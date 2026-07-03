@@ -4,6 +4,21 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [Outillage] - 2026-07-03
+
+### Configuration Claude Code
+
+- Initialisation du dépôt git + `.gitignore`
+- `CLAUDE.md` racine (gouvernance opérationnelle pour les agents IA)
+- `.claude/` : `settings.json`, hook `guard-locked` (protection des `Locked`),
+  6 commandes métier, 3 sous-agents, skill projet `gsie-governance`
+- Skills : installation vendorisée et épinglée de `mermaid` (MIT, commit
+  `8ab1815`, provenance tracée) ; création de la skill `skill-management`
+- `.claude/SKILLS_GSIE.md` : sélection des meilleures skills (internes,
+  officielles et communautaires) par phase
+
+---
+
 ## [0.0.1] - 2026-07-01
 
 ### Fondation

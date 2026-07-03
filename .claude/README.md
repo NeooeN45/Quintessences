@@ -13,6 +13,8 @@ gouvernance du projet (voir `../CLAUDE.md`).
 | `commands/` | Commandes métier GSIE (slash commands) |
 | `agents/` | Sous-agents spécialisés |
 | `skills/gsie-governance/` | Skill projet auto-déclenchée (gouvernance) |
+| `skills/skill-management/` | Gestion des skills (installer/évaluer/tracer/retirer) |
+| `skills/mermaid/` | Skill communautaire vendorisée (diagrammes, MIT, épinglée) |
 | `SKILLS_GSIE.md` | Sélection curatée des meilleures skills par phase |
 
 ## Commandes disponibles
