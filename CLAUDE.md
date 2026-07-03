@@ -126,6 +126,16 @@ Un livrable ne passe en `Review` que si le précédent est au minimum en
 
 ---
 
+## 7bis. Skills & outillage Claude Code
+
+- Skill projet **`gsie-governance`** (`.claude/skills/`) : auto-déclenchée dès
+  qu'on touche un document GSIE ; impose la gouvernance. Prioritaire.
+- Commandes : `/rfc`, `/decision`, `/article`, `/engine-doc`, `/sync-memory`,
+  `/constitution-audit`. Sous-agents : `constitution-guardian`, `doc-redactor`,
+  `memory-keeper`.
+- Sélection des meilleures skills externes par phase : voir
+  `.claude/SKILLS_GSIE.md`. En Phase 1, aucune skill ne doit produire de code métier.
+
 ## 8. Style & conventions
 
 - **Markdown** propre : titres hiérarchisés, tables pour les listes de faits,

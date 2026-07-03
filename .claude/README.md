@@ -12,6 +12,8 @@ gouvernance du projet (voir `../CLAUDE.md`).
 | `hooks/guard-locked.mjs` | Bloque toute écriture sur un document `Locked` |
 | `commands/` | Commandes métier GSIE (slash commands) |
 | `agents/` | Sous-agents spécialisés |
+| `skills/gsie-governance/` | Skill projet auto-déclenchée (gouvernance) |
+| `SKILLS_GSIE.md` | Sélection curatée des meilleures skills par phase |
 
 ## Commandes disponibles
 

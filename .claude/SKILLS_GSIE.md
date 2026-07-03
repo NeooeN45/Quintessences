@@ -1,0 +1,51 @@
+# Skills recommandées pour GSIE
+
+Sélection curatée des meilleures skills (parmi celles disponibles) pour ce
+projet, classées par utilité et par phase. La skill **projet** `gsie-governance`
+(dans `.claude/skills/`) se déclenche automatiquement et impose la gouvernance —
+elle est prioritaire sur toutes les autres.
+
+## Priorité maximale — utiles dès maintenant (Phase 1 : Foundation)
+
+| Skill | Pourquoi pour GSIE |
+|---|---|
+| `gsie-governance` *(projet)* | Applique la gouvernance à toute production documentaire. **Auto-déclenchée.** |
+| `superpowers:brainstorming` | Concrétise « l'architecture avant les fonctionnalités » : conçois avant de rédiger. À lancer avant tout nouveau document structurant. |
+| `superpowers:writing-plans` + `executing-plans` | Structure la production des 12 livrables dans l'ordre, sans en sauter. |
+| `deep-research` | Sourcing scientifique fact-checké et cité pour `06_RESEARCH/`, `07_KNOWLEDGE/`, Evidence Engine. Cœur de « la science avant l'opinion ». |
+| `context7-doc` | Docs à jour et exactes des standards/formats (ontologies, SIG, schémas) sans halluciner. |
+| `claude-md-management:revise-claude-md` | Maintient `CLAUDE.md` à jour quand la gouvernance évolue. |
+| `claude-mem:learn-codebase` | Charge tout le dépôt en mémoire en une passe (~5 min) → contexte auto-injecté ensuite. |
+| `superpowers:writing-skills` / `skill-creator` | Pour créer d'autres skills GSIE sur-mesure au besoin. |
+
+## Phase 2 — Architecture
+
+| Skill | Usage |
+|---|---|
+| `feature-dev:feature-dev` (agent `code-architect`) | Concevoir l'architecture détaillée des 14 moteurs et leurs contrats d'interface. |
+| `superpowers:writing-plans` | Séquencer l'ordre de développement des moteurs. |
+
+## Phase 3 — Connaissance
+
+| Skill | Usage |
+|---|---|
+| `deep-research` | Constituer la base de connaissances sourcée, les ontologies, les niveaux de preuve. |
+| `superpowers:verification-before-completion` | Vérifier chaque affirmation avant validation (traçabilité). |
+
+## Phase 4 — Implémentation (le code viendra en son temps)
+
+| Domaine | Skills |
+|---|---|
+| Développement moteurs | `feature-dev:feature-dev`, `superpowers:test-driven-development`, `superpowers:systematic-debugging` |
+| Qualité / revue | `code-review`, `security-review`, `superpowers:requesting-code-review` + `receiving-code-review` |
+| Intégration LLM/IA | `claude-api`, `model-economy` |
+| Interfaces (Mobile/Desktop/Web) | `frontend-design`, `ui-ux-pro-max`, `web-design-guidelines`, `react-best-practices`, `composition-patterns` |
+| Accessibilité | `accesslint:audit` |
+| Backend/données (si retenu) | `supabase`, `supabase-postgres-best-practices` |
+
+## Règle d'usage
+
+Quand plusieurs skills s'appliquent : les **skills de processus** d'abord
+(`gsie-governance`, `brainstorming`, `systematic-debugging`) fixent l'approche,
+puis les skills d'implémentation exécutent. En Phase 1, aucune skill ne doit
+conduire à écrire du code métier.
