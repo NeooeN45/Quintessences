@@ -1,0 +1,21 @@
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code — local / secrets (le reste de .claude/ est versionné)
+.claude/settings.local.json
+
+# Temporaire
+tmp/
+*.tmp
+*.log
+
+# Node (si outillage ajouté plus tard)
+node_modules/
