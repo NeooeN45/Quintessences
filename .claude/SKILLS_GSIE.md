@@ -43,6 +43,39 @@ elle est prioritaire sur toutes les autres.
 | Accessibilité | `accesslint:audit` |
 | Backend/données (si retenu) | `supabase`, `supabase-postgres-best-practices` |
 
+## Skills communautaires (externes — à réviser avant adoption)
+
+⚠️ Une skill communautaire = instructions/scripts tiers. Conformément à la
+gouvernance GSIE : **lire le `SKILL.md` avant de faire confiance**, épingler la
+version (submodule git pour la traçabilité), préférer les licences claires (MIT).
+Le hook `guard-locked` et la skill `gsie-governance` continuent de protéger les
+documents `Locked`.
+
+| Skill | Utilité pour GSIE | Source | Licence |
+|---|---|---|---|
+| **mermaid-skill** | 23 types de diagrammes (`/mermaid`). Idéal pour `04_ARCHITECTURE/` (data-flow, C4), `09_ENGINES/`. Les diagrammes compressent le contexte ~3-6×. | `github.com/WH-2099/mermaid-skill` | MIT |
+| **docs-with-mermaid** | Génère une doc technique structurée avec diagrammes Mermaid. | `github.com/pranavred/...docs-with-mermaid` | à vérifier |
+| **walkthrough** | Génère des explications HTML interactives (Mermaid cliquable) d'une architecture/flux — parfait pour présenter les 14 moteurs. | `github.com/alexanderop/walkthrough` | à vérifier |
+| **tapestry** | Interlie et résume des documents en réseaux de connaissances — aligné avec `07_KNOWLEDGE/` et le Knowledge Graph. | via marketplaces (ci-dessous) | à vérifier |
+| **get-shit-done (gsd)** | Développement piloté par spécifications + context engineering — utile pour séquencer les livrables. | `github.com/gsd-build/get-shit-done` | à vérifier |
+| **obra/superpowers** | Bibliothèque de skills de processus (déjà présente dans cette session). | `github.com/obra/superpowers` | — |
+| **skill-creator** | Création guidée de skills GSIE sur-mesure (déjà disponible). | `github.com/anthropics/skills` | — |
+
+### Installation d'une skill projet (exemple mermaid, épinglé)
+
+```bash
+git submodule add https://github.com/WH-2099/mermaid-skill.git .claude/skills/mermaid-skill
+# puis pointer .claude/skills/mermaid vers mermaid-skill/.claude/skills/mermaid
+```
+
+### Où chercher d'autres skills communautaires
+
+- `claudemarketplaces.com` — annuaire communautaire (skills, MCP, marketplaces).
+- `claudeskills.info` — grand catalogue de skills open-source.
+- `github.com/ComposioHQ/awesome-claude-skills` — 1000+ skills curées.
+- `github.com/VoltAgent/awesome-agent-skills` — 1000+ skills multi-agents.
+- `github.com/travisvn/awesome-claude-skills` — liste curée.
+
 ## Règle d'usage
 
 Quand plusieurs skills s'appliquent : les **skills de processus** d'abord
