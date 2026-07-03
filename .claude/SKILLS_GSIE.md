@@ -61,6 +61,21 @@ documents `Locked`.
 | **obra/superpowers** | Bibliothèque de skills de processus (déjà présente dans cette session). | `github.com/obra/superpowers` | — |
 | **skill-creator** | Création guidée de skills GSIE sur-mesure (déjà disponible). | `github.com/anthropics/skills` | — |
 
+### Nouveaux candidats évalués (recherche 2026-07-03)
+
+Licences vérifiées ; verdict selon la gouvernance GSIE.
+
+| Skill | Utilité GSIE | Source | Licence | Verdict |
+|---|---|---|---|---|
+| **markdown-linter-fixer** | Corrige automatiquement le lint markdown (MD029, etc.) sur les centaines de `.md` du dépôt. Sert « la documentation est le produit ». | `github.com/s2005/markdown-linter-fixer-skill` | MIT | ✅ **Recommandée** (dépend de Node + `markdownlint-cli2`) |
+| **graphify** | Transforme docs/PDF/schémas en **knowledge graph** interrogeable (HTML + markdown + JSON). Aligné `07_KNOWLEDGE/` + Knowledge Graph. Code traité en local ; docs via LLM au choix. | `github.com/safishamsi/graphify` | MIT | ✅ Recommandée Phase 3 (installation via `uv tool install`, pas une simple vendorisation) |
+| **obra/knowledge-graph** | Interroge un vault Markdown comme graphe (recherche sémantique, chemins) — 100 % local. Plugin Claude Code (auteur de superpowers). | `github.com/obra/knowledge-graph` | à vérifier | ⏳ À évaluer (licence) |
+| **claude-obsidian** | « Second cerveau » PKM : 15 skills, liaison auto de sources en graphe Markdown (7,2k★). | `github.com/AgriciDaniel/claude-obsidian` | à vérifier | ⏳ À évaluer (licence + périmètre large) |
+| **academic-research-skills** | Pipeline recherche→rédaction→revue par les pairs (13/12/7 agents). Puissant pour `06_RESEARCH/`. | `github.com/imbad0202/academic-research-skills` | CC-BY-NC 4.0 | ⚠ **Bloquée** : licence **non commerciale** (incompatible avec licence GSIE non encore fixée) + API payante. Rouvrir après le RFC licence. |
+
+> Catalogues additionnels repérés : `alirezarezvani/claude-skills` (337 skills),
+> `mingrath/awesome-claude-skills`, `glebis/claude-skills`, `daymade/claude-code-skills`.
+
 ### Installation d'une skill projet (exemple mermaid, épinglé)
 
 ```bash
