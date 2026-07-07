@@ -4,7 +4,7 @@
 |---|---|
 | **Phase** | 1 — Foundation |
 | **Directive courante** | GSIE-DIR-0003 |
-| **Dernière mise à jour** | 2026-07-01 |
+| **Dernière mise à jour** | 2026-07-07 |
 
 ---
 
@@ -21,8 +21,8 @@ l'ordre. Aucun développement ne commencera avant leur validation.
 
 - **Validated** : 1 / 12 (001 — structure)
 - **Locked** : 3 / 12 (002 — Préambule Constitutionnel, 003 — Préambule Philosophique, 004 — Article 000)
-- **Draft** : 8 / 12 (005 à 012 — 005 et 006 rédigés, à valider)
-- **Review** : 0 / 12
+- **Review** : 5 / 12 (005 — Pacte IA, 006 — Design Philosophy, 007 — Constitution Scientifique, 008 — Constitution Technique, 009 — Constitution IA)
+- **Draft** : 3 / 12 (010, 011, 012)
 
 ### Articles constitutionnels rédigés
 
@@ -55,7 +55,10 @@ l'ordre. Aucun développement ne commencera avant leur validation.
 - `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
 
-### Moteurs documentés (14/14)
+### Moteurs amorcés (14/14 — profondeur à qualifier)
+
+> 3 moteurs ont un fichier dédié (EVIDENCE, KNOWLEDGE, CORRELATION) ; 11 n'ont
+> qu'un README de cadrage. Documentation complète = Phase 2. Détail : `ROADMAP.md`.
 
 - `09_ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
 - `09_ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
@@ -71,6 +74,14 @@ l'ordre. Aucun développement ne commencera avant leur validation.
 - `09_ENGINES/FOREST_DYNAMICS_ENGINE/` — Forest Dynamics Engine
 - `09_ENGINES/LEARNING_ENGINE/` — Learning Engine
 - `09_ENGINES/SIMULATION_ENGINE/` — Simulation Engine
+
+## RFC ouverts
+
+- **RFC-0003** — Architecture distribuée GSIE-Net (Proposé — 2026-07-07) :
+  capture la vision fondateur sur l'architecture offline-first, distribuée,
+  multi-couches et orientée données. Activé en Phase 2.
+
+---
 
 ## Décisions actives
 
@@ -88,7 +99,10 @@ l'ordre. Aucun développement ne commencera avant leur validation.
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
 - **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
+- **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
+- **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
+- **RFC-0003 à RFC-0010** — Réservés, non ouverts
 
 ## Documents fondateurs de la Constitution
 
@@ -107,9 +121,10 @@ code viendra en son temps, subordonné aux fondations.
 
 ## Prochaine étape
 
-**Livrables 007 à 009** — Constitutions scientifique, technique et de
-l'IA : à rédiger. Les livrables 005 (Pacte IA) et 006 (Design Philosophy)
-sont rédigés en attente de validation.
+**Livrables 005 à 009** sont en **Review** — le Fondateur doit les valider
+pour les faire passer en `Validated`. Une fois ces cinq livrables validés,
+les livrables 010 (Articles CON-001 à 010), 011 (Documentation) et 012
+(Mémoire complète) peuvent être travaillés pour clôturer la Phase 1.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète des 12 livrables vit dans `ROADMAP.md`.

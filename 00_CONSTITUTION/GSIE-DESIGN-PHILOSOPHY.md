@@ -1,5 +1,10 @@
 # GSIE Design Philosophy
 
+Livrable : 006 — Philosophie de conception
+Édition : Première Édition
+Version : 1.0 (Review)
+Statut : En attente de validation du Fondateur
+
 ## Mission
 Définir la manière officielle de concevoir GSIE.
 

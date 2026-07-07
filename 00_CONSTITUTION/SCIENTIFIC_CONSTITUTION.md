@@ -1,8 +1,8 @@
 # Constitution Scientifique de GSIE
 
 Édition : Première Édition
-Version : 1.0 (Draft)
-Statut : À valider
+Version : 1.0 (Review)
+Statut : En attente de validation du Fondateur
 Classification : Constitution Sectorielle
 Référence : Livrable 007 (GSIE-DIR-0003)
 Loi fondatrice : GSIE-CON-002 — La science avant tout

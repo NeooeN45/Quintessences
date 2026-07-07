@@ -4,6 +4,86 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RFC-0003 + Review 005-009] - 2026-07-07
+
+### RFC ouvert
+
+- **RFC-0003** — Architecture distribuée GSIE-Net : capture la vision du
+  Fondateur sur l'architecture offline-first, multi-couches, distribuée et
+  orientée données. Activé en Phase 2. (`02_RFC/RFC-0003.md`)
+
+### Livrables passés en Review
+
+Cinq livrables passent du statut `Draft` au statut `Review` — soumis à la
+validation du Fondateur :
+
+- Livrable 005 — `PACT_FOR_AI_AGENTS.md`
+- Livrable 006 — `GSIE-DESIGN-PHILOSOPHY.md`
+- Livrable 007 — `SCIENTIFIC_CONSTITUTION.md`
+- Livrable 008 — `TECHNICAL_CONSTITUTION.md`
+- Livrable 009 — `AI_CONSTITUTION.md`
+
+### Mémoire synchronisée
+
+- `PROJECT_MEMORY.md` mis à jour : avancement Review 5/12, RFC-0003 tracé.
+- `ROADMAP.md` mis à jour : statuts livrables + RFC-0003 + prochaine étape.
+
+---
+
+## [Conformité] - 2026-07-06
+
+### Audit de l'état réel
+
+- Cartographie complète du dépôt (277 fichiers `.md`) confrontée au ROADMAP et
+  à la mémoire. Écarts de traçabilité et de conformité identifiés.
+
+### Conformité des statuts (livrables 005, 006, 010)
+
+- Ajout des champs `Statut : À valider` et `Classification : Loi Fondamentale
+  (Immuable)` aux articles `GSIE-CON-005` à `GSIE-CON-010` (en-têtes non
+  conformes au cycle de vie).
+- Ajout d'en-têtes (édition, version, statut) à `PACT_FOR_AI_AGENTS.md` (005)
+  et `GSIE-DESIGN-PHILOSOPHY.md` (006).
+- Aucun document `Locked` modifié.
+
+### Traçabilité
+
+- `GSIE-DIR-0004` (GSIE Genesis Directive, ACTIVE) désormais tracée dans
+  `PROJECT_MEMORY.md` (racine et `22_`). Elle en était absente.
+
+### RFC
+
+- **RFC-0002** ouvert : « Unification du système d'articles constitutionnels »
+  (double système `ARTICLE_0xx` vides / `GSIE-CON-0xx` rédigés). Statut
+  *Proposé*, en attente de validation du Fondateur. Aucune suppression exécutée.
+- `RFC-0003` à `RFC-0010` : coquilles vides remplacées par des en-têtes
+  « Réservé — non ouvert » (traçabilité conservée, aucun RFC supprimé).
+
+### Livrables 011 et 012
+
+- Rédaction des fichiers vides de `17_DOCUMENTATION/` : `WRITING_GUIDELINES.md`,
+  `DOCUMENTATION_SYSTEM.md`, `CONTRIBUTING_GUIDE.md`, `ADR_TEMPLATE.md` (Draft).
+- `CONTEXT_SNAPSHOT_001.md` : en-tête de réservation ajouté (déclenchement prévu
+  à la 10ᵉ Directive — non atteint, snapshot volontairement en attente).
+
+### ROADMAP
+
+- Livrable 010 repointé vers la source réelle (`GSIE-CON-0xx`) avec renvoi au
+  RFC-0002.
+- Requalification honnête des 14 moteurs (3 fichiers dédiés, 11 README de
+  cadrage ; documentation complète = Phase 2).
+- Mention des dossiers hors 12 livrables (`18_FINANCING`, `23_QUALITY_MANAGEMENT`)
+  et de leur statut de gouvernance à statuer.
+
+### Reste à la main du Fondateur
+
+- Choix d'une option pour RFC-0002 (A / B / C).
+- Levée ou confirmation de la réserve sur le `Locked` de `GSIE-CON-000`
+  (« LOCKED sous réserve de validation du Fondateur »).
+- Rattachement de `18_FINANCING` et `23_QUALITY_MANAGEMENT` aux livrables.
+
+---
+
 ## [Outillage] - 2026-07-03
 
 ### Configuration Claude Code

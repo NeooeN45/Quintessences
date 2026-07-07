@@ -17,12 +17,12 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | 002 | Préambule Constitutionnel | `00_CONSTITUTION/GSIE-FND-002.md` | Locked |
 | 003 | Préambule Philosophique | `00_CONSTITUTION/GSIE-FND-001.md` | Locked |
 | 004 | Article 000 — Primauté de la Constitution | `00_CONSTITUTION/GSIE-CON-000.md` | Locked |
-| 005 | Pacte pour les IA | `00_CONSTITUTION/PACT_FOR_AI_AGENTS.md` | Draft (rédigé, à valider) |
-| 006 | Philosophie de conception | `00_CONSTITUTION/GSIE-DESIGN-PHILOSOPHY.md` | Draft (rédigé, à valider) |
-| 007 | Constitution scientifique | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` | Draft |
-| 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Draft |
-| 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Draft |
-| 010 | Articles constitutionnels 001-100 | `00_CONSTITUTION/ARTICLE_001.md` à `ARTICLE_100.md` | Draft (003-010 rédigés) |
+| 005 | Pacte pour les IA | `00_CONSTITUTION/PACT_FOR_AI_AGENTS.md` | Review |
+| 006 | Philosophie de conception | `00_CONSTITUTION/GSIE-DESIGN-PHILOSOPHY.md` | Review |
+| 007 | Constitution scientifique | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` | Review |
+| 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Review |
+| 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Review |
+| 010 | Articles constitutionnels 000-100 | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source réelle) ; gabarit `ARTICLE_0xx` en attente (cf. **RFC-0002**) | Draft (000 Locked, 001-010 rédigés « À valider ») |
 | 011 | Système de documentation et guides contributeurs | `17_DOCUMENTATION/` | Draft |
 | 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Draft |
 
@@ -39,8 +39,8 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 
 - **Validated** : 1 / 12 (001)
 - **Locked** : 3 / 12 (002, 003, 004)
-- **Draft** : 8 / 12 (005 à 012 — 005 et 006 rédigés, à valider)
-- **Review** : 0 / 12
+- **Review** : 5 / 12 (005, 006, 007, 008, 009 — en attente de validation Fondateur)
+- **Draft** : 3 / 12 (010, 011, 012)
 
 ### Articles constitutionnels rédigés (livrable 010)
 
@@ -62,8 +62,8 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 
 | Fichier | Titre | Statut |
 |---|---|---|
-| `PACT_FOR_AI_AGENTS.md` | Pacte des Agents IA (livrable 005) | Draft (à valider) |
-| `GSIE-DESIGN-PHILOSOPHY.md` | GSIE Design Philosophy (livrable 006) | Draft (à valider) |
+| `PACT_FOR_AI_AGENTS.md` | Pacte des Agents IA (livrable 005) | Review |
+| `GSIE-DESIGN-PHILOSOPHY.md` | GSIE Design Philosophy (livrable 006) | Review |
 
 ### Documents méthodologiques rédigés
 
@@ -100,13 +100,36 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | `LEARNING_ENGINE` | `09_ENGINES/LEARNING_ENGINE/` | Documenté (Phase 1) |
 | `SIMULATION_ENGINE` | `09_ENGINES/SIMULATION_ENGINE/` | Documenté (Phase 1) |
 
-**14/14 moteurs documentés.**
+**14/14 moteurs amorcés — niveau de documentation à qualifier.**
 
-### Prochain livrable actif
+> Précision (audit 2026-07-06) : « amorcé » ne signifie pas « documenté en
+> profondeur ». Sur les 14 moteurs, **3** possèdent un fichier de moteur dédié
+> (`EVIDENCE`, `KNOWLEDGE`, `CORRELATION`, 14–18 lignes) et **11** ne disposent
+> pour l'instant que d'un `README` de cadrage (26–35 lignes). Quatre brouillons
+> (`DIAGNOSTIC`, `REASONING`, `RECOMMENDATION`, `VALIDATION`) subsistent dans
+> `22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/`. La documentation de moteur complète
+> relève de la **Phase 2 (Architecture)**.
 
-**Livrables 007 à 009** — Constitutions scientifique, technique et IA :
-**rédigés** (Draft, à valider). Les 14 moteurs sont documentés. La
-contradiction sur la position de l'Evidence Engine est résolue.
+### Hors des 12 livrables (dossiers annexes substantiels)
+
+Deux ensembles volumineux existent mais ne sont **rattachés à aucun** des 12
+livrables de la Phase 1. Leur statut de gouvernance reste à statuer par le
+Fondateur (livrable annexe ? anticipation de phase ultérieure ?) :
+
+- `18_FINANCING/` — modèle et gouvernance financière (~1 060 lignes).
+- `23_QUALITY_MANAGEMENT/` — manuel, politique et processus qualité (~1 370 l).
+
+### RFC ouvert
+
+**RFC-0003** — Architecture distribuée GSIE-Net : ouvert le 2026-07-07.
+Capture la vision fondateur sur l'architecture offline-first, distribuée
+et orientée données de GSIE. Activé en Phase 2. Voir `02_RFC/RFC-0003.md`.
+
+### Prochaine étape
+
+**Livrables 005 à 009** sont en **Review** — en attente de validation
+du Fondateur. Une fois validés, passer aux livrables 010, 011 et 012
+pour clôturer la Phase 1.
 
 ---
 

@@ -1,5 +1,10 @@
 # Pacte des Agents IA
 
+Livrable : 005 — Pacte pour les IA
+Édition : Première Édition
+Version : 1.0 (Review)
+Statut : En attente de validation du Fondateur
+
 Tout agent IA intervenant sur GSIE s'engage à :
 - respecter la Constitution ;
 - ne jamais inventer une donnée scientifique ;
