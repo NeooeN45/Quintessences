@@ -1,6 +1,11 @@
 # GSIE Engineering Handbook
 # Tome I — Vision & Fondation
 
+Livrable : 011 — Système de documentation
+Statut : Validated
+Version : 1.0
+Date : 2026-07-12
+
 ## Préface
 
 GSIE (GeoSylva Intelligence Engine) est né d'un constat simple : les outils forestiers actuels excellent souvent dans une tâche précise (cartographie, inventaire, SIG, calculs), mais très peu sont capables de relier l'ensemble des connaissances nécessaires à une décision forestière.

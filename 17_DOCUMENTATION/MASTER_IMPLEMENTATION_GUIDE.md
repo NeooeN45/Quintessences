@@ -4,6 +4,7 @@
  MASTER IMPLEMENTATION GUIDE
 ================================================================================
  Document maître · Référence d'ingénierie et scientifique
+ Statut : Validated
  Statut de version : v0.6.1 (fondation + Parties I, II, III, IV, VI, VII rédigées + dimensions organisationnelles)
 --------------------------------------------------------------------------------
  Ce fichier est le document de référence unique du projet GSIE.
