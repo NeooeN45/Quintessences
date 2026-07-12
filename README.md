@@ -77,7 +77,9 @@ Quintessences (écosystème)
     │
     └── Spécialisations (applications clientes)
         ├── GeoSylva        — app forestière (diagnostics sylvicoles)
-        ├── GSIE-Ignis        — spécialisation incendie (surveillance, propagation)
+        ├── GSIE-Ignis      — spécialisation incendie (surveillance, propagation)
+        ├── Myhunt          — suivi cynégétique (faune, territoires)
+        ├── QGISIA          — agent IA QGIS (SIG desktop, analyses géospatiales)
         └── [futures]       — climat, eau, biodiversité…
 ```
 
@@ -111,6 +113,27 @@ comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
 jamais un système de commandement. Aucune alerte directe à la population
 (prérogative régale FR-Alert). La sortie « cause probable » reste une
 hypothèse exploratoire, jamais une conclusion.
+
+### Myhunt — suivi cynégétique
+
+Plateforme de suivi cynégétique premium orientée terrain. Application
+Android native, API NestJS et backoffice Next.js. Gestion des
+observations, zones, espèces et synchronisation hors-ligne.
+
+- **Repo** : [github.com/NeooeN45/Myhunt](https://github.com/NeooeN45/Myhunt)
+- **Lien GSIE** : moteurs GIS, Knowledge, Correlation, Learning (analyse
+  des populations, prédiction de présence, gestion durable).
+
+### QGISIA — agent IA QGIS (« GeoSylva AI »)
+
+Agent IA intelligent pour QGIS. Route les demandes en langage naturel
+vers le meilleur modèle, appelle les outils QGIS, interroge le web et
+l'imagerie satellite, génère et exécute du PyQGIS. Interface desktop
+du moteur GSIE pour les professionnels SIG.
+
+- **Repo** : [github.com/NeooeN45/QGISIAPRO](https://github.com/NeooeN45/QGISIAPRO)
+- **Lien GSIE** : moteurs GIS, Climate, Pedology, Botanical, Reasoning
+  (analyses environnementales expertes dans QGIS).
 
 ### Futures spécialisations
 
