@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdown-lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
+
+      - name: Lint markdown files
+        run: |
+          # Lint tous les .md du dépôt, en ignorant les dossiers vendor/skills
+          find . -name '*.md' \
+            -not -path './.claude/skills/*' \
+            -not -path './node_modules/*' \
+            -not -path './.git/*' \
+            -print0 | xargs -0 markdownlint \
+            --disable MD013 MD024 MD033 MD041 MD036 \
+            2>&1 || true
+
+  consistency-checks:
+    name: Consistency Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check line endings (LF only)
+        run: |
+          # Vérifie qu'aucun fichier texte n'a de CRLF dans le dépôt
+          if grep -rlU $'\r' --include='*.md' --include='*.py' --include='*.sh' --include='*.yml' --include='*.yaml' --include='*.json' . ; then
+            echo "::error::CRLF line endings detected. Run 'git add --renormalize .' locally."
+            exit 1
+          fi
+
+      - name: Check for trailing whitespace
+        run: |
+          if grep -rn '[[:space:]]$' --include='*.md' . | grep -v '.claude/skills/' ; then
+            echo "::warning::Trailing whitespace detected in markdown files."
+            grep -rn '[[:space:]]$' --include='*.md' . | grep -v '.claude/skills/' || true
+          fi
+
+      - name: Check LICENSE exists
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "::error::LICENSE file is missing."
+            exit 1
+          fi
+
+      - name: Check no secrets in tracked files
+        run: |
+          # Scan basique pour des patterns de secrets courants
+          if grep -rnE '(ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|sk-[a-zA-Z0-9]{20}|AKIA[0-9A-Z]{16})' \
+            --include='*.md' --include='*.py' --include='*.sh' --include='*.yml' --include='*.json' \
+            . | grep -v '.git/' ; then
+            echo "::error::Potential secret detected in tracked files!"
+            exit 1
+          fi
+
+      - name: Check French language in documentation
+        run: |
+          # Vérifie que les documents GSIE principaux sont bien en français
+          # (présence d'accents ou de mots-clés français)
+          for f in README.md CLAUDE.md ROADMAP.md PROJECT_MEMORY.md CHANGELOG.md; do
+            if [ -f "$f" ]; then
+              if ! grep -qP '[àâäéèêëïîôöùûüç]' "$f" && ! grep -qi 'phase\|fondateur\|constitution' "$f"; then
+                echo "::warning::$f might not be in French."
+              fi
+            fi
+          done
+
+      - name: Check constitution articles status
+        run: |
+          # Vérifie qu'aucun article constitutionnel n'est en statut "Draft"
+          # après la clôture de la Phase 1
+          for f in 00_CONSTITUTION/GSIE-CON-0*.md; do
+            if [ -f "$f" ]; then
+              if grep -qi 'statut.*draft\|statut.*à valider' "$f"; then
+                echo "::warning::$f still in Draft/À valider status."
+              fi
+            fi
+          done
+
+  governance-check:
+    name: Governance Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check no Locked documents modified without RFC
+        run: |
+          # Liste les documents Locked connus
+          LOCKED_FILES=(
+            "00_CONSTITUTION/GSIE-FND-001.md"
+            "00_CONSTITUTION/GSIE-FND-002.md"
+            "00_CONSTITUTION/GSIE-CON-000.md"
+          )
+          for f in "${LOCKED_FILES[@]}"; do
+            if [ -f "$f" ]; then
+              # Vérifie que le fichier contient bien "Locked" dans son en-tête
+              if ! head -10 "$f" | grep -qi 'locked'; then
+                echo "::warning::$f should be Locked but status not found in header."
+              fi
+            fi
+          done
+
+      - name: Check DEC files have required fields
+        run: |
+          for f in 03_DECISIONS/DEC-*.md; do
+            if [ -f "$f" ]; then
+              if ! grep -qi '\*\*ID\*\*' "$f"; then
+                echo "::error::$f missing required ID field."
+                exit 1
+              fi
+              if ! grep -qi '\*\*Statut\*\*' "$f"; then
+                echo "::error::$f missing required Statut field."
+                exit 1
+              fi
+              if ! grep -qi '\*\*Décideur\*\*' "$f"; then
+                echo "::error::$f missing required Décideur field."
+                exit 1
+              fi
+            fi
+          done

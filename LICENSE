@@ -1,0 +1,68 @@
+Copyright (c) 2026 Camille Perraudeau — GSIE (GeoSylva Intelligence Engine)
+All Rights Reserved.
+
+LICENSE PROPRIÉTAIRE — QUINTESSENCES
+PROPRIETARY LICENSE — QUINTESSENCES
+
+===========================================================================
+FRANÇAIS
+===========================================================================
+
+Aucune partie de ce dépôt (code, documentation, configurations, schémas,
+données ou tout autre contenu) ne peut être utilisée, copiée, modifiée,
+fusionnée, publiée, distribuée, sous-licenciée, vendue ou exploitée
+commercialement, en tout ou en partie, sans l'autorisation écrite
+préalable et explicite du détenteur des droits d'auteur.
+
+Le code source est publié publiquement à des fins de transparence,
+d'évaluation et de démonstration. Cette publication ne constitue en
+aucun cas une autorisation d'utilisation, de réutilisation, de
+modification ou de déploiement.
+
+Toute utilisation commerciale, y compris mais sans s'y limiter :
+  - intégration dans un produit ou service commercial ;
+  - offre d'un service basé sur ce code (SaaS, API, plateforme) ;
+  - redistribution ou revente sous quelque forme que ce soit ;
+  - modification ou création de travaux dérivés ;
+  nécessite une licence commerciale séparée.
+
+Pour toute demande de licence ou partenariat :
+  Contact : fondateur@gsie.fr
+
+===========================================================================
+ENGLISH
+===========================================================================
+
+No part of this repository (code, documentation, configurations,
+schemas, data or any other content) may be used, copied, modified,
+merged, published, distributed, sublicensed, sold or commercially
+exploited, in whole or in part, without the prior explicit written
+permission of the copyright holder.
+
+The source code is publicly available for transparency, evaluation and
+demonstration purposes only. This public availability does not
+constitute a license to use, reuse, modify or deploy the software.
+
+Any commercial use, including but not limited to:
+  - integration into a commercial product or service;
+  - offering a service based on this code (SaaS, API, platform);
+  - redistribution or resale in any form;
+  - modification or creation of derivative works;
+  requires a separate commercial license.
+
+For licensing or partnership inquiries:
+  Contact: fondateur@gsie.fr
+
+===========================================================================
+
+This license will be reviewed and may transition to an open-source
+license or a commercial SaaS license at the sole discretion of the
+copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.
