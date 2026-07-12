@@ -12,9 +12,13 @@ GSIE est une **fondation scientifique** dont le produit principal est un
 **moteur d'intelligence forestière** modulaire, traçable et explicable — **pas
 une application**. Les applications ne sont que des clients du moteur.
 
-**Phase actuelle : Phase 1 — Foundation.** Le **produit est la documentation**.
-**Aucun développement métier / code applicatif** n'est autorisé tant que les
-12 livrables de la Phase 1 ne sont pas validés. Voir `ROADMAP.md`.
+**Phase actuelle : Phase 2 — Architecture** (ouverte par `DEC-000004`
+le 2026-07-12). La Phase 1 (Foundation) est **clôturée** : les 12 livrables
+sont Validated (9/12) ou Locked (3/12). La Phase 2 autorise l'architecture
+détaillée des 14 moteurs, les spécifications techniques, les RFC
+d'architecture et le banc de simulation GSIE-FEU. Le **code métier des
+moteurs dans le dépôt GSIE reste interdit jusqu'en Phase 4**. Voir
+`ROADMAP.md` et `PROJECT_MEMORY.md`.
 
 ---
 
@@ -25,9 +29,13 @@ une application**. Les applications ne sont que des clients du moteur.
 2. **Ne modifie JAMAIS un document `Locked`** (voir statuts §5). Un `Locked`
    ne change **que** par un RFC dédié dans `02_RFC/`. Ceci inclut :
    `GSIE-FND-001`, `GSIE-FND-002`, `GSIE-CON-000`.
-3. **Pas de code métier en Phase 1.** Ne crée aucun moteur exécutable, API,
-   SDK ou application. Si on te le demande, signale que la Phase 1 l'interdit
-   et propose la documentation correspondante à la place.
+3. **Pas de code métier des moteurs dans le dépôt GSIE.** La Phase 2
+   autorise l'architecture et les spécifications, mais l'implémentation des
+   14 moteurs est réservée à la Phase 4. Le banc GSIE-FEU vit hors dépôt
+   (`~/gsie-feu/` WSL2) ; une archive de son Jalon 0 est néanmoins conservée
+   dans `22_PROJECT_MEMORY/GSIE-FEU/` (voir `DEC-000005`). Si on te demande
+   du code métier, signale que la Phase 2 l'interdit et propose
+   l'architecture / spécification correspondante à la place.
 4. **Tout en français.** Documentation, commentaires, titres, commits.
 5. **La connaissance avant le code ; la science avant l'opinion.** Toute
    affirmation scientifique doit être **sourçable** et **traçable**.
