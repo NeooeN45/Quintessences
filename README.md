@@ -1,91 +1,209 @@
+<div align="center">
+
 # Quintessences
 
-> **Écosystème d'intelligence environnementale** — moteur d'aide à la
-> décision pour la forêt, le feu, le climat et les territoires.
-> La connaissance avant le code. La science avant l'opinion.
+### Écosystème d'intelligence environnementale
+
+**Un moteur. Des spécialisations. Zéro décision opaque.**
+
+GSIE (General System Intelligence Engine) est un moteur d'aide à la
+décision modulaire, traçable et explicable — conçu pour la forêt, le feu,
+le climat et les territoires.
+
+[![Phase](https://img.shields.io/badge/phase-2%20Architecture-blue)](ROADMAP.md)
+[![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
+[![Constitution](https://img.shields.io/badge/constitution-10%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
+[![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](09_ENGINES/)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-6%20DEC-yellow)](03_DECISIONS/)
+[![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
+
+</div>
 
 ---
 
-## Qu'est-ce que Quintessences ?
+## Pourquoi Quintessences existe
 
-**Quintessences** est un **écosystème d'applications environnementales**
-fondé sur un moteur d'intelligence commun : **GSIE** (General System
-Intelligence Engine). Chaque spécialisation — forestière, incendie,
-climatique — est une application cliente du moteur GSIE, adaptée à son
-domaine.
+La gestion environnementale repose sur des **décisions qui engagent des
+décennies** : choix d'essences, interventions sylvicoles, lutte contre
+les incendies, adaptation climatique. Ces décisions sont prises par des
+professionnels de terrain avec des outils **inadaptés** :
 
-Quintessences n'est **pas une application**. C'est un écosystème dont le
-cœur est un **moteur d'intelligence modulaire, traçable et explicable**,
-déclinable en plusieurs spécialisations environnementales.
+- **Données fragmentées** — sol, climat, flore, satellite éparpillés
+  dans des silos incompatibles.
+- **Outils d'IA opaques** — boîtes noires qui produisent des
+  recommandations sans explication, sans source, sans traçabilité.
+- **Pas de hors-ligne** — les outils existants supposent une
+  connexion permanente, impossible en forêt ou en zone isolée.
+- **Pas de gouvernance** — aucun cadre ne garantit que l'IA reste un
+  outil d'aide et non une autorité qui décide à la place de l'humain.
+
+**Quintessences résout ces quatre problèmes** avec une approche
+radicalement différente : un moteur d'intelligence **fondé sur une
+Constitution**, où chaque recommandation est sourcée, explicable et
+contournable.
+
+---
+
+## Ce qui différencie Quintessences
+
+| Critère | Concurrents (SilvIA, ForestNet, EcoAudit-AI…) | Quintessences |
+|---|---|---|
+| **Gouvernance** | Aucun cadre formel | Constitution de 10 articles + 3 sectorielles |
+| **Traçabilité** | Décisions non tracées | Chaque décision a un identifiant (DEC-xxx) et un historique |
+| **Explicabilité** | Boîte noire | Chaque recommandation cite ses sources et son raisonnement |
+| **Hors-ligne** | Supposent une connexion | Conçu pour le terrain isolé (offline-first) |
+| **Périmètre** | Un domaine (forêt OU feu OU carbone) | Multi-spécialisations (forêt + feu + futur climat/eau) |
+| **Architecture** | Monolithique | 14 moteurs indépendants, responsabilité unique |
+| **Méthodologie** | Ad hoc | Hiérarchie documentaire formelle (Vision → Code) |
+| **Rôle de l'IA** | Décide ou suggère | **Assiste, ne décide jamais** (GSIE-CON-001) |
+
+---
+
+## Architecture
 
 ```
 Quintessences (écosystème)
 └── GSIE (General System Intelligence Engine — moteur)
-    ├── GSIE Forestier → GeoSylva (app forestière)
-    ├── GSIE-FEU (spécialisation incendie)
-    └── [futures spécialisations : climat, eau, biodiversité, …]
+    │
+    ├── 14 moteurs communs (chaîne d'intelligence)
+    │   Evidence → Knowledge → Correlation → Reasoning
+    │   → Diagnostic → Recommendation → Validation → Utilisateur
+    │
+    ├── Moteurs domaine (alimentent le raisonnement)
+    │   GIS · Climate · Pedology · Botanical · Forest Dynamics
+    │
+    ├── Moteurs transverses
+    │   Learning (apprentissage encadré) · Simulation (scénarios)
+    │
+    └── Spécialisations (applications clientes)
+        ├── GeoSylva        — app forestière (diagnostics sylvicoles)
+        ├── GSIE-FEU        — spécialisation incendie (surveillance, propagation)
+        └── [futures]       — climat, eau, biodiversité…
 ```
-
----
-
-## GSIE — le moteur
-
-**GSIE** (General System Intelligence Engine) est le **moteur
-d'intelligence** au cœur de Quintessences. Il est **spécialisable par
-domaine** : chaque spécialisation étend les 14 moteurs communs avec des
-modules domaine-spécifiques.
-
-GSIE est conçu pour :
-
-- Réaliser des diagnostics environnementaux (stationnels, sylvicoles,
-  climatiques, de risque)
-- Corréler des centaines de paramètres écologiques, pédologiques,
-  climatiques et géographiques
-- Fournir des recommandations **explicables** et **contournables**
-- Fonctionner **entièrement hors ligne** (terrain, zones isolées)
-- Servir de base à plusieurs spécialisations et interfaces
-
-L'IA **assiste** le décideur (forestier, COS, gestionnaire). Elle ne
-décide **jamais** à sa place.
 
 ---
 
 ## Spécialisations
 
-### GeoSylva — app forestière
+### GeoSylva — application forestière
 
-**GeoSylva** est la **première spécialisation** de Quintessences. C'est
-l'application forestière du **GSIE Forestier**. Elle couvre :
-
-- Diagnostics stationnels et sylvicoles
-- Analyse des sols et interprétation de la flore
-- Recommandations de gestion adaptées au terrain
-- Interfaces terrain (mobile), bureau (desktop) et web
-
-GeoSylva garde son nom historique — c'est l'origine du projet, maintenant
-intégrée dans l'écosystème plus large.
+La première spécialisation de Quintessences. Diagnostics stationnels,
+analyse des sols, interprétation de la flore, recommandations de gestion
+adaptées au terrain.
 
 | Interface | Rôle |
 |---|---|
-| **GeoSylva Mobile** | Client Android terrain |
-| **GeoSylva Desktop** | Poste fixe d'analyse |
-| **GeoSylva Web** | Interface en ligne |
-| **API GSIE** | Intégration dans des workflows tiers |
-| **SDK** | Bibliothèques clientes (Kotlin, Python, TypeScript) |
-| **Plugins** | Intégrations SIG tiers (QGIS, ArcGIS) |
+| GeoSylva Mobile | Client Android terrain (offline) |
+| GeoSylva Desktop | Poste fixe d'analyse |
+| GeoSylva Web | Interface en ligne |
+| API GSIE | Intégration dans des workflows tiers |
+| SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
+| Plugins SIG | Intégrations QGIS, ArcGIS |
 
 ### GSIE-FEU — spécialisation incendie
 
-**GSIE-FEU** est la spécialisation incendie de Quintessences. Système
-d'aide à la décision pour la surveillance et l'analyse des feux de
-forêt, positionné comme **application cliente** de GSIE (RFC-0004,
-ADOPTÉ). Voir `22_PROJECT_MEMORY/GSIE-FEU.md` pour le registre d'idées.
+Système d'aide à la décision pour la surveillance et l'analyse des feux
+de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
+données temps réel par drone, détection par vision embarquée. Positionné
+comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
+
+**Garde-fous non négociables** : outil d'aide à la décision du COS/CODIS,
+jamais un système de commandement. Aucune alerte directe à la population
+(prérogative régale FR-Alert). La sortie « cause probable » reste une
+hypothèse exploratoire, jamais une conclusion.
 
 ### Futures spécialisations
 
 L'architecture modulaire de GSIE permet d'étendre Quintessences à
-d'autres domaines environnementaux : climat, eau, biodiversité, sols,
-etc. Chaque nouvelle spécialisation fera l'objet d'un RFC dédié.
+d'autres domaines : climat, eau, biodiversité, sols. Chaque nouvelle
+spécialisation fait l'objet d'un RFC dédié.
+
+---
+
+## Les 14 moteurs GSIE
+
+Chaque moteur a une **responsabilité unique**. Aucun moteur ne connaît
+les détails internes d'un autre. Cette modularité garantit la
+maintenabilité, la testabilité et l'extensibilité.
+
+### Chaîne d'intelligence (7 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| Evidence Engine | Évalue la preuve scientifique en amont |
+| Knowledge Engine | Centralise les connaissances qualifiées |
+| Correlation Engine | Détecte les corrélations multiparamètres |
+| Reasoning Engine | Raisonne sur les connaissances et corrélations |
+| Diagnostic Engine | Produit les diagnostics (stationnels, sylvicoles, risque) |
+| Recommendation Engine | Génère des recommandations **contournables** |
+| Validation Engine | Valide les sorties avant présentation à l'utilisateur |
+
+### Moteurs domaine (5 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| GIS Engine | Données géospatiales (MNT, parcels, infra) |
+| Climate Engine | Données climatiques et bioclimatiques |
+| Pedology Engine | Données pédologiques (sols, texture, drainage) |
+| Botanical Engine | Flore, taxonomie, autécologie |
+| Forest Dynamics Engine | Dynamique des peuplements, croissance, mortalité |
+
+### Moteurs transverses (2 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| Learning Engine | Apprentissage encadré (retours terrain, feedback) |
+| Simulation Engine | Simulation de scénarios (interventions, évolutions) |
+
+---
+
+## Gouvernance
+
+Quintessences est gouverné par une **Constitution** — un ensemble de
+principes intangibles qui s'imposent à tout le projet, y compris au
+Fondateur. Aucun autre projet d'IA environnementale n'a ce niveau de
+garde-fou formel.
+
+### Les 10 articles constitutionnels
+
+| Article | Principe |
+|---|---|
+| CON-000 | La Constitution prime sur tout (Locked) |
+| CON-001 | Le forestier reste le décideur — l'IA assiste, ne décide jamais |
+| CON-002 | La science avant tout |
+| CON-003 | La Connaissance avant le Code |
+| CON-004 | Toute décision doit être explicable |
+| CON-005 | Toute connaissance doit être traçable |
+| CON-006 | La Documentation fait partie du Produit |
+| CON-007 | La Modularité est obligatoire |
+| CON-008 | Le Projet appartient à sa Vision |
+| CON-009 | GSIE est un patrimoine scientifique vivant |
+| CON-010 | Toute connaissance doit pouvoir évoluer sans perdre son historique |
+
+### Hiérarchie documentaire
+
+Le code est toujours le **dernier niveau**. Aucun niveau ne contredit
+un niveau supérieur.
+
+```
+Vision → Constitution → RFC → Directive → Décision
+→ Architecture → Spécification → Implémentation → Code
+```
+
+### Traçabilité
+
+Chaque décision structurante reçoit un identifiant (`DEC-xxxxxx`) et est
+archivée dans `03_DECISIONS/`. Les propositions d'évolution passent par
+des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
+
+| Decision | Sujet |
+|---|---|
+| DEC-000001 | GSIE est une fondation scientifique |
+| DEC-000002 | Phase 1 : aucun développement métier |
+| DEC-000003 | Adoption RFC-0004 : branche fonctionnelle GSIE-FEU |
+| DEC-000004 | Entrée en Phase 2 : Architecture |
+| DEC-000005 | Archivage du code du banc GSIE-FEU (Jalon 0) |
+| DEC-000006 | Restructuration identité : Quintessences > GSIE > GeoSylva |
 
 ---
 
@@ -104,19 +222,21 @@ etc. Chaque nouvelle spécialisation fera l'objet d'un RFC dédié.
 
 ---
 
-## Méthodologie documentaire
+## Roadmap
 
-Toute documentation Quintessences / GSIE suit la hiérarchie suivante. Le
-code est toujours le **dernier niveau**.
+| Phase | Statut | Description |
+|---|---|---|
+| **Phase 1 — Foundation** | Clôturée | Constitution, 14 moteurs documentés, gouvernance, mémoire |
+| **Phase 2 — Architecture** | **Active** | Contrats d'interface, schémas de données, RFC d'architecture |
+| Phase 3 — Specification | À venir | Spécifications techniques détaillées par moteur |
+| Phase 4 — Implementation | À venir | Code métier des moteurs |
+| Phase 5 — Applications | À venir | GeoSylva, GSIE-FEU et interfaces |
 
-```
-Vision → Constitution → RFC → Directive → Decision
-→ Architecture → Specification → Implementation → Code
-```
+Voir `ROADMAP.md` pour le détail des livrables.
 
 ---
 
-## Organisation du projet
+## Organisation du dépôt
 
 ```
 Quintessences/
@@ -137,126 +257,54 @@ Quintessences/
 ├── 14_SDK/                 Bibliothèques clientes
 ├── 15_TESTS/               Tests unitaires, intégration et non-régression
 ├── 16_TOOLS/               Utilitaires et chaînes de construction
-├── 17_DOCUMENTATION/       Documentation officielle
+├── 17_DOCUMENTATION/       Documentation officielle et guides contributeurs
 ├── 18_FINANCING/           Modèle économique et traçabilité financière
 ├── 19_LEGAL/               Licences, conformité, propriété intellectuelle
 ├── 20_PARTNERSHIPS/        Partenariats scientifiques et institutionnels
 ├── 21_EXPERIMENTS/         Prototypes et recherches exploratoires
 ├── 22_PROJECT_MEMORY/      Mémoire du projet (décisions, visions, idées)
-└── 23_QUALITY_MANAGEMENT/  Qualité : manuel, politique, KPI, audits
+└── 23_QUALITY_MANAGEMENT/  Qualité : manuel, politique, KPI, audits, revues
 ```
 
-Chaque dossier possède un README expliquant son objectif, ses
-responsabilités, ce qui peut y être ajouté, ce qui est interdit, et ses
-liens avec les autres dossiers.
+Chaque dossier possède un `README.md` expliquant son objectif, ses
+responsabilités, ce qui peut y être ajouté, ce qui est interdit.
 
 ---
 
-## État du projet
+## Contribuer
 
-**Phase 2 : Architecture.** La Phase 1 (Foundation) est clôturée — les
-12 livrables sont Validated (9/12) ou Locked (3/12).
+Quintessences est un projet à gouvernance constitutionnelle. Toute
+contribution respecte la hiérarchie documentaire et la Constitution.
 
-La Constitution est en place : 11 articles (CON-000 à CON-010), deux
-préambules verrouillés (FND-001, FND-002), trois constitutions
-sectorielles (scientifique, technique, IA). Les 14 moteurs GSIE sont
-documentés dans `09_ENGINES/`. L'architecture est en cours de
-consolidation.
+1. **Lire la Constitution** (`00_CONSTITUTION/`) avant toute proposition.
+2. **Ouvrir un RFC** (`02_RFC/`) pour toute évolution structurante.
+3. **Sourcer** toute affirmation scientifique (`06_RESEARCH/`,
+   `08_DATASETS/`).
+4. **Tracer** toute décision (`03_DECISIONS/`).
+5. **Rédiger en français** — documentation, commentaires, commits.
 
----
-
-## Moteurs GSIE
-
-GSIE est composé de **14 moteurs indépendants**, chacun ayant une
-responsabilité unique. La chaîne principale est :
-
-```
-Evidence Engine → Knowledge Engine → Correlation Engine
-→ Reasoning Engine → Diagnostic Engine → Recommendation Engine
-→ Validation Engine → Utilisateur
-```
-
-Les moteurs spécialisés (GIS, Climate, Pedology, Botanical, Forest
-Dynamics) alimentent les moteurs de raisonnement en données
-domaine-spécifiques. Les moteurs Learning et Simulation enrichissent et
-projettent.
-
-| Moteur | Rôle | Dossier |
-|---|---|---|
-| Evidence Engine | Évaluation de la preuve scientifique | `09_ENGINES/EVIDENCE_ENGINE/` |
-| Knowledge Engine | Centralisation des connaissances qualifiées | `09_ENGINES/KNOWLEDGE_ENGINE/` |
-| Correlation Engine | Corrélations multiparamètres | `09_ENGINES/CORRELATION_ENGINE/` |
-| Reasoning Engine | Raisonnement sur les connaissances | `09_ENGINES/REASONING_ENGINE/` |
-| Diagnostic Engine | Diagnostics stationnels et sylvicoles | `09_ENGINES/DIAGNOSTIC_ENGINE/` |
-| Recommendation Engine | Recommandations contournables | `09_ENGINES/RECOMMENDATION_ENGINE/` |
-| Validation Engine | Validation des sorties avant présentation | `09_ENGINES/VALIDATION_ENGINE/` |
-| GIS Engine | Données géospatiales | `09_ENGINES/GIS_ENGINE/` |
-| Climate Engine | Données climatiques et bioclimatiques | `09_ENGINES/CLIMATE_ENGINE/` |
-| Pedology Engine | Données pédologiques | `09_ENGINES/PEDOLOGY_ENGINE/` |
-| Botanical Engine | Flore, taxonomie, autécologie | `09_ENGINES/BOTANICAL_ENGINE/` |
-| Forest Dynamics Engine | Dynamique des peuplements | `09_ENGINES/FOREST_DYNAMICS_ENGINE/` |
-| Learning Engine | Apprentissage encadré | `09_ENGINES/LEARNING_ENGINE/` |
-| Simulation Engine | Simulation de scénarios | `09_ENGINES/SIMULATION_ENGINE/` |
-
----
-
-## Bases spécialisées
-
-GSIE ne repose pas sur une seule base. Les 9 bases spécialisées sont :
-
-| Base | Rôle |
-|---|---|
-| Knowledge Graph | Graphe de connaissances structurées |
-| Scientific Database | Données scientifiques sourcées |
-| Spatial Database | Données géospatiales |
-| Ontology | Ontologies et taxonomies |
-| Document Repository | Documents et publications |
-| Evidence Repository | Preuves et niveaux de preuve |
-| Climate Repository | Données climatiques |
-| Species Repository | Espèces et caractéristiques |
-| Station Repository | Stations forestières |
-
----
-
-## Gouvernance et traçabilité
-
-- **Constitution** (`00_CONSTITUTION/`) — principes intangibles
-- **Directives** (`01_DIRECTIVES/`) — décisions fondatrices versionnées
-- **RFC** (`02_RFC/`) — propositions d'évolution débattues
-- **Décisions** (`03_DECISIONS/`) — décisions tracées et validées
-- **Mémoire** (`22_PROJECT_MEMORY/`) — aucune décision perdue
-
-Les prompts de pilotage sont eux-mêmes versionnés :
-
-```
-GSIE-PROMPT-0001  →  Fondation du projet
-GSIE-PROMPT-0002  →  Constitution
-GSIE-PROMPT-0003  →  Architecture générale
-…
-```
-
----
-
-## Fichiers racine
-
-| Fichier | Rôle |
-|---|---|
-| `README.md` | Présentation de l'écosystème (ce fichier) |
-| `PROJECT_MEMORY.md` | Vue courante de l'état du projet |
-| `CHANGELOG.md` | Journal des évolutions |
-| `ROADMAP.md` | Feuille de route |
+Voir `17_DOCUMENTATION/CONTRIBUTING_GUIDE.md` pour le guide complet.
 
 ---
 
 ## Licence
 
-Licence propriétaire — **All Rights Reserved**. Voir `LICENSE`.
+**Licence propriétaire — All Rights Reserved.**
+
+Copyright (c) 2026 Camille Perraudeau — Quintessences / GSIE.
 
 Le code source est public pour transparence et évaluation. Toute
-utilisation commerciale nécessite une licence séparée. Contact :
-`fondateur@gsie.fr`.
+utilisation commerciale nécessite une licence séparée.
+
+Contact : `fondateur@gsie.fr`
+
+Voir `LICENSE` pour le texte complet.
 
 ---
 
-*Quintessences — la connaissance est le véritable produit. Le code n'est
-qu'un moyen.*
+<div align="center">
+
+*Quintessences — la connaissance est le véritable produit.*
+*Le code n'est qu'un moyen.*
+
+</div>
