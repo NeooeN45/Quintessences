@@ -1,8 +1,8 @@
-# AGENTS.md — Contexte maître GSIE-Feu
+# AGENTS.md — Contexte maître GSIE-Ignis
 ## À lire intégralement avant toute action. Ce fichier est ta constitution de session.
 
 > **Note de gouvernance GSIE (2026-07-12)** : ce document est le contexte maître
-> pour les sessions de code sur le banc de simulation GSIE-FEU (`~/gsie-feu/`
+> pour les sessions de code sur le banc de simulation GSIE-Ignis (`~/GSIE-Ignis/`
 > WSL2, séparé du dépôt GSIE). Il a été archivé ici pour traçabilité. Les
 > instructions de code qu'il contient s'appliquent **au banc de simulation
 > uniquement** et ne contournent pas la règle Phase 1 de GSIE : aucun code
@@ -16,11 +16,11 @@
 Tu travailles avec **Camille Perraudeau**, 19 ans, Ligugé (86, France) :
 - **Technicien forestier diplômé** (BTSA Gestion Forestière, École de Meymac, 31+ semaines terrain ONF dont DFCI). Il connaît le feu de forêt, la doctrine pompier, le terrain. Ne vulgarise pas le domaine forestier/DFCI — c'est LUI l'expert métier.
 - **Développeur autodidacte de niveau professionnel** : Python, TypeScript, Docker, FastAPI, Bash, SIG/géomatique (QGIS, MapLibre, Lambert 93), IA embarquée, architectures multi-agents. Il a déjà construit : GeoSylva (app Android Kotlin, 420+ tests, Clean Architecture), SylvIA (FastAPI + XGBoost + ChromaDB RAG), QGISIA2 (plugin QGIS multi-agents).
-- Il lance sa micro-entreprise de services numériques forestiers (août 2026). GSIE-Feu est la branche « incendies » — potentiellement la plus importante.
+- Il lance sa micro-entreprise de services numériques forestiers (août 2026). GSIE-Ignis est la branche « incendies » — potentiellement la plus importante.
 - **Sa manière de penser** : il fourmille d'idées, pense en systèmes et en connexions, va vite, valide vite quand c'est bien argumenté. Il attend de toi : des solutions concrètes et évolutives, du challenge argumenté (jamais de complaisance), de la rigueur scientifique sourcée, et que tu déroules les conséquences de ses idées.
 - **Sa manière d'écrire** : rapide, phonétique parfois, sans ponctuation — NE JAMAIS relever ses fautes, comprendre l'intention. Il écrit en français, tu réponds en français. Code, commentaires de code et noms de variables/commits en **anglais** (standard pro), documentation projet en **français**.
 
-## 2. LE PROJET : GSIE-FEU EN UNE PAGE
+## 2. LE PROJET : GSIE-Ignis EN UNE PAGE
 
 **Vision** : système de surveillance et d'analyse des incendies du territoire français — drones autonomes multicapteurs (RGB, thermique radiométrique, capteurs environnementaux) + jumeau numérique opérationnel du feu (moteur de propagation ForeFire recalé en temps réel par **assimilation de données** issues des drones) + analyse d'enjeux (bâtiments menacés + délais) → **outil d'aide à la décision pour les COS/CODIS** (pompiers). Jamais d'alerte directe à la population (régalien, FR-Alert).
 
@@ -37,16 +37,16 @@ Tu travailles avec **Camille Perraudeau**, 19 ans, Ligugé (86, France) :
 6. GCS-Lite : carte MapLibre GL temps réel (WebSocket)
 
 **Documents joints à lire dans l'ordre** :
-1. `GSIE-Feu_registre_idees.md` (v0.7.2, 110 entrées) — la base de connaissance complète : idées par module avec IDs (P-xx perception, J-xx jumeau, V-xx vol, C-xx comms, G-xx interface, D-xx données, S-xx stratégie, M-xx modèles IA, K-xx concurrence). Référence les IDs dans tes commits et discussions.
-2. `GSIE-Feu_Phase0_comparatif_moteurs_simulation.md` — les décisions techniques prises et POURQUOI (ForeFire, PX4, Gazebo Gz, MAVSDK). Ne les rediscute pas sans raison nouvelle.
-3. `GSIE-Feu_guide_installation_banc.md` — l'environnement cible exact sur cette machine.
+1. `GSIE-Ignis_registre_idees.md` (v0.7.2, 110 entrées) — la base de connaissance complète : idées par module avec IDs (P-xx perception, J-xx jumeau, V-xx vol, C-xx comms, G-xx interface, D-xx données, S-xx stratégie, M-xx modèles IA, K-xx concurrence). Référence les IDs dans tes commits et discussions.
+2. `GSIE-Ignis_Phase0_comparatif_moteurs_simulation.md` — les décisions techniques prises et POURQUOI (ForeFire, PX4, Gazebo Gz, MAVSDK). Ne les rediscute pas sans raison nouvelle.
+3. `GSIE-Ignis_guide_installation_banc.md` — l'environnement cible exact sur cette machine.
 
 ## 3. LA MACHINE SUR LAQUELLE TU TRAVAILLES
 
 - HP laptop : i5-11300H (**4 cœurs/8 threads** — compile en `-j4`, pas plus), 32 Go RAM, RTX 3050 4 Go (CUDA dispo dans WSL2, mais rendu WSLg = iGPU), Windows 11 + **WSL2 Ubuntu 24.04 déplacé sur E:** (C: presque plein : ne rien installer de lourd sur C:).
 - WSL plafonné : 20 Go RAM / 6 threads (`.wslconfig`).
 - Gazebo : privilégier `HEADLESS=1` (performances + reproductibilité).
-- Le projet vit dans `~/gsie-feu/` (arborescence : forefire/, PX4-Autopilot/, data/, scripts/, assimilation/, gcs-lite/, notes/).
+- Le projet vit dans `~/GSIE-Ignis/` (arborescence : forefire/, PX4-Autopilot/, data/, scripts/, assimilation/, gcs-lite/, notes/).
 - Un seul drone simulé confortable sur cette machine ; le multi-drones attendra la future station de Camille.
 
 ## 4. RÈGLES D'ARCHITECTURE (NON NÉGOCIABLES)
@@ -60,7 +60,7 @@ Tu travailles avec **Camille Perraudeau**, 19 ans, Ligugé (86, France) :
 
 ## 5. CONVENTIONS DE CODE
 
-- **Python 3.12**, venv du projet (`~/gsie-feu/.venv`). Typage systématique (`mypy` strict sur les nouveaux modules), `ruff` pour lint/format, `pytest` pour les tests.
+- **Python 3.12**, venv du projet (`~/GSIE-Ignis/.venv`). Typage systématique (`mypy` strict sur les nouveaux modules), `ruff` pour lint/format, `pytest` pour les tests.
 - Style : fonctions courtes, dataclasses/pydantic pour les structures, `asyncio` pour tout ce qui touche MAVSDK/WebSocket, logging structuré (module `logging`, jamais de `print` en module).
 - **Tests d'abord sur la brique assimilation** : c'est le cœur scientifique, il se valide par tests reproductibles (seeds fixés) et métriques (écart au front vérité en mètres). Camille vient d'un projet à 420+ tests — le niveau d'exigence est celui-là.
 - Géospatial : tout en **EPSG:2154 (Lambert 93)** en interne, WGS84 uniquement aux interfaces (MAVLink, GeoJSON export). Utiliser pyproj/GeoPandas/shapely.
@@ -88,7 +88,7 @@ Camille dispose sur ce PC de configurations et skills (dont un pack Claude Code 
 
 1. Lire ce fichier + les 3 documents joints (dans l'ordre indiqué).
 2. Inventorier tes outils/skills réels.
-3. Vérifier l'état du banc : `wsl -l -v` côté Windows ; dans WSL : venv actif, `forefire` dans le PATH, état de `~/gsie-feu/`.
+3. Vérifier l'état du banc : `wsl -l -v` côté Windows ; dans WSL : venv actif, `forefire` dans le PATH, état de `~/GSIE-Ignis/`.
 4. Lire `notes/journal.md` s'il existe (mémoire des sessions précédentes).
 5. Annoncer en 5 lignes max : état constaté, prochain jalon du §2, plan proposé pour la session.
 6. Attendre le GO de Camille, puis exécuter par petits pas vérifiables.

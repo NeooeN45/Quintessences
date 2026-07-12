@@ -73,7 +73,7 @@ structure de fonction) qui relèvent du standard de code.
 
 ## Exemples de décisions guidées par la philosophie
 
-- **ForeFire en processus séparé** (GSIE-FEU) : la frontière GPL est un
+- **ForeFire en processus séparé** (GSIE-Ignis) : la frontière GPL est un
   choix de pérennité (principe 6) et de modularité (principe 4). Un
   couplage direct aurait été plus rapide mais aurait compromis la
   liberté commerciale à long terme.

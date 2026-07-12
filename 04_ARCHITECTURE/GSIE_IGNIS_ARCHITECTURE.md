@@ -1,4 +1,4 @@
-# Architecture GSIE-FEU — Système d'aide à la décision pour la surveillance et l'analyse des incendies de forêt
+# Architecture GSIE-Ignis — Système d'aide à la décision pour la surveillance et l'analyse des incendies de forêt
 
 | Champ | Valeur |
 |---|---|
@@ -9,23 +9,23 @@
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
 | **Décisions liées** | DEC-000003 (adoption RFC-0004 + garde-fous), DEC-000005 (archive banc) |
-| **Documents connexes** | `GSIE_FEU_DATA_PIPELINE.md`, `GSIE_FEU_DRONE_ARCHITECTURE.md`, `22_PROJECT_MEMORY/GSIE-FEU.md` (registre d'idées), `22_PROJECT_MEMORY/GSIE-FEU/Phase0_comparatif_moteurs_simulation.md` |
+| **Documents connexes** | `GSIE_IGNIS_DATA_PIPELINE.md`, `GSIE_IGNIS_DRONE_ARCHITECTURE.md`, `22_PROJECT_MEMORY/GSIE-Ignis.md` (registre d'idées), `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md` |
 
 ---
 
 ## 1. Objet et périmètre
 
-Ce document décrit l'architecture du système cible GSIE-FEU : un système
+Ce document décrit l'architecture du système cible GSIE-Ignis : un système
 d'aide à la décision pour la surveillance, la détection précoce, la
 caractérisation et l'analyse opérationnelle des incendies de forêt, destiné
 au COS (Commandant des Opérations de Secours) et au CODIS.
 
-GSIE-FEU est une **application cliente** de l'écosystème GSIE — ce n'est ni
+GSIE-Ignis est une **application cliente** de l'écosystème GSIE — ce n'est ni
 un 15ᵉ moteur central, ni un système de commandement (DEC-000003,
 RFC-0004 §4, Option C hybride).
 
 L'architecture décrite ici est celle du **système opérationnel cible**. Le
-banc de simulation actuel (`~/gsie-feu/` WSL2, Jalon 0–2) en est une
+banc de simulation actuel (`~/GSIE-Ignis/` WSL2, Jalon 0–2) en est une
 sous-tranche de validation, pas l'inverse.
 
 ---
@@ -45,7 +45,7 @@ sous-tranche de validation, pas l'inverse.
 └──────────────────────────┬──────────────────────────────────────┘
                            │ API GSIE (interfaces documentées)
 ┌──────────────────────────┴──────────────────────────────────────┐
-│ GSIE-FEU — Application cliente dédiée risque incendie           │
+│ GSIE-Ignis — Application cliente dédiée risque incendie           │
 │                                                                 │
 │  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌───────────────┐  │
 │  │  Drone   │  │  Jumeau   │  │ Analyse  │  │   GCS-Lite    │  │
@@ -133,7 +133,7 @@ Home).
 **Nature** : open source, licence BSD (permissive — cohérent avec un
 produit commercial). Dépôt : `github.com/PX4/PX4-Autopilot`.
 
-**Intégration** : PX4 gère le vol de bas niveau. GSIE-FEU ne réinvente
+**Intégration** : PX4 gère le vol de bas niveau. GSIE-Ignis ne réinvente
 jamais l'autopilote (V-01). La couche mission (MAVSDK) est isolée de la
 couche autopilote — portabilité ArduPilot préservée (ADR à écrire).
 
@@ -160,7 +160,7 @@ Gazebo : il vit dans le GCS-Cinéma (Unreal/Cesium), découplage sain.
 
 ### 3.4 MAVSDK — API de mission
 
-**Rôle** : interface haut niveau entre GSIE-FEU et PX4 — définition de
+**Rôle** : interface haut niveau entre GSIE-Ignis et PX4 — définition de
 missions, télémétrie, contrôle de vol, via le protocole MAVLink.
 
 **Nature** : bibliothèque multi-langages (Python, Go, Swift, C++). API
@@ -195,7 +195,7 @@ certitude (J-04).
 
 ## 4. Pipeline de données — vue synthétique
 
-Le pipeline détaillé fait l'objet de `GSIE_FEU_DATA_PIPELINE.md`. Vue
+Le pipeline détaillé fait l'objet de `GSIE_IGNIS_DATA_PIPELINE.md`. Vue
 synthétique :
 
 ```
@@ -214,7 +214,7 @@ Présentation COS (carte 3D, enjeux menacés, délais, incertitude)
 
 **Boucle d'assimilation** (J-03, cœur du projet) : prédiction → observation
 drone → recalage (~5 min). Filtre de Kalman d'ensemble ou filtre
-particulaire. C'est la brique différenciante de GSIE-FEU.
+particulaire. C'est la brique différenciante de GSIE-Ignis.
 
 **Vecteur de feu multi-estimateurs** (J-04) : (1) géométrie du front
 thermique entre passages drone, (2) inclinaison panache + vent, (3)
@@ -224,7 +224,7 @@ prédiction ForeFire → fusion pondérée par incertitudes.
 
 ## 5. Intégration avec les 14 moteurs GSIE
 
-GSIE-FEU est une application cliente : elle **sollicite** les moteurs GSIE
+GSIE-Ignis est une application cliente : elle **sollicite** les moteurs GSIE
 via leurs interfaces documentées. Elle n'en réimplémente aucun. L'approche
 hybride (RFC-0004 Option C, actée par DEC-000003) prévoit des extensions
 ciblées de certains moteurs, et réserve la question d'un moteur dédié à la
@@ -232,10 +232,10 @@ dynamique du feu à un second RFC après preuve de concept.
 
 ### 5.1 Moteurs sollicités et modalités d'intégration
 
-| Moteur GSIE | Rôle dans GSIE-FEU | Modalité | Idées liées |
+| Moteur GSIE | Rôle dans GSIE-Ignis | Modalité | Idées liées |
 |---|---|---|---|
 | **Evidence Engine** | Évaluation de la preuve des détections drone, satellitaires et capteurs sol. Attribution d'un niveau de preuve à chaque observation avant intégration. | Consommation directe : chaque détection est soumise à l'Evidence Engine qui attribue un niveau de confiance. | P-01, P-03, J-08 |
-| **Knowledge Engine** | Intégration des connaissances qualifiées (combustible, topographie, météo, enjeux) dans le graphe de connaissances. Base de doctrine DFCI, RETEX historiques. | Consommation + alimentation : GSIE-FEU nourrit le graphe avec les observations terrain et la « boîte noire » du front (J-10). | J-10, D-04, M-21 |
+| **Knowledge Engine** | Intégration des connaissances qualifiées (combustible, topographie, météo, enjeux) dans le graphe de connaissances. Base de doctrine DFCI, RETEX historiques. | Consommation + alimentation : GSIE-Ignis nourrit le graphe avec les observations terrain et la « boîte noire » du front (J-10). | J-10, D-04, M-21 |
 | **Correlation Engine** | Croisement des observations multi-sources (drone × satellite × sol × météo) pour corroboration. Détection des divergences. | Consommation : fusion multi-estimateurs (J-04) s'appuie sur la corrélation des sources. | J-04, J-08, D-06 |
 | **Reasoning Engine** | Inférence sur l'état du feu, les causes probables (hypothèse, jamais conclusion), les scénarios de propagation. | Consommation : le raisonnement sur la cause probable est une **hypothèse exploratoire** (garde-fou DEC-000003). | P-04, J-11 |
 | **Diagnostic Engine** | Diagnostic de l'état du feu : intensité, régime de combustion, comportement (flamboyant/couvant), sautes probables. | Consommation : le diagnostic alimente la présentation COS. | P-03, P-07, J-11 |
@@ -339,7 +339,7 @@ documentation seule.*
 
 ### 7.1 Outil d'aide à la décision, jamais commandement
 
-> GSIE-FEU est un **outil d'aide à la décision** du COS / CODIS, jamais
+> GSIE-Ignis est un **outil d'aide à la décision** du COS / CODIS, jamais
 > un système de commandement (GSIE-CON-001, DEC-000003).
 
 **Implications architecturales** :
@@ -423,8 +423,8 @@ documentation seule.*
 
 ## 9. Jalons d'architecture
 
-Les jalons GSIE-FEU s'inscrivent dans les phases GSIE globales (voir
-`22_PROJECT_MEMORY/GSIE-FEU.md` §10) :
+Les jalons GSIE-Ignis s'inscrivent dans les phases GSIE globales (voir
+`22_PROJECT_MEMORY/GSIE-Ignis.md` §10) :
 
 | Jalon | Contenu architectural | Phase GSIE |
 |---|---|---|
@@ -514,16 +514,16 @@ Les jalons GSIE-FEU s'inscrivent dans les phases GSIE globales (voir
 ### 13.3 Documents de gouvernance
 
 - `00_CONSTITUTION/` — Constitution GSIE (prime sur tout)
-- `02_RFC/RFC-0004.md` — RFC GSIE-FEU (ADOPTÉ)
+- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ)
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004 + garde-fous
 - `03_DECISIONS/DEC-000005.md` — Archive du banc
-- `22_PROJECT_MEMORY/GSIE-FEU.md` — Registre d'idées (60+ idées, 9
+- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (60+ idées, 9
   sections)
-- `22_PROJECT_MEMORY/GSIE-FEU/Phase0_comparatif_moteurs_simulation.md`
+- `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`
   — Comparatif sourcé Phase 0
-- `22_PROJECT_MEMORY/GSIE-FEU/guide_installation_banc.md` — Guide
+- `22_PROJECT_MEMORY/GSIE-Ignis/guide_installation_banc.md` — Guide
   d'installation
-- `22_PROJECT_MEMORY/GSIE-FEU/journal.md` — Journal de bord
+- `22_PROJECT_MEMORY/GSIE-Ignis/journal.md` — Journal de bord
 
 ---
 
@@ -544,6 +544,6 @@ Les jalons GSIE-FEU s'inscrivent dans les phases GSIE globales (voir
 
 ---
 
-> **Rappel final** : GSIE-FEU est un outil d'aide à la décision. Le COS
+> **Rappel final** : GSIE-Ignis est un outil d'aide à la décision. Le COS
 > reste le décideur. L'architecture sert cette posture, elle ne la
 > contourne pas.

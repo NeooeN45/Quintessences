@@ -1,8 +1,8 @@
-"""GSIE-FEU — Visualisation des contours de front ForeFire.
+"""GSIE-Ignis — Visualisation des contours de front ForeFire.
 
 Usage:
-    cd ~/gsie-feu/forefire/examples/aullene
-    python ~/gsie-feu/scripts/plot_front.py
+    cd ~/GSIE-Ignis/forefire/examples/aullene
+    python ~/GSIE-Ignis/scripts/plot_front.py
 
 Lit les fichiers GeoJSON/JSON de contours produits par ForeFire et
 génère une image propagation.png avec les contours successifs.

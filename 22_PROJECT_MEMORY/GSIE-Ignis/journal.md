@@ -1,4 +1,4 @@
-# Journal de bord — GSIE-FEU
+# Journal de bord — GSIE-Ignis
 
 ## 2026-07-12 — Session 1 : démarrage du banc
 
@@ -7,12 +7,12 @@
 - WSL2 Ubuntu 24.04 vérifié : Python 3.12.3, 8 threads, 15 Go RAM, 948 Go dispo
 - `.wslconfig` créé (20GB RAM, 6 CPU, 8GB swap)
 - Socle logiciel installé : cmake 3.28.3, GCC 13.3, NetCDF 4.9.2, Make 4.3
-- Structure `~/gsie-feu/` créée (forefire/, PX4-Autopilot/, data/, scripts/,
+- Structure `~/GSIE-Ignis/` créée (forefire/, PX4-Autopilot/, data/, scripts/,
   assimilation/, gcs-lite/, notes/)
 - Venv Python 3.12 créé + pip 26.1.2
 - ForeFire cloné et **compilé avec succès** (-j4, ~2 min)
 - Premier feu simulé : `forefire -i tests/runff/run.ff` → GeoJSON produit
-- `propagation.png` généré (première image du projet GSIE-FEU)
+- `propagation.png` généré (première image du projet GSIE-Ignis)
 - Scripts `plot_front.py` et `premier_vol.py` déployés
 - `.bashrc` configuré (PATH forefire + activation venv)
 - PX4-Autopilot cloné (--recursive), setup ubuntu.sh en cours
@@ -31,4 +31,4 @@
 - Premier vol drone : `HEADLESS=1 make px4_sitl gz_x500`
 - Script `premier_vol.py` (MAVSDK) : armement → décollage → télémétrie →
   atterrissage
-- git init sur ~/gsie-feu/ (scripts/, assimilation/, gcs-lite/, notes/)
+- git init sur ~/GSIE-Ignis/ (scripts/, assimilation/, gcs-lite/, notes/)

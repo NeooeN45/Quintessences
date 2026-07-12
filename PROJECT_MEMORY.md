@@ -14,7 +14,7 @@
 
 **Quintessences** est un écosystème d'applications environnementales
 fondé sur le moteur **GSIE** (General System Intelligence Engine).
-Spécialisations : GeoSylva (forêt), GSIE-FEU (incendie), futures à venir.
+Spécialisations : GeoSylva (forêt), GSIE-Ignis (incendie), futures à venir.
 
 Le projet est en **Phase 2 : Architecture**, lancée officiellement par
 **DEC-000004** le 2026-07-12. La Phase 1 (Foundation) est **clôturée** —
@@ -22,7 +22,7 @@ les 12 livrables sont Validated (9/12) ou Locked (3/12).
 
 La Phase 2 autorise l'architecture détaillée des moteurs, les
 spécifications techniques, les RFC d'architecture et le banc de
-simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
+simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
  reste interdit jusqu'en Phase 4.
 
 ### Avancement des livrables
@@ -62,12 +62,12 @@ simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
 - `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
 
-### Branche GSIE-FEU (RFC-0004)
+### Branche GSIE-Ignis (RFC-0004)
 
-- `22_PROJECT_MEMORY/GSIE-FEU.md` — Registre d'idées vivant (60+ idées, 9
+- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées vivant (60+ idées, 9
   sections : perception, jumeau numérique, vol drone, communications, GCS,
   données, stratégie, modèles IA, veille concurrentielle). Version 0.7.x.
-- `22_PROJECT_MEMORY/GSIE-FEU/` — Livrables du Jalon 0 (comparatifs sourcés).
+- `22_PROJECT_MEMORY/GSIE-Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
 
 ### Moteurs amorcés (14/14 — profondeur à qualifier)
 
@@ -94,11 +94,11 @@ simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé — 2026-07-07) :
   capture la vision fondateur sur l'architecture offline-first, distribuée,
   multi-couches et orientée données. Activé en Phase 2.
-- **RFC-0004** — GSIE-FEU : Système autonome de surveillance et d'analyse
+- **RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse
   des incendies (**ADOPTÉ** — 2026-07-12, DEC-000003) : nouvelle branche
   fonctionnelle dédiée au risque incendie, positionnée comme application
-  cliente de GSIE. Registre d'idées dans `22_PROJECT_MEMORY/GSIE-FEU.md` ;
-  livrables Jalon 0 dans `22_PROJECT_MEMORY/GSIE-FEU/`. Aucun développement
+  cliente de GSIE. Registre d'idées dans `22_PROJECT_MEMORY/GSIE-Ignis.md` ;
+  livrables Jalon 0 dans `22_PROJECT_MEMORY/GSIE-Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
 
 ---
@@ -114,9 +114,9 @@ simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
 - **DIR-0003-D1** — La documentation devient le cœur du projet
 - **DIR-0003-D2** — 12 livrables obligatoires, produits dans l'ordre
 - **DIR-0003-D3** — Aucun développement métier avant validation des 12 livrables
-- **DEC-000003** — Adoption RFC-0004 : branche fonctionnelle GSIE-FEU (application cliente)
+- **DEC-000003** — Adoption RFC-0004 : branche fonctionnelle GSIE-Ignis (application cliente)
 - **DEC-000004** — Entrée en Phase 2 : Architecture (Phase 1 clôturée)
-- **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc GSIE-FEU (Jalon 0)
+- **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc GSIE-Ignis (Jalon 0)
 - **DEC-000006** — Restructuration identité : Quintessences (écosystème) > GSIE (moteur) > GeoSylva (app forestière)
 
 ## Documents structurants
@@ -127,7 +127,7 @@ simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
-- **RFC-0004** — Branche fonctionnelle GSIE-FEU (ADOPTÉ — DEC-000003)
+- **RFC-0004** — Branche fonctionnelle GSIE-Ignis (ADOPTÉ — DEC-000003)
 - **RFC-0005 à RFC-0010** — Réservés, non ouverts
 
 ## Documents fondateurs de la Constitution

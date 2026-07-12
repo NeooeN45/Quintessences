@@ -70,14 +70,14 @@ tracé) ; `ROADMAP.md` mis à jour (statuts livrables + RFC-0003 + prochaine
 
 ---
 
-## 2026-07-11 — Ouverture de RFC-0004 GSIE-FEU
-**Décisions** : ouverture de **RFC-0004** « GSIE-FEU : Système autonome de
+## 2026-07-11 — Ouverture de RFC-0004 GSIE-Ignis
+**Décisions** : ouverture de **RFC-0004** « GSIE-Ignis : Système autonome de
 surveillance et d'analyse des incendies » — nouvelle branche fonctionnelle
 dédiée au risque incendie, positionnée comme application cliente des 14 moteurs
-GSIE. Création de `22_PROJECT_MEMORY/GSIE-FEU.md` : registre vivant des idées
-GSIE-FEU (60+ idées en 9 sections).
+GSIE. Création de `22_PROJECT_MEMORY/GSIE-Ignis.md` : registre vivant des idées
+GSIE-Ignis (60+ idées en 9 sections).
 **Motivations** : le risque incendie est un domaine d'application à fort impact
-pour GSIE. La proposition adopte une approche hybride — GSIE-FEU comme
+pour GSIE. La proposition adopte une approche hybride — GSIE-Ignis comme
 application, extensions ciblées des moteurs existants, moteur dédié éventuel
 réservé à un second RFC. Démonstrateur visé : incendie de Landiras (Gironde,
 2022), sans drone.
@@ -90,7 +90,7 @@ développement métier en Phase 1.
 ---
 
 ## 2026-07-12 — Adoption RFC-0004, validation 005-009 et articles CON-001 à 010
-**Décisions** : **RFC-0004 ADOPTÉ** — `DEC-000003` tracée (GSIE-FEU devient
+**Décisions** : **RFC-0004 ADOPTÉ** — `DEC-000003` tracée (GSIE-Ignis devient
 officiellement une branche fonctionnelle de GSIE, approche hybride Option C
 retenue). Livrables 005 à 009 passent de `Review` à **Validated** après audit et
 enrichissement par le Fondateur. Articles `GSIE-CON-001` à `GSIE-CON-010` mis en
@@ -101,11 +101,11 @@ conformes au template. Les articles constitutionnels 001 à 010 devaient suivre
 le même template (Références + Historique). L'adoption de RFC-0004 formalise
 l'engagement de GSIE sur le risque incendie.
 **Impact** : avancement Phase 1 — 7/12 Validated, 3/12 Locked, 2/12 Draft (010
-désormais Validated, reste 011 et 012). Corrections de gouvernance GSIE-FEU
+désormais Validated, reste 011 et 012). Corrections de gouvernance GSIE-Ignis
 appliquées (statut ✅ redéfini, phases renommées « Jalon 0-6 » pour éviter la
 collision avec les phases GSIE globales). Sous-dossier
-`22_PROJECT_MEMORY/GSIE-FEU/` créé pour les livrables du Jalon 0. Pack contexte
-agent archivé (le code du banc vit hors dépôt, dans `~/gsie-feu/` WSL2).
+`22_PROJECT_MEMORY/GSIE-Ignis/` créé pour les livrables du Jalon 0. Pack contexte
+agent archivé (le code du banc vit hors dépôt, dans `~/GSIE-Ignis/` WSL2).
 
 ---
 

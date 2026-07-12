@@ -32,7 +32,7 @@ contient et les contraint.
 
 GSIE est un **moteur d'intelligence environnementale** modulaire,
 traçable et explicable. Il n'est pas une application : les applications
-(GeoSylva, GSIE-FEU, futures spécialisations) sont des **clients** du
+(GeoSylva, GSIE-Ignis, futures spécialisations) sont des **clients** du
 moteur.
 
 Le système se décompose en trois axes :
@@ -42,7 +42,7 @@ Le système se décompose en trois axes :
 │                        ÉCOSYSTÈME QUINTESSENCES                  │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
-│  │  GeoSylva    │  │  GSIE-FEU    │  │  Futures spécialis.  │   │
+│  │  GeoSylva    │  │  GSIE-Ignis    │  │  Futures spécialis.  │   │
 │  │  (forêt)     │  │  (incendie)  │  │  (eau, biodiv., …)   │   │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘   │
 │         │                 │                     │               │
@@ -119,7 +119,7 @@ forks. Elles consomment les API du moteur et ajoutent une couche
 métier propre à leur domaine :
 
 - **GeoSylva** — application forestière (première spécialisation) ;
-- **GSIE-FEU** — surveillance et analyse des incendies (RFC-0004,
+- **GSIE-Ignis** — surveillance et analyse des incendies (RFC-0004,
   DEC-000003) ;
 - **Futures spécialisations** — eau, biodiversité, etc.
 
@@ -292,7 +292,7 @@ API. Elle ne contient aucune logique métier — elle affiche, capture
 et transmet.
 
 **Justification :** les interfaces changent plus vite que le moteur.
-GeoSylva mobile, GSIE-FEU desktop et une future API publique
+GeoSylva mobile, GSIE-Ignis desktop et une future API publique
 partagent le même moteur mais ont des présentations distinctes.
 
 ---

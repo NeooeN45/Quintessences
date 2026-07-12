@@ -10,7 +10,7 @@
 | **Constitutions liées** | Technique (T-1, T-2, T-8, T-10) |
 | **RFC de référence** | RFC-0003 (GSIE-Net) |
 | **Décision d'ouverture** | DEC-000004 |
-| **Source du choix de stack** | Journal GSIE-FEU, session 1 (2026-07-12) |
+| **Source du choix de stack** | Journal GSIE-Ignis, session 1 (2026-07-12) |
 
 ---
 
@@ -27,7 +27,7 @@ production. Ce document respecte cette règle : aucune dépendance
 flottante (`latest`, `*`) n'est admise.
 
 > **Note de gouvernance :** le choix de la stack a été acté dans le
-> journal de bord GSIE-FEU (session 1, 2026-07-12) par le Fondateur.
+> journal de bord GSIE-Ignis (session 1, 2026-07-12) par le Fondateur.
 > Ce document formalise ce choix sous forme d'ADR pour traçabilité
 > (CON-005) et explicabilité (CON-004). Il ne contredit aucune
 > décision antérieure.
@@ -81,7 +81,7 @@ flottante (`latest`, `*`) n'est admise.
 | **Statut** | Accepté |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | DEC-000004, journal GSIE-FEU session 1 |
+| **Décision liée** | DEC-000004, journal GSIE-Ignis session 1 |
 
 ### Contexte
 
@@ -153,7 +153,7 @@ pyo3 permet d'appeler les moteurs Rust depuis Python sans friction.
 
 | Dépendance | Version cible | Rôle | Justification |
 |---|---|---|---|
-| Python | 3.12.x | Runtime | Stabilité, correspond à l'environnement WSL2 validé (journal GSIE-FEU) |
+| Python | 3.12.x | Runtime | Stabilité, correspond à l'environnement WSL2 validé (journal GSIE-Ignis) |
 | pyo3 | 0.22.x | Bridge Rust ↔ Python | Liaison native entre le cœur IP Rust et l'orchestration Python |
 | FastAPI | 0.115.x | API REST | Documentation OpenAPI auto-générée, typage Pydantic, async natif |
 | Pydantic | 2.x | Validation des données | Validation des contrats d'interface au runtime, cohérent avec FastAPI |
@@ -176,7 +176,7 @@ pyo3 permet d'appeler les moteurs Rust depuis Python sans friction.
 | **Statut** | Accepté |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | DEC-000004, journal GSIE-FEU session 1 |
+| **Décision liée** | DEC-000004, journal GSIE-Ignis session 1 |
 
 ### Contexte
 
@@ -249,7 +249,7 @@ ARM, no_std). pyo3 fournit une interopérabilité Python mature et
 testée.
 
 Le C++ reste pertinent **uniquement** pour contribuer directement à
-des projets existants en C++ (ForeFire, PX4 — branche GSIE-FEU) ;
+des projets existants en C++ (ForeFire, PX4 — branche GSIE-Ignis) ;
 il n'est pas le langage du cœur IP GSIE.
 
 ### Conséquences
@@ -257,7 +257,7 @@ il n'est pas le langage du cœur IP GSIE.
 - **Positives :** sécurité mémoire garantie, performance, cœur IP
   embarquable, interopérabilité Python via pyo3.
 - **Négatives :** courbe d'apprentissage (le Fondateur apprend Rust
-  — journal GSIE-FEU), temps de compilation, écosystème scientifique
+  — journal GSIE-Ignis), temps de compilation, écosystème scientifique
   Rust plus jeune (compensé par Python pour l'accès aux données).
 - **Impact :** les moteurs critiques sont des crates Rust exposés
   comme modules Python via pyo3. L'orchestration Python les appelle
@@ -285,11 +285,11 @@ il n'est pas le langage du cœur IP GSIE.
 | **Statut** | Proposé (optionnel — activé si besoin temps réel) |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | DEC-000004, journal GSIE-FEU session 1 |
+| **Décision liée** | DEC-000004, journal GSIE-Ignis session 1 |
 
 ### Contexte
 
-GSIE-FEU (RFC-0004) introduit un besoin de **temps réel** : télémétrie
+GSIE-Ignis (RFC-0004) introduit un besoin de **temps réel** : télémétrie
 drone, streaming de données capteur, interface de contrôle (GCS-Lite).
 L'orchestration Python (FastAPI) est adaptée au REST classique mais
 moins optimale pour le streaming basse latence et la concurrence
@@ -297,7 +297,7 @@ massive (WebSockets, SSE, MAVLink).
 
 Contraintes :
 - le temps réel n'est pas un besoin du moteur GSIE principal
-  (GeoSylva) — c'est un besoin de la spécialisation GSIE-FEU ;
+  (GeoSylva) — c'est un besoin de la spécialisation GSIE-Ignis ;
 - l'API temps réel doit coexister avec l'API REST Python ;
 - le binaire doit être déployable sur des postes légers (GCS-Lite).
 
@@ -325,26 +325,26 @@ Contraintes :
 ### Décision
 
 **Go** pour l'API temps réel, **uniquement si le besoin temps réel
-est confirmé** (GSIE-FEU). Statut **Proposé** — non activé par
+est confirmé** (GSIE-Ignis). Statut **Proposé** — non activé par
 défaut pour GeoSylva.
 
 **Justification :** Go excelle sur un créneau précis — la concurrence
 massive à faible latence avec un déploiement trivial (binaire
 statique). L'écosystème MAVSDK/MAVLink est plus mature en Go qu'en
-Rust. Pour GSIE-FEU, la télémétrie drone et le GCS-Lite bénéficient
+Rust. Pour GSIE-Ignis, la télémétrie drone et le GCS-Lite bénéficient
 directement de ces propriétés. Pour GeoSylva (pas de temps réel),
 FastAPI Python suffit et Go n'est pas nécessaire.
 
 L'option Rust (axum) reste ouverte si l'écosystème MAVLink Rust
 mûrit ; la décision sera réévaluée lors de l'architecture détaillée
-de GSIE-FEU (livrable 210).
+de GSIE-Ignis (livrable 210).
 
 ### Conséquences
 
 - **Positives :** performance temps réel, déploiement simple,
   écosystème MAVLink.
 - **Négatives :** langage supplémentaire (complexité de la stack),
-  uniquement justifié par GSIE-FEU.
+  uniquement justifié par GSIE-Ignis.
 - **Impact :** Go est isolé dans la couche infrastructure (API
   temps réel). Il n'implémente aucun moteur — il transporte.
 
@@ -355,7 +355,7 @@ de GSIE-FEU (livrable 210).
 | Go | 1.22.x | Runtime | Stabilité, generics disponibles |
 | Fiber ou Chi | 2.x / 5.x | Router HTTP | Léger, performant, minimal |
 | gorilla/websocket | 1.5.x | WebSockets | Streaming temps réel (télémétrie) |
-| mavsdk-go | 1.x | SDK drone | Intégration PX4/MAVLink (GSIE-FEU) |
+| mavsdk-go | 1.x | SDK drone | Intégration PX4/MAVLink (GSIE-Ignis) |
 
 ---
 
@@ -367,7 +367,7 @@ de GSIE-FEU (livrable 210).
 | **Statut** | Accepté |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | DEC-000004, journal GSIE-FEU session 1 |
+| **Décision liée** | DEC-000004, journal GSIE-Ignis session 1 |
 
 ### Contexte
 
@@ -420,7 +420,7 @@ React (web). Partage de composants et de types via une bibliothèque
 commune.
 
 **Justification :** le facteur décisif est le **partage de code
-mobile/web**. Les interfaces GeoSylva et GSIE-FEU partagent des
+mobile/web**. Les interfaces GeoSylva et GSIE-Ignis partagent des
 composants (cartes, arbres, diagnostics) — les dupliquer en Kotlin
 + TypeScript violerait T-4. React Native permet un partage
 significatif tout en ciblant iOS et Android. Le typage TypeScript
@@ -462,7 +462,7 @@ intégrable en React Native. L'offline-first est supporté nativement
 | **Statut** | Remplacé (non retenu pour la production, veille recherche) |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | journal GSIE-FEU session 1 |
+| **Décision liée** | journal GSIE-Ignis session 1 |
 
 ### Contexte
 
@@ -509,12 +509,12 @@ l'objectif de longévité (CON-010).
 | **Statut** | Accepté (périmètre restreint) |
 | **Date** | 2026-07-12 |
 | **Auteur** | Fondateur GSIE |
-| **Décision liée** | journal GSIE-FEU session 1 |
+| **Décision liée** | journal GSIE-Ignis session 1 |
 
 ### Contexte
 
 ForeFire (simulateur de feu) et PX4 (autopilote drone) sont en C++.
-La branche GSIE-FEU (RFC-0004) doit interagir avec ces projets.
+La branche GSIE-Ignis (RFC-0004) doit interagir avec ces projets.
 
 ### Décision
 
@@ -533,7 +533,7 @@ GSIE reste en Rust.
   via FFI.
 - **Négatives :** C++ dans le périmètre (limité à l'interopérabilité).
 - **Impact :** aucun moteur GSIE en C++ ; uniquement des adapters
-  pour ForeFire/PX4 dans la branche GSIE-FEU.
+  pour ForeFire/PX4 dans la branche GSIE-Ignis.
 
 ---
 

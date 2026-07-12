@@ -1,9 +1,9 @@
-"""GSIE-FEU — Premier vol drone simulé (PX4 SITL + MAVSDK).
+"""GSIE-Ignis — Premier vol drone simulé (PX4 SITL + MAVSDK).
 
 Usage:
-    1. Terminal 1: cd ~/gsie-feu/PX4-Autopilot && HEADLESS=1 make px4_sitl gz_x500
-    2. Terminal 2: source ~/gsie-feu/.venv/bin/activate
-                   python ~/gsie-feu/scripts/premier_vol.py
+    1. Terminal 1: cd ~/GSIE-Ignis/PX4-Autopilot && HEADLESS=1 make px4_sitl gz_x500
+    2. Terminal 2: source ~/GSIE-Ignis/.venv/bin/activate
+                   python ~/GSIE-Ignis/scripts/premier_vol.py
 
 Le script arme le drone, décolle à 30m, lit la télémétrie et atterrit.
 """

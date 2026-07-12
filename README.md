@@ -77,7 +77,7 @@ Quintessences (écosystème)
     │
     └── Spécialisations (applications clientes)
         ├── GeoSylva        — app forestière (diagnostics sylvicoles)
-        ├── GSIE-FEU        — spécialisation incendie (surveillance, propagation)
+        ├── GSIE-Ignis        — spécialisation incendie (surveillance, propagation)
         └── [futures]       — climat, eau, biodiversité…
 ```
 
@@ -100,7 +100,7 @@ adaptées au terrain.
 | SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
 | Plugins SIG | Intégrations QGIS, ArcGIS |
 
-### GSIE-FEU — spécialisation incendie
+### GSIE-Ignis — spécialisation incendie
 
 Système d'aide à la décision pour la surveillance et l'analyse des feux
 de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
@@ -200,9 +200,9 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 |---|---|
 | DEC-000001 | GSIE est une fondation scientifique |
 | DEC-000002 | Phase 1 : aucun développement métier |
-| DEC-000003 | Adoption RFC-0004 : branche fonctionnelle GSIE-FEU |
+| DEC-000003 | Adoption RFC-0004 : branche fonctionnelle GSIE-Ignis |
 | DEC-000004 | Entrée en Phase 2 : Architecture |
-| DEC-000005 | Archivage du code du banc GSIE-FEU (Jalon 0) |
+| DEC-000005 | Archivage du code du banc GSIE-Ignis (Jalon 0) |
 | DEC-000006 | Restructuration identité : Quintessences > GSIE > GeoSylva |
 
 ---
@@ -230,7 +230,7 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | **Phase 2 — Architecture** | **Active** | Contrats d'interface, schémas de données, RFC d'architecture |
 | Phase 3 — Specification | À venir | Spécifications techniques détaillées par moteur |
 | Phase 4 — Implementation | À venir | Code métier des moteurs |
-| Phase 5 — Applications | À venir | GeoSylva, GSIE-FEU et interfaces |
+| Phase 5 — Applications | À venir | GeoSylva, GSIE-Ignis et interfaces |
 
 Voir `ROADMAP.md` pour le détail des livrables.
 
@@ -252,7 +252,7 @@ Quintessences/
 ├── 09_ENGINES/             14 moteurs GSIE (documentés, non implémentés)
 ├── 10_ALGORITHMS/          Procédures computationnelles formelles
 ├── 11_MODELS/              Modèles scientifiques et d'apprentissage
-├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, GSIE-FEU, …)
+├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, GSIE-Ignis, …)
 ├── 13_API/                 Contrats d'interface exposés
 ├── 14_SDK/                 Bibliothèques clientes
 ├── 15_TESTS/               Tests unitaires, intégration et non-régression

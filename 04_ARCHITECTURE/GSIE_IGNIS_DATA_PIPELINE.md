@@ -1,4 +1,4 @@
-# Pipeline de données GSIE-FEU — Flux temps réel, simulation et post-feu
+# Pipeline de données GSIE-Ignis — Flux temps réel, simulation et post-feu
 
 | Champ | Valeur |
 |---|---|
@@ -9,14 +9,14 @@
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
 | **Décisions liées** | DEC-000003 (garde-fous), DEC-000005 (archive banc) |
-| **Document parent** | `GSIE_FEU_ARCHITECTURE.md` |
-| **Document connexe** | `GSIE_FEU_DRONE_ARCHITECTURE.md` |
+| **Document parent** | `GSIE_IGNIS_ARCHITECTURE.md` |
+| **Document connexe** | `GSIE_IGNIS_DRONE_ARCHITECTURE.md` |
 
 ---
 
 ## 1. Objet
 
-Ce document décrit les flux de données du système GSIE-FEU à chaque étape
+Ce document décrit les flux de données du système GSIE-Ignis à chaque étape
 du cycle de vie d'un incendie : détection temps réel, simulation et
 recalage, validation post-feu et apprentissage continu.
 
@@ -554,15 +554,15 @@ connexion rétablit, recale rétroactivement, et met à jour la prédiction.
 
 ### 10.3 Documents de gouvernance
 
-- `02_RFC/RFC-0004.md` — RFC GSIE-FEU (ADOPTÉ)
+- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ)
 - `03_DECISIONS/DEC-000003.md` — Adoption + garde-fous
-- `22_PROJECT_MEMORY/GSIE-FEU.md` — Registre d'idées (sections 1, 2, 6)
-- `22_PROJECT_MEMORY/GSIE-FEU/Phase0_comparatif_moteurs_simulation.md`
+- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (sections 1, 2, 6)
+- `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`
   — Comparatif moteurs et simulation
 
 ---
 
 > **Rappel** : le pipeline sert la boucle d'assimilation (J-03), qui est
-> la brique différenciante de GSIE-FEU. Toutes les données convergent
+> la brique différenciante de GSIE-Ignis. Toutes les données convergent
 > vers le recalage du jumeau numérique et la présentation au COS —
 > jamais vers une action automatique.

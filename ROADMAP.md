@@ -124,7 +124,7 @@ Fondateur (livrable annexe ? anticipation de phase ultérieure ?) :
 Capture la vision fondateur sur l'architecture offline-first, distribuée
 et orientée données de GSIE. Activé en Phase 2. Voir `02_RFC/RFC-0003.md`.
 
-**RFC-0004** — GSIE-FEU : Système autonome de surveillance et d'analyse des
+**RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse des
 incendies : **ADOPTÉ** le 2026-07-12 (DEC-000003). Nouvelle branche
 fonctionnelle et application cliente de GSIE pour le risque incendie. Activé
 en Phase 2+. Voir `02_RFC/RFC-0004.md` et `03_DECISIONS/DEC-000003.md`.
@@ -159,9 +159,9 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 205 | Modèle de données scientifique | `04_ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
 | 206 | Contrats d'interface des 14 moteurs | `04_ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
 | 207 | Documentation détaillée des 14 moteurs | `09_ENGINES/*/` (14 dossiers) | Draft |
-| 208 | Architecture GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_ARCHITECTURE.md` | Draft |
-| 209 | Pipeline de données GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_DATA_PIPELINE.md` | Draft |
-| 210 | Architecture drone GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_DRONE_ARCHITECTURE.md` | Draft |
+| 208 | Architecture GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
+| 209 | Pipeline de données GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
+| 210 | Architecture drone GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
 
 ### Critères de complétude Phase 2
 
@@ -170,7 +170,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 - La matrice d'interactions entre moteurs est complète.
 - Le stack technologique est justifié par des ADR.
 - Le protocole de communication gère l'offline-first.
-- L'architecture GSIE-FEU respecte les garde-fous de DEC-000003.
+- L'architecture GSIE-Ignis respecte les garde-fous de DEC-000003.
 - Toutes les sources de données sont citées.
 
 ## Phase 3 — Connaissance (à définir)

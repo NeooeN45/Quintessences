@@ -1,4 +1,4 @@
-# GSIE-Feu — Registre d'idées
+# GSIE-Ignis — Registre d'idées
 
 > Document vivant. Chaque idée est capturée, rattachée à un module, évaluée (maturité, priorité), et reliée aux idées connexes.
 > Statuts : 💡 idée brute · 🔍 à étudier · ✅ principe accepté (intégration prévue en Phase 2+) · ⏸️ reportée · ❌ écartée (avec raison)
@@ -172,7 +172,7 @@
 |----|---------|--------|-------|
 | K-01 | **Google FireSat / Earth Fire Alliance** : constellation dédiée feu (>50 satellites à terme), détection 5×5 m, revisite ≤20 min, IR multispectral perçant la fumée, IA comparative historique. Pilote en orbite + 3 satellites lancés juil. 2026. EFA « accueille de nouveaux partenaires » | 🔍 **prioritaire** | Redéfinit la complémentarité : satellite détecte tôt/partout → notre drone caractérise finement + mesure in situ + alimente le jumeau. Renforce S-08. Contact EFA à envisager (accès données France) |
 | K-02 | Pano AI (SF, 89 M$) : caméras 360° + IA + analystes, >50 M acres US/CA/AU, 735 alertes 2025 (>50 % premières détections), brevets imagerie panoramique/géoloc/visu carto, **expansion Europe visée 2026** | 🔍 veille | Le « Pyronear commercial ». Ses brevets sont à examiner avant de breveter nous-mêmes (liberté d'exploitation) |
-| K-03 | **Technosylva** : prédiction risque + propagation (utilities, agences US) — concurrent le plus proche de notre jumeau numérique. **Partenariat Technosylva × Pano annoncé fév. 2026** : prédictif + temps réel unifiés en « image décisionnelle partagée » | 🔍 veille | La version US à deux entreprises de ce que GSIE-Feu construit intégré. Valide la direction ET presse le tempo |
+| K-03 | **Technosylva** : prédiction risque + propagation (utilities, agences US) — concurrent le plus proche de notre jumeau numérique. **Partenariat Technosylva × Pano annoncé fév. 2026** : prédictif + temps réel unifiés en « image décisionnelle partagée » | 🔍 veille | La version US à deux entreprises de ce que GSIE-Ignis construit intégré. Valide la direction ET presse le tempo |
 | K-04 | Dryad Networks (Berlin) : >30 000 capteurs gaz solaires LoRaWAN (H₂/CO/CO₂/COV ppm), détection « par le nez », 10-15 ans d'autonomie sur arbre | 🔍 | **Validation industrielle directe de C-04.** Partenaire potentiel plus que concurrent (capteurs, pas jumeau) |
 | K-05 | OroraTech (Munich) : nanosatellites thermiques — le FireSat européen commercial | 🔍 veille | |
 | K-06 | Écosystème mondial : ALERTCalifornia (public), Fireball.International, Robotics Cats, exci, Gridware, SenseNet, Insight Robotics, Wildfire Defense Systems (assurance). 72 sociétés, 26 financées, US dominant (20) | ✅ | Détection = marché encombré ; caractérisation drone + assimilation + jumeau + décision COS intégrés = espace encore ouvert |
@@ -180,22 +180,22 @@
 
 ## 10. Feuille de route (rappel)
 
-> **Les jalons ci-dessous sont internes à GSIE-FEU.** Ils ne pas se confondre
-> avec les phases de GSIE (Phase 1 Foundation → Phase 4 Implémentation). GSIE-FEU
+> **Les jalons ci-dessous sont internes à GSIE-Ignis.** Ils ne pas se confondre
+> avec les phases de GSIE (Phase 1 Foundation → Phase 4 Implémentation). GSIE-Ignis
 > est une application cliente de GSIE ; ses jalons s'inscrivent *dans* les phases
 > GSIE globales. Voir le rappel de gouvernance en fin de section.
 
-- **GSIE-FEU Jalon 0** — Cartographie de l'existant : comparatif sourcé des briques + matrice capteurs + comparatif comms (C-05). *(en cours — voir `22_PROJECT_MEMORY/GSIE-FEU/` pour les livrables produits)*
-- **GSIE-FEU Jalon 1** — Architecture & spécification : vision, modules, ADRs, contrat d'interface API temps réel (G-11), plan de validation.
-- **GSIE-FEU Jalon 2** — Banc de simulation intégral sur PC : ForeFire + PX4 SITL/Gazebo + détecteur virtuel bruité + boucle d'assimilation + GCS-Lite.
-- **GSIE-FEU Jalon 3** — Validation sur incendies historiques (Landiras 2022, Copernicus EMS).
-- **GSIE-FEU Jalon 4** — Hardware in the loop (Jetson réel) + démarrage GCS-Cinéma (Unreal/Cesium).
-- **GSIE-FEU Jalon 5** — Premier drone réel, vol à vue.
-- **GSIE-FEU Jalon 6** — Pilote SDIS.
+- **GSIE-Ignis Jalon 0** — Cartographie de l'existant : comparatif sourcé des briques + matrice capteurs + comparatif comms (C-05). *(en cours — voir `22_PROJECT_MEMORY/GSIE-Ignis/` pour les livrables produits)*
+- **GSIE-Ignis Jalon 1** — Architecture & spécification : vision, modules, ADRs, contrat d'interface API temps réel (G-11), plan de validation.
+- **GSIE-Ignis Jalon 2** — Banc de simulation intégral sur PC : ForeFire + PX4 SITL/Gazebo + détecteur virtuel bruité + boucle d'assimilation + GCS-Lite.
+- **GSIE-Ignis Jalon 3** — Validation sur incendies historiques (Landiras 2022, Copernicus EMS).
+- **GSIE-Ignis Jalon 4** — Hardware in the loop (Jetson réel) + démarrage GCS-Cinéma (Unreal/Cesium).
+- **GSIE-Ignis Jalon 5** — Premier drone réel, vol à vue.
+- **GSIE-Ignis Jalon 6** — Pilote SDIS.
 
-> **Rappel de gouvernance (2026-07-12)** : les jalons 0 et 1 de GSIE-FEU
+> **Rappel de gouvernance (2026-07-12)** : les jalons 0 et 1 de GSIE-Ignis
 > ci-dessus sont des étapes *documentaires* (comparatifs, specs, ADRs anticipés).
-> Aucun code — y compris sur le banc de simulation séparé (`~/gsie-feu/` WSL2) —
+> Aucun code — y compris sur le banc de simulation séparé (`~/GSIE-Ignis/` WSL2) —
 > ne démarre avant la validation complète des 12 livrables de la Phase 1 de
 > **GSIE** (le projet-fondation). Voir `02_RFC/RFC-0004.md` §8.5 et §11.
 

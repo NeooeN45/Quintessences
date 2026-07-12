@@ -1,4 +1,4 @@
-# Architecture drone GSIE-FEU — Stack embarqué, missions, communications et sécurité
+# Architecture drone GSIE-Ignis — Stack embarqué, missions, communications et sécurité
 
 | Champ | Valeur |
 |---|---|
@@ -9,14 +9,14 @@
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
 | **Décisions liées** | DEC-000003 (garde-fous), DEC-000005 (archive banc) |
-| **Document parent** | `GSIE_FEU_ARCHITECTURE.md` |
-| **Document connexe** | `GSIE_FEU_DATA_PIPELINE.md` |
+| **Document parent** | `GSIE_IGNIS_ARCHITECTURE.md` |
+| **Document connexe** | `GSIE_IGNIS_DATA_PIPELINE.md` |
 
 ---
 
 ## 1. Objet
 
-Ce document décrit l'architecture du sous-système drone de GSIE-FEU :
+Ce document décrit l'architecture du sous-système drone de GSIE-Ignis :
 stack logicielle embarquée, types de missions, communications avec le
 sol, contraintes d'autonomie et mesures de sécurité.
 
@@ -76,7 +76,7 @@ plans de vol, décollage/atterrissage autonomes, fail-safe, RTH.
 **Justification du choix** (Phase0 §2.1) :
 - Licence BSD vs GPL ArduPilot (liberté commerciale sur les modules
   embarqués).
-- Alignement avec l'écosystème recherche vision/ROS 2 dont GSIE-FEU
+- Alignement avec l'écosystème recherche vision/ROS 2 dont GSIE-Ignis
   dépend (P-01, P-02).
 - MAVSDK-Python comme API de mission propre et moderne.
 - Cité dans des dossiers BVLOS de référence.
@@ -91,7 +91,7 @@ Mode headless pour les campagnes automatisées. Variables
 
 ### 3.2 MAVSDK — API de mission
 
-**Rôle** : interface haut niveau entre GSIE-FEU et PX4.
+**Rôle** : interface haut niveau entre GSIE-Ignis et PX4.
 
 **Stack** : MAVSDK-Python (banc), MAVSDK multi-langages (production).
 
@@ -273,7 +273,7 @@ débit (LoRa) passe toujours ; le haut débit (4G/5G) n'est pas garanti.
 
 ~200 octets : détection, lat/lon, intensité, vecteur, horodatage.
 Spécification détaillée à écrire en Phase 2 (voir
-`GSIE_FEU_DATA_PIPELINE.md` §3.3.3).
+`GSIE_IGNIS_DATA_PIPELINE.md` §3.3.3).
 
 ### 5.4 Mesh radio renforçable (C-03)
 
@@ -492,10 +492,10 @@ sécurité civile (S-11).
 
 ### 10.4 Documents de gouvernance
 
-- `02_RFC/RFC-0004.md` — RFC GSIE-FEU (ADOPTÉ), §3.1, §3.5, §5.3
+- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ), §3.1, §3.5, §5.3
 - `03_DECISIONS/DEC-000003.md` — Adoption + garde-fous (RGPD, autonomie)
-- `22_PROJECT_MEMORY/GSIE-FEU.md` — Registre d'idées (sections 1, 3, 4, 7)
-- `22_PROJECT_MEMORY/GSIE-FEU/Phase0_comparatif_moteurs_simulation.md`
+- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (sections 1, 3, 4, 7)
+- `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`
   — Comparatif PX4/ArduPilot, Gazebo, MAVSDK
 
 ---

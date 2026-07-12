@@ -16,7 +16,7 @@ Démarrage effectif de la Phase 2 (Architecture) avec 3 axes en parallèle :
 2. **Architecture technique globale** — stack technologique (ADR), protocole
    de communication offline-first, ordre de développement, modèle de données
    scientifique, architecture globale enrichie.
-3. **Architecture GSIE-FEU** — pipeline de données (ForeFire, drone, GCS),
+3. **Architecture GSIE-Ignis** — pipeline de données (ForeFire, drone, GCS),
    architecture drone (PX4, MAVSDK, YOLO), intégration avec les 14 moteurs,
    garde-fous DEC-000003.
 
@@ -39,9 +39,9 @@ constitutionnelle, roadmap, contributing.
   GeoSylva Intelligence Engine). C'est le **moteur** spécialisable par
   domaine, au cœur de Quintessences.
 - **GeoSylva** est repositionné comme **app forestière** (première
-  spécialisation de GSIE), au même titre que GSIE-FEU (spécialisation
+  spécialisation de GSIE), au même titre que GSIE-Ignis (spécialisation
   incendie). GeoSylva garde son nom historique.
-- Architecture : `Quintessences > GSIE > GeoSylva / GSIE-FEU / futures`.
+- Architecture : `Quintessences > GSIE > GeoSylva / GSIE-Ignis / futures`.
 - README, PROJECT_MEMORY, ROADMAP, CHANGELOG, LICENSE mis à jour.
 - La Constitution, les 14 moteurs, la gouvernance et la traçabilité
   restent valables — GSIE est généralisé, pas remplacé.
@@ -50,14 +50,14 @@ constitutionnelle, roadmap, contributing.
 
 ## [PHASE 2 — Architecture] - 2026-07-12
 
-### DEC-000005 — Amendement : archivage du code du banc GSIE-FEU
+### DEC-000005 — Amendement : archivage du code du banc GSIE-Ignis
 
 - Le Fondateur **amende** DEC-000003 et DEC-000004 pour autoriser
   l'archivage du code du banc de simulation (Jalon 0) dans
-  `22_PROJECT_MEMORY/GSIE-FEU/`.
+  `22_PROJECT_MEMORY/GSIE-Ignis/`.
 - Périmètre : `premier_vol.py`, `plot_front.py`, scripts `*.sh` du banc.
 - Statut : **artefacts d'archive**, pas du code métier des 14 moteurs.
-- Le banc opérationnel reste dans `~/gsie-feu/` (WSL2) ; le dépôt n'en
+- Le banc opérationnel reste dans `~/GSIE-Ignis/` (WSL2) ; le dépôt n'en
   conserve qu'une archive versionnée pour reproductibilité et traçabilité.
 - L'interdiction de code métier GSIE dans le dépôt (Phase 4) reste entière.
 
@@ -67,10 +67,10 @@ constitutionnelle, roadmap, contributing.
   (3/12).
 - **Phase 2 (Architecture) activée** par le Fondateur.
 - Autorise : architecture détaillée des moteurs, spécifications
-  techniques, RFC d'architecture, banc de simulation GSIE-FEU.
+  techniques, RFC d'architecture, banc de simulation GSIE-Ignis.
 - N'autorise pas encore : code métier dans le dépôt GSIE (Phase 4).
 
-### Banc de simulation GSIE-FEU — démarrage
+### Banc de simulation GSIE-Ignis — démarrage
 
 - `.wslconfig` créé (20GB RAM, 6 CPU, 8GB swap).
 - État WSL constaté : Ubuntu 24.04.3 LTS, Python 3.12.3, 8 threads,
@@ -78,7 +78,7 @@ constitutionnelle, roadmap, contributing.
 - Installation du socle logiciel en cours (cmake, build-essential,
   libnetcdf-dev).
 - Prochaines étapes : ForeFire (compilation + démo Aullène), PX4 SITL
-  + Gazebo, structure projet `~/gsie-feu/`.
+  + Gazebo, structure projet `~/GSIE-Ignis/`.
 
 ---
 
@@ -129,13 +129,13 @@ template RFC-0001 (ADOPTÉ) et validés :
   (2026-07-01 à 2026-07-12) au format Décisions/Motivations/Impact.
 - `CONTEXT_SNAPSHOT_001.md` : statut clarifié → `Draft — en attente du
   10e Directive`.
-- `README.md` (`22_PROJECT_MEMORY/`) : `GSIE-FEU.md` et sous-dossier
-  `GSIE-FEU/` ajoutés à la liste des fichiers autorisés.
+- `README.md` (`22_PROJECT_MEMORY/`) : `GSIE-Ignis.md` et sous-dossier
+  `GSIE-Ignis/` ajoutés à la liste des fichiers autorisés.
 
 ### Prochaine étape
 
 Le projet peut entrer en **Phase 2 (Architecture)** après décision du
-Fondateur. Le banc de simulation GSIE-FEU (`~/gsie-feu/` WSL2) peut
+Fondateur. Le banc de simulation GSIE-Ignis (`~/GSIE-Ignis/` WSL2) peut
 démarrer indépendamment — il vit hors du dépôt GSIE.
 
 ---
@@ -155,8 +155,8 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 - **`CONTEXT_SNAPSHOT_001.md`** : statut « Réservé » remplacé par
   « Draft — en attente du 10e Directive (non atteint) ». Note explicite
   ajoutée : le snapshot sera déclenché à la 10e Directive.
-- **`README.md`** (`22_PROJECT_MEMORY/`) : `GSIE-FEU.md` et le sous-dossier
-  `GSIE-FEU/` ajoutés à la liste des fichiers autorisés.
+- **`README.md`** (`22_PROJECT_MEMORY/`) : `GSIE-Ignis.md` et le sous-dossier
+  `GSIE-Ignis/` ajoutés à la liste des fichiers autorisés.
 
 ### Avancement Phase 1
 
@@ -171,12 +171,12 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
-## [RFC-0004 GSIE-FEU — Registre d'idées] - 2026-07-11
+## [RFC-0004 GSIE-Ignis — Registre d'idées] - 2026-07-11
 
 ### Registre d'idées opérationnelles
 
-- Création de `22_PROJECT_MEMORY/GSIE-FEU.md` : registre vivant des idées
-  GSIE-FEU structuré en 8 domaines (Perception, Jumeau numérique, Vol,
+- Création de `22_PROJECT_MEMORY/GSIE-Ignis.md` : registre vivant des idées
+  GSIE-Ignis structuré en 8 domaines (Perception, Jumeau numérique, Vol,
   Communications, GCS, Données, Stratégie) + feuille de route + backlog
   de questions ouvertes. Chaque idée est classée par maturité
   (💡/🔍/✅/⏸️/❌), priorité et notes opérationnelles.
@@ -184,17 +184,17 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 ### Mémoire synchronisée
 
 - `PROJECT_MEMORY.md` : RFC-0004 référence désormais le registre
-  `22_PROJECT_MEMORY/GSIE-FEU.md`.
+  `22_PROJECT_MEMORY/GSIE-Ignis.md`.
 - `02_RFC/RFC-0004.md` : étape 3 des prochaines étapes actionnables
   marquée comme réalisée (registre d'idées ouvert).
 
 ---
 
-## [RFC-0004 GSIE-FEU] - 2026-07-11
+## [RFC-0004 GSIE-Ignis] - 2026-07-11
 
 ### RFC ouvert
 
-- **RFC-0004** — GSIE-FEU : Système autonome de surveillance et d'analyse des
+- **RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse des
   incendies. Proposition d'une nouvelle branche fonctionnelle dédiée au risque
   incendie, positionnée comme application cliente des 14 moteurs GSIE.
   (`02_RFC/RFC-0004.md`)
@@ -214,7 +214,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 - Points de vigilance : flou organisationnel (entreprise vs fondation), danger
   de la sortie « cause probable », limite du terme « autonome », interdiction
   d'alerte directe à la population, contrainte Phase 1 (pas de code métier).
-- Recommandation : approche hybride — GSIE-FEU comme application, extensions
+- Recommandation : approche hybride — GSIE-Ignis comme application, extensions
   ciblées des moteurs existants, moteur dédié éventuel réservé à un second RFC.
 
 ### Mémoire synchronisée
@@ -224,7 +224,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
-## [GSIE-FEU gouvernance] - 2026-07-12
+## [GSIE-Ignis gouvernance] - 2026-07-12
 
 ### Livrables 005-009 validés (Phase 1)
 
@@ -262,29 +262,29 @@ enrichissement par le Fondateur :
 
 ### RFC-0004 ADOPTÉ
 
-- **DEC-000003** tracée : adoption du RFC-0004 par le Fondateur. GSIE-FEU
+- **DEC-000003** tracée : adoption du RFC-0004 par le Fondateur. GSIE-Ignis
   devient officiellement une branche fonctionnelle de GSIE, positionnée comme
   application cliente. Approche hybride retenue (Option C).
 - RFC-0004 passe au statut **ADOPTÉ**.
 
-### Registre d'idées GSIE-FEU
+### Registre d'idées GSIE-Ignis
 
-- `22_PROJECT_MEMORY/GSIE-FEU.md` : registre vivant créé par le Fondateur
+- `22_PROJECT_MEMORY/GSIE-Ignis.md` : registre vivant créé par le Fondateur
   (version 0.7.x, 60+ idées en 9 sections : perception, jumeau numérique, vol
   drone, communications, GCS, données, stratégie, modèles IA, veille
   concurrentielle).
-- `22_PROJECT_MEMORY/GSIE-FEU/` : sous-dossier de livrables du Jalon 0
+- `22_PROJECT_MEMORY/GSIE-Ignis/` : sous-dossier de livrables du Jalon 0
   (comparatif moteurs de simulation, contexte agent, guide d'installation banc).
 
 ### Pack contexte agent archivé
 
-- `GSIE-Feu_pack_contexte_agent.zip` : lu et extrait. Contenu :
-  `AGENTS.md` (contexte maître session), `LISEZMOI.md`, `GSIE-Feu_registre_idees.md`
-  (v0.7.2), `GSIE-Feu_Phase0_comparatif_moteurs_simulation.md`,
-  `GSIE-Feu_guide_installation_banc.md`.
+- `GSIE-Ignis_pack_contexte_agent.zip` : lu et extrait. Contenu :
+  `AGENTS.md` (contexte maître session), `LISEZMOI.md`, `GSIE-Ignis_registre_idees.md`
+  (v0.7.2), `GSIE-Ignis_Phase0_comparatif_moteurs_simulation.md`,
+  `GSIE-Ignis_guide_installation_banc.md`.
 - `AGENTS_contexte_session.md` et `guide_installation_banc.md` archivés dans
-  `22_PROJECT_MEMORY/GSIE-FEU/` avec note de gouvernance (le code du banc vit
-  hors dépôt GSIE, dans `~/gsie-feu/` WSL2).
+  `22_PROJECT_MEMORY/GSIE-Ignis/` avec note de gouvernance (le code du banc vit
+  hors dépôt GSIE, dans `~/GSIE-Ignis/` WSL2).
 - Le zip reste ignoré par git (`.gitignore : *.zip`).
 
 ### Corrections de gouvernance appliquées
@@ -292,11 +292,11 @@ enrichissement par le Fondateur :
 - **Statut ✅** : redéfini de « validée (intégrée à l'architecture) » en
   « principe accepté (intégration prévue en Phase 2+) » — aucune architecture
   n'est finalisée en Phase 1.
-- **Phases renommées** : « Phase 0-6 » → « GSIE-FEU Jalon 0-6 » pour éviter la
+- **Phases renommées** : « Phase 0-6 » → « GSIE-Ignis Jalon 0-6 » pour éviter la
   collision avec les phases GSIE globales (Phase 1-4). Note de rappel ajoutée.
 - **RFC-0004** : §12 « Documents liés » ajouté (référence au registre et au
   sous-dossier Jalon 0).
-- `PROJECT_MEMORY.md` : section « Branche GSIE-FEU (RFC-0004) » + DEC-000003.
+- `PROJECT_MEMORY.md` : section « Branche GSIE-Ignis (RFC-0004) » + DEC-000003.
 - `ROADMAP.md` : RFC-0004 marqué ADOPTÉ.
 - `.gitignore` : `*.zip` ajouté (le pack contexte agent binaire n'est pas
   versionné).
