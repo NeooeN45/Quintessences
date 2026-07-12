@@ -17,14 +17,14 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | 002 | Préambule Constitutionnel | `00_CONSTITUTION/GSIE-FND-002.md` | Locked |
 | 003 | Préambule Philosophique | `00_CONSTITUTION/GSIE-FND-001.md` | Locked |
 | 004 | Article 000 — Primauté de la Constitution | `00_CONSTITUTION/GSIE-CON-000.md` | Locked |
-| 005 | Pacte pour les IA | `00_CONSTITUTION/PACT_FOR_AI_AGENTS.md` | Review |
-| 006 | Philosophie de conception | `00_CONSTITUTION/GSIE-DESIGN-PHILOSOPHY.md` | Review |
-| 007 | Constitution scientifique | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` | Review |
-| 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Review |
-| 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Review |
-| 010 | Articles constitutionnels 000-100 | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source réelle) ; gabarit `ARTICLE_0xx` en attente (cf. **RFC-0002**) | Draft (000 Locked, 001-010 rédigés « À valider ») |
-| 011 | Système de documentation et guides contributeurs | `17_DOCUMENTATION/` | Draft |
-| 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Draft |
+| 005 | Pacte pour les IA | `00_CONSTITUTION/PACT_FOR_AI_AGENTS.md` | Validated |
+| 006 | Philosophie de conception | `00_CONSTITUTION/GSIE-DESIGN-PHILOSOPHY.md` | Validated |
+| 007 | Constitution scientifique | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` | Validated |
+| 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Validated |
+| 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Validated |
+| 010 | Articles constitutionnels 000-100 | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source réelle) ; gabarit `ARTICLE_0xx` en attente (cf. **RFC-0002**) | Validated (000 Locked, 001-010 Validated) |
+| 011 | Système de documentation et guides contributeurs | `17_DOCUMENTATION/` | Validated |
+| 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Validated |
 
 ### Légende des statuts
 
@@ -37,33 +37,32 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 
 ### Avancement global
 
-- **Validated** : 1 / 12 (001)
+- **Validated** : 9 / 12 (001, 005, 006, 007, 008, 009, 010, 011, 012)
 - **Locked** : 3 / 12 (002, 003, 004)
-- **Review** : 5 / 12 (005, 006, 007, 008, 009 — en attente de validation Fondateur)
-- **Draft** : 3 / 12 (010, 011, 012)
+- **Draft** : 0 / 12
 
 ### Articles constitutionnels rédigés (livrable 010)
 
 | Article | Fichier | Titre | Statut |
 |---|---|---|---|
 | 000 | `GSIE-CON-000.md` | La Primauté de la Constitution | Locked |
-| 001 | `GSIE-CON-001.md` | Le forestier reste le décideur | Draft (à valider) |
-| 002 | `GSIE-CON-002.md` | La science avant tout | Draft (à valider) |
-| 003 | `GSIE-CON-003.md` | La Connaissance avant le Code | Draft (à valider) |
-| 004 | `GSIE-CON-004.md` | Toute décision doit être explicable | Draft (à valider) |
-| 005 | `GSIE-CON-005.md` | Toute connaissance doit être traçable | Draft (à valider) |
-| 006 | `GSIE-CON-006.md` | La Documentation fait partie du Produit | Draft (à valider) |
-| 007 | `GSIE-CON-007.md` | La Modularité est obligatoire | Draft (à valider) |
-| 008 | `GSIE-CON-008.md` | Le Projet appartient à sa Vision | Draft (à valider) |
-| 009 | `GSIE-CON-009.md` | GSIE est un patrimoine scientifique vivant | Draft (à valider) |
-| 010 | `GSIE-CON-010.md` | Toute connaissance doit pouvoir évoluer sans perdre son historique | Draft (à valider) |
+| 001 | `GSIE-CON-001.md` | Le forestier reste le décideur | Validated |
+| 002 | `GSIE-CON-002.md` | La science avant tout | Validated |
+| 003 | `GSIE-CON-003.md` | La Connaissance avant le Code | Validated |
+| 004 | `GSIE-CON-004.md` | Toute décision doit être explicable | Validated |
+| 005 | `GSIE-CON-005.md` | Toute connaissance doit être traçable | Validated |
+| 006 | `GSIE-CON-006.md` | La Documentation fait partie du Produit | Validated |
+| 007 | `GSIE-CON-007.md` | La Modularité est obligatoire | Validated |
+| 008 | `GSIE-CON-008.md` | Le Projet appartient à sa Vision | Validated |
+| 009 | `GSIE-CON-009.md` | GSIE est un patrimoine scientifique vivant | Validated |
+| 010 | `GSIE-CON-010.md` | Toute connaissance doit pouvoir évoluer sans perdre son historique | Validated |
 
 ### Documents transverses rédigés
 
 | Fichier | Titre | Statut |
 |---|---|---|
-| `PACT_FOR_AI_AGENTS.md` | Pacte des Agents IA (livrable 005) | Review |
-| `GSIE-DESIGN-PHILOSOPHY.md` | GSIE Design Philosophy (livrable 006) | Review |
+| `PACT_FOR_AI_AGENTS.md` | Pacte des Agents IA (livrable 005) | Validated |
+| `GSIE-DESIGN-PHILOSOPHY.md` | GSIE Design Philosophy (livrable 006) | Validated |
 
 ### Documents méthodologiques rédigés
 
@@ -119,21 +118,35 @@ Fondateur (livrable annexe ? anticipation de phase ultérieure ?) :
 - `18_FINANCING/` — modèle et gouvernance financière (~1 060 lignes).
 - `23_QUALITY_MANAGEMENT/` — manuel, politique et processus qualité (~1 370 l).
 
-### RFC ouvert
+### RFC ouverts
 
 **RFC-0003** — Architecture distribuée GSIE-Net : ouvert le 2026-07-07.
 Capture la vision fondateur sur l'architecture offline-first, distribuée
 et orientée données de GSIE. Activé en Phase 2. Voir `02_RFC/RFC-0003.md`.
 
+**RFC-0004** — GSIE-FEU : Système autonome de surveillance et d'analyse des
+incendies : **ADOPTÉ** le 2026-07-12 (DEC-000003). Nouvelle branche
+fonctionnelle et application cliente de GSIE pour le risque incendie. Activé
+en Phase 2+. Voir `02_RFC/RFC-0004.md` et `03_DECISIONS/DEC-000003.md`.
+
 ### Prochaine étape
 
-**Livrables 005 à 009** sont en **Review** — en attente de validation
-du Fondateur. Une fois validés, passer aux livrables 010, 011 et 012
-pour clôturer la Phase 1.
+**TOUS les livrables sont Validated ou Locked.** Phase 1 complète.
+
+| Statut | Count | Livrables |
+|---|---|---|
+| Validated | 9 / 12 | 001, 005, 006, 007, 008, 009, 010, 011, 012 |
+| Locked | 3 / 12 | 002, 003, 004 |
+
+La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
+(Architecture) après décision du Fondateur.
 
 ---
 
-## Phase 2 — Architecture (à définir)
+## Phase 2 — Architecture (active)
+
+> Lancée officiellement par **DEC-000004** le 2026-07-12.
+> Phase 1 clôturée — tous les livrables Validated ou Locked.
 
 - Architecture détaillée des moteurs
 - Contrats d'interface entre moteurs

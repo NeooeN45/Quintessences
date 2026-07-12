@@ -19,3 +19,6 @@ tmp/
 
 # Node (si outillage ajouté plus tard)
 node_modules/
+
+# Archives binaires (les packs contexte agent ne sont pas versionnés)
+*.zip

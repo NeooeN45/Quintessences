@@ -5,7 +5,7 @@
 | **Créé le** | 2026-07-01 |
 | **Phase** | 1 — Foundation |
 | **Directive courante** | GSIE-DIR-0003 |
-| **Dernière mise à jour** | 2026-07-01 |
+| **Dernière mise à jour** | 2026-07-06 |
 
 ---
 
@@ -62,8 +62,10 @@ l'ordre strict. Aucun développement ne commencera avant leur validation.
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
 - **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
+- **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
-- **RFC-0002 à RFC-0010** — Vides, en attente
+- **RFC-0002** — Unification du système d'articles constitutionnels (Proposé)
+- **RFC-0003 à RFC-0010** — Réservés, non ouverts
 
 ## Documents fondateurs de la Constitution
 
@@ -102,7 +104,10 @@ l'ordre strict. Aucun développement ne commencera avant leur validation.
 - `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint (Evidence Engine repositionné en amont)
 - `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données (Evidence Engine repositionné en amont)
 
-## Moteurs documentés (14/14)
+## Moteurs amorcés (14/14 — profondeur à qualifier)
+
+> 3 moteurs ont un fichier dédié (EVIDENCE, KNOWLEDGE, CORRELATION) ; 11 n'ont
+> qu'un README de cadrage. Documentation complète = Phase 2 (cf. `ROADMAP.md`).
 
 - `09_ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
 - `09_ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine

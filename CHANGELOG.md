@@ -4,6 +4,261 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 2 — Architecture] - 2026-07-12
+
+### DEC-000005 — Amendement : archivage du code du banc GSIE-FEU
+
+- Le Fondateur **amende** DEC-000003 et DEC-000004 pour autoriser
+  l'archivage du code du banc de simulation (Jalon 0) dans
+  `22_PROJECT_MEMORY/GSIE-FEU/`.
+- Périmètre : `premier_vol.py`, `plot_front.py`, scripts `*.sh` du banc.
+- Statut : **artefacts d'archive**, pas du code métier des 14 moteurs.
+- Le banc opérationnel reste dans `~/gsie-feu/` (WSL2) ; le dépôt n'en
+  conserve qu'une archive versionnée pour reproductibilité et traçabilité.
+- L'interdiction de code métier GSIE dans le dépôt (Phase 4) reste entière.
+
+### DEC-000004 — Entrée en Phase 2
+
+- **Phase 1 clôturée** — tous les livrables Validated (9/12) ou Locked
+  (3/12).
+- **Phase 2 (Architecture) activée** par le Fondateur.
+- Autorise : architecture détaillée des moteurs, spécifications
+  techniques, RFC d'architecture, banc de simulation GSIE-FEU.
+- N'autorise pas encore : code métier dans le dépôt GSIE (Phase 4).
+
+### Banc de simulation GSIE-FEU — démarrage
+
+- `.wslconfig` créé (20GB RAM, 6 CPU, 8GB swap).
+- État WSL constaté : Ubuntu 24.04.3 LTS, Python 3.12.3, 8 threads,
+  948 Go dispo sur E:.
+- Installation du socle logiciel en cours (cmake, build-essential,
+  libnetcdf-dev).
+- Prochaines étapes : ForeFire (compilation + démo Aullène), PX4 SITL
+  + Gazebo, structure projet `~/gsie-feu/`.
+
+---
+
+## [PHASE 1 CLÔTURÉE] - 2026-07-12
+
+### Tous les livrables Validated ou Locked
+
+La Phase 1 (Foundation) est **clôturée**. Les 12 livrables sont
+dans un statut terminal :
+
+| Statut | Count | Livrables |
+|---|---|---|
+| Validated | 9 / 12 | 001, 005, 006, 007, 008, 009, 010, 011, 012 |
+| Locked | 3 / 12 | 002, 003, 004 |
+
+### Livrable 011 — Documentation (Validated)
+
+- `CODING_STANDARDS.md` : enrichi (11 → 82 lignes) — conventions nommage,
+  structure fonctions, gestion d'erreurs, tests, typage, imports.
+- `DEVELOPMENT_PLAYBOOK.md` : enrichi (17 → 68 lignes) — cycle de vie
+  Spec→Impl→Tests→Review→Merge, commits conventionnels, ADR.
+- `MASTER_ROADMAP.md` : enrichi (20 → 55 lignes) — aligné sur ROADMAP.md
+  racine, 5 phases avec jalons et critères de succès.
+- `PROJECT_EXECUTION_PLAN.md` : enrichi (16 → 64 lignes) — 9 étapes,
+  6 jalons (M1-M6), dépendances entre livrables.
+- `CONTRIBUTING_GUIDE.md`, `DOCUMENTATION_SYSTEM.md`,
+  `WRITING_GUIDELINES.md` : statuts normalisés → Validated.
+- `ENGINEERING_HANDBOOK_TOME_I_CHAPTER_1.md` : en-tête de statut ajouté.
+- `MASTER_IMPLEMENTATION_GUIDE.md` : `Statut : Validated` ajouté
+  (contenu non touché, v0.6.1 préservée).
+- `ENGINEERING_HANDBOOK_TOME_I_CHAPTER_1.docx` : **supprimé** (le .md est
+  la source de vérité, pas de binaire dans le dépôt).
+
+### Livrable 010 — Articles CON-001 à CON-010 (Validated)
+
+Les 10 articles constitutionnels ont été mis en conformité avec le
+template RFC-0001 (ADOPTÉ) et validés :
+
+- `GSIE-CON-001.md` à `GSIE-CON-010.md` : enrichis avec sections
+  Exemple, Contre-exemple, Références, Historique, Statut.
+- CON-008 (20 → 74 lignes) et CON-009 (21 → 70 lignes) : enrichis
+  avec Conséquences, Exemple, Contre-exemple, Références.
+- Tous passent de `Draft (À valider)` à `Validated`.
+
+### Livrable 012 — Mémoire (Validated)
+
+- `FOUNDER_JOURNAL.md` : enrichi (23 → 112 lignes) — 6 entrées datées
+  (2026-07-01 à 2026-07-12) au format Décisions/Motivations/Impact.
+- `CONTEXT_SNAPSHOT_001.md` : statut clarifié → `Draft — en attente du
+  10e Directive`.
+- `README.md` (`22_PROJECT_MEMORY/`) : `GSIE-FEU.md` et sous-dossier
+  `GSIE-FEU/` ajoutés à la liste des fichiers autorisés.
+
+### Prochaine étape
+
+Le projet peut entrer en **Phase 2 (Architecture)** après décision du
+Fondateur. Le banc de simulation GSIE-FEU (`~/gsie-feu/` WSL2) peut
+démarrer indépendamment — il vit hors du dépôt GSIE.
+
+---
+
+## [Livrable 012 Validated] - 2026-07-12
+
+### Mémoire du projet — livrable 012 passé en Validated
+
+Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
+`Validated` après audit et enrichissement :
+
+- **`FOUNDER_JOURNAL.md`** : enrichi avec les entrées manquantes
+  (2026-07-01 à 2026-07-12). Six entrées datées au format
+  Décisions / Motivations / Impact, retraçant la fondation, l'outillage
+  Claude Code, l'audit de conformité, l'ouverture des RFC-0002/0003/0004,
+  la validation des livrables 005-009 et des articles CON-001 à 010.
+- **`CONTEXT_SNAPSHOT_001.md`** : statut « Réservé » remplacé par
+  « Draft — en attente du 10e Directive (non atteint) ». Note explicite
+  ajoutée : le snapshot sera déclenché à la 10e Directive.
+- **`README.md`** (`22_PROJECT_MEMORY/`) : `GSIE-FEU.md` et le sous-dossier
+  `GSIE-FEU/` ajoutés à la liste des fichiers autorisés.
+
+### Avancement Phase 1
+
+- **Validated** : 8 / 12 (001, 005, 006, 007, 008, 009, 010, 012)
+- **Locked** : 3 / 12 (002, 003, 004)
+- **Draft** : 1 / 12 (011)
+
+### Mémoire synchronisée
+
+- `ROADMAP.md` : livrable 012 → Validated, avancement global mis à jour.
+- `PROJECT_MEMORY.md` (racine) : avancement et prochaine étape mis à jour.
+
+---
+
+## [RFC-0004 GSIE-FEU — Registre d'idées] - 2026-07-11
+
+### Registre d'idées opérationnelles
+
+- Création de `22_PROJECT_MEMORY/GSIE-FEU.md` : registre vivant des idées
+  GSIE-FEU structuré en 8 domaines (Perception, Jumeau numérique, Vol,
+  Communications, GCS, Données, Stratégie) + feuille de route + backlog
+  de questions ouvertes. Chaque idée est classée par maturité
+  (💡/🔍/✅/⏸️/❌), priorité et notes opérationnelles.
+
+### Mémoire synchronisée
+
+- `PROJECT_MEMORY.md` : RFC-0004 référence désormais le registre
+  `22_PROJECT_MEMORY/GSIE-FEU.md`.
+- `02_RFC/RFC-0004.md` : étape 3 des prochaines étapes actionnables
+  marquée comme réalisée (registre d'idées ouvert).
+
+---
+
+## [RFC-0004 GSIE-FEU] - 2026-07-11
+
+### RFC ouvert
+
+- **RFC-0004** — GSIE-FEU : Système autonome de surveillance et d'analyse des
+  incendies. Proposition d'une nouvelle branche fonctionnelle dédiée au risque
+  incendie, positionnée comme application cliente des 14 moteurs GSIE.
+  (`02_RFC/RFC-0004.md`)
+
+### Contenu du RFC
+
+- Vision : détection précoce par drones, caractérisation de l'événement, jumeau
+  numérique opérationnel du feu, analyse d'enjeux pour le COS / CODIS, autonomie
+  drone sous supervision humaine.
+- Exigences : sourçage scientifique, métriques domaine (rappel, faux positifs,
+  latence, XAI), cadre réglementaire (EASA, SORA, BVLOS, DGAC, RGPD), injection
+  de la connaissance métier forestière / DFCI.
+- Écosystème : Pyronear, ForeFire, SDIS / CODIS, Prométhée ; datasets Pyro-SDIS,
+  FLAME, D-Fire, FASDD, FIgLib, WildfireSpreadTS ; financements ANR, Horizon
+  Europe, DGSCGC, CIFRE.
+- Jalon : démonstrateur sans drone sur l'incendie de Landiras (Gironde, 2022).
+- Points de vigilance : flou organisationnel (entreprise vs fondation), danger
+  de la sortie « cause probable », limite du terme « autonome », interdiction
+  d'alerte directe à la population, contrainte Phase 1 (pas de code métier).
+- Recommandation : approche hybride — GSIE-FEU comme application, extensions
+  ciblées des moteurs existants, moteur dédié éventuel réservé à un second RFC.
+
+### Mémoire synchronisée
+
+- `PROJECT_MEMORY.md` : date, RFC-0004 tracé.
+- `ROADMAP.md` : RFC-0004 ajouté aux RFC ouverts.
+
+---
+
+## [GSIE-FEU gouvernance] - 2026-07-12
+
+### Livrables 005-009 validés (Phase 1)
+
+Les 5 livrables passent de `Review` à `Validated` après audit et
+enrichissement par le Fondateur :
+
+- **Livrable 005** — `PACT_FOR_AI_AGENTS.md` : enrichi (18 → 113 lignes).
+  Ajout : Objectif, distinction des rôles (dev vs production), cas concrets,
+  procédure de violation, anti-patterns, conséquences, historique,
+  validation. Conformité template RFC-0001.
+- **Livrable 006** — `GSIE-DESIGN-PHILOSOPHY.md` : enrichi (29 → 137
+  lignes). Ajout : Objectif, principes numérotés et justifiés, exemples de
+  décisions guidées par la philosophie (ForeFire GPL, 14 moteurs, Phase 1),
+  cas limites, anti-patterns, conséquences, historique, validation.
+- **Livrable 007** — `SCIENTIFIC_CONSTITUTION.md` : sections Historique +
+  Validation ajoutées. Contenu inchangé (déjà solide, 168 → 184 lignes).
+- **Livrable 008** — `TECHNICAL_CONSTITUTION.md` : sections Historique +
+  Validation ajoutées. Contenu inchangé (173 → 190 lignes).
+- **Livrable 009** — `AI_CONSTITUTION.md` : sections Historique +
+  Validation ajoutées. Contenu inchangé (168 → 184 lignes).
+
+### Avancement Phase 1
+
+- **Validated** : 6 / 12 (001, 005, 006, 007, 008, 009)
+- **Locked** : 3 / 12 (002, 003, 004)
+- **Draft** : 3 / 12 (010, 011, 012)
+
+### Reste à traiter pour clôturer Phase 1
+
+- **Livrable 010** : articles CON-001 à CON-010 — aucun ne suit le template
+  RFC-0001 (manquent Références + Historique). CON-008 et CON-009 (20-21
+  lignes) sont très incomplets. À enrichir.
+- **Livrable 011** : documentation et guides contributeurs — à évaluer.
+- **Livrable 012** : mémoire complète — à évaluer.
+
+### RFC-0004 ADOPTÉ
+
+- **DEC-000003** tracée : adoption du RFC-0004 par le Fondateur. GSIE-FEU
+  devient officiellement une branche fonctionnelle de GSIE, positionnée comme
+  application cliente. Approche hybride retenue (Option C).
+- RFC-0004 passe au statut **ADOPTÉ**.
+
+### Registre d'idées GSIE-FEU
+
+- `22_PROJECT_MEMORY/GSIE-FEU.md` : registre vivant créé par le Fondateur
+  (version 0.7.x, 60+ idées en 9 sections : perception, jumeau numérique, vol
+  drone, communications, GCS, données, stratégie, modèles IA, veille
+  concurrentielle).
+- `22_PROJECT_MEMORY/GSIE-FEU/` : sous-dossier de livrables du Jalon 0
+  (comparatif moteurs de simulation, contexte agent, guide d'installation banc).
+
+### Pack contexte agent archivé
+
+- `GSIE-Feu_pack_contexte_agent.zip` : lu et extrait. Contenu :
+  `AGENTS.md` (contexte maître session), `LISEZMOI.md`, `GSIE-Feu_registre_idees.md`
+  (v0.7.2), `GSIE-Feu_Phase0_comparatif_moteurs_simulation.md`,
+  `GSIE-Feu_guide_installation_banc.md`.
+- `AGENTS_contexte_session.md` et `guide_installation_banc.md` archivés dans
+  `22_PROJECT_MEMORY/GSIE-FEU/` avec note de gouvernance (le code du banc vit
+  hors dépôt GSIE, dans `~/gsie-feu/` WSL2).
+- Le zip reste ignoré par git (`.gitignore : *.zip`).
+
+### Corrections de gouvernance appliquées
+
+- **Statut ✅** : redéfini de « validée (intégrée à l'architecture) » en
+  « principe accepté (intégration prévue en Phase 2+) » — aucune architecture
+  n'est finalisée en Phase 1.
+- **Phases renommées** : « Phase 0-6 » → « GSIE-FEU Jalon 0-6 » pour éviter la
+  collision avec les phases GSIE globales (Phase 1-4). Note de rappel ajoutée.
+- **RFC-0004** : §12 « Documents liés » ajouté (référence au registre et au
+  sous-dossier Jalon 0).
+- `PROJECT_MEMORY.md` : section « Branche GSIE-FEU (RFC-0004) » + DEC-000003.
+- `ROADMAP.md` : RFC-0004 marqué ADOPTÉ.
+- `.gitignore` : `*.zip` ajouté (le pack contexte agent binaire n'est pas
+  versionné).
+
+---
+
 ## [RFC-0003 + Review 005-009] - 2026-07-07
 
 ### RFC ouvert
