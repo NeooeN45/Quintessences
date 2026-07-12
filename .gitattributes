@@ -1,0 +1,45 @@
+# Normalisation des fins de ligne (standard enterprise)
+# LF dans le dépôt, CRLF au checkout Windows pour les fichiers texte.
+* text=auto eol=lf
+
+# Markdown et texte : LF explicite
+*.md       text eol=lf
+*.txt      text eol=lf
+*.mdx      text eol=lf
+
+# Code (hors Phase 1 — réservé Phase 2+) : LF
+*.py       text eol=lf
+*.sh       text eol=lf
+*.ts       text eol=lf
+*.js       text eol=lf
+*.json     text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.toml     text eol=lf
+*.rs       text eol=lf
+*.go       text eol=lf
+*.kt       text eol=lf
+
+# Fichiers Windows : CRLF préservé
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Binaires : jamais normalisés
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.pdf      binary
+*.docx     binary
+*.xlsx     binary
+*.zip      binary
+*.parquet  binary
+*.nc       binary
+*.geotiff  binary
+*.tif      binary
+*.tiff     binary
+
+# Linguist GitHub : masquer les fichiers de config agent
+.claude/** linguist-vendored
+.github/** linguist-vendored=false
