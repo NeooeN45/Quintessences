@@ -9,8 +9,9 @@ Desktop.ini
 *.swp
 *~
 
-# Claude Code — local / secrets (le reste de .claude/ est versionné)
-.claude/settings.local.json
+# Claude Code — config d'outil IA locale (non versionnée)
+.claude/
+CLAUDE.md
 
 # Temporaire
 tmp/
