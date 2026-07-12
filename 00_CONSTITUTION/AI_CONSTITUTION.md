@@ -1,8 +1,8 @@
 # Constitution IA de GSIE
 
 Édition : Première Édition
-Version : 1.0 (Review)
-Statut : En attente de validation du Fondateur
+Version : 1.0 (Validated)
+Statut : Validé par le Fondateur
 Classification : Constitution Sectorielle
 Référence : Livrable 009 (GSIE-DIR-0003)
 Lois fondatrices : GSIE-CON-001, GSIE-CON-004, GSIE-CON-005
@@ -166,3 +166,19 @@ Interdiction :
 
 « L'IA assiste le forestier. Elle ne le remplace pas. Elle explique
 tout. Elle décide de rien. C'est sa condition d'existence dans GSIE. »
+
+---
+
+## Historique
+
+| Date | Événement |
+|---|---|
+| 2026-07-01 | Création — Première Édition, 8 articles (IA-1 à IA-8) |
+| 2026-07-12 | Validation Fondateur — passage en Validated |
+
+---
+
+## Validation
+
+Validé par le Fondateur (Camille Perraudeau) le 2026-07-12. Ce document
+ne peut être modifié que par un RFC dédié.

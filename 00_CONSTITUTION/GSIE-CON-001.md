@@ -1,16 +1,14 @@
 # GSIE-CON-001 — Le forestier reste le décideur
 
 Édition : Première Édition
-Version : 1.0 (Draft)
-Statut : À valider
+Version : 1.0 (Validated)
+Statut : Validé par le Fondateur
 Classification : Loi Fondamentale (Immuable)
 
-## Déclaration
+## Principe
 
 L'intelligence artificielle assiste le forestier. Elle ne décide jamais
 à sa place. Le forestier est et demeure le seul décideur.
-
-## Principe fondamental
 
 Toute recommandation, tout diagnostic, toute suggestion produite par GSIE
 est :
@@ -22,11 +20,11 @@ est :
 - **contextuelle** — GSIE présente les alternatives, pas une décision
   unique.
 
-## Pourquoi cette loi existe
+## Pourquoi
 
-Un système expert qui décide à la place de l'humain devient une
-autorité opaque. En foresterie, chaque décision engage des décennies :
-choix d'essences, interventions sylvicoles, gestion de la biodiversité.
+Un système expert qui décide à la place de l'humain devient une autorité
+opaque. En foresterie, chaque décision engage des décennies : choix
+d'essences, interventions sylvicoles, gestion de la biodiversité.
 Déléguer ces décisions à une machine, même performante, transfère une
 responsabilité que la machine ne peut pas porter.
 
@@ -44,28 +42,38 @@ responsabilité légale.
 - GSIE documente le désaccord éventuel du forestier (traçabilité).
 - Aucun mécanisme de « pilote automatique » ne peut être implémenté.
 
-## Cas d'application
+## Exemple
 
-**Exemple 1 :** GSIE recommande de planter du chêne sessile. Le
-forestier choisit le hêtre en raison de son expérience locale.
-→ GSIE enregistre le choix, la recommandation et l'écart. Aucun
-blocage.
+GSIE recommande de planter du chêne sessile. Le forestier choisit le
+hêtre en raison de son expérience locale. GSIE enregistre le choix, la
+recommandation et l'écart. Aucun blocage.
 
-**Exemple 2 :** GSIE détecte un risque de dépérissement. Le forestier
-décide de ne pas intervenir immédiatement.
-→ GSIE documente le risque, la décision du forestier et la justification
-fournie. Aucun blocage.
+GSIE détecte un risque de dépérissement. Le forestier décide de ne pas
+intervenir immédiatement. GSIE documente le risque, la décision du
+forestier et la justification fournie. Aucun blocage.
 
-## Anti-Lois
+## Contre-exemple
 
-Interdiction :
-- de produire une sortie non contournable ;
-- de masquer une alternative au forestier ;
-- d'implémenter un mécanisme de décision automatique ;
-- de présenter une recommandation comme une obligation ;
-- de pénaliser un désaccord avec GSIE.
+Un moteur produit une recommandation que le forestier ne peut pas
+contourner (bouton désactivé, action exécutée automatiquement). C'est
+une violation de CON-001. Le mécanisme doit être retiré et remplacé par
+une sortie contournable.
 
-## Déclaration finale
+## Références
 
-« GSIE est un outil au service du forestier. Le forestier est le
-décideur. Toujours. »
+- `GSIE-FND-001` — Préambule Philosophique (Locked)
+- `AI_CONSTITUTION.md` — Article IA-1 (Rôle de l'IA) et IA-5 (Désaccord
+  humain)
+- `PACT_FOR_AI_AGENTS.md` — Principe 4 (proposer avant de modifier)
+
+## Historique
+
+| Date | Événement |
+|---|---|
+| 2026-07-01 | Création — Première Édition |
+| 2026-07-12 | Mise en conformité template RFC-0001, validation Fondateur |
+
+## Statut
+
+ADOPTÉ — Loi Fondamentale Immuable. Modification uniquement par RFC de
+révision constitutionnelle.

@@ -1,8 +1,8 @@
 # Constitution Technique de GSIE
 
 Édition : Première Édition
-Version : 1.0 (Review)
-Statut : En attente de validation du Fondateur
+Version : 1.0 (Validated)
+Statut : Validé par le Fondateur
 Classification : Constitution Sectorielle
 Référence : Livrable 008 (GSIE-DIR-0003)
 Lois fondatrices : GSIE-CON-003, GSIE-CON-007
@@ -171,3 +171,19 @@ Interdiction :
 « Le code sert la connaissance. L'architecture sert la pérennité.
 Aucun raccourci technique ne justifie de compromettre l'un ou
 l'autre. »
+
+---
+
+## Historique
+
+| Date | Événement |
+|---|---|
+| 2026-07-01 | Création — Première Édition, 10 articles (T-1 à T-10) |
+| 2026-07-12 | Validation Fondateur — passage en Validated |
+
+---
+
+## Validation
+
+Validé par le Fondateur (Camille Perraudeau) le 2026-07-12. Ce document
+ne peut être modifié que par un RFC dédié.

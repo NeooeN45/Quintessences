@@ -1,18 +1,16 @@
 # GSIE-CON-002 — La science avant tout
 
 Édition : Première Édition
-Version : 1.0 (Draft)
-Statut : À valider
+Version : 1.0 (Validated)
+Statut : Validé par le Fondateur
 Classification : Loi Fondamentale (Immuable)
 
-## Déclaration
+## Principe
 
 Toute connaissance, toute règle, tout seuil et toute corrélation dans
 GSIE doit reposer sur une source scientifique identifiable et
 vérifiable. L'opinion, l'intuition et la commodité n'ont pas de place
 dans le système expert.
-
-## Principe fondamental
 
 Aucune connaissance ne peut être intégrée à GSIE sans :
 
@@ -25,7 +23,7 @@ Lorsqu'aucune source scientifique n'est disponible, GSIE signale
 explicitement l'incertitude plutôt que de combler le vide par une
 estimation non fondée.
 
-## Pourquoi cette loi existe
+## Pourquoi
 
 Un système expert qui mélange faits scientifiques et opinions devient
 une boîte noire : on ne sait plus ce qui est fiable. En foresterie, les
@@ -48,37 +46,46 @@ une discipline : **ce qui n'est pas sourcé n'existe pas**.
 - Une connaissance dont la source est invalidée par la communauté
   scientifique est révisée via RFC, pas ignorée.
 
-## Cas d'application
+## Exemple
 
-**Exemple 1 :** Un développeur veut utiliser un seuil de pH « 5.5 »
-pour classer un sol acide. Aucune source n'est citée.
-→ Refusé. La règle ne peut pas être intégrée sans référence (par
-exemple : Référentiel Pédologique Français, édition 2008).
+Un développeur veut utiliser un seuil de pH « 5.5 » pour classer un sol
+acide. Aucune source n'est citée. Refusé. La règle ne peut pas être
+intégrée sans référence (par exemple : Référentiel Pédologique Français,
+édition 2008).
 
-**Exemple 2 :** Deux publications scientifiques donnent des gammes
-d'optimum écologique différentes pour une même essence.
-→ GSIE présente les deux sources, leurs niveaux de preuve respectifs, et
-signale le conflit. Aucune moyenne arbitraire n'est calculée sans
-justification.
+Deux publications scientifiques donnent des gammes d'optimum écologique
+différentes pour une même essence. GSIE présente les deux sources, leurs
+niveaux de preuve respectifs, et signale le conflit. Aucune moyenne
+arbitraire n'est calculée sans justification.
 
-**Exemple 3 :** Une connaissance empirique de terrain n'a pas de
-publication associée mais provient d'un expert reconnu.
-→ GSIE l'intègre avec un niveau de preuve « expert » (inférieur à
-« peer-reviewed »), en citant l'expert et la date. L'incertitude est
-affichée.
+Une connaissance empirique de terrain n'a pas de publication associée
+mais provient d'un expert reconnu. GSIE l'intègre avec un niveau de
+preuve « expert » (inférieur à « peer-reviewed »), en citant l'expert et
+la date. L'incertitude est affichée.
 
-## Anti-Lois
+## Contre-exemple
 
-Interdiction :
-- d'inventer une règle scientifique ;
-- d'inventer un coefficient ou un seuil sans source ;
-- de masquer une incertitude ;
-- de présenter une opinion comme un fait ;
-- de supprimer une source contradictoire ;
-- de fusionner des sources divergentes sans justification documentée.
+Un moteur utilise un coefficient de croissance « qui marche bien » sans
+source. Le coefficient produit des recommandations correctes sur un cas
+mais erronées sur un autre. Sans source, impossible de déterminer le
+domaine de validité. C'est une violation de CON-002. Le coefficient doit
+être retiré jusqu'à sourçage.
 
-## Déclaration finale
+## Références
 
-« Une connaissance sans source est une opinion. Une connaissance sourcée
-et traçable devient un patrimoine scientifique. GSIE ne construit que
-sur ce second fondement. »
+- `SCIENTIFIC_CONSTITUTION.md` — Articles S-1 (Sources acceptées) à S-7
+  (Patrimoine scientifique)
+- `GSIE-CON-005` — Toute connaissance doit être traçable
+- `GSIE-CON-004` — Toute décision doit être explicable
+
+## Historique
+
+| Date | Événement |
+|---|---|
+| 2026-07-01 | Création — Première Édition |
+| 2026-07-12 | Mise en conformité template RFC-0001, validation Fondateur |
+
+## Statut
+
+ADOPTÉ — Loi Fondamentale Immuable. Modification uniquement par RFC de
+révision constitutionnelle.

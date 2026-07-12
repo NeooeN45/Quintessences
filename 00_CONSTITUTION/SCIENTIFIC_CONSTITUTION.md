@@ -1,8 +1,8 @@
 # Constitution Scientifique de GSIE
 
 Édition : Première Édition
-Version : 1.0 (Review)
-Statut : En attente de validation du Fondateur
+Version : 1.0 (Validated)
+Statut : Validé par le Fondateur
 Classification : Constitution Sectorielle
 Référence : Livrable 007 (GSIE-DIR-0003)
 Loi fondatrice : GSIE-CON-002 — La science avant tout
@@ -166,3 +166,19 @@ Interdiction :
 
 « GSIE est un outil scientifique. Sa légitimité repose sur la rigueur
 de ses sources. Sans rigueur scientifique, GSIE n'est rien. »
+
+---
+
+## Historique
+
+| Date | Événement |
+|---|---|
+| 2026-07-01 | Création — Première Édition, 7 articles (S-1 à S-7) |
+| 2026-07-12 | Validation Fondateur — passage en Validated |
+
+---
+
+## Validation
+
+Validé par le Fondateur (Camille Perraudeau) le 2026-07-12. Ce document
+ne peut être modifié que par un RFC dédié.
