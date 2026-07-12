@@ -4,6 +4,31 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 2 — DÉMARRAGE EFFECTIF] - 2026-07-12
+
+### Production de l'architecture (10 livrables)
+
+Démarrage effectif de la Phase 2 (Architecture) avec 3 axes en parallèle :
+
+1. **Architecture des 14 moteurs** — contrats d'interface, entrées/sorties,
+   dépendances, garanties, cas d'usage pour chaque moteur + matrice
+   d'interactions croisée.
+2. **Architecture technique globale** — stack technologique (ADR), protocole
+   de communication offline-first, ordre de développement, modèle de données
+   scientifique, architecture globale enrichie.
+3. **Architecture GSIE-FEU** — pipeline de données (ForeFire, drone, GCS),
+   architecture drone (PX4, MAVSDK, YOLO), intégration avec les 14 moteurs,
+   garde-fous DEC-000003.
+
+ROADMAP.md enrichi avec 10 livrables Phase 2 (201-210) et critères de
+complétude.
+
+README réécrit au niveau enterprise : badges, problem statement, tableau
+comparatif avec la concurrence, architecture visuelle, gouvernance
+constitutionnelle, roadmap, contributing.
+
+---
+
 ## [RESTRUCTURATION IDENTITÉ] - 2026-07-12
 
 ### DEC-000006 — Quintessences, GSIE, GeoSylva

@@ -148,9 +148,30 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 > Lancée officiellement par **DEC-000004** le 2026-07-12.
 > Phase 1 clôturée — tous les livrables Validated ou Locked.
 
-- Architecture détaillée des moteurs
-- Contrats d'interface entre moteurs
-- Schémas de données
+### Livrables Phase 2
+
+| # | Livrable | Fichier / Dossier | Statut |
+|---|---|---|---|
+| 201 | Architecture globale GSIE | `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` | Draft |
+| 202 | Stack technologique (ADR) | `04_ARCHITECTURE/TECHNOLOGY_STACK.md` | Draft |
+| 203 | Protocole de communication entre moteurs | `04_ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` | Draft |
+| 204 | Ordre de développement des moteurs | `04_ARCHITECTURE/ENGINE_DEVELOPMENT_ORDER.md` | Draft |
+| 205 | Modèle de données scientifique | `04_ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
+| 206 | Contrats d'interface des 14 moteurs | `04_ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
+| 207 | Documentation détaillée des 14 moteurs | `09_ENGINES/*/` (14 dossiers) | Draft |
+| 208 | Architecture GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_ARCHITECTURE.md` | Draft |
+| 209 | Pipeline de données GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_DATA_PIPELINE.md` | Draft |
+| 210 | Architecture drone GSIE-FEU | `04_ARCHITECTURE/GSIE_FEU_DRONE_ARCHITECTURE.md` | Draft |
+
+### Critères de complétude Phase 2
+
+- Chaque moteur a un document détaillé (responsabilité, entrées/sorties,
+  dépendances, contrat d'interface, garanties, cas d'usage).
+- La matrice d'interactions entre moteurs est complète.
+- Le stack technologique est justifié par des ADR.
+- Le protocole de communication gère l'offline-first.
+- L'architecture GSIE-FEU respecte les garde-fous de DEC-000003.
+- Toutes les sources de données sont citées.
 
 ## Phase 3 — Connaissance (à définir)
 

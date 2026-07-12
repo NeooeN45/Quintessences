@@ -23,3 +23,5 @@ node_modules/
 
 # Archives binaires (les packs contexte agent ne sont pas versionnés)
 *.zip
+.coverage
+16_TOOLS/dataset_forge/
