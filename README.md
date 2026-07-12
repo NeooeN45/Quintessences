@@ -331,3 +331,12 @@ Voir `LICENSE` pour le texte complet.
 *Le code n'est qu'un moyen.*
 
 </div>
+
+---
+
+## Contact
+
+Pour toute question, réclamation ou collaboration :
+
+**5jvw9s5zj@mozmail.com**
+
