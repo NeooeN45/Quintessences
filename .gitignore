@@ -25,3 +25,6 @@ node_modules/
 *.zip
 .coverage
 16_TOOLS/dataset_forge/
+22_PROJECT_MEMORY/GSIE-FEU/git_init.sh
+22_PROJECT_MEMORY/GSIE-FEU/run_premier_vol.sh
+22_PROJECT_MEMORY/GSIE-FEU/run_px4.sh
