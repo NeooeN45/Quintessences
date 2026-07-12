@@ -131,8 +131,8 @@ jobs:
                 echo "::error::$f missing required Statut field."
                 exit 1
               fi
-              if ! grep -qi '\*\*Décideur\*\*' "$f"; then
-                echo "::error::$f missing required Décideur field."
+              if ! grep -qiE '\*\*Décideur(s)?\*\*' "$f"; then
+                echo "::error::$f missing required Décideur/Décideurs field."
                 exit 1
               fi
             fi
