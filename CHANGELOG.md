@@ -1,6 +1,25 @@
-# CHANGELOG — GSIE
+# CHANGELOG — Quintessences / GSIE
 
 Format : `## [version] - YYYY-MM-DD`
+
+---
+
+## [RESTRUCTURATION IDENTITÉ] - 2026-07-12
+
+### DEC-000006 — Quintessences, GSIE, GeoSylva
+
+- **Quintessences** devient l'**écosystème** (marque umbrella) regroupant
+  toutes les spécialisations environnementales.
+- **GSIE** est redéfini : **General System Intelligence Engine** (avant :
+  GeoSylva Intelligence Engine). C'est le **moteur** spécialisable par
+  domaine, au cœur de Quintessences.
+- **GeoSylva** est repositionné comme **app forestière** (première
+  spécialisation de GSIE), au même titre que GSIE-FEU (spécialisation
+  incendie). GeoSylva garde son nom historique.
+- Architecture : `Quintessences > GSIE > GeoSylva / GSIE-FEU / futures`.
+- README, PROJECT_MEMORY, ROADMAP, CHANGELOG, LICENSE mis à jour.
+- La Constitution, les 14 moteurs, la gouvernance et la traçabilité
+  restent valables — GSIE est généralisé, pas remplacé.
 
 ---
 

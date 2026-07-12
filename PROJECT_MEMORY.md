@@ -1,7 +1,9 @@
-# PROJECT_MEMORY — Vue courante du projet GSIE
+# PROJECT_MEMORY — Vue courante du projet Quintessences
 
 | Champ | Valeur |
 |---|---|
+| **Écosystème** | Quintessences |
+| **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 2 — Architecture |
 | **Directive courante** | GSIE-DIR-0003 |
 | **Dernière mise à jour** | 2026-07-12 |
@@ -10,14 +12,18 @@
 
 ## État
 
-GSIE est en **Phase 2 : Architecture**, lancée officiellement par
+**Quintessences** est un écosystème d'applications environnementales
+fondé sur le moteur **GSIE** (General System Intelligence Engine).
+Spécialisations : GeoSylva (forêt), GSIE-FEU (incendie), futures à venir.
+
+Le projet est en **Phase 2 : Architecture**, lancée officiellement par
 **DEC-000004** le 2026-07-12. La Phase 1 (Foundation) est **clôturée** —
 les 12 livrables sont Validated (9/12) ou Locked (3/12).
 
 La Phase 2 autorise l'architecture détaillée des moteurs, les
 spécifications techniques, les RFC d'architecture et le banc de
-simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt GSIE
-reste interdit jusqu'en Phase 4.
+simulation GSIE-FEU (hors dépôt). Le code métier dans le dépôt
+ reste interdit jusqu'en Phase 4.
 
 ### Avancement des livrables
 
@@ -111,6 +117,7 @@ reste interdit jusqu'en Phase 4.
 - **DEC-000003** — Adoption RFC-0004 : branche fonctionnelle GSIE-FEU (application cliente)
 - **DEC-000004** — Entrée en Phase 2 : Architecture (Phase 1 clôturée)
 - **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc GSIE-FEU (Jalon 0)
+- **DEC-000006** — Restructuration identité : Quintessences (écosystème) > GSIE (moteur) > GeoSylva (app forestière)
 
 ## Documents structurants
 
@@ -131,9 +138,10 @@ reste interdit jusqu'en Phase 4.
 
 ## Vision courante
 
-GSIE = moteur d'intelligence forestière. Produit principal.
-Les applications ne sont que des interfaces. La connaissance est le
-véritable produit.
+**Quintessences** = écosystème d'intelligence environnementale (marque
+umbrella). **GSIE** = General System Intelligence Engine, le moteur
+spécialisable par domaine. **GeoSylva** = app forestière (première
+spécialisation). La connaissance est le véritable produit.
 
 **Durant la Phase 1**, la documentation est le produit principal. Le
 code viendra en son temps, subordonné aux fondations.

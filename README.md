@@ -1,38 +1,69 @@
-# GeoSylva Intelligence Engine (GSIE)
+# Quintessences
 
-> **Fondation scientifique** — système expert forestier open-source français.
+> **Écosystème d'intelligence environnementale** — moteur d'aide à la
+> décision pour la forêt, le feu, le climat et les territoires.
 > La connaissance avant le code. La science avant l'opinion.
 
 ---
 
-## Qu'est-ce que GSIE ?
+## Qu'est-ce que Quintessences ?
 
-**GSIE** (GeoSylva Intelligence Engine) est une **plateforme
-scientifique, technique et logicielle** destinée à devenir un système
-expert d'aide au diagnostic forestier.
+**Quintessences** est un **écosystème d'applications environnementales**
+fondé sur un moteur d'intelligence commun : **GSIE** (General System
+Intelligence Engine). Chaque spécialisation — forestière, incendie,
+climatique — est une application cliente du moteur GSIE, adaptée à son
+domaine.
 
-GSIE n'est **pas une application**. GSIE n'est **pas un simple
-logiciel**. C'est une fondation scientifique dont le produit principal
-est un **moteur d'intelligence forestière** modulaire, traçable et
-explicable.
+Quintessences n'est **pas une application**. C'est un écosystème dont le
+cœur est un **moteur d'intelligence modulaire, traçable et explicable**,
+déclinable en plusieurs spécialisations environnementales.
 
-GSIE doit devenir le **premier système expert forestier open-source
-français**, capable de :
-
-- Réaliser des diagnostics stationnels
-- Analyser les sols et interpréter la flore
-- Corréler des centaines de paramètres écologiques, pédologiques,
-  climatiques et géographiques
-- Fournir des recommandations **explicables**
-- Fonctionner **entièrement hors ligne**
-- Servir de base à plusieurs interfaces
+```
+Quintessences (écosystème)
+└── GSIE (General System Intelligence Engine — moteur)
+    ├── GSIE Forestier → GeoSylva (app forestière)
+    ├── GSIE-FEU (spécialisation incendie)
+    └── [futures spécialisations : climat, eau, biodiversité, …]
+```
 
 ---
 
-## GSIE et ses interfaces
+## GSIE — le moteur
 
-**GeoSylva Mobile n'est qu'une interface.** Le produit principal est
-GSIE. Les applications ne sont que des clients du moteur.
+**GSIE** (General System Intelligence Engine) est le **moteur
+d'intelligence** au cœur de Quintessences. Il est **spécialisable par
+domaine** : chaque spécialisation étend les 14 moteurs communs avec des
+modules domaine-spécifiques.
+
+GSIE est conçu pour :
+
+- Réaliser des diagnostics environnementaux (stationnels, sylvicoles,
+  climatiques, de risque)
+- Corréler des centaines de paramètres écologiques, pédologiques,
+  climatiques et géographiques
+- Fournir des recommandations **explicables** et **contournables**
+- Fonctionner **entièrement hors ligne** (terrain, zones isolées)
+- Servir de base à plusieurs spécialisations et interfaces
+
+L'IA **assiste** le décideur (forestier, COS, gestionnaire). Elle ne
+décide **jamais** à sa place.
+
+---
+
+## Spécialisations
+
+### GeoSylva — app forestière
+
+**GeoSylva** est la **première spécialisation** de Quintessences. C'est
+l'application forestière du **GSIE Forestier**. Elle couvre :
+
+- Diagnostics stationnels et sylvicoles
+- Analyse des sols et interprétation de la flore
+- Recommandations de gestion adaptées au terrain
+- Interfaces terrain (mobile), bureau (desktop) et web
+
+GeoSylva garde son nom historique — c'est l'origine du projet, maintenant
+intégrée dans l'écosystème plus large.
 
 | Interface | Rôle |
 |---|---|
@@ -43,8 +74,18 @@ GSIE. Les applications ne sont que des clients du moteur.
 | **SDK** | Bibliothèques clientes (Kotlin, Python, TypeScript) |
 | **Plugins** | Intégrations SIG tiers (QGIS, ArcGIS) |
 
-Aucune application ne contient de logique métier. Toute l'intelligence
-réside dans les moteurs de GSIE.
+### GSIE-FEU — spécialisation incendie
+
+**GSIE-FEU** est la spécialisation incendie de Quintessences. Système
+d'aide à la décision pour la surveillance et l'analyse des feux de
+forêt, positionné comme **application cliente** de GSIE (RFC-0004,
+ADOPTÉ). Voir `22_PROJECT_MEMORY/GSIE-FEU.md` pour le registre d'idées.
+
+### Futures spécialisations
+
+L'architecture modulaire de GSIE permet d'étendre Quintessences à
+d'autres domaines environnementaux : climat, eau, biodiversité, sols,
+etc. Chaque nouvelle spécialisation fera l'objet d'un RFC dédié.
 
 ---
 
@@ -61,14 +102,12 @@ réside dans les moteurs de GSIE.
 9. L'explicabilité avant la performance.
 10. La modularité avant le confort de développement.
 
-L'IA **assiste** le forestier. Elle ne décide **jamais** à sa place.
-
 ---
 
 ## Méthodologie documentaire
 
-Toute documentation GSIE suit la hiérarchie suivante. Le code est
-toujours le **dernier niveau**.
+Toute documentation Quintessences / GSIE suit la hiérarchie suivante. Le
+code est toujours le **dernier niveau**.
 
 ```
 Vision → Constitution → RFC → Directive → Decision
@@ -80,7 +119,7 @@ Vision → Constitution → RFC → Directive → Decision
 ## Organisation du projet
 
 ```
-GSIE/
+Quintessences/
 ├── 00_CONSTITUTION/        Principes intangibles et garde-fous
 ├── 01_DIRECTIVES/          Directives fondatrices (ACTIVE / ARCHIVED)
 ├── 02_RFC/                 Request for Comments
@@ -90,10 +129,10 @@ GSIE/
 ├── 06_RESEARCH/            Travaux scientifiques et bibliographie
 ├── 07_KNOWLEDGE/           Base de connaissances structurée
 ├── 08_DATASETS/            Jeux de données référencés et sourcés
-├── 09_ENGINES/             Moteurs exécutables indépendants
+├── 09_ENGINES/             14 moteurs GSIE (documentés, non implémentés)
 ├── 10_ALGORITHMS/          Procédures computationnelles formelles
 ├── 11_MODELS/              Modèles scientifiques et d'apprentissage
-├── 12_APPLICATIONS/        Interfaces utilisateurs
+├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, GSIE-FEU, …)
 ├── 13_API/                 Contrats d'interface exposés
 ├── 14_SDK/                 Bibliothèques clientes
 ├── 15_TESTS/               Tests unitaires, intégration et non-régression
@@ -103,7 +142,8 @@ GSIE/
 ├── 19_LEGAL/               Licences, conformité, propriété intellectuelle
 ├── 20_PARTNERSHIPS/        Partenariats scientifiques et institutionnels
 ├── 21_EXPERIMENTS/         Prototypes et recherches exploratoires
-└── 22_PROJECT_MEMORY/      Mémoire du projet (décisions, visions, idées)
+├── 22_PROJECT_MEMORY/      Mémoire du projet (décisions, visions, idées)
+└── 23_QUALITY_MANAGEMENT/  Qualité : manuel, politique, KPI, audits
 ```
 
 Chaque dossier possède un README expliquant son objectif, ses
@@ -114,12 +154,13 @@ liens avec les autres dossiers.
 
 ## État du projet
 
-**Phase 1 : Fondation.** Aucun développement métier.
+**Phase 2 : Architecture.** La Phase 1 (Foundation) est clôturée — les
+12 livrables sont Validated (9/12) ou Locked (3/12).
 
 La Constitution est en place : 11 articles (CON-000 à CON-010), deux
 préambules verrouillés (FND-001, FND-002), trois constitutions
-sectorielles (scientifique, technique, IA). Les 14 moteurs officiels
-sont documentés dans `09_ENGINES/`. L'architecture est en cours de
+sectorielles (scientifique, technique, IA). Les 14 moteurs GSIE sont
+documentés dans `09_ENGINES/`. L'architecture est en cours de
 consolidation.
 
 ---
@@ -200,7 +241,7 @@ GSIE-PROMPT-0003  →  Architecture générale
 
 | Fichier | Rôle |
 |---|---|
-| `README.md` | Présentation du projet (ce fichier) |
+| `README.md` | Présentation de l'écosystème (ce fichier) |
 | `PROJECT_MEMORY.md` | Vue courante de l'état du projet |
 | `CHANGELOG.md` | Journal des évolutions |
 | `ROADMAP.md` | Feuille de route |
@@ -209,9 +250,13 @@ GSIE-PROMPT-0003  →  Architecture générale
 
 ## Licence
 
-À définir par un RFC dédié.
+Licence propriétaire — **All Rights Reserved**. Voir `LICENSE`.
+
+Le code source est public pour transparence et évaluation. Toute
+utilisation commerciale nécessite une licence séparée. Contact :
+`fondateur@gsie.fr`.
 
 ---
 
-*GSIE — la connaissance est le véritable produit. Le code n'est qu'un
-moyen.*
+*Quintessences — la connaissance est le véritable produit. Le code n'est
+qu'un moyen.*

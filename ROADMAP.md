@@ -1,4 +1,4 @@
-# ROADMAP — GSIE
+# ROADMAP — Quintessences / GSIE
 
 ## Phase 1 — Foundation (courante)
 
