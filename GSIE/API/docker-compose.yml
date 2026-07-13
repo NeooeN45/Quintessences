@@ -1,0 +1,63 @@
+# GSIE API — Docker Compose (Phase 4, semaine 1)
+# DEC-000019 : PostgreSQL+PostGIS, Redis, API FastAPI
+#
+# Usage :
+#   docker compose up -d          # démarrer tous les services
+#   docker compose logs -f api    # suivre les logs API
+#   docker compose down           # arrêter
+
+services:
+  # PostgreSQL + PostGIS 3.4
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: gsie
+      POSTGRES_PASSWORD: gsie_dev
+      POSTGRES_DB: gsie
+    ports:
+      - "5432:5432"
+    volumes:
+      - gsie_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gsie -d gsie"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis 7.2 — cache + Pub/Sub + WebSocket fan-out
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - gsie_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # API FastAPI — Gunicorn + UvicornWorker
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      GSIE_ENVIRONMENT: development
+      GSIE_DEBUG: "true"
+      GSIE_LOG_LEVEL: INFO
+      GSIE_DATABASE_URL: postgresql+asyncpg://gsie:gsie_dev@db:5432/gsie
+      GSIE_REDIS_URL: redis://redis:6379/0
+      GSIE_OTEL_ENABLED: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  gsie_pgdata:
+  gsie_redisdata:
