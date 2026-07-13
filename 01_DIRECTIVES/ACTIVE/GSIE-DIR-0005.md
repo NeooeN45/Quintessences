@@ -3,13 +3,13 @@
 # Directive ID : GSIE-DIR-0005
 # Version : 1.0
 # Statut : Draft
-# Priorité : CRITIQUE — guide toutes les décisions futures de GSIE-Ignis
+# Priorité : CRITIQUE — guide toutes les décisions futures de Ignis
 # Classification : FONDATION
 # Auteur : Camille Perraudeau (Fondateur)
 # Date : 2026-07-12
 # ============================================================================
 #
-# Cette Directive fondatrice fixe la vision produit de GSIE-Ignis en tant que
+# Cette Directive fondatrice fixe la vision produit de Ignis en tant que
 # jumeau numérique vivant des opérations de lutte contre les incendies.
 #
 # Elle est complémentaire à RFC-0004 (cadre technique/fonctionnel, ADOPTÉ via
@@ -20,15 +20,15 @@
 #   2. RFC-0004 §8 (garde-fous) prime sur la présente Directive pour tout ce
 #      qui touche à l'autonomie, à l'alerte et au commandement des secours.
 #   3. La présente Directive prime sur l'architecture et les spécifications
-#      GSIE-Ignis pour la vision produit.
+#      Ignis pour la vision produit.
 # ============================================================================
 
 # Principe fondamental
 
-Le but de GSIE-Ignis n'est pas de créer un logiciel de cartographie, un
+Le but de Ignis n'est pas de créer un logiciel de cartographie, un
 logiciel de drones ou un simulateur d'incendie.
 
-Le but de GSIE-Ignis est de créer un **jumeau numérique vivant** des
+Le but de Ignis est de créer un **jumeau numérique vivant** des
 opérations de lutte contre les incendies.
 
 Chaque choix d'architecture, chaque ligne de code et chaque fonctionnalité
@@ -38,14 +38,14 @@ doivent servir cette vision.
 
 # Vision finale
 
-Lorsqu'un utilisateur ouvre GSIE-Ignis, il ne doit pas avoir l'impression
+Lorsqu'un utilisateur ouvre Ignis, il ne doit pas avoir l'impression
 d'utiliser un logiciel.
 
 Il doit avoir l'impression d'observer le terrain réel.
 
 L'expérience doit être naturelle, fluide et immersive.
 
-L'utilisateur ouvre GSIE-Ignis.
+L'utilisateur ouvre Ignis.
 
 Il voit la Terre.
 Il zoome.
@@ -88,8 +88,8 @@ Toutes les données viennent s'y projeter.
 
 # Philosophie
 
-GSIE-Ignis ne montre pas des données.
-GSIE-Ignis raconte ce qui se passe.
+Ignis ne montre pas des données.
+Ignis raconte ce qui se passe.
 
 Le terrain devient le support unique de compréhension.
 Toutes les informations doivent être visibles directement dans leur contexte
@@ -142,7 +142,7 @@ système.
 
 Il est la représentation graphique du jumeau numérique.
 Il ne contient pas la logique métier.
-Il reçoit les informations calculées par GSIE-Ignis.
+Il reçoit les informations calculées par Ignis.
 
 Son rôle est :
 
@@ -160,7 +160,7 @@ Son rôle est :
 
 # Le cerveau
 
-Le serveur GSIE-Ignis constitue le cerveau du système.
+Le serveur Ignis constitue le cerveau du système.
 
 Il réalise :
 
@@ -229,7 +229,7 @@ L'humain conserve toujours la décision finale.
 >    système (RFC-0004 §3.1, §8.4).
 > 3. La **reprise manuelle** par le télépilote sous supervision humaine reste
 >    toujours possible et prioritaire (RFC-0004 §3.5).
-> 4. GSIE-Ignis est un **outil d'aide à la décision**, pas un système de
+> 4. Ignis est un **outil d'aide à la décision**, pas un système de
 >    commandement. Il ne remplace jamais le COS / CODIS (RFC-0004 §8.4,
 >    GSIE-CON-001).
 > 5. Aucune alerte directe à la population : prérogative régalienne
@@ -255,7 +255,7 @@ Le terrain devient un tableau de bord vivant.
 
 # Principe architectural fondamental
 
-GSIE-Ignis est une plateforme d'intelligence.
+Ignis est une plateforme d'intelligence.
 
 Le moteur graphique est interchangeable.
 Aujourd'hui Unreal Engine.
@@ -278,10 +278,10 @@ Le rendu n'est qu'une fenêtre ouverte sur cette intelligence.
 - `00_CONSTITUTION/GSIE-CON-000.md` — Primauté de la Constitution
 - `00_CONSTITUTION/GSIE-CON-001.md` — Le décideur reste humain
 - `00_CONSTITUTION/GSIE-CON-007.md` — Modularité obligatoire
-- `02_RFC/RFC-0004.md` — GSIE-Ignis : système autonome de surveillance et
+- `02_RFC/RFC-0004.md` — Ignis : système autonome de surveillance et
   d'analyse des incendies (ADOPTÉ — DEC-000003)
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004
 - `03_DECISIONS/DEC-000008.md` — Adoption de la présente Directive
-- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées vivant
+- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant
 
 FIN DE DIRECTIVE.

@@ -124,7 +124,7 @@ Fondateur (livrable annexe ? anticipation de phase ultérieure ?) :
 Capture la vision fondateur sur l'architecture offline-first, distribuée
 et orientée données de GSIE. Activé en Phase 2. Voir `02_RFC/RFC-0003.md`.
 
-**RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse des
+**RFC-0004** — Ignis : Système autonome de surveillance et d'analyse des
 incendies : **ADOPTÉ** le 2026-07-12 (DEC-000003). Nouvelle branche
 fonctionnelle et application cliente de GSIE pour le risque incendie. Activé
 en Phase 2+. Voir `02_RFC/RFC-0004.md` et `03_DECISIONS/DEC-000003.md`.
@@ -148,10 +148,10 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 > Lancée officiellement par **DEC-000004** le 2026-07-12.
 > Phase 1 clôturée — tous les livrables Validated ou Locked.
 >
-> **Vision produit GSIE-Ignis** fixée par **GSIE-DIR-0005** (Directive
+> **Vision produit Ignis** fixée par **GSIE-DIR-0005** (Directive
 > fondatrice GCS / jumeau numérique vivant, DEC-000008) et **GSIE-DIR-0006**
 > (Vision du Moteur Cognitif, DEC-000009). Les livrables 208-210
-> (architecture GSIE-Ignis) doivent servir ces deux visions complémentaires
+> (architecture Ignis) doivent servir ces deux visions complémentaires
 > — le moteur graphique montre le monde, le moteur cognitif le comprend — et
 > respecter les garde-fous de RFC-0004 §8.
 
@@ -166,9 +166,9 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 205 | Modèle de données scientifique | `04_ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
 | 206 | Contrats d'interface des 14 moteurs | `04_ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
 | 207 | Documentation détaillée des 14 moteurs | `09_ENGINES/*/` (14 dossiers) | Draft |
-| 208 | Architecture GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
-| 209 | Pipeline de données GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
-| 210 | Architecture drone GSIE-Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
+| 208 | Architecture Ignis | `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
+| 209 | Pipeline de données Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
+| 210 | Architecture drone Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
 | 211 | GCS-Cinéma Unreal Engine (Ignis) | `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | Draft |
 | 212 | GeoSylva-Unreal Architecture (LiDAR + PCG) | `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` | Draft (attente MVP Ignis) |
 
@@ -179,7 +179,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 - La matrice d'interactions entre moteurs est complète.
 - Le stack technologique est justifié par des ADR.
 - Le protocole de communication gère l'offline-first.
-- L'architecture GSIE-Ignis respecte les garde-fous de DEC-000003 et la
+- L'architecture Ignis respecte les garde-fous de DEC-000003 et la
   vision produit de GSIE-DIR-0005 (jumeau numérique vivant, moteur 3D
   interchangeable sans logique métier) et de GSIE-DIR-0006 (moteur cognitif :
   assimilation probabiliste, raisonnement multi-échelle/temporel/probabiliste,
@@ -254,7 +254,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 ### Applications
 
 - GeoSylva (forêt)
-- GSIE-Ignis (incendie)
+- Ignis (incendie)
 
 ---
 

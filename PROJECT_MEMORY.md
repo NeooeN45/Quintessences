@@ -5,7 +5,7 @@
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 3 — Connaissance |
-| **Directive courante** | GSIE-DIR-0008 (Encyclopédie de l'Écosystème) |
+| **Directive courante** | GSIE-DIR-0009 (Restructuration écosystème) |
 | **Dernière mise à jour** | 2026-07-13 |
 
 ---
@@ -14,7 +14,10 @@
 
 **Quintessences** est un écosystème d'applications environnementales
 fondé sur le moteur **GSIE** (General System Intelligence Engine).
-Spécialisations : GeoSylva (forêt), GSIE-Ignis (incendie), futures à venir.
+Spécialisations : GeoSylva (forêt), Artemis (faune), Ignis (incendies),
+Hydro (eau), Flora (végétation), QGISIA (plugin QGIS). Centre de
+Commandement GSIE (Unreal Engine 5.8) — poste de pilotage immersif où
+toutes les données convergent.
 
 Le projet est en **Phase 3 : Connaissance**, lancée officiellement par
 **DEC-000011** (GSIE-DIR-0007) le 2026-07-13. La Phase 1 (Foundation)
@@ -75,13 +78,13 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, en attente MVP Ignis)
 - `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR
 
-### Branche GSIE-Ignis (RFC-0004)
+### Branche Ignis (RFC-0004)
 
-- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées vivant (60+ idées, 9
+- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant (60+ idées, 9
   sections : perception, jumeau numérique, vol drone, communications, GCS,
   données, stratégie, modèles IA, veille concurrentielle). Version 0.7.x.
-- `22_PROJECT_MEMORY/GSIE-Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
-- **Banc de simulation GSIE-Ignis** (WSL2, hors dépôt) :
+- `22_PROJECT_MEMORY/Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
+- **Banc de simulation Ignis** (WSL2, hors dépôt) :
   - ForeFire compilé + démo propagation.png ✓
   - PX4 SITL v1.18.0-beta1 + Gazebo Harmonic 8.14.0 opérationnels ✓
   - **5 tests de vol réussis** : premier vol (34 m), waypoint (carré 100 m),
@@ -116,11 +119,11 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé — 2026-07-07) :
   capture la vision fondateur sur l'architecture offline-first, distribuée,
   multi-couches et orientée données. Activé en Phase 2.
-- **RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse
+- **RFC-0004** — Ignis : Système autonome de surveillance et d'analyse
   des incendies (**ADOPTÉ** — 2026-07-12, DEC-000003) : nouvelle branche
   fonctionnelle dédiée au risque incendie, positionnée comme application
-  cliente de GSIE. Registre d'idées dans `22_PROJECT_MEMORY/GSIE-Ignis.md` ;
-  livrables Jalon 0 dans `22_PROJECT_MEMORY/GSIE-Ignis/`. Aucun développement
+  cliente de GSIE. Registre d'idées dans `22_PROJECT_MEMORY/Ignis.md` ;
+  livrables Jalon 0 dans `22_PROJECT_MEMORY/Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
 
 ---
@@ -136,30 +139,32 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **DIR-0003-D1** — La documentation devient le cœur du projet
 - **DIR-0003-D2** — 12 livrables obligatoires, produits dans l'ordre
 - **DIR-0003-D3** — Aucun développement métier avant validation des 12 livrables
-- **DEC-000003** — Adoption RFC-0004 : branche fonctionnelle GSIE-Ignis (application cliente)
+- **DEC-000003** — Adoption RFC-0004 : branche fonctionnelle Ignis (application cliente)
 - **DEC-000004** — Entrée en Phase 2 : Architecture (Phase 1 clôturée)
-- **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc GSIE-Ignis (Jalon 0)
+- **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc Ignis (Jalon 0)
 - **DEC-000006** — Restructuration identité : Quintessences (écosystème) > GSIE (moteur) > GeoSylva (app forestière)
-- **DEC-000007** — Extension écosystème : Myhunt + QGISIA
-- **DEC-000008** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) — GSIE-DIR-0005
-- **DEC-000009** — Vision du Moteur Cognitif GSIE-Ignis — GSIE-DIR-0006
+- **DEC-000007** — Extension écosystème : Artemis + QGISIA (ancien Myhunt, renommé par DEC-000013)
+- **DEC-000008** — Directive fondatrice Ignis (GCS / jumeau numérique vivant) — GSIE-DIR-0005
+- **DEC-000009** — Vision du Moteur Cognitif Ignis — GSIE-DIR-0006
 - **DEC-000010** — Adoption Unreal Engine 5.8 + Cesium comme moteur 3D du jumeau numérique
 - **DEC-000011** — Entrée en Phase 3 : Connaissance (GSIE-DIR-0007)
 - **DEC-000012** — L'Encyclopédie de l'Écosystème : la plus grande base de connaissances écologiques du marché (GSIE-DIR-0008)
+- **DEC-000013** — Restructuration écosystème : Myhunt→Artemis, GSIE-Ignis→Ignis, +Hydro, +Flora, Centre de Commandement GSIE (GSIE-DIR-0009)
 
 ## Documents structurants
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
 - **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
 - **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
-- **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
-- **GSIE-DIR-0006** — Vision du Moteur Cognitif GSIE-Ignis (Draft — DEC-000009)
+- **GSIE-DIR-0005** — Directive fondatrice Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
+- **GSIE-DIR-0006** — Vision du Moteur Cognitif Ignis (Draft — DEC-000009)
 - **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
 - **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
+- **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
-- **RFC-0004** — Branche fonctionnelle GSIE-Ignis (ADOPTÉ — DEC-000003)
+- **RFC-0004** — Branche fonctionnelle Ignis (ADOPTÉ — DEC-000003)
 - **RFC-0005 à RFC-0010** — Réservés, non ouverts
 
 ## Documents fondateurs de la Constitution

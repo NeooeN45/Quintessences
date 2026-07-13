@@ -18,9 +18,9 @@
 Le présent livrable définit, pour chacun des 14 moteurs GSIE, le
 **socle de données** qu'il consomme depuis l'Encyclopédie de
 l'Écosystème (GSIE-DIR-0008) et ce qu'il produit en retour. Il
-définit également les liens entre les moteurs et les quatre
+définit également les liens entre les moteurs et les six
 applications externes de l'écosystème Quintessences : GeoSylva,
-GSIE-Ignis, Myhunt et QGISIA.
+Ignis, Artemis, Hydro, Flora et QGISIA.
 
 Le socle de données est le **contrat de données** entre
 l'Encyclopédie (source centrale) et chaque moteur. Il précise, pour
@@ -94,7 +94,7 @@ Chaque socle se décompose en trois couches :
 ## 3. Schéma global des flux
 
 Le schéma ci-dessous montre l'Encyclopédie au centre, alimentant les
-14 moteurs, qui à leur tour servent les 4 applications externes.
+14 moteurs, qui à leur tour servent les 6 applications externes.
 
 ```
                     +-----------------------------------------+
@@ -157,13 +157,13 @@ Le schéma ci-dessous montre l'Encyclopédie au centre, alimentant les
                     |  (ValidatedOutput, 206)   |
                     +-------------+-------------+
                                   |
-          +-----------+-----------+-----------+-----------+
-          |           |           |           |
-          v           v           v           v
-     +-----------+ +-----------+ +-----------+ +-----------+
-     | GEOSYLVA  | |GSIE-IGNIS | |  MYHUNT   | |  QGISIA   |
-     |  (foret)  | | (incendie)| | (chasse)  | | (QGIS+IA) |
-     +-----------+ +-----------+ +-----------+ +-----------+
+          +-----------+-----------+-----------+-----------+-----------+-----------+
+          |           |           |           |           |           |           |
+          v           v           v           v           v           v
+     +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
+     | GEOSYLVA  | |  IGNIS    | |  ARTEMIS  | |  QGISIA   | |  HYDRO    | |  FLORA    |
+     |  (foret)  | | (incendie)| | (faune)   | | (QGIS+IA) | |  (eau)    | | (végétal) |
+     +-----------+ +-----------+ +-----------+ +-----------+ +-----------+ +-----------+
 ```
 
 Légende : les flèches représentent les flux de données principaux.
@@ -227,7 +227,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Polygone de la parcelle X avec type de peuplement » 2. « MNT et hauteur de canopée sur un rayon de 500 m autour de la station Y » 3. « Indice NDVI moyen sur la parcelle Z pour l'été 2025 » |
 | **Moteurs amont (dépendances)** | Knowledge Engine (cache, ontologie spatiale) |
 | **Moteurs aval (consommateurs)** | Diagnostic Engine, Simulation Engine, Forest Dynamics Engine, indirectement Correlation (via Knowledge) |
-| **Apps externes servies** | GeoSylva (cartes), GSIE-Ignis (terrain, combustible spatial), Myhunt (cartes habitats), QGISIA (couches QGIS) |
+| **Apps externes servies** | GeoSylva (cartes), Ignis (terrain, combustible spatial), Artemis (cartes habitats), QGISIA (couches QGIS) |
 | **Tables/Nodes spécifiques** | PostgreSQL/PostGIS : tables `parcelle`, `mnt_raster`, `canopee_raster`, `occupation_sol`, `sentinel_tile` ; Neo4j : `Station` avec géométrie |
 | **Volume estimé** | ~10 To de données raster (LiDAR, satellite), ~500 000 polygones forestiers (BD Forêt) |
 
@@ -244,7 +244,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Autécologie complète de `Quercus petraea` : pH, altitude, RUM, exposition » 2. « Essences adaptées à un sol de pH 5,0 et altitude 600 m » 3. « Aire de répartition de `Fagus sylvatica` selon GBIF » |
 | **Moteurs amont (dépendances)** | Knowledge Engine (ontologie taxonomique) |
 | **Moteurs aval (consommateurs)** | Diagnostic Engine, Correlation Engine, Simulation Engine, Recommendation Engine (indirectement) |
-| **Apps externes servies** | GeoSylva (fiches essences), Myhunt (habitats faune liés à la flore), QGISIA (couches taxonomiques) |
+| **Apps externes servies** | GeoSylva (fiches essences), Artemis (habitats faune liés à la flore), QGISIA (couches taxonomiques) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `Essence` (taxonomie hiérarchique), arêtes `est_adapte_a` ; PostgreSQL : tables `essence`, `essence_autecologie`, `taxon_classification`, `aire_repartition` |
 | **Volume estimé** | ~50 000 taxons (BDNFF), ~200 000 occurrences (GBIF France), ~5 000 fiches autécologiques |
 
@@ -278,7 +278,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Déficit hydrique cumulé été 2025 à la station X » 2. « Projection de température moyenne 2050 scénario SSP3-7.0 sur la parcelle Y » 3. « Étage bioclimatique de la station Z selon la classification de Rameau » |
 | **Moteurs amont (dépendances)** | Knowledge Engine (cache) |
 | **Moteurs aval (consommateurs)** | Diagnostic Engine, Simulation Engine, Forest Dynamics Engine, Correlation Engine |
-| **Apps externes servies** | GeoSylva (données climatiques station), GSIE-Ignis (météo temps réel pour propagation feu), Myhunt (météo chasse) |
+| **Apps externes servies** | GeoSylva (données climatiques station), Ignis (météo temps réel pour propagation feu), Artemis (météo chasse) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `Climat` (historique/projection), arêtes `influence` (climat-essence) ; PostgreSQL : tables `climat_normale`, `climat_projection`, `climat_observation`, `bioclimat_indice` |
 | **Volume estimé** | ~5 To de données climatiques gridded (Safran, DRIAS), ~10 millions d'observations journalières |
 
@@ -329,7 +329,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Diagnostic sanitaire de la parcelle X : stress hydrique, maladies, ravageurs » 2. « Risque de dépérissement du chêne sur la station Y selon climat 2025 » 3. « État de régénération naturelle de la parcelle Z » |
 | **Moteurs amont (dépendances)** | Reasoning Engine + moteurs domaine (GIS, Climate, Pedology, Botanical, Forest Dynamics) |
 | **Moteurs aval (consommateurs)** | Recommendation Engine, Simulation Engine |
-| **Apps externes servies** | GeoSylva (diagnostic affiché au forestier), GSIE-Ignis (diagnostic combustible/risque incendie) |
+| **Apps externes servies** | GeoSylva (diagnostic affiché au forestier), Ignis (diagnostic combustible/risque incendie) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `Diagnostic` (liés aux parcelles) ; PostgreSQL : tables `diagnostic_report`, `diagnostic_probleme`, `diagnostic_risque`, `system_state` |
 | **Volume estimé** | ~10 000 diagnostics par an (un par parcelle active), ~50 paramètres par diagnostic |
 
@@ -346,7 +346,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Projection de croissance du douglas sur la parcelle X à 10 ans selon le modèle ONF-FFN » 2. « Accroissement moyen annuel de la parcelle Y par essence » 3. « Biomasse sur pied estimée par LiDAR sur la parcelle Z » |
 | **Moteurs amont (dépendances)** | Knowledge Engine, Correlation Engine |
 | **Moteurs aval (consommateurs)** | Diagnostic Engine, Simulation Engine |
-| **Apps externes servies** | GeoSylva (projections croissance), GSIE-Ignis (biomasse = combustible) |
+| **Apps externes servies** | GeoSylva (projections croissance), Ignis (biomasse = combustible) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `Peuplement`, `Arbre` ; PostgreSQL : tables `peuplement`, `arbre`, `croissance_projection`, `biomasse_estimation`, `modele_calibration` |
 | **Volume estimé** | ~100 000 peuplements suivis, ~10 millions d'arbres (IFN + LiDAR), ~50 modèles de croissance calibrés |
 
@@ -363,7 +363,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « Simulation de la parcelle X sur 50 ans avec scénario SSP3-7.0 et intervention d'éclaircie à 15 ans » 2. « Propagation d'un incendie sur la zone Y avec vent 30 km/h et humidité 20 % » 3. « Comparaison de 3 scénarios sylvicoles pour la parcelle Z » |
 | **Moteurs amont (dépendances)** | Forest Dynamics Engine, Climate Engine |
 | **Moteurs aval (consommateurs)** | Recommendation Engine, Validation Engine, Learning Engine |
-| **Apps externes servies** | GeoSylva (simulations sylvicoles), GSIE-Ignis (simulation propagation feu, jumeau UE 5.8) |
+| **Apps externes servies** | GeoSylva (simulations sylvicoles), Ignis (simulation propagation feu, jumeau UE 5.8) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `Scenario`, `SimulationRun` ; PostgreSQL : tables `simulation_scenario`, `simulation_run`, `simulation_result`, `scenario_comparison` |
 | **Volume estimé** | ~1 000 scénarios par an, ~100 000 pas de temps par simulation, ~50 Go de résultats par scénario long |
 
@@ -397,7 +397,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 | **Requêtes typiques** | 1. « La recommandation X est-elle conforme à CON-001 (le forestier décideur) ? » 2. « Toutes les sources de la recommandation Y sont-elles traçables (CON-005) ? » 3. « Le niveau de preuve de chaque élément de la recommandation Z est-il affiché (S-2) ? » |
 | **Moteurs amont (dépendances)** | Recommendation Engine, Diagnostic Engine |
 | **Moteurs aval (consommateurs)** | Utilisateur final (via apps externes), Learning Engine (écarts) |
-| **Apps externes servies** | GeoSylva (sorties validées affichées), GSIE-Ignis (validations des simulations incendie), Myhunt, QGISIA (toutes les apps consomment les sorties validées) |
+| **Apps externes servies** | GeoSylva (sorties validées affichées), Ignis (validations des simulations incendie), Artemis, QGISIA, Hydro, Flora (toutes les apps consomment les sorties validées) |
 | **Tables/Nodes spécifiques** | Neo4j : nœuds `ValidationResult` (liés aux recommandations) ; PostgreSQL : tables `validation_result`, `validation_check`, `validation_gap`, `conformite_constitution` |
 | **Volume estimé** | ~10 000 validations par an (une par recommandation), ~20 contrôles par validation |
 
@@ -422,7 +422,7 @@ Les 14 moteurs sont décrits ci-dessous dans l'ordre du livrable 204.
 
 ## 5. Liens vers les apps externes
 
-Les quatre applications externes de l'écosystème Quintessences
+Les six applications externes de l'écosystème Quintessences
 consomment les sorties des moteurs GSIE via l'API GSIE (livrable 207).
 Aucune app n'accède directement au Knowledge Graph : toutes passent
 par les contrats d'interface validés (livrable 206).
@@ -442,9 +442,9 @@ diagnostic, recommandations, simulations, cartographie.
 | **Contrats consommés** | `ValidatedOutput` (206), `DiagnosticReport` (206), `RecommendationSet` (206), `SimulationResult` (206), `DomainData` GIS/Botanical/Pedology/Climate (206) |
 | **Fréquence d'accès** | Temps réel pour la consultation, asynchrone pour les diagnostics et simulations longs |
 
-### 5.2 GSIE-Ignis (incendie)
+### 5.2 Ignis (incendie)
 
-GSIE-Ignis est l'application de surveillance et d'analyse incendie,
+Ignis est l'application de surveillance et d'analyse incendie,
 dotée d'un jumeau numérique 3D sous Unreal Engine 5.8. Elle
 consomme les moteurs spatiaux, climatiques et de simulation pour
 modéliser la propagation du feu.
@@ -453,23 +453,23 @@ modéliser la propagation du feu.
 |---|---|
 | **Moteurs consommés** | GIS Engine, Climate Engine, Simulation Engine, Knowledge Engine, Reasoning Engine, Forest Dynamics Engine (biomasse = combustible), Diagnostic Engine (risque combustible) |
 | **Données affichées** | Propagation du feu (simulation), météo temps réel, terrain (MNT, pente, exposition), combustibles (biomasse, humidité), jumeau 3D UE 5.8 |
-| **Flux** | GSIE API → GSIE-Ignis GCS (ground control station) + Unreal Engine 5.8 (rendu 3D temps réel) |
+| **Flux** | GSIE API → Ignis GCS (ground control station) + Unreal Engine 5.8 (rendu 3D temps réel) |
 | **Socle spécifique** | Comportement du feu (modèles FARSITE, Prométhée), combustibles (classification, charge, humidité), météo temps réel (AROME), terrain (LiDAR, pente), historique incendies (Prométhée, EFFIS, FIRMS) |
 | **Contrats consommés** | `SimulationResult` (propagation), `DomainData` GIS/Climate, `DiagnosticReport` (risque combustible), `SystemState` (état initial) |
 | **Fréquence d'accès** | Temps réel pendant la surveillance active (flux synchrone autorisé, livrable 206 §4) ; asynchrone pour les analyses post-incendie |
 | **Datasets spécifiques** | DS-002 (LiDAR — combustible spatial), DS-009 (AROME — météo temps réel), DS-022 (Prométhée), DS-023 (EFFIS), DS-024 (MODIS/FIRMS — détection active) |
 
-### 5.3 Myhunt (chasse)
+### 5.3 Artemis (faune)
 
-Myhunt est l'application de chasse. Elle consomme les moteurs
+Artemis est l'application de suivi de la faune. Elle consomme les moteurs
 spatiaux et botaniques pour cartographier les habitats faune et
-fournir le contexte météo aux chasseurs.
+fournir le contexte météo aux utilisateurs.
 
 | Aspect | Détail |
 |---|---|
 | **Moteurs consommés** | GIS Engine, Botanical Engine, Knowledge Engine, Climate Engine |
-| **Données affichées** | Habitats faune (liés à la flore et aux habitats écologiques), cartes interactives, météo de chasse, observations naturalistes (INPN) |
-| **Flux** | GSIE API → Myhunt frontend (mobile) |
+| **Données affichées** | Habitats faune (liés à la flore et aux habitats écologiques), cartes interactives, météo de terrain, observations naturalistes (INPN) |
+| **Flux** | GSIE API → Artemis frontend (mobile) |
 | **Socle spécifique** | Habitats faune (corrélation flore-faune via INPN), biodiversité, données spatiales (parcelles, relief), météo locale |
 | **Contrats consommés** | `DomainData` GIS/Botanical/Climate, `KnowledgeQuery` (recherche habitats) |
 | **Fréquence d'accès** | Temps réel pour la consultation terrain (mobile), asynchrone pour les analyses d'habitat |
@@ -491,6 +491,38 @@ directement dans QGIS.
 | **Fréquence d'accès** | À la demande (l'utilisateur déclenche les analyses depuis QGIS) |
 | **Datasets spécifiques** | DS-001 (BD Forêt), DS-002 (LiDAR), DS-018/019/020 (Sentinel/Landsat), DS-013 (SoilGrids) |
 
+### 5.5 Hydro (eau)
+
+Hydro est l'application de gestion et de visualisation de l'eau. Elle
+consomme les moteurs spatiaux, climatiques, de connaissances et de
+corrélation pour cartographier le réseau hydrographique et analyser
+les régimes hydriques.
+
+| Aspect | Détail |
+|---|---|
+| **Moteurs consommés** | GIS Engine, Climate Engine, Knowledge Engine, Correlation Engine |
+| **Données affichées** | Réseau hydrographique, zones humides, régimes hydriques |
+| **Flux** | GSIE API → Hydro frontend |
+| **Socle spécifique** | BD Carthage (IGN), BD TOPAGE, Sandre |
+| **Contrats consommés** | `DomainData` GIS/Climate, `KnowledgeQuery` (requêtes hydriques), `CorrelationSet` (corrélations hydro-climatiques) |
+| **Fréquence d'accès** | Temps réel pour la consultation, asynchrone pour les analyses de régime hydrique |
+
+### 5.6 Flora (végétation)
+
+Flora est l'application de cartographie et d'analyse de la végétation.
+Elle consomme les moteurs botaniques, de connaissances, spatiaux et
+climatiques pour fournir des données floristiques, taxonomiques et
+phénologiques.
+
+| Aspect | Détail |
+|---|---|
+| **Moteurs consommés** | Botanical Engine, Knowledge Engine, GIS Engine, Climate Engine |
+| **Données affichées** | Flore, taxonomie, cartographie végétale, phénologie |
+| **Flux** | GSIE API → Flora frontend |
+| **Socle spécifique** | GBIF, Tela Botanica, BDNFF, INPN |
+| **Contrats consommés** | `DomainData` Botanical/GIS/Climate, `KnowledgeQuery` (requêtes taxonomiques) |
+| **Fréquence d'accès** | Temps réel pour la consultation terrain, asynchrone pour les analyses phénologiques |
+
 ---
 
 ## 6. Matrice moteur × app
@@ -499,22 +531,22 @@ Lecture : la ligne est un moteur, la colonne est une application. Une
 case cochée signifie que l'application consomme les sorties du
 moteur (directement ou via les sorties validées).
 
-| Moteur \ App | GeoSylva | GSIE-Ignis | Myhunt | QGISIA |
-|---|---|---|---|---|
-| **Evidence Engine** | Oui (indirect) | Oui (indirect) | Oui (indirect) | Oui (indirect) |
-| **Knowledge Engine** | Oui | Oui | Oui | Oui |
-| **GIS Engine** | Oui | Oui | Oui | Oui |
-| **Botanical Engine** | Oui | Non | Oui | Non |
-| **Pedology Engine** | Oui | Non | Non | Oui |
-| **Climate Engine** | Oui | Oui | Oui | Non |
-| **Correlation Engine** | Oui (indirect) | Non | Non | Oui |
-| **Reasoning Engine** | Oui (indirect) | Oui (indirect) | Non | Oui (indirect) |
-| **Diagnostic Engine** | Oui | Oui | Non | Non |
-| **Forest Dynamics Engine** | Oui | Oui (combustible) | Non | Non |
-| **Simulation Engine** | Oui | Oui | Non | Non |
-| **Recommendation Engine** | Oui | Non | Non | Non |
-| **Validation Engine** | Oui | Oui | Oui | Oui |
-| **Learning Engine** | Non (transverse) | Non (transverse) | Non (transverse) | Non (transverse) |
+| Moteur \ App | GeoSylva | Ignis | Artemis | QGISIA | Hydro | Flora |
+|---|---|---|---|---|---|---|
+| **Evidence Engine** | Oui (indirect) | Oui (indirect) | Oui (indirect) | Oui (indirect) | Oui (indirect) | Oui (indirect) |
+| **Knowledge Engine** | Oui | Oui | Oui | Oui | Oui | Oui |
+| **GIS Engine** | Oui | Oui | Oui | Oui | Oui | Oui |
+| **Botanical Engine** | Oui | Non | Oui | Non | Non | Oui |
+| **Pedology Engine** | Oui | Non | Non | Oui | Non | Non |
+| **Climate Engine** | Oui | Oui | Oui | Non | Oui | Oui |
+| **Correlation Engine** | Oui (indirect) | Non | Non | Oui | Oui | Non |
+| **Reasoning Engine** | Oui (indirect) | Oui (indirect) | Non | Oui (indirect) | Non | Non |
+| **Diagnostic Engine** | Oui | Oui | Non | Non | Non | Non |
+| **Forest Dynamics Engine** | Oui | Oui (combustible) | Non | Non | Non | Non |
+| **Simulation Engine** | Oui | Oui | Non | Non | Non | Non |
+| **Recommendation Engine** | Oui | Non | Non | Non | Non | Non |
+| **Validation Engine** | Oui | Oui | Oui | Oui | Oui | Oui |
+| **Learning Engine** | Non (transverse) | Non (transverse) | Non (transverse) | Non (transverse) | Non (transverse) | Non (transverse) |
 
 Légende :
 - **Oui** = l'app consomme directement les sorties du moteur.
@@ -524,13 +556,16 @@ Légende :
 - **Non** = l'app ne consomme pas ce moteur.
 
 > GeoSylva consomme la chaîne complète car c'est l'application
-> forestière principale. GSIE-Ignis se concentre sur les moteurs
-> spatiaux, climatiques et de simulation. Myhunt exploite les
+> forestière principale. Ignis se concentre sur les moteurs
+> spatiaux, climatiques et de simulation. Artemis exploite les
 > moteurs spatiaux et botaniques pour les habitats faune. QGISIA
 > exploite les moteurs spatiaux et de corrélation pour les analyses
-> IA. Le Learning Engine est transverse et n'est pas consommé
-> directement par les apps : il alimente la boucle d'amélioration en
-> amont.
+> IA. Hydro exploite les moteurs spatiaux, climatiques et de
+> corrélation pour le réseau hydrographique et les régimes hydriques.
+> Flora exploite les moteurs botaniques, spatiaux et climatiques pour
+> la cartographie végétale et la phénologie. Le Learning Engine est
+> transverse et n'est pas consommé directement par les apps : il
+> alimente la boucle d'amélioration en amont.
 
 ---
 
@@ -565,10 +600,12 @@ d'interface) et au livrable 203 (protocole de communication).
 
 | Message | Émetteur | Destinataire | Description |
 |---|---|---|---|
-| `ValidatedOutput` | Validation Engine | GeoSylva, GSIE-Ignis, Myhunt, QGISIA | Sorties validées (recommandations + sources + niveau de confiance) — produit principal exposé aux apps |
-| `DomainData` (GIS) | GIS Engine | GeoSylva, GSIE-Ignis, Myhunt, QGISIA | Couches spatiales (parcelles, MNT, imagerie) |
-| `SimulationResult` | Simulation Engine | GeoSylva, GSIE-Ignis | Projections et simulations (sylvicoles et incendie) |
-| `DiagnosticReport` | Diagnostic Engine | GeoSylva, GSIE-Ignis | Diagnostic de peuplement / risque combustible |
+| `ValidatedOutput` | Validation Engine | GeoSylva, Ignis, Artemis, QGISIA, Hydro, Flora | Sorties validées (recommandations + sources + niveau de confiance) — produit principal exposé aux apps |
+| `DomainData` (GIS) | GIS Engine | GeoSylva, Ignis, Artemis, QGISIA, Hydro, Flora | Couches spatiales (parcelles, MNT, imagerie) |
+| `DomainData` (Climate) | Climate Engine | GeoSylva, Ignis, Artemis, Hydro, Flora | Données climatiques et bioclimatiques |
+| `DomainData` (Botanical) | Botanical Engine | GeoSylva, Artemis, Flora | Données botaniques (taxonomie, autécologie) |
+| `SimulationResult` | Simulation Engine | GeoSylva, Ignis | Projections et simulations (sylvicoles et incendie) |
+| `DiagnosticReport` | Diagnostic Engine | GeoSylva, Ignis | Diagnostic de peuplement / risque combustible |
 
 ### 7.4 Flux transverses (Learning)
 
@@ -590,7 +627,7 @@ d'interface) et au livrable 203 (protocole de communication).
 3. **Toutes les sorties sont explicables** (CON-004). Chaque
    recommandation cite les moteurs et sources qui l'ont produite.
 4. **Communication asynchrone par défaut**. La chaîne d'intelligence
-   peut être synchrone pour les flux temps réel (GSIE-Ignis).
+   peut être synchrone pour les flux temps réel (Ignis).
 5. **Offline-first**. Les moteurs communiquent par messages persistés
    (T-2).
 
@@ -759,7 +796,8 @@ critique ; le graphe Neo4j reste d'volume modéré.
 
 | Version | Date | Auteur | Modification |
 |---|---|---|---|
-| 0.1 | 2026-07-13 | Camille Perraudeau | Création du livrable 310 — socle de données des 14 moteurs et liens vers les apps externes (GeoSylva, GSIE-Ignis, Myhunt, QGISIA) |
+| 0.1 | 2026-07-13 | Camille Perraudeau | Création du livrable 310 — socle de données des 14 moteurs et liens vers les apps externes (GeoSylva, Ignis, Artemis, QGISIA) |
+| 0.2 | 2026-07-13 | Camille Perraudeau | Restructuration GSIE-DIR-0009 / DEC-000013 — ajout Hydro et Flora (sections 5.5, 5.6), renommage Ignis → Ignis, Artemis → Artemis, matrice moteur × app étendue à 6 apps |
 
 ---
 

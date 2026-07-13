@@ -3,13 +3,13 @@
 # Directive ID : GSIE-DIR-0006
 # Version : 1.0
 # Statut : Draft
-# Priorité : CRITIQUE — guide l'architecture du cerveau GSIE-Ignis
+# Priorité : CRITIQUE — guide l'architecture du cerveau Ignis
 # Classification : FONDATION
 # Auteur : Camille Perraudeau (Fondateur)
 # Date : 2026-07-12
 # ============================================================================
 #
-# Cette Directive fondatrice fixe la vision du **moteur cognitif** GSIE-Ignis
+# Cette Directive fondatrice fixe la vision du **moteur cognitif** Ignis
 # (le cerveau serveur). Elle est le compagnon de GSIE-DIR-0005, qui fixe la
 # vision du **jumeau numérique vivant** côté rendu/GCS.
 #
@@ -25,12 +25,12 @@
 #   2. RFC-0004 §8 (garde-fous) prime sur la présente Directive pour tout ce
 #      qui touche à l'autonomie, à l'alerte et au commandement des secours.
 #   3. La présente Directive prime sur l'architecture et les spécifications
-#      GSIE-Ignis pour la vision du moteur cognitif.
+#      Ignis pour la vision du moteur cognitif.
 # ============================================================================
 
 # Principe fondamental
 
-Le serveur GSIE-Ignis n'est pas un serveur.
+Le serveur Ignis n'est pas un serveur.
 
 Il est un système d'intelligence.
 
@@ -320,7 +320,7 @@ les comportements inhabituels.
 Il agit avant qu'un humain ne pose la question.
 
 > **Cadrage explicite** : « agit » signifie « signale et propose », jamais
-> « décide à la place de l'humain » (GSIE-CON-001, RFC-0004 §8.4). GSIE-Ignis
+> « décide à la place de l'humain » (GSIE-CON-001, RFC-0004 §8.4). Ignis
 > est un outil d'aide à la décision, pas un système de commandement.
 
 ---
@@ -331,7 +331,7 @@ Toute nouvelle théorie peut être testée.
 Toute nouvelle IA peut être comparée.
 Toute nouvelle simulation peut être évaluée.
 
-GSIE-Ignis devient une plateforme scientifique autant qu'opérationnelle.
+Ignis devient une plateforme scientifique autant qu'opérationnelle.
 
 ---
 
@@ -346,7 +346,7 @@ prédire et d'apprendre continuellement à partir du monde réel.
 
 # Vision à long terme
 
-À terme, GSIE-Ignis ne devra plus seulement représenter les incendies.
+À terme, Ignis ne devra plus seulement représenter les incendies.
 
 Il devra être capable de comprendre les interactions entre le climat, la
 végétation, la topographie, les infrastructures, les moyens humains et les
@@ -362,7 +362,7 @@ territoires.
 
 > **Cohérence écosystème** : cette vision à long terme rejoint la vocation
 > du moteur GSIE (General System Intelligence Engine) et de l'écosystème
-> Quintessences (DEC-000006, DEC-000007). GSIE-Ignis est la spécialisation
+> Quintessences (DEC-000006, DEC-000007). Ignis est la spécialisation
 > incendie d'un moteur conçu pour être généralisable.
 
 ---
@@ -375,7 +375,7 @@ territoires.
 
 # Références
 
-- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Directive fondatrice GSIE-Ignis
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Directive fondatrice Ignis
   (GCS / jumeau numérique vivant) — vision côté rendu, compagnon de la
   présente
 - `00_CONSTITUTION/GSIE-CON-000.md` — Primauté de la Constitution
@@ -384,11 +384,11 @@ territoires.
 - `00_CONSTITUTION/GSIE-CON-005.md` — Toute connaissance doit être traçable
 - `00_CONSTITUTION/GSIE-CON-007.md` — Modularité obligatoire
 - `00_CONSTITUTION/GSIE-CON-010.md` — Évolution sans perte d'historique
-- `02_RFC/RFC-0004.md` — GSIE-Ignis : système autonome de surveillance et
+- `02_RFC/RFC-0004.md` — Ignis : système autonome de surveillance et
   d'analyse des incendies (ADOPTÉ — DEC-000003)
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004
 - `03_DECISIONS/DEC-000006.md` — Identité Quintessences / GSIE / GeoSylva
 - `03_DECISIONS/DEC-000009.md` — Adoption de la présente Directive
-- `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées vivant
+- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant
 
 FIN DE DIRECTIVE.

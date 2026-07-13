@@ -32,7 +32,7 @@ cette recension.
 | **ArXiv** | arXiv:2510.18879 |
 | **Moteur** | Unreal Engine 5 |
 
-### Ce qu'il valide pour GSIE-Ignis
+### Ce qu'il valide pour Ignis
 
 - Intègre un **modèle couplé atmosphère-feu (CAWFE)** dans Unreal Engine 5.
 - Émetteurs de feu **Niagara** modélisant traînée aérodynamique, vent,
@@ -72,7 +72,7 @@ pour ForeFire.
 | **ArXiv** | arXiv:2601.03449 |
 | **Moteur** | Unreal Engine 5.3 |
 
-### Ce qu'il valide pour GSIE-Ignis
+### Ce qu'il valide pour Ignis
 
 - Un **drone simulé** apprend à traquer un front de feu par **renforcement
   (PPO)**, guidé par un **modèle vision-langage type CLIP**.
@@ -98,7 +98,7 @@ applicables — l'autonomie de navigation est encadrée.
 | **Année** | 2026 |
 | **ArXiv** | arXiv:2602.08949 |
 
-### Ce qu'il valide pour GSIE-Ignis
+### Ce qu'il valide pour Ignis
 
 - Une **« salle de situation virtuelle »** avec agents IA autonomes.
 - Ingère en continu **imagerie multi-capteurs, données météo et modèles
@@ -147,7 +147,7 @@ que le GCS-Cinéma, Cosys-AirSim est la piste à auditer en premier.
 
 ## Lecture stratégique
 
-Ces publications confirment que l'approche GSIE-Ignis est
+Ces publications confirment que l'approche Ignis est
 **scientifiquement défendable et récente** (aucune n'a plus d'un an),
 mais aussi qu'on n'est plus seuls sur ce terrain précis. L'équipe
 FIRETWIN (financement NASA/NSF) mérite d'être identifiée nommément comme

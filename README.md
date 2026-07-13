@@ -77,10 +77,12 @@ Quintessences (écosystème)
     │
     └── Spécialisations (applications clientes)
         ├── GeoSylva        — app forestière (diagnostics sylvicoles)
-        ├── GSIE-Ignis      — spécialisation incendie (surveillance, propagation)
-        ├── Myhunt          — suivi cynégétique (faune, territoires)
+        ├── Ignis           — spécialisation incendie (surveillance, propagation)
+        ├── Artemis         — suivi faune (habitats, territoires)
+        ├── Hydro           — gestion de l'eau (réseau hydrographique, régimes hydriques)
+        ├── Flora           — végétation (flore, taxonomie, phénologie)
         ├── QGISIA          — agent IA QGIS (SIG desktop, analyses géospatiales)
-        └── [futures]       — climat, eau, biodiversité…
+        └── Centre de Commandement GSIE — Unreal Engine 5.8 (poste de pilotage immersif, convergence de toutes les apps)
 ```
 
 ---
@@ -102,7 +104,7 @@ adaptées au terrain.
 | SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
 | Plugins SIG | Intégrations QGIS, ArcGIS |
 
-### GSIE-Ignis — spécialisation incendie
+### Ignis — spécialisation incendie
 
 Système d'aide à la décision pour la surveillance et l'analyse des feux
 de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
@@ -114,15 +116,35 @@ jamais un système de commandement. Aucune alerte directe à la population
 (prérogative régale FR-Alert). La sortie « cause probable » reste une
 hypothèse exploratoire, jamais une conclusion.
 
-### Myhunt — suivi cynégétique
+### Artemis — suivi faune
 
-Plateforme de suivi cynégétique premium orientée terrain. Application
+Plateforme de suivi de la faune premium orientée terrain. Application
 Android native, API NestJS et backoffice Next.js. Gestion des
 observations, zones, espèces et synchronisation hors-ligne.
 
-- **Repo** : [github.com/NeooeN45/Myhunt](https://github.com/NeooeN45/Myhunt)
+- **Repo** : [github.com/NeooeN45/Artemis](https://github.com/NeooeN45/Artemis)
 - **Lien GSIE** : moteurs GIS, Knowledge, Correlation, Learning (analyse
   des populations, prédiction de présence, gestion durable).
+
+### Hydro — gestion de l'eau
+
+Application de gestion et de visualisation de l'eau. Cartographie du
+réseau hydrographique, des zones humides et analyse des régimes
+hydriques. Consomme les moteurs GIS, Climate, Knowledge et Correlation.
+
+- **Lien GSIE** : moteurs GIS, Climate, Knowledge, Correlation (réseau
+  hydrographique, régimes hydriques, corrélations hydro-climatiques).
+- **Socle spécifique** : BD Carthage (IGN), BD TOPAGE, Sandre.
+
+### Flora — végétation
+
+Application de cartographie et d'analyse de la végétation. Flore,
+taxonomie, cartographie végétale et phénologie. Consomme les moteurs
+Botanical, Knowledge, GIS et Climate.
+
+- **Lien GSIE** : moteurs Botanical, Knowledge, GIS, Climate (flore,
+  taxonomie, cartographie végétale, phénologie).
+- **Socle spécifique** : GBIF, Tela Botanica, BDNFF, INPN.
 
 ### QGISIA — agent IA QGIS (« GeoSylva AI »)
 
@@ -135,11 +157,26 @@ du moteur GSIE pour les professionnels SIG.
 - **Lien GSIE** : moteurs GIS, Climate, Pedology, Botanical, Reasoning
   (analyses environnementales expertes dans QGIS).
 
+### Centre de Commandement GSIE — Unreal Engine 5.8
+
+Poste de pilotage immersif où **toutes les données de l'écosystème
+convergent**. Construit sur Unreal Engine 5.8 + Cesium for Unreal, le
+Centre de Commandement offre une visualisation 3D temps réel du
+territoire : forêt (GeoSylva), incendies (Ignis), faune (Artemis), eau
+(Hydro) et végétation (Flora). Les données affluent via l'API GSIE
+(WebSocket/JSON) et sont rendues dans une scène géoréférencée unique.
+
+- **Lien GSIE** : consomme les sorties validées de tous les moteurs via
+  l'API GSIE (livrable 207).
+- **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
+  (effets), WebSockets natifs (temps réel).
+- **Document de référence** : `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+
 ### Futures spécialisations
 
 L'architecture modulaire de GSIE permet d'étendre Quintessences à
-d'autres domaines : climat, eau, biodiversité, sols. Chaque nouvelle
-spécialisation fait l'objet d'un RFC dédié.
+d'autres domaines. Chaque nouvelle spécialisation fait l'objet d'un RFC
+dédié.
 
 ---
 
@@ -223,9 +260,9 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 |---|---|
 | DEC-000001 | GSIE est une fondation scientifique |
 | DEC-000002 | Phase 1 : aucun développement métier |
-| DEC-000003 | Adoption RFC-0004 : branche fonctionnelle GSIE-Ignis |
+| DEC-000003 | Adoption RFC-0004 : branche fonctionnelle Ignis |
 | DEC-000004 | Entrée en Phase 2 : Architecture |
-| DEC-000005 | Archivage du code du banc GSIE-Ignis (Jalon 0) |
+| DEC-000005 | Archivage du code du banc Ignis (Jalon 0) |
 | DEC-000006 | Restructuration identité : Quintessences > GSIE > GeoSylva |
 
 ---
@@ -253,7 +290,7 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | **Phase 2 — Architecture** | **Active** | Contrats d'interface, schémas de données, RFC d'architecture |
 | Phase 3 — Specification | À venir | Spécifications techniques détaillées par moteur |
 | Phase 4 — Implementation | À venir | Code métier des moteurs |
-| Phase 5 — Applications | À venir | GeoSylva, GSIE-Ignis et interfaces |
+| Phase 5 — Applications | À venir | GeoSylva, Ignis et interfaces |
 
 Voir `ROADMAP.md` pour le détail des livrables.
 
@@ -275,7 +312,7 @@ Quintessences/
 ├── 09_ENGINES/             14 moteurs GSIE (documentés, non implémentés)
 ├── 10_ALGORITHMS/          Procédures computationnelles formelles
 ├── 11_MODELS/              Modèles scientifiques et d'apprentissage
-├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, GSIE-Ignis, …)
+├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, Ignis, …)
 ├── 13_API/                 Contrats d'interface exposés
 ├── 14_SDK/                 Bibliothèques clientes
 ├── 15_TESTS/               Tests unitaires, intégration et non-régression

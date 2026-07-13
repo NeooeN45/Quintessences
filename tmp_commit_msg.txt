@@ -1,26 +1,40 @@
-feat(architecture): livrables 309-310 — schéma DB Encyclopédie + socle 14 moteurs
+feat(ecosystem): GSIE-DIR-0009 — restructuration Quintessences + Centre de Commandement
 
-Socle technique de l'Encyclopédie de l'Écosystème (GSIE-DIR-0008).
+Restructuration majeure de l'écosystème Quintessences (DEC-000013,
+GSIE-DIR-0009).
 
-Livrable 309 — Encyclopédie Database Schema (677 lignes) :
-- 16 tables PostgreSQL/PostGIS avec DDL complet et contraintes CHECK
-- Schéma Neo4j (labels, relations, contraintes, exemples Cypher)
-- Index Elasticsearch (mapping full-text français)
-- Schéma RDF/OWL (préfixes, classes, alignement Linked Open Data)
-- Règles de génération d'identifiants uniques stables (GSIE-K-XXXXXXXXXX)
-- Mapping KnowledgeObject → PostgreSQL/Neo4j/RDF
-- Pipeline d'ingestion, sécurité, rôles, audit
+Renommages :
+- Myhunt → Artemis (faune)
+- GSIE-Ignis → Ignis (incendies — l'application, pas le moteur)
 
-Livrable 310 — Engine Data Socle (768 lignes) :
-- Socle de données détaillé pour les 14 moteurs
-  (consomme/produit/domaines/datasets/entités/requêtes/dépendances/volumes)
-- Liens vers les 4 apps externes (GeoSylva, GSIE-Ignis, Myhunt, QGISIA)
-- Matrice moteur × app
-- Priorité d'alimentation alignée sur l'ordre de développement (204)
+Nouvelles applications :
+- Hydro (eau) — réseau hydrographique, zones humides
+- Flora (végétation) — flore, taxonomie, cartographie végétale
 
-Phase 3 reste en architecture (pas de code métier). Les schémas SQL et
-Cypher sont des définitions de structure (DDL), pas des fonctions
-applicatives. L'implémentation physique relève de la Phase 4.
+QGISIA reste comme plugin QGIS de Quintessences.
+
+Centre de Commandement GSIE (Unreal Engine 5.8) : repositionnement
+majeur — UE devient un poste de pilotage immersif où toutes les données
+convergent (GeoSylva, Artemis, Ignis, Hydro, Flora). Mélange ArcGIS +
+QGIS + Cesium + Flight Simulator + Digital Twins + moteur de jeu.
+
+Architecture cible :
+  Quintessences → GSIE (moteur) → GeoSylva, Artemis, Ignis, Hydro, Flora, QGISIA
+
+Applications futures réservées : Terra, Atmos, Atlas, Aether, Chronos, Nexus
+
+Changements :
+- 6 fichiers renommés (git mv) : GSIE_IGNIS_* → IGNIS_*, GCS_CINEMA → COMMAND_CENTER
+- 22_PROJECT_MEMORY/GSIE-Ignis/ → 22_PROJECT_MEMORY/Ignis/
+- 58 fichiers : remplacement Myhunt→Artemis et GSIE-Ignis→Ignis
+- ENGINE_DATA_SOCLE : +Hydro, +Flora, matrice étendue à 6 apps
+- GSIE_MASTER_ARCHITECTURE : +section Centre de Commandement
+- COMMAND_CENTER_UNREAL : repositionnement GCS→Centre de Commandement
+- README : architecture mise à jour
+
+Documents créés :
+- 01_DIRECTIVES/ACTIVE/GSIE-DIR-0009.md
+- 03_DECISIONS/DEC-000013.md
 
 Generated with [Devin](https://devin.ai)
 

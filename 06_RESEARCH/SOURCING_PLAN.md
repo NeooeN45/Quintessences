@@ -37,7 +37,7 @@ Vague 2 : Correlation, Reasoning (raisonnement)
 Vague 3 : Diagnostic, Forest Dynamics (synthèse)
 Vague 4 : Simulation, Recommendation, Validation (sortie)
 Vague 5 : Learning (transverse)
-Vague I : GSIE-Ignis (incendie — parallèle)
+Vague I : Ignis (incendie — parallèle)
 ```
 
 ### 2.2 Critères de priorisation au sein d'une vague
@@ -225,7 +225,7 @@ dans cette vague — seulement les méta-connaissances.
 
 ---
 
-## 9. Vague I — GSIE-Ignis (incendie)
+## 9. Vague I — Ignis (incendie)
 
 ### 9.1 Sources à ingérer
 
@@ -259,7 +259,7 @@ dans cette vague — seulement les méta-connaissances.
 | 3 | Diagnostic, Forest Dynamics | Dendrométrie, Dynamique, Pathologie | 7 | B | Semaine 10-12 |
 | 4 | Simulation, Recommendation, Validation | Sylviculture, Climat | 6 | B | Semaine 13-15 |
 | 5 | Learning | ML, Écologie | 5 | A | Semaine 16-17 |
-| I | GSIE-Ignis | Incendie | 9 | B | Parallèle (Semaine 3-12) |
+| I | Ignis | Incendie | 9 | B | Parallèle (Semaine 3-12) |
 
 **Total** : 64 sources à ingérer sur 17 semaines (estimation indicative,
 non contractuelle — la Phase 3 est de la documentation, pas de

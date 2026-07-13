@@ -20,8 +20,8 @@ perdue.
 - `IDEA_BACKLOG.md` — idées non encore décidées
 - `FOUNDER_JOURNAL.md` — journal du fondateur
 - `ARCHITECT_JOURNAL.md` — journal de l'architecte
-- `GSIE-Ignis.md` — registre vivant des idées GSIE-Ignis (branche fonctionnelle, RFC-0004)
-- `GSIE-Ignis/` — sous-dossier des livrables du Jalon 0 GSIE-Ignis
+- `Ignis.md` — registre vivant des idées Ignis (branche fonctionnelle, RFC-0004)
+- `Ignis/` — sous-dossier des livrables du Jalon 0 Ignis
 - Context Snapshots (toutes les 10 Directives)
 - Master Context Snapshots (toutes les 100 Directives)
 

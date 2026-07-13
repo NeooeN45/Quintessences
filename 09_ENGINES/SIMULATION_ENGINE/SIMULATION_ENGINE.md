@@ -48,7 +48,7 @@ des décisions avant qu'elles ne soient prises.
 | Moteur | `CLIMATE_ENGINE` | Scénarios climatiques comme conditions aux limites |
 | Moteur | `GIS_ENGINE` | Données spatiales pour la projection cartographique |
 | Moteur | `LEARNING_ENGINE` | Calibration des paramètres de simulation |
-| Externe | ForeFire (GSIE-Ignis) | Moteur de propagation de feu pour les scénarios incendie |
+| Externe | ForeFire (Ignis) | Moteur de propagation de feu pour les scénarios incendie |
 
 ## 5. Contrat d'interface
 
@@ -107,7 +107,7 @@ Simulation Engine projette l'évolution du peuplement (biomasse,
 biodiversité, risque de dépérissement) avec et sans intervention. Le
 forestier compare et décide.
 
-### Cas 2 — COS (incendie, GSIE-Ignis)
+### Cas 2 — COS (incendie, Ignis)
 
 Le COS envisage un positionnement de moyens sur un versant. Le
 Simulation Engine, couplé à ForeFire, projette la propagation du feu à
@@ -120,4 +120,4 @@ d'elle-même.
 - `04_ARCHITECTURE/ENGINE_DEVELOPMENT_ORDER.md` — ordre de développement
 - `04_ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` — protocole d'échange
 - `09_ENGINES/FOREST_DYNAMICS_ENGINE/` — modèles de dynamique (dépendance forte)
-- `22_PROJECT_MEMORY/GSIE-Ignis.md` — registre d'idées GSIE-Ignis (J-01, J-02, J-03)
+- `22_PROJECT_MEMORY/Ignis.md` — registre d'idées Ignis (J-01, J-02, J-03)

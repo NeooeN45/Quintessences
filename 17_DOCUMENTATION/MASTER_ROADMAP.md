@@ -33,7 +33,7 @@ statuts se trouve dans `ROADMAP.md` et `PROJECT_MEMORY.md`.
 | Contrats d'interface entre moteurs | Interfaces validées et tracées (ADR) |
 | Schémas de données | Modèles de données validés |
 | RFC-0003 (GSIE-Net) activé | Architecture distribuée spécifiée |
-| RFC-0004 (GSIE-Ignis) activé | Branche incendie spécifiée |
+| RFC-0004 (Ignis) activé | Branche incendie spécifiée |
 
 ## Phase 3 — Connaissance
 

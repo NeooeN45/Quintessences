@@ -29,7 +29,7 @@ Ce catalogue couvre les dix domaines scientifiques de l'article S-6
 (écologie forestière, pédologie, dendrométrie, climatologie,
 botanique, pathologie, entomologie, sylviculture, biodiversité,
 dynamique des peuplements) ainsi que les besoins spécifiques du
-jumeau numérique GSIE-Ignis (météo, satellite, terrain incendie).
+jumeau numérique Ignis (météo, satellite, terrain incendie).
 
 Aucune donnée n'est inventée : chaque fiche renvoie à un organisme
 producteur réel et à une licence effectivement appliquée par cet
@@ -75,7 +75,7 @@ conforme aux contraintes de licence.
 ## 3. Catalogue par catégorie
 
 Le catalogue est organisé en six catégories (A à F) correspondant
-aux grandes familles de données consommées par GSIE et GSIE-Ignis.
+aux grandes familles de données consommées par GSIE et Ignis.
 
 ### 3.A — Datasets forestiers (IGN, ONF, INRAE)
 
@@ -123,7 +123,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Qualité / précision** | Précision altimétrique verticale ~10 cm (MNT) ; classification sol/canopée |
 | **Contact** | IGN — Programme LiDAR HD |
 | **Statut d'ingestion** | Planifié |
-| **Notes** | Permet le calcul de hauteur de canopée, volume sur pied et biomasse ; donnée structurante pour GSIE-Ignis (combustible) |
+| **Notes** | Permet le calcul de hauteur de canopée, volume sur pied et biomasse ; donnée structurante pour Ignis (combustible) |
 
 #### DS-003 — Inventaire Forestier National (IGN)
 
@@ -242,7 +242,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Qualité / précision** | Réanalyse par analyse-objet (précipitations, température, rayonnement, ETP) |
 | **Contact** | Météo-France — Direction de la Climatologie et des Services Climatiques |
 | **Statut d'ingestion** | Planifié (accord d'accès à formaliser) |
-| **Notes** | Source climatique quotidienne de référence pour la France ; indispensable aux modèles bioclimatiques et à GSIE-Ignis (sécheresse) |
+| **Notes** | Source climatique quotidienne de référence pour la France ; indispensable aux modèles bioclimatiques et à Ignis (sécheresse) |
 
 #### DS-008 — DRIAS — projections climatiques régionalisées
 
@@ -276,7 +276,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Organisme producteur** | Météo-France — Direction de la Prévision |
 | **Catégorie** | B — Climatique / météorologique |
 | **Domaines S-6 couverts** | Climatologie, bioclimatologie |
-| **Moteurs consommateurs** | Climate Engine, Simulation Engine, GSIE-Ignis (météo temps réel) |
+| **Moteurs consommateurs** | Climate Engine, Simulation Engine, Ignis (météo temps réel) |
 | **Source / URL** | https://donneespubliques.meteofrance.fr |
 | **Licence** | Conditions Météo-France (Licence Ouverte sur produits ouverts ; archivage sous accord) |
 | **Couverture spatiale** | ARPEGE : France + global ; AROME : France métropolitaine (domaine 1.3 km) |
@@ -287,8 +287,8 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Version référencée** | Cycle opérationnel courant (ARPEGE 6, AROME 1.3 km) |
 | **Qualité / précision** | Modèle de prévision numérique opérationnel (Météo-France) |
 | **Contact** | Météo-France — Direction de la Production |
-| **Statut d'ingestion** | Planifié (prioritaire pour GSIE-Ignis) |
-| **Notes** | Vent, température, humidité — entrées critiques pour la propagation incendie (GSIE-Ignis) |
+| **Statut d'ingestion** | Planifié (prioritaire pour Ignis) |
+| **Notes** | Vent, température, humidité — entrées critiques pour la propagation incendie (Ignis) |
 
 #### DS-010 — Météo-France — observations sol
 
@@ -495,7 +495,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Organisme producteur** | ESA / Commission européenne (programme Copernicus) |
 | **Catégorie** | E — Satellite / télédétection |
 | **Domaines S-6 couverts** | Écologie forestière, dynamique des peuplements, pathologie |
-| **Moteurs consommateurs** | GIS Engine, Forest Dynamics Engine, Diagnostic Engine, GSIE-Ignis |
+| **Moteurs consommateurs** | GIS Engine, Forest Dynamics Engine, Diagnostic Engine, Ignis |
 | **Source / URL** | https://scihub.copernicus.eu (Copernicus Open Access Hub) |
 | **Licence** | Libre et gratuite (Copernicus data policy — CC-BY 4.0) |
 | **Couverture spatiale** | Mondiale (terres émergées) |
@@ -507,7 +507,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Qualité / précision** | Calibration ESA ; produits L2A traités |
 | **Contact** | ESA — Copernicus Data Access |
 | **Statut d'ingestion** | Planifié |
-| **Notes** | Imagerie de référence pour les indices de végétation (NDVI), détection dépérissement, cartographie combustible (GSIE-Ignis) |
+| **Notes** | Imagerie de référence pour les indices de végétation (NDVI), détection dépérissement, cartographie combustible (Ignis) |
 
 #### DS-019 — Copernicus Sentinel-1
 
@@ -580,7 +580,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 
 ---
 
-### 3.F — Datasets incendie (GSIE-Ignis)
+### 3.F — Datasets incendie (Ignis)
 
 #### DS-022 — Prométhée (base incendies France méditerranéenne)
 
@@ -591,7 +591,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Organisme producteur** | Entente pour la Forêt Méditerranéenne (EEIFM) — base Prométhée |
 | **Catégorie** | F — Incendie |
 | **Domaines S-6 couverts** | Écologie forestière, sylviculture (post-incendie) |
-| **Moteurs consommateurs** | GSIE-Ignis, Simulation Engine, Diagnostic Engine |
+| **Moteurs consommateurs** | Ignis, Simulation Engine, Diagnostic Engine |
 | **Source / URL** | http://www.promethee.com |
 | **Licence** | Accès sous accord (Entente Forêt Méditerranéenne) — données publiques agrégées |
 | **Couverture spatiale** | France méditerranéenne (15 départements du Sud-Est) |
@@ -614,7 +614,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Organisme producteur** | Commission européenne — Joint Research Centre (JRC) |
 | **Catégorie** | F — Incendie |
 | **Domaines S-6 couverts** | Écologie forestière (incendie) |
-| **Moteurs consommateurs** | GSIE-Ignis, Simulation Engine |
+| **Moteurs consommateurs** | Ignis, Simulation Engine |
 | **Source / URL** | https://effis.jrc.ec.europa.eu |
 | **Licence** | Licence Ouverte EU (CC-BY 4.0 — Commission européenne) |
 | **Couverture spatiale** | Europe (Espace économique européen + pays méditerranéens) |
@@ -637,7 +637,7 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Organisme producteur** | NASA (MODIS, VIIRS) — FIRMS (University of Maryland / NASA) |
 | **Catégorie** | F — Incendie |
 | **Domaines S-6 couverts** | Écologie forestière (incendie) |
-| **Moteurs consommateurs** | GSIE-Ignis, Simulation Engine |
+| **Moteurs consommateurs** | Ignis, Simulation Engine |
 | **Source / URL** | https://firms.modaps.eosdis.nasa.gov |
 | **Licence** | Domaine public (NASA data policy) |
 | **Couverture spatiale** | Mondiale |
@@ -648,8 +648,8 @@ aux grandes familles de données consommées par GSIE et GSIE-Ignis.
 | **Version référencée** | Collection 6 (MODIS), VIIRS courant |
 | **Qualité / précision** | Détection active (faux positifs possibles — à filtrer) |
 | **Contact** | NASA FIRMS |
-| **Statut d'ingestion** | Planifié (prioritaire GSIE-Ignis) |
-| **Notes** | Détection d'incendies actifs en quasi temps réel ; entrée critique pour le suivi opérationnel GSIE-Ignis |
+| **Statut d'ingestion** | Planifié (prioritaire Ignis) |
+| **Notes** | Détection d'incendies actifs en quasi temps réel ; entrée critique pour le suivi opérationnel Ignis |
 
 ---
 
@@ -710,9 +710,9 @@ moteurs qui les consomment.
 | Priorité | Dataset | Moteur cible | Justification |
 |---|---|---|---|
 | P5 | DS-008 DRIAS | Simulation Engine | Projections climatiques 2100 |
-| P5 | DS-009 ARPEGE/AROME | Simulation Engine / GSIE-Ignis | Météo opérationnelle |
+| P5 | DS-009 ARPEGE/AROME | Simulation Engine / Ignis | Météo opérationnelle |
 
-### 4.7 GSIE-Ignis (transverse, priorité haute sur le périmètre incendie)
+### 4.7 Ignis (transverse, priorité haute sur le périmètre incendie)
 
 | Priorité | Dataset | Justification |
 |---|---|---|
@@ -721,7 +721,7 @@ moteurs qui les consomment.
 | PI | DS-024 MODIS/FIRMS | Détection temps réel |
 
 > **Note :** la priorité PI (Ignis) est traitée en parallèle des
-> vagues principales car GSIE-Ignis est un jumeau numérique à
+> vagues principales car Ignis est un jumeau numérique à
 > pipeline partiellement autonome (voir `04_ARCHITECTURE/GSIE_IGNIS_*`).
 
 ---
@@ -813,7 +813,7 @@ qui l'exigent.
 
 | Date | Événement |
 |---|---|
-| 2026-07-13 | Création du livrable 305 — Dataset Catalog (Draft). Catalogage de 24 datasets répartis en 6 catégories (A-F), alignés sur les 14 moteurs et GSIE-Ignis. Métadonnées complètes conformes à CON-002 et CON-005. Priorité d'ingestion alignée sur l'ordre de développement des moteurs (livrable 204). Notes de licences détaillées (Licence Ouverte, CC-BY, domaine public, accords spécifiques). |
+| 2026-07-13 | Création du livrable 305 — Dataset Catalog (Draft). Catalogage de 24 datasets répartis en 6 catégories (A-F), alignés sur les 14 moteurs et Ignis. Métadonnées complètes conformes à CON-002 et CON-005. Priorité d'ingestion alignée sur l'ordre de développement des moteurs (livrable 204). Notes de licences détaillées (Licence Ouverte, CC-BY, domaine public, accords spécifiques). |
 
 ---
 

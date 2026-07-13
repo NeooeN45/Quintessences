@@ -4,6 +4,69 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RESTRUCTURATION ÉCOSYSTÈME] - 2026-07-13
+
+### Restructuration Quintessences (DEC-000013, GSIE-DIR-0009)
+
+Le Fondateur acte une restructuration majeure de l'écosystème
+Quintessences :
+
+**Renommages** :
+- Myhunt → **Artemis** (faune — comptages, pièges photo, empreintes,
+  observations, populations)
+- GSIE-Ignis → **Ignis** (incendies — DFCI, prévention, simulation,
+  gestion de crise)
+
+**Nouvelles applications** :
+- **Hydro** (eau) — réseau hydrographique, zones humides, régimes
+  hydriques. Moteurs : GIS, Climate, Knowledge, Correlation. Datasets :
+  BD Carthage, BD TOPAGE, Sandre.
+- **Flora** (végétation) — flore, taxonomie, cartographie végétale,
+  phénologie. Moteurs : Botanical, Knowledge, GIS, Climate. Datasets :
+  GBIF, Tela Botanica, BDNFF, INPN.
+
+**QGISIA** : reste comme plugin QGIS de l'écosystème Quintessences.
+
+**Centre de Commandement GSIE** (Unreal Engine 5.8) : repositionnement
+majeur. UE n'est plus une simple visionneuse 3D — c'est un poste de
+pilotage immersif où toutes les données convergent (GeoSylva, Artemis,
+Ignis, Hydro, Flora). Mélange ArcGIS Pro + QGIS + Cesium + Flight
+Simulator + Microsoft Digital Twins + moteur de jeu.
+
+**Architecture cible** :
+```
+Quintessences → GSIE (moteur) → GeoSylva, Artemis, Ignis, Hydro, Flora, QGISIA
+```
+
+**Applications futures réservées** : Terra, Atmos, Atlas, Aether,
+Chronos, Nexus…
+
+### Fichiers renommés
+
+| Ancien nom | Nouveau nom |
+|---|---|
+| `22_PROJECT_MEMORY/GSIE-Ignis/` | `22_PROJECT_MEMORY/Ignis/` |
+| `22_PROJECT_MEMORY/GSIE-Ignis.md` | `22_PROJECT_MEMORY/Ignis.md` |
+| `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | `04_ARCHITECTURE/IGNIS_ARCHITECTURE.md` |
+| `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | `04_ARCHITECTURE/IGNIS_DATA_PIPELINE.md` |
+| `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | `04_ARCHITECTURE/IGNIS_DRONE_ARCHITECTURE.md` |
+| `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md` |
+
+### Documents mis à jour
+
+- 58 fichiers : remplacement Myhunt→Artemis et GSIE-Ignis→Ignis
+- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` : +Hydro, +Flora, matrice 6 apps
+- `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` : +Centre de Commandement
+- `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md` : repositionnement GCS→Centre de Commandement
+- `README.md` : architecture + Hydro + Flora + Centre de Commandement
+
+### Documents créés
+
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0009.md` — directive restructuration
+- `03_DECISIONS/DEC-000013.md` — décision restructuration
+
+---
+
 ## [SCHÉMA DB + SOCLE MOTEURS] - 2026-07-13
 
 ### Livrables 309-310 — socle technique de l'Encyclopédie
@@ -24,7 +87,7 @@ Format : `## [version] - YYYY-MM-DD`
 **Livrable 310 — Engine Data Socle** (768 lignes) :
 - Socle de données détaillé pour les 14 moteurs (consomme/produit,
   domaines, datasets, entités, requêtes, dépendances, volumes)
-- Liens vers les 4 apps externes (GeoSylva, GSIE-Ignis, Myhunt, QGISIA)
+- Liens vers les 4 apps externes (GeoSylva, Ignis, Artemis, QGISIA)
 - Matrice moteur × app
 - Priorité d'alimentation alignée sur l'ordre de développement (204)
 
@@ -217,7 +280,7 @@ de complétude Phase 2. Scores : 201 (8→9), 202 (7), 203 (6), 204 (8.5→9),
   retry, timeout, idempotence), codes d'erreur par moteur, versioning SemVer
   des contrats, tests d'interface (conformité schéma, contrat comportemental,
   intégration inter-moteurs).
-- **Livrable 208 — GSIE-Ignis Architecture** (6→9/10, 549→847 lignes) :
+- **Livrable 208 — Ignis Architecture** (6→9/10, 549→847 lignes) :
   alignement DIR-0005 (§2bis — jumeau numérique vivant : terrain comme
   interface, zoom progressif, ADR-001 moteur 3D interchangeable, trois
   usages d'un socle, immersion), alignement DIR-0006 (§2ter — moteur
@@ -226,7 +289,7 @@ de complétude Phase 2. Scores : 201 (8→9), 202 (7), 203 (6), 204 (8.5→9),
   IA collaborative, mémoire, explicabilité, auto-évaluation, curiosité
   artificielle sous supervision humaine, anticipation « signale et propose »,
   moteur scientifique), garde-fous RFC-0004 §8 référencés (non dupliqués).
-- **Livrable 209 — GSIE-Ignis Data Pipeline** (6.5→9/10, 569→829 lignes) :
+- **Livrable 209 — Ignis Data Pipeline** (6.5→9/10, 569→829 lignes) :
   alignement DIR-0006 (§10 assimilation probabiliste multi-observateurs avec
   tableau de 16 observateurs, §11 raisonnement multi-échelle pixel→pays,
   §12 auto-évaluation + curiosité artificielle sous supervision humaine),
@@ -250,10 +313,10 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ## [GSIE-IGNIS — VISION MOTEUR COGNITIF] - 2026-07-12
 
-### DEC-000009 — GSIE-DIR-0006 : le moteur cognitif GSIE-Ignis
+### DEC-000009 — GSIE-DIR-0006 : le moteur cognitif Ignis
 
 - **GSIE-DIR-0006** — Directive fondatrice compagnon de DIR-0005. Fixe la
-  vision du **moteur cognitif** GSIE-Ignis (le cerveau serveur).
+  vision du **moteur cognitif** Ignis (le cerveau serveur).
 - **Articulation** : DIR-0005 = « Le moteur graphique montre le monde. » ;
   DIR-0006 = « Le moteur cognitif le comprend. »
 - **Principes** : le serveur n'est pas un backend mais un système
@@ -278,7 +341,7 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 - **Traçabilité** : `DEC-000009` acte l'adoption ; `PROJECT_MEMORY.md`,
   `ROADMAP.md` synchronisés.
 - **Impact** : oriente les livrables Phase 2 n°208-210 (architecture
-  GSIE-Ignis) et les moteurs Reasoning / Correlation / Learning / Simulation.
+  Ignis) et les moteurs Reasoning / Correlation / Learning / Simulation.
 
 ---
 
@@ -286,8 +349,8 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ### DEC-000008 — GSIE-DIR-0005 : jumeau numérique vivant
 
-- **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / Ground Control
-  System). Fixe la vision produit : GSIE-Ignis est un **jumeau numérique
+- **GSIE-DIR-0005** — Directive fondatrice Ignis (GCS / Ground Control
+  System). Fixe la vision produit : Ignis est un **jumeau numérique
   vivant** des opérations de lutte contre les incendies, pas un logiciel de
   cartographie, de drones ou de simulation.
 - **Principes** : le terrain devient l'interface unique ; le moteur 3D
@@ -304,7 +367,7 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 - **Traçabilité** : `DEC-000008` acte l'adoption ; `PROJECT_MEMORY.md`,
   `ROADMAP.md` synchronisés.
 - **Impact** : oriente les livrables Phase 2 n°208-210 (architecture
-  GSIE-Ignis) et les futures spécifications.
+  Ignis) et les futures spécifications.
 
 ---
 
@@ -342,7 +405,7 @@ Démarrage effectif de la Phase 2 (Architecture) avec 3 axes en parallèle :
 2. **Architecture technique globale** — stack technologique (ADR), protocole
    de communication offline-first, ordre de développement, modèle de données
    scientifique, architecture globale enrichie.
-3. **Architecture GSIE-Ignis** — pipeline de données (ForeFire, drone, GCS),
+3. **Architecture Ignis** — pipeline de données (ForeFire, drone, GCS),
    architecture drone (PX4, MAVSDK, YOLO), intégration avec les 14 moteurs,
    garde-fous DEC-000003.
 
@@ -365,9 +428,9 @@ constitutionnelle, roadmap, contributing.
   GeoSylva Intelligence Engine). C'est le **moteur** spécialisable par
   domaine, au cœur de Quintessences.
 - **GeoSylva** est repositionné comme **app forestière** (première
-  spécialisation de GSIE), au même titre que GSIE-Ignis (spécialisation
+  spécialisation de GSIE), au même titre que Ignis (spécialisation
   incendie). GeoSylva garde son nom historique.
-- Architecture : `Quintessences > GSIE > GeoSylva / GSIE-Ignis / futures`.
+- Architecture : `Quintessences > GSIE > GeoSylva / Ignis / futures`.
 - README, PROJECT_MEMORY, ROADMAP, CHANGELOG, LICENSE mis à jour.
 - La Constitution, les 14 moteurs, la gouvernance et la traçabilité
   restent valables — GSIE est généralisé, pas remplacé.
@@ -376,14 +439,14 @@ constitutionnelle, roadmap, contributing.
 
 ## [PHASE 2 — Architecture] - 2026-07-12
 
-### DEC-000005 — Amendement : archivage du code du banc GSIE-Ignis
+### DEC-000005 — Amendement : archivage du code du banc Ignis
 
 - Le Fondateur **amende** DEC-000003 et DEC-000004 pour autoriser
   l'archivage du code du banc de simulation (Jalon 0) dans
-  `22_PROJECT_MEMORY/GSIE-Ignis/`.
+  `22_PROJECT_MEMORY/Ignis/`.
 - Périmètre : `premier_vol.py`, `plot_front.py`, scripts `*.sh` du banc.
 - Statut : **artefacts d'archive**, pas du code métier des 14 moteurs.
-- Le banc opérationnel reste dans `~/GSIE-Ignis/` (WSL2) ; le dépôt n'en
+- Le banc opérationnel reste dans `~/Ignis/` (WSL2) ; le dépôt n'en
   conserve qu'une archive versionnée pour reproductibilité et traçabilité.
 - L'interdiction de code métier GSIE dans le dépôt (Phase 4) reste entière.
 
@@ -393,10 +456,10 @@ constitutionnelle, roadmap, contributing.
   (3/12).
 - **Phase 2 (Architecture) activée** par le Fondateur.
 - Autorise : architecture détaillée des moteurs, spécifications
-  techniques, RFC d'architecture, banc de simulation GSIE-Ignis.
+  techniques, RFC d'architecture, banc de simulation Ignis.
 - N'autorise pas encore : code métier dans le dépôt GSIE (Phase 4).
 
-### Banc de simulation GSIE-Ignis — démarrage
+### Banc de simulation Ignis — démarrage
 
 - `.wslconfig` créé (20GB RAM, 6 CPU, 8GB swap).
 - État WSL constaté : Ubuntu 24.04.3 LTS, Python 3.12.3, 8 threads,
@@ -404,7 +467,7 @@ constitutionnelle, roadmap, contributing.
 - Installation du socle logiciel en cours (cmake, build-essential,
   libnetcdf-dev).
 - Prochaines étapes : ForeFire (compilation + démo Aullène), PX4 SITL
-  + Gazebo, structure projet `~/GSIE-Ignis/`.
+  + Gazebo, structure projet `~/Ignis/`.
 
 ---
 
@@ -455,13 +518,13 @@ template RFC-0001 (ADOPTÉ) et validés :
   (2026-07-01 à 2026-07-12) au format Décisions/Motivations/Impact.
 - `CONTEXT_SNAPSHOT_001.md` : statut clarifié → `Draft — en attente du
   10e Directive`.
-- `README.md` (`22_PROJECT_MEMORY/`) : `GSIE-Ignis.md` et sous-dossier
-  `GSIE-Ignis/` ajoutés à la liste des fichiers autorisés.
+- `README.md` (`22_PROJECT_MEMORY/`) : `Ignis.md` et sous-dossier
+  `Ignis/` ajoutés à la liste des fichiers autorisés.
 
 ### Prochaine étape
 
 Le projet peut entrer en **Phase 2 (Architecture)** après décision du
-Fondateur. Le banc de simulation GSIE-Ignis (`~/GSIE-Ignis/` WSL2) peut
+Fondateur. Le banc de simulation Ignis (`~/Ignis/` WSL2) peut
 démarrer indépendamment — il vit hors du dépôt GSIE.
 
 ---
@@ -481,8 +544,8 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 - **`CONTEXT_SNAPSHOT_001.md`** : statut « Réservé » remplacé par
   « Draft — en attente du 10e Directive (non atteint) ». Note explicite
   ajoutée : le snapshot sera déclenché à la 10e Directive.
-- **`README.md`** (`22_PROJECT_MEMORY/`) : `GSIE-Ignis.md` et le sous-dossier
-  `GSIE-Ignis/` ajoutés à la liste des fichiers autorisés.
+- **`README.md`** (`22_PROJECT_MEMORY/`) : `Ignis.md` et le sous-dossier
+  `Ignis/` ajoutés à la liste des fichiers autorisés.
 
 ### Avancement Phase 1
 
@@ -497,12 +560,12 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
-## [RFC-0004 GSIE-Ignis — Registre d'idées] - 2026-07-11
+## [RFC-0004 Ignis — Registre d'idées] - 2026-07-11
 
 ### Registre d'idées opérationnelles
 
-- Création de `22_PROJECT_MEMORY/GSIE-Ignis.md` : registre vivant des idées
-  GSIE-Ignis structuré en 8 domaines (Perception, Jumeau numérique, Vol,
+- Création de `22_PROJECT_MEMORY/Ignis.md` : registre vivant des idées
+  Ignis structuré en 8 domaines (Perception, Jumeau numérique, Vol,
   Communications, GCS, Données, Stratégie) + feuille de route + backlog
   de questions ouvertes. Chaque idée est classée par maturité
   (💡/🔍/✅/⏸️/❌), priorité et notes opérationnelles.
@@ -510,17 +573,17 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 ### Mémoire synchronisée
 
 - `PROJECT_MEMORY.md` : RFC-0004 référence désormais le registre
-  `22_PROJECT_MEMORY/GSIE-Ignis.md`.
+  `22_PROJECT_MEMORY/Ignis.md`.
 - `02_RFC/RFC-0004.md` : étape 3 des prochaines étapes actionnables
   marquée comme réalisée (registre d'idées ouvert).
 
 ---
 
-## [RFC-0004 GSIE-Ignis] - 2026-07-11
+## [RFC-0004 Ignis] - 2026-07-11
 
 ### RFC ouvert
 
-- **RFC-0004** — GSIE-Ignis : Système autonome de surveillance et d'analyse des
+- **RFC-0004** — Ignis : Système autonome de surveillance et d'analyse des
   incendies. Proposition d'une nouvelle branche fonctionnelle dédiée au risque
   incendie, positionnée comme application cliente des 14 moteurs GSIE.
   (`02_RFC/RFC-0004.md`)
@@ -540,7 +603,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 - Points de vigilance : flou organisationnel (entreprise vs fondation), danger
   de la sortie « cause probable », limite du terme « autonome », interdiction
   d'alerte directe à la population, contrainte Phase 1 (pas de code métier).
-- Recommandation : approche hybride — GSIE-Ignis comme application, extensions
+- Recommandation : approche hybride — Ignis comme application, extensions
   ciblées des moteurs existants, moteur dédié éventuel réservé à un second RFC.
 
 ### Mémoire synchronisée
@@ -550,7 +613,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
-## [GSIE-Ignis gouvernance] - 2026-07-12
+## [Ignis gouvernance] - 2026-07-12
 
 ### Livrables 005-009 validés (Phase 1)
 
@@ -588,29 +651,29 @@ enrichissement par le Fondateur :
 
 ### RFC-0004 ADOPTÉ
 
-- **DEC-000003** tracée : adoption du RFC-0004 par le Fondateur. GSIE-Ignis
+- **DEC-000003** tracée : adoption du RFC-0004 par le Fondateur. Ignis
   devient officiellement une branche fonctionnelle de GSIE, positionnée comme
   application cliente. Approche hybride retenue (Option C).
 - RFC-0004 passe au statut **ADOPTÉ**.
 
-### Registre d'idées GSIE-Ignis
+### Registre d'idées Ignis
 
-- `22_PROJECT_MEMORY/GSIE-Ignis.md` : registre vivant créé par le Fondateur
+- `22_PROJECT_MEMORY/Ignis.md` : registre vivant créé par le Fondateur
   (version 0.7.x, 60+ idées en 9 sections : perception, jumeau numérique, vol
   drone, communications, GCS, données, stratégie, modèles IA, veille
   concurrentielle).
-- `22_PROJECT_MEMORY/GSIE-Ignis/` : sous-dossier de livrables du Jalon 0
+- `22_PROJECT_MEMORY/Ignis/` : sous-dossier de livrables du Jalon 0
   (comparatif moteurs de simulation, contexte agent, guide d'installation banc).
 
 ### Pack contexte agent archivé
 
-- `GSIE-Ignis_pack_contexte_agent.zip` : lu et extrait. Contenu :
-  `AGENTS.md` (contexte maître session), `LISEZMOI.md`, `GSIE-Ignis_registre_idees.md`
-  (v0.7.2), `GSIE-Ignis_Phase0_comparatif_moteurs_simulation.md`,
-  `GSIE-Ignis_guide_installation_banc.md`.
+- `Ignis_pack_contexte_agent.zip` : lu et extrait. Contenu :
+  `AGENTS.md` (contexte maître session), `LISEZMOI.md`, `Ignis_registre_idees.md`
+  (v0.7.2), `Ignis_Phase0_comparatif_moteurs_simulation.md`,
+  `Ignis_guide_installation_banc.md`.
 - `AGENTS_contexte_session.md` et `guide_installation_banc.md` archivés dans
-  `22_PROJECT_MEMORY/GSIE-Ignis/` avec note de gouvernance (le code du banc vit
-  hors dépôt GSIE, dans `~/GSIE-Ignis/` WSL2).
+  `22_PROJECT_MEMORY/Ignis/` avec note de gouvernance (le code du banc vit
+  hors dépôt GSIE, dans `~/Ignis/` WSL2).
 - Le zip reste ignoré par git (`.gitignore : *.zip`).
 
 ### Corrections de gouvernance appliquées
@@ -618,11 +681,11 @@ enrichissement par le Fondateur :
 - **Statut ✅** : redéfini de « validée (intégrée à l'architecture) » en
   « principe accepté (intégration prévue en Phase 2+) » — aucune architecture
   n'est finalisée en Phase 1.
-- **Phases renommées** : « Phase 0-6 » → « GSIE-Ignis Jalon 0-6 » pour éviter la
+- **Phases renommées** : « Phase 0-6 » → « Ignis Jalon 0-6 » pour éviter la
   collision avec les phases GSIE globales (Phase 1-4). Note de rappel ajoutée.
 - **RFC-0004** : §12 « Documents liés » ajouté (référence au registre et au
   sous-dossier Jalon 0).
-- `PROJECT_MEMORY.md` : section « Branche GSIE-Ignis (RFC-0004) » + DEC-000003.
+- `PROJECT_MEMORY.md` : section « Branche Ignis (RFC-0004) » + DEC-000003.
 - `ROADMAP.md` : RFC-0004 marqué ADOPTÉ.
 - `.gitignore` : `*.zip` ajouté (le pack contexte agent binaire n'est pas
   versionné).

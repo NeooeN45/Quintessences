@@ -22,7 +22,7 @@ insectes, champignons, interactions trophiques, dynamiques de
 peuplements, modèles de croissance, et au-delà.
 
 Cette encyclopédie est **un produit en soi**, pas un sous-produit des
-moteurs. Elle peut alimenter GSIE, GeoSylva, GSIE-Ignis, mais aussi
+moteurs. Elle peut alimenter GSIE, GeoSylva, Ignis, mais aussi
 tout autre acteur (recherche, éducation, gestion, politique
 environnementale).
 
@@ -58,7 +58,7 @@ L'Encyclopédie couvre **tout l'écosystème**, pas seulement la forêt :
 | Sylviculture | Itinéraires, densités, rotations, modèles de croissance |
 | Biodiversité | Indicateurs, habitats, corridors, connectivité |
 | Géographie | Répartitions, aires, altitudes, expositions |
-| Incendie | Comportement du feu, combustibles, météo, propagation (GSIE-Ignis) |
+| Incendie | Comportement du feu, combustibles, météo, propagation (Ignis) |
 
 ### 1.3 Ambition de marché
 

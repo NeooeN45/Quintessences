@@ -32,7 +32,7 @@ contient et les contraint.
 
 GSIE est un **moteur d'intelligence environnementale** modulaire,
 traçable et explicable. Il n'est pas une application : les applications
-(GeoSylva, GSIE-Ignis, futures spécialisations) sont des **clients** du
+(GeoSylva, Ignis, Artemis, Hydro, Flora, QGISIA) sont des **clients** du
 moteur.
 
 Le système se décompose en trois axes :
@@ -42,8 +42,8 @@ Le système se décompose en trois axes :
 │                        ÉCOSYSTÈME QUINTESSENCES                  │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
-│  │  GeoSylva    │  │  GSIE-Ignis    │  │  Futures spécialis.  │   │
-│  │  (forêt)     │  │  (incendie)  │  │  (eau, biodiv., …)   │   │
+│  │  GeoSylva    │  │   Ignis      │  │  Artemis · Hydro     │   │
+│  │  (forêt)     │  │  (incendie)  │  │  Flora · QGISIA      │   │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘   │
 │         │                 │                     │               │
 │         └─────────────────┼─────────────────────┘               │
@@ -119,9 +119,14 @@ forks. Elles consomment les API du moteur et ajoutent une couche
 métier propre à leur domaine :
 
 - **GeoSylva** — application forestière (première spécialisation) ;
-- **GSIE-Ignis** — surveillance et analyse des incendies (RFC-0004,
+- **Ignis** — surveillance et analyse des incendies (RFC-0004,
   DEC-000003) ;
-- **Futures spécialisations** — eau, biodiversité, etc.
+- **Artemis** — suivi de la faune (habitats, territoires) ;
+- **Hydro** — gestion de l'eau (réseau hydrographique, régimes hydriques) ;
+- **Flora** — végétation (flore, taxonomie, cartographie végétale, phénologie) ;
+- **QGISIA** — agent IA QGIS (analyses géospatiales expertes) ;
+- **Centre de Commandement GSIE** — poste de pilotage immersif Unreal
+  Engine 5.8 où toutes les apps convergent (voir §2.4).
 
 ### 2.3 Interfaces
 
@@ -132,6 +137,53 @@ utilisateurs/applications :
 - **Web** — console de gestion et d'analyse ;
 - **Desktop** — poste fixe (bureau d'études) ;
 - **API** — accès programmatique pour intégrations tierces.
+
+### 2.4 Centre de Commandement GSIE — Unreal Engine 5.8
+
+Le **Centre de Commandement GSIE** est le poste de pilotage immersif de
+l'écosystème Quintessences. Construit sur **Unreal Engine 5.8** et
+**Cesium for Unreal**, il offre une visualisation 3D temps réel du
+territoire où **toutes les applications convergent** dans une scène
+géoréférencée unique.
+
+**Périmètre — convergence de toutes les apps :**
+
+| App | Données visualisées dans le Centre de Commandement |
+|---|---|
+| **GeoSylva** | Peuplements forestiers, diagnostics sylvicoles, recommandations |
+| **Ignis** | Propagation du feu (Niagara), combustibles, météo temps réel, drones |
+| **Artemis** | Habitats faune, observations, territories |
+| **Hydro** | Réseau hydrographique, zones humides, régimes hydriques |
+| **Flora** | Cartographie végétale, phénologie, répartition floristique |
+
+**Principes techniques :**
+
+- **Cesium for Unreal** — globe WGS84 haute précision, 3D Tiles pour
+  le terrain (LiDAR HD IGN), l'imagerie et les Gaussian Splats
+  (reconstructions drone). Géoréférencement natif.
+- **WebSockets natifs + JSON** (C++) — connexion temps réel à l'API
+  GSIE (livrable 207). Aucune dépendance externe exotique.
+- **Niagara** — effets visuels (feu, fumée, eau) pilotés par les
+  données des moteurs.
+- **Client de visualisation, jamais de calcul** — le Centre de
+  Commandement consomme les sorties validées des moteurs ; il peut
+  planter ou être fermé sans affecter le moteur GSIE (philosophie
+  « lourd serveur / léger terrain », C-06).
+
+**Flux de données :**
+
+```
+GSIE API (livrable 207) → WebSocket/JSON → Centre de Commandement UE 5.8
+    ├── GeoSylva : diagnostics, recommandations, carte interactive
+    ├── Ignis    : front de feu, drones, météo, combustibles
+    ├── Artemis  : habitats faune, observations
+    ├── Hydro    : réseau hydrographique, zones humides
+    └── Flora    : cartographie végétale, phénologie
+```
+
+> **Document de référence :** `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+> (livrable 211) — architecture détaillée du Centre de Commandement,
+> briques techniques, précédents scientifiques.
 
 ---
 
@@ -326,7 +378,7 @@ API. Elle ne contient aucune logique métier — elle affiche, capture
 et transmet.
 
 **Justification :** les interfaces changent plus vite que le moteur.
-GeoSylva mobile, GSIE-Ignis desktop et une future API publique
+GeoSylva mobile, Ignis desktop et une future API publique
 partagent le même moteur mais ont des présentations distinctes.
 
 ---
@@ -707,6 +759,7 @@ Les sources externes suivantes sont référencées dans le flux de données
 | 2026-07-01 | Création — version squelette (Phase 1) |
 | 2026-07-12 | Enrichissement Phase 2 — vue d'ensemble, principes, couches, diagramme de flux, relation RFC-0003 |
 | 2026-07-12 | Correction audit — références constitutionnelles explicites (§3), références sources (§2.1, §4.3, §5.1), modes dégradés détaillés (§5.2), esquisse des contrats d'interface (§10), sources et références scientifiques (§11) |
+| 2026-07-13 | Restructuration GSIE-DIR-0009 / DEC-000013 — renommage Ignis → Ignis, ajout Artemis, Hydro, Flora, QGISIA dans §2.2, ajout §2.4 Centre de Commandement GSIE (Unreal Engine 5.8) |
 
 ---
 

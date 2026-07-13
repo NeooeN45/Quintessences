@@ -128,7 +128,7 @@ Légende : ✅ = flux de données direct entre les deux moteurs.
 
 4. **Communication asynchrone par défaut**. Les moteurs domaine
    répondent en temps différé. La chaîne d'intelligence (Evidence →
-   Validation) peut être synchrone pour les flux temps réel (GSIE-Ignis).
+   Validation) peut être synchrone pour les flux temps réel (Ignis).
 
 5. **Offline-first**. Les moteurs communiquent par messages persistés.
    En cas de coupure réseau, les messages sont mis en file et traités
