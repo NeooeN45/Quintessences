@@ -14,6 +14,9 @@ Desktop.ini
 .claude/
 CLAUDE.md
 
+# Devin CLI — config locale (clés personnelles, non versionnée)
+.devin/config.local.json
+
 # Temporaire
 tmp/
 *.tmp

@@ -203,7 +203,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Validated ✅ |
 | 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Validated ✅ |
 | 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Validated ✅ |
-| 305 | Dataset Catalog (26 datasets) | `GSIE/DATASETS/DATASET_CATALOG.md` | Validated ✅ |
+| 305 | Dataset Catalog (29 datasets) | `GSIE/DATASETS/DATASET_CATALOG.md` | Validated ✅ |
 | 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Validated ✅ |
 | 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Validated ✅ |
 | 308 | Knowledge Base Seed (25 connaissances) | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Validated ✅ |
