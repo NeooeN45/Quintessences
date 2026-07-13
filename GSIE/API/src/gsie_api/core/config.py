@@ -4,7 +4,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     rate_limit_default: str = "60/minute"
     # Endpoints health/ready plus permissifs (monitoring)
     rate_limit_health: str = "300/minute"
+    # Endpoints POST plus stricts (protection flood)
+    rate_limit_evaluate: str = "30/minute"
 
     # PostgreSQL + PostGIS
     # Format : postgresql+asyncpg://user:pass@host:5432/dbname
@@ -61,6 +63,9 @@ class Settings(BaseSettings):
     redis_max_connections: int = 20
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
+    # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
+    # En développement/test, "memory://" est utilisé (pas de Redis requis)
+    rate_limit_storage_url: str = "memory://"
 
     # Auth — JWT RS256 (DEC-000019)
     jwt_algorithm: str = "RS256"
@@ -73,6 +78,20 @@ class Settings(BaseSettings):
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
     otel_service_name: str = "gsie-api"
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Valide que la configuration est sûre en production."""
+        if self.environment == "production":
+            if self.debug:
+                raise ValueError("debug must be False in production")
+            if "gsie_dev" in self.database_url:
+                raise ValueError("Default database password not allowed in production")
+            if "*" in self.cors_origins:
+                raise ValueError("Wildcard CORS origin not allowed in production")
+            if any("localhost" in o for o in self.cors_origins):
+                raise ValueError("localhost CORS origins not allowed in production")
+        return self
 
 
 @lru_cache

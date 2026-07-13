@@ -21,6 +21,9 @@ use crate::types::{
     RawKnowledgeSubmission, SourceType,
 };
 
+/// Taille maximale des chaînes entrantes (anti-DoS).
+const MAX_STRING_LENGTH: usize = 10_000;
+
 /// Erreurs de l'Evidence Engine.
 #[derive(Debug, thiserror::Error)]
 pub enum EvidenceError {
@@ -37,7 +40,7 @@ impl EvidenceEngine {
     /// Évalue une soumission de connaissance et retourne une connaissance qualifiée.
     ///
     /// Pipeline :
-    /// 1. Validation de la source (non vide, référence présente)
+    /// 1. Validation de la source (non vide, référence présente, longueurs OK)
     /// 2. Attribution du niveau de preuve (matrice source × contenu)
     /// 3. Détermination du statut (accepte / quarantine / refuse)
     /// 4. Génération de l'UUID et timestamp
@@ -65,14 +68,33 @@ impl EvidenceEngine {
         })
     }
 
-    /// Valide que la source a une référence et un auteur non vides.
+    /// Valide que la source a une référence et un auteur non vides et de longueur raisonnable.
     fn validate_source(submission: &RawKnowledgeSubmission) -> Result<(), EvidenceError> {
-        if submission.source_candidate.auteur.trim().is_empty() {
+        let auteur = submission.source_candidate.auteur.trim();
+        if auteur.is_empty() {
             return Err(EvidenceError::InvalidSource("auteur manquant".into()));
         }
-        if submission.source_candidate.reference.trim().is_empty() {
+        if auteur.len() > MAX_STRING_LENGTH {
+            return Err(EvidenceError::InvalidSource("auteur trop long".into()));
+        }
+
+        let reference = submission.source_candidate.reference.trim();
+        if reference.is_empty() {
             return Err(EvidenceError::InvalidSource("référence manquante".into()));
         }
+        if reference.len() > MAX_STRING_LENGTH {
+            return Err(EvidenceError::InvalidSource("référence trop longue".into()));
+        }
+
+        // Valider le soumetteur
+        let soumetteur = submission.soumetteur.trim();
+        if soumetteur.is_empty() {
+            return Err(EvidenceError::InvalidSource("soumetteur manquant".into()));
+        }
+        if soumetteur.len() > MAX_STRING_LENGTH {
+            return Err(EvidenceError::InvalidSource("soumetteur trop long".into()));
+        }
+
         Ok(())
     }
 

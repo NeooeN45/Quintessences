@@ -1,8 +1,8 @@
 //! Bindings PyO3 — expose l'Evidence Engine à Python.
 //!
 //! Conformément à ADR-0002 (TECHNOLOGY_STACK.md) :
-//! - py.allow_threads() pour éviter la GIL contention
 //! - Sérialisation via serde (JSON string) — simple et robuste
+//! - Limite de taille JSON pour prévenir le DoS (10 MB max)
 //!
 //! Usage Python :
 //!   from gsie_evidence import EvidenceEngine
@@ -14,6 +14,9 @@ use serde_json;
 
 use crate::engine::EvidenceEngine as RustEngine;
 use crate::types::RawKnowledgeSubmission;
+
+/// Taille maximale du JSON entrant (10 MB) — anti-DoS.
+const MAX_JSON_SIZE: usize = 10 * 1024 * 1024;
 
 /// Module Python gsie_evidence.
 #[pymodule]
@@ -34,6 +37,15 @@ fn gsie_evidence(m: &Bound<'_, PyModule>) -> PyResult<()> {
         ///     string JSON avec connaissance_id, evidence_level, statut, source, etc.
         #[staticmethod]
         fn evaluate_json(submission_json: String) -> PyResult<String> {
+            // Valider la taille du JSON avant désérialisation (anti-DoS)
+            if submission_json.len() > MAX_JSON_SIZE {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "JSON trop volumineux : {} octets (max : {} octets)",
+                    submission_json.len(),
+                    MAX_JSON_SIZE
+                )));
+            }
+
             // Désérialiser la soumission depuis JSON
             let submission: RawKnowledgeSubmission = serde_json::from_str(&submission_json)
                 .map_err(|e| {
@@ -42,7 +54,7 @@ fn gsie_evidence(m: &Bound<'_, PyModule>) -> PyResult<()> {
                     ))
                 })?;
 
-            // Évaluer SANS le GIL (py.allow_threads équivalent — on n'utilise pas Python ici)
+            // Évaluer (le GIL est maintenu — l'évaluation est rapide, < 1ms)
             let result = RustEngine::evaluate(submission)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
 
@@ -60,6 +72,15 @@ fn gsie_evidence(m: &Bound<'_, PyModule>) -> PyResult<()> {
         ///     string : "A", "B", "C", "D", "E" ou "F"
         #[staticmethod]
         fn evaluate_level(submission_json: String) -> PyResult<String> {
+            // Valider la taille du JSON avant désérialisation (anti-DoS)
+            if submission_json.len() > MAX_JSON_SIZE {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "JSON trop volumineux : {} octets (max : {} octets)",
+                    submission_json.len(),
+                    MAX_JSON_SIZE
+                )));
+            }
+
             let submission: RawKnowledgeSubmission = serde_json::from_str(&submission_json)
                 .map_err(|e| {
                     pyo3::exceptions::PyValueError::new_err(format!("JSON invalide : {e}"))

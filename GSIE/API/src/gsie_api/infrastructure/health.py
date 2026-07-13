@@ -9,7 +9,6 @@ Séparation liveness/readiness (recommandation stress test) :
 - /ready (readiness) : avec DB+Redis + cache Redis 5s — pour Kubernetes readiness probe
 """
 
-import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
@@ -34,11 +33,18 @@ _READY_CACHE_KEY = "gsie:ready:cache"
 async def _check_database(db: AsyncSession) -> str:
     """Vérifie la connexion PostgreSQL + PostGIS. Retourne le statut."""
     try:
-        result = await db.execute(text("SELECT PostGIS_Version()"))
-        postgis_version = result.scalar_one()
-        return f"healthy (PostGIS {postgis_version})"
+        is_production = _settings.environment == "production"
+        if is_production:
+            # En production : ping simple sans divulguer la version PostGIS
+            result = await db.execute(text("SELECT 1"))
+            result.fetchone()
+            return "healthy"
+        else:
+            result = await db.execute(text("SELECT PostGIS_Version()"))
+            postgis_version = result.scalar_one()
+            return f"healthy (PostGIS {postgis_version})"
     except Exception as exc:
-        logger.error("database_health_check_failed", error=str(exc))
+        logger.error("database_health_check_failed", error_type=type(exc).__name__)
         return "unhealthy"
 
 
@@ -48,7 +54,7 @@ async def _check_redis(redis: Redis) -> str:
         pong = await redis.ping()
         return "healthy" if pong else "unhealthy"
     except Exception as exc:
-        logger.error("redis_health_check_failed", error=str(exc))
+        logger.error("redis_health_check_failed", error_type=type(exc).__name__)
         return "unhealthy"
 
 
@@ -83,7 +89,7 @@ async def readiness(
     try:
         cached = await redis.get(_READY_CACHE_KEY)
         if cached:
-            return HealthResponse(**json.loads(cached))
+            return HealthResponse.model_validate_json(cached)
     except Exception:
         pass  # Cache indisponible — on continue avec le check réel
 

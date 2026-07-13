@@ -6,6 +6,12 @@
 # ajoutées en semaine 5 (GIS Engine). Pour la semaine 1, on n'a besoin que
 # de FastAPI + asyncpg + Redis — image légère et build rapide.
 
+LABEL org.opencontainers.image.title="GSIE API"
+LABEL org.opencontainers.image.description="General System Intelligence Engine REST/WebSocket API"
+LABEL org.opencontainers.image.version="0.1.0"
+LABEL org.opencontainers.image.source="https://github.com/NeooeN45/Quintessences"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
+
 FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /build

@@ -79,3 +79,53 @@ def should_compress_response_when_gzip_enabled():
     client = TestClient(app)
     response = client.get("/api/v1/openapi.json", headers={"Accept-Encoding": "gzip"})
     assert response.headers.get("content-encoding") == "gzip"
+
+
+def should_return_500_with_error_code_when_unhandled_exception():
+    """Le handler global 500 doit retourner 500 sans stack trace."""
+    with patch("gsie_api.app._settings") as mock_settings:
+        mock_settings.app_name = "GSIE API"
+        mock_settings.app_version = "0.1.0"
+        mock_settings.environment = "development"
+        mock_settings.debug = False
+        mock_settings.log_level = "INFO"
+        mock_settings.api_v1_prefix = "/api/v1"
+        mock_settings.cors_origins = ["http://localhost:3000"]
+        mock_settings.rate_limit_enabled = False
+        mock_settings.rate_limit_default = "60/minute"
+        mock_settings.rate_limit_storage_url = "memory://"
+
+        app = create_app()
+        client = TestClient(app, raise_server_exceptions=False)
+
+        # Provoquer une exception non gérée en mockant le router evidence
+        with patch("gsie_api.engines.evidence.router.evaluate", side_effect=RuntimeError("boom")):
+            from gsie_api.engines.evidence.schemas import (
+                ContentType,
+                RawKnowledgeSubmission,
+                SourceReference,
+                SourceType,
+            )
+            from uuid import uuid4
+            from datetime import UTC, datetime
+
+            sub = RawKnowledgeSubmission(
+                soumission_id=uuid4(),
+                type_contenu=ContentType.publication,
+                contenu={"test": "data"},
+                source_candidate=SourceReference(
+                    type_source=SourceType.peer_reviewed,
+                    auteur="Test",
+                    reference="DOI:test",
+                ),
+                date_soumission=datetime.now(UTC),
+                soumetteur="test",
+            )
+            response = client.post(
+                "/api/v1/evidence/evaluate",
+                json=sub.model_dump(mode="json"),
+            )
+            assert response.status_code == 500
+            # La stack trace ne doit pas être divulguée dans la réponse
+            assert "RuntimeError" not in response.text
+            assert "boom" not in response.text

@@ -8,8 +8,11 @@ import multiprocessing
 # Workers : 2×CPU + 1 (formule Gunicorn)
 workers = multiprocessing.cpu_count() * 2 + 1
 
-# Worker class : Uvicorn pour async ASGI
-worker_class = "uvicorn.workers.UvicornWorker"
+# Worker class : SecureUvicornWorker (supprime header Server — OWASP A05)
+worker_class = "gsie_api.worker.SecureUvicornWorker"
+
+# Connexions concurrentes par worker (ASGI)
+worker_connections = 1000
 
 # Bind
 bind = "0.0.0.0:8000"
@@ -30,5 +33,4 @@ accesslog = "-"
 errorlog = "-"
 
 # Sécurité — désactive le header Server (anti-fingerprinting OWASP A05)
-# UvicornWorker lit ces options via la config Uvicorn
-# Note : server_header est une option Uvicorn, passée via worker_class
+# SecureUvicornWorker configure server_header=False et date_header=False

@@ -18,7 +18,7 @@ services:
       POSTGRES_PASSWORD: ${GSIE_DB_PASSWORD:?GSIE_DB_PASSWORD requis dans .env}
       POSTGRES_DB: ${GSIE_DB_NAME:-gsie}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - gsie_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -27,6 +27,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     # Limites ressources (recommandation stress test)
     deploy:
       resources:
@@ -47,14 +49,18 @@ services:
       --appendfsync everysec
     expose:
       - "6379"
+    environment:
+      REDISCLI_AUTH: ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
     volumes:
       - gsie_redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${GSIE_REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     deploy:
       resources:
         limits:
@@ -66,13 +72,14 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:-development}
-      GSIE_DEBUG: ${GSIE_DEBUG:-true}
+      GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
+      GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
       GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
       GSIE_RATE_LIMIT_ENABLED: ${GSIE_RATE_LIMIT_ENABLED:-true}
     depends_on:
@@ -80,6 +87,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
     # Sécurité Docker (OWASP A05)
     read_only: true
@@ -95,6 +108,10 @@ services:
         limits:
           cpus: "2.0"
           memory: 768M
+
+networks:
+  default:
+    driver: bridge
 
 volumes:
   gsie_pgdata:

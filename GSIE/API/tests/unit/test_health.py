@@ -214,3 +214,21 @@ def should_return_unhealthy_when_redis_ping_returns_false():
     data = response.json()
     assert data["dependencies"]["redis"] == "unhealthy"
     app.dependency_overrides.clear()
+
+
+def should_use_simple_ping_in_production():
+    """En production, _check_database doit utiliser SELECT 1 (pas PostGIS_Version)."""
+    from unittest.mock import patch
+
+    from gsie_api.infrastructure.health import _check_database
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.fetchone = MagicMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    with patch("gsie_api.infrastructure.health._settings") as mock_settings:
+        mock_settings.environment = "production"
+        import asyncio
+        result = asyncio.run(_check_database(mock_db))
+        assert result == "healthy"

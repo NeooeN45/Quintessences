@@ -35,10 +35,13 @@ _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
 # Rate limiter — par IP, configurable (OWASP A07)
+# Stockage Redis pour distribution entre workers Gunicorn
 limiter = Limiter(
     key_func=get_remote_address,
     enabled=_settings.rate_limit_enabled,
     default_limits=[_settings.rate_limit_default],
+    storage_uri=_settings.rate_limit_storage_url,
+    headers_enabled=True,
 )
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
@@ -77,6 +80,7 @@ def create_app() -> FastAPI:
         version=_settings.app_version,
         description="GSIE — General System Intelligence Engine API",
         lifespan=lifespan,
+        debug=_settings.debug,
         docs_url=None if is_production else "/docs",
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
@@ -114,6 +118,21 @@ def create_app() -> FastAPI:
         return JSONResponse(
             status_code=404,
             content={"detail": "Resource not found", "error_code": "NOT_FOUND"},
+        )
+
+    # Handler global 500 — ne divulgue pas la stack trace (OWASP A05)
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.error(
+            "unhandled_exception",
+            path=request.url.path,
+            method=request.method,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error", "error_code": "INTERNAL_ERROR"},
         )
 
     return app

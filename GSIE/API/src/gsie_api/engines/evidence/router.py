@@ -11,15 +11,20 @@ GRADE-CERQual, ASReview, Rayyan, claim verification (SciFact/FEVER).
 """
 
 from fastapi import APIRouter, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from gsie_api.engines.evidence.schemas import (
     QualifiedKnowledge,
     RawKnowledgeSubmission,
 )
 from gsie_api.engines.evidence.wrapper import engine_version, evaluate, is_rust_available
-from gsie_api.shared.schemas import EngineStatusResponse
+from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+# Rate limiter spécifique pour les endpoints POST coûteux (flood protection)
+_evaluate_limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/status", response_model=EngineStatusResponse)
@@ -46,6 +51,7 @@ async def evidence_status(request: Request) -> EngineStatusResponse:
         "via PyO3 (ADR-0002)."
     ),
 )
+@_evaluate_limiter.limit("30/minute")
 async def evidence_evaluate(
     submission: RawKnowledgeSubmission,
     request: Request,
@@ -73,10 +79,14 @@ async def evidence_evaluate(
     return evaluate(submission)
 
 
-@router.get("/version", summary="Version du moteur Evidence")
-async def evidence_version(request: Request) -> dict[str, str]:
+@router.get(
+    "/version",
+    response_model=EngineVersionResponse,
+    summary="Version du moteur Evidence",
+)
+async def evidence_version(request: Request) -> EngineVersionResponse:
     """Retourne la version du moteur et le backend utilisé."""
-    return {
-        "version": engine_version(),
-        "backend": "rust+pyo3" if is_rust_available() else "python-fallback",
-    }
+    return EngineVersionResponse(
+        version=engine_version(),
+        backend="rust+pyo3" if is_rust_available() else "python-fallback",
+    )
