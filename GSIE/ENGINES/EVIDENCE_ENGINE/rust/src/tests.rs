@@ -246,6 +246,117 @@ fn should_preserve_contenu_when_evaluated() {
     assert_eq!(result.contenu_normalise["data"], 42);
 }
 
+// --- Tests detect_conflicts ---
+
+#[test]
+fn should_detect_conflict_when_same_reference_different_source_type() {
+    let candidate = SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "Smith".to_string(),
+        date_publication: Some("2024-01-01".to_string()),
+        reference: "DOI:10.1234/test".to_string(),
+        version_source: None,
+    };
+    let existing = vec![SourceReference {
+        type_source: SourceType::ExpertIdentifie,
+        auteur: "Jones".to_string(),
+        date_publication: None,
+        reference: "doi:10.1234/test".to_string(), // même DOI, casse différente
+        version_source: None,
+    }];
+    let conflits = EvidenceEngine::detect_conflicts(&candidate, &existing);
+    assert_eq!(conflits.len(), 1);
+    assert!(conflits[0].description.contains("divergent"));
+}
+
+#[test]
+fn should_not_detect_conflict_when_same_reference_same_type() {
+    let candidate = SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "Smith".to_string(),
+        date_publication: Some("2024-01-01".to_string()),
+        reference: "DOI:10.1234/test".to_string(),
+        version_source: None,
+    };
+    let existing = vec![SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "Jones".to_string(),
+        date_publication: None,
+        reference: "DOI:10.1234/test".to_string(),
+        version_source: None,
+    }];
+    let conflits = EvidenceEngine::detect_conflicts(&candidate, &existing);
+    assert!(conflits.is_empty());
+}
+
+#[test]
+fn should_detect_conflict_when_same_author_date_different_reference() {
+    let candidate = SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "Smith".to_string(),
+        date_publication: Some("2024-01-01".to_string()),
+        reference: "DOI:10.1234/a".to_string(),
+        version_source: None,
+    };
+    let existing = vec![SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "smith".to_string(), // casse différente
+        date_publication: Some("2024-01-01".to_string()),
+        reference: "DOI:10.1234/b".to_string(),
+        version_source: None,
+    }];
+    let conflits = EvidenceEngine::detect_conflicts(&candidate, &existing);
+    assert_eq!(conflits.len(), 1);
+    assert!(conflits[0].description.contains("attribution erronée"));
+}
+
+#[test]
+fn should_return_empty_conflicts_when_no_existing_sources() {
+    let candidate = SourceReference {
+        type_source: SourceType::PeerReviewed,
+        auteur: "Smith".to_string(),
+        date_publication: None,
+        reference: "DOI:10.1234/test".to_string(),
+        version_source: None,
+    };
+    let conflits = EvidenceEngine::detect_conflicts(&candidate, &[]);
+    assert!(conflits.is_empty());
+}
+
+// --- Tests versionnement ---
+
+#[test]
+fn should_set_version_to_2_when_parent_version_is_1() {
+    let sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    let result =
+        EvidenceEngine::evaluate_with_context(sub, &[], Some(1)).unwrap();
+    assert_eq!(result.version, 2);
+}
+
+#[test]
+fn should_set_version_to_5_when_parent_version_is_4() {
+    let sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    let result =
+        EvidenceEngine::evaluate_with_context(sub, &[], Some(4)).unwrap();
+    assert_eq!(result.version, 5);
+}
+
+#[test]
+fn should_return_refuse_when_conflict_detected() {
+    let mut sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    sub.source_candidate.reference = "DOI:10.1234/conflict".to_string();
+    let existing = vec![SourceReference {
+        type_source: SourceType::ExpertIdentifie,
+        auteur: "Other".to_string(),
+        date_publication: None,
+        reference: "DOI:10.1234/conflict".to_string(),
+        version_source: None,
+    }];
+    let result = EvidenceEngine::evaluate_with_context(sub, &existing, None).unwrap();
+    assert_eq!(result.statut, KnowledgeStatus::Refuse);
+    assert!(!result.conflits.is_empty());
+}
+
 // --- Tests de l'enum EvidenceLevel ---
 
 #[test]

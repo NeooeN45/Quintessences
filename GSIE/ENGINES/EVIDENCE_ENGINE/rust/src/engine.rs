@@ -17,8 +17,8 @@ use chrono::Utc;
 use uuid::Uuid;
 
 use crate::types::{
-    ContentType, EvidenceLevel, KnowledgeStatus, QualifiedKnowledge,
-    RawKnowledgeSubmission, SourceType,
+    ConflitBibliographique, ContentType, EvidenceLevel, KnowledgeStatus,
+    QualifiedKnowledge, RawKnowledgeSubmission, SourceReference, SourceType,
 };
 
 /// Taille maximale des chaînes entrantes (anti-DoS).
@@ -42,9 +42,26 @@ impl EvidenceEngine {
     /// Pipeline :
     /// 1. Validation de la source (non vide, référence présente, longueurs OK)
     /// 2. Attribution du niveau de preuve (matrice source × contenu)
-    /// 3. Détermination du statut (accepte / quarantine / refuse)
-    /// 4. Génération de l'UUID et timestamp
+    /// 3. Détection de conflits bibliographiques (si sources existantes fournies)
+    /// 4. Détermination du statut (accepte / quarantine / refuse)
+    /// 5. Génération de l'UUID, version et timestamp
+    ///
+    /// Versionnement : si `parent_version` est fourni, la nouvelle version
+    /// est parent_version + 1 (lien parent-enfant pour traçabilité CON-005).
     pub fn evaluate(submission: RawKnowledgeSubmission) -> Result<QualifiedKnowledge, EvidenceError> {
+        Self::evaluate_with_context(submission, &[], None)
+    }
+
+    /// Évalue une soumission avec contexte : sources existantes + parent pour versionnement.
+    ///
+    /// Args :
+    /// - `existing_sources` : sources déjà qualifiées pour détecter les conflits
+    /// - `parent_version` : version de la connaissance parente (None = nouvelle, version 1)
+    pub fn evaluate_with_context(
+        submission: RawKnowledgeSubmission,
+        existing_sources: &[SourceReference],
+        parent_version: Option<u32>,
+    ) -> Result<QualifiedKnowledge, EvidenceError> {
         // 1. Validation
         Self::validate_source(&submission)?;
         Self::validate_content(&submission)?;
@@ -52,20 +69,93 @@ impl EvidenceEngine {
         // 2. Attribution du niveau de preuve
         let evidence_level = Self::determine_evidence_level(&submission);
 
-        // 3. Détermination du statut
-        let statut = Self::determine_status(evidence_level);
+        // 3. Détection de conflits bibliographiques
+        let conflits = Self::detect_conflicts(&submission.source_candidate, existing_sources);
 
-        // 4. Construction de la connaissance qualifiée
+        // 4. Détermination du statut (conflit non résolvable → F)
+        let statut = if !conflits.is_empty() {
+            KnowledgeStatus::Refuse
+        } else {
+            Self::determine_status(evidence_level)
+        };
+
+        // 5. Versionnement : incrément si parent fourni
+        let version = parent_version.map_or(1, |pv| pv + 1);
+
+        // 6. Construction de la connaissance qualifiée
         Ok(QualifiedKnowledge {
             connaissance_id: Uuid::new_v4(),
             contenu_normalise: submission.contenu,
             evidence_level,
             source: submission.source_candidate,
-            version: 1,
+            version,
             date_qualification: Utc::now(),
-            conflits: Vec::new(),
+            conflits,
             statut,
         })
+    }
+
+    /// Détecte les conflits bibliographiques entre une source candidate et des sources existantes.
+    ///
+    /// Un conflit est détecté quand :
+    /// - Deux sources partagent la même référence (DOI, URL) mais ont des types différents
+    ///   (ex: peer_reviewed vs expert_identifie — indique une désinformation potentielle)
+    /// - Deux sources ont le même auteur + même date mais des références différentes
+    ///   (indique une attribution erronée)
+    ///
+    /// Args :
+    /// - `candidate` : source candidate à vérifier
+    /// - `existing` : sources déjà qualifiées dans la base
+    ///
+    /// Returns : liste des conflits détectés (vide si aucun)
+    pub fn detect_conflicts(
+        candidate: &SourceReference,
+        existing: &[SourceReference],
+    ) -> Vec<ConflitBibliographique> {
+        let mut conflits = Vec::new();
+
+        for source in existing {
+            // Conflit type 1 : même référence, type de source différent
+            if Self::normalize_reference(&candidate.reference)
+                == Self::normalize_reference(&source.reference)
+                && candidate.type_source != source.type_source
+            {
+                conflits.push(ConflitBibliographique {
+                    source_a: candidate.clone(),
+                    source_b: source.clone(),
+                    description: format!(
+                        "Référence identique ({}) mais type de source divergent : {:?} vs {:?}",
+                        candidate.reference, candidate.type_source, source.type_source
+                    ),
+                });
+                continue;
+            }
+
+            // Conflit type 2 : même auteur + même date, références différentes
+            if candidate.auteur.eq_ignore_ascii_case(&source.auteur)
+                && candidate.date_publication.is_some()
+                && candidate.date_publication == source.date_publication
+                && Self::normalize_reference(&candidate.reference)
+                    != Self::normalize_reference(&source.reference)
+            {
+                conflits.push(ConflitBibliographique {
+                    source_a: candidate.clone(),
+                    source_b: source.clone(),
+                    description: format!(
+                        "Même auteur ({}) et date ({}) mais références différentes — attribution erronée possible",
+                        candidate.auteur,
+                        candidate.date_publication.as_ref().unwrap()
+                    ),
+                });
+            }
+        }
+
+        conflits
+    }
+
+    /// Normalise une référence pour comparaison (lowercase, trim, suppression espaces superflus).
+    fn normalize_reference(reference: &str) -> String {
+        reference.trim().to_lowercase().replace(' ', "")
     }
 
     /// Valide que la source a une référence et un auteur non vides et de longueur raisonnable.

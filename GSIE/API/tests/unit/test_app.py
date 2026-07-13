@@ -82,7 +82,7 @@ def should_compress_response_when_gzip_enabled():
 
 
 def should_return_500_with_error_code_when_unhandled_exception():
-    """Le handler global 500 doit retourner 500 sans stack trace."""
+    """Le handler global 500 doit retourner 500 sans stack trace (RFC 7807)."""
     with patch("gsie_api.app._settings") as mock_settings:
         mock_settings.app_name = "GSIE API"
         mock_settings.app_version = "0.1.0"
@@ -94,6 +94,8 @@ def should_return_500_with_error_code_when_unhandled_exception():
         mock_settings.rate_limit_enabled = False
         mock_settings.rate_limit_default = "60/minute"
         mock_settings.rate_limit_storage_url = "memory://"
+        mock_settings.otel_enabled = False
+        mock_settings.max_request_body_size = 1_048_576
 
         app = create_app()
         client = TestClient(app, raise_server_exceptions=False)
@@ -129,3 +131,9 @@ def should_return_500_with_error_code_when_unhandled_exception():
             # La stack trace ne doit pas être divulguée dans la réponse
             assert "RuntimeError" not in response.text
             assert "boom" not in response.text
+            # RFC 7807 Problem Details
+            data = response.json()
+            assert data["title"] == "Internal Server Error"
+            assert data["status"] == 500
+            assert data["error_code"] == "INTERNAL_ERROR"
+            assert "instance" in data

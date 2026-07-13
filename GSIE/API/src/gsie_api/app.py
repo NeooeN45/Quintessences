@@ -2,12 +2,14 @@
 
 Architecture (DEC-000019) :
 - Clean architecture par modules moteurs (pas DDD pur)
-- OpenTelemetry pour observabilité (CON-005)
+- OpenTelemetry pour observabilité (CON-005) — instrumentation conditionnelle
+- Prometheus /metrics pour monitoring production
 - TraceId middleware : traçabilité + headers de sécurité + limite taille
 - Health/Ready séparés : liveness (instantané) vs readiness (DB+Redis + cache)
-- Rate limiting (OWASP A07 — slowapi)
+- Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)
 - Gzip compression (performance)
 - Documentation désactivée en production (OWASP A05)
+- RFC 7807 Problem Details pour les réponses d'erreur
 - 404 handler custom avec trace_id (ne divulgue pas l'arborescence)
 """
 
@@ -18,11 +20,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
+from slowapi.middleware import SlowAPIASGIMiddleware
 from slowapi.util import get_remote_address
 
+from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.engines.evidence.router import router as evidence_router
@@ -46,7 +50,9 @@ limiter = Limiter(
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
 _OPENAPI_TAGS = [
+    {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
+    {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -57,12 +63,37 @@ _ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 _ALLOWED_HEADERS = ["Content-Type", "Authorization", "X-Trace-Id"]
 
 
+def _build_problem_detail(
+    status_code: int,
+    title: str,
+    detail: str,
+    error_code: str,
+    trace_id: str,
+    request: Request,
+) -> dict:
+    """Construit une réponse d'erreur au format RFC 7807 Problem Details.
+
+    RFC 7807 : https://datatracker.ietf.org/doc/html/rfc7807
+    Champs : type, title, status, detail, instance + extensions (error_code, trace_id).
+    """
+    return {
+        "type": f"about:blank",
+        "title": title,
+        "status": status_code,
+        "detail": detail,
+        "instance": request.url.path,
+        "error_code": error_code,
+        "trace_id": trace_id,
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Cycle de vie : startup + shutdown.
 
-    Graceful shutdown (P0) : ferme proprement les connexions DB et Redis
-    pour éviter les fuites de connexions côté PostgreSQL/Redis.
+    Startup :
+    - OpenTelemetry instrumentation si otel_enabled=True (CON-005)
+    - Graceful shutdown : ferme proprement les connexions DB et Redis
     """
     setup_logging(_settings.log_level, _settings.environment)
     logger.info(
@@ -71,6 +102,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         version=_settings.app_version,
         environment=_settings.environment,
     )
+
+    # OpenTelemetry — instrumentation conditionnelle (CON-005, DEC-000019)
+    if _settings.otel_enabled:
+        _setup_opentelemetry(app)
+
     yield
     logger.info("api_stopping")
     # Graceful shutdown — ferme les pools de connexions (P0 résilience)
@@ -84,6 +120,42 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "shutdown_cleanup_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+
+
+def _setup_opentelemetry(app: FastAPI) -> None:
+    """Configure l'instrumentation OpenTelemetry si otel_enabled=True.
+
+    Instrumente FastAPI, SQLAlchemy et Redis pour la traçabilité distribuée (CON-005).
+    Les traces sont exportées vers l'endpoint OTLP configuré (otel_endpoint).
+    """
+    try:
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.redis import RedisInstrumentor
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+        from gsie_api.infrastructure.database import engine
+
+        resource = Resource.create({"service.name": _settings.otel_service_name})
+        provider = TracerProvider(resource=resource)
+        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=_settings.otel_endpoint))
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+
+        FastAPIInstrumentor.instrument_app(app)
+        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
+        RedisInstrumentor().instrument()
+        logger.info("otel_instrumented", endpoint=_settings.otel_endpoint)
+    except Exception as exc:
+        logger.error(
+            "otel_setup_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )
@@ -105,10 +177,18 @@ def create_app() -> FastAPI:
         openapi_tags=_OPENAPI_TAGS,
     )
 
-    # Rate limiting (OWASP A07 — slowapi)
+    # Prometheus /metrics — monitoring production (CON-005)
+    Instrumentator().instrument(app).expose(
+        app,
+        endpoint="/metrics",
+        tags=["metrics"],
+        include_in_schema=not is_production,
+    )
+
+    # Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    app.add_middleware(SlowAPIMiddleware)
+    app.add_middleware(SlowAPIASGIMiddleware)
 
     # Middlewares (ordre important : outermost en premier)
     # Gzip : compresse les réponses > 500 bytes (performance)
@@ -124,26 +204,30 @@ def create_app() -> FastAPI:
         allow_headers=_ALLOWED_HEADERS,
     )
 
-    # Routes — health/ready à la racine, moteurs sous /api/v1/
+    # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
+    app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(gis_router, prefix=_settings.api_v1_prefix)
 
-    # 404 handler custom — ne divulgue pas l'arborescence (OWASP A05)
+    # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc: Exception) -> JSONResponse:
         trace_id = request.headers.get("X-Trace-Id", "")
         return JSONResponse(
             status_code=404,
-            content={
-                "detail": "Resource not found",
-                "error_code": "NOT_FOUND",
-                "trace_id": trace_id,
-            },
+            content=_build_problem_detail(
+                status_code=404,
+                title="Not Found",
+                detail="Resource not found",
+                error_code="NOT_FOUND",
+                trace_id=trace_id,
+                request=request,
+            ),
         )
 
-    # Handler global 500 — ne divulgue pas la stack trace (OWASP A05)
+    # Handler global 500 — RFC 7807 Problem Details (OWASP A05)
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         trace_id = request.headers.get("X-Trace-Id", "")
@@ -157,11 +241,14 @@ def create_app() -> FastAPI:
         )
         return JSONResponse(
             status_code=500,
-            content={
-                "detail": "Internal server error",
-                "error_code": "INTERNAL_ERROR",
-                "trace_id": trace_id,
-            },
+            content=_build_problem_detail(
+                status_code=500,
+                title="Internal Server Error",
+                detail="Internal server error",
+                error_code="INTERNAL_ERROR",
+                trace_id=trace_id,
+                request=request,
+            ),
         )
 
     return app

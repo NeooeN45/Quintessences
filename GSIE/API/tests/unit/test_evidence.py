@@ -291,9 +291,140 @@ def should_fallback_to_python_when_rust_raises_exception():
 
 
 def should_include_trace_id_in_404_error():
-    """Le handler 404 doit inclure le trace_id dans la réponse d'erreur."""
+    """Le handler 404 doit inclure le trace_id dans la réponse d'erreur (RFC 7807)."""
     response = client.get("/nonexistent", headers={"X-Trace-Id": "test-trace-123"})
     assert response.status_code == 404
     data = response.json()
+    # RFC 7807 Problem Details
     assert data["error_code"] == "NOT_FOUND"
     assert data["trace_id"] == "test-trace-123"
+    assert data["title"] == "Not Found"
+    assert data["status"] == 404
+    assert "instance" in data
+
+
+# --- Tests detect_conflicts ---
+
+def should_detect_conflict_when_same_reference_different_type():
+    """detect_conflicts doit détecter un conflit : même référence, type différent."""
+    from gsie_api.engines.evidence.wrapper import detect_conflicts
+
+    candidate = SourceReference(
+        type_source=SourceType.peer_reviewed,
+        auteur="Smith",
+        reference="DOI:10.1234/test",
+    )
+    existing = [
+        SourceReference(
+            type_source=SourceType.expert_identifie,
+            auteur="Jones",
+            reference="doi:10.1234/test",  # même DOI, casse différente
+        )
+    ]
+    conflits = detect_conflicts(candidate, existing)
+    assert len(conflits) == 1
+    assert "divergent" in conflits[0].description.lower()
+
+
+def should_not_detect_conflict_when_same_reference_same_type():
+    """detect_conflicts ne doit pas détecter de conflit si même type."""
+    from gsie_api.engines.evidence.wrapper import detect_conflicts
+
+    candidate = SourceReference(
+        type_source=SourceType.peer_reviewed,
+        auteur="Smith",
+        reference="DOI:10.1234/test",
+    )
+    existing = [
+        SourceReference(
+            type_source=SourceType.peer_reviewed,
+            auteur="Jones",
+            reference="DOI:10.1234/test",
+        )
+    ]
+    conflits = detect_conflicts(candidate, existing)
+    assert len(conflits) == 0
+
+
+def should_detect_conflict_when_same_author_date_different_reference():
+    """detect_conflicts doit détecter : même auteur + date, références différentes."""
+    from gsie_api.engines.evidence.wrapper import detect_conflicts
+
+    candidate = SourceReference(
+        type_source=SourceType.peer_reviewed,
+        auteur="Smith",
+        date_publication="2024-01-01",
+        reference="DOI:10.1234/a",
+    )
+    existing = [
+        SourceReference(
+            type_source=SourceType.peer_reviewed,
+            auteur="smith",  # casse différente
+            date_publication="2024-01-01",
+            reference="DOI:10.1234/b",
+        )
+    ]
+    conflits = detect_conflicts(candidate, existing)
+    assert len(conflits) == 1
+    assert "attribution" in conflits[0].description.lower()
+
+
+def should_return_empty_conflicts_when_no_existing():
+    """detect_conflicts doit retourner une liste vide sans sources existantes."""
+    from gsie_api.engines.evidence.wrapper import detect_conflicts
+
+    candidate = SourceReference(
+        type_source=SourceType.peer_reviewed,
+        auteur="Smith",
+        reference="DOI:10.1234/test",
+    )
+    conflits = detect_conflicts(candidate, [])
+    assert len(conflits) == 0
+
+
+# --- Tests versionnement ---
+
+def should_set_version_to_2_when_parent_version_is_1():
+    """evaluate_with_context doit incrémenter la version avec un parent."""
+    from gsie_api.engines.evidence.wrapper import evaluate_with_context
+
+    sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+    result = evaluate_with_context(sub, parent_version=1)
+    assert result.version == 2
+
+
+def should_set_version_to_1_when_no_parent():
+    """evaluate_with_context doit mettre version=1 sans parent."""
+    from gsie_api.engines.evidence.wrapper import evaluate_with_context
+
+    sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+    result = evaluate_with_context(sub)
+    assert result.version == 1
+
+
+def should_return_refuse_when_conflict_detected():
+    """evaluate_with_context doit retourner refuse quand un conflit est détecté."""
+    from gsie_api.engines.evidence.wrapper import evaluate_with_context
+
+    sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+    sub.source_candidate.reference = "DOI:10.1234/conflict"
+    existing = [
+        SourceReference(
+            type_source=SourceType.expert_identifie,
+            auteur="Other",
+            reference="DOI:10.1234/conflict",
+        )
+    ]
+    result = evaluate_with_context(sub, existing_sources=existing)
+    assert result.statut == KnowledgeStatus.refuse
+    assert len(result.conflits) > 0
+
+
+# --- Tests /metrics ---
+
+def should_return_200_when_metrics_requested():
+    """GET /metrics doit retourner les métriques Prometheus."""
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    # Prometheus expose du texte, pas du JSON
+    assert "http_request" in response.text or "python_info" in response.text
