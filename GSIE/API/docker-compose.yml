@@ -27,13 +27,24 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    # Limites ressources (recommandation stress test)
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
 
   # Redis 7.2 — cache + Pub/Sub + WebSocket fan-out
-  # Sécurisé : mot de passe requis, port non exposé sur l'hôte
+  # Sécurisé : mot de passe, maxmemory, port interne uniquement
   redis:
     image: redis:7.2-alpine
-    command: redis-server --requirepass ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
-    # Port interne uniquement — pas de mapping sur l'hôte (sécurité)
+    command: >
+      redis-server
+      --requirepass ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
     expose:
       - "6379"
     volumes:
@@ -44,8 +55,14 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   # API FastAPI — Gunicorn + UvicornWorker
+  # Durcissement : read-only rootfs, no-new-privileges, cap_drop ALL
   api:
     build: .
     ports:
@@ -57,12 +74,27 @@ services:
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
+      GSIE_RATE_LIMIT_ENABLED: ${GSIE_RATE_LIMIT_ENABLED:-true}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
+    # Sécurité Docker (OWASP A05)
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Limites ressources (recommandation stress test)
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 512M
 
 volumes:
   gsie_pgdata:

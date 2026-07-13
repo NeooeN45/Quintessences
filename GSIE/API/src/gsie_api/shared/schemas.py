@@ -21,7 +21,7 @@ class ErrorResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    """Réponse du endpoint health."""
+    """Réponse des endpoints health/ready."""
 
     status: str = Field(description="healthy|degraded|unhealthy")
     version: str
@@ -31,3 +31,12 @@ class HealthResponse(BaseModel):
         default_factory=dict,
         description="État des dépendances (database, redis)",
     )
+
+
+class EngineStatusResponse(BaseModel):
+    """Réponse standardisée pour le statut d'un moteur."""
+
+    engine: str = Field(description="Nom du moteur")
+    status: str = Field(description="not_implemented|active|degraded")
+    planned_week: int = Field(description="Semaine d'implémentation prévue")
+    language: str = Field(description="Langage d'implémentation")

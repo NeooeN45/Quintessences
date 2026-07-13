@@ -41,9 +41,12 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy==0.50b0",
     "opentelemetry-instrumentation-redis==0.50b0",
 
-    # Auth
+    # Auth — bcrypt direct (passlib 1.7.4 non maintenu, CVE potentielles)
     "pyjwt[crypto]==2.10.1",
-    "passlib[bcrypt]==1.7.4",
+    "bcrypt==4.2.1",
+
+    # Sécurité — rate limiting (OWASP A07)
+    "slowapi==0.1.9",
 
     # OGC API — pygeoapi ajouté en semaine 5 (GIS Engine)
     # Note : pygeoapi 0.19 exige pydantic<2.0, incompatible avec pydantic v2

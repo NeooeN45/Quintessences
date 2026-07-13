@@ -47,3 +47,10 @@ def should_return_200_when_docs_requested():
     """La documentation Swagger doit être accessible en développement."""
     response = client.get("/docs")
     assert response.status_code == 200
+
+
+def should_have_engine_status_schema_when_openapi_requested():
+    """Le schéma OpenAPI doit contenir EngineStatusResponse."""
+    response = client.get("/api/v1/openapi.json")
+    schema = response.json()
+    assert "EngineStatusResponse" in schema.get("components", {}).get("schemas", {})

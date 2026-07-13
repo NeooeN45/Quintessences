@@ -7,17 +7,19 @@ scientifiques qualifiées dans un graphe interrogeable.
 W3C PROV-O, RDF2Vec, GraphRAG.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+
+from gsie_api.shared.schemas import EngineStatusResponse
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 
-@router.get("/status")
-async def knowledge_status() -> dict:
+@router.get("/status", response_model=EngineStatusResponse)
+async def knowledge_status(request: Request) -> EngineStatusResponse:
     """Statut du moteur Knowledge — non implémenté (semaine 3)."""
-    return {
-        "engine": "knowledge",
-        "status": "not_implemented",
-        "planned_week": 3,
-        "language": "rust+pyo3",
-    }
+    return EngineStatusResponse(
+        engine="knowledge",
+        status="not_implemented",
+        planned_week=3,
+        language="rust+pyo3",
+    )

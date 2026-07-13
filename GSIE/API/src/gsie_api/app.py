@@ -3,17 +3,22 @@
 Architecture (DEC-000019) :
 - Clean architecture par modules moteurs (pas DDD pur)
 - OpenTelemetry pour observabilité (CON-005)
-- TraceId middleware pour traçabilité + headers de sécurité
-- Health endpoint pour monitoring
+- TraceId middleware : traçabilité + headers de sécurité + limite taille
+- Health/Ready séparés : liveness (instantané) vs readiness (DB+Redis + cache)
+- Rate limiting (OWASP A07 — slowapi)
 - Documentation désactivée en production (OWASP A05)
 """
 
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger, setup_logging
@@ -26,9 +31,17 @@ from gsie_api.shared.middleware import TraceIdMiddleware
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
+# Rate limiter — par IP, configurable (OWASP A07)
+# default_limits s'applique à toutes les routes sans décorateur explicite
+limiter = Limiter(
+    key_func=get_remote_address,
+    enabled=_settings.rate_limit_enabled,
+    default_limits=[_settings.rate_limit_default],
+)
+
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
 _OPENAPI_TAGS = [
-    {"name": "health", "description": "Health checks — liveness et dépendances"},
+    {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -62,12 +75,16 @@ def create_app() -> FastAPI:
         version=_settings.app_version,
         description="GSIE — General System Intelligence Engine API",
         lifespan=lifespan,
-        # Documentation désactivée en production (OWASP A05)
         docs_url=None if is_production else "/docs",
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
         openapi_tags=_OPENAPI_TAGS,
     )
+
+    # Rate limiting (OWASP A07 — slowapi)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
     # Middlewares (ordre important : trace_id en premier)
     app.add_middleware(TraceIdMiddleware)
@@ -79,7 +96,7 @@ def create_app() -> FastAPI:
         allow_headers=_ALLOWED_HEADERS,
     )
 
-    # Routes — health à la racine, moteurs sous /api/v1/
+    # Routes — health/ready à la racine, moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)

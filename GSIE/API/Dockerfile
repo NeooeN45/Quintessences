@@ -41,17 +41,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=gsie:gsie src/ ./src/
-COPY --chown=gsie:gsie pyproject.toml .
+COPY --chown=gsie:gsie pyproject.toml gunicorn.conf.py ./
 
 USER gsie
 
 EXPOSE 8000
 
-# Gunicorn + UvicornWorker (DEC-000019 : 2×CPU+1)
+# Gunicorn + SecureUvicornWorker (sans header Server, OWASP A05)
+# Config dans gunicorn.conf.py (workers, keep-alive, max-requests, timeouts)
 CMD ["gunicorn", "gsie_api.app:app", \
-     "-w", "5", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8000", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "--timeout", "120"]
+     "--config", "gunicorn.conf.py", \
+     "-k", "gsie_api.worker.SecureUvicornWorker"]

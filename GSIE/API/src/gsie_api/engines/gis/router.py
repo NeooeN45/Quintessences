@@ -7,17 +7,19 @@ Responsabilité : ingestion et traitement des données géospatiales
 API Géoplateforme IGN, BD Carthage.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+
+from gsie_api.shared.schemas import EngineStatusResponse
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
 
-@router.get("/status")
-async def gis_status() -> dict:
+@router.get("/status", response_model=EngineStatusResponse)
+async def gis_status(request: Request) -> EngineStatusResponse:
     """Statut du moteur GIS — non implémenté (semaine 5)."""
-    return {
-        "engine": "gis",
-        "status": "not_implemented",
-        "planned_week": 5,
-        "language": "python",
-    }
+    return EngineStatusResponse(
+        engine="gis",
+        status="not_implemented",
+        planned_week=5,
+        language="python",
+    )

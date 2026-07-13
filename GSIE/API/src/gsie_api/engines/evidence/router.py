@@ -7,17 +7,19 @@ et lui attribuer un niveau de preuve sourcé et traçable (A-F).
 ASReview, Rayyan, claim verification (SciFact/FEVER), Retraction Watch.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+
+from gsie_api.shared.schemas import EngineStatusResponse
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
 
-@router.get("/status")
-async def evidence_status() -> dict:
+@router.get("/status", response_model=EngineStatusResponse)
+async def evidence_status(request: Request) -> EngineStatusResponse:
     """Statut du moteur Evidence — non implémenté (semaine 2)."""
-    return {
-        "engine": "evidence",
-        "status": "not_implemented",
-        "planned_week": 2,
-        "language": "rust+pyo3",
-    }
+    return EngineStatusResponse(
+        engine="evidence",
+        status="not_implemented",
+        planned_week=2,
+        language="rust+pyo3",
+    )
