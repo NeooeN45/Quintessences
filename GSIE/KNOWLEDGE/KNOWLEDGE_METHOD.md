@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 302 — Knowledge Method (détaillée) |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Draft |
+| **Statut** | Review |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-003, GSIE-CON-005, GSIE-CON-010 |
 | **Constitutions liées** | Scientifique (S-1 à S-7) |
@@ -354,5 +354,5 @@ relation est créée avec sa source et son niveau de preuve.
 
 ---
 
-> Statut : *Draft — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Review — Phase 3 (Connaissance). Documentation uniquement,
 > aucune implémentation (Phase 4).*

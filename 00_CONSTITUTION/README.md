@@ -19,7 +19,10 @@ scientifique ou commerciale ne peut entrer en contradiction avec elle.
 - Rédaction des 6 documents transverses (PREAMBLE, PACT_FOR_AI_AGENTS,
   DESIGN_PHILOSOPHY, SCIENTIFIC_CONSTITUTION, TECHNICAL_CONSTITUTION,
   AI_CONSTITUTION)
-- Rédaction des 100 articles (ARTICLE_001 à ARTICLE_100)
+- Rédaction des articles constitutionnels dans des fichiers
+  `GSIE-CON-0XX.md` (source de vérité unique — RFC-0002 / DEC-000015).
+  L'index de renvoi vit dans `ARTICLES_INDEX.md`. Numérotation non
+  plafonnée à 100.
 - Toute modification via un RFC dédié
 
 ## Ce qui est interdit

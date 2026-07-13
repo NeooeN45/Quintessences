@@ -1,7 +1,7 @@
 # ============================================================================
 # GSIE KNOWLEDGE DIRECTIVE
 # Directive ID : GSIE-DIR-0007
-# Version : 1.0
+# Version : 1.1
 # Statut : ACTIVE
 # Priorité : CRITIQUE
 # Classification : PHASE
@@ -10,6 +10,21 @@
 # ============================================================================
 
 # Titre : Lancement officiel de la Phase 3 — Connaissance
+
+## Amendement — 2026-07-13 (v1.1, DEC-000016)
+
+Le périmètre de la Phase 3 est **étendu de 8 à 10 livrables**. Deux
+livrables de spécification/conception sont rattachés à la Phase 3 :
+
+| # | Livrable | Fichier |
+|---|---|---|
+| 309 | Schéma DB Encyclopédie | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` |
+| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` |
+
+Ces deux livrables sont des documents de **spécification** (aucun code
+métier — conforme à la nature documentaire de la Phase 3). L'**implémentation**
+de l'Encyclopédie reste en Phase 4 (DEC-000012, inchangée). Le texte
+d'origine ci-dessous (8 livrables) est conservé au titre de CON-010.
 
 ## Résumé exécutif
 

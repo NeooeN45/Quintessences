@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 305 — Dataset Catalog |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Draft |
+| **Statut** | Review |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-005 |
 | **Constitutions liées** | Scientifique (S-1) |
@@ -107,23 +107,23 @@ aux grandes familles de données consommées par GSIE et Ignis.
 | Champ | Valeur |
 |---|---|
 | **Identifiant GSIE** | DS-002 |
-| **Nom du dataset** | LiDAR HD (Modèle Numérique de Terrain et canopée) |
-| **Organisme producteur** | IGN |
+| **Nom du dataset** | LiDAR HD — Modèles numériques (MNT, MNS, MNH) et nuages de points classés |
+| **Organisme producteur** | IGN (Institut national de l'information géographique et forestière) |
 | **Catégorie** | A — Forestier |
 | **Domaines S-6 couverts** | Dendrométrie, dynamique des peuplements, écologie forestière |
-| **Moteurs consommateurs** | GIS Engine, Forest Dynamics Engine, Simulation Engine |
-| **Source / URL** | https://geoservices.ign.fr/lidarhd (portail IGN) |
-| **Licence** | Licence Ouverte 2.0 (etalab-2.0) |
-| **Couverture spatiale** | France métropolitaine (couverture programmée 2021-2026) |
+| **Moteurs consommateurs** | GIS Engine, Forest Dynamics Engine, Simulation Engine, Ignis (combustible) |
+| **Source / URL** | https://geoservices.ign.fr/lidarhd ; https://cartes.gouv.fr/telechargement/IGNF_MNT-LIDAR-HD (MNT), IGNF_MNS-LIDAR-HD (MNS), IGNF_MNH-LIDAR-HD (MNH) |
+| **Licence** | Licence Ouverte 2.0 (etalab-2.0) — réutilisation commerciale autorisée |
+| **Couverture spatiale** | France métropolitaine + Corse + DROM (hors Guyane) — 93 % survolé, 84 % des nuages publiés (juillet 2026), couverture complète fin 2026 |
 | **Couverture temporelle** | 2021-2026 (acquisition progressive) |
-| **Résolution spatiale** | MNT à 1 m ; nuages de points classés (densité ~10 pts/m²) |
+| **Résolution spatiale** | Nuages de points : densité ~10 pts/m² ; MNT/MNS/MNH : 50 cm (dalles 1×1 km GeoTIFF) |
 | **Résolution temporelle** | Acquisition unique (pas de répétition planifiée à ce jour) |
-| **Format** | LAZ/LAS, GeoTIFF (MNT raster) |
-| **Version référencée** | LiDAR HD (édition 2024+) |
-| **Qualité / précision** | Précision altimétrique verticale ~10 cm (MNT) ; classification sol/canopée |
+| **Format** | LAZ/LAS (nuages classés, 11 catégories : sol, végétation basse/moyenne/haute, bâtiment, eau...) ; GeoTIFF (MNT, MNS, MNH rasters) |
+| **Version référencée** | LiDAR HD (édition 2024+) ; MNT/MNS/MNH publiés depuis mars 2025 (CP IGN 27/03/2025) |
+| **Qualité / précision** | Précision altimétrique verticale ~10 cm (MNT) ; classification sol/canopée par algorithmes IA IGN ; MNH = MNS−MNT (hauteur de canopée directement exploitable) |
 | **Contact** | IGN — Programme LiDAR HD |
-| **Statut d'ingestion** | Planifié |
-| **Notes** | Permet le calcul de hauteur de canopée, volume sur pied et biomasse ; donnée structurante pour Ignis (combustible) |
+| **Statut d'ingestion** | Planifié (priorité P2 — socle géospatial) |
+| **Notes** | Donnée structurante pour GeoSylva (hauteur arbres, accessibilité, dessertes) et Ignis (3 strates végétation, continuité 0-3 m, accessibilité CCF). ⚠️ ZICAD (zones interdites de captation) → données vides (nodata) à gérer dans le pipeline. Cas d'usage validés : SDIS 63 (caractérisation combustible 3 m de résolution), ONF (cartes dendrométriques 700 m²/pixel : surface terrière, DBH, hauteur dominante, densité, structure), Arbonaut SaniLidar (stress hydrique par arbre). Webinaire IGN « LiDAR HD & Simulation multirisque » (oct. 2025) — source sur combustible/vent/humidité/topographie. Voir `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` §2 (livrable 212) et `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211). |
 
 #### DS-003 — Inventaire Forestier National (IGN)
 
@@ -653,6 +653,56 @@ aux grandes familles de données consommées par GSIE et Ignis.
 
 ---
 
+### 3.G — Datasets biomasse spatiale (complément LiDAR HD)
+
+#### DS-025 — GEDI L4A / L4B (NASA — biomasse aérienne spatiale)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-025 |
+| **Nom du dataset** | GEDI — Global Ecosystem Dynamics Investigation (L4A Footprint Biomass + L4B Gridded) |
+| **Organisme producteur** | NASA — University of Maryland (ORNL DAAC) |
+| **Catégorie** | A — Forestier / E — Spatial |
+| **Domaines S-6 couverts** | Dendrométrie, dynamique des peuplements, écologie forestière |
+| **Moteurs consommateurs** | Forest Dynamics Engine, Correlation Engine, GIS Engine |
+| **Source / URL** | https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=2508 (L4A v3) ; https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-gedi-l4b-gridded-biomass-v2-1-2299-2.1 (L4B v2.1) |
+| **Licence** | Domaine public (NASA data policy) |
+| **Couverture spatiale** | Bande latitudinale ±51.6° (ISS) — quasi globale |
+| **Couverture temporelle** | 2019-04-04 à 2023-03-16 (instrument en stockage mars 2023 → avril 2024, reprise) |
+| **Résolution spatiale** | L4A : footprint 25 m (8 faisceaux, 60 m le long-track, 600 m cross-track, ~4.2 km de large) ; L4B : grille 1 km × 1 km |
+| **Résolution temporelle** | Acquisition continue (orbite ISS) |
+| **Format** | HDF5 (L4A), GeoTIFF (L4B) |
+| **Version référencée** | L4A Version 3 (publiée 2026-06-08) ; L4B Version 2.1 |
+| **Qualité / précision** | AGBD (Aboveground Biomass Density) en Mg/ha, calibré sur plots terrain ; incertitude (erreur standard) fournie par footprint et par cellule 1 km |
+| **Contact** | ORNL DAAC (NASA) ; Dubayah et al. 2023 — doi:10.3334/ORNLDAAC/2299 |
+| **Statut d'ingestion** | Planifié |
+| **Notes** | Complémentaire du LiDAR HD IGN (DS-002) : GEDI donne la biomasse là où l'IGN n'a pas encore publié, et à l'échelle mondiale pour les comparaisons. L4A = biomasse par footprint ; L4B = moyenne agrégée 1 km avec incertitude. Utile pour GeoSylva (estimation carbone forestier) et transverse (benchmark international). |
+
+#### DS-026 — ESA Biomass CCI v7 (cartes globales de biomasse aérienne)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-026 |
+| **Nom du dataset** | ESA Biomass Climate Change Initiative — Global AGB datasets v7.0 |
+| **Organisme producteur** | ESA (Climate Change Initiative) — CEDA Archive |
+| **Catégorie** | A — Forestier / E — Spatial |
+| **Domaines S-6 couverts** | Dendrométrie, dynamique des peuplements, écologie forestière |
+| **Moteurs consommateurs** | Forest Dynamics Engine, Correlation Engine, GIS Engine |
+| **Source / URL** | https://catalogue.ceda.ac.uk/uuid/6429d1aafe1e43b9b414e4a5a7f8b903/ |
+| **Licence** | Open Government Licence (OGL) / CC-BY 4.0 (ESA) |
+| **Couverture spatiale** | Mondiale |
+| **Couverture temporelle** | 2005-2012 et 2015-2024 (cartes annuelles + cartes de changement) |
+| **Résolution spatiale** | 1 ha (100 m × 100 m) ; produits agrégés à 1, 10, 25 et 50 km |
+| **Résolution temporelle** | Annuelle (2015-2024) ; décennale (cartes de changement 2020-2010) |
+| **Format** | NetCDF, GeoTIFF |
+| **Version référencée** | v7.0 (publiée 2026-05-21) |
+| **Qualité / précision** | AGB (Mg/ha) + incertitude (écart-type Mg/ha) par pixel ; calibré sur Sentinel-1, ALOS-1/2, ICESat-2, GEDI |
+| **Contact** | ESA CCI Biomass — CEDA Archive (Rutherford Appleton Laboratory) |
+| **Statut d'ingestion** | Planifié |
+| **Notes** | Source globale de référence pour la biomasse aérienne (AGB). Combine radar (Sentinel-1, ALOS-2) + LiDAR spatial (ICESat-2, GEDI). Permet le suivi des changements inter-annuels et décennaux. Complémentaire de GEDI (DS-025, footprint) et du LiDAR HD IGN (DS-002, haute résolution nationale). Alertes déforestation RADD (Sentinel-1) intégrées au pipeline. |
+
+---
+
 ## 4. Priorité d'ingestion
 
 La priorité d'ingestion des datasets est alignée sur l'ordre de
@@ -704,6 +754,8 @@ moteurs qui les consomment.
 | P4 | DS-019 Sentinel-1 | Forest Dynamics Engine | Biomasse radar |
 | P4 | DS-020 Landsat 8/9 | Forest Dynamics Engine | Série longue |
 | P4 | DS-021 MODIS | Forest Dynamics Engine | Phénologie globale |
+| P4 | DS-025 GEDI L4A/L4B | Forest Dynamics Engine | Biomasse spatiale (complément LiDAR HD IGN) |
+| P4 | DS-026 ESA Biomass CCI v7 | Forest Dynamics Engine | Biomasse globale + changements inter-annuels |
 
 ### 4.6 Vague 5 — Simulation (projections long terme)
 
@@ -832,6 +884,6 @@ qui l'exigent.
 
 ---
 
-> **Statut : Draft** — Ce livrable est en cours de rédaction. Il ne
+> **Statut : Review** — Ce livrable est en cours de rédaction. Il ne
 > passe en Review qu'après validation interne et conformément à
 > l'ordre des livrables défini par `GSIE-DIR-0007`.

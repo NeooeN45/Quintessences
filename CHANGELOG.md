@@ -4,6 +4,210 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SPECS HUB + IGNIS + GEOSYLVA COMPLÈTES] - 2026-07-13
+
+### 5 nouvelles spécifications Draft (HUB-003, IGNIS-002, IGNIS-003, GEO-002, GEO-003)
+
+Complétion du plan `HUB_AND_APPS_PLAN.md` : les 9 spécifications P0/P1
+sont désormais rédigées.
+
+- **HUB-003** — Fiches détaillées des 25 couches du Hub (22 apps + 3
+  globales). 14 champs par fiche (layer_id, geometry_type, canal,
+  datasets, moteur, état, priorité P4). Matrice de compatibilité +
+  priorités P0/P1/P2.
+- **IGNIS-002** — Spec non fonctionnelle Ignis : performance (latence
+  par flux, capacité), résilience (T-10), sécurité (JWT, TLS, rôles,
+  RGPD), interopérabilité, souveraineté, explicabilité (CON-004),
+  garde-fous RFC-0004 §8, scalabilité.
+- **IGNIS-003** — Matrice de traçabilité Ignis : F-01→F-26, NF-01→NF-10,
+  datasets (DS-001/002/009/010/022/023/024), moteurs (GIS, Climate,
+  Simulation, Correlation, Learning), idées registre (P/J/V/G/S/D),
+  couches Hub (ignis.*), garde-fous RFC-0004 §8.
+- **GEO-002** — Spec non fonctionnelle GeoSylva : performance (mobile +
+  Hub + segmentation), offline-first (RFC-0003, cache < 2 GB),
+  résilience (ZICAD), sécurité, interopérabilité (app Android Kotlin),
+  souveraineté, accessibilité mobile (terrain).
+- **GEO-003** — Matrice de traçabilité GeoSylva : F-01→F-23,
+  NF-01→NF-12, datasets (DS-001/002/003/025/026), moteurs (GIS, Forest
+  Dyn., Botanical, Diagnostic, Recommendation, Simulation), ontologie
+  S-6 (DOM-ECO/DEN/SYL/DYN), couches Hub (geosylva.*), précédents
+  opérationnels (ONF, SDIS 63, Arbonaut).
+
+Mémoire synchronisée : `PROJECT_MEMORY.md`, `ROADMAP.md`.
+
+---
+
+## [PHASE 3 — LIVRABLES 301-310 EN REVIEW] - 2026-07-13
+
+### Passage des 10 livrables Phase 3 de `Draft` à `Review`
+
+Les 10 livrables de la Phase 3 (301-310) passent en **Review** : contenu
+rédigé, en attente de validation du Fondateur.
+
+- Statut mis à jour (en-tête + pied) dans les 10 fichiers :
+  `RESEARCH_METHOD`, `KNOWLEDGE_METHOD`, `FOREST_ONTOLOGY`,
+  `KNOWLEDGE_GRAPH_SPECIFICATION`, `DATASET_CATALOG`, `EVIDENCE_FRAMEWORK`,
+  `SOURCING_PLAN`, `KNOWLEDGE_BASE_SEED`, `ENCYCLOPEDIA_DATABASE_SCHEMA`,
+  `ENGINE_DATA_SOCLE`.
+- `ROADMAP.md` : table Phase 3 → tous en Review.
+- `PROJECT_MEMORY.md` : section « Prochaine étape » actualisée.
+- La validation `Review → Validated` relève du Fondateur (CON-001).
+
+---
+
+## [VAULT OBSIDIAN IGNORÉ — NON CANONIQUE] - 2026-07-13
+
+### Vault Obsidian `Quintessences/Quintessences/` exclu du dépôt
+
+Un vault Obsidian personnel (33 fichiers `.md`) dupliquait la gouvernance
+dans une arborescence parallèle, avec un contenu **périmé et contradictoire**
+(titres d'articles CON-002 à CON-007 erronés, statuts Locked incorrects,
+CON-008/009/010 absents).
+
+- Ajout de `/Quintessences/` au `.gitignore` (ancré à la racine).
+- Le vault reste un **outil de navigation personnel local**, explicitement
+  **non canonique**. La source de vérité de la gouvernance reste les
+  dossiers numérotés (`00_CONSTITUTION/`, `03_DECISIONS/`, etc.).
+- Aucun contenu constitutionnel faux n'entrera dans le dépôt.
+
+---
+
+## [PHASE 3 ÉTENDUE À 10 LIVRABLES] - 2026-07-13
+
+### Extension du périmètre Phase 3 (8 → 10) — DEC-000016
+
+Les livrables **309** (Schéma DB Encyclopédie) et **310** (Socle données
+14 moteurs + liens apps), créés hors périmètre, sont rattachés
+formellement à la Phase 3.
+
+- `GSIE-DIR-0007` amendé (v1.0 → v1.1) — section « Amendement 2026-07-13 »
+  ajoutée, texte d'origine (8 livrables) conservé (CON-010).
+- `ROADMAP.md` : table Phase 3 étendue à 309-310, note de périmètre.
+- `PROJECT_MEMORY.md` : périmètre mis à jour (10 livrables), DEC-000016
+  ajoutée.
+- Conciliation DEC-000012 : 309-310 sont des **spécifications** (aucun
+  code) ; l'implémentation de l'Encyclopédie reste en Phase 4.
+
+---
+
+## [RFC-0002 ADOPTÉ — UNIFICATION DES ARTICLES] - 2026-07-13
+
+### Adoption de RFC-0002 (Option A) — DEC-000015
+
+Les fichiers `GSIE-CON-0XX.md` deviennent la **source de vérité unique**
+du corpus d'articles constitutionnels.
+
+- Suppression des 100 fichiers vides `ARTICLE_001.md` → `ARTICLE_100.md`
+  (0 octet chacun, vérifiés avant suppression).
+- Création de `00_CONSTITUTION/ARTICLES_INDEX.md` (index de renvoi).
+- `00_CONSTITUTION/README.md` : section « Ce qui peut y être ajouté »
+  corrigée (numérotation `GSIE-CON-0XX` non plafonnée à 100).
+- `02_RFC/RFC-0002.md` passé en **Adopté** (section 9 ajoutée).
+- `ROADMAP.md` : livrable 010 repointé, mention du gabarit `ARTICLE_0xx`
+  retirée.
+- `GSIE-CON-000.md` (Locked) non modifié.
+
+### Mémoire du fondateur
+
+- `22_PROJECT_MEMORY/FOUNDER_JOURNAL.md` : entrée du 2026-07-13 ajoutée
+  (DEC-000011 à DEC-000015).
+
+---
+
+## [SPECS HUB + AUDIT PHASE 3] - 2026-07-13
+
+### Spécifications créées (05_SPECIFICATIONS/)
+
+- **HUB_001_SPECIFICATION.md** créé : spec fonctionnelle du Centre de
+  Commandement (26 exigences : HUB-F-01 à HUB-F-26, HUB-NF-01 à
+  HUB-NF-13). 3 cas d'usage (surveillance incendie, diagnostic
+  sylvicole, exploration recherche). Matrice de traçabilité exigence →
+  source. 13 couches Hub définies.
+- **HUB_002_INTERFACE_CONTRACT.md** créé : contrat d'interface Hub ↔
+  Apps. 22 couches initiales (geosylva.*, ignis.*, hydro.*, flora.*,
+  artemis.*). Format payload temps réel (WebSocket/JSON) et volumineux
+  (3D Tiles, GeoTIFF). Métadonnées requises (CON-005). Convention état
+  réel vs simulé. Cycle de vie d'une couche. Version 1.0.0 du contrat.
+- **IGNIS_001_SPECIFICATION.md** créé : spec fonctionnelle Ignis (357
+  lignes, 26 exigences IGNIS-F-01 à F-26 en 8 sections : détection,
+  combustible, météo, propagation, drones, visualisation Hub, garde-fous,
+  données synthétiques. 10 exigences non fonctionnelles. 3 cas d'usage.
+  Traçabilité : 7 datasets (DS-001/002/009/010/022/023/024), 30+ idées
+  registre (P/J/V/C/G/D/S/M), garde-fous RFC-0004 §8, contrat HUB-002.
+- **GEO_001_SPECIFICATION.md** créé : spec fonctionnelle GeoSylva (432
+  lignes, 23 exigences GEO-F-01 à F-23 en 7 sections : inventaire,
+  peuplements, biomasse, diagnostic, visualisation Hub, app mobile,
+  état réel/simulé). 12 exigences non fonctionnelles. 3 cas d'usage.
+  Traçabilité : 5 datasets (DS-001/002/003/025/026), ontologie forestière
+  (livrable 303), gradient de fidélité (livrable 212 §1), précédents
+  ONF/SDIS/Arbonaut (livrable 212 §3.3), contrat HUB-002.
+
+### Audit Phase 3 (livrables 301-308)
+
+- **Résultat : tous les 8 livrables sont complets et non stubs.**
+- 301 RESEARCH_METHOD (~261 lignes) — pipeline 10 étapes ✅
+- 302 KNOWLEDGE_METHOD (~358 lignes) — cycle de vie complet ✅
+- 303 FOREST_ONTOLOGY (~803 lignes) — 10 domaines S-6 ✅
+- 304 KNOWLEDGE_GRAPH_SPEC (~917 lignes) — raisonnement multi-échelle ✅
+- 305 DATASET_CATALOG (~889 lignes) — 26 datasets (critère: ≥10) ✅
+- 306 EVIDENCE_FRAMEWORK (~579 lignes) — 6 niveaux + exemples 10 domaines ✅
+- 307 SOURCING_PLAN (~337 lignes) — 6 vagues alignées moteurs ✅
+- 308 KNOWLEDGE_BASE_SEED (~668 lignes) — 25 connaissances (critère: ≥20) ✅
+- **La Phase 3 peut passer en Review.**
+
+---
+
+## [SOURCES 3D + PLAN HUB] - 2026-07-13
+
+### Enrichissement des sources de données (DATASET_CATALOG, livrable 305)
+
+- **DS-002 (LiDAR HD IGN)** enrichi : MNT/MNS/MNH 50 cm, 84 % publié
+  (juillet 2026), 9 cas d'usage IGN, précédents validés (SDIS 63, ONF,
+  Arbonaut SaniLidar), webinaire IGN oct. 2025, restriction ZICAD.
+- **DS-025 (GEDI L4A/L4B NASA)** créé : biomasse aérienne spatiale,
+  footprint 25 m, grille 1 km, v3 publiée juin 2026.
+- **DS-026 (ESA Biomass CCI v7)** créé : cartes globales AGB 2005-2024,
+  1 ha, v7 publiée mai 2026 (Sentinel-1 + ALOS-2 + ICESat-2 + GEDI).
+- Priorité d'ingestion mise à jour (vague 4 — Forest Dynamics).
+
+### Mise à jour des précédents scientifiques (UNREAL_ENGINE_PRECEDENTS)
+
+- **Cesium 3D Gaussian Splats** (avril 2026) : support production-ready
+  dans Cesium for Unreal avec LOD hiérarchique, standardisation glTF
+  (KHR_gaussian_splatting + SPZ -90 %), pipeline bout-en-bout Cesium ion.
+- **SegmentAnyTreeV2** (2026) : foundation model segmentation d'arbres,
+  F1 85 %, zero-shot cross-domain, code ouvert (Open Forest Observatory).
+- **Crown-BERT** (2026) : classification d'essences par fusion LiDAR +
+  hyperspectral drone, 83-91 % OA, 0.9 M params.
+
+### Mise à jour des livrables d'architecture (Phase 2)
+
+- **Livrable 211 (COMMAND_CENTER_UNREAL.md)** v2.1.0 : brique 5 Gaussian
+  Splatting passée de « à tester » → « ✅ validé » (pipeline Cesium ion
+  confirmé avril 2026). Section §2 enrichie avec la validation.
+- **Livrable 212 (GEOSYLVA_UNREAL_ARCHITECTURE.md)** v1.1.0 : ajout de
+  SegmentAnyTreeV2 et Crown-BERT au tableau §3.2, nouvelle section §3.3
+  « Précédents opérationnels validés » (ONF, SDIS 63, Arbonaut).
+
+### Veille partenariat (20_PARTNERSHIPS)
+
+- **JUNN_VEILLE.md** créé : veille stratégique sur le programme JUNN
+  (Jumeau Numérique National, IGN/Cerema/Inria, France 2030, 25 M€,
+  14 partenaires). Alignement quasi 1:1 avec l'architecture Quintessences.
+  Pas un partenariat actif — veille uniquement.
+
+### Plan Hub + specs apps (05_SPECIFICATIONS)
+
+- **HUB_AND_APPS_PLAN.md** créé : plan de production du Hub (Centre de
+  Commandement) puis des spécifications de chaque app. Ordre : Hub (P0,
+  bloquant) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora (P2) →
+  Artemis/QGISIA (P3). Exigences fonctionnelles et non fonctionnelles
+  structurées (HUB-F-01 à HUB-F-10, HUB-NF-01 à HUB-NF-08, IGNIS-F-01 à
+  IGNIS-F-10, GEO-F-01 à GEO-F-12). Contrat d'interface Hub ↔ Apps
+  défini. Calendrier indicatif Phase 3 → Phase 4.
+
+---
+
 ## [INTÉGRATION REPOS EXTERNES] - 2026-07-13
 
 ### Déplacement des repos externes dans la structure Quintessences

@@ -5,7 +5,7 @@
 | **Livrable** | 211 — Centre de Commandement GSIE (Unreal Engine 5.8) |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-13 |
+| **Date de révision** | 2026-07-13 (v2.1.0 — validation Gaussian Splatting + sources IGN) |
 | **Lois fondatrices** | GSIE-CON-004, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Technique (T-2, T-8, T-10) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif), GSIE-DIR-0009 (restructuration écosystème) |
@@ -27,7 +27,7 @@
 | 2 | Terrain géoréférencé | Cesium for Unreal (Cesium ion + 3D Tiles) | ✅ décidé |
 | 3 | Ingestion de données temps réel | Module natif `WebSockets` + `Json` d'Unreal (C++), pas de plugin tiers nécessaire | ✅ décidé |
 | 4 | Feu / fumée | Niagara, piloté par les données du jumeau numérique, à la manière de FIRETWIN (§3) | ✅ décidé |
-| 5 | Photogrammétrie / Gaussian Splatting | Pipeline Cesium ion (support natif des Gaussian Splats via 3D Tiles) | 🔍 à tester |
+| 5 | Photogrammétrie / Gaussian Splatting | Pipeline Cesium ion (support natif des Gaussian Splats via 3D Tiles, LOD hiérarchique, avril 2026) | ✅ validé |
 | 6 | Simulation drone dans Unreal (recherche) | Cosys-AirSim (fork maintenu, voir correction §6) | 🔍 veille |
 | 7 | IA embarquée dans l'éditeur | Plugin MCP expérimental UE 5.8 (connexion directe de Claude au projet) | 🔍 à surveiller |
 
@@ -121,7 +121,7 @@ Cesium for Unreal est un plugin open source (racheté par Bentley Systems en 202
 Ce qu'il résout pour nous, concrètement :
 - **Géoréférencement précis** : le composant `CesiumGeoreference` gère la courbure terrestre et la gravité radiale — un problème qu'on aurait dû résoudre nous-mêmes sinon.
 - **Ingestion de nos propres données** : Cesium ion traite LAS/LAZ (notre LiDAR HD IGN), GeoTIFF, glTF et l'imagerie drone pour les convertir en 3D Tiles streamables — un pipeline tout fait pour nos couches SIG françaises.
-- **Découverte majeure pour G-05/M-19** : <cite index="48-1">Cesium ion supporte nativement les Gaussian Splats via 3D Tiles avec streaming par niveau de détail</cite>. Autrement dit, une reconstruction 3D Gaussian Splatting faite depuis une vidéo drone (M-19) peut passer par le **même pipeline** que le terrain et l'imagerie — pas besoin d'un système de rendu séparé. Ça simplifie beaucoup l'architecture qu'on avait esquissée.
+- **Découverte majeure pour G-05/M-19** : <cite index="48-1">Cesium ion supporte nativement les Gaussian Splats via 3D Tiles avec streaming par niveau de détail</cite>. Autrement dit, une reconstruction 3D Gaussian Splatting faite depuis une vidéo drone (M-19) peut passer par le **même pipeline** que le terrain et l'imagerie — pas besoin d'un système de rendu séparé. Ça simplifie beaucoup l'architecture qu'on avait esquissée. **✅ Validé en avril 2026** : le blog Cesium (27/04/2026) confirme le support production-ready des Gaussian Splats dans Cesium for Unreal avec LOD hiérarchique, standardisation glTF (`KHR_gaussian_splatting` + compression SPZ -90 %), pipeline bout-en-bout dans Cesium ion (upload photos → reconstruction automatique géoréférencée, via web ou API REST). Voir `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — fiche « Cesium 3D Gaussian Splats ». Les Gaussian Splats excellent sur végétation, lignes électriques et surfaces réflectives — exactement les éléments que la photogrammétrie classique gère mal en forêt.
 - **Vue globale gratuite** : intégration des 3D Tiles photoréalistes de Google Maps comme contexte large avant de zoomer sur nos données haute résolution propres.
 
 Compatibilité : le plugin suit officiellement les trois dernières versions d'Unreal Engine — la compatibilité UE5.8 est donc couverte par leur politique de support, à vérifier au moment de l'installation (version exacte disponible sur le dépôt GitHub CesiumGS/cesium-unreal ou via Fab, l'ex-Marketplace Unreal).

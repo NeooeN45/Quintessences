@@ -37,3 +37,9 @@ apps/GeoSylva/
 apps/QGISIA/
 # Forge — usine de données (pas de remote configuré)
 Forge/
+
+# Vault Obsidian personnel de navigation (NON canonique — cf. CHANGELOG 2026-07-13).
+# La source de vérité de la gouvernance vit dans les dossiers numérotés
+# (00_CONSTITUTION/, 03_DECISIONS/, etc.), jamais dans ce vault.
+# Ancré à la racine pour ne matcher que le vault, pas un futur dossier homonyme.
+/Quintessences/

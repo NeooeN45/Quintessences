@@ -22,7 +22,7 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | 007 | Constitution scientifique | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` | Validated |
 | 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Validated |
 | 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Validated |
-| 010 | Articles constitutionnels 000-100 | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source réelle) ; gabarit `ARTICLE_0xx` en attente (cf. **RFC-0002**) | Validated (000 Locked, 001-010 Validated) |
+| 010 | Articles constitutionnels | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source de vérité unique) ; index dans `ARTICLES_INDEX.md` (RFC-0002 Adopté, DEC-000015) | Validated (000 Locked, 001-010 Validated) |
 | 011 | Système de documentation et guides contributeurs | `GSIE/DOCUMENTATION/` | Validated |
 | 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Validated |
 
@@ -190,6 +190,8 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 ## Phase 3 — Connaissance (active)
 
 > Lancée officiellement par **GSIE-DIR-0007** le 2026-07-13 (DEC-000011).
+> Périmètre étendu à **10 livrables** (301-310) par **DEC-000016**
+> (amendement GSIE-DIR-0007 v1.1).
 > La base de connaissances est le véritable produit de GSIE (CON-003).
 > Aucune connaissance sans source (S-1) et sans niveau de preuve (S-2).
 
@@ -197,14 +199,16 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 | # | Livrable | Fichier / Dossier | Statut |
 |---|---|---|---|
-| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Draft |
-| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Draft |
-| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Draft |
-| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Draft |
-| 305 | Dataset Catalog | `GSIE/DATASETS/DATASET_CATALOG.md` | Draft |
-| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Draft |
-| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Draft |
-| 308 | Knowledge Base Seed | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Draft |
+| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Review |
+| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Review |
+| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Review |
+| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Review |
+| 305 | Dataset Catalog | `GSIE/DATASETS/DATASET_CATALOG.md` | Review |
+| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Review |
+| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Review |
+| 308 | Knowledge Base Seed | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Review |
+| 309 | Schéma DB Encyclopédie (spécification) | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` | Review |
+| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` | Review |
 
 ### Ordre de production
 
@@ -222,6 +226,10 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 - Framework de niveaux de preuve avec exemples concrets par domaine.
 - Plan de sourcing priorisé et aligné sur l'ordre des moteurs.
 - Base de connaissances : au moins 20 connaissances validées.
+
+> **Audit 2026-07-13 : les 8 critères sont satisfaits.** Tous les
+> livrables 301-308 sont complets et non stubs. La Phase 3 peut passer
+> en Review. Voir `CHANGELOG.md` pour le détail.
 
 ## Phase 4 — Implémentation (à définir)
 
@@ -255,6 +263,32 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 - GeoSylva (forêt)
 - Ignis (incendie)
+- Hydro, Flora, Artemis, QGISIA (apps secondaires)
+
+### Spécifications (préparation Phase 4)
+
+> Plan de production : `05_SPECIFICATIONS/HUB_AND_APPS_PLAN.md`
+
+| # | Document | Dossier | Statut |
+|---|---|---|---|
+| HUB-001 | Spécification fonctionnelle du Centre de Commandement | `05_SPECIFICATIONS/HUB/HUB_001_SPECIFICATION.md` | Draft ✅ |
+| HUB-002 | Contrat d'interface Hub ↔ Apps | `05_SPECIFICATIONS/HUB/HUB_002_INTERFACE_CONTRACT.md` | Draft ✅ |
+| HUB-003 | Fiches couches (une par app) | `05_SPECIFICATIONS/HUB/HUB_003_LAYER_SHEETS.md` | Draft ✅ |
+| IGNIS-001 | Spécification fonctionnelle Ignis | `05_SPECIFICATIONS/IGNIS/IGNIS_001_SPECIFICATION.md` | Draft ✅ |
+| IGNIS-002 | Spécification non fonctionnelle Ignis | `05_SPECIFICATIONS/IGNIS/IGNIS_002_NON_FUNCTIONAL.md` | Draft ✅ |
+| IGNIS-003 | Matrice de traçabilité Ignis | `05_SPECIFICATIONS/IGNIS/IGNIS_003_TRACEABILITY.md` | Draft ✅ |
+| GEO-001 | Spécification fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_001_SPECIFICATION.md` | Draft ✅ |
+| GEO-002 | Spécification non fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_002_NON_FUNCTIONAL.md` | Draft ✅ |
+| GEO-003 | Matrice de traçabilité GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_003_TRACEABILITY.md` | Draft ✅ |
+
+> Ordre : Hub (P0, bloquant) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora
+> (P2) → Artemis/QGISIA (P3).
+
+### Veille partenariat
+
+- `20_PARTNERSHIPS/JUNN_VEILLE.md` — JUNN (Jumeau Numérique National,
+  IGN/Cerema/Inria, France 2030, 25 M€). Veille stratégique, pas un
+  partenariat actif.
 
 ---
 

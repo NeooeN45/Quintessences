@@ -5,7 +5,7 @@
 | **Livrable** | 212 — GeoSylva-Unreal Architecture (pipeline LiDAR + PCG) |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft — **piste en attente volontaire** (ne pas construire avant MVP Ignis) |
-| **Date de révision** | 2026-07-12 |
+| **Date de révision** | 2026-07-13 (v1.1.0 — SegmentAnyTreeV2, Crown-BERT, précédents ONF/SDIS/Arbonaut) |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-005, GSIE-CON-007, GSIE-CON-010 |
 | **Constitutions liées** | Scientifique (S-1, S-2, S-7, S-8), Technique (T-8, T-10) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant — gradient de fidélité) |
@@ -78,12 +78,26 @@ La segmentation d'arbres individuels depuis LiDAR aéroporté est un domaine de 
 | Outil | Langage | Nature | Quand l'utiliser |
 |---|---|---|---|
 | **PyCrown** | **Python** | Segmentation raster (sur Modèle de Hauteur de Canopée) par maxima locaux, optimisé Cython/Numba | Point de départ recommandé — colle à ton stack Python, rapide, méthode publiée (Dalponte & Coomes 2016) |
+| **SegmentAnyTreeV2** | Python (foundation model) | Point Transformer v3 + cross-attention, agnostique capteur, zero-shot cross-domain. F1 85 %, précision 90.5 % sur FOR-instance v2. Code ouvert (Open Forest Observatory) | **Évolution au-delà de PyCrown** quand la précision ne suffit pas ou pour la généralisation cross-domain (arXiv:2606.08206, 2026) |
 | `lidR` | R | Référence académique du domaine, très complet (CHM, segmentation nuage de points, métriques) | Référence méthodologique à consulter même si tu n'écris pas en R — beaucoup de papiers s'y comparent |
 | ForAINet / TreeLearn | Python (deep learning) | Segmentation par réseaux de neurones sur nuage de points brut, meilleure précision sur canopées complexes/superposées | Si la précision de PyCrown ne suffit pas sur tes peuplements denses |
+| **Crown-BERT** | Python (transformer) | Classification d'essences par fusion LiDAR + hyperspectral drone. 83-91 % OA, 0.9 M params. Crown masking + self-supervised pre-training | **Pour combler la limite « essence non extractible du LiDAR seul »** (§3.1). Nécessite capteur hyperspectral drone (doi:10.6084/m9.figshare.32296654, 2026) |
 | TLS2trees | Python | Équivalent pour LiDAR terrestre (scan au sol, pas aéroporté) | Seulement si tu fais un jour du scan terrestre complémentaire — pas pertinent pour du LiDAR HD IGN (aéroporté) |
 | Lidar360 / Lidarvisor | Commercial, clé en main | Pipeline complet nuage → rapport d'inventaire (PDF/CSV) | Option « acheter plutôt que construire » si le temps de développement presse |
 
-**Recommandation concrète** : PyCrown sur un MNH LiDAR HD pour la première parcelle de test — c'est le chemin le plus court entre « j'ai un fichier LAZ » et « j'ai une liste d'arbres avec position et hauteur », et ça reste dans ton stack.
+**Recommandation concrète** : PyCrown sur un MNH LiDAR HD pour la première parcelle de test — c'est le chemin le plus court entre « j'ai un fichier LAZ » et « j'ai une liste d'arbres avec position et hauteur », et ça reste dans ton stack. Si la précision est insuffisante ou pour généraliser à de nouveaux sites sans ré-entraînement, **SegmentAnyTreeV2** est la piste de montée en gamme validée (zero-shot, code ouvert). Pour l'identification d'essence (non extractible du LiDAR seul, §3.1), la fusion **LiDAR + hyperspectral drone** via **Crown-BERT** est la piste mature (83-91 % OA).
+
+### 3.3 Précédents opérationnels validés (IGN, ONF, Arbonaut)
+
+Trois cas d'usage réels documentés par l'IGN confirment la faisabilité du pipeline GeoSylva-Unreal :
+
+| Acteur | Méthode | Production | Source |
+|---|---|---|---|
+| **ONF** | Croisement LiDAR HD + données dendrométriques terrain → modèles experts applicables à grande échelle | Cartes 700 m²/pixel : surface terrière, diamètre moyen et dominant, hauteur dominante, densité de tiges, structure des peuplements | `ign.fr/lidar-hd-foret` — citation Fabrice Coq (ONF) : *« La télédétection, et notamment le LiDAR HD, a le même impact pour les forestiers que l'arrivée d'internet »* |
+| **SDIS 63 (Puy-de-Dôme)** | Caractérisation végétation 3 strates (herbacée/arbustive/arborée) à 3 m de résolution, homogène département | Cartes de continuité 0-3 m, difficulté de pénétration, conditions d'intervention CCF | `ign.fr/lidar-hd-incendies` — utilisable aussi pour Ignis (couche combustible) |
+| **Arbonaut (SaniLidar)** | LiDAR HD + orthophotos IGN + données terrain Forestry France → indice de pente/humidité par arbre individuel | Cartes de hauteur, pentes, humidité, diamètre, stress des arbres | `ign.fr/lidar-hd-foret` — projet Finlande/France, gestion forêt privée |
+
+> Ces trois précédents sont **à citer dans tout dossier de financement** (CON-002) comme preuve que le pipeline LiDAR HD → inventaire forestier est opérationnel en France, pas théorique.
 
 ---
 

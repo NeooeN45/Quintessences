@@ -109,4 +109,50 @@ agent archivé (le code du banc vit hors dépôt, dans `~/Ignis/` WSL2).
 
 ---
 
+## 2026-07-13 — Entrée en Phase 3, Encyclopédie, restructuration écosystème et réorganisation arborescence
+**Décisions** : **DEC-000011** (entrée officielle en Phase 3 — Connaissance,
+`GSIE-DIR-0007`, 8 livrables 301-308) ; **DEC-000012** (création de
+l'Encyclopédie de l'Écosystème — produit principal de GSIE, échelle visée :
+million d'entrées minimum, `GSIE-DIR-0008`) ; **DEC-000013** (restructuration
+écosystème : Myhunt→Artemis, GSIE-Ignis→Ignis, ajout de Hydro et Flora, Unreal
+Engine repositionné en Centre de Commandement GSIE, `GSIE-DIR-0009`) ;
+**DEC-000014** (réorganisation de l'arborescence en trois niveaux
+racine/`GSIE/`/`apps/`, `GSIE-DIR-0010`).
+**Motivations** : la Phase 2 étant complète (12 livrables Draft 201-212), la
+connaissance devient le chantier central conformément à CON-003. La vision
+d'une Encyclopédie à l'échelle du marché (million d'entrées) est capturée
+avant de figer les choix techniques (réservés à des ADR de Phase 4).
+L'écosystème s'élargit avec deux nouvelles spécialisations (Hydro, Flora) et
+le Centre de Commandement Unreal devient le point de convergence visuel de
+toutes les applications. La réorganisation en `GSIE/` + `apps/` clarifie la
+frontière moteur/applications.
+**Impact** : 4 nouvelles directives actives (`GSIE-DIR-0007` à `GSIE-DIR-0010`) ;
+livrables 301-308 rédigés (statut `Draft`, en attente de passage en Review) ;
+livrables 309-310 ajoutés (schéma DB Encyclopédie, socle données 14 moteurs)
+hors du périmètre initial des 8 livrables fixé par `GSIE-DIR-0007` — statut à
+clarifier ; 13 dossiers déplacés vers `GSIE/`, 6 créés dans `apps/` ;
+`CLAUDE.md`, `README.md`, `ROADMAP.md`, `PROJECT_MEMORY.md` mis à jour.
+Intégration de trois repos externes (`apps/GeoSylva/`, `apps/QGISIA/`,
+`Forge/`) dans la structure du disque `A:\`.
+**Régularisations (même jour, audit de conformité)** :
+- **DEC-000015** — `RFC-0002` (unification des articles) **adopté** (Option A) :
+  `GSIE-CON-0XX` devient la source de vérité unique, 100 fichiers
+  `ARTICLE_0XX` vides supprimés, `ARTICLES_INDEX.md` créé. Outils `.claude/`
+  (guardian, `/article`, skill gsie-governance) réalignés.
+- **DEC-000016** — périmètre Phase 3 **étendu de 8 à 10 livrables** :
+  309-310 rattachés formellement (amendement `GSIE-DIR-0007` v1.1). Ce sont
+  des spécifications (aucun code) ; l'implémentation de l'Encyclopédie reste
+  en Phase 4 (DEC-000012 inchangée).
+- **Vault Obsidian** (`Quintessences/Quintessences/`) statué : ajouté au
+  `.gitignore` (`/Quintessences/`), déclaré outil de navigation personnel
+  **non canonique**. Contenu constaté périmé/contradictoire avec la
+  Constitution — n'entrera pas dans le dépôt (cf. CHANGELOG).
+- **Livrables 301-310** passés en `Review` (contenu rédigé, en attente de
+  validation du Fondateur ; `Review → Validated` relève du Fondateur, CON-001).
+**Reste ouvert** : validation Fondateur des 10 livrables Phase 3 (Review →
+Validated) puis clôture de la Phase 3 ; passage en Review des livrables
+Phase 2 (201-212, toujours Draft).
+
+---
+
 > Chaque session ou décision significative ajoute une entrée datée.

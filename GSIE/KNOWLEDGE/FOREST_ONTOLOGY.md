@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 303 — Forest Ontology (complète) |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Draft |
+| **Statut** | Review |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-003 |
 | **Constitutions liées** | Scientifique (S-6 — Domaines de connaissance) |
@@ -799,5 +799,5 @@ spécifier son `domaines_validite` (livrable 302, §6). À titre indicatif :
 
 ---
 
-> Statut : *Draft — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Review — Phase 3 (Connaissance). Documentation uniquement,
 > aucune implémentation (Phase 4).*

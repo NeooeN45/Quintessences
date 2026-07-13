@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 310 — Engine Data Socle |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Draft |
+| **Statut** | Review |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-003, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Scientifique (S-6), Technique (T-1, T-2) |
@@ -801,6 +801,6 @@ critique ; le graphe Neo4j reste d'volume modéré.
 
 ---
 
-*Statut : Draft — Livrable 310, Phase 3 Connaissance. Document
+*Statut : Review — Livrable 310, Phase 3 Connaissance. Document
 d'architecture de données, aucun code métier. L'implémentation des
 moteurs est réservée à la Phase 4 (DEC-000004).*

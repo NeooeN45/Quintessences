@@ -155,5 +155,114 @@ piste de veille, voire de contact académique à moyen terme.
 
 ---
 
+## Cesium 3D Gaussian Splats avec LOD hiérarchique (avril 2026)
+
+| Champ | Valeur |
+|---|---|
+| **Titre** | *Introducing 3D Gaussian Splats with Hierarchical Level of Detail Using 3D Tiles* |
+| **Auteur** | Shehzan Mohammed (Cesium) |
+| **Date** | 27 avril 2026 |
+| **Source** | https://cesium.com/blog/2026/04/27/3d-gaussian-splats-lod/ |
+| **Moteur** | Cesium for Unreal, CesiumJS, Cesium ion |
+
+### Ce qu'il valide pour le Centre de Commandement (livrable 211)
+
+- **3D Gaussian Splats désormais supportés dans Cesium for Unreal** avec
+  streaming par niveau de détail (LOD) via 3D Tiles — confirme et améliore
+  la brique 5 du livrable 211 (passée de « à tester » à « validé »).
+- **Pipeline bout-en-bout dans Cesium ion** : upload de photos source →
+  reconstruction automatique en mesh, point cloud **ou** Gaussian Splats
+  géoréférencés, via interface web **ou** API REST.
+- **Standardisation glTF** : extensions `KHR_gaussian_splatting` +
+  `KHR_gaussian_splatting_compression_spz` (compression SPZ de Niantic →
+  **-90 % vs PLY**, harmoniques sphériques incluses). Ratification Khronos
+  Q2 2026.
+- **Intégré à 3D Tiles 2.0** (proposed OGC community standard) → même
+  pipeline que le terrain et l'imagerie.
+
+### Ce qu'il valide pour GeoSylva-Unreal (livrable 212)
+
+- Les Gaussian Splats excellent sur **végétation, lignes électriques,
+  surfaces réflectives** — exactement les éléments que la photogrammétrie
+  classique gère mal en forêt.
+- Une reconstruction 3D Gaussian Splatting faite depuis une vidéo drone
+  peut passer par le **même pipeline** que le terrain et l'imagerie — pas
+  besoin d'un système de rendu séparé.
+
+### Collaboration industrielle
+
+Cesium (racheté par Bentley Systems en 2024), Khronos Group, Open
+Geospatial Consortium, Esri, Niantic Spatial. Citation Neil Trevett
+(Khronos) : *« the geospatial community has been the catalyst for bringing
+Gaussian splats into glTF as an open, interoperable primitive »*.
+
+### Action
+
+Faire passer la brique 5 du livrable 211 de « 🔍 à tester » →
+« ✅ validé (pipeline Cesium ion confirmé, avril 2026) ». Tester le
+pipeline sur une vidéo drone d'une parcelle forestière (M-19 du registre
+Ignis) pour valider en pratique.
+
+---
+
+## SegmentAnyTreeV2 (2026) — segmentation d'arbres par foundation model
+
+| Champ | Valeur |
+|---|---|
+| **Titre** | *SegmentAnyTreeV2: Scaling Transformer-Based Tree Instance Segmentation Across Sensors, Platforms, and Forests* |
+| **Année** | 2026 |
+| **ArXiv** | arXiv:2606.08206 |
+| **Code** | Open Forest Observatory (GitHub) |
+
+### Ce qu'il valide pour GeoSylva-Unreal (livrable 212)
+
+- **Foundation model agnostique capteur** (Point Transformer v3 + cross-
+  attention mask decoder) pour la segmentation sémantique et d'instance
+  de nuages de points forestiers.
+- **F1 85 %, précision 90.5 %, rappel 80.2 %** sur le benchmark FOR-instance
+  v2 — **supérieur à PyCrown** (~80 % F1) et surtout **zero-shot cross-
+  domain** (généralisation sur sites indépendants).
+- Benchmark **FOR-instance v3** : 427 scènes, 26 496 arbres annotés,
+  multi-biomes, multi-plateformes LiDAR.
+
+### Positionnement GSIE
+
+Évolution au-delà de PyCrown pour le livrable 212 §3.2. PyCrown reste le
+point de départ recommandé (Python natif, méthode publiée 2016, simple) ;
+SegmentAnyTreeV2 est la piste de montée en gamme quand la précision de
+PyCrown ne suffit pas sur des peuplements denses ou pour la
+généralisation cross-domain. Code ouvert — à auditer dans
+`GSIE/ALGORITHMS/` quand on sortira de la Phase 3.
+
+---
+
+## Crown-BERT (2026) — classification d'essences par fusion LiDAR + hyperspectral
+
+| Champ | Valeur |
+|---|---|
+| **Titre** | *Crown-BERT: a crown-morphology-aware deep learning framework for individual tree species classification using UAV LiDAR and hyperspectral data* |
+| **Année** | 2026 |
+| **Source** | doi:10.6084/m9.figshare.32296654 |
+
+### Ce qu'il valide pour GeoSylva-Unreal (livrable 212)
+
+- Combler la **limite fondamentale du LiDAR seul** : l'essence n'est pas
+  extractible directement (livrable 212 §3.1). La fusion **LiDAR +
+  hyperspectral drone** est maintenant mature.
+- **83-91 % de précision** (OA) sur 3 datasets UAV, avec seulement 0.9 M
+  de paramètres (modèle léger).
+- Crown masking dynamique + crown positional encoding + pré-entraînement
+  self-supervisé sur échantillons non annotés.
+
+### Positionnement GSIE
+
+Piste complémentaire de PyCrown/SegmentAnyTreeV2 pour GeoSylva :
+segmentation (PyCrown/SegmentAnyTreeV2) → classification d'essence
+(Crown-BERT). Nécessite un capteur hyperspectral drone — à planifier dans
+`GSIE/DATASETS/` et `21_EXPERIMENTS/` quand la haute fidélité sera
+priorisée.
+
+---
+
 > Statut : *Draft — Phase 2 (Architecture). Recensement scientifique pour
 > traçabilité (CON-005) et crédibilité (CON-002).*

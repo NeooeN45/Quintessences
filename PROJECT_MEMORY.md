@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 3 — Connaissance |
 | **Directive courante** | GSIE-DIR-0010 (Réorganisation arborescence) |
-| **Dernière mise à jour** | 2026-07-13 |
+| **Dernière mise à jour** | 2026-07-13 (specs Hub + Ignis + GeoSylva complètes : 9 specs) |
 
 ---
 
@@ -32,8 +32,10 @@ est **clôturée** — les 12 livrables sont Validated (9/12) ou Locked
 
 La Phase 3 transforme les fondations scientifiques et l'architecture en
 une **base de connaissances structurée, sourcée et versionnée** — le
-véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
-(301-308). Le code métier dans le dépôt reste interdit jusqu'en Phase 4.
+véritable produit de GSIE (CON-003). Elle est composée de **10 livrables
+(301-310)** — périmètre étendu de 8 à 10 par DEC-000016 (309-310 :
+spécifications, aucun code). Le code métier dans le dépôt reste interdit
+jusqu'en Phase 4.
 
 ### Avancement des livrables
 
@@ -70,7 +72,7 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` — Forest Ontology (livrable 303, Phase 3)
 - `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
 - `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
-- `GSIE/DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 24 datasets)
+- `GSIE/DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 26 datasets — DS-001 à DS-026)
 - `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — Schéma DB Encyclopédie (livrable 309, PostgreSQL + Neo4j + ES + Jena)
 - `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` — Socle données 14 moteurs + liens apps (livrable 310)
 
@@ -79,9 +81,9 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
 - `GSIE/ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `GSIE/ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
-- `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — GCS-Cinéma UE 5.8 (livrable 211, DEC-000010)
-- `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, en attente MVP Ignis)
-- `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR
+- `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — Centre de Commandement UE 5.8 (livrable 211, v2.1.0 — Gaussian Splatting validé, DEC-000010)
+- `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, v1.1.0 — SegmentAnyTreeV2 + Crown-BERT + précédents ONF/SDIS/Arbonaut, en attente MVP Ignis)
+- `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR, Cesium Gaussian Splats, SegmentAnyTreeV2, Crown-BERT
 
 ### Branche Ignis (RFC-0004)
 
@@ -156,6 +158,8 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **DEC-000012** — L'Encyclopédie de l'Écosystème : la plus grande base de connaissances écologiques du marché (GSIE-DIR-0008)
 - **DEC-000013** — Restructuration écosystème : Myhunt→Artemis, GSIE-Ignis→Ignis, +Hydro, +Flora, Centre de Commandement GSIE (GSIE-DIR-0009)
 - **DEC-000014** — Réorganisation arborescence : GSIE/ + apps/ (GSIE-DIR-0010)
+- **DEC-000015** — Unification des articles constitutionnels : `GSIE-CON-0XX` source unique, 100 fichiers `ARTICLE_0XX` vides supprimés (RFC-0002 Option A)
+- **DEC-000016** — Extension Phase 3 : 8 → 10 livrables (309-310 rattachés, amendement GSIE-DIR-0007 v1.1)
 
 ## Documents structurants
 
@@ -169,10 +173,24 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
 - **GSIE-DIR-0010** — Réorganisation arborescence : GSIE/ + apps/ (ACTIVE — DEC-000014)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
-- **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
+- **RFC-0002** — Unification du système d'articles constitutionnels (**Adopté** — Option A, DEC-000015, 2026-07-13)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
 - **RFC-0004** — Branche fonctionnelle Ignis (ADOPTÉ — DEC-000003)
 - **RFC-0005 à RFC-0010** — Réservés, non ouverts
+
+## Veille partenariat et planification
+
+- `20_PARTNERSHIPS/JUNN_VEILLE.md` — Veille JUNN (Jumeau Numérique National, IGN/Cerema/Inria, France 2030, 25 M€). Alignement stratégique avec Quintessences. Pas un partenariat actif.
+- `05_SPECIFICATIONS/HUB_AND_APPS_PLAN.md` — Plan de production du Hub (Centre de Commandement) + specs apps. Ordre : Hub (P0) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora (P2) → Artemis/QGISIA (P3).
+- `05_SPECIFICATIONS/HUB/HUB_001_SPECIFICATION.md` — Spec fonctionnelle Hub (26 exigences, 3 cas d'usage, 13 couches).
+- `05_SPECIFICATIONS/HUB/HUB_002_INTERFACE_CONTRACT.md` — Contrat d'interface Hub↔Apps (22 couches, format payload, métadonnées, v1.0.0).
+- `05_SPECIFICATIONS/IGNIS/IGNIS_001_SPECIFICATION.md` — Spec fonctionnelle Ignis (26 exigences, 8 sections, 3 cas d'usage, traçabilité registre/datasets/RFC-0004).
+- `05_SPECIFICATIONS/IGNIS/IGNIS_002_NON_FUNCTIONAL.md` — Spec non fonctionnelle Ignis (performance, résilience, sécurité, interop, souveraineté, explicabilité, garde-fous RFC-0004 §8).
+- `05_SPECIFICATIONS/IGNIS/IGNIS_003_TRACEABILITY.md` — Matrice de traçabilité Ignis (F-01→F-26, NF-01→NF-10, datasets, moteurs, registre, couches Hub, garde-fous).
+- `05_SPECIFICATIONS/GEOSYLVA/GEO_001_SPECIFICATION.md` — Spec fonctionnelle GeoSylva (23 exigences, 7 sections, 3 cas d'usage, couverture app mobile + Hub).
+- `05_SPECIFICATIONS/GEOSYLVA/GEO_002_NON_FUNCTIONAL.md` — Spec non fonctionnelle GeoSylva (performance, offline-first RFC-0003, sécurité, interop, souveraineté, accessibilité mobile).
+- `05_SPECIFICATIONS/GEOSYLVA/GEO_003_TRACEABILITY.md` — Matrice de traçabilité GeoSylva (F-01→F-23, NF-01→NF-12, datasets, moteurs, ontologie S-6, couches Hub, précédents ONF/SDIS/Arbonaut).
+- `05_SPECIFICATIONS/HUB/HUB_003_LAYER_SHEETS.md` — Fiches détaillées des 25 couches du Hub (22 apps + 3 globales, 14 champs par fiche, matrice de compatibilité, priorités P0/P1/P2 Phase 4).
 
 ## Documents fondateurs de la Constitution
 
@@ -192,10 +210,14 @@ code viendra en son temps, subordonné aux fondations.
 
 ## Prochaine étape
 
-**Phase 2 — Architecture : tous les livrables 201-210 sont Draft et
-complets.** Les 10 livrables respectent DIR-0005/0006 et les garde-fous
-RFC-0004 §8. Le projet peut passer à la revue Fondateur (Review) puis
-à la Phase 3 (Connaissance).
+**Phase 3 — Connaissance : les 10 livrables (301-310) sont passés en
+`Review`** (2026-07-13) — contenu rédigé, en attente de validation du
+Fondateur (`Draft → Review`, la validation `Review → Validated` relève
+du Fondateur, CON-001). Une fois validés, la Phase 3 pourra être
+clôturée selon les critères de complétude du `ROADMAP.md`.
+
+Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
+pour Review.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.
