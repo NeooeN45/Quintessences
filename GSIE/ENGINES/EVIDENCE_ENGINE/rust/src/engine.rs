@@ -101,7 +101,7 @@ impl EvidenceEngine {
     /// Valide que le contenu n'est pas vide (null ou object vide).
     fn validate_content(submission: &RawKnowledgeSubmission) -> Result<(), EvidenceError> {
         if submission.contenu.is_null()
-            || (submission.contenu.is_object() && submission.contenu.as_object().map_or(false, |o| o.is_empty()))
+            || (submission.contenu.is_object() && submission.contenu.as_object().is_some_and(|o| o.is_empty()))
         {
             return Err(EvidenceError::EmptyContent);
         }
@@ -110,50 +110,51 @@ impl EvidenceEngine {
 
     /// Détermine le niveau de preuve selon la matrice source × contenu.
     ///
-    /// Matrice de décision (EVIDENCE_FRAMEWORK.md) :
+    /// Matrice de décision conforme à EVIDENCE_FRAMEWORK.md (Validated) :
+    /// Plafonds par catégorie de source (section 3.1) :
+    /// - Peer-reviewed : plafond B (source unique), A si convergence ≥ 3 sources
+    /// - Référentiel officiel : plafond B
+    /// - Expert identifié : plafond D
+    /// - Observation terrain : plafond F
+    ///
+    /// Le niveau A (consensus fort) exige la convergence multi-sources (≥ 3),
+    /// non implémentée ici (évaluation source unique). Une seule source
+    /// référentiel officiel = B maximum.
     ///
     /// | Source \ Contenu    | Publication | Référentiel | Expert | Observation |
     /// |---------------------|-------------|-------------|--------|-------------|
     /// | Peer-reviewed       | B           | B           | C      | C           |
-    /// | Référentiel officiel| B           | A*          | D      | E           |
-    /// | Expert identifié    | D           | D           | D      | E           |
-    /// | Observation terrain | E           | E           | E      | E           |
-    ///
-    /// A* : un référentiel officiel avec contenu référentiel = niveau A
-    ///      (consensus institutionnel reproductible)
+    /// | Référentiel officiel| B           | B           | D      | D           |
+    /// | Expert identifié    | D           | D           | D      | D           |
+    /// | Observation terrain | F           | F           | F      | F           |
     ///
     /// Notes :
-    /// - Le niveau A (méta-analyse) nécessite un corpus, non une seule source.
-    ///   Une seule source peer-reviewed = B maximum.
-    /// - Le niveau F est attribué en cas de conflit (géré par detect_conflicts).
+    /// - Le niveau A nécessite la convergence multi-sources (section 3.3 du framework).
+    ///   Non attribuable par une évaluation source unique.
+    /// - L'observation terrain est plafonnée à F (observation isolée, non recoupée).
+    /// - Le niveau F est aussi attribué en cas de conflit (géré par detect_conflicts).
     fn determine_evidence_level(submission: &RawKnowledgeSubmission) -> EvidenceLevel {
         let source = &submission.source_candidate.type_source;
         let content = &submission.type_contenu;
 
         match (source, content) {
-            // Référentiel officiel + contenu référentiel = A (consensus institutionnel)
-            (SourceType::ReferentielOfficiel, ContentType::Referentiel) => EvidenceLevel::A,
-            // Peer-reviewed + publication = B (établi)
+            // Peer-reviewed : plafond B (source unique)
+            // Publication et référentiel = B (établi, reproductible)
             (SourceType::PeerReviewed, ContentType::Publication) => EvidenceLevel::B,
-            // Référentiel officiel + publication = B
-            (SourceType::ReferentielOfficiel, ContentType::Publication) => EvidenceLevel::B,
-            // Peer-reviewed + référentiel = B
             (SourceType::PeerReviewed, ContentType::Referentiel) => EvidenceLevel::B,
-            // Peer-reviewed + expert = C (probable, domaine partiel)
+            // Peer-reviewed + expert/observation = C (probable, domaine partiel)
             (SourceType::PeerReviewed, ContentType::Expert) => EvidenceLevel::C,
-            // Peer-reviewed + observation = C
             (SourceType::PeerReviewed, ContentType::Observation) => EvidenceLevel::C,
-            // Référentiel officiel + expert = D
+            // Référentiel officiel : plafond B (validation institutionnelle)
+            (SourceType::ReferentielOfficiel, ContentType::Publication) => EvidenceLevel::B,
+            (SourceType::ReferentielOfficiel, ContentType::Referentiel) => EvidenceLevel::B,
+            // Référentiel officiel + expert/observation = D (domaine partiel)
             (SourceType::ReferentielOfficiel, ContentType::Expert) => EvidenceLevel::D,
-            // Référentiel officiel + observation = E
-            (SourceType::ReferentielOfficiel, ContentType::Observation) => EvidenceLevel::E,
-            // Expert identifié + tout = D (sauf observation = E)
-            (SourceType::ExpertIdentifie, ContentType::Publication) => EvidenceLevel::D,
-            (SourceType::ExpertIdentifie, ContentType::Referentiel) => EvidenceLevel::D,
-            (SourceType::ExpertIdentifie, ContentType::Expert) => EvidenceLevel::D,
-            (SourceType::ExpertIdentifie, ContentType::Observation) => EvidenceLevel::E,
-            // Observation terrain + tout = E
-            (SourceType::ObservationTerrain, _) => EvidenceLevel::E,
+            (SourceType::ReferentielOfficiel, ContentType::Observation) => EvidenceLevel::D,
+            // Expert identifié : plafond D (expertise non publiée)
+            (SourceType::ExpertIdentifie, _) => EvidenceLevel::D,
+            // Observation terrain : plafond F (observation isolée, non recoupée)
+            (SourceType::ObservationTerrain, _) => EvidenceLevel::F,
         }
     }
 

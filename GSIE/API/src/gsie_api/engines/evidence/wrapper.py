@@ -4,9 +4,6 @@ Si le module Rust n'est pas installé (dev sans Rust), un fallback
 Python est utilisé. En production, le module Rust compilé est requis.
 """
 
-import json
-from typing import Any
-
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.evidence.schemas import (
     KnowledgeStatus,
@@ -44,34 +41,57 @@ def evaluate(submission: RawKnowledgeSubmission) -> QualifiedKnowledge:
 
 
 def _evaluate_rust(submission: RawKnowledgeSubmission) -> QualifiedKnowledge:
-    """Évaluation via le cœur Rust (PyO3)."""
-    submission_json = submission.model_dump_json()
-    result_json = _rust_engine.EvidenceEngine.evaluate_json(submission_json)
-    return QualifiedKnowledge.model_validate_json(result_json)
+    """Évaluation via le cœur Rust (PyO3).
+
+    Panic recovery : si l'appel Rust lève une exception (panic, erreur
+    de sérialisation, erreur d'évaluation), on logge l'erreur et on
+    fallback vers l'implémentation Python pour résilience (P0).
+    """
+    try:
+        submission_json = submission.model_dump_json()
+        result_json = _rust_engine.EvidenceEngine.evaluate_json(submission_json)
+        return QualifiedKnowledge.model_validate_json(result_json)
+    except Exception as exc:
+        logger.error(
+            "rust_engine_evaluation_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        logger.warning("falling_back_to_python_evaluation")
+        return _evaluate_python_fallback(submission)
 
 
 # --- Fallback Python (si Rust non installé) ---
 
 # Matrice de décision (identique au cœur Rust — engine.rs)
+# Conforme à EVIDENCE_FRAMEWORK.md (Validated) section 3.1 :
+# - Peer-reviewed : plafond B (source unique), A si convergence ≥ 3 sources
+# - Référentiel officiel : plafond B
+# - Expert identifié : plafond D
+# - Observation terrain : plafond F
+# Le niveau A exige la convergence multi-sources (non attribuable ici).
 _DECISION_MATRIX: dict[tuple[str, str], str] = {
     # (type_source, type_contenu) → evidence_level
-    ("referentiel_officiel", "referentiel"): "A",
+    # Peer-reviewed : plafond B
     ("peer_reviewed", "publication"): "B",
-    ("referentiel_officiel", "publication"): "B",
     ("peer_reviewed", "referentiel"): "B",
     ("peer_reviewed", "expert"): "C",
     ("peer_reviewed", "observation"): "C",
+    # Référentiel officiel : plafond B
+    ("referentiel_officiel", "publication"): "B",
+    ("referentiel_officiel", "referentiel"): "B",
     ("referentiel_officiel", "expert"): "D",
-    ("referentiel_officiel", "observation"): "E",
+    ("referentiel_officiel", "observation"): "D",
+    # Expert identifié : plafond D
     ("expert_identifie", "publication"): "D",
     ("expert_identifie", "referentiel"): "D",
     ("expert_identifie", "expert"): "D",
-    ("expert_identifie", "observation"): "E",
-    # observation_terrain → E pour tout
-    ("observation_terrain", "publication"): "E",
-    ("observation_terrain", "referentiel"): "E",
-    ("observation_terrain", "expert"): "E",
-    ("observation_terrain", "observation"): "E",
+    ("expert_identifie", "observation"): "D",
+    # Observation terrain : plafond F
+    ("observation_terrain", "publication"): "F",
+    ("observation_terrain", "referentiel"): "F",
+    ("observation_terrain", "expert"): "F",
+    ("observation_terrain", "observation"): "F",
 }
 
 _STATUS_MAP: dict[str, KnowledgeStatus] = {

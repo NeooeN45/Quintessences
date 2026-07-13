@@ -3,6 +3,9 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
+# Temp
+.commit-msg.txt
+
 # Éditeurs
 .vscode/
 .idea/

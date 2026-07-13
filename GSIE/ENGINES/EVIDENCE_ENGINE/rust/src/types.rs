@@ -72,7 +72,7 @@ impl std::fmt::Display for EvidenceLevel {
 }
 
 /// Type de source scientifique (EVIDENCE_FRAMEWORK.md matrice de décision).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SourceType {
     /// Publication peer-reviewed (journal scientifique, conférence avec comité)
@@ -86,7 +86,7 @@ pub enum SourceType {
 }
 
 /// Type de contenu soumis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ContentType {
     /// Publication scientifique
@@ -100,7 +100,7 @@ pub enum ContentType {
 }
 
 /// Statut de la connaissance après qualification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum KnowledgeStatus {
     /// Acceptée — niveau de preuve suffisant, intégrée à GSIE
@@ -112,7 +112,7 @@ pub enum KnowledgeStatus {
 }
 
 /// Référence à une source scientifique (ENGINE_INTERFACE_CONTRACTS.md).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SourceReference {
     pub type_source: SourceType,
     pub auteur: String,
@@ -124,7 +124,7 @@ pub struct SourceReference {
 }
 
 /// Soumission de connaissance brute (entrée de l'Evidence Engine).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RawKnowledgeSubmission {
     pub soumission_id: Uuid,
     pub type_contenu: ContentType,
@@ -135,7 +135,7 @@ pub struct RawKnowledgeSubmission {
 }
 
 /// Conflit bibliographique entre deux sources (CON-002).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConflitBibliographique {
     pub source_a: SourceReference,
     pub source_b: SourceReference,
@@ -143,7 +143,7 @@ pub struct ConflitBibliographique {
 }
 
 /// Connaissance qualifiée (sortie de l'Evidence Engine).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct QualifiedKnowledge {
     pub connaissance_id: Uuid,
     pub contenu_normalise: serde_json::Value,

@@ -70,3 +70,38 @@ def should_return_413_when_content_length_exceeds_limit():
         headers={"content-length": str(10 * 1024 * 1024)},  # 10 MiB
     )
     assert response.status_code == 413
+
+
+def should_return_400_when_content_length_non_numeric():
+    """Le middleware doit retourner 400 si content-length non numérique.
+
+    Évite le crash ValueError sur int("abc") (P0 résilience).
+    """
+    app = FastAPI()
+    app.add_middleware(TraceIdMiddleware)
+
+    @app.get("/test")
+    async def test_endpoint():
+        return {"ok": True}
+
+    client = TestClient(app)
+    response = client.get("/test", headers={"content-length": "abc"})
+    assert response.status_code == 400
+    assert response.json()["error_code"] == "BAD_REQUEST"
+
+
+def should_return_413_when_content_length_negative():
+    """Le middleware doit retourner 413 si content-length négatif.
+
+    Évite le crash ou comportement inattendu sur int("-1") (P0 résilience).
+    """
+    app = FastAPI()
+    app.add_middleware(TraceIdMiddleware)
+
+    @app.get("/test")
+    async def test_endpoint():
+        return {"ok": True}
+
+    client = TestClient(app)
+    response = client.get("/test", headers={"content-length": "-1"})
+    assert response.status_code == 413

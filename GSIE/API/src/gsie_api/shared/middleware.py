@@ -47,12 +47,21 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         # Limite taille corps de requête (OWASP A04)
+        # Gestion robuste du Content-Length : valeur non numérique ou négative
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > _MAX_BODY_SIZE:
-            return JSONResponse(
-                status_code=413,
-                content={"detail": "Request body too large", "error_code": "PAYLOAD_TOO_LARGE"},
-            )
+        if content_length:
+            try:
+                cl_value = int(content_length)
+            except ValueError:
+                return JSONResponse(
+                    status_code=400,
+                    content={"detail": "Invalid Content-Length header", "error_code": "BAD_REQUEST"},
+                )
+            if cl_value < 0 or cl_value > _MAX_BODY_SIZE:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Request body too large", "error_code": "PAYLOAD_TOO_LARGE"},
+                )
 
         client_trace_id = request.headers.get("X-Trace-Id")
         validated_id = _validate_trace_id(client_trace_id)

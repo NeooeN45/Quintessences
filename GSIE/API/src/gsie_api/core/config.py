@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
     redis_max_connections: int = 20
+    # Timeouts Redis (secondes) — évite les requêtes bloquantes (résilience P0)
+    redis_socket_timeout: float = 5.0
+    redis_connect_timeout: float = 5.0
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
     # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
@@ -91,6 +94,9 @@ class Settings(BaseSettings):
                 raise ValueError("Wildcard CORS origin not allowed in production")
             if any("localhost" in o for o in self.cors_origins):
                 raise ValueError("localhost CORS origins not allowed in production")
+            # Redis sans mot de passe en production = critique (OWASP A07)
+            if "localhost" in self.redis_url and ":@" not in self.redis_url:
+                raise ValueError("Redis without password not allowed in production")
         return self
 
 

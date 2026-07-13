@@ -73,12 +73,19 @@ fn should_return_error_when_content_empty_object() {
 }
 
 // --- Tests de la matrice de décision (niveaux A-F) ---
+// Conforme à EVIDENCE_FRAMEWORK.md (Validated) section 3.1 :
+// - Peer-reviewed : plafond B (source unique)
+// - Référentiel officiel : plafond B
+// - Expert identifié : plafond D
+// - Observation terrain : plafond F
+// Le niveau A exige la convergence multi-sources (non testable ici).
 
 #[test]
-fn should_return_level_a_when_referentiel_officiel_and_referentiel() {
+fn should_return_level_b_when_referentiel_officiel_and_referentiel() {
+    // Plafond B — le niveau A exige la convergence multi-sources (≥ 3)
     let sub = make_submission(SourceType::ReferentielOfficiel, ContentType::Referentiel);
     let result = EvidenceEngine::evaluate(sub).unwrap();
-    assert_eq!(result.evidence_level, EvidenceLevel::A);
+    assert_eq!(result.evidence_level, EvidenceLevel::B);
 }
 
 #[test]
@@ -124,32 +131,50 @@ fn should_return_level_d_when_expert_identifie_and_expert() {
 }
 
 #[test]
-fn should_return_level_e_when_expert_identifie_and_observation() {
+fn should_return_level_d_when_expert_identifie_and_observation() {
+    // Plafond D pour expert identifié (tous types de contenu)
     let sub = make_submission(SourceType::ExpertIdentifie, ContentType::Observation);
     let result = EvidenceEngine::evaluate(sub).unwrap();
-    assert_eq!(result.evidence_level, EvidenceLevel::E);
+    assert_eq!(result.evidence_level, EvidenceLevel::D);
 }
 
 #[test]
-fn should_return_level_e_when_observation_terrain_and_publication() {
+fn should_return_level_f_when_observation_terrain_and_publication() {
+    // Plafond F — observation terrain isolée, non recoupée
     let sub = make_submission(SourceType::ObservationTerrain, ContentType::Publication);
     let result = EvidenceEngine::evaluate(sub).unwrap();
-    assert_eq!(result.evidence_level, EvidenceLevel::E);
+    assert_eq!(result.evidence_level, EvidenceLevel::F);
 }
 
 #[test]
-fn should_return_level_e_when_observation_terrain_and_observation() {
+fn should_return_level_f_when_observation_terrain_and_observation() {
     let sub = make_submission(SourceType::ObservationTerrain, ContentType::Observation);
     let result = EvidenceEngine::evaluate(sub).unwrap();
-    assert_eq!(result.evidence_level, EvidenceLevel::E);
+    assert_eq!(result.evidence_level, EvidenceLevel::F);
+}
+
+#[test]
+fn should_return_level_d_when_referentiel_officiel_and_expert() {
+    let sub = make_submission(SourceType::ReferentielOfficiel, ContentType::Expert);
+    let result = EvidenceEngine::evaluate(sub).unwrap();
+    assert_eq!(result.evidence_level, EvidenceLevel::D);
+}
+
+#[test]
+fn should_return_level_d_when_referentiel_officiel_and_observation() {
+    let sub = make_submission(SourceType::ReferentielOfficiel, ContentType::Observation);
+    let result = EvidenceEngine::evaluate(sub).unwrap();
+    assert_eq!(result.evidence_level, EvidenceLevel::D);
 }
 
 // --- Tests du statut ---
 
 #[test]
-fn should_return_accepte_when_level_a() {
+fn should_return_accepte_when_referentiel_officiel_referentiel() {
+    // (ReferentielOfficiel, Referentiel) = B maintenant (plafond B)
     let sub = make_submission(SourceType::ReferentielOfficiel, ContentType::Referentiel);
     let result = EvidenceEngine::evaluate(sub).unwrap();
+    assert_eq!(result.evidence_level, EvidenceLevel::B);
     assert_eq!(result.statut, KnowledgeStatus::Accepte);
 }
 
@@ -175,10 +200,12 @@ fn should_return_quarantine_when_level_d() {
 }
 
 #[test]
-fn should_return_quarantine_when_level_e() {
+fn should_return_refuse_when_level_f() {
+    // (ObservationTerrain, *) = F maintenant (plafond F)
     let sub = make_submission(SourceType::ObservationTerrain, ContentType::Observation);
     let result = EvidenceEngine::evaluate(sub).unwrap();
-    assert_eq!(result.statut, KnowledgeStatus::Quarantine);
+    assert_eq!(result.evidence_level, EvidenceLevel::F);
+    assert_eq!(result.statut, KnowledgeStatus::Refuse);
 }
 
 // --- Tests de structure ---

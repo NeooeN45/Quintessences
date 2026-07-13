@@ -68,11 +68,16 @@ def should_return_level_b_when_peer_reviewed_and_publication():
     assert result.statut == KnowledgeStatus.accepte
 
 
-def should_return_level_a_when_referentiel_officiel_and_referentiel():
-    """Référentiel officiel + référentiel doit donner niveau A."""
+def should_return_level_b_when_referentiel_officiel_and_referentiel():
+    """Référentiel officiel + référentiel doit donner niveau B (plafond B).
+
+    Le niveau A exige la convergence multi-sources (≥ 3) selon
+    EVIDENCE_FRAMEWORK.md section 3.1 — non attribuable par une
+    évaluation source unique.
+    """
     sub = _make_submission(SourceType.referentiel_officiel, ContentType.referentiel)
     result = evaluate(sub)
-    assert result.evidence_level == EvidenceLevel.A
+    assert result.evidence_level == EvidenceLevel.B
     assert result.statut == KnowledgeStatus.accepte
 
 
@@ -92,12 +97,15 @@ def should_return_level_d_when_expert_identifie_and_expert():
     assert result.statut == KnowledgeStatus.quarantine
 
 
-def should_return_level_e_when_observation_terrain():
-    """Observation terrain doit donner niveau E."""
+def should_return_level_f_when_observation_terrain():
+    """Observation terrain doit donner niveau F (plafond F).
+
+    Observation isolée, non recoupée — EVIDENCE_FRAMEWORK.md section 3.1.
+    """
     sub = _make_submission(SourceType.observation_terrain, ContentType.observation)
     result = evaluate(sub)
-    assert result.evidence_level == EvidenceLevel.E
-    assert result.statut == KnowledgeStatus.quarantine
+    assert result.evidence_level == EvidenceLevel.F
+    assert result.statut == KnowledgeStatus.refuse
 
 
 def should_generate_connaissance_id_when_evaluated():
@@ -188,15 +196,18 @@ def should_return_422_when_invalid_source_type():
     assert response.status_code == 422
 
 
-def should_return_level_a_via_api_when_referentiel():
-    """L'API doit retourner niveau A pour référentiel officiel + référentiel."""
+def should_return_level_b_via_api_when_referentiel():
+    """L'API doit retourner niveau B pour référentiel officiel + référentiel.
+
+    Plafond B — le niveau A exige la convergence multi-sources (≥ 3).
+    """
     sub = _make_submission(SourceType.referentiel_officiel, ContentType.referentiel)
     response = client.post(
         "/api/v1/evidence/evaluate",
         json=sub.model_dump(mode="json"),
     )
     data = response.json()
-    assert data["evidence_level"] == "A"
+    assert data["evidence_level"] == "B"
     assert data["statut"] == "accepte"
 
 
@@ -252,3 +263,37 @@ def should_return_level_f_via_fallback_when_unknown_combination():
             result = wrapper_module.evaluate(sub)
             assert result.evidence_level == EvidenceLevel.F
             assert result.statut == KnowledgeStatus.refuse
+
+
+def should_fallback_to_python_when_rust_raises_exception():
+    """Le wrapper doit fallback vers Python si l'appel Rust lève une exception.
+
+    Panic recovery (P0 résilience) — si le moteur Rust crash ou lève
+    une erreur de sérialisation, l'API ne doit pas crasher mais
+    utiliser le fallback Python.
+    """
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    # Simuler une exception lors de l'appel Rust
+    with patch.object(wrapper_module, "_RUST_AVAILABLE", True):
+        with patch.object(
+            wrapper_module._rust_engine.EvidenceEngine,
+            "evaluate_json",
+            side_effect=RuntimeError("Rust panic simulated"),
+        ):
+            sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+            result = wrapper_module.evaluate(sub)
+            # Le fallback Python doit produire le même résultat
+            assert result.evidence_level == EvidenceLevel.B
+            assert result.statut == KnowledgeStatus.accepte
+
+
+def should_include_trace_id_in_404_error():
+    """Le handler 404 doit inclure le trace_id dans la réponse d'erreur."""
+    response = client.get("/nonexistent", headers={"X-Trace-Id": "test-trace-123"})
+    assert response.status_code == 404
+    data = response.json()
+    assert data["error_code"] == "NOT_FOUND"
+    assert data["trace_id"] == "test-trace-123"

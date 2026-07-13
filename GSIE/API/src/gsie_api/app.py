@@ -59,7 +59,11 @@ _ALLOWED_HEADERS = ["Content-Type", "Authorization", "X-Trace-Id"]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Cycle de vie : startup + shutdown."""
+    """Cycle de vie : startup + shutdown.
+
+    Graceful shutdown (P0) : ferme proprement les connexions DB et Redis
+    pour éviter les fuites de connexions côté PostgreSQL/Redis.
+    """
     setup_logging(_settings.log_level, _settings.environment)
     logger.info(
         "api_starting",
@@ -69,6 +73,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     yield
     logger.info("api_stopping")
+    # Graceful shutdown — ferme les pools de connexions (P0 résilience)
+    try:
+        from gsie_api.infrastructure.database import engine
+        from gsie_api.infrastructure.redis_client import redis_pool
+
+        await engine.dispose()
+        await redis_pool.aclose()
+        logger.info("connections_closed")
+    except Exception as exc:
+        logger.error(
+            "shutdown_cleanup_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
 
 
 def create_app() -> FastAPI:
@@ -114,25 +132,36 @@ def create_app() -> FastAPI:
 
     # 404 handler custom — ne divulgue pas l'arborescence (OWASP A05)
     @app.exception_handler(404)
-    async def not_found_handler(request: Request, exc) -> JSONResponse:
+    async def not_found_handler(request: Request, exc: Exception) -> JSONResponse:
+        trace_id = request.headers.get("X-Trace-Id", "")
         return JSONResponse(
             status_code=404,
-            content={"detail": "Resource not found", "error_code": "NOT_FOUND"},
+            content={
+                "detail": "Resource not found",
+                "error_code": "NOT_FOUND",
+                "trace_id": trace_id,
+            },
         )
 
     # Handler global 500 — ne divulgue pas la stack trace (OWASP A05)
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        trace_id = request.headers.get("X-Trace-Id", "")
         logger.error(
             "unhandled_exception",
             path=request.url.path,
             method=request.method,
             error_type=type(exc).__name__,
             error=str(exc),
+            trace_id=trace_id,
         )
         return JSONResponse(
             status_code=500,
-            content={"detail": "Internal server error", "error_code": "INTERNAL_ERROR"},
+            content={
+                "detail": "Internal server error",
+                "error_code": "INTERNAL_ERROR",
+                "trace_id": trace_id,
+            },
         )
 
     return app
