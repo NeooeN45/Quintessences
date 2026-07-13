@@ -25,7 +25,7 @@ node_modules/
 # Archives binaires (les packs contexte agent ne sont pas versionnés)
 *.zip
 .coverage
-16_TOOLS/dataset_forge/
-22_PROJECT_MEMORY/Ignis/git_init.sh
-22_PROJECT_MEMORY/Ignis/run_premier_vol.sh
-22_PROJECT_MEMORY/Ignis/run_px4.sh
+GSIE/TOOLS/dataset_forge/
+apps/Ignis/git_init.sh
+apps/Ignis/run_premier_vol.sh
+apps/Ignis/run_px4.sh

@@ -13,7 +13,7 @@ le climat et les territoires.
 [![Phase](https://img.shields.io/badge/phase-2%20Architecture-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-10%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
-[![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](09_ENGINES/)
+[![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](GSIE/ENGINES/)
 [![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-6%20DEC-yellow)](03_DECISIONS/)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
@@ -170,7 +170,7 @@ territoire : forêt (GeoSylva), incendies (Ignis), faune (Artemis), eau
   l'API GSIE (livrable 207).
 - **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
   (effets), WebSockets natifs (temps réel).
-- **Document de référence** : `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+- **Document de référence** : `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
 
 ### Futures spécialisations
 
@@ -304,20 +304,20 @@ Quintessences/
 ├── 01_DIRECTIVES/          Directives fondatrices (ACTIVE / ARCHIVED)
 ├── 02_RFC/                 Request for Comments
 ├── 03_DECISIONS/           Décisions tracées et validées
-├── 04_ARCHITECTURE/        Architecture logicielle et scientifique
+├── GSIE/ARCHITECTURE/        Architecture logicielle et scientifique
 ├── 05_SPECIFICATIONS/      Exigences fonctionnelles et non fonctionnelles
-├── 06_RESEARCH/            Travaux scientifiques et bibliographie
-├── 07_KNOWLEDGE/           Base de connaissances structurée
-├── 08_DATASETS/            Jeux de données référencés et sourcés
-├── 09_ENGINES/             14 moteurs GSIE (documentés, non implémentés)
-├── 10_ALGORITHMS/          Procédures computationnelles formelles
-├── 11_MODELS/              Modèles scientifiques et d'apprentissage
-├── 12_APPLICATIONS/        Interfaces utilisateurs (GeoSylva, Ignis, …)
-├── 13_API/                 Contrats d'interface exposés
-├── 14_SDK/                 Bibliothèques clientes
-├── 15_TESTS/               Tests unitaires, intégration et non-régression
-├── 16_TOOLS/               Utilitaires et chaînes de construction
-├── 17_DOCUMENTATION/       Documentation officielle et guides contributeurs
+├── GSIE/RESEARCH/            Travaux scientifiques et bibliographie
+├── GSIE/KNOWLEDGE/           Base de connaissances structurée
+├── GSIE/DATASETS/            Jeux de données référencés et sourcés
+├── GSIE/ENGINES/             14 moteurs GSIE (documentés, non implémentés)
+├── GSIE/ALGORITHMS/          Procédures computationnelles formelles
+├── GSIE/MODELS/              Modèles scientifiques et d'apprentissage
+├── GSIE/APPLICATIONS/        Interfaces utilisateurs (GeoSylva, Ignis, …)
+├── GSIE/API/                 Contrats d'interface exposés
+├── GSIE/SDK/                 Bibliothèques clientes
+├── GSIE/TESTS/               Tests unitaires, intégration et non-régression
+├── GSIE/TOOLS/               Utilitaires et chaînes de construction
+├── GSIE/DOCUMENTATION/       Documentation officielle et guides contributeurs
 ├── 18_FINANCING/           Modèle économique et traçabilité financière
 ├── 19_LEGAL/               Licences, conformité, propriété intellectuelle
 ├── 20_PARTNERSHIPS/        Partenariats scientifiques et institutionnels
@@ -338,12 +338,12 @@ contribution respecte la hiérarchie documentaire et la Constitution.
 
 1. **Lire la Constitution** (`00_CONSTITUTION/`) avant toute proposition.
 2. **Ouvrir un RFC** (`02_RFC/`) pour toute évolution structurante.
-3. **Sourcer** toute affirmation scientifique (`06_RESEARCH/`,
-   `08_DATASETS/`).
+3. **Sourcer** toute affirmation scientifique (`GSIE/RESEARCH/`,
+   `GSIE/DATASETS/`).
 4. **Tracer** toute décision (`03_DECISIONS/`).
 5. **Rédiger en français** — documentation, commentaires, commits.
 
-Voir `17_DOCUMENTATION/CONTRIBUTING_GUIDE.md` pour le guide complet.
+Voir `GSIE/DOCUMENTATION/CONTRIBUTING_GUIDE.md` pour le guide complet.
 
 ---
 

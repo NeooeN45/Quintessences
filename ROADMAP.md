@@ -23,7 +23,7 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Validated |
 | 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Validated |
 | 010 | Articles constitutionnels 000-100 | `00_CONSTITUTION/GSIE-CON-000.md` à `GSIE-CON-010.md` (source réelle) ; gabarit `ARTICLE_0xx` en attente (cf. **RFC-0002**) | Validated (000 Locked, 001-010 Validated) |
-| 011 | Système de documentation et guides contributeurs | `17_DOCUMENTATION/` | Validated |
+| 011 | Système de documentation et guides contributeurs | `GSIE/DOCUMENTATION/` | Validated |
 | 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Validated |
 
 ### Légende des statuts
@@ -68,36 +68,36 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 
 | Fichier | Dossier | Titre |
 |---|---|---|
-| `ARCHITECTURE_PRINCIPLES.md` | `04_ARCHITECTURE/` | Architecture Principles |
-| `RESEARCH_METHOD.md` | `06_RESEARCH/` | GSIE Research Method |
-| `KNOWLEDGE_METHOD.md` | `07_KNOWLEDGE/` | GSIE Knowledge Method |
+| `ARCHITECTURE_PRINCIPLES.md` | `GSIE/ARCHITECTURE/` | Architecture Principles |
+| `RESEARCH_METHOD.md` | `GSIE/RESEARCH/` | GSIE Research Method |
+| `KNOWLEDGE_METHOD.md` | `GSIE/KNOWLEDGE/` | GSIE Knowledge Method |
 
 ### Documents d'architecture rédigés
 
 | Fichier | Dossier | Titre |
 |---|---|---|
-| `GSIE_MASTER_ARCHITECTURE.md` | `04_ARCHITECTURE/` | GSIE Master Architecture |
-| `GSIE_CORE_BLUEPRINT.md` | `04_ARCHITECTURE/` | GSIE Core Blueprint |
-| `GSIE_DATA_FLOW.md` | `04_ARCHITECTURE/` | GSIE Data Flow |
+| `GSIE_MASTER_ARCHITECTURE.md` | `GSIE/ARCHITECTURE/` | GSIE Master Architecture |
+| `GSIE_CORE_BLUEPRINT.md` | `GSIE/ARCHITECTURE/` | GSIE Core Blueprint |
+| `GSIE_DATA_FLOW.md` | `GSIE/ARCHITECTURE/` | GSIE Data Flow |
 
-### Moteurs documentés (`09_ENGINES/`)
+### Moteurs documentés (`GSIE/ENGINES/`)
 
 | Moteur | Dossier | Statut |
 |---|---|---|
-| `EVIDENCE_ENGINE` | `09_ENGINES/EVIDENCE_ENGINE/` | Documenté (Phase 1) |
-| `KNOWLEDGE_ENGINE` | `09_ENGINES/KNOWLEDGE_ENGINE/` | Documenté (Phase 1) |
-| `CORRELATION_ENGINE` | `09_ENGINES/CORRELATION_ENGINE/` | Documenté (Phase 1) |
-| `REASONING_ENGINE` | `09_ENGINES/REASONING_ENGINE/` | Documenté (Phase 1) |
-| `DIAGNOSTIC_ENGINE` | `09_ENGINES/DIAGNOSTIC_ENGINE/` | Documenté (Phase 1) |
-| `RECOMMENDATION_ENGINE` | `09_ENGINES/RECOMMENDATION_ENGINE/` | Documenté (Phase 1) |
-| `VALIDATION_ENGINE` | `09_ENGINES/VALIDATION_ENGINE/` | Documenté (Phase 1) |
-| `GIS_ENGINE` | `09_ENGINES/GIS_ENGINE/` | Documenté (Phase 1) |
-| `CLIMATE_ENGINE` | `09_ENGINES/CLIMATE_ENGINE/` | Documenté (Phase 1) |
-| `PEDOLOGY_ENGINE` | `09_ENGINES/PEDOLOGY_ENGINE/` | Documenté (Phase 1) |
-| `BOTANICAL_ENGINE` | `09_ENGINES/BOTANICAL_ENGINE/` | Documenté (Phase 1) |
-| `FOREST_DYNAMICS_ENGINE` | `09_ENGINES/FOREST_DYNAMICS_ENGINE/` | Documenté (Phase 1) |
-| `LEARNING_ENGINE` | `09_ENGINES/LEARNING_ENGINE/` | Documenté (Phase 1) |
-| `SIMULATION_ENGINE` | `09_ENGINES/SIMULATION_ENGINE/` | Documenté (Phase 1) |
+| `EVIDENCE_ENGINE` | `GSIE/ENGINES/EVIDENCE_ENGINE/` | Documenté (Phase 1) |
+| `KNOWLEDGE_ENGINE` | `GSIE/ENGINES/KNOWLEDGE_ENGINE/` | Documenté (Phase 1) |
+| `CORRELATION_ENGINE` | `GSIE/ENGINES/CORRELATION_ENGINE/` | Documenté (Phase 1) |
+| `REASONING_ENGINE` | `GSIE/ENGINES/REASONING_ENGINE/` | Documenté (Phase 1) |
+| `DIAGNOSTIC_ENGINE` | `GSIE/ENGINES/DIAGNOSTIC_ENGINE/` | Documenté (Phase 1) |
+| `RECOMMENDATION_ENGINE` | `GSIE/ENGINES/RECOMMENDATION_ENGINE/` | Documenté (Phase 1) |
+| `VALIDATION_ENGINE` | `GSIE/ENGINES/VALIDATION_ENGINE/` | Documenté (Phase 1) |
+| `GIS_ENGINE` | `GSIE/ENGINES/GIS_ENGINE/` | Documenté (Phase 1) |
+| `CLIMATE_ENGINE` | `GSIE/ENGINES/CLIMATE_ENGINE/` | Documenté (Phase 1) |
+| `PEDOLOGY_ENGINE` | `GSIE/ENGINES/PEDOLOGY_ENGINE/` | Documenté (Phase 1) |
+| `BOTANICAL_ENGINE` | `GSIE/ENGINES/BOTANICAL_ENGINE/` | Documenté (Phase 1) |
+| `FOREST_DYNAMICS_ENGINE` | `GSIE/ENGINES/FOREST_DYNAMICS_ENGINE/` | Documenté (Phase 1) |
+| `LEARNING_ENGINE` | `GSIE/ENGINES/LEARNING_ENGINE/` | Documenté (Phase 1) |
+| `SIMULATION_ENGINE` | `GSIE/ENGINES/SIMULATION_ENGINE/` | Documenté (Phase 1) |
 
 **14/14 moteurs amorcés — niveau de documentation à qualifier.**
 
@@ -159,18 +159,18 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 | # | Livrable | Fichier / Dossier | Statut |
 |---|---|---|---|
-| 201 | Architecture globale GSIE | `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` | Draft |
-| 202 | Stack technologique (ADR) | `04_ARCHITECTURE/TECHNOLOGY_STACK.md` | Draft |
-| 203 | Protocole de communication entre moteurs | `04_ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` | Draft |
-| 204 | Ordre de développement des moteurs | `04_ARCHITECTURE/ENGINE_DEVELOPMENT_ORDER.md` | Draft |
-| 205 | Modèle de données scientifique | `04_ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
-| 206 | Contrats d'interface des 14 moteurs | `04_ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
-| 207 | Documentation détaillée des 14 moteurs | `09_ENGINES/*/` (14 dossiers) | Draft |
-| 208 | Architecture Ignis | `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
-| 209 | Pipeline de données Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
-| 210 | Architecture drone Ignis | `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
-| 211 | GCS-Cinéma Unreal Engine (Ignis) | `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | Draft |
-| 212 | GeoSylva-Unreal Architecture (LiDAR + PCG) | `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` | Draft (attente MVP Ignis) |
+| 201 | Architecture globale GSIE | `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` | Draft |
+| 202 | Stack technologique (ADR) | `GSIE/ARCHITECTURE/TECHNOLOGY_STACK.md` | Draft |
+| 203 | Protocole de communication entre moteurs | `GSIE/ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` | Draft |
+| 204 | Ordre de développement des moteurs | `GSIE/ARCHITECTURE/ENGINE_DEVELOPMENT_ORDER.md` | Draft |
+| 205 | Modèle de données scientifique | `GSIE/ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
+| 206 | Contrats d'interface des 14 moteurs | `GSIE/ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
+| 207 | Documentation détaillée des 14 moteurs | `GSIE/ENGINES/*/` (14 dossiers) | Draft |
+| 208 | Architecture Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
+| 209 | Pipeline de données Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
+| 210 | Architecture drone Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
+| 211 | GCS-Cinéma Unreal Engine (Ignis) | `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | Draft |
+| 212 | GeoSylva-Unreal Architecture (LiDAR + PCG) | `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` | Draft (attente MVP Ignis) |
 
 ### Critères de complétude Phase 2
 
@@ -197,14 +197,14 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 | # | Livrable | Fichier / Dossier | Statut |
 |---|---|---|---|
-| 301 | Research Method (détaillée) | `06_RESEARCH/RESEARCH_METHOD.md` | Draft |
-| 302 | Knowledge Method (détaillée) | `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` | Draft |
-| 303 | Forest Ontology | `07_KNOWLEDGE/FOREST_ONTOLOGY.md` | Draft |
-| 304 | Knowledge Graph Specification | `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Draft |
-| 305 | Dataset Catalog | `08_DATASETS/DATASET_CATALOG.md` | Draft |
-| 306 | Evidence Framework | `06_RESEARCH/EVIDENCE_FRAMEWORK.md` | Draft |
-| 307 | Sourcing Plan | `06_RESEARCH/SOURCING_PLAN.md` | Draft |
-| 308 | Knowledge Base Seed | `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Draft |
+| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Draft |
+| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Draft |
+| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Draft |
+| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Draft |
+| 305 | Dataset Catalog | `GSIE/DATASETS/DATASET_CATALOG.md` | Draft |
+| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Draft |
+| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Draft |
+| 308 | Knowledge Base Seed | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Draft |
 
 ### Ordre de production
 

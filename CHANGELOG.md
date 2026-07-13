@@ -4,6 +4,47 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RÉORGANISATION ARBORESCENCE] - 2026-07-13
+
+### Réorganisation du dépôt (DEC-000014, GSIE-DIR-0010)
+
+Le Fondateur acte la réorganisation de l'arborescence du dépôt en trois
+niveaux : **racine** (transverse), **GSIE/** (moteur), **apps/**
+(applications clientes).
+
+**13 dossiers déplacés vers GSIE/** :
+- `04_ARCHITECTURE/` → `GSIE/ARCHITECTURE/`
+- `06_RESEARCH/` → `GSIE/RESEARCH/`
+- `07_KNOWLEDGE/` → `GSIE/KNOWLEDGE/`
+- `08_DATASETS/` → `GSIE/DATASETS/`
+- `09_ENGINES/` → `GSIE/ENGINES/`
+- `10_ALGORITHMS/` → `GSIE/ALGORITHMS/`
+- `11_MODELS/` → `GSIE/MODELS/`
+- `12_APPLICATIONS/` → `GSIE/APPLICATIONS/`
+- `13_API/` → `GSIE/API/`
+- `14_SDK/` → `GSIE/SDK/`
+- `15_TESTS/` → `GSIE/TESTS/`
+- `16_TOOLS/` → `GSIE/TOOLS/`
+- `17_DOCUMENTATION/` → `GSIE/DOCUMENTATION/`
+
+**6 dossiers apps/ créés** :
+- `apps/GeoSylva/` (forêt) — README créé
+- `apps/Artemis/` (faune) — README créé
+- `apps/Ignis/` (incendies) — déménagé depuis `22_PROJECT_MEMORY/Ignis/`
+- `apps/Hydro/` (eau) — README créé
+- `apps/Flora/` (végétation) — README créé
+- `apps/QGISIA/` (plugin QGIS) — README créé
+
+**454 remplacements de chemins** dans 73 fichiers.
+**CLAUDE.md** entièrement réécrit avec la nouvelle arborescence.
+
+### Documents créés
+
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0010.md` — directive réorganisation
+- `03_DECISIONS/DEC-000014.md` — décision réorganisation
+
+---
+
 ## [RESTRUCTURATION ÉCOSYSTÈME] - 2026-07-13
 
 ### Restructuration Quintessences (DEC-000013, GSIE-DIR-0009)
@@ -45,19 +86,19 @@ Chronos, Nexus…
 
 | Ancien nom | Nouveau nom |
 |---|---|
-| `22_PROJECT_MEMORY/GSIE-Ignis/` | `22_PROJECT_MEMORY/Ignis/` |
-| `22_PROJECT_MEMORY/GSIE-Ignis.md` | `22_PROJECT_MEMORY/Ignis.md` |
-| `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | `04_ARCHITECTURE/IGNIS_ARCHITECTURE.md` |
-| `04_ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | `04_ARCHITECTURE/IGNIS_DATA_PIPELINE.md` |
-| `04_ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | `04_ARCHITECTURE/IGNIS_DRONE_ARCHITECTURE.md` |
-| `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md` |
+| `22_PROJECT_MEMORY/GSIE-Ignis/` | `apps/Ignis/` |
+| `22_PROJECT_MEMORY/GSIE-Ignis.md` | `apps/Ignis/REGISTRE.md` |
+| `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | `GSIE/ARCHITECTURE/IGNIS_ARCHITECTURE.md` |
+| `GSIE/ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | `GSIE/ARCHITECTURE/IGNIS_DATA_PIPELINE.md` |
+| `GSIE/ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | `GSIE/ARCHITECTURE/IGNIS_DRONE_ARCHITECTURE.md` |
+| `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` |
 
 ### Documents mis à jour
 
 - 58 fichiers : remplacement Myhunt→Artemis et GSIE-Ignis→Ignis
-- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` : +Hydro, +Flora, matrice 6 apps
-- `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` : +Centre de Commandement
-- `04_ARCHITECTURE/COMMAND_CENTER_UNREAL.md` : repositionnement GCS→Centre de Commandement
+- `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` : +Hydro, +Flora, matrice 6 apps
+- `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` : +Centre de Commandement
+- `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` : repositionnement GCS→Centre de Commandement
 - `README.md` : architecture + Hydro + Flora + Centre de Commandement
 
 ### Documents créés
@@ -93,8 +134,8 @@ Chronos, Nexus…
 
 ### Documents créés
 
-- `04_ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — livrable 309
-- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` — livrable 310
+- `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — livrable 309
+- `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` — livrable 310
 
 ---
 
@@ -158,14 +199,14 @@ versionnée** — le véritable produit de GSIE (CON-003).
 
 - `01_DIRECTIVES/ACTIVE/GSIE-DIR-0007.md` — Directive Phase 3
 - `03_DECISIONS/DEC-000011.md` — Décision d'ouverture Phase 3
-- `06_RESEARCH/RESEARCH_METHOD.md` — détaillage (stub → 261 lignes)
-- `06_RESEARCH/EVIDENCE_FRAMEWORK.md` — nouveau
-- `06_RESEARCH/SOURCING_PLAN.md` — nouveau
-- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — détaillage (stub → 358 lignes)
-- `07_KNOWLEDGE/FOREST_ONTOLOGY.md` — détaillage (stub → 803 lignes)
-- `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — détaillage (stub → 917 lignes)
-- `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — nouveau
-- `08_DATASETS/DATASET_CATALOG.md` — nouveau
+- `GSIE/RESEARCH/RESEARCH_METHOD.md` — détaillage (stub → 261 lignes)
+- `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` — nouveau
+- `GSIE/RESEARCH/SOURCING_PLAN.md` — nouveau
+- `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` — détaillage (stub → 358 lignes)
+- `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` — détaillage (stub → 803 lignes)
+- `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — détaillage (stub → 917 lignes)
+- `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — nouveau
+- `GSIE/DATASETS/DATASET_CATALOG.md` — nouveau
 
 ### Connaissances initiales (livrable 308)
 
@@ -208,15 +249,15 @@ deux nouveaux livrables Phase 2.
 
 ### Documents créés
 
-- `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` (livrable 211)
-- `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212)
+- `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` (livrable 211)
+- `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212)
 - `03_DECISIONS/DEC-000010.md` (adoption UE 5.8 + Cesium)
-- `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` (fiches FIRETWIN, FIRE-VLM, IVSR)
+- `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` (fiches FIRETWIN, FIRE-VLM, IVSR)
 
 ### Documents mis à jour
 
-- `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` (208) : ajout référence 211
-- `04_ARCHITECTURE/TECHNOLOGY_STACK.md` (202) : ajout ADR-0007 (UE 5.8 +
+- `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` (208) : ajout référence 211
+- `GSIE/ARCHITECTURE/TECHNOLOGY_STACK.md` (202) : ajout ADR-0007 (UE 5.8 +
   Cesium), matrice de compatibilité étendue C++/UE
 - `PROJECT_MEMORY.md` : DEC-000010 ajouté, documents d'architecture étendus
 - `ROADMAP.md` : livrables 211 et 212 ajoutés
@@ -245,8 +286,8 @@ de complétude Phase 2. Scores : 201 (8→9), 202 (7), 203 (6), 204 (8.5→9),
 ### Corrections apportées (4 quick wins initiaux)
 
 - **Livrable 201 — Master Architecture** (524→717 lignes) : ajout des
-  références sources scientifiques (mapping domaine → `06_RESEARCH/` /
-  `08_DATASETS/`), liaison explicite des principes constitutionnels
+  références sources scientifiques (mapping domaine → `GSIE/RESEARCH/` /
+  `GSIE/DATASETS/`), liaison explicite des principes constitutionnels
   (CON-001 à CON-010), section modes dégradés (hors-ligne vs en ligne par
   moteur), esquisse des contrats d'interface (table inputs/outputs).
 - **Livrable 204 — Development Order** (365→416 lignes) : en-tête complété
@@ -443,7 +484,7 @@ constitutionnelle, roadmap, contributing.
 
 - Le Fondateur **amende** DEC-000003 et DEC-000004 pour autoriser
   l'archivage du code du banc de simulation (Jalon 0) dans
-  `22_PROJECT_MEMORY/Ignis/`.
+  `apps/Ignis/`.
 - Périmètre : `premier_vol.py`, `plot_front.py`, scripts `*.sh` du banc.
 - Statut : **artefacts d'archive**, pas du code métier des 14 moteurs.
 - Le banc opérationnel reste dans `~/Ignis/` (WSL2) ; le dépôt n'en
@@ -564,7 +605,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ### Registre d'idées opérationnelles
 
-- Création de `22_PROJECT_MEMORY/Ignis.md` : registre vivant des idées
+- Création de `apps/Ignis/REGISTRE.md` : registre vivant des idées
   Ignis structuré en 8 domaines (Perception, Jumeau numérique, Vol,
   Communications, GCS, Données, Stratégie) + feuille de route + backlog
   de questions ouvertes. Chaque idée est classée par maturité
@@ -573,7 +614,7 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 ### Mémoire synchronisée
 
 - `PROJECT_MEMORY.md` : RFC-0004 référence désormais le registre
-  `22_PROJECT_MEMORY/Ignis.md`.
+  `apps/Ignis/REGISTRE.md`.
 - `02_RFC/RFC-0004.md` : étape 3 des prochaines étapes actionnables
   marquée comme réalisée (registre d'idées ouvert).
 
@@ -658,11 +699,11 @@ enrichissement par le Fondateur :
 
 ### Registre d'idées Ignis
 
-- `22_PROJECT_MEMORY/Ignis.md` : registre vivant créé par le Fondateur
+- `apps/Ignis/REGISTRE.md` : registre vivant créé par le Fondateur
   (version 0.7.x, 60+ idées en 9 sections : perception, jumeau numérique, vol
   drone, communications, GCS, données, stratégie, modèles IA, veille
   concurrentielle).
-- `22_PROJECT_MEMORY/Ignis/` : sous-dossier de livrables du Jalon 0
+- `apps/Ignis/` : sous-dossier de livrables du Jalon 0
   (comparatif moteurs de simulation, contexte agent, guide d'installation banc).
 
 ### Pack contexte agent archivé
@@ -672,7 +713,7 @@ enrichissement par le Fondateur :
   (v0.7.2), `Ignis_Phase0_comparatif_moteurs_simulation.md`,
   `Ignis_guide_installation_banc.md`.
 - `AGENTS_contexte_session.md` et `guide_installation_banc.md` archivés dans
-  `22_PROJECT_MEMORY/Ignis/` avec note de gouvernance (le code du banc vit
+  `apps/Ignis/` avec note de gouvernance (le code du banc vit
   hors dépôt GSIE, dans `~/Ignis/` WSL2).
 - Le zip reste ignoré par git (`.gitignore : *.zip`).
 
@@ -749,7 +790,7 @@ validation du Fondateur :
 
 ### Livrables 011 et 012
 
-- Rédaction des fichiers vides de `17_DOCUMENTATION/` : `WRITING_GUIDELINES.md`,
+- Rédaction des fichiers vides de `GSIE/DOCUMENTATION/` : `WRITING_GUIDELINES.md`,
   `DOCUMENTATION_SYSTEM.md`, `CONTRIBUTING_GUIDE.md`, `ADR_TEMPLATE.md` (Draft).
 - `CONTEXT_SNAPSHOT_001.md` : en-tête de réservation ajouté (déclenchement prévu
   à la 10ᵉ Directive — non atteint, snapshot volontairement en attente).
@@ -844,10 +885,10 @@ validation du Fondateur :
 
 ### Fichiers créés
 
-- `17_DOCUMENTATION/CONTRIBUTING_GUIDE.md` (vide — livrable 011)
-- `17_DOCUMENTATION/DOCUMENTATION_SYSTEM.md` (vide — livrable 011)
-- `17_DOCUMENTATION/ADR_TEMPLATE.md` (vide — livrable 011)
-- `17_DOCUMENTATION/WRITING_GUIDELINES.md` (vide — livrable 011)
+- `GSIE/DOCUMENTATION/CONTRIBUTING_GUIDE.md` (vide — livrable 011)
+- `GSIE/DOCUMENTATION/DOCUMENTATION_SYSTEM.md` (vide — livrable 011)
+- `GSIE/DOCUMENTATION/ADR_TEMPLATE.md` (vide — livrable 011)
+- `GSIE/DOCUMENTATION/WRITING_GUIDELINES.md` (vide — livrable 011)
 - `22_PROJECT_MEMORY/CONTEXT_SNAPSHOT_001.md` (vide — livrable 012)
 
 ### Fichiers mis à jour
@@ -946,9 +987,9 @@ validation du Fondateur :
 
 ### Documents méthodologiques
 
-- Rangement de `ARCHITECTURE_PRINCIPLES.md` dans `04_ARCHITECTURE/`
-- Rangement de `RESEARCH_METHOD.md` dans `06_RESEARCH/`
-- Rangement de `KNOWLEDGE_METHOD.md` dans `07_KNOWLEDGE/`
+- Rangement de `ARCHITECTURE_PRINCIPLES.md` dans `GSIE/ARCHITECTURE/`
+- Rangement de `RESEARCH_METHOD.md` dans `GSIE/RESEARCH/`
+- Rangement de `KNOWLEDGE_METHOD.md` dans `GSIE/KNOWLEDGE/`
 
 ### Avancement des livrables
 
@@ -970,20 +1011,20 @@ validation du Fondateur :
 
 ### Documents d'architecture
 
-- Rangement de `GSIE_MASTER_ARCHITECTURE.md` dans `04_ARCHITECTURE/` —
+- Rangement de `GSIE_MASTER_ARCHITECTURE.md` dans `GSIE/ARCHITECTURE/` —
   architecture globale en couches
-- Rangement de `GSIE_CORE_BLUEPRINT.md` dans `04_ARCHITECTURE/` —
+- Rangement de `GSIE_CORE_BLUEPRINT.md` dans `GSIE/ARCHITECTURE/` —
   blueprint du cœur système (chaîne de moteurs)
-- Rangement de `GSIE_DATA_FLOW.md` dans `04_ARCHITECTURE/` — flux
+- Rangement de `GSIE_DATA_FLOW.md` dans `GSIE/ARCHITECTURE/` — flux
   officiel des données
 
 ### Moteurs documentés
 
-- Recréation de `09_ENGINES/KNOWLEDGE_ENGINE/` — README + définition
+- Recréation de `GSIE/ENGINES/KNOWLEDGE_ENGINE/` — README + définition
   (`KNOWLEDGE_ENGINE.md`)
-- Recréation de `09_ENGINES/CORRELATION_ENGINE/` — README + définition
+- Recréation de `GSIE/ENGINES/CORRELATION_ENGINE/` — README + définition
   (`CORRELATION_ENGINE.md`)
-- Création de `09_ENGINES/EVIDENCE_ENGINE/` — nouveau moteur, README +
+- Création de `GSIE/ENGINES/EVIDENCE_ENGINE/` — nouveau moteur, README +
   définition (`EVIDENCE_ENGINE.md`)
 
 ### Fichiers mis à jour
@@ -1020,14 +1061,14 @@ tous rédigés.
 
 ### Nouveaux moteurs documentés
 
-- Création de `09_ENGINES/FOREST_DYNAMICS_ENGINE/` — dynamique des
+- Création de `GSIE/ENGINES/FOREST_DYNAMICS_ENGINE/` — dynamique des
   peuplements (nouveau, DIR-0004)
-- Création de `09_ENGINES/LEARNING_ENGINE/` — apprentissage (nouveau,
+- Création de `GSIE/ENGINES/LEARNING_ENGINE/` — apprentissage (nouveau,
   DIR-0004, subordonné à CON-001 et CON-004)
-- Création de `09_ENGINES/SIMULATION_ENGINE/` — simulation de
+- Création de `GSIE/ENGINES/SIMULATION_ENGINE/` — simulation de
   scénarios (nouveau, DIR-0004)
 
-`09_ENGINES/` contient désormais **6 moteurs documentés** sur 14.
+`GSIE/ENGINES/` contient désormais **6 moteurs documentés** sur 14.
 
 ### Analyse d'architecture
 

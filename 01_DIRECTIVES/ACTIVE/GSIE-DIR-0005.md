@@ -282,6 +282,6 @@ Le rendu n'est qu'une fenêtre ouverte sur cette intelligence.
   d'analyse des incendies (ADOPTÉ — DEC-000003)
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004
 - `03_DECISIONS/DEC-000008.md` — Adoption de la présente Directive
-- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant
+- `apps/Ignis/REGISTRE.md` — Registre d'idées vivant
 
 FIN DE DIRECTIVE.

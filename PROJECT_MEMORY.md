@@ -5,7 +5,7 @@
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 3 — Connaissance |
-| **Directive courante** | GSIE-DIR-0009 (Restructuration écosystème) |
+| **Directive courante** | GSIE-DIR-0010 (Réorganisation arborescence) |
 | **Dernière mise à jour** | 2026-07-13 |
 
 ---
@@ -57,33 +57,33 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - `SCIENTIFIC_CONSTITUTION.md` — Constitution Scientifique (livrable 007, Validated)
 - `TECHNICAL_CONSTITUTION.md` — Constitution Technique (livrable 008, Validated)
 - `AI_CONSTITUTION.md` — Constitution IA (livrable 009, Validated)
-- `04_ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
-- `06_RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method (livrable 301, détaillé Phase 3)
-- `06_RESEARCH/EVIDENCE_FRAMEWORK.md` — Evidence Framework (livrable 306, Phase 3)
-- `06_RESEARCH/SOURCING_PLAN.md` — Sourcing Plan (livrable 307, Phase 3)
-- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method (livrable 302, détaillé Phase 3)
-- `07_KNOWLEDGE/FOREST_ONTOLOGY.md` — Forest Ontology (livrable 303, Phase 3)
-- `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
-- `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
-- `08_DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 24 datasets)
-- `04_ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — Schéma DB Encyclopédie (livrable 309, PostgreSQL + Neo4j + ES + Jena)
-- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` — Socle données 14 moteurs + liens apps (livrable 310)
+- `GSIE/ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
+- `GSIE/RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method (livrable 301, détaillé Phase 3)
+- `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` — Evidence Framework (livrable 306, Phase 3)
+- `GSIE/RESEARCH/SOURCING_PLAN.md` — Sourcing Plan (livrable 307, Phase 3)
+- `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method (livrable 302, détaillé Phase 3)
+- `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` — Forest Ontology (livrable 303, Phase 3)
+- `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
+- `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
+- `GSIE/DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 24 datasets)
+- `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — Schéma DB Encyclopédie (livrable 309, PostgreSQL + Neo4j + ES + Jena)
+- `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` — Socle données 14 moteurs + liens apps (livrable 310)
 
 ### Documents d'architecture rédigés
 
-- `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
-- `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
-- `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
-- `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — GCS-Cinéma UE 5.8 (livrable 211, DEC-000010)
-- `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, en attente MVP Ignis)
-- `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR
+- `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
+- `GSIE/ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
+- `GSIE/ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
+- `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — GCS-Cinéma UE 5.8 (livrable 211, DEC-000010)
+- `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, en attente MVP Ignis)
+- `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR
 
 ### Branche Ignis (RFC-0004)
 
-- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant (60+ idées, 9
+- `apps/Ignis/REGISTRE.md` — Registre d'idées vivant (60+ idées, 9
   sections : perception, jumeau numérique, vol drone, communications, GCS,
   données, stratégie, modèles IA, veille concurrentielle). Version 0.7.x.
-- `22_PROJECT_MEMORY/Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
+- `apps/Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
 - **Banc de simulation Ignis** (WSL2, hors dépôt) :
   - ForeFire compilé + démo propagation.png ✓
   - PX4 SITL v1.18.0-beta1 + Gazebo Harmonic 8.14.0 opérationnels ✓
@@ -99,20 +99,20 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 > 3 moteurs ont un fichier dédié (EVIDENCE, KNOWLEDGE, CORRELATION) ; 11 n'ont
 > qu'un README de cadrage. Documentation complète = Phase 2. Détail : `ROADMAP.md`.
 
-- `09_ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
-- `09_ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
-- `09_ENGINES/CORRELATION_ENGINE/` — Correlation Engine
-- `09_ENGINES/REASONING_ENGINE/` — Reasoning Engine
-- `09_ENGINES/DIAGNOSTIC_ENGINE/` — Diagnostic Engine
-- `09_ENGINES/RECOMMENDATION_ENGINE/` — Recommendation Engine
-- `09_ENGINES/VALIDATION_ENGINE/` — Validation Engine
-- `09_ENGINES/GIS_ENGINE/` — GIS Engine
-- `09_ENGINES/CLIMATE_ENGINE/` — Climate Engine
-- `09_ENGINES/PEDOLOGY_ENGINE/` — Pedology Engine
-- `09_ENGINES/BOTANICAL_ENGINE/` — Botanical Engine
-- `09_ENGINES/FOREST_DYNAMICS_ENGINE/` — Forest Dynamics Engine
-- `09_ENGINES/LEARNING_ENGINE/` — Learning Engine
-- `09_ENGINES/SIMULATION_ENGINE/` — Simulation Engine
+- `GSIE/ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
+- `GSIE/ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
+- `GSIE/ENGINES/CORRELATION_ENGINE/` — Correlation Engine
+- `GSIE/ENGINES/REASONING_ENGINE/` — Reasoning Engine
+- `GSIE/ENGINES/DIAGNOSTIC_ENGINE/` — Diagnostic Engine
+- `GSIE/ENGINES/RECOMMENDATION_ENGINE/` — Recommendation Engine
+- `GSIE/ENGINES/VALIDATION_ENGINE/` — Validation Engine
+- `GSIE/ENGINES/GIS_ENGINE/` — GIS Engine
+- `GSIE/ENGINES/CLIMATE_ENGINE/` — Climate Engine
+- `GSIE/ENGINES/PEDOLOGY_ENGINE/` — Pedology Engine
+- `GSIE/ENGINES/BOTANICAL_ENGINE/` — Botanical Engine
+- `GSIE/ENGINES/FOREST_DYNAMICS_ENGINE/` — Forest Dynamics Engine
+- `GSIE/ENGINES/LEARNING_ENGINE/` — Learning Engine
+- `GSIE/ENGINES/SIMULATION_ENGINE/` — Simulation Engine
 
 ## RFC ouverts
 
@@ -122,8 +122,8 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **RFC-0004** — Ignis : Système autonome de surveillance et d'analyse
   des incendies (**ADOPTÉ** — 2026-07-12, DEC-000003) : nouvelle branche
   fonctionnelle dédiée au risque incendie, positionnée comme application
-  cliente de GSIE. Registre d'idées dans `22_PROJECT_MEMORY/Ignis.md` ;
-  livrables Jalon 0 dans `22_PROJECT_MEMORY/Ignis/`. Aucun développement
+  cliente de GSIE. Registre d'idées dans `apps/Ignis/REGISTRE.md` ;
+  livrables Jalon 0 dans `apps/Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
 
 ---
@@ -150,6 +150,7 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **DEC-000011** — Entrée en Phase 3 : Connaissance (GSIE-DIR-0007)
 - **DEC-000012** — L'Encyclopédie de l'Écosystème : la plus grande base de connaissances écologiques du marché (GSIE-DIR-0008)
 - **DEC-000013** — Restructuration écosystème : Myhunt→Artemis, GSIE-Ignis→Ignis, +Hydro, +Flora, Centre de Commandement GSIE (GSIE-DIR-0009)
+- **DEC-000014** — Réorganisation arborescence : GSIE/ + apps/ (GSIE-DIR-0010)
 
 ## Documents structurants
 
@@ -161,6 +162,7 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
 - **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
 - **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
+- **GSIE-DIR-0010** — Réorganisation arborescence : GSIE/ + apps/ (ACTIVE — DEC-000014)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)

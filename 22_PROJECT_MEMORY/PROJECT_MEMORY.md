@@ -94,35 +94,35 @@ l'ordre strict. Aucun développement ne commencera avant leur validation.
 - `SCIENTIFIC_CONSTITUTION.md` — Constitution Scientifique (livrable 007, Draft)
 - `TECHNICAL_CONSTITUTION.md` — Constitution Technique (livrable 008, Draft)
 - `AI_CONSTITUTION.md` — Constitution IA (livrable 009, Draft)
-- `04_ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
-- `06_RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method
-- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method
+- `GSIE/ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
+- `GSIE/RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method
+- `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method
 
 ## Documents d'architecture rédigés
 
-- `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
-- `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint (Evidence Engine repositionné en amont)
-- `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données (Evidence Engine repositionné en amont)
+- `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
+- `GSIE/ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint (Evidence Engine repositionné en amont)
+- `GSIE/ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données (Evidence Engine repositionné en amont)
 
 ## Moteurs amorcés (14/14 — profondeur à qualifier)
 
 > 3 moteurs ont un fichier dédié (EVIDENCE, KNOWLEDGE, CORRELATION) ; 11 n'ont
 > qu'un README de cadrage. Documentation complète = Phase 2 (cf. `ROADMAP.md`).
 
-- `09_ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
-- `09_ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
-- `09_ENGINES/CORRELATION_ENGINE/` — Correlation Engine
-- `09_ENGINES/REASONING_ENGINE/` — Reasoning Engine
-- `09_ENGINES/DIAGNOSTIC_ENGINE/` — Diagnostic Engine
-- `09_ENGINES/RECOMMENDATION_ENGINE/` — Recommendation Engine
-- `09_ENGINES/VALIDATION_ENGINE/` — Validation Engine
-- `09_ENGINES/GIS_ENGINE/` — GIS Engine
-- `09_ENGINES/CLIMATE_ENGINE/` — Climate Engine
-- `09_ENGINES/PEDOLOGY_ENGINE/` — Pedology Engine
-- `09_ENGINES/BOTANICAL_ENGINE/` — Botanical Engine
-- `09_ENGINES/FOREST_DYNAMICS_ENGINE/` — Forest Dynamics Engine
-- `09_ENGINES/LEARNING_ENGINE/` — Learning Engine
-- `09_ENGINES/SIMULATION_ENGINE/` — Simulation Engine
+- `GSIE/ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
+- `GSIE/ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
+- `GSIE/ENGINES/CORRELATION_ENGINE/` — Correlation Engine
+- `GSIE/ENGINES/REASONING_ENGINE/` — Reasoning Engine
+- `GSIE/ENGINES/DIAGNOSTIC_ENGINE/` — Diagnostic Engine
+- `GSIE/ENGINES/RECOMMENDATION_ENGINE/` — Recommendation Engine
+- `GSIE/ENGINES/VALIDATION_ENGINE/` — Validation Engine
+- `GSIE/ENGINES/GIS_ENGINE/` — GIS Engine
+- `GSIE/ENGINES/CLIMATE_ENGINE/` — Climate Engine
+- `GSIE/ENGINES/PEDOLOGY_ENGINE/` — Pedology Engine
+- `GSIE/ENGINES/BOTANICAL_ENGINE/` — Botanical Engine
+- `GSIE/ENGINES/FOREST_DYNAMICS_ENGINE/` — Forest Dynamics Engine
+- `GSIE/ENGINES/LEARNING_ENGINE/` — Learning Engine
+- `GSIE/ENGINES/SIMULATION_ENGINE/` — Simulation Engine
 
 ## Vision courante
 

@@ -48,14 +48,14 @@ Cette phase est composée de **8 livrables obligatoires** (301-308).
 
 | # | Livrable | Fichier | Description |
 |---|---|---|---|
-| 301 | Research Method (détaillée) | `06_RESEARCH/RESEARCH_METHOD.md` | Pipeline complet : critères par étape, évaluation sources, assignation niveau de preuve, résolution conflits, surveillance scientifique |
-| 302 | Knowledge Method (détaillée) | `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` | Cycle de vie KnowledgeObject, versioning, domaines de validité, types de relations, mapping moteurs consommateurs |
-| 303 | Forest Ontology | `07_KNOWLEDGE/FOREST_ONTOLOGY.md` | Ontologie complète : concepts par domaine (S-6), définitions, propriétés, relations |
-| 304 | Knowledge Graph Spec | `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Types de nœuds, types d'arêtes, propriétés, patterns de requête, versioning, support graphe vivant (DIR-0006) |
-| 305 | Dataset Catalog | `08_DATASETS/DATASET_CATALOG.md` | Catalogue datasets : IGN, Météo-France, INRAE, ONF, GBIF, Copernicus — métadonnées complètes |
-| 306 | Evidence Framework | `06_RESEARCH/EVIDENCE_FRAMEWORK.md` | Critères détaillés assignation niveaux A-F, exemples par domaine, cas limites, règles upgrade/downgrade |
-| 307 | Sourcing Plan | `06_RESEARCH/SOURCING_PLAN.md` | Plan priorisé d'ingestion : quels domaines/sources en premier, aligné sur ordre développement moteurs |
-| 308 | Knowledge Base Seed | `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Premières connaissances concrètes : autécologie essences, seuils pédologiques, modèles croissance |
+| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Pipeline complet : critères par étape, évaluation sources, assignation niveau de preuve, résolution conflits, surveillance scientifique |
+| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Cycle de vie KnowledgeObject, versioning, domaines de validité, types de relations, mapping moteurs consommateurs |
+| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Ontologie complète : concepts par domaine (S-6), définitions, propriétés, relations |
+| 304 | Knowledge Graph Spec | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Types de nœuds, types d'arêtes, propriétés, patterns de requête, versioning, support graphe vivant (DIR-0006) |
+| 305 | Dataset Catalog | `GSIE/DATASETS/DATASET_CATALOG.md` | Catalogue datasets : IGN, Météo-France, INRAE, ONF, GBIF, Copernicus — métadonnées complètes |
+| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Critères détaillés assignation niveaux A-F, exemples par domaine, cas limites, règles upgrade/downgrade |
+| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Plan priorisé d'ingestion : quels domaines/sources en premier, aligné sur ordre développement moteurs |
+| 308 | Knowledge Base Seed | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Premières connaissances concrètes : autécologie essences, seuils pédologiques, modèles croissance |
 
 ## Ordre de production
 

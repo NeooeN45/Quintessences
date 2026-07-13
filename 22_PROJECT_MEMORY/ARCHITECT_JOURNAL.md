@@ -41,7 +41,7 @@ Définition de **12 livrables obligatoires** produits dans l'ordre. La
 documentation devient le produit principal de la phase.
 
 Création des fichiers vides pour les livrables 011 (4 fichiers dans
-`17_DOCUMENTATION/`) et 012 (`CONTEXT_SNAPSHOT_001.md`).
+`GSIE/DOCUMENTATION/`) et 012 (`CONTEXT_SNAPSHOT_001.md`).
 
 Mise à jour de `ROADMAP.md` avec la Foundation Roadmap complète.
 Mise à jour de la mémoire du projet avec l'avancement des livrables.
@@ -113,9 +113,9 @@ Le fondateur a fourni un second lot de documents officiels :
 - `GSIE-DESIGN-PHILOSOPHY.md` — Design Philosophy (livrable 006, a remplacé le `DESIGN_PHILOSOPHY.md` vide)
 
 **Documents méthodologiques** :
-- `04_ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
-- `06_RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method
-- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method
+- `GSIE/ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
+- `GSIE/RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method
+- `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method
 
 Avancement : 9 articles constitutionnels rédigés (000, 003 à 010).
 Livrables 005 et 006 rédigés en attente de validation.
@@ -130,12 +130,12 @@ Prochaine action : rédiger les livrables 007 à 009.
 
 Le fondateur a fourni 6 fichiers supplémentaires rangés comme suit :
 
-**Documents d'architecture** (`04_ARCHITECTURE/`) :
+**Documents d'architecture** (`GSIE/ARCHITECTURE/`) :
 - `GSIE_MASTER_ARCHITECTURE.md` — architecture globale en couches
 - `GSIE_CORE_BLUEPRINT.md` — blueprint du cœur système (chaîne de moteurs)
 - `GSIE_DATA_FLOW.md` — flux officiel des données (sources → utilisateur)
 
-**Moteurs documentés** (`09_ENGINES/`) :
+**Moteurs documentés** (`GSIE/ENGINES/`) :
 - `KNOWLEDGE_ENGINE/` — centralisation des connaissances (recréé, README + définition)
 - `CORRELATION_ENGINE/` — corrélations multiparamètres (recréé, README + définition)
 - `EVIDENCE_ENGINE/` — évaluation de la preuve scientifique (nouveau moteur, README + définition)
@@ -178,13 +178,13 @@ appliquée.
 La Constitution compte désormais **11 articles** (CON-000 à CON-010),
 tous rédigés. Il ne manque plus aucun article de la Genesis Directive.
 
-**3 nouveaux moteurs créés** dans `09_ENGINES/` (conformément à la
+**3 nouveaux moteurs créés** dans `GSIE/ENGINES/` (conformément à la
 liste officielle des 14 moteurs de DIR-0004) :
 - `FOREST_DYNAMICS_ENGINE/` — dynamique des peuplements
 - `LEARNING_ENGINE/` — apprentissage (subordonné à CON-001 et CON-004)
 - `SIMULATION_ENGINE/` — simulation de scénarios
 
-`09_ENGINES/` contient désormais **6 moteurs documentés** sur 14. Les
+`GSIE/ENGINES/` contient désormais **6 moteurs documentés** sur 14. Les
 8 moteurs restants (Reasoning, Diagnostic, Recommendation, Validation,
 GIS, Climate, Pedology, Botanical) sont référencés dans
 `ARCHITECTURE_PRINCIPLES.md` mais n'ont pas encore de dossier.
@@ -250,7 +250,7 @@ Core Blueprint, README Evidence Engine).
 Création des 8 moteurs restants : Reasoning, Diagnostic,
 Recommendation, Validation, GIS, Climate, Pedology, Botanical. Chacun
 a un README définissant son périmètre, son principe fondamental, ses
-frontières et sa position dans la chaîne. `09_ENGINES/` contient
+frontières et sa position dans la chaîne. `GSIE/ENGINES/` contient
 désormais les 14 moteurs officiels de DIR-0004.
 
 **README racine mis à jour** : ajout des sections « Moteurs GSIE »

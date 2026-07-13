@@ -1,6 +1,6 @@
 > **Brouillon supersédé** — Ce document est une version antérieure
 > conservée pour la traçabilité. La version officielle et complète vit
-> dans `09_ENGINES/RECOMMENDATION_ENGINE/README.md`.
+> dans `GSIE/ENGINES/RECOMMENDATION_ENGINE/README.md`.
 
 # Recommendation Engine (brouillon)
 

@@ -49,7 +49,7 @@ double système d'articles crée une ambiguïté qu'il faut lever. Aucun documen
 `Locked` n'a été modifié.
 **Impact** : `RFC-0003` à `RFC-0010` remplacés par des en-têtes « Réservé — non
 ouvert » (traçabilité conservée). Livrables 011 et 012 amorcés (fichiers de
-`17_DOCUMENTATION/` rédigés en Draft ; `CONTEXT_SNAPSHOT_001.md` réservé).
+`GSIE/DOCUMENTATION/` rédigés en Draft ; `CONTEXT_SNAPSHOT_001.md` réservé).
 ROADMAP mis à jour (livrable 010 repointé vers `GSIE-CON-0xx`, moteurs
 requalifiés honnêtement).
 
@@ -74,7 +74,7 @@ tracé) ; `ROADMAP.md` mis à jour (statuts livrables + RFC-0003 + prochaine
 **Décisions** : ouverture de **RFC-0004** « Ignis : Système autonome de
 surveillance et d'analyse des incendies » — nouvelle branche fonctionnelle
 dédiée au risque incendie, positionnée comme application cliente des 14 moteurs
-GSIE. Création de `22_PROJECT_MEMORY/Ignis.md` : registre vivant des idées
+GSIE. Création de `apps/Ignis/REGISTRE.md` : registre vivant des idées
 Ignis (60+ idées en 9 sections).
 **Motivations** : le risque incendie est un domaine d'application à fort impact
 pour GSIE. La proposition adopte une approche hybride — Ignis comme
@@ -104,7 +104,7 @@ l'engagement de GSIE sur le risque incendie.
 désormais Validated, reste 011 et 012). Corrections de gouvernance Ignis
 appliquées (statut ✅ redéfini, phases renommées « Jalon 0-6 » pour éviter la
 collision avec les phases GSIE globales). Sous-dossier
-`22_PROJECT_MEMORY/Ignis/` créé pour les livrables du Jalon 0. Pack contexte
+`apps/Ignis/` créé pour les livrables du Jalon 0. Pack contexte
 agent archivé (le code du banc vit hors dépôt, dans `~/Ignis/` WSL2).
 
 ---

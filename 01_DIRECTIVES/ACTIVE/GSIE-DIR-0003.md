@@ -41,7 +41,7 @@ projet** durant cette phase.
 | 008 | Constitution technique | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` | Draft |
 | 009 | Constitution de l'IA | `00_CONSTITUTION/AI_CONSTITUTION.md` | Draft |
 | 010 | Articles constitutionnels 001-100 | `00_CONSTITUTION/ARTICLE_001.md` à `ARTICLE_100.md` | Draft |
-| 011 | Système de documentation et guides contributeurs | `17_DOCUMENTATION/` | Draft |
+| 011 | Système de documentation et guides contributeurs | `GSIE/DOCUMENTATION/` | Draft |
 | 012 | Mémoire du projet complète et snapshots | `22_PROJECT_MEMORY/` | Draft |
 
 ### Règles de statut
@@ -100,14 +100,14 @@ fondations.
 - `22_PROJECT_MEMORY/PROJECT_MEMORY.md` — mise à jour de l'état
 - `22_PROJECT_MEMORY/DECISION_HISTORY.md` — nouvelle décision
 - `CHANGELOG.md` — version 0.0.3
-- `17_DOCUMENTATION/` — création des fichiers du livrable 011
+- `GSIE/DOCUMENTATION/` — création des fichiers du livrable 011
 
 ## Fichiers à créer
 
-- `17_DOCUMENTATION/CONTRIBUTING_GUIDE.md` (vide)
-- `17_DOCUMENTATION/DOCUMENTATION_SYSTEM.md` (vide)
-- `17_DOCUMENTATION/ADR_TEMPLATE.md` (vide)
-- `17_DOCUMENTATION/WRITING_GUIDELINES.md` (vide)
+- `GSIE/DOCUMENTATION/CONTRIBUTING_GUIDE.md` (vide)
+- `GSIE/DOCUMENTATION/DOCUMENTATION_SYSTEM.md` (vide)
+- `GSIE/DOCUMENTATION/ADR_TEMPLATE.md` (vide)
+- `GSIE/DOCUMENTATION/WRITING_GUIDELINES.md` (vide)
 - `22_PROJECT_MEMORY/CONTEXT_SNAPSHOT_001.md` (vide — sera rempli à la
   10e Directive)
 

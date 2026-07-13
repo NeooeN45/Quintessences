@@ -1,6 +1,6 @@
 > **Brouillon supersédé** — Ce document est une version antérieure
 > conservée pour la traçabilité. La version officielle et complète vit
-> dans `09_ENGINES/REASONING_ENGINE/README.md`.
+> dans `GSIE/ENGINES/REASONING_ENGINE/README.md`.
 
 # Reasoning Engine (brouillon)
 

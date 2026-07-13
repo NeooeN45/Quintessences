@@ -389,6 +389,6 @@ territoires.
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004
 - `03_DECISIONS/DEC-000006.md` — Identité Quintessences / GSIE / GeoSylva
 - `03_DECISIONS/DEC-000009.md` — Adoption de la présente Directive
-- `22_PROJECT_MEMORY/Ignis.md` — Registre d'idées vivant
+- `apps/Ignis/REGISTRE.md` — Registre d'idées vivant
 
 FIN DE DIRECTIVE.

@@ -34,9 +34,9 @@
 | CON-010 | Article 010 — Toute connaissance doit pouvoir évoluer sans perdre son historique (GSIE-CON-010.md) | Fondateur | DRAFT |
 | PACT | Pacte des Agents IA (PACT_FOR_AI_AGENTS.md) — livrable 005 | Fondateur | DRAFT |
 | DESIGN | Design Philosophy (GSIE-DESIGN-PHILOSOPHY.md) — livrable 006 | Fondateur | DRAFT |
-| ARCH-PRINC | Architecture Principles (04_ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md) | Fondateur | DRAFT |
-| RESEARCH-METHOD | Research Method (06_RESEARCH/RESEARCH_METHOD.md) | Fondateur | DRAFT |
-| KNOWLEDGE-METHOD | Knowledge Method (07_KNOWLEDGE/KNOWLEDGE_METHOD.md) | Fondateur | DRAFT |
+| ARCH-PRINC | Architecture Principles (GSIE/ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md) | Fondateur | DRAFT |
+| RESEARCH-METHOD | Research Method (GSIE/RESEARCH/RESEARCH_METHOD.md) | Fondateur | DRAFT |
+| KNOWLEDGE-METHOD | Knowledge Method (GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md) | Fondateur | DRAFT |
 
 ## 2026-07-02
 
@@ -52,7 +52,7 @@
 | TECH-CON | Constitution Technique (TECHNICAL_CONSTITUTION.md) — livrable 008 | Fondateur | DRAFT |
 | AI-CON | Constitution IA (AI_CONSTITUTION.md) — livrable 009 | Fondateur | DRAFT |
 | ARCH-D1 | Evidence Engine repositionné en amont de Knowledge Engine (filtre amont) — résolution de la contradiction | Fondateur | ACTIVE |
-| ARCH-D2 | 14/14 moteurs officiels documentés dans 09_ENGINES/ | Fondateur | ACTIVE |
+| ARCH-D2 | 14/14 moteurs officiels documentés dans GSIE/ENGINES/ | Fondateur | ACTIVE |
 
 ---
 
