@@ -18,18 +18,22 @@ clôture officiellement la Phase 3 — Connaissance.
 - `ROADMAP.md` : Phase 3 → Clôturée ✅, Phase 4 → Active 🚀
 - `PROJECT_MEMORY.md` : Phase courante → 4 — Implémentation
 
-### Fiche recherche LiDAR HD IGN
+### Fiche recherche LiDAR HD IGN — analyse complète des 4 PDFs officiels
 
-Source : `DC_LiDAR_HD_1-0.pdf` (IGN, descriptif de contenu officiel).
+Sources : `DC_LiDAR_HD_1-0.pdf` (46p, descriptif de contenu v1.0 juillet 2026),
+`SE_LiDAR_HD.pdf` (suivi des évolutions), `Offre_Produit_LiDAR_2025-08.pdf`
+(accès aux produits), `Traitements_Produits_LiDAR_2025-08.pdf` (traitements).
 
-- `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` créée (236 lignes) :
-  - 11 classes de classification (8 ASPRS + 3 IGN) détaillées
-  - Correspondance strates Ignis ↔ classes LiDAR (3↔4→strate 1, 5→2/3)
-  - Pipeline IGN officiel : PDAL → GDAL → PostGIS (ST_Tile, ST_SummaryStats, ST_DumpAsPolygon)
-  - Bibliothèque `IGN_LIDAR_HD_DATASET` v4.1.2 (GPU/CUDA, 35-45 features, LOD2/LOD3)
-  - Implications Unreal/Cesium : MNT 50cm → Cesium 3D Terrain, MNH → PCG végétation par strate
-  - 8 recommandations Phase 4 priorisées
-- `DATASET_CATALOG.md` DS-002 enrichi : 11 classes, pipeline, bibliothèque, correspondance strates
+- `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` enrichie (236 → 461 lignes) :
+  - 11 classes avec codes ASPRS précis (1,2,3,4,5,6,9,17,64,66,67) et définitions IGN complètes
+  - 13 attributs standards + 3 Extra Bytes (DTM_Marker, DSM_Marker, Origin)
+  - Qualité géométrique : REMQ plani 11,7cm (exigence 50cm), REMQ alti 5,5cm (exigence 10cm)
+  - Accès : COPC.LAZ, EPT/VPC (streaming), WMS-Raster (MNT/MNS/MNH + ombrages), API altimétrique
+  - Traitements : calendrier diffusion (juin 2026), améliorations version finale
+  - Points d'attention : déficit points sur eau, vég < 20cm = sol, vergers inclus, divers bâtis incertain
+  - Classe 64 (sursol pérenne) = lignes électriques → détection risque incendie (Ignis)
+  - 15 recommandations Phase 4 priorisées (P0/P1/P2)
+- `DATASET_CATALOG.md` DS-002 enrichi : codes précis, attributs, accès, qualité
 
 ---
 
