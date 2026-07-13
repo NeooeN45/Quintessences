@@ -94,7 +94,7 @@ services:
       resources:
         limits:
           cpus: "2.0"
-          memory: 512M
+          memory: 768M
 
 volumes:
   gsie_pgdata:

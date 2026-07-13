@@ -6,7 +6,9 @@ Architecture (DEC-000019) :
 - TraceId middleware : traçabilité + headers de sécurité + limite taille
 - Health/Ready séparés : liveness (instantané) vs readiness (DB+Redis + cache)
 - Rate limiting (OWASP A07 — slowapi)
+- Gzip compression (performance)
 - Documentation désactivée en production (OWASP A05)
+- 404 handler custom avec trace_id (ne divulgue pas l'arborescence)
 """
 
 from contextlib import asynccontextmanager
@@ -14,6 +16,7 @@ from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -32,7 +35,6 @@ _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
 # Rate limiter — par IP, configurable (OWASP A07)
-# default_limits s'applique à toutes les routes sans décorateur explicite
 limiter = Limiter(
     key_func=get_remote_address,
     enabled=_settings.rate_limit_enabled,
@@ -86,8 +88,12 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
 
-    # Middlewares (ordre important : trace_id en premier)
+    # Middlewares (ordre important : outermost en premier)
+    # Gzip : compresse les réponses > 500 bytes (performance)
+    app.add_middleware(GZipMiddleware, minimum_size=500)
+    # TraceId : traçabilité + headers de sécurité + limite taille
     app.add_middleware(TraceIdMiddleware)
+    # CORS : origines restrictives
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_settings.cors_origins,
@@ -101,6 +107,14 @@ def create_app() -> FastAPI:
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(gis_router, prefix=_settings.api_v1_prefix)
+
+    # 404 handler custom — ne divulgue pas l'arborescence (OWASP A05)
+    @app.exception_handler(404)
+    async def not_found_handler(request: Request, exc) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Resource not found", "error_code": "NOT_FOUND"},
+        )
 
     return app
 
