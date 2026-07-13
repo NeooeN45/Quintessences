@@ -142,6 +142,51 @@ annuel de 40 % sur 3 ans. La trajectoire projetée intègre cette
 réduction avec son incertitude. Le Diagnostic Engine utilise cette
 information pour évaluer le risque de dépérissement.
 
+## 8. État de l'art et pistes de recherche sourcées
+
+Cette section recense, à titre de pistes pour la Phase 4
+(implémentation future), des plateformes, modèles et méthodes
+représentatifs de l'état de l'art en simulation de dynamique
+forestière. Elle ne prescrit aucun choix d'implémentation ni de
+détail technique : elle vise à documenter, de façon sourcée et
+vérifiable, l'éventail des approches disponibles pour couvrir la
+responsabilité du moteur — modélisation de la croissance, de la
+régénération et des perturbations, avec incertitude explicite.
+
+Quatre axes structurent cet état de l'art : (1) les plateformes de
+simulation de croissance forestière existantes, qui illustrent des
+architectures modulaires transposables ; (2) l'opposition entre
+modèles à l'arbre individuel et modèles de peuplement, qui informe le
+niveau de granularité de `PeuplementState`/`TrajectoireCroissance` ;
+(3) les modèles de succession et de perturbation (tempête, sécheresse,
+ravageurs), directement liés au type `Perturbation` du contrat
+d'interface ; (4) les méthodes de quantification de l'incertitude, qui
+répondent à la garantie « les projections incluent leur incertitude ».
+
+| Outil / Méthode | Rôle potentiel pour ce moteur | Justification |
+|---|---|---|
+| **CAPSIS** — plateforme ouverte de modélisation de la croissance forestière (INRAE et communauté scientifique associée) | Architecture de référence pour un moteur modulaire capable d'héberger plusieurs familles de modèles au sein d'un même cadre logiciel | CAPSIS a été conçu précisément pour permettre l'implémentation hétérogène de modèles de croissance, compétition, mortalité et régénération et la comparaison de scénarios sylvicoles — une organisation directement transposable à la séparation « modèles de production / régénération / perturbations » que ce moteur doit intégrer (Dufour-Kowalski et al., 2012). CAPSIS est également cité dans la section équivalente du `SIMULATION_ENGINE`, dont ce moteur est la dépendance principale (§4) : les deux moteurs devraient partager la même bibliothèque de modèles plutôt que de dupliquer l'intégration. |
+| **iLand** — modèle paysager individu-centré de dynamique et de perturbation forestière (Université technique de Munich et collaborateurs) | Précédent pour le couplage explicite entre croissance à l'arbre individuel, régénération et perturbations discontinues sous scénario climatique | iLand intègre nativement les processus continus (croissance, mortalité, régénération) et discontinus (perturbations) dans un même cadre hiérarchique multi-échelle — une correspondance directe avec le champ `perturbations` de `DynamicsRequest` (Rammer et al., 2024) |
+| **SILVA** — simulateur de peuplement à l'arbre individuel, dépendant de la position spatiale (TU Munich, H. Pretzsch et al.) | Piste pour approfondir la modélisation de la croissance à l'arbre individuel en peuplements mélangés et irréguliers | SILVA évalue la structure tridimensionnelle du peuplement pour déterminer la compétition inter-arbres — pertinent pour les structures `melange` et `irreguliere` déjà prévues dans `PeuplementState.structure` (Pretzsch, Biber & Ďurský, 2002) |
+| **ForCEEPS / ForClim** — modèle de succession forestière de type « gap model », multi-essences, sous contrainte climatique | Piste pour le volet régénération/succession à long terme, en particulier la coexistence d'essences et la réponse au changement climatique | Ce type de modèle simule explicitement l'établissement, la croissance et la survie des essences sous contraintes abiotiques et biotiques (Morin et al., 2021) |
+| **Couplage sécheresse × scolytes dans un modèle de perturbation forestier** (étude appliquée au modèle iLand sur un paysage d'Europe centrale) | Précédent scientifique pour le sous-module de perturbations biotiques (`type: ravageur`) | Cette étude formalise la sécheresse comme facteur déclencheur de pullulations de scolytes — un exemple directement transposable au type `Perturbation { type: ravageur }` du contrat d'interface (Das et al., 2025) |
+| **Cadre bayésien de quantification d'incertitude pour les projections de croissance et de production** (démonstration sur douglas en plantation, Pacifique Nord-Ouest des États-Unis) | Piste méthodologique pour construire l'`IntervalleConfiance` associé à chaque `PointTrajectoire` | Le cadre bayésien génère une distribution prédictive des états futurs du peuplement à partir de l'incertitude sur les paramètres (Wilson, Monleon & Weiskittel, 2019) |
+
+Ces pistes restent, à ce stade, des orientations de recherche pour la
+Phase 4 : aucune n'est retenue comme choix d'implémentation, aucun
+algorithme n'est prescrit, et le moteur devra dans tous les cas
+documenter précisément le domaine de validité et le niveau de preuve
+(`evidence_level`) de tout modèle finalement intégré.
+
+### Sources
+
+- Dufour-Kowalski, S., Courbaud, B., Dreyfus, P., Meredieu, C., de Coligny, F. (2012). *Capsis: an open software framework and community for forest growth modelling.* Annals of Forest Science, 69(2), 221–233. https://doi.org/10.1007/s13595-011-0140-9
+- Rammer, W. et al. (2024). *The individual-based forest landscape and disturbance model iLand: Overview, progress, and outlook.* Ecological Modelling, 495, 110785. https://doi.org/10.1016/j.ecolmodel.2024.110785 — https://iland-model.org/
+- Pretzsch, H., Biber, P., Ďurský, J. (2002). *The single tree-based stand simulator SILVA.* Forest Ecology and Management, 162(1), 3–21. https://doi.org/10.1016/S0378-1127(02)00047-6
+- Morin, X. et al. (2021). *Beyond forest succession: a gap model to study ecosystem functioning and tree community composition under climate change.* Functional Ecology. https://doi.org/10.1111/1365-2435.13760
+- Das, A. K., Baldo, M., Dobor, L. et al. (2025). *The increasing role of drought as an inciting factor of bark beetle outbreaks can cause large-scale transformation of Central European forests.* Landscape Ecology, 40. https://doi.org/10.1007/s10980-025-02125-w
+- Wilson, D., Monleon, V., Weiskittel, A. (2019). *Quantification and Incorporation of Uncertainty in Forest Growth and Yield Projections Using A Bayesian Probabilistic Framework.* Mathematical and Computational Forestry & Natural-Resource Sciences, 11(2), 264–285. https://mcfns.com/index.php/Journal/article/view/11.3
+
 ---
 
 > Statut : *Draft — Phase 2 (Architecture). Documentation uniquement,

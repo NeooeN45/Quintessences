@@ -115,6 +115,44 @@ Simulation Engine, couplé à ForeFire, projette la propagation du feu à
 scénarios et positionne ses moyens. La simulation ne déclenche rien
 d'elle-même.
 
+## 8. État de l'art et pistes de recherche sourcées
+
+Cette section recense, à titre de pistes pour une implémentation future
+(Phase 4), des technologies, méthodes et précédents scientifiques
+pertinents pour la responsabilité du Simulation Engine telle que définie
+en §1. Aucun choix d'implémentation n'est arrêté ici : il s'agit de
+repères sourcés destinés à alimenter une future spécification technique
+et, le cas échéant, un RFC.
+
+| Outil / Méthode | Rôle potentiel pour ce moteur | Justification |
+|---|---|---|
+| **CAPSIS** (plateforme collaborative INRAE/AMAP/CIRAD) | Bibliothèque de modules de croissance forestière calibrés, réutilisable en amont ou en complément du Forest Dynamics Engine pour alimenter les `TimedProjection` du contrat de sortie | Framework Java open source fédérant, depuis plus de vingt ans, des dizaines de modèles de croissance calibrés sur des essences européennes au sein d'une architecture à modules interchangeables (Dufour-Kowalski et al., 2012). Également cité dans la section équivalente du `FOREST_DYNAMICS_ENGINE`, dont ce moteur dépend directement (§4) : les deux moteurs devraient partager la même bibliothèque de modèles plutôt que de dupliquer l'intégration. |
+| **iLand** (individual-based forest Landscape and Disturbance model) | Modèle individu-centré pour projeter des trajectoires de peuplement sous scénarios climatiques et perturbations combinées, à l'échelle du paysage | Conçu explicitement pour coupler dynamique forestière et scénarios climatiques/perturbations sur le temps long ; correspond directement aux champs `climate_scenario` et `horizon` du contrat d'entrée (Seidl et al., 2012 ; Rammer & Seidl, 2024) |
+| **LANDIS-II** | Simulateur de paysage multi-perturbations (récolte, feu, agents biotiques) à résolution spatio-temporelle flexible, pour produire plusieurs `alternatives` comparables dans un même `SimulationResult` | Sa conception en modules de perturbation interchangeables illustre concrètement la garantie « les scénarios sont comparatifs, pas une projection unique » (Scheller et al., 2007) |
+| **ForeFire** (déjà identifié comme dépendance externe, §4) | Formalisation de l'interface ForeFire ↔ Simulation Engine comme cas particulier du contrat générique `ScenarioSimulation`/`SimulationResult` | Moteur de propagation de feu opérationnel développé au CNRS/Université de Corse, déjà utilisé côté Ignis ; traiter ses sorties comme un type de `SimulationResult` parmi d'autres simplifierait la traçabilité des sources exigée par GSIE-CON-005 (Filippi et al., 2011) |
+| **SALib** (bibliothèque Python d'analyse de sensibilité : Sobol, Morris, FAST) | Échantillonnage des `parameters` d'entrée suivi d'une analyse de sensibilité globale, pour documenter le champ `confidence` de `SimulationResult` par une mesure statistique plutôt qu'un niveau qualitatif | Une approche de type Monte Carlo est une pratique courante de quantification d'incertitude en modélisation environnementale ; elle rendrait `confidence` traçable et vérifiable (Herman & Usher, 2017 ; Iwanaga et al., 2022) |
+| **Couplage simulation ↔ moteur de rendu temps réel (type Unreal Engine)** | Piste pour la sortie « Visualisation » du Simulation Engine vers le Centre de Commandement GSIE (Unreal Engine 5.8) | Des précédents opérationnels et académiques démontrent la faisabilité d'un flux de données depuis un moteur de simulation externe vers un moteur 3D temps réel assurant un rendu géoréférencé interactif, sans que ce dernier ne recalcule la simulation lui-même — voir `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` pour l'architecture retenue côté rendu (Raha et al., 2025, prépublication non revue par les pairs ; *Computers and Electronics in Agriculture*, 2023, pour un précédent revu par les pairs) |
+
+Ces pistes restent complémentaires entre elles : CAPSIS, iLand et LANDIS-II
+relèvent du champ de la dynamique forestière (et donc en premier lieu du
+Forest Dynamics Engine, dont le Simulation Engine est dépendant selon
+§4), tandis que ForeFire, la quantification d'incertitude et le couplage
+au moteur de rendu concernent plus directement la responsabilité propre
+du Simulation Engine. Aucune de ces pistes ne modifie les garanties
+énoncées en §6.
+
+### Sources
+
+- Dufour-Kowalski, S., Courbaud, B., Dreyfus, P., Meredieu, C., de Coligny, F. (2012). *Capsis: an open software framework and community for forest growth modelling*. Annals of Forest Science, 69(2), 221-233. DOI: 10.1007/s13595-011-0140-9 (voir aussi https://capsis.cirad.fr/capsis/presentation)
+- Seidl, R., Rammer, W., Scheller, R.M., Spies, T.A. (2012). *An individual-based process model to simulate landscape-scale forest ecosystem dynamics*. Ecological Modelling, 231, 87-100. https://www.sciencedirect.com/science/article/pii/S0304380012000919
+- Rammer, W., Seidl, R. (2024). *The individual-based forest landscape and disturbance model iLand: Overview, progress, and outlook*. Ecological Modelling, 495. https://www.sciencedirect.com/science/article/pii/S030438002400173X (https://iland-model.org/)
+- Scheller, R.M., Domingo, J.B., Sturtevant, B.R. et al. (2007). *Design, development, and application of LANDIS-II*. Ecological Modelling, 201, 409-419. DOI: 10.1016/j.ecolmodel.2006.10.009. https://www.landis-ii.org/
+- Filippi, J.-B. et al. (2011). *Simulation of Coupled Fire/Atmosphere Interaction with the MesoNH-ForeFire Models*. Journal of Combustion, 2011, article 540390. DOI: 10.1155/2011/540390 — code source : https://github.com/forefireAPI/forefire, documentation https://forefire.readthedocs.io/
+- Herman, J., Usher, W. (2017). *SALib: An open-source Python library for Sensitivity Analysis*. The Journal of Open Source Software, 2(9), 97. https://github.com/SALib/SALib
+- Iwanaga, T., Usher, W., Herman, J. (2022). *Toward SALib 2.0*. Socio-Environmental Systems Modelling. https://github.com/SALib/SALib
+- Raha, M.H., Tavakkoli, A.R., Webb, C. et al. (2025). *FIRETWIN: Digital Twin Advancing Multi-Modal Sensing, Interactive Analytics for Tactical Wildfire Response*. Prépublication arXiv:2510.18879 (non revue par les pairs). https://arxiv.org/abs/2510.18879
+- *Forest digital twin: A new tool for forest management practices based on Spatio-Temporal Data, 3D simulation Engine, and intelligent interactive environment*. Computers and Electronics in Agriculture, vol. 215, article 108416, 2023. DOI: 10.1016/j.compag.2023.108416
+
 ## Références
 
 - `GSIE/ARCHITECTURE/ENGINE_DEVELOPMENT_ORDER.md` — ordre de développement

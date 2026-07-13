@@ -164,6 +164,7 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
 - **DEC-000016** — Extension Phase 3 : 8 → 10 livrables (309-310 rattachés, amendement GSIE-DIR-0007 v1.1)
 - **DEC-000017** — Validation 10 livrables Phase 3 + clôture Phase 3 + lancement Phase 4 (GSIE-DIR-0011)
 - **DEC-000018** — Stratégie IA IGN : adoption geocontext MCP + capitalisation datasets IA (CoSIA, OCS GE, apprentissage LiDAR HD)
+- **DEC-000019** — Validation architecture Phase 4 + plan révisé 24 semaines (Python+Rust+Go différé, FastAPI+PostGIS+Redis, 6 vagues)
 
 ## Documents structurants
 

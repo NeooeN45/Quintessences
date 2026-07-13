@@ -5,7 +5,7 @@
 | **Livrable** | 211 — Centre de Commandement GSIE (Unreal Engine 5.8) |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-13 (v2.1.0 — validation Gaussian Splatting + sources IGN) |
+| **Date de révision** | 2026-07-13 (v2.2.0 — complément de recherche §9 : UE5.8, Cesium post-avril 2026, précédents multi-domaines, MCP, publications 2026) |
 | **Lois fondatrices** | GSIE-CON-004, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Technique (T-2, T-8, T-10) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif), GSIE-DIR-0009 (restructuration écosystème) |
@@ -191,6 +191,70 @@ Ce qui ne change rien à notre philosophie « lourd serveur / léger terrain » 
 4. Une fois le prototype validé : brancher Niagara sur les mêmes données pour le premier feu visualisé en 3D (couche Ignis).
 5. Étendre le prototype aux autres apps : afficher une couche forêt (GeoSylva), un cours d'eau (Hydro), une observation faune (Artemis) et une cartographie végétale (Flora) dans la même scène — valider le principe de convergence multi-apps.
 6. Définir le système de couches activables/désactivables (forêt, feu, faune, eau, flore) dans l'interface du Centre de Commandement.
+
+## 9. Compléments de recherche (mise à jour)
+
+> Recherche complémentaire (2026-07-13), portant spécifiquement sur ce qui n'est pas déjà couvert par les sections 1 à 8 : détail des fonctionnalités UE5.8 pertinentes pour un centre de commandement multi-domaines, mises à jour Cesium postérieures à avril 2026, précédents de convergence multi-domaines (hors incendie), maturité actuelle du plugin MCP, et nouvelles publications académiques 2026 sur les jumeaux numériques environnementaux au-delà du feu.
+
+### 9.1 UE5.8 — fonctionnalités de production complémentaires pour un centre de commandement multi-domaines
+
+Le §1 cite déjà MegaLights, Live Link Hub, Movie Render Graph et l'outil expérimental de terrain comme fonctionnalités « prêtes pour la production » de UE5.8. Le détail de chacune, une fois creusé, est directement pertinent pour le Centre de Commandement :
+
+- **Mesh Terrain** (expérimental) — alternative au terrain heightfield 2,5D classique, reposant sur un maillage 3D complet : il peut représenter falaises, surplombs, tunnels et îles flottantes, avec une résolution géométrique variable selon les zones, et s'intègre à PCG, Nanite, World Partition et One File Per Actor sans perdre l'édition non destructive. Intérêt pour GSIE : couvrir un massif forestier accidenté (ravins, corniches, gorges) sans les limites de résolution d'un heightfield classique — pertinent pour les terrains GeoSylva/Ignis en zone de relief marqué.
+- **MegaLights** (passé Production-Ready en 5.8) — grand nombre de lumières dynamiques à ombres portées, bruit réduit, meilleures performances, et surtout support de la diffusion sous-surface (*subsurface scattering*), de la translucidité, des canaux d'éclairage et des ombres de nuages. La translucidité et la diffusion sous-surface sont directement utiles pour l'éclairage réaliste d'une canopée forestière en extérieur (feuillage traversé par la lumière, ombres changeantes) — un cas d'usage plus proche de GeoSylva/Flora que du rendu intérieur pour lequel MegaLights a d'abord été pensé.
+- **Movie Render Graph** (Production-Ready) — fenêtre de rendu repensée exposant les réglages sous forme de graphe, isolation de l'éclairage par plan, support nDisplay. Utilisable pour générer automatiquement des rendus ou cinématiques standardisés (rapport de diagnostic sylvicole, bilan de campagne de surveillance incendie) directement depuis l'état du jumeau numérique, sans reconfiguration manuelle à chaque export.
+- **Live Link Hub** (Production-Ready) — interface centrale de supervision de flux vidéo/données multiples, synchronisation Live Link, pilotage d'enregistreurs compatibles sur IP. À évaluer comme voie d'ingestion complémentaire pour des flux caméra/capteur (drones, stations fixes), en plus du couple WebSocket/JSON déjà retenu (§3) — pas un remplacement, un complément pour les flux vidéo/temps réel spécifiquement.
+
+### 9.2 Cesium for Unreal / Cesium ion — mises à jour postérieures à avril 2026
+
+Le blog Cesium confirme, dans ses parutions mensuelles jusqu'à juillet 2026 :
+
+- **Cesium for Unreal 2.28.0** (juillet 2026) — prise en charge officielle d'Unreal Engine 5.8, mise à jour du moteur natif `cesium-native` (0.61.0 → 0.62.0), correction d'un bug de rendu des Gaussian Splats en session « Standalone Game ». Point de vigilance pour la planification : c'est la **dernière version à supporter UE 5.5** — les versions suivantes de Cesium for Unreal exigeront UE 5.6 minimum, ce qui ne pose aucun risque pour notre choix UE5.8.
+- **Nouveaux formats côté Cesium ion (SaaS)** — conversion de fichiers **NetCDF vers 3D Tiles via le « voxel tiler »**, pertinente pour des données climatiques/hydrologiques volumétriques (moteur Climate, app Hydro), et conversion de **GeoJSON vers 3D Tiles via le « vector tiler »**, pertinente pour nos couches vectorielles (parcelles GeoSylva, habitats Artemis, réseau hydrographique Hydro) sans étape de conversion manuelle. Import d'iModels depuis Bentley Infrastructure Cloud également ajouté.
+- **Rapprochement SaaS / Self-Hosted** — Cesium annonce que les capacités de modélisation de la réalité de Cesium ion SaaS (dont la création de Gaussian Splats avec LOD) deviennent progressivement disponibles pour les déploiements **Self-Hosted**. Pertinent si GSIE devait un jour héberger son propre pipeline Cesium ion plutôt que dépendre du SaaS public, pour des raisons de maîtrise des données environnementales.
+
+### 9.3 Précédents de convergence multi-domaines (au-delà du feu)
+
+Trois précédents, non issus du domaine environnemental mais directement transposables, éclairent l'architecture de « couches activables/désactivables » du Centre de Commandement :
+
+- **NVIDIA Omniverse / OpenUSD** — le modèle de composition en couches non destructives d'OpenUSD (Open Universal Scene Description) est le précédent industriel le plus direct : plusieurs couches de données hétérogènes (CAO, champs de simulation, flux de capteurs IoT, annotations IA) coexistent dans une même scène et peuvent être activées, désactivées ou mises à jour indépendamment, sans dupliquer les données sous-jacentes. Le domaine d'application reste industriel (jumeaux numériques d'usines, d'événements), pas environnemental — mais le principe de composition par couches est directement transposable à notre modèle « forêt / feu / faune / eau / flore ».
+- **ArcGIS Urban (Esri)** — plateforme de jumeau numérique urbain agrégeant plusieurs couches géospatiales (occupation du sol, bâti, démographie, BIM) pour la planification territoriale ; la mise à jour de mars 2026 ajoute un fond de carte photoréaliste 3D (Google 3D Photorealistic basemap, bêta) et des flux de densification paramétrés. Précédent de plateforme multi-couches SIG/3D à visée professionnelle.
+- **Cesium ion Enterprise / Self-Hosted** — voir §9.2 : le rapprochement des capacités SaaS et Self-Hosted répond au même besoin de déploiement multi-tenant/multi-organisation qu'un centre de commandement partagé pourrait rencontrer à terme.
+
+Un précédent académique 2026 rejoint directement cette réflexion : Ene, Badea, Badea & Grădinaru, *« Development of Urban Digital Twins Using GIS and Game Engine Systems »* (*Land*, 2026), comparent explicitement une approche SIG « professionnelle » (analyse, suivi) et une approche moteur de jeu (immersion, participation) pour le jumeau numérique urbain — la même dualité que GSIE pose entre QGISIA (SIG) et le Centre de Commandement (Unreal).
+
+**Précédent institutionnel français** — l'IGN propose désormais un service « **Jumeau numérique** » explicitement décrit comme un outil de « simulation et anticipation territoriale » dans son catalogue d'offres (`ign.fr/offre`), aux côtés de LiDAR HD, BD TOPO, données forestières et Panoramax. C'est un précédent institutionnel direct et français — à surveiller de près, y compris pour d'éventuelles synergies de données (LiDAR HD, BD TOPO, données forestières IGN, cf. §8 du `GIS_ENGINE`) plutôt que pour son architecture technique interne, non documentée publiquement à ce stade.
+
+### 9.4 Maturité du plugin MCP pour l'éditeur Unreal (mise à jour)
+
+Le plugin mentionné en veille dans la version précédente de ce document a maintenant un nom et une documentation officielle : **Unreal MCP**, livré avec UE5.8 (annoncé au State of Unreal 2026) et documenté sur dev.epicgames.com. Il embarque un serveur MCP dans le processus de l'éditeur, permettant à un client MCP (Claude, Cursor, MCP Inspector) de piloter l'éditeur via une connexion HTTP locale : manipulation d'acteurs, création d'instances de matériaux, configuration de l'éclairage, inspection de widgets Slate, exécution de tests d'automatisation.
+
+Le statut reste explicitement **expérimental** : la documentation officielle d'Epic précise que « de nombreuses fonctionnalités sont incomplètes ou manquantes, les API et formats de données sont susceptibles de changer à tout moment ». Limites documentées : transport restreint à HTTP/Server-Sent Events (ni stdio, ni WebSocket), liaison à `localhost` uniquement sans couche d'authentification, redémarrage complet de l'éditeur nécessaire pour toute nouvelle fonction ajoutée via Live Coding.
+
+Une comparaison publiée par StraySpark Studio (juillet 2026 — source spécialisée non académique, à traiter comme un avis technique et non comme une donnée officielle Epic) situe le plugin officiel derrière les serveurs MCP tiers existants sur cinq dimensions : couverture d'outils, efficacité de contexte, exécution transactionnelle par lot, profondeur d'inspection, et sécurité (authentification, contrôle de portée). Epic présente néanmoins ce plugin comme une brique fondatrice pour Unreal Engine 6 (fin 2027) — ce qui confirme l'intérêt de le garder en veille active plutôt que de l'adopter en production dès mi-2026, conformément à la posture déjà retenue dans ce document.
+
+### 9.5 Nouvelles publications académiques 2026 — au-delà du feu
+
+Deux domaines complètent utilement FIRETWIN/FIRE-VLM/IVSR (tous trois centrés incendie) :
+
+- **Hydrologie** — Kang, W. & Jang, E., *« A Digital Twin of River Experiment Infrastructure Based on a 3D Game Engine and Validation of Water Flow with a Real-Scale Experiment »*, *Applied Sciences*, 2025, vol. 15, n° 23, article 12507 (DOI: 10.3390/app152312507) : jumeau numérique d'une installation d'essais hydrauliques construit dans **Unreal Engine 5**, utilisant le plugin de simulation de fluides *Fluid Flux* (équations de Saint-Venant en eaux peu profondes, champs de hauteur 2D), validé par comparaison directe à une expérience physique à échelle réelle. C'est actuellement le précédent le plus direct identifiable pour l'app **Hydro** — un cas « moteur de jeu + hydraulique » validé expérimentalement, sur le même principe que ce que FIRETWIN apporte au feu.
+- **Convergence SIG / moteur de jeu (urbain, transposable)** — Ene, A., Badea, A.-C., Badea, G. & Grădinaru, A., *« Development of Urban Digital Twins Using GIS and Game Engine Systems »*, *Land*, 2026, vol. 15, n° 2, article 254 (DOI: 10.3390/land15020254). Centré sur le jumeau numérique urbain, pas forestier, mais c'est la publication 2026 la plus récente identifiée qui documente explicitement la complémentarité SIG professionnel / moteur de jeu immersif.
+- **Faune** — aucune publication 2026 combinant explicitement moteur de jeu et jumeau numérique de la faune n'a pu être identifiée avec certitude lors de cette recherche ; à ne pas présenter comme un précédent établi. Le travail le plus proche reste Islam, S. et al., *« FAIR digital twins for biodiversity: enabling data, model, and workflow integration »*, *npj Biodiversity*, 2026 (DOI: 10.1038/s44185-025-00116-3), issu du projet européen **BioDT** (2022-2025) : il documente des prototypes de jumeaux numériques pour la dynamique forestière (couplage du modèle LANDIS-II à un modèle de communauté d'espèces), les prairies (GRASSMIND) et le suivi ornithologique en temps réel par science citoyenne — **mais il s'agit d'un cadre d'intégration de données/modèles/workflows (principes FAIR, format RO-Crate), pas d'une implémentation en moteur de jeu 3D**. À citer comme précédent de gouvernance scientifique des données pour Artemis/GeoSylva, pas comme précédent d'architecture Unreal.
+
+> **Lecture pour Artemis** : l'absence de précédent confirmé « moteur de jeu + faune » renforce l'intérêt de documenter notre propre approche, le cas échéant, comme contribution potentiellement originale plutôt que comme simple application d'un précédent existant — à revérifier par une revue de littérature ciblée avant tout dossier de publication ou de financement.
+
+### Sources complémentaires
+
+- Epic Games — *Unreal Engine 5.8 Release Notes*, dev.epicgames.com/documentation/unreal-engine/unreal-engine-5-8-release-notes ; *State of Unreal 2026: Top news from the show* (unrealengine.com/news).
+- Epic Games — *Unreal MCP in Unreal Editor*, https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor
+- StraySpark Studio — *« Epic's Official MCP Plugin Is Here (UE 5.8): What It Does and Where Third-Party Servers Still Win »*, https://www.strayspark.studio/blog/epic-official-mcp-plugin-ue5-8-vs-third-party
+- Cesium — *Cesium Releases in July 2026*, https://cesium.com/blog/2026/07/01/cesium-releases-in-july-2026/ ; CesiumGS/cesium-unreal, GitHub (page « Releases »)
+- NVIDIA — documentation Omniverse / OpenUSD, docs.omniverse.nvidia.com
+- Esri — *What's New in ArcGIS Urban (March 2026)*, esri.com/arcgis-blog/products/urban/announcements/whats-new-in-arcgis-urban-march-2026
+- Ene, A., Badea, A.-C., Badea, G., Grădinaru, A. (2026). *Development of Urban Digital Twins Using GIS and Game Engine Systems*. Land, 15(2), 254. https://www.mdpi.com/2073-445X/15/2/254
+- Kang, W., Jang, E. (2025). *A Digital Twin of River Experiment Infrastructure Based on a 3D Game Engine and Validation of Water Flow with a Real-Scale Experiment*. Applied Sciences, 15(23), 12507. https://www.mdpi.com/2076-3417/15/23/12507
+- Islam, S., Koivula, H., Andrew, C. et al. (2026). *FAIR digital twins for biodiversity: enabling data, model, and workflow integration*. npj Biodiversity. DOI: 10.1038/s44185-025-00116-3 (projet BioDT, 2022-2025)
+- IGN — *Catalogue des offres* (service « Jumeau numérique », LiDAR HD, BD TOPO, données forestières, Panoramax). https://www.ign.fr/offre
 
 ## Sources principales
 State of Unreal 2026 / Epic Games (annonces UE6, UE5.8, plugin MCP) ; documentation Epic Developer Community (WebSockets, Live Link, Remote Control API) ; CesiumGS/cesium-unreal (GitHub) et cesium.com (capacités, Gaussian Splats, rachat Bentley) ; FIRETWIN — *Digital Twin Advancing Multi-Modal Sensing, Interactive Analytics for Wildfire Response* (2025, financement NASA/NSF, arXiv:2510.18879) ; FIRE-VLM — *Vision-Language-Driven Reinforcement Learning Framework for UAV Wildfire Tracking* (2026, arXiv:2601.03449) ; *Digital Twin and Agentic AI for Wild Fire Disaster Management* — IVSR (2026, arXiv:2602.08949) ; *Review and perspectives of digital twin systems for wildland fire management*, Journal of Forestry Research (Springer).

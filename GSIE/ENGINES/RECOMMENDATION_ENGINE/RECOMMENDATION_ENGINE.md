@@ -151,6 +151,54 @@ sylvicole du douglas (ONF, 2019). Alternative : éclaircie forte
 peut refuser, modifier le pourcentage ou demander une simulation
 comparative via le Simulation Engine.
 
+## 8. État de l'art et pistes de recherche sourcées
+
+Cette section recense, à titre de pistes pour la Phase 4
+(implémentation), des travaux et systèmes existants pertinents pour la
+responsabilité exacte du Recommendation Engine : produire des
+recommandations sylvicoles contournables, assorties d'alternatives
+justifiées, à partir de diagnostics et de simulations, en documentant
+les refus du forestier. La recherche a porté sur quatre axes : les
+systèmes d'aide à la décision (DSS) forestiers, l'analyse
+multicritère appliquée à la sylviculture, les approches de
+recommandation adaptées aux décisions rares et à fort enjeu (par
+opposition aux recommandeurs de type e-commerce), et la traçabilité
+des refus/alternatives.
+
+| Outil / Méthode | Rôle potentiel pour ce moteur | Justification |
+|---|---|---|
+| **EMDS — Ecosystem Management Decision Support System** (v8.0) | Architecture de référence combinant raisonnement logique (NetWeaver), analyse multicritère et traçabilité native des étapes d'analyse | EMDS est un DSS environnemental opérationnel, développé et maintenu depuis 1997 par le Pacific Northwest Research Station (USDA Forest Service). Sa version 8.0 (Reynolds et al., 2023) expose un mécanisme de suivi de provenance permettant de rejouer chaque étape d'une analyse — un précédent directement transposable à `JustificationRecommandation` et à la documentation des `ForestierDecision`. |
+| **Heureka (SLU, Suède)** | Précédent d'architecture pour l'articulation Diagnostic → Simulation → Recommandation dans un DSS forestier opérationnel | Heureka est un DSS forestier utilisé depuis plus de 15 ans en recherche, enseignement et gestion forestière opérationnelle en Suède (Lämås et al., 2023). Il couple simulateur de peuplement, module d'optimisation et analyse régionale — une organisation proche de la dépendance du Recommendation Engine envers `SIMULATION_ENGINE` et `FOREST_DYNAMICS_ENGINE`. |
+| **AHP couplé à PROMETHEE (analyse multicritère hybride)** | Pondération des critères de décision (`objectif_forestier`, `contraintes_forestier`) par AHP, puis classement des alternatives sylvicoles par surclassement (outranking) avec PROMETHEE | Lakićević, Reynolds et Gawryszewska (2021) démontrent, sur un cas de gestion paysagère/forestière, l'intégration d'AHP et de PROMETHEE. Cette combinaison correspond structurellement au besoin de produire une recommandation principale et plusieurs alternatives classées, chacune avec un `niveau_confiance` explicite. |
+| **Argumentation computationnelle pour la décision explicable et contestable** | Structuration formelle des justifications et des refus : chaque recommandation et chaque alternative devient un argument attaquable/défendable, les refus du forestier deviennent des contestations tracées | Dejl, Williams et Toni (2026, preprint arXiv) proposent un cadre (ArgEval) distinguant la contestation locale (une décision) de la contestation globale (la logique de décision sous-jacente) — une piste pertinente pour transformer `ForestierDecision.decision = refuse` en signal exploitable par `LEARNING_ENGINE`. Sassoon, Kökciyan, Modgil et Parsons (2021) montrent, en aide à la décision clinique, comment des schémas d'argumentation structurent des alternatives concurrentes et leurs justifications. |
+| **Raisonnement à partir de cas (Case-Based Reasoning, CBR)** | Réutilisation de diagnostics/recommandations antérieurs similaires comme point de départ argumenté, adapté aux décisions rares et non répétées | Le CBR (Aamodt et Plaza, 1994) est conçu pour des problèmes de décision faiblement structurés où l'expérience passée sert de justification explicite plutôt que de corrélation statistique — mieux adapté qu'un recommandeur classique à des décisions sylvicoles peu fréquentes, à fort enjeu et fortement contextuelles. |
+| **W3C PROV-O (PROV Ontology)** | Modèle standard pour tracer la provenance d'une recommandation : quelles données, quelles règles, quelles versions de moteurs ont produit `JustificationRecommandation` | PROV-O est une recommandation W3C (Lebo, Sahoo et McGuinness, éds., 2013) modélisant entités, activités et agents. Également cité dans les sections équivalentes du `KNOWLEDGE_ENGINE` et du `VALIDATION_ENGINE` — une seule modélisation centralisée du vocabulaire de provenance, réutilisée par les trois moteurs, éviterait une triple redondance d'implémentation. |
+
+Ces pistes restent à évaluer et arbitrer en Phase 4 ; aucune ne
+constitue un choix d'implémentation arrêté. En particulier, le choix
+entre AHP/PROMETHEE, un cadre d'argumentation ou une architecture de
+type EMDS n'est pas tranché ici — il dépendra des contraintes
+retenues lors de la spécification détaillée (`05_SPECIFICATIONS/`) et
+de la disponibilité de règles sylvicoles formalisées dans le
+Knowledge Engine.
+
+À noter : EMDS et **NED-2** (cité dans la section équivalente du
+`REASONING_ENGINE`) proviennent tous deux de l'écosystème USDA Forest
+Service et occupent des positions adjacentes dans la chaîne
+Reasoning → Recommendation ; une évaluation conjointe des deux
+précédents en Phase 4 est plus pertinente qu'une évaluation isolée.
+
+### Sources
+
+- Reynolds, K. M., Paplanus, S., Murphy, P. J. et al. (2023). *Latest features of the ecosystem management decision support system, version 8.0*. Frontiers in Environmental Science, 11:1231818. https://doi.org/10.3389/fenvs.2023.1231818
+- Lämås, T., Sängstuvall, L., Öhman, K. et al. (2023). *The multi-faceted Swedish Heureka forest decision support system*. Frontiers in Forests and Global Change, 6:1163105. https://doi.org/10.3389/ffgc.2023.1163105
+- Lakićević, M. D., Reynolds, K. M., & Gawryszewska, B. J. (2021). *An integrated application of AHP and PROMETHEE in decision making for landscape management*. Austrian Journal of Forest Science, 138(3), 167–182. https://research.fs.usda.gov/treesearch/63769
+- Dejl, A., Williams, M., & Toni, F. (2026). *Argumentation for Explainable and Globally Contestable Decision Support with LLMs*. arXiv:2603.14643 (preprint). https://arxiv.org/abs/2603.14643
+- Sassoon, I., Kökciyan, N., Modgil, S., & Parsons, S. (2021). *Argumentation schemes for clinical decision support*. Argument & Computation, 12(3). https://doi.org/10.3233/AAC-200550
+- Aamodt, A., & Plaza, E. (1994). *Case-Based Reasoning: Foundational Issues, Methodological Variations, and System Approaches*. AI Communications, 7(1), 39–59. https://www.iiia.csic.es/~enric/papers/AICom.pdf
+- Lebo, T., Sahoo, S., & McGuinness, D. (éds.) (2013). *PROV-O: The PROV Ontology*. W3C Recommendation. https://www.w3.org/TR/2013/REC-prov-o-20130430/
+- Yadav, N., Rakholia, S., & Yosef, R. (2024). *Decision Support Systems in Forestry and Tree-Planting Practices and the Prioritization of Ecosystem Services: A Review*. Land, 13(2), 230. https://doi.org/10.3390/land13020230
+
 ---
 
 > Statut : *Draft — Phase 2 (Architecture). Documentation uniquement,

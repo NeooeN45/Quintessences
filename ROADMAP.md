@@ -239,6 +239,19 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 > (4.1 API GSIE, 4.2 moteurs, 4.3 Hub, 4.4 apps, 4.5 Encyclopédie).
 > Étendue par **GSIE-DIR-0008** (DEC-000012) — l'Encyclopédie de
 > l'Écosystème devient un chantier majeur de la Phase 4.
+> **Plan révisé 24 semaines** validé par **DEC-000019** (2026-07-13) —
+> voir `GSIE/RESEARCH/PHASE4_ARCHITECTURE_VALIDATION.md`.
+
+### Plan d'implémentation révisé (DEC-000019 — 24 semaines, 6 vagues)
+
+| Vague | Semaines | Moteurs/Livrables | Langages |
+|---|---|---|---|
+| 1 — Fondations | 1-4 | FastAPI + Docker + Evidence + Knowledge | Python + Rust |
+| 2 — Domaine | 5-8 | GIS + Climate + Botanical + Pedology + ForeFire | Python |
+| 3 — Raisonnement | 9-14 | Correlation + Reasoning + Diagnostic | Rust |
+| 4 — Avancés | 15-20 | Forest Dynamics + Simulation + Recommendation | Python + Rust |
+| 5 — Validation | 21-24 | Validation + Learning | Rust |
+| 6 — Go (optionnel) | 25-26 | Benchmark WebSocket + décision Go | Go si activé |
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008)
 

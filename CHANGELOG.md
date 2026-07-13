@@ -4,6 +4,31 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [VALIDATION ARCHITECTURE PHASE 4] - 2026-07-13
+
+### Validation par 3 subagents de recherche (DEC-000019)
+
+Analyse approfondie de l'architecture Phase 4 par 3 subagents en
+parallèle (sources web 2025-2026) :
+
+- **Multi-langage validé** : Python + Rust (pyo3) + Go différé
+  (MAVSDK-Go est PoC en 2026, MAVSDK-Python est production). PyO3
+  mature (Polars, Pydantic v2, Ruff — gains 7.4x). Pièges : GIL
+  (`py.allow_threads()`), FFI overhead (profiler avant)
+- **Architecture API validée** : FastAPI + asyncpg + PostGIS + Redis
+  + OpenTelemetry. 5 ajustements P0/P1 : bypass PgBouncer pour
+  LISTEN/NOTIFY, `statement_cache_size=0`, pygeoapi comme lib
+  Starlette, modules par moteur (pas DDD pur), fastgeoapi P1
+- **Plan refondu** : 8 semaines → 24 semaines (6 vagues). Respect
+  strict du graphe de dépendances (livrable 204). Knowledge Engine
+  ajouté (dépendance critique sautée). 2 semaines/moteur Rust
+  (réaliste solo). ForeFire repositionné après Climate Engine
+
+Livrables produits :
+- `GSIE/RESEARCH/PHASE4_ARCHITECTURE_VALIDATION.md` (318 lignes)
+- `GSIE/RESEARCH/API_TECHNOLOGY_RESEARCH.md` (1092 lignes, 30 recos)
+- `03_DECISIONS/DEC-000019.md` (141 lignes)
+
 ## [STRATÉGIE IA IGN + GEOCONTEXT MCP] - 2026-07-13
 
 ### Découverte et capitalisation de la stratégie IA IGN (DEC-000018)
