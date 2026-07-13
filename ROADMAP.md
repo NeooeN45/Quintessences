@@ -225,10 +225,36 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 ## Phase 4 — Implémentation (à définir)
 
-- Moteurs
-- API
-- SDK
-- Applications
+> Étendue par **GSIE-DIR-0008** (DEC-000012) — l'Encyclopédie de
+> l'Écosystème devient un chantier majeur de la Phase 4.
+
+### Encyclopédie de l'Écosystème (GSIE-DIR-0008)
+
+- Base de données graphe (Neo4j ou équivalent) — 10M+ nœuds
+- Identifiants uniques stables et citables (GSIE-K-XXXXXXXXXX)
+- Triple store sémantique (RDF/OWL, SPARQL, Linked Open Data)
+- Pipelines d'ingestion automatisés (Airflow + NLP + LLM)
+- 10 classificateurs (source, preuve, domaine, type, entités,
+  relations, seuils, conflits, doublons, conformité)
+- API GraphQL + REST (publique en lecture)
+- Interface web de consultation (Next.js + D3.js / Cytoscape)
+- Export en formats ouverts (JSON, RDF, CSV)
+- ADR-0008 à ADR-0013 (choix technologiques)
+
+### Moteurs
+
+- Implémentation des 14 moteurs (ordre : livrable 204)
+- Intégration avec l'Encyclopédie (Knowledge Engine)
+
+### API et SDK
+
+- API publique (lecture)
+- SDK Python / TypeScript
+
+### Applications
+
+- GeoSylva (forêt)
+- GSIE-Ignis (incendie)
 
 ---
 

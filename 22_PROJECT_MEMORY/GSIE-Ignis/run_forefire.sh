@@ -19,7 +19,7 @@ export PYTHONUNBUFFERED=1
 
 # Lancer le script Python
 cd /mnt/a/GSIE/22_PROJECT_MEMORY/GSIE-Ignis
-timeout 300 python3 -u vol_forefire.py
+timeout 300 $HOME/gsie-ignis/.venv/bin/python3 -u vol_forefire.py
 EXIT_CODE=$?
 
 # Nettoyage final

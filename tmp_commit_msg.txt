@@ -1,0 +1,38 @@
+feat(directive): GSIE-DIR-0008 — l'Encyclopédie de l'Écosystème
+
+Le Fondateur acte la création de l'Encyclopédie de l'Écosystème : la
+plus grande base de données structurée, sourcée et traçable sur tout ce
+qui touche à l'écosystème. L'Encyclopédie devient le produit principal
+de GSIE, pas un sous-produit des moteurs.
+
+Échelle visée : million d'entrées minimum.
+
+Périmètre : flore, faune, sols, climat, hydrologie, pathologies,
+entomologie, mycologie, interactions trophiques, dynamiques,
+sylviculture, biodiversité, incendie.
+
+Architecture cible (Phase 4) :
+- Base graphe (Neo4j) — 10M+ nœuds
+- Identifiants uniques stables et citables (GSIE-K-XXXXXXXXXX)
+- Triple store sémantique (RDF/OWL, SPARQL)
+- Pipelines ingestion automatisés (Airflow + NLP + LLM)
+- 10 classificateurs (source, preuve, domaine, type, entités,
+  relations, seuils, conflits, doublons, conformité)
+- API GraphQL + REST + interface web
+- Licence ouverte maximale
+
+Le livrable 308 (25 connaissances) devient l'amorce de l'Encyclopédie,
+pas le produit final.
+
+Documents créés :
+- 01_DIRECTIVES/ACTIVE/GSIE-DIR-0008.md
+- 03_DECISIONS/DEC-000012.md
+
+Documents mis à jour :
+- PROJECT_MEMORY.md (vision encyclopédie)
+- ROADMAP.md (Phase 4 étendue)
+- CHANGELOG.md (section dédiée)
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>

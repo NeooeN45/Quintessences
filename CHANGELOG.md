@@ -4,6 +4,40 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [ENCYCLOPÉDIE DE L'ÉCOSYSTÈME] - 2026-07-13
+
+### L'Encyclopédie de l'Écosystème (DEC-000012, GSIE-DIR-0008)
+
+Le Fondateur acte la création de l'**Encyclopédie de l'Écosystème** :
+la plus grande base de données structurée, sourcée et traçable sur tout
+ce qui touche à l'écosystème. Cette encyclopédie est **le produit
+principal** de GSIE, pas un sous-produit des moteurs.
+
+**Échelle visée** : million d'entrées minimum.
+
+**Périmètre** : flore, faune, sols, climat, hydrologie, pathologies,
+entomologie, mycologie, interactions trophiques, dynamiques,
+sylviculture, biodiversité, incendie.
+
+**Architecture cible** (Phase 4) :
+- Base graphe (Neo4j ou équivalent) — 10M+ nœuds
+- Identifiants uniques stables et citables (GSIE-K-XXXXXXXXXX)
+- Triple store sémantique (RDF/OWL, SPARQL)
+- Pipelines d'ingestion automatisés (Airflow + NLP + LLM)
+- 10 classificateurs (source, preuve, domaine, type, entités, relations,
+  seuils, conflits, doublons, conformité)
+- API GraphQL + REST + interface web
+- Licence ouverte maximale
+
+**Positionnement unique** : la seule base combinant taxonomie +
+autécologie + pédologie + climat + interactions + modèles +
+sylviculture, sourcé, versionné et interrogeable.
+
+Le livrable 308 (25 connaissances) devient l'**amorce** de
+l'Encyclopédie, pas le produit final.
+
+---
+
 ## [PHASE 3 — CONNAISSANCE] - 2026-07-13
 
 ### Lancement officiel Phase 3 (DEC-000011, GSIE-DIR-0007)

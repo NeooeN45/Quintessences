@@ -18,13 +18,12 @@ Prérequis :
 - corse.sdf dans ~/gsie-ignis/data/forefire/
 """
 import asyncio
+import http.client
 import json
 import math
 import os
 import subprocess
 import time
-import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -88,14 +87,22 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 # === Client ForeFire HTTP ===
 
 def ff_send(command: str) -> str:
-    """Envoie une commande à ForeFire via HTTP GET."""
-    encoded = urllib.parse.quote(command, safe="")
-    url = f"{FF_BASE_URL}/ff:{encoded}"
+    """Envoie une commande à ForeFire via HTTP GET.
+
+    Utilise http.client pour éviter les problèmes d'encodage URL de urllib.
+    Les commandes ne doivent pas contenir d'espaces (utiliser geojson pour startFire).
+    """
+    import http.client
+    conn = http.client.HTTPConnection(FF_HOST, FF_PORT, timeout=10)
     try:
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            return resp.read().decode("utf-8")
+        conn.request("GET", f"/ff:{command}")
+        resp = conn.getresponse()
+        data = resp.read().decode("utf-8")
+        return data
     except Exception as e:
         return f"ERROR: {e}"
+    finally:
+        conn.close()
 
 
 def ff_step(seconds: int) -> str:
@@ -152,10 +159,18 @@ def min_dist_to_fire(drone_lat: float, drone_lon: float, fire_points: list) -> f
 # === ForeFire processus ===
 
 def start_forefire() -> subprocess.Popen:
-    """Lance ForeFire en mode serveur HTTP avec stdin pipe pour le maintenir en vie."""
-    env = dict(os.environ, LD_LIBRARY_PATH=f"{FOREFIRE_LIB}:{os.environ.get('LD_LIBRARY_PATH', '')}")
+    """Lance ForeFire en mode serveur HTTP dédié (flag -l).
+
+    Le flag -l démarre le serveur HTTP avec une boucle infinie qui maintient
+    le processus en vie. Toutes les commandes (setup, step, print) sont ensuite
+    envoyées via HTTP POST.
+    """
+    env = dict(os.environ,
+        LD_LIBRARY_PATH=f"{FOREFIRE_LIB}:{os.environ.get('LD_LIBRARY_PATH', '')}",
+        PWD=FOREFIRE_DATA,
+    )
     proc = subprocess.Popen(
-        [f"{FOREFIRE_DIR}/bin/forefire", "-i", FF_SCRIPT],
+        [f"{FOREFIRE_DIR}/bin/forefire", "-l"],
         cwd=FOREFIRE_DATA,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -164,6 +179,27 @@ def start_forefire() -> subprocess.Popen:
         env=env,
     )
     return proc
+
+
+def setup_forefire() -> None:
+    """Envoie les commandes de setup à ForeFire via HTTP."""
+    cmds = [
+        "setParameter[ForeFireDataDirectory=.]",
+        "setParameter[fuelsTableFile=fuels.csv]",
+        "setParameter[propagationModel=Rothermel]",
+        "setParameter[dumpMode=geojson]",
+        "setParameter[perimeterResolution=10]",
+        "setParameter[spatialIncrement=3]",
+        "setParameter[propagationSpeedAdjustmentFactor=0.6]",
+        "setParameter[windReductionFactor=0.4]",
+        "loadData[data.nc;2025-02-10T17:35:54Z]",
+        'startFire[geojson="""{"type":"FeatureCollection","valid_at":"2025-02-10T17:35:54Z","features":[{"type":"Feature","properties":{"numberOfPolygons":1},"geometry":{"type":"MultiPolygon","coordinates":[[[[8.69992,41.95206,0],[8.69984,41.95194,0],[8.69976,41.95182,0],[8.70024,41.95182,0],[8.70000,41.95218,0],[8.69992,41.95206,0]]]]}}]}"""]',
+        "trigger[wind;loc=(0.,0.,0.);vel=(10,5,0.)]",
+    ]
+    for cmd in cmds:
+        resp = ff_send(cmd)
+        if "ERROR" in resp:
+            print(f"  ⚠ ForeFire: {cmd[:50]} → {resp[:80]}")
 
 
 def stop_forefire(proc: subprocess.Popen) -> None:
@@ -500,6 +536,11 @@ async def run() -> None:
         stop_forefire(ff_proc)
         return
     print("  ✓ ForeFire serveur HTTP prêt (port 8000)")
+
+    # Setup : charger terrain, carburants, allumer le feu, vent
+    print("  Configuration ForeFire (terrain, feu, vent)...")
+    setup_forefire()
+    print("  ✓ ForeFire configuré")
 
     # === Phase 2 : Gazebo + PX4 ===
     print("\n--- Phase 2 : Démarrage Gazebo + PX4 ---")

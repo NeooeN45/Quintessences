@@ -5,7 +5,7 @@
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 3 — Connaissance |
-| **Directive courante** | GSIE-DIR-0007 |
+| **Directive courante** | GSIE-DIR-0008 (Encyclopédie de l'Écosystème) |
 | **Dernière mise à jour** | 2026-07-13 |
 
 ---
@@ -143,6 +143,7 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **DEC-000009** — Vision du Moteur Cognitif GSIE-Ignis — GSIE-DIR-0006
 - **DEC-000010** — Adoption Unreal Engine 5.8 + Cesium comme moteur 3D du jumeau numérique
 - **DEC-000011** — Entrée en Phase 3 : Connaissance (GSIE-DIR-0007)
+- **DEC-000012** — L'Encyclopédie de l'Écosystème : la plus grande base de connaissances écologiques du marché (GSIE-DIR-0008)
 
 ## Documents structurants
 
@@ -152,6 +153,7 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
 - **GSIE-DIR-0006** — Vision du Moteur Cognitif GSIE-Ignis (Draft — DEC-000009)
 - **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
+- **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
