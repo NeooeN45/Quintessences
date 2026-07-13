@@ -1,35 +1,37 @@
 # GSIE API — Dockerfile multi-stage (DEC-000019 §18)
 # Build : docker build -t gsie-api .
 # Run : docker compose up
+#
+# Note : les libs géospatiales lourdes (GDAL, rasterio, geopandas) seront
+# ajoutées en semaine 5 (GIS Engine). Pour la semaine 1, on n'a besoin que
+# de FastAPI + asyncpg + Redis — image légère et build rapide.
 
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /build
 
-# Dépendances système pour rasterio, shapely, asyncpg
+# Dépendances système — minimales pour semaine 1 (asyncpg, shapely, pyproj)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgdal-dev \
     libgeos-dev \
     libproj-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
 RUN pip install --no-cache-dir --upgrade pip uv
 
-# Build des dépendances (cache layer)
+# Copie du projet et installation des dépendances
+COPY pyproject.toml README.md ./
 COPY src/ src/
 RUN uv pip install --system .
 
 # --- Stage final ---
-FROM python:3.12-slim AS runtime
+FROM python:3.12-slim-bookworm AS runtime
 
 WORKDIR /app
 
 # Dépendances runtime (sans build-essential)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdal32 \
     libgeos-c1v5 \
     libproj25 \
     libpq5 \

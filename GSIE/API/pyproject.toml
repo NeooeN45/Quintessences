@@ -28,11 +28,10 @@ dependencies = [
     "redis[hiredis]==5.2.1",
     "websockets==14.1",
 
-    # Géospatial
+    # Géospatial — shapely/pyproj dès la semaine 1 (léger)
+    # rasterio + geopandas ajoutés en semaine 5 (GIS Engine, nécessite GDAL)
     "shapely==2.0.6",
     "pyproj==3.7.0",
-    "rasterio==1.4.3",
-    "geopandas==1.0.1",
 
     # Observabilité
     "structlog==24.4.0",
@@ -46,8 +45,9 @@ dependencies = [
     "pyjwt[crypto]==2.10.1",
     "passlib[bcrypt]==1.7.4",
 
-    # OGC API
-    "pygeoapi==0.19.0",
+    # OGC API — pygeoapi ajouté en semaine 5 (GIS Engine)
+    # Note : pygeoapi 0.19 exige pydantic<2.0, incompatible avec pydantic v2
+    # Solution : fastgeoapi (P1) ou wrapper Starlette custom (P0)
 
     # Utilitaires
     "python-multipart==0.0.20",
