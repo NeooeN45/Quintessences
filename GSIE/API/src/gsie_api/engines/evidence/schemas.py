@@ -1,0 +1,85 @@
+"""Schémas Pydantic pour l'Evidence Engine.
+
+Conforme à ENGINE_INTERFACE_CONTRACTS.md :
+- RawKnowledgeSubmission (entrée)
+- QualifiedKnowledge (sortie)
+- EvidenceLevel (A-F)
+"""
+
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+
+class SourceType(str, Enum):
+    """Type de source scientifique (EVIDENCE_FRAMEWORK.md)."""
+    peer_reviewed = "peer_reviewed"
+    referentiel_officiel = "referentiel_officiel"
+    expert_identifie = "expert_identifie"
+    observation_terrain = "observation_terrain"
+
+
+class ContentType(str, Enum):
+    """Type de contenu soumis."""
+    publication = "publication"
+    referentiel = "referentiel"
+    expert = "expert"
+    observation = "observation"
+
+
+class EvidenceLevel(str, Enum):
+    """Niveau de preuve scientifique (CON-002). A=meilleur, F=pire."""
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+
+
+class KnowledgeStatus(str, Enum):
+    """Statut de la connaissance après qualification."""
+    accepte = "accepte"
+    quarantine = "quarantine"
+    refuse = "refuse"
+
+
+class SourceReference(BaseModel):
+    """Référence à une source scientifique."""
+    type_source: SourceType
+    auteur: str = Field(min_length=1, description="Auteur ou organisme")
+    date_publication: str | None = None
+    reference: str = Field(min_length=1, description="DOI, URL, citation ou code")
+    version_source: str | None = None
+
+
+class RawKnowledgeSubmission(BaseModel):
+    """Soumission de connaissance brute — entrée de l'Evidence Engine."""
+    soumission_id: UUID
+    type_contenu: ContentType
+    contenu: dict[str, Any] = Field(description="Structure libre (texte, tableau, mesure)")
+    source_candidate: SourceReference
+    date_soumission: datetime
+    soumetteur: str = Field(min_length=1)
+
+
+class ConflitBibliographique(BaseModel):
+    """Conflit entre deux sources (CON-002)."""
+    source_a: SourceReference
+    source_b: SourceReference
+    description: str
+
+
+class QualifiedKnowledge(BaseModel):
+    """Connaissance qualifiée — sortie de l'Evidence Engine."""
+    connaissance_id: UUID
+    contenu_normalise: dict[str, Any]
+    evidence_level: EvidenceLevel
+    source: SourceReference
+    version: int = Field(ge=1)
+    date_qualification: datetime
+    conflits: list[ConflitBibliographique] = Field(default_factory=list)
+    statut: KnowledgeStatus

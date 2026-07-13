@@ -22,6 +22,10 @@ tmp/
 *.tmp
 *.log
 
+# Rust — build artifacts et venv maturin
+**/target/
+**/.venv/
+
 # Node (si outillage ajouté plus tard)
 node_modules/
 

@@ -1,0 +1,21 @@
+[package]
+name = "gsie_evidence"
+version = "0.1.0"
+edition = "2021"
+description = "GSIE Evidence Engine — évaluation de la qualité scientifique (niveaux A-F)"
+license = "AGPL-3.0-or-later"
+authors = ["Camille Perraudeau"]
+
+[lib]
+name = "gsie_evidence"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]

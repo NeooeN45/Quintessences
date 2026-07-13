@@ -1,0 +1,15 @@
+[build-system]
+requires = ["maturin>=1.7,<1.8"]
+build-backend = "maturin"
+
+[project]
+name = "gsie-evidence"
+version = "0.1.0"
+description = "GSIE Evidence Engine — évaluation de la qualité scientifique (Rust + PyO3)"
+requires-python = ">=3.12"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Camille Perraudeau" }]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "gsie_evidence"

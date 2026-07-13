@@ -14,7 +14,8 @@ def should_return_200_when_evidence_status_requested():
     assert response.status_code == 200
     data = response.json()
     assert data["engine"] == "evidence"
-    assert data["status"] == "not_implemented"
+    # Le statut est "active" (Rust disponible) ou "degraded" (fallback Python)
+    assert data["status"] in ("active", "degraded")
 
 
 def should_return_200_when_knowledge_status_requested():
