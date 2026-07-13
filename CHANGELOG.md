@@ -4,6 +4,51 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [ÉTAT DE L'ART SOURCÉ — 14 MOTEURS + CENTRE DE COMMANDEMENT] - 2026-07-13
+
+### Enrichissement documentaire par recherche sourcée multi-agents
+
+Aucun changement de phase, de statut de livrable ou de décision
+structurante. Enrichissement de contenu à l'intérieur de documents
+existants, tous restés en `Draft` — des pistes de recherche pour la
+Phase 4, pas des choix d'implémentation arrêtés. Toutes les sources
+vérifiées par recherche web avant intégration (GSIE-CON-002, GSIE-CON-005).
+
+- Les **14 fichiers de moteurs** (`GSIE/ENGINES/*/*_ENGINE.md` —
+  EVIDENCE, KNOWLEDGE, CORRELATION, REASONING, DIAGNOSTIC,
+  RECOMMENDATION, VALIDATION, GIS, CLIMATE, PEDOLOGY, BOTANICAL,
+  FOREST_DYNAMICS, LEARNING, SIMULATION) reçoivent chacun une nouvelle
+  section **« État de l'art et pistes de recherche sourcées »** (§8, ou
+  avant « Références » pour `SIMULATION_ENGINE.md`) : technologies,
+  algorithmes, bibliothèques et bases de données concrets, précédents
+  scientifiques (articles peer-reviewed, standards W3C/OGC, plateformes
+  open source), tableau de synthèse + sous-section « Sources ». Aucun
+  contrat d'interface ni aucune garantie déjà documentée n'est modifié.
+- Renvois croisés ajoutés entre moteurs partageant une même piste
+  technique : CAPSIS (Forest Dynamics ↔ Simulation), NED-2/EMDS
+  (Reasoning ↔ Recommendation), forêts aléatoires/Random Forest
+  (Correlation ↔ Diagnostic), PROV-O (Knowledge ↔ Recommendation ↔
+  Validation).
+- Deux corrections mineures suite à relecture critique croisée : URL
+  FAO-56 corrigée (`CLIMATE_ENGINE.md`), mention de LIME complétée
+  (`VALIDATION_ENGINE.md`).
+- `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211, Centre de
+  Commandement GSIE, Unreal Engine 5.8) passe de **v2.1.0 à v2.2.0** :
+  nouvelle section 9 « Compléments de recherche (mise à jour) » —
+  détail des fonctionnalités UE5.8 (Mesh Terrain, MegaLights, Movie
+  Render Graph, Live Link Hub), mises à jour Cesium for Unreal / Cesium
+  ion postérieures à avril 2026 (v2.28.0, tilers NetCDF/GeoJSON),
+  précédents de convergence multi-domaines hors incendie (NVIDIA
+  Omniverse/OpenUSD, ArcGIS Urban, service « Jumeau numérique » de
+  l'IGN — précédent institutionnel français, `ign.fr/offre`), mise à
+  jour de maturité du plugin **Unreal MCP** (désormais nommé et
+  documenté officiellement par Epic, statut expérimental confirmé), et
+  deux publications académiques 2026 (jumeau numérique hydraulique en
+  Unreal Engine, pertinent pour l'app Hydro ; convergence SIG/moteur de
+  jeu urbain).
+
+Mémoire synchronisée : `PROJECT_MEMORY.md`.
+
 ## [VALIDATION ARCHITECTURE PHASE 4] - 2026-07-13
 
 ### Validation par 3 subagents de recherche (DEC-000019)

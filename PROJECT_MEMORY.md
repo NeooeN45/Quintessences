@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-13 (clôture Phase 3 + lancement Phase 4 + fiche LiDAR HD) |
+| **Dernière mise à jour** | 2026-07-13 (état de l'art sourcé : 14 moteurs + Centre de Commandement) |
 
 ---
 
@@ -82,7 +82,7 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
 - `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
 - `GSIE/ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `GSIE/ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
-- `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — Centre de Commandement UE 5.8 (livrable 211, v2.1.0 — Gaussian Splatting validé, DEC-000010)
+- `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` — Centre de Commandement UE 5.8 (livrable 211, v2.2.0 — Gaussian Splatting validé (DEC-000010) + §9 compléments de recherche : UE5.8, Cesium post-avril 2026, précédents multi-domaines, plugin Unreal MCP, publications 2026)
 - `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, v1.1.0 — SegmentAnyTreeV2 + Crown-BERT + précédents ONF/SDIS/Arbonaut, en attente MVP Ignis)
 - `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR, Cesium Gaussian Splats, SegmentAnyTreeV2, Crown-BERT
 - `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` — Fiche LiDAR HD IGN (11 classes ASPRS+IGN, pipeline PDAL→GDAL→PostGIS, correspondance strates Ignis, bibliothèque IGN_LIDAR_HD_DATASET v4.1.2, implications Unreal/Cesium)
@@ -103,10 +103,16 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
     `vol_rth.py`, `vol_surveillance_incendie.py`, `run_test.sh`
   - Visualisation : `trajectoire_surveillance.png`
 
-### Moteurs amorcés (14/14 — profondeur à qualifier)
+### Moteurs documentés (14/14 — architecture + état de l'art sourcé)
 
-> 3 moteurs ont un fichier dédié (EVIDENCE, KNOWLEDGE, CORRELATION) ; 11 n'ont
-> qu'un README de cadrage. Documentation complète = Phase 2. Détail : `ROADMAP.md`.
+> Les 14 moteurs ont chacun un fichier d'architecture dédié (livrable 207,
+> Phase 2 : responsabilité, entrées/sorties, dépendances, contrat
+> d'interface, garanties, cas d'usage). Enrichissement 2026-07-13 (recherche
+> sourcée multi-agents) : chaque fichier reçoit désormais une section
+> supplémentaire **« État de l'art et pistes de recherche sourcées »**
+> (technologies, algorithmes, bibliothèques, précédents scientifiques —
+> pistes pour la Phase 4, aucun contrat d'interface modifié). Statut
+> `Draft` inchangé pour les 14 fichiers. Détail : `ROADMAP.md`.
 
 - `GSIE/ENGINES/EVIDENCE_ENGINE/` — Evidence Engine (filtre amont)
 - `GSIE/ENGINES/KNOWLEDGE_ENGINE/` — Knowledge Engine
