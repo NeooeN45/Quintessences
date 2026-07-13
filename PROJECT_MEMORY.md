@@ -4,9 +4,9 @@
 |---|---|
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
-| **Phase** | 2 — Architecture |
-| **Directive courante** | GSIE-DIR-0006 |
-| **Dernière mise à jour** | 2026-07-12 |
+| **Phase** | 3 — Connaissance |
+| **Directive courante** | GSIE-DIR-0007 |
+| **Dernière mise à jour** | 2026-07-13 |
 
 ---
 
@@ -16,14 +16,16 @@
 fondé sur le moteur **GSIE** (General System Intelligence Engine).
 Spécialisations : GeoSylva (forêt), GSIE-Ignis (incendie), futures à venir.
 
-Le projet est en **Phase 2 : Architecture**, lancée officiellement par
-**DEC-000004** le 2026-07-12. La Phase 1 (Foundation) est **clôturée** —
-les 12 livrables sont Validated (9/12) ou Locked (3/12).
+Le projet est en **Phase 3 : Connaissance**, lancée officiellement par
+**DEC-000011** (GSIE-DIR-0007) le 2026-07-13. La Phase 1 (Foundation)
+est **clôturée** — les 12 livrables sont Validated (9/12) ou Locked
+(3/12). La Phase 2 (Architecture) a produit 12 livrables Draft
+(201-212), prêts pour Review.
 
-La Phase 2 autorise l'architecture détaillée des moteurs, les
-spécifications techniques, les RFC d'architecture et le banc de
-simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
- reste interdit jusqu'en Phase 4.
+La Phase 3 transforme les fondations scientifiques et l'architecture en
+une **base de connaissances structurée, sourcée et versionnée** — le
+véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
+(301-308). Le code métier dans le dépôt reste interdit jusqu'en Phase 4.
 
 ### Avancement des livrables
 
@@ -53,8 +55,14 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
 - `TECHNICAL_CONSTITUTION.md` — Constitution Technique (livrable 008, Validated)
 - `AI_CONSTITUTION.md` — Constitution IA (livrable 009, Validated)
 - `04_ARCHITECTURE/ARCHITECTURE_PRINCIPLES.md` — Architecture Principles
-- `06_RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method
-- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method
+- `06_RESEARCH/RESEARCH_METHOD.md` — GSIE Research Method (livrable 301, détaillé Phase 3)
+- `06_RESEARCH/EVIDENCE_FRAMEWORK.md` — Evidence Framework (livrable 306, Phase 3)
+- `06_RESEARCH/SOURCING_PLAN.md` — Sourcing Plan (livrable 307, Phase 3)
+- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — GSIE Knowledge Method (livrable 302, détaillé Phase 3)
+- `07_KNOWLEDGE/FOREST_ONTOLOGY.md` — Forest Ontology (livrable 303, Phase 3)
+- `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
+- `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
+- `08_DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 24 datasets)
 
 ### Documents d'architecture rédigés
 
@@ -134,6 +142,7 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
 - **DEC-000008** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) — GSIE-DIR-0005
 - **DEC-000009** — Vision du Moteur Cognitif GSIE-Ignis — GSIE-DIR-0006
 - **DEC-000010** — Adoption Unreal Engine 5.8 + Cesium comme moteur 3D du jumeau numérique
+- **DEC-000011** — Entrée en Phase 3 : Connaissance (GSIE-DIR-0007)
 
 ## Documents structurants
 
@@ -142,6 +151,7 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
 - **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
 - **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
 - **GSIE-DIR-0006** — Vision du Moteur Cognitif GSIE-Ignis (Draft — DEC-000009)
+- **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)

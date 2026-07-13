@@ -187,11 +187,41 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
   supervision humaine).
 - Toutes les sources de données sont citées.
 
-## Phase 3 — Connaissance (à définir)
+## Phase 3 — Connaissance (active)
 
-- Base de connaissances
-- Ontologies et taxonomies
-- Sourcing scientifique
+> Lancée officiellement par **GSIE-DIR-0007** le 2026-07-13 (DEC-000011).
+> La base de connaissances est le véritable produit de GSIE (CON-003).
+> Aucune connaissance sans source (S-1) et sans niveau de preuve (S-2).
+
+### Livrables Phase 3
+
+| # | Livrable | Fichier / Dossier | Statut |
+|---|---|---|---|
+| 301 | Research Method (détaillée) | `06_RESEARCH/RESEARCH_METHOD.md` | Draft |
+| 302 | Knowledge Method (détaillée) | `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` | Draft |
+| 303 | Forest Ontology | `07_KNOWLEDGE/FOREST_ONTOLOGY.md` | Draft |
+| 304 | Knowledge Graph Specification | `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Draft |
+| 305 | Dataset Catalog | `08_DATASETS/DATASET_CATALOG.md` | Draft |
+| 306 | Evidence Framework | `06_RESEARCH/EVIDENCE_FRAMEWORK.md` | Draft |
+| 307 | Sourcing Plan | `06_RESEARCH/SOURCING_PLAN.md` | Draft |
+| 308 | Knowledge Base Seed | `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Draft |
+
+### Ordre de production
+
+```
+301 + 302 (méthodes) → 303-306 (parallèle) → 307 (sourcing) → 308 (seed)
+```
+
+### Critères de complétude Phase 3
+
+- Pipeline de recherche détaillé avec critères opérationnels.
+- Cycle de vie d'une connaissance complet (création → révision → archivage).
+- Ontologie forestière couvre les 10 domaines scientifiques (S-6).
+- Graphe de connaissances supporte le raisonnement multi-échelle (DIR-0006).
+- Au moins 10 datasets français catalogués avec métadonnées.
+- Framework de niveaux de preuve avec exemples concrets par domaine.
+- Plan de sourcing priorisé et aligné sur l'ordre des moteurs.
+- Base de connaissances : au moins 20 connaissances validées.
 
 ## Phase 4 — Implémentation (à définir)
 

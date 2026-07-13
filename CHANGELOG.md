@@ -4,6 +4,57 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 3 — CONNAISSANCE] - 2026-07-13
+
+### Lancement officiel Phase 3 (DEC-000011, GSIE-DIR-0007)
+
+Le Fondateur acte l'entrée en **Phase 3 — Connaissance**. La Phase 3
+transforme les fondations scientifiques (Phase 1) et l'architecture
+(Phase 2) en une **base de connaissances structurée, sourcée et
+versionnée** — le véritable produit de GSIE (CON-003).
+
+### 8 livrables Phase 3 (301-308)
+
+| # | Livrable | Lignes | Description |
+|---|---|---|---|
+| 301 | Research Method | 261 | Pipeline 10 étapes avec critères opérationnels, articulation moteurs |
+| 302 | Knowledge Method | 358 | Cycle de vie KnowledgeObject, 6 types, versionnement, domaines de validité |
+| 303 | Forest Ontology | 803 | 10 domaines S-6, concepts, propriétés, relations, référentiels, échelles |
+| 304 | Knowledge Graph Spec | 917 | Nœuds, arêtes, requêtes, versioning, graphe vivant DIR-0006, conflits S-3 |
+| 305 | Dataset Catalog | 837 | 24 datasets (IGN, Météo-France, INRAE, GBIF, Copernicus, Prométhée) |
+| 306 | Evidence Framework | 579 | Niveaux A-F, matrice de décision, 10 exemples par domaine, upgrade/downgrade |
+| 307 | Sourcing Plan | 337 | 7 vagues alignées sur moteurs, 64 sources, critères de complétude |
+| 308 | Knowledge Base Seed | 668 | 25 connaissances validées (5 essences + pédologie + croissance + taxonomie) |
+
+### Documents créés
+
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0007.md` — Directive Phase 3
+- `03_DECISIONS/DEC-000011.md` — Décision d'ouverture Phase 3
+- `06_RESEARCH/RESEARCH_METHOD.md` — détaillage (stub → 261 lignes)
+- `06_RESEARCH/EVIDENCE_FRAMEWORK.md` — nouveau
+- `06_RESEARCH/SOURCING_PLAN.md` — nouveau
+- `07_KNOWLEDGE/KNOWLEDGE_METHOD.md` — détaillage (stub → 358 lignes)
+- `07_KNOWLEDGE/FOREST_ONTOLOGY.md` — détaillage (stub → 803 lignes)
+- `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — détaillage (stub → 917 lignes)
+- `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — nouveau
+- `08_DATASETS/DATASET_CATALOG.md` — nouveau
+
+### Connaissances initiales (livrable 308)
+
+25 KnowledgeObjects validés :
+- Autécologie : chêne sessile (K-001 à K-004), hêtre (K-005 à K-007),
+  douglas (K-008 à K-010), sapin pectiné (K-011, K-012), pin sylvestre
+  (K-013, K-014)
+- Pédologie : classes RUM, classes pH, profondeur, Alocrisol, Brunisol
+  (K-015 à K-019)
+- Croissance : ONF-FFN douglas, chêne, hêtre (K-020 à K-022)
+- Taxonomie : Quercus petraea, Fagus sylvatica, Pseudotsuga menziesii
+  (K-023 à K-025)
+- 1 conflit bibliographique documenté (S-3) : gel du sapin pectiné
+  (-20°C vs -15°C selon provenance)
+
+---
+
 ## [UNREAL ENGINE — JUMEAU NUMÉRIQUE 3D] - 2026-07-12
 
 ### Adoption Unreal Engine 5.8 + Cesium (DEC-000010)
