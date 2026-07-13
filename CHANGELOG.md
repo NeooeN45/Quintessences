@@ -4,6 +4,50 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [CONFIGURATION CENTRE DE COMMANDEMENT UE5.8] - 2026-07-13
+
+### Installation et configuration du poste de pilotage immersif (livrable 211)
+
+Configuration complète de l'environnement Unreal Engine 5.8 pour le Centre
+de Commandement GSIE, sur disque `E:\GSIE-Centre-Commandement` (anciennement
+`E:\Quintessences unréal ungin`, renommé). Conforme à DEC-000010 (adoption
+UE 5.8 + Cesium) et au livrable 211 (`COMMAND_CENTER_UNREAL.md`).
+
+**Composants installés et configurés :**
+- Unreal Engine 5.8.0 (changelist 55116800) — moteur
+- Cesium for Unreal v2.28.0 (EngineVersion 5.8.0) — globe 3D géoréférencé,
+  installé dans `Engine/Plugins/Marketplace/CesiumForUnreal/`
+- Unreal MCP v2.2.0 (GenOrca, EngineVersion 5.8.0) — pilotage IA de l'éditeur
+  via MCP (Claude Code, Cursor), 253 actions, précompilé UE 5.8
+- Twinmotion 2026.1 — installé
+- RealityScan 2.2 — photogrammétrie, installé
+
+**Plugins natifs UE5.8 vérifiés présents :**
+- GeoReferencing (avec PROJ/vcpkg — projections EPSG)
+- Niagara (effets feu/eau/fumée)
+- ScriptPlugin/PythonScriptPlugin (requis par Unreal MCP)
+
+**Plugins source clonés (Plugins-Sources/) :**
+- UE-GeoViewer (Will747) — overlay maps Google/Bing, import terrain HGT SRTM
+- LandscapeGen (TensorWorks) — veille (EngineVersion 4.25, incompatible 5.8 sans refonte)
+
+**Configuration système :**
+- Registre Windows : `HKCU\...\Unreal Engine\Builds\UE_5.8` enregistré
+- 8 variables d'environnement utilisateur (UE_ENGINE_PATH, GSIE_UE_ROOT, etc.)
+- 3 raccourcis bureau (UE5.8 Editor, Twinmotion, RealityScan)
+- Scripts utilitaires (Tools/) : verify-install, launch-ue, launch-twinmotion,
+  launch-realityscan, clean-cache
+- Config Cesium ion template (Tools/cesium-ion-config.json) — coordonnées
+  Landiras (zone de test Ignis, 44.4764°N, -0.4236°E)
+
+**Plugins à installer via Fab (marketplace Epic) — manuel :**
+- BlueprintWebSocket (Pandoa) — gratuit, WebSocket pour Blueprints
+- FluidFlux (ImaginaryBlend) — $349.99, simulation eau shallow-water (app Hydro)
+
+Mémoire synchronisée : `PROJECT_MEMORY.md`.
+
+---
+
 ## [ÉTAT DE L'ART SOURCÉ — 14 MOTEURS + CENTRE DE COMMANDEMENT] - 2026-07-13
 
 ### Enrichissement documentaire par recherche sourcée multi-agents

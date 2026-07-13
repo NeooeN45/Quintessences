@@ -357,6 +357,59 @@ fn should_return_refuse_when_conflict_detected() {
     assert!(!result.conflits.is_empty());
 }
 
+// --- Tests de validation avancés (coverage 100%) ---
+
+#[test]
+fn should_return_error_when_author_too_long() {
+    let mut sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    sub.source_candidate.auteur = "a".repeat(10_001);
+    let result = EvidenceEngine::evaluate(sub);
+    assert!(result.is_err());
+}
+
+#[test]
+fn should_return_error_when_reference_too_long() {
+    let mut sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    sub.source_candidate.reference = "r".repeat(10_001);
+    let result = EvidenceEngine::evaluate(sub);
+    assert!(result.is_err());
+}
+
+#[test]
+fn should_return_error_when_soumetteur_empty() {
+    let mut sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    sub.soumetteur = "   ".to_string();
+    let result = EvidenceEngine::evaluate(sub);
+    assert!(result.is_err());
+}
+
+#[test]
+fn should_return_error_when_soumetteur_too_long() {
+    let mut sub = make_submission(SourceType::PeerReviewed, ContentType::Publication);
+    sub.soumetteur = "s".repeat(10_001);
+    let result = EvidenceEngine::evaluate(sub);
+    assert!(result.is_err());
+}
+
+#[test]
+fn should_return_level_b_when_peer_reviewed_and_referentiel() {
+    let sub = make_submission(SourceType::PeerReviewed, ContentType::Referentiel);
+    let result = EvidenceEngine::evaluate(sub).unwrap();
+    assert_eq!(result.evidence_level, EvidenceLevel::B);
+}
+
+// --- Tests Display pour EvidenceLevel (coverage 100%) ---
+
+#[test]
+fn should_display_all_evidence_levels_correctly() {
+    assert_eq!(EvidenceLevel::A.to_string(), "A");
+    assert_eq!(EvidenceLevel::B.to_string(), "B");
+    assert_eq!(EvidenceLevel::C.to_string(), "C");
+    assert_eq!(EvidenceLevel::D.to_string(), "D");
+    assert_eq!(EvidenceLevel::E.to_string(), "E");
+    assert_eq!(EvidenceLevel::F.to_string(), "F");
+}
+
 // --- Tests de l'enum EvidenceLevel ---
 
 #[test]

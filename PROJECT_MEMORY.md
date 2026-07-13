@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-13 (état de l'art sourcé : 14 moteurs + Centre de Commandement) |
+| **Dernière mise à jour** | 2026-07-13 (configuration Centre de Commandement UE5.8 — livrable 211) |
 
 ---
 
@@ -37,6 +37,20 @@ connaissances en **code métier opérationnel** : les 14 moteurs GSIE,
 l'API GSIE, le Hub (Centre de Commandement Unreal Engine 5.8) et les
 applications clientes (GeoSylva, Ignis en priorité). Le code métier,
 interdit en Phase 3 (CON-003), est désormais autorisé.
+
+### Centre de Commandement GSIE — configuration environnement (2026-07-13)
+
+Environnement Unreal Engine 5.8 configuré sur `E:\GSIE-Centre-Commandement`
+(DEC-000010, livrable 211). Composants installés : UE 5.8.0, Cesium for
+Unreal v2.28.0 (globe 3D géoréférencé), Unreal MCP v2.2.0 (pilotage IA
+éditeur), Twinmotion 2026.1, RealityScan 2.2. Plugins natifs vérifiés :
+GeoReferencing (PROJ/EPSG), Niagara, PythonScriptPlugin. Plugins source
+clonés : UE-GeoViewer (GIS overlay), LandscapeGen (veille, UE 4.25).
+Configuration système : registre Windows, 8 variables d'environnement,
+3 raccourcis bureau, scripts utilitaires (Tools/), config Cesium ion
+template (Landiras — zone de test Ignis). Plugins Fab à installer
+manuellement : BlueprintWebSocket (gratuit), FluidFlux ($349.99, Hydro).
+Voir `CHANGELOG.md` pour le détail complet.
 
 ### Avancement des livrables
 
