@@ -29,7 +29,7 @@ Le projet est en **Phase 4 : Implémentation**, lancée officiellement par
 est **clôturée** — les 12 livrables sont Validated (9/12) ou Locked
 (3/12). La Phase 2 (Architecture) a produit 12 livrables Draft
 (201-212). La Phase 3 (Connaissance) est **clôturée** — les 10 livrables
-(301-310) sont Validated, 26 datasets catalogués, 25 connaissances
+(301-310) sont Validated, 29 datasets catalogués, 25 connaissances
 validées, 9 spécifications Draft produites pour la Phase 4.
 
 La Phase 4 transforme les fondations, l'architecture et la base de
@@ -73,7 +73,7 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
 - `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` — Forest Ontology (livrable 303, Phase 3)
 - `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
 - `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
-- `GSIE/DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 26 datasets — DS-001 à DS-026)
+- `GSIE/DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 29 datasets — DS-001 à DS-029)
 - `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — Schéma DB Encyclopédie (livrable 309, PostgreSQL + Neo4j + ES + Jena)
 - `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` — Socle données 14 moteurs + liens apps (livrable 310)
 
@@ -163,6 +163,7 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
 - **DEC-000015** — Unification des articles constitutionnels : `GSIE-CON-0XX` source unique, 100 fichiers `ARTICLE_0XX` vides supprimés (RFC-0002 Option A)
 - **DEC-000016** — Extension Phase 3 : 8 → 10 livrables (309-310 rattachés, amendement GSIE-DIR-0007 v1.1)
 - **DEC-000017** — Validation 10 livrables Phase 3 + clôture Phase 3 + lancement Phase 4 (GSIE-DIR-0011)
+- **DEC-000018** — Stratégie IA IGN : adoption geocontext MCP + capitalisation datasets IA (CoSIA, OCS GE, apprentissage LiDAR HD)
 
 ## Documents structurants
 

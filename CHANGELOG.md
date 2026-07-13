@@ -4,6 +4,33 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [STRATÉGIE IA IGN + GEOCONTEXT MCP] - 2026-07-13
+
+### Découverte et capitalisation de la stratégie IA IGN (DEC-000018)
+
+Analyse de la feuille de route IA IGN 2022-2024, de la page vigie IA et
+du dépôt `ignfab/geocontext`. 4 livrables produits :
+
+- **`GSIE/RESEARCH/IGN_IA_STRATEGY.md`** (292 lignes) : feuille de route
+  IA IGN (6 axes, 3 objectifs), produits (CoSIA 20cm, OCS GE, GéoLLM,
+  cartes Anthropocène), consortium AI4GEO, IGNfab, 8 recommandations
+- **`.devin/config.json`** : MCP geocontext configuré (instance HTTP
+  `https://geollm.beta.ign.fr/geocontext/mcp`). 10 outils : geocode,
+  altitude, adminexpress, cadastre, urbanisme, assiette_sup,
+  gpf_search_types, gpf_describe_type, gpf_count_features,
+  gpf_get_features
+- **`DATASET_CATALOG.md`** : 3 nouveaux datasets (DS-027 CoSIA, DS-028
+  OCS GE, DS-029 Datasets apprentissage LiDAR HD). Total : 29 datasets
+- **`HUB_AND_APPS_PLAN.md`** §11 : interopérabilité IGN geocontext MCP
+  documentée pour les specs (HUB-001, HUB-003, IGNIS-001, GEO-001,
+  GIS Engine)
+- **`DEC-000018`** : décision tracée (3 actes, 8 recommandations)
+
+Alignement thématique IGN ↔ GSIE : forêts (Forest Dynamics), érosion
+(GIS/Simulation), cours d'eau (Hydro), artificialisation (GIS),
+biodiversité (Botanical). geocontext = première brique d'interopérabilité
+avec la Géoplateforme.
+
 ## [PHASE 3 CLÔTURÉE — PHASE 4 LANCÉE] - 2026-07-13
 
 ### Validation des 10 livrables Phase 3 (DEC-000017)

@@ -709,6 +709,81 @@ aux grandes familles de données consommées par GSIE et Ignis.
 
 ---
 
+#### DS-027 — CoSIA (Couverture du Sol par Intelligence Artificielle)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-027 |
+| **Nom du dataset** | CoSIA — Couverture du Sol par Intelligence Artificielle |
+| **Organisme producteur** | IGN |
+| **Catégorie** | A — Forestier / B — Cartographique / H — IA |
+| **Domaines S-6 couverts** | Occupation du sol, végétation, artificialisation |
+| **Moteurs consommateurs** | Forest Dynamics Engine, GIS Engine, Botanical Engine, Ignis (combustible surface) |
+| **Source / URL** | https://www.ign.fr/institut/ia-en-vigie-du-territoire |
+| **Licence** | Licence Ouverte 2.0 (etalab-2.0) |
+| **Couverture spatiale** | France métropolitaine + DROM |
+| **Couverture temporelle** | Depuis 2019 (production continue) |
+| **Résolution spatiale** | **20 cm par pixel** |
+| **Résolution temporelle** | Continue (mise à jour avec OCS GE) |
+| **Format** | Vecteur + raster |
+| **Version référencée** | 2024 (production continue) |
+| **Qualité / précision** | Deep learning sur images aériennes → prédiction haute résolution, puis traitements complémentaires + croisement données existantes |
+| **Contact** | IGN — programme OCS GE |
+| **Statut d'ingestion** | Planifié (Phase 4) |
+| **Notes** | Complément majeur du LiDAR HD (DS-002) pour la couverture du sol. Première estimation par IA → croisement avec données forestières (BD Forêt v2, DS-001). Source : `GSIE/RESEARCH/IGN_IA_STRATEGY.md` §3.1. |
+
+---
+
+#### DS-028 — OCS GE (Occupation du Sol à Grande Échelle)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-028 |
+| **Nom du dataset** | OCS GE — Occupation du Sol à Grande Échelle |
+| **Organisme producteur** | IGN (pilote) |
+| **Catégorie** | B — Cartographique / H — IA |
+| **Domaines S-6 couverts** | Occupation du sol, imperméabilité, foncier, nature en ville, surfaces agricoles, haies et bocages |
+| **Moteurs consommateurs** | GIS Engine, Forest Dynamics Engine, Hydro Engine (imperméabilité → ruissellement), Ignis |
+| **Source / URL** | https://www.ign.fr/institut/ia-en-vigie-du-territoire |
+| **Licence** | Licence Ouverte 2.0 (etalab-2.0) |
+| **Couverture spatiale** | France métropolitaine + DROM |
+| **Couverture temporelle** | Depuis 2019 (mise à jour continue) |
+| **Résolution spatiale** | Grande échelle (précision à confirmer) |
+| **Résolution temporelle** | Continue |
+| **Format** | Vecteur |
+| **Version référencée** | 2024 (production continue) |
+| **Qualité / précision** | Télédétection d'objets par IA (habitations, végétation) + croisement données existantes. Référentiel national. |
+| **Contact** | IGN — programme OCS GE |
+| **Statut d'ingestion** | Planifié (Phase 4) |
+| **Notes** | Référentiel national d'occupation du sol, service de l'État et des collectivités. Thématiques : imperméabilité, foncier, nature en ville, surfaces agricoles utiles, haies et bocages. Source : `GSIE/RESEARCH/IGN_IA_STRATEGY.md` §3.2. |
+
+---
+
+#### DS-029 — Datasets apprentissage LiDAR HD (IGN)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-029 |
+| **Nom du dataset** | Datasets d'apprentissage LiDAR HD (IGN) |
+| **Organisme producteur** | IGN |
+| **Catégorie** | H — IA / I — Apprentissage |
+| **Domaines S-6 couverts** | Classification nuages de points, essences, structure forestière |
+| **Moteurs consommateurs** | Learning Engine, Botanical Engine, Forest Dynamics Engine |
+| **Source / URL** | https://www.ign.fr/feuille-route-ia (mesure 3 — feuille de route IA) |
+| **Licence** | Licence Ouverte 2.0 (etalab-2.0) |
+| **Couverture spatiale** | France métropolitaine (dalles LiDAR HD) |
+| **Couverture temporelle** | Diffusion en cours (programme LiDAR HD) |
+| **Résolution spatiale** | Nuages de points classés (11 classes ASPRS+IGN) |
+| **Résolution temporelle** | Continu |
+| **Format** | LAZ 1.4 (COPC), datasets ML-ready (à confirmer) |
+| **Version référencée** | 2024 (diffusion en cours) |
+| **Qualité / précision** | Datasets d'apprentissage pour deep learning sur nuages de points. Mesure 3 de la feuille de route IA IGN. |
+| **Contact** | IGN — programme LiDAR HD + équipe IA |
+| **Statut d'ingestion** | À évaluer (Phase 4) |
+| **Notes** | La feuille de route IA IGN (mesure 3) prévoit la diffusion de jeux de données d'apprentissage LiDAR HD et de modèles entraînés. Source directe pour le Learning Engine (transfer learning, classification essences). Complément de la bibliothèque `IGN_LIDAR_HD_DATASET` v4.1.2 (voir `LIDAR_HD_SPECIFICATIONS.md` §8). Source : `GSIE/RESEARCH/IGN_IA_STRATEGY.md` §7. |
+
+---
+
 ## 4. Priorité d'ingestion
 
 La priorité d'ingestion des datasets est alignée sur l'ordre de
@@ -872,6 +947,8 @@ qui l'exigent.
 | Date | Événement |
 |---|---|
 | 2026-07-13 | Création du livrable 305 — Dataset Catalog (Draft). Catalogage de 24 datasets répartis en 6 catégories (A-F), alignés sur les 14 moteurs et Ignis. Métadonnées complètes conformes à CON-002 et CON-005. Priorité d'ingestion alignée sur l'ordre de développement des moteurs (livrable 204). Notes de licences détaillées (Licence Ouverte, CC-BY, domaine public, accords spécifiques). |
+| 2026-07-13 | Enrichissement DS-002 (LiDAR HD) : 11 classes ASPRS+IGN détaillées, attributs points, accès COPC/EPT/WMS/API, qualité géométrique. Source : analyse 4 PDFs IGN officiels. |
+| 2026-07-13 | Ajout DS-027 (CoSIA 20cm), DS-028 (OCS GE), DS-029 (Datasets apprentissage LiDAR HD). Source : feuille de route IA IGN + page vigie IA. Total : 29 datasets. Voir `IGN_IA_STRATEGY.md` et DEC-000018. |
 
 ---
 

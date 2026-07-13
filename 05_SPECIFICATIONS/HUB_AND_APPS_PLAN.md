@@ -309,6 +309,63 @@ Une spécification est considérée **complète** quand :
 
 ---
 
+## 11. Interopérabilité IGN — geocontext MCP (Phase 4)
+
+### 11.1 Contexte
+
+L'IGN propose un serveur MCP (Model Context Protocol) — **geocontext**
+— qui permet d'interroger directement les données de la Géoplateforme
+sans téléchargement ni synchronisation. C'est la **première brique
+d'interopérabilité** GSIE avec les référentiels nationaux.
+
+Voir `GSIE/RESEARCH/IGN_IA_STRATEGY.md` §4 et `DEC-000018`.
+
+### 11.2 Configuration
+
+Le MCP est configuré dans `.devin/config.json` (scope projet) :
+
+```json
+{
+  "mcpServers": {
+    "geocontext": {
+      "url": "https://geollm.beta.ign.fr/geocontext/mcp",
+      "transport": "http"
+    }
+  }
+}
+```
+
+### 11.3 Outils disponibles pour le GIS Engine
+
+| Outil MCP | Source GPF | Usage GIS Engine |
+|---|---|---|
+| `geocode` | Autocomplétion GPF | Localiser un lieu |
+| `altitude` | Calcul altimétrique GPF | Altitude terrain (ForeFire, Hub) |
+| `adminexpress` | ADMIN-EXPRESS WFS | Commune, département, région |
+| `cadastre` | PARCELLAIRE-EXPRESS WFS | Parcelles cadastrales |
+| `urbanisme` | GPU WFS | PLU, POS, CC |
+| `assiette_sup` | GPU WFS | Servitudes d'utilité publique |
+| `gpf_search_types` | gpf-schema-store | Découverte de couches GPF |
+| `gpf_describe_type` | gpf-schema-store | Schéma d'un type |
+| `gpf_count_features` | WFS GPF | Comptage de features filtrées |
+| `gpf_get_features` | WFS GPF | Récupération de features |
+
+### 11.4 Implications pour les specs
+
+| Spec | Apport geocontext |
+|---|---|
+| **HUB-001** (Hub) | Cas d'usage GéoLLM : interrogation naturelle des données IGN par décideurs |
+| **HUB-003** (Layer Sheets) | Couches BD TOPO, ADMIN-EXPRESS, cadastre, PLU, SUP accessibles via MCP |
+| **IGNIS-001** (Ignis) | `altitude` pour ForeFire, `assiette_sup` pour servitudes, bâtiments à risque |
+| **GEO-001** (GeoSylva) | BD TOPO forêts, OCS GE (DS-028), CoSIA (DS-027) |
+| **GIS Engine** (à créer Phase 4) | Dépendance candidate : geocontext comme couche d'accès Géoplateforme |
+
+> **Recommandation** : la spec GIS Engine (Phase 4) doit intégrer
+> geocontext comme couche d'interopérabilité avec la Géoplateforme.
+> Voir `IGN_IA_STRATEGY.md` REC-IA-01 (P0).
+
+---
+
 > Statut : *Draft — plan de travail Phase 3 (préparation Phase 4). À
 > valider par le Fondateur avant exécution. Aucun code métier produit
 > (CON-003).*
