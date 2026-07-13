@@ -8,7 +8,7 @@ app = create_app()
 client = TestClient(app)
 
 
-def test_evidence_status_returns_200():
+def should_return_200_when_evidence_status_requested():
     """Le endpoint /api/v1/evidence/status doit retourner 200."""
     response = client.get("/api/v1/evidence/status")
     assert response.status_code == 200
@@ -17,7 +17,7 @@ def test_evidence_status_returns_200():
     assert data["status"] == "not_implemented"
 
 
-def test_knowledge_status_returns_200():
+def should_return_200_when_knowledge_status_requested():
     """Le endpoint /api/v1/knowledge/status doit retourner 200."""
     response = client.get("/api/v1/knowledge/status")
     assert response.status_code == 200
@@ -26,7 +26,7 @@ def test_knowledge_status_returns_200():
     assert data["status"] == "not_implemented"
 
 
-def test_gis_status_returns_200():
+def should_return_200_when_gis_status_requested():
     """Le endpoint /api/v1/gis/status doit retourner 200."""
     response = client.get("/api/v1/gis/status")
     assert response.status_code == 200
@@ -35,7 +35,7 @@ def test_gis_status_returns_200():
     assert data["status"] == "not_implemented"
 
 
-def test_openapi_schema_available():
+def should_return_200_when_openapi_schema_requested():
     """Le schéma OpenAPI doit être disponible à /api/v1/openapi.json."""
     response = client.get("/api/v1/openapi.json")
     assert response.status_code == 200
@@ -43,7 +43,7 @@ def test_openapi_schema_available():
     assert schema["info"]["title"] == "GSIE API"
 
 
-def test_docs_endpoint_available():
-    """La documentation Swagger doit être accessible."""
+def should_return_200_when_docs_requested():
+    """La documentation Swagger doit être accessible en développement."""
     response = client.get("/docs")
     assert response.status_code == 200

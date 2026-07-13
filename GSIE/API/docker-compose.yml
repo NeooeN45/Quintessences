@@ -1,6 +1,9 @@
 # GSIE API — Docker Compose (Phase 4, semaine 1)
 # DEC-000019 : PostgreSQL+PostGIS, Redis, API FastAPI
 #
+# Les secrets sont lus depuis .env (non commité).
+# Copier .env.example en .env et adapter les valeurs.
+#
 # Usage :
 #   docker compose up -d          # démarrer tous les services
 #   docker compose logs -f api    # suivre les logs API
@@ -11,9 +14,9 @@ services:
   db:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_USER: gsie
-      POSTGRES_PASSWORD: gsie_dev
-      POSTGRES_DB: gsie
+      POSTGRES_USER: ${GSIE_DB_USER:-gsie}
+      POSTGRES_PASSWORD: ${GSIE_DB_PASSWORD:?GSIE_DB_PASSWORD requis dans .env}
+      POSTGRES_DB: ${GSIE_DB_NAME:-gsie}
     ports:
       - "5432:5432"
     volumes:
@@ -26,14 +29,17 @@ services:
     restart: unless-stopped
 
   # Redis 7.2 — cache + Pub/Sub + WebSocket fan-out
+  # Sécurisé : mot de passe requis, port non exposé sur l'hôte
   redis:
     image: redis:7.2-alpine
-    ports:
-      - "6379:6379"
+    command: redis-server --requirepass ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
+    # Port interne uniquement — pas de mapping sur l'hôte (sécurité)
+    expose:
+      - "6379"
     volumes:
       - gsie_redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${GSIE_REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,12 +51,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      GSIE_ENVIRONMENT: development
-      GSIE_DEBUG: "true"
-      GSIE_LOG_LEVEL: INFO
-      GSIE_DATABASE_URL: postgresql+asyncpg://gsie:gsie_dev@db:5432/gsie
-      GSIE_REDIS_URL: redis://redis:6379/0
-      GSIE_OTEL_ENABLED: "false"
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:-development}
+      GSIE_DEBUG: ${GSIE_DEBUG:-true}
+      GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
+      GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy

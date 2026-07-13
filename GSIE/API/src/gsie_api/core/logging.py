@@ -1,4 +1,7 @@
-"""Logging structuré — structlog + correlation ID (CON-005 traçabilité)."""
+"""Logging structuré — structlog + correlation ID (CON-005 traçabilité).
+
+Format JSON en production, console en développement.
+"""
 
 import logging
 import sys
@@ -11,7 +14,7 @@ import structlog
 trace_id_ctx: ContextVar[str] = ContextVar("trace_id", default="")
 
 
-def _add_trace_id(_, __, event_dict: dict) -> dict:
+def _add_trace_id(_: object, __: object, event_dict: dict) -> dict:
     """Injecte le trace_id dans chaque log (CON-005)."""
     tid = trace_id_ctx.get()
     if tid:
@@ -19,15 +22,23 @@ def _add_trace_id(_, __, event_dict: dict) -> dict:
     return event_dict
 
 
-def setup_logging(log_level: str = "INFO") -> None:
+def setup_logging(log_level: str = "INFO", environment: str = "development") -> None:
     """Configure structlog avec format JSON en production, console en dev."""
+    is_production = environment == "production"
+
+    renderer = (
+        structlog.processors.JSONRenderer()
+        if is_production
+        else structlog.dev.ConsoleRenderer()
+    )
+
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
             _add_trace_id,
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
-            structlog.dev.ConsoleRenderer(),
+            renderer,
         ],
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, log_level.upper(), logging.INFO)

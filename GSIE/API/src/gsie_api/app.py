@@ -3,8 +3,9 @@
 Architecture (DEC-000019) :
 - Clean architecture par modules moteurs (pas DDD pur)
 - OpenTelemetry pour observabilité (CON-005)
-- TraceId middleware pour traçabilité
+- TraceId middleware pour traçabilité + headers de sécurité
 - Health endpoint pour monitoring
+- Documentation désactivée en production (OWASP A05)
 """
 
 from contextlib import asynccontextmanager
@@ -12,23 +13,36 @@ from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 
 from gsie_api.core.config import get_settings
-from gsie_api.core.health import router as health_router
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.engines.evidence.router import router as evidence_router
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
+from gsie_api.infrastructure.health import router as health_router
 from gsie_api.shared.middleware import TraceIdMiddleware
 
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
+# Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
+_OPENAPI_TAGS = [
+    {"name": "health", "description": "Health checks — liveness et dépendances"},
+    {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
+    {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
+    {"name": "gis", "description": "GIS Engine — traitement géospatial"},
+]
+
+# CORS — méthodes et headers explicites (sécurité OWASP A05)
+_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+_ALLOWED_HEADERS = ["Content-Type", "Authorization", "X-Trace-Id"]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Cycle de vie : startup + shutdown."""
-    setup_logging(_settings.log_level)
+    setup_logging(_settings.log_level, _settings.environment)
     logger.info(
         "api_starting",
         app=_settings.app_name,
@@ -41,14 +55,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     """Factory FastAPI — app creation avec tous les middlewares et routes."""
+    is_production = _settings.environment == "production"
+
     app = FastAPI(
         title=_settings.app_name,
         version=_settings.app_version,
         description="GSIE — General System Intelligence Engine API",
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url=f"{_settings.api_v1_prefix}/openapi.json",
+        # Documentation désactivée en production (OWASP A05)
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
+        openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
+        openapi_tags=_OPENAPI_TAGS,
     )
 
     # Middlewares (ordre important : trace_id en premier)
@@ -57,8 +75,8 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=_settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=_ALLOWED_METHODS,
+        allow_headers=_ALLOWED_HEADERS,
     )
 
     # Routes — health à la racine, moteurs sous /api/v1/
