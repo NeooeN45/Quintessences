@@ -63,6 +63,8 @@ véritable produit de GSIE (CON-003). Elle est composée de 8 livrables
 - `07_KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` — Knowledge Graph Spec (livrable 304, Phase 3)
 - `07_KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` — Knowledge Base Seed (livrable 308, 25 connaissances)
 - `08_DATASETS/DATASET_CATALOG.md` — Dataset Catalog (livrable 305, 24 datasets)
+- `04_ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — Schéma DB Encyclopédie (livrable 309, PostgreSQL + Neo4j + ES + Jena)
+- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` — Socle données 14 moteurs + liens apps (livrable 310)
 
 ### Documents d'architecture rédigés
 

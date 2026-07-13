@@ -4,6 +4,37 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SCHÉMA DB + SOCLE MOTEURS] - 2026-07-13
+
+### Livrables 309-310 — socle technique de l'Encyclopédie
+
+**Livrable 309 — Encyclopédie Database Schema** (677 lignes) :
+- 16 tables PostgreSQL/PostGIS avec DDL complet (sources, datasets,
+  connaissances_meta, connaissances_versions, conflits,
+  domaines_validite, taxons, types_sol, habitats, pathologies,
+  insectes, modeles, moteurs_consommateurs, relations_meta,
+  ingestion_logs, utilisateurs)
+- Schéma Neo4j (labels, relations, contraintes, exemples Cypher)
+- Index Elasticsearch (mapping full-text)
+- Schéma RDF/OWL (préfixes, classes, propriétés, alignement LOD)
+- Règles de génération d'identifiants uniques stables
+- Mapping KnowledgeObject → PostgreSQL/Neo4j/RDF
+- Pipeline d'ingestion, sécurité et accès
+
+**Livrable 310 — Engine Data Socle** (768 lignes) :
+- Socle de données détaillé pour les 14 moteurs (consomme/produit,
+  domaines, datasets, entités, requêtes, dépendances, volumes)
+- Liens vers les 4 apps externes (GeoSylva, GSIE-Ignis, Myhunt, QGISIA)
+- Matrice moteur × app
+- Priorité d'alimentation alignée sur l'ordre de développement (204)
+
+### Documents créés
+
+- `04_ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` — livrable 309
+- `04_ARCHITECTURE/ENGINE_DATA_SOCLE.md` — livrable 310
+
+---
+
 ## [ENCYCLOPÉDIE DE L'ÉCOSYSTÈME] - 2026-07-13
 
 ### L'Encyclopédie de l'Écosystème (DEC-000012, GSIE-DIR-0008)

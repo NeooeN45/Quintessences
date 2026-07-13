@@ -52,7 +52,7 @@ FF_BASE_URL = f"http://{FF_HOST}:{FF_PORT}"
 # Chemins
 HOME = str(Path.home())
 PX4_BUILD_DIR = f"{HOME}/gsie-ignis/PX4-Autopilot/build/px4_sitl_default"
-PX4_GZ_ENV = f"{HOME}/gsie-ignis/PX4-Autopilot/build/px4_sitl_default/gz_env.sh"
+PX4_GZ_ENV = f"{HOME}/gsie-ignis/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh"
 FOREFIRE_DIR = f"{HOME}/gsie-ignis/forefire"
 FOREFIRE_DATA = f"{HOME}/gsie-ignis/data/forefire"
 FOREFIRE_LIB = f"{FOREFIRE_DIR}/lib"
@@ -218,10 +218,9 @@ def stop_forefire(proc: subprocess.Popen) -> None:
 
 # === PX4 + Gazebo ===
 
-def start_gazebo() -> subprocess.Popen:
-    """Lance Gazebo server-only avec le monde Corse."""
+def _source_gz_env() -> dict:
+    """Source gz_env.sh et retourne l'environnement complet."""
     env = dict(os.environ)
-    # Sourcer gz_env.sh pour les plugins capteurs
     if os.path.exists(PX4_GZ_ENV):
         result = subprocess.run(
             ["bash", "-c", f"source {PX4_GZ_ENV} && env"],
@@ -231,9 +230,16 @@ def start_gazebo() -> subprocess.Popen:
             if "=" in line:
                 k, v = line.split("=", 1)
                 env[k] = v
+    return env
 
+
+def start_gazebo() -> subprocess.Popen:
+    """Lance Gazebo server-only avec le monde Corse via bash (source gz_env.sh)."""
+    env = _source_gz_env()
+    # Lancer via bash pour garantir que gz_env.sh est sourcé
+    cmd = f"source {PX4_GZ_ENV} && gz sim -s -r {CORSE_SDF}"
     proc = subprocess.Popen(
-        ["gz", "sim", "-s", "-r", CORSE_SDF],
+        ["bash", "-c", cmd],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -243,27 +249,18 @@ def start_gazebo() -> subprocess.Popen:
 
 
 def start_px4() -> subprocess.Popen:
-    """Lance PX4 SITL avec le modèle x500."""
-    env = dict(os.environ)
-    if os.path.exists(PX4_GZ_ENV):
-        result = subprocess.run(
-            ["bash", "-c", f"source {PX4_GZ_ENV} && env"],
-            capture_output=True, text=True
-        )
-        for line in result.stdout.split("\n"):
-            if "=" in line:
-                k, v = line.split("=", 1)
-                env[k] = v
-
+    """Lance PX4 SITL avec le modèle x500 via bash (source gz_env.sh)."""
+    env = _source_gz_env()
     env["PX4_SIM_MODEL"] = "gz_x500"
     env["PX4_GZ_WORLD"] = "corse"
 
     log_path = os.path.join(OUTPUT_DIR, "px4_forefire.log")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+    # Lancer via bash pour garantir que gz_env.sh est sourcé
+    cmd = f"source {PX4_GZ_ENV} && cd {PX4_BUILD_DIR} && ./bin/px4 etc/init.d-posix/rcS 0"
     proc = subprocess.Popen(
-        ["./bin/px4", "etc/init.d-posix/rcS", "0"],
-        cwd=PX4_BUILD_DIR,
+        ["bash", "-c", cmd],
         stdout=open(log_path, "w"),
         stderr=subprocess.STDOUT,
         text=True,
