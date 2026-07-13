@@ -1,8 +1,8 @@
 # ============================================================================
 # GSIE KNOWLEDGE DIRECTIVE
 # Directive ID : GSIE-DIR-0007
-# Version : 1.1
-# Statut : ACTIVE
+# Version : 1.2
+# Statut : CLOS
 # Priorité : CRITIQUE
 # Classification : PHASE
 # Auteur : Camille Perraudeau
@@ -10,6 +10,13 @@
 # ============================================================================
 
 # Titre : Lancement officiel de la Phase 3 — Connaissance
+
+## Amendement — 2026-07-13 (v1.2, DEC-000017) — Clôture
+
+La Phase 3 est **clôturée**. Les 10 livrables (301-310) sont validés
+par le Fondateur (`Review` → `Validated`). 9 spécifications Draft
+(HUB/Ignis/GeoSylva) ont été produites en fin de Phase 3 pour préparer
+la Phase 4. La Phase 4 — Implémentation est ouverte par `GSIE-DIR-0011`.
 
 ## Amendement — 2026-07-13 (v1.1, DEC-000016)
 

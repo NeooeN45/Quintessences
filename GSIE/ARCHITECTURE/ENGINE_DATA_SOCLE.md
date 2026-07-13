@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 310 — Engine Data Socle |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Review |
+| **Statut** | Validated |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-003, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Scientifique (S-6), Technique (T-1, T-2) |

@@ -187,28 +187,28 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
   supervision humaine).
 - Toutes les sources de données sont citées.
 
-## Phase 3 — Connaissance (active)
+## Phase 3 — Connaissance (clôturée ✅)
 
-> Lancée officiellement par **GSIE-DIR-0007** le 2026-07-13 (DEC-000011).
-> Périmètre étendu à **10 livrables** (301-310) par **DEC-000016**
-> (amendement GSIE-DIR-0007 v1.1).
-> La base de connaissances est le véritable produit de GSIE (CON-003).
-> Aucune connaissance sans source (S-1) et sans niveau de preuve (S-2).
+> Lancée par **GSIE-DIR-0007** le 2026-07-13 (DEC-000011).
+> Périmètre étendu à **10 livrables** (301-310) par **DEC-000016**.
+> **Clôturée** par **DEC-000017** le 2026-07-13 — 10/10 livrables
+> Validated. 9 spécifications Draft produites pour la Phase 4.
+> GSIE-DIR-0007 v1.2 (CLOS). Phase 4 ouverte par GSIE-DIR-0011.
 
 ### Livrables Phase 3
 
 | # | Livrable | Fichier / Dossier | Statut |
 |---|---|---|---|
-| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Review |
-| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Review |
-| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Review |
-| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Review |
-| 305 | Dataset Catalog | `GSIE/DATASETS/DATASET_CATALOG.md` | Review |
-| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Review |
-| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Review |
-| 308 | Knowledge Base Seed | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Review |
-| 309 | Schéma DB Encyclopédie (spécification) | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` | Review |
-| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` | Review |
+| 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Validated ✅ |
+| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Validated ✅ |
+| 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Validated ✅ |
+| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Validated ✅ |
+| 305 | Dataset Catalog (26 datasets) | `GSIE/DATASETS/DATASET_CATALOG.md` | Validated ✅ |
+| 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Validated ✅ |
+| 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Validated ✅ |
+| 308 | Knowledge Base Seed (25 connaissances) | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Validated ✅ |
+| 309 | Schéma DB Encyclopédie (spécification) | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` | Validated ✅ |
+| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` | Validated ✅ |
 
 ### Ordre de production
 
@@ -231,8 +231,12 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 > livrables 301-308 sont complets et non stubs. La Phase 3 peut passer
 > en Review. Voir `CHANGELOG.md` pour le détail.
 
-## Phase 4 — Implémentation (à définir)
+## Phase 4 — Implémentation (active 🚀)
 
+> Lancée par **GSIE-DIR-0011** le 2026-07-13 (DEC-000017).
+> Le code métier est désormais autorisé (CON-003 lève l'interdiction).
+> Voir `01_DIRECTIVES/ACTIVE/GSIE-DIR-0011.md` pour le périmètre complet
+> (4.1 API GSIE, 4.2 moteurs, 4.3 Hub, 4.4 apps, 4.5 Encyclopédie).
 > Étendue par **GSIE-DIR-0008** (DEC-000012) — l'Encyclopédie de
 > l'Écosystème devient un chantier majeur de la Phase 4.
 

@@ -4,6 +4,35 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 3 CLÔTURÉE — PHASE 4 LANCÉE] - 2026-07-13
+
+### Validation des 10 livrables Phase 3 (DEC-000017)
+
+Le Fondateur valide les 10 livrables Phase 3 (`Review` → `Validated`) et
+clôture officiellement la Phase 3 — Connaissance.
+
+- 10 livrables (301-310) passés en `Validated`
+- `GSIE-DIR-0007` amendé v1.2 (CLOS)
+- `GSIE-DIR-0011` créée — lancement Phase 4 Implémentation
+- `DEC-000017` tracée
+- `ROADMAP.md` : Phase 3 → Clôturée ✅, Phase 4 → Active 🚀
+- `PROJECT_MEMORY.md` : Phase courante → 4 — Implémentation
+
+### Fiche recherche LiDAR HD IGN
+
+Source : `DC_LiDAR_HD_1-0.pdf` (IGN, descriptif de contenu officiel).
+
+- `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` créée (236 lignes) :
+  - 11 classes de classification (8 ASPRS + 3 IGN) détaillées
+  - Correspondance strates Ignis ↔ classes LiDAR (3↔4→strate 1, 5→2/3)
+  - Pipeline IGN officiel : PDAL → GDAL → PostGIS (ST_Tile, ST_SummaryStats, ST_DumpAsPolygon)
+  - Bibliothèque `IGN_LIDAR_HD_DATASET` v4.1.2 (GPU/CUDA, 35-45 features, LOD2/LOD3)
+  - Implications Unreal/Cesium : MNT 50cm → Cesium 3D Terrain, MNH → PCG végétation par strate
+  - 8 recommandations Phase 4 priorisées
+- `DATASET_CATALOG.md` DS-002 enrichi : 11 classes, pipeline, bibliothèque, correspondance strates
+
+---
+
 ## [SPECS HUB + IGNIS + GEOSYLVA COMPLÈTES] - 2026-07-13
 
 ### 5 nouvelles spécifications Draft (HUB-003, IGNIS-002, IGNIS-003, GEO-002, GEO-003)

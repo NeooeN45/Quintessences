@@ -4,9 +4,9 @@
 |---|---|
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
-| **Phase** | 3 — Connaissance |
-| **Directive courante** | GSIE-DIR-0010 (Réorganisation arborescence) |
-| **Dernière mise à jour** | 2026-07-13 (specs Hub + Ignis + GeoSylva complètes : 9 specs) |
+| **Phase** | 4 — Implémentation |
+| **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
+| **Dernière mise à jour** | 2026-07-13 (clôture Phase 3 + lancement Phase 4 + fiche LiDAR HD) |
 
 ---
 
@@ -24,18 +24,19 @@ Repos externes intégrés : `apps/GeoSylva/` (GitHub: NeooeN45/GeoSylva),
 pas de remote). Ces repos ont leur propre `.git` et sont ignorés par le
 repo parent.
 
-Le projet est en **Phase 3 : Connaissance**, lancée officiellement par
-**DEC-000011** (GSIE-DIR-0007) le 2026-07-13. La Phase 1 (Foundation)
+Le projet est en **Phase 4 : Implémentation**, lancée officiellement par
+**DEC-000017** (GSIE-DIR-0011) le 2026-07-13. La Phase 1 (Foundation)
 est **clôturée** — les 12 livrables sont Validated (9/12) ou Locked
 (3/12). La Phase 2 (Architecture) a produit 12 livrables Draft
-(201-212), prêts pour Review.
+(201-212). La Phase 3 (Connaissance) est **clôturée** — les 10 livrables
+(301-310) sont Validated, 26 datasets catalogués, 25 connaissances
+validées, 9 spécifications Draft produites pour la Phase 4.
 
-La Phase 3 transforme les fondations scientifiques et l'architecture en
-une **base de connaissances structurée, sourcée et versionnée** — le
-véritable produit de GSIE (CON-003). Elle est composée de **10 livrables
-(301-310)** — périmètre étendu de 8 à 10 par DEC-000016 (309-310 :
-spécifications, aucun code). Le code métier dans le dépôt reste interdit
-jusqu'en Phase 4.
+La Phase 4 transforme les fondations, l'architecture et la base de
+connaissances en **code métier opérationnel** : les 14 moteurs GSIE,
+l'API GSIE, le Hub (Centre de Commandement Unreal Engine 5.8) et les
+applications clientes (GeoSylva, Ignis en priorité). Le code métier,
+interdit en Phase 3 (CON-003), est désormais autorisé.
 
 ### Avancement des livrables
 
@@ -84,6 +85,7 @@ jusqu'en Phase 4.
 - `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — Centre de Commandement UE 5.8 (livrable 211, v2.1.0 — Gaussian Splatting validé, DEC-000010)
 - `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, v1.1.0 — SegmentAnyTreeV2 + Crown-BERT + précédents ONF/SDIS/Arbonaut, en attente MVP Ignis)
 - `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR, Cesium Gaussian Splats, SegmentAnyTreeV2, Crown-BERT
+- `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` — Fiche LiDAR HD IGN (11 classes ASPRS+IGN, pipeline PDAL→GDAL→PostGIS, correspondance strates Ignis, bibliothèque IGN_LIDAR_HD_DATASET v4.1.2, implications Unreal/Cesium)
 
 ### Branche Ignis (RFC-0004)
 
@@ -160,6 +162,7 @@ jusqu'en Phase 4.
 - **DEC-000014** — Réorganisation arborescence : GSIE/ + apps/ (GSIE-DIR-0010)
 - **DEC-000015** — Unification des articles constitutionnels : `GSIE-CON-0XX` source unique, 100 fichiers `ARTICLE_0XX` vides supprimés (RFC-0002 Option A)
 - **DEC-000016** — Extension Phase 3 : 8 → 10 livrables (309-310 rattachés, amendement GSIE-DIR-0007 v1.1)
+- **DEC-000017** — Validation 10 livrables Phase 3 + clôture Phase 3 + lancement Phase 4 (GSIE-DIR-0011)
 
 ## Documents structurants
 
@@ -172,6 +175,7 @@ jusqu'en Phase 4.
 - **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
 - **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
 - **GSIE-DIR-0010** — Réorganisation arborescence : GSIE/ + apps/ (ACTIVE — DEC-000014)
+- **GSIE-DIR-0011** — Lancement officiel Phase 4 Implémentation (ACTIVE — DEC-000017)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (**Adopté** — Option A, DEC-000015, 2026-07-13)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)

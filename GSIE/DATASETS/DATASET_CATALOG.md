@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 305 — Dataset Catalog |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Review |
+| **Statut** | Validated |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-005 |
 | **Constitutions liées** | Scientifique (S-1) |
@@ -118,12 +118,15 @@ aux grandes familles de données consommées par GSIE et Ignis.
 | **Couverture temporelle** | 2021-2026 (acquisition progressive) |
 | **Résolution spatiale** | Nuages de points : densité ~10 pts/m² ; MNT/MNS/MNH : 50 cm (dalles 1×1 km GeoTIFF) |
 | **Résolution temporelle** | Acquisition unique (pas de répétition planifiée à ce jour) |
-| **Format** | LAZ/LAS (nuages classés, 11 catégories : sol, végétation basse/moyenne/haute, bâtiment, eau...) ; GeoTIFF (MNT, MNS, MNH rasters) |
+| **Format** | LAZ 1.4 (nuages classés, 11 catégories : 8 ASPRS + 3 IGN) ; GeoTIFF (MNT, MNS, MNH rasters 50 cm) |
 | **Version référencée** | LiDAR HD (édition 2024+) ; MNT/MNS/MNH publiés depuis mars 2025 (CP IGN 27/03/2025) |
 | **Qualité / précision** | Précision altimétrique verticale ~10 cm (MNT) ; classification sol/canopée par algorithmes IA IGN ; MNH = MNS−MNT (hauteur de canopée directement exploitable) |
 | **Contact** | IGN — Programme LiDAR HD |
 | **Statut d'ingestion** | Planifié (priorité P2 — socle géospatial) |
-| **Notes** | Donnée structurante pour GeoSylva (hauteur arbres, accessibilité, dessertes) et Ignis (3 strates végétation, continuité 0-3 m, accessibilité CCF). ⚠️ ZICAD (zones interdites de captation) → données vides (nodata) à gérer dans le pipeline. Cas d'usage validés : SDIS 63 (caractérisation combustible 3 m de résolution), ONF (cartes dendrométriques 700 m²/pixel : surface terrière, DBH, hauteur dominante, densité, structure), Arbonaut SaniLidar (stress hydrique par arbre). Webinaire IGN « LiDAR HD & Simulation multirisque » (oct. 2025) — source sur combustible/vent/humidité/topographie. Voir `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` §2 (livrable 212) et `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211). |
+| **Classification (11 classes)** | **ASPRS (8)** : 2=sol, 3=vég. basse (0-50cm), 4=vég. moyenne (50cm-1m50), 5=vég. haute (>1m50), 6=bâtiment, 9=eau, 17=tablier de pont, 1=non classé. **IGN (3)** : sursol pérenne, points virtuels, divers bâtis. Voir `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` §3. |
+| **Pipeline IGN de référence** | PDAL (filtrage) → GDAL (rasterisation MNT/MNS/MNH 50cm) → PostGIS ST_Tile/ST_SummaryStats/ST_DumpAsPolygon (vectorisation polygones hauteur+densité). Voir `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` §4. |
+| **Bibliothèque de référence** | `IGN_LIDAR_HD_DATASET` v4.1.2 (Python, GPU/CUDA, 35-45 features géométriques, LOD2/LOD3, RGB+NIR/NDVI, PyTorch/HDF5). Candidat Phase 4. |
+| **Notes** | Donnée structurante pour GeoSylva (hauteur arbres, accessibilité, dessertes) et Ignis (3 strates végétation, continuité 0-3 m, accessibilité CCF). ⚠️ ZICAD (zones interdites de captation) → données vides (nodata) à gérer dans le pipeline. Cas d'usage validés : SDIS 63 (caractérisation combustible 3 m de résolution), ONF (cartes dendrométriques 700 m²/pixel : surface terrière, DBH, hauteur dominante, densité, structure), Arbonaut SaniLidar (stress hydrique par arbre). Webinaire IGN « LiDAR HD & Simulation multirisque » (oct. 2025) — source sur combustible/vent/humidité/topographie. **Correspondance strates Ignis** : strate 1 (0-3m) = classes 3+4, strate 2 (3-15m) = classe 5 sous-canopée, strate 3 (>15m) = classe 5 canopée. Voir `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` (fiche complète) et `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` §2 (livrable 212) et `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211). |
 
 #### DS-003 — Inventaire Forestier National (IGN)
 

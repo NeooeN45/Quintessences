@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 306 — Evidence Framework |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Review |
+| **Statut** | Validated |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-005 |
 | **Constitutions liées** | Scientifique (S-2, S-3, S-5) |
@@ -575,5 +575,5 @@ l'intégration d'une connaissance si :
 
 ---
 
-> Statut : *Review — Phase 3 (Connaissance). Documentation uniquement, aucune
+> Statut : *Validated — Phase 3 (Connaissance). Documentation uniquement, aucune
 > implémentation (Phase 4).*

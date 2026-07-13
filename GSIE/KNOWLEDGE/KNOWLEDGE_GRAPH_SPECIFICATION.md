@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 304 — Knowledge Graph Specification |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Review |
+| **Statut** | Validated |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-003, GSIE-CON-010 |
 | **Constitutions liées** | Scientifique (S-3, S-5, S-7) |
@@ -913,5 +913,5 @@ spécifier en Phase 4) :
 
 ---
 
-> Statut : *Review — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Validated — Phase 3 (Connaissance). Documentation uniquement,
 > aucune implémentation (Phase 4).*

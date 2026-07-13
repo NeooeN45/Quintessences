@@ -4,7 +4,7 @@
 |---|---|
 | **Livrable** | 307 — Sourcing Plan |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Review |
+| **Statut** | Validated |
 | **Date de révision** | 2026-07-13 |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-003, GSIE-CON-005 |
 | **Constitutions liées** | Scientifique (S-1, S-6) |
@@ -333,5 +333,5 @@ l'implémentation).
 
 ---
 
-> Statut : *Review — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Validated — Phase 3 (Connaissance). Documentation uniquement,
 > aucune implémentation (Phase 4).*
