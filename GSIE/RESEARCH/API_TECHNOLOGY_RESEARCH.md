@@ -437,10 +437,646 @@ Cette recherche évalue si Go ou Rust est préférable.
 | API-13 | GraphQL pour Encyclopédie (livrable 450) | P2 |
 | API-14 | Go pour service temps réel dédié si WebSocket massif | P2 |
 | API-15 | Kong/Envoy API gateway si > 10K RPS | P2 |
+| API-16 | **OGC API Features** pour exposition vectorielle (BD TOPO, cadastre) | P0 |
+| API-17 | **OGC API Tiles** pour tuiles vectorielles/raster (Hub Cesium) | P0 |
+| API-18 | **STAC API** pour catalogue datasets (LiDAR, imagerie) | P1 |
+| API-19 | **pygeoapi** à évaluer pour exposition catalogique OGC | P1 |
+| API-20 | **Clean architecture** : domain ← infra ← api, repository pattern | P0 |
+| API-21 | **geojson-pydantic + pydantic-shapely** pour validation géométries | P0 |
+| API-22 | **ForeFire** via HTTP (`listenHTTP[]`) + WebSocket fan-out | P0 |
+| API-23 | **pytest-asyncio** mode auto + **testcontainers** pour intégration | P0 |
+| API-24 | **OpenTelemetry** auto-instrumentation (FastAPI, SQLAlchemy, Redis) | P0 |
+| API-25 | **Prometheus + Grafana + Loki + Jaeger** stack observabilité | P1 |
+| API-26 | **Keycloak** comme IdP quand gestion users complexe (P1) | P1 |
+| API-27 | **RBAC** : roles forestier, chercheur, admin, public | P0 |
+| API-28 | **SlowAPI** rate limiting (P0) → Redis custom token bucket (P1) | P0 |
+| API-29 | **Docker Compose** pour Phase 4 début, K8s si scale (Phase 5) | P0 |
+| API-30 | **Gunicorn + UvicornWorker** pour production (workers = 2×CPU+1) | P0 |
 
 ---
 
-## 11. Critères d'acceptation
+## 11. Standards OGC API — conformité géospatiale
+
+### 11.1 Pourquoi respecter les standards OGC
+
+L'IGN, l'INRAE, Météo-France et tous les partenaires institutionnels
+de GSIE publient leurs données via des standards OGC (Open Geospatial
+Consortium). Respecter ces standards garantit :
+
+- **interopérabilité** avec les sources existantes (WMS, WFS, OGC API)
+- **découvrabilité** via les catalogues STAC et CSW
+- **conformité réglementaire** (INSPIRE pour les données environnementales)
+- **réutilisation** d'outils matures (QGIS, pygeoapi, GeoServer)
+
+### 11.2 Standards OGC API pertinents pour GSIE
+
+| Standard | Description | Cas GSIE | Priorité |
+|---|---|---|---|
+| **OGC API — Features** | REST API pour features vectorielles (successeur WFS) | BD TOPO, ADMIN-EXPRESS, cadastre, parcelles | P0 |
+| **OGC API — Tiles** | Tuiles vectorielles/raster (successeur WMTS) | Hub Cesium, couches statiques | P0 |
+| **OGC API — Processes** | Processus asynchrones (calculs, simulations) | ForeFire, Forest Dynamics, simulations | P1 |
+| **OGC API — Coverages** | Rasters (successeur WCS) | MNT/MNS/MNH LiDAR, Climate rasters | P1 |
+| **OGC API — Maps** | Cartes rendues (successeur WMS) | Cartes statiques, export PDF | P2 |
+| **OGC API — Records** | Catalogue de métadonnées (successeur CSW) | Catalogue datasets GSIE | P2 |
+| **STAC** | SpatioTemporal Asset Catalog | Catalogue LiDAR, imagerie, datasets | P1 |
+
+### 11.3 Implémentation recommandée
+
+| Approche | Description | Recommandation GSIE |
+|---|---|---|
+| **pygeoapi** | Serveur OGC API Python (OSGeo, reference implementation) | Évaluer pour exposition datasets (P1) |
+| **GeoServer** | Serveur Java, mature, OGC complet | Trop lourd pour GSIE (Java), mais possible |
+| **FastAPI + extensions** | Implémenter les endpoints OGC API directement | **P0** — contrôle total, intégration native |
+| **pg_tileserv** | Serveur de tuiles PostGIS léger | P1 pour tuiles vectorielles dynamiques |
+| **TiTiler** | Serveur de tuiles raster Python (rasterio) | P1 pour rasters (MNT, imagerie) |
+
+> **Recommandation** : implémenter les endpoints OGC API Features et
+> Tiles directement dans FastAPI (P0). Évaluer pygeoapi pour
+> l'exposition catalogique des datasets (P1). STAC pour le catalogue
+> LiDAR/imagerie (P1).
+
+### 11.4 STAC pour le catalogue de datasets GSIE
+
+STAC (SpatioTemporal Asset Catalog) est le standard de facto pour
+cataloguer les assets géospatiaux. Il couvre : imagerie satellite,
+LiDAR, DEM, SAR, hyperspectral, vidéos, nuages de points.
+
+| Composant STAC | Rôle GSIE | Implémentation |
+|---|---|---|
+| **STAC Catalog** | Racine du catalogue | `pystac` (Python) |
+| **STAC Collection** | Groupe d'assets (ex: LiDAR HD) | Une collection par dataset |
+| **STAC Item** | Asset individuel (ex: une dalle LAZ) | Un item par fichier |
+| **STAC API** | Recherche spatio-temporelle | FastAPI + `stac-fastapi` |
+| **STAC Browser** | Interface web de navigation | `stac-browser` (JS) |
+
+> **Implication GSIE** : le `DATASET_CATALOG.md` (29 datasets) peut
+> être exposé en STAC API, permettant aux moteurs de découvrir
+> automatiquement les assets disponibles. Le LiDAR HD IGN (DS-002)
+> est un cas parfait pour STAC (dalles LAZ avec bbox + date).
+
+---
+
+## 12. Architecture de projet FastAPI — clean architecture
+
+### 12.1 Structure recommandée (sources : guides production 2026)
+
+```
+gsie-api/
+├── pyproject.toml              ← dépendances épinglées (T-10)
+├── alembic/                    ← migrations DB
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── src/
+│   └── gsie_api/
+│       ├── __init__.py
+│       ├── main.py             ← create_app() — app factory
+│       ├── config.py           ← Pydantic Settings (env vars)
+│       ├── dependencies.py     ← DI FastAPI (get_db, get_redis, get_engine)
+│       │
+│       ├── api/                ← couche présentation (routes)
+│       │   ├── v1/
+│       │   │   ├── __init__.py
+│       │   │   ├── router.py   ← agrège tous les routers
+│       │   │   ├── forest.py   ← /api/v1/forest
+│       │   │   ├── climate.py  ← /api/v1/climate
+│       │   │   ├── gis.py      ← /api/v1/gis
+│       │   │   ├── ignis.py    ← /api/v1/ignis
+│       │   │   ├── botanical.py
+│       │   │   ├── knowledge.py
+│       │   │   └── health.py   ← /health, /metrics
+│       │   └── ws/             ← WebSocket endpoints
+│       │       ├── ignis.py    ← /ws/ignis (front de feu)
+│       │       ├── forest.py   ← /ws/forest (sync live)
+│       │       └── sim.py      ← /ws/sim (ForeFire)
+│       │
+│       ├── domain/             ← couche domaine (logique métier)
+│       │   ├── models/         ← entités domaine (Pydantic)
+│       │   ├── repositories/   ← interfaces repositories (abstract)
+│       │   └── services/       ← use cases / services
+│       │
+│       ├── infrastructure/     ← couche infrastructure
+│       │   ├── database/       ← SQLAlchemy models, asyncpg
+│       │   ├── redis/          ← Redis client, Pub/Sub
+│       │   ├── engines/        ← pyo3 bindings (Rust)
+│       │   └── external/       ← clients API externes (IGN, Météo-France)
+│       │
+│       ├── core/               ← transverse
+│       │   ├── security.py     ← JWT, OAuth2
+│       │   ├── logging.py      ← structlog + OpenTelemetry
+│       │   ├── exceptions.py   ← exceptions domaine
+│       │   └── middleware.py   ← rate limit, CORS, tracing
+│       │
+│       └── schemas/            ← DTOs (request/response Pydantic)
+│
+└── tests/
+    ├── unit/                   ← tests unitaires (mock repositories)
+    ├── integration/            ← tests intégration (DB réelle via testcontainers)
+    └── e2e/                    ← tests end-to-end (httpx AsyncClient)
+```
+
+### 12.2 Principes clés (clean architecture)
+
+| Principe | Application GSIE |
+|---|---|
+| **Dependency direction** | Domain ← Infrastructure ← API. Le domaine ne connaît pas l'infra |
+| **Repository pattern** | Interfaces dans `domain/repositories/`, implémentations dans `infrastructure/database/` |
+| **App factory** | `create_app()` dans `main.py` — pas d'app au niveau module |
+| **Dependency injection** | FastAPI `Depends()` pour injecter sessions DB, Redis, engines |
+| **DTOs aux boundaries** | `schemas/` pour request/response, `domain/models/` pour interne |
+| **Pas de logique métier dans routes** | Routes = HTTP seulement, délèguent aux services |
+| **Pas d'appels DB dans services** | Services utilisent les interfaces repositories |
+| **Configuration via env vars** | `Pydantic Settings` — jamais hardcoded |
+
+### 12.3 Pattern Dependency Injection FastAPI
+
+```python
+# dependencies.py
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_db() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
+        yield session
+
+async def get_forest_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
+) -> ForestService:
+    return ForestService(
+        repo=ForestRepository(db),
+        cache=redis,
+    )
+
+# forest.py
+@router.get("/trees/{tree_id}")
+async def get_tree(
+    tree_id: str,
+    service: ForestService = Depends(get_forest_service),
+) -> TreeResponse:
+    return await service.get_tree(tree_id)
+```
+
+> **Implication GSIE** : cette structure respecte CON-007 (modularité),
+> T-2 (couplage faible), et permet de tester chaque couche
+> indépendamment. Les 14 moteurs sont des services injectés.
+
+---
+
+## 13. Validation géospatiale — Pydantic v2 + Shapely
+
+### 13.1 Validation des géométries en entrée
+
+Toute géométrie reçue par l'API (GeoJSON, WKT) doit être validée avant
+traitement. Pydantic v2 (core Rust) exécute la validation à la vitesse C.
+
+| Librairie | Rôle | Recommandation |
+|---|---|---|
+| **geojson-pydantic** | Modèles Pydantic pour GeoJSON (Point, LineString, Polygon, etc.) | P0 — validation structurale |
+| **pydantic-shapely** | Intégration Pydantic ↔ Shapely (validation géométrique) | P0 — validation géométrique |
+| **shapely** | Géométrie computationnelle (buffer, intersect, area) | P0 — déjà dans stack GIS |
+| **pydantic-geojson** | Alternative pour parsing GeoJSON | P2 |
+
+### 13.2 Pattern de validation
+
+```python
+from geojson_pydantic import Feature, Point
+from pydantic import BaseModel, field_validator
+from shapely.geometry import shape
+from shapely.validation import explain_validity
+
+class ForestPlotRequest(BaseModel):
+    geometry: Feature
+    area_min_ha: float
+
+    @field_validator("geometry")
+    @classmethod
+    def validate_geometry(cls, v: Feature) -> Feature:
+        geom = shape(v.geometry.dict())
+        if not geom.is_valid:
+            reason = explain_validity(geom)
+            raise ValueError(f"Invalid geometry: {reason}")
+        # Vérification bounds France métropolitaine
+        if not (-5.5 < geom.bounds[0] < 8.5 and 41.0 < geom.bounds[1] < 51.5):
+            raise ValueError("Geometry outside France bounds")
+        return v
+```
+
+### 13.3 Sérialisation PostGIS
+
+| Type | Conversion | Recommandation |
+|---|---|---|
+| GeoJSON → PostGIS | `shapely.wkb.dumps(geom, hex=True)` → `ST_GeomFromEWKT` | asyncpg natif |
+| PostGIS → GeoJSON | `ST_AsGeoJSON(geom)` → parsing Pydantic | Query SQL |
+| WKT | `shapely.wkt.dumps(geom)` | Pour logs/debug |
+
+> **Recommandation** : utiliser `geojson-pydantic` + `pydantic-shapely`
+> pour valider toutes les géométries en entrée. Validation à la vitesse
+> C (Pydantic v2 core Rust), pas de bottleneck sur l'event loop.
+
+---
+
+## 14. asyncpg vs psycopg3 — analyse approfondie
+
+### 14.1 Benchmark (source : MagicStack/asyncpg, tests 2026)
+
+| Critère | asyncpg | psycopg3 | Verdict |
+|---|---|---|---|
+| **Performance brute** | **5x plus rapide** (moyenne) | Référence | asyncpg gagne |
+| **Protocol** | Binary protocol natif | Libpq (C) | asyncpg plus efficace |
+| **Prepared statements** | Natif, zero-copy | Supporté | asyncpg gagne |
+| **Pydantic mapping** | Workaround (pas built-in) | **Intégration native** | psycopg3 gagne |
+| **SQLAlchemy 2.0 async** | Supporté (driver recommandé) | Supporté | Égalité |
+| **PostGIS** | **Recommandé** (binary, zero-copy) | Supporté | asyncpg gagne |
+| **Maturité** | Production, MagicStack | Production, psycopg team | Égalité |
+| **Communauté** | Active, 12K stars | Active, héritier psycopg2 | Égalité |
+
+### 14.2 Verdict
+
+| Cas | Driver recommandé | Raison |
+|---|---|---|
+| **PostGIS + performance** | **asyncpg** | Binary protocol, zero-copy, 5x plus rapide |
+| **Pydantic mapping natif** | psycopg3 | Intégration built-in Pydantic |
+| **SQLAlchemy 2.0 async** | asyncpg | Driver recommandé par SQLAlchemy |
+
+> **Recommandation GSIE** : **asyncpg** comme driver principal
+> (PostGIS = besoin critique, performance binaire). SQLAlchemy 2.0
+> async avec driver asyncpg pour l'ORM. Pour les queries Pydantic
+> directes, mapping manuel via `record_to_pydantic()`.
+
+### 14.3 Configuration asyncpg + PgBouncer
+
+```python
+import asyncpg
+from sqlalchemy.ext.asyncio import create_async_engine
+
+# Engine SQLAlchemy 2.0 async avec asyncpg
+engine = create_async_engine(
+    "postgresql+asyncpg://gsie:pass@localhost:5432/gsie",
+    pool_size=20,          # 20-40 par réplica (guide geospatial-api.com)
+    max_overflow=10,
+    pool_timeout=30,       # Évite blocage indéfini (asyncpg n'a pas de timeout natif)
+    pool_recycle=3600,     # Évite connexions zombies
+    echo=False,
+)
+
+# Statement timeout au niveau DB
+# postgresql.conf: statement_timeout = '5s'
+```
+
+---
+
+## 15. Intégration ForeFire — API simulation incendie
+
+### 15.1 ForeFire — vue d'ensemble
+
+| Caractéristique | Détail |
+|---|---|
+| **Développeur** | CNRS, Université de Corse (Jean-Baptiste Filippi) |
+| **Licence** | Open-source (GitHub: forefireAPI/forefire) |
+| **Langage** | C++ (core), Python bindings |
+| **Interface HTTP** | `listenHTTP[]` — serveur HTTP intégré sur port 8000 |
+| **Scripts** | Fichiers `.ff` (event-driven scripting language) |
+| **Couplage atmosphère** | MesoNH (fire-atmosphere two-way coupling) |
+| **Performance** | C++ optimisé, MPI pour parallélisme |
+| **Adoption** | Autorités françaises, AriaFire, Ororatech, umgrauemeio (Pantera) |
+
+### 15.2 Architecture d'intégration GSIE ↔ ForeFire
+
+```
+┌──────────────┐    HTTP/REST     ┌───────────────┐    C++ core    ┌──────────────┐
+│  FastAPI     │ ───────────────→ │  ForeFire     │ ─────────────→ │  Simulation  │
+│  /ws/sim     │                  │  HTTP server  │                │  propagation │
+│  (WebSocket) │ ←─────────────── │  (port 8000)  │ ←───────────── │  (feu)       │
+└──────────────┘   events JSON    └───────────────┘   front de feu  └──────────────┘
+       │
+       │  Redis Pub/Sub
+       ↓
+┌──────────────┐
+│  Hub Unreal  │  ← front de feu temps réel (3D)
+│  Ignis app   │  ← position du feu, ROS, direction
+└──────────────┘
+```
+
+### 15.3 Pattern d'intégration
+
+| Étape | Techno | Détail |
+|---|---|---|
+| 1. Lancement simulation | FastAPI → ForeFire HTTP | `POST /api/v1/ignis/simulate` → `include[scenario.ff]` |
+| 2. Streaming front de feu | ForeFire → FastAPI WebSocket | ForeFire émet events, FastAPI relay via WebSocket |
+| 3. Fan-out temps réel | FastAPI → Redis Pub/Sub → Hub | Multi-clients (Hub, Ignis app, dashboard) |
+| 4. Couplage météo | Climate Engine → ForeFire | Wind triggers, température, humidité |
+| 5. Couplage terrain | GIS Engine → ForeFire | MNT, végétation (fuel models), pente |
+
+### 15.4 Recommandation ForeFire
+
+| Aspect | Recommandation |
+|---|---|
+| **Déploiement** | Docker (ForeFire Super Console Docker disponible) |
+| **Communication** | HTTP REST (ForeFire intégré) + WebSocket (fan-out) |
+| **Python bindings** | Utiliser pour contrôle programmatique (start/stop/params) |
+| **Scénarios** | Fichiers `.ff` générés par Simulation Engine |
+| **Données fuel** | BD Forêt IGN + Crown-BERT → fuel models ForeFire |
+| **Météo** | Climate Engine → wind/temperature/humidity → ForeFire triggers |
+
+> **Implication GSIE** : ForeFire s'intègre naturellement via HTTP.
+> L'API GSIE agit comme proxy entre ForeFire et les clients (Hub, Ignis).
+> Le pattern WebSocket fan-out (Redis Pub/Sub) est directement
+> applicable pour diffuser le front de feu.
+
+---
+
+## 16. Tests API — stratégie complète
+
+### 16.1 Stack de test
+
+| Outil | Rôle | Version cible |
+|---|---|---|
+| **pytest** | Runner de tests | 8.x |
+| **pytest-asyncio** | Tests async (mode auto) | 0.24+ |
+| **httpx** | Client HTTP async pour tests | 0.28+ |
+| **pytest-cov** | Couverture de code | 5+ |
+| **testcontainers-python** | PostgreSQL/Redis réels pour intégration | 4+ |
+| **faker** | Données de test réalistes | 30+ |
+| **pytest-xdist** | Tests parallèles | 3+ |
+
+### 16.2 Configuration pytest
+
+```ini
+[pytest]
+testpaths = tests
+python_files = test_*.py
+python_functions = test_*
+asyncio_mode = auto
+addopts = -v --cov=src --cov-report=term-missing --cov-report=html
+markers =
+    unit: Unit tests (no external deps)
+    integration: Integration tests (real DB/Redis via testcontainers)
+    slow: Slow tests (simulations, large datasets)
+```
+
+### 16.3 Pattern de test (Arrange → Act → Assert)
+
+```python
+# tests/integration/test_forest.py
+import pytest
+from httpx import ASGITransport, AsyncClient
+from gsie_api.main import create_app
+
+@pytest.fixture
+async def client():
+    app = create_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as ac:
+        yield ac
+
+async def test_get_tree_returns_200_when_tree_exists(client):
+    # Arrange
+    tree_id = "GSIE-T-0000000001"
+    # Act
+    response = await client.get(f"/api/v1/forest/trees/{tree_id}")
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["id"] == tree_id
+    assert response.json()["species"] == "Quercus robur"
+```
+
+### 16.4 Niveaux de test
+
+| Niveau | Scope | Outils | Couverture cible |
+|---|---|---|---|
+| **Unitaire** | Services, repositories (mock) | pytest + pytest-mock | 80% (domain) |
+| **Intégration** | DB réelle (testcontainers), Redis | pytest + testcontainers | 60% |
+| **E2E** | API complète (HTTP + WebSocket) | httpx AsyncClient | Cas critiques |
+| **Performance** | Charge, latence | locust | P99 < seuils |
+
+> **Implication GSIE** : `asyncio_mode = auto` — tous les tests
+> `async def test_*` sont automatiquement async. `testcontainers` pour
+> PostgreSQL+PostGIS et Redis réels en intégration. Dependency
+> overrides FastAPI pour isoler les couches.
+
+---
+
+## 17. Observabilité — OpenTelemetry
+
+### 17.1 Les trois piliers
+
+| Pilier | Outil | Rôle GSIE |
+|---|---|---|
+| **Metrics** | Prometheus | RPS, latence, erreurs, connexions DB |
+| **Traces** | Jaeger / Grafana Tempo | Traçage distribué (CON-005) — request → moteur → DB |
+| **Logs** | Loki / structlog | Logs structurés JSON avec `trace_id` + `span_id` |
+
+### 17.2 Stack observabilité recommandée
+
+```
+FastAPI (instrumentée OpenTelemetry)
+    │
+    ├── Metrics ──→ Prometheus ──┐
+    ├── Traces  ──→ Jaeger ──────┤
+    └── Logs    ──→ Loki ────────┤
+                                 ↓
+                          Grafana Dashboard
+                          (corrélation trace ↔ log ↔ metric)
+```
+
+### 17.3 Instrumentation FastAPI
+
+| Composant | Librairie | Auto/Manuel |
+|---|---|---|
+| FastAPI routes | `opentelemetry-instrumentation-fastapi` | Auto |
+| SQLAlchemy queries | `opentelemetry-instrumentation-sqlalchemy` | Auto |
+| Redis | `opentelemetry-instrumentation-redis` | Auto |
+| HTTP client (httpx) | `opentelemetry-instrumentation-httpx` | Auto |
+| Logs structurés | `structlog` + injection `trace_id` | Manuel |
+| Spans métier | `@tracer.start_as_current_span("forest.compute")` | Manuel |
+
+### 17.4 Attention production
+
+> Source : retour production 2026. L'auto-instrumentation OpenTelemetry
+> peut causer un **backup de l'event loop** si l'exporter ne suit pas.
+> Symptôme : pause de 150ms dans le handler, queue de spans qui
+> déborde. Solution : configurer le batch exporter avec `max_queue_size`
+> et `max_export_batch_size` appropriés, ou utiliser un OTLP collector
+> local asynchrone.
+
+### 17.5 Recommandation GSIE
+
+| Aspect | Recommandation | Priorité |
+|---|---|---|
+| OpenTelemetry instrumentation | Auto (FastAPI, SQLAlchemy, Redis) | P0 |
+| structlog + trace_id | Logs JSON corrélés aux traces | P0 |
+| Prometheus metrics | RPS, latence, erreurs, pool DB | P0 |
+| Grafana dashboard | 4 golden signals + drill-down | P1 |
+| Jaeger traces | Debug latence inter-moteurs | P1 |
+| Alerting | Alertmanager (latence P99, error rate) | P1 |
+
+> **Implication GSIE** : OpenTelemetry est **vendor-neutral** (CNCF).
+> Instrumenter une fois, changer de backend sans modifier le code.
+> Respecte CON-005 (traçabilité) — toute requête est traçable de bout
+> en bout (client → API → moteur → DB).
+
+---
+
+## 18. Authentification et sécurité
+
+### 18.1 Stack auth recommandée
+
+| Composant | Techno | Rôle | Priorité |
+|---|---|---|---|
+| **Token** | JWT (RS256) | Access 15min, Refresh 7d | P0 |
+| **OAuth2** | Authorization Code + PKCE | Apps clientes (mobile, web) | P0 |
+| **IdP** | Keycloak (self-hosted) | Identity provider, gestion utilisateurs | P1 |
+| **API Keys** | Clés persistantes | Accès programmatique (partenaires) | P1 |
+| **RBAC** | Roles + permissions | forestier, chercheur, admin, public | P0 |
+
+### 18.2 Configuration JWT
+
+| Paramètre | Valeur | Raison |
+|---|---|---|
+| Algorithme | RS256 (asymétrique) | Vérification sans secret partagé |
+| Access token TTL | 15 minutes | Limite d'exposition (global_rules) |
+| Refresh token TTL | 7 jours | Équilibre UX vs sécurité |
+| Validation | Signature + expiration + claims | À chaque requête |
+| Stockage client | HttpOnly cookie (web) / secure storage (mobile) | Pas de localStorage |
+
+### 18.3 Keycloak vs alternatives
+
+| Solution | Type | Avantages | Inconvénients | Verdict GSIE |
+|---|---|---|---|---|
+| **Keycloak** | Self-hosted | Open-source, mature, OAuth2/OIDC complet, RBAC | Ops overhead | **P1** (recommandé) |
+| Auth0 | SaaS | Managed, excellent DX | Vendor lock-in, payant | ❌ (CON-008 souveraineté) |
+| Supabase Auth | SaaS | Simple, PostgreSQL natif | Limité vs Keycloak | ❌ |
+| FastAPI JWT natif | Built-in | Simple, pas d'infra | Pas de gestion utilisateurs | **P0** (début Phase 4) |
+
+> **Recommandation** : FastAPI JWT natif pour Phase 4 début (P0).
+> Keycloak quand la gestion utilisateurs devient complexe (P1).
+> Pas de SaaS d'auth (CON-008 souveraineté des données).
+
+### 18.4 Rate limiting
+
+| Solution | Description | Recommandation |
+|---|---|---|
+| **SlowAPI** | Rate limiting FastAPI (basé sur Starlette) | P0 — simple, per-IP |
+| **Redis custom** | Token bucket distribué | P1 — per-user, sliding window |
+| **NGINX** | Rate limiting au niveau proxy | P1 — protection edge |
+
+> **Note** : SlowAPI a des limitations (per-IP seulement, pas de
+> sliding window, problèmes derrière reverse proxy). Pour la
+> production, un rate limiter custom Redis (token bucket) est
+> recommandé (P1).
+
+---
+
+## 19. Déploiement — Docker + production
+
+### 19.1 Stack de déploiement
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Production                                          │
+│                                                      │
+│  NGINX (reverse proxy, TLS 1.3, rate-limit)         │
+│    ↓                                                 │
+│  Gunicorn (process manager)                         │
+│    ├── UvicornWorker 1 (FastAPI)                    │
+│    ├── UvicornWorker 2 (FastAPI)                    │
+│    └── UvicornWorker N (FastAPI)                    │
+│    ↓                                                 │
+│  Docker (multi-stage build)                         │
+│    ↓                                                 │
+│  PostgreSQL + PostGIS + PgBouncer                   │
+│  Redis 7+                                           │
+│  OpenTelemetry Collector                            │
+│  Prometheus + Grafana + Loki + Jaeger               │
+└─────────────────────────────────────────────────────┘
+```
+
+### 19.2 Configuration Gunicorn + Uvicorn
+
+| Paramètre | Valeur | Raison |
+|---|---|---|
+| Workers | `(2 × CPU cores) + 1` | Standard Gunicorn |
+| Worker class | `uvicorn.workers.UvicornWorker` | ASGI support |
+| Timeout | 120s | Simulations longues |
+| Graceful timeout | 30s | Connexions WebSocket |
+| Max requests | 1000 + jitter | Évite memory leaks |
+| Preload app | `True` | Mémoire partagée entre workers |
+
+### 19.3 Docker multi-stage
+
+```dockerfile
+# Stage 1: builder
+FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY pyproject.toml .
+RUN pip install --no-cache-dir build && python -m build --wheel
+
+# Stage 2: runtime
+FROM python:3.12-slim AS runtime
+WORKDIR /app
+COPY --from=builder /app/dist/*.whl .
+RUN pip install --no-cache-dir *.whl uvicorn[standard] gunicorn
+COPY src/ ./src/
+EXPOSE 8000
+CMD ["gunicorn", "src.gsie_api.main:app", \
+     "-w", "4", "-k", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8000", "--timeout", "120"]
+```
+
+### 19.4 Recommandation déploiement GSIE
+
+| Phase | Setup | Raison |
+|---|---|---|
+| **Phase 4 début** | Docker Compose (API + Postgres + Redis) | Développement, tests |
+| Phase 4 milieu | Docker Compose + NGINX + observabilité | Staging/production léger |
+| Phase 5 | Kubernetes (si scale) | Multi-répliques, autoscaling |
+
+> **YAGNI** : Docker Compose suffit pour démarrer. Kubernetes seulement
+> si le traffic ou la complexité l'exige (Phase 5).
+
+---
+
+## 20. Versioning API — stratégie
+
+### 20.1 Approche recommandée
+
+| Stratégie | Description | Recommandation GSIE |
+|---|---|---|
+| **URI versioning** | `/api/v1/...` | **✅ P0** — simple, explicite, cacheable |
+| Header versioning | `Accept: application/vnd.gsie.v1+json` | ❌ — complexe, pas debuggable |
+| Query param | `?version=1` | ❌ — fragile |
+| Content negotiation | `Accept` header | ❌ — trop subtil |
+
+### 20.2 Règles de versioning (CON-010 — évolution sans perte)
+
+| Changement | Impact version | Action |
+|---|---|---|
+| Ajout endpoint | Aucun (backward compatible) | Pas de version bump |
+| Ajout champ response | Aucun (backward compatible) | Pas de version bump |
+| Suppression endpoint | **Breaking** | Nouvelle version majeure |
+| Changement type champ | **Breaking** | Nouvelle version majeure |
+| Changement comportement | **Breaking** | Nouvelle version majeure |
+
+### 20.3 Cycle de vie des versions
+
+| Version | Statut | Durée |
+|---|---|---|
+| Courante (`/api/v1/`) | Active | Indéfinie |
+| Précédente (`/api/v1/` après v2) | Deprecation | 6 mois minimum |
+| Obsolète | Retirée | Après déprecation |
+
+> **Implication GSIE** : CON-010 impose que toute connaissance puisse
+> évoluer sans perdre son historique. L'API suit le même principe :
+> `v1` reste disponible pendant 6 mois après sortie de `v2`. Toute
+> déprecation est documentée dans l'OpenAPI et signalée via header
+> `Deprecation: true`.
+
+---
+
+## 21. Critères d'acceptation (mis à jour)
 
 - [x] Framework Python comparé (FastAPI vs Litestar vs Django Bolt vs Django REST)
 - [x] Benchmark 2026 analysé (RPS, latence, DB)
@@ -451,8 +1087,18 @@ Cette recherche évalue si Go ou Rust est préférable.
 - [x] Go vs Rust pour temps réel comparé (production 2026)
 - [x] Stack Phase 4 P0 complète définie avec versions épinglées
 - [x] Schéma architecture API GSIE produit
-- [x] 15 recommandations priorisées pour livrable 401
+- [x] 15 recommandations initialisées pour livrable 401
 - [x] Cohérence avec ADR-0001/0002/0003 vérifiée
+- [x] Standards OGC API analysés (Features, Tiles, Processes, Coverages, STAC)
+- [x] Structure projet FastAPI clean architecture définie
+- [x] Validation géospatiale Pydantic v2 + Shapely documentée
+- [x] asyncpg vs psycopg3 comparé en profondeur (5x plus rapide)
+- [x] Intégration ForeFire documentée (HTTP, scripts .ff, fan-out WebSocket)
+- [x] Stratégie de tests complète (pytest-asyncio, httpx, testcontainers)
+- [x] Observabilité OpenTelemetry documentée (metrics, traces, logs corrélés)
+- [x] Authentification JWT + Keycloak + RBAC + rate limiting
+- [x] Déploiement Docker + Gunicorn + Uvicorn + NGINX
+- [x] Versioning API URI `/api/v1/` + cycle de déprecation
 
 ---
 
