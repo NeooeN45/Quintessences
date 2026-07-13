@@ -1,0 +1,25 @@
+Quintessences
+
+
+
+├── GeoSylva      🌲 Gestion forestière
+
+├── Artemis       🦌 Faune
+
+├── Chloris       🌿 Flore
+
+├── Gaia          🪨 Sols et géologie
+
+├── Nereus        💧 Hydrologie
+
+├── Caelus        ☁️ Climat & Atmosphère
+
+├── Aether        🛰️ Données satellites et télédétection
+
+├── Atlas         🗺️ Cartographie et SIG
+
+├── Vulcan        🚁 Drones et robotique
+
+├── Chronos       📈 Historique, séries temporelles
+
+└── Ignis         Feux gestion incendit

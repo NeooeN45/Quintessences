@@ -19,6 +19,11 @@ Hydro (eau), Flora (végétation), QGISIA (plugin QGIS). Centre de
 Commandement GSIE (Unreal Engine 5.8) — poste de pilotage immersif où
 toutes les données convergent.
 
+Repos externes intégrés : `apps/GeoSylva/` (GitHub: NeooeN45/GeoSylva),
+`apps/QGISIA/` (GitHub: NeooeN45/QGISIAPRO), `Forge/` (usine de données,
+pas de remote). Ces repos ont leur propre `.git` et sont ignorés par le
+repo parent.
+
 Le projet est en **Phase 3 : Connaissance**, lancée officiellement par
 **DEC-000011** (GSIE-DIR-0007) le 2026-07-13. La Phase 1 (Foundation)
 est **clôturée** — les 12 livrables sont Validated (9/12) ou Locked

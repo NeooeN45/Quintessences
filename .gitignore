@@ -29,3 +29,11 @@ GSIE/TOOLS/dataset_forge/
 apps/Ignis/git_init.sh
 apps/Ignis/run_premier_vol.sh
 apps/Ignis/run_px4.sh
+
+# Repos externes (repos git indépendants dans la structure Quintessences)
+# GeoSylva — repo GitHub NeooeN45/GeoSylva
+apps/GeoSylva/
+# QGISIA — repo GitHub NeooeN45/QGISIAPRO
+apps/QGISIA/
+# Forge — usine de données (pas de remote configuré)
+Forge/

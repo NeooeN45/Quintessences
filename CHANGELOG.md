@@ -4,6 +4,42 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [INTÉGRATION REPOS EXTERNES] - 2026-07-13
+
+### Déplacement des repos externes dans la structure Quintessences
+
+| Ancien chemin | Nouveau chemin | Repo git |
+|---|---|---|
+| `A:\GeoSylva\` | `apps/GeoSylva/` | GitHub: NeooeN45/GeoSylva |
+| `A:\QGISIA\` | `apps/QGISIA/` | GitHub: NeooeN45/QGISIAPRO |
+| `A:\GSIE-Dataset-Forge\` | `Forge/` | Pas de remote |
+
+Ces repos gardent leur propre `.git` — ils sont indépendants du repo
+parent Quintessences. Le `.gitignore` du parent les ignore.
+
+### Fichiers de notes rangés
+
+| Ancien chemin | Nouveau chemin |
+|---|---|
+| `A:\profile-readme.md` | `22_PROJECT_MEMORY/notes/profile-readme.md` |
+| `A:\possible changement de noms.txt` | `22_PROJECT_MEMORY/notes/possible_changement_de_noms.txt` |
+| `A:\modification a faire Architecture g.txt` | `22_PROJECT_MEMORY/notes/modification_architecture_globale.txt` |
+
+### Nettoyage
+
+- Stubs `apps/GeoSylva/README.md` et `apps/QGISIA/README.md` supprimés
+  (remplacés par les vrais repos)
+- `tmp_commit_msg.txt` supprimé
+
+### À noter
+
+- `apps/Artemis/` reste un stub (README.md seulement) — le code sera
+  créé en Phase 4
+- Le disque `A:\` est désormais propre : seulement `$RECYCLE.BIN` et
+  `GSIE/` (qui sera renommé en `Quintessences/` par le Fondateur)
+
+---
+
 ## [RÉORGANISATION ARBORESCENCE] - 2026-07-13
 
 ### Réorganisation du dépôt (DEC-000014, GSIE-DIR-0010)
