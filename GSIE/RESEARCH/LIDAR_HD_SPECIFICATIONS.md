@@ -7,7 +7,8 @@
 | **Phase** | 3 — Connaissance (préparation Phase 4) |
 | **Statut** | Draft |
 | **Date de création** | 2026-07-13 |
-| **Source primaire** | `DC_LiDAR_HD_1-0.pdf` (IGN, descriptif de contenu) |
+| **Source primaire** | `GSIE/RESEARCH/DC_LiDAR_HD_1-0.pdf` (IGN, descriptif de contenu) |
+| **Sources PDF locales** | `GSIE/RESEARCH/DC_LiDAR_HD_1-0.pdf`, `GSIE/RESEARCH/SE_LiDAR_HD.pdf` (spécifications d'échange), `GSIE/RESEARCH/Offre_Produit_LiDAR_2025-08.pdf`, `GSIE/RESEARCH/Traitements_Produits_LiDAR_2025-08.pdf` |
 | **Sources secondaires** | ignf.github.io, data.gouv.fr, ign.fr/lidar-hd-detection-changement, GitHub imagodata/IGN_LIDAR_HD_DATASET |
 | **Lois fondatrices** | CON-002 (science), CON-005 (traçabilité) |
 | **Documents connexes** | `DATASET_CATALOG.md` (DS-002), `GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212), `COMMAND_CENTER_UNREAL.md` (livrable 211), `ENGINE_DATA_SOCLE.md` (livrable 310) |
