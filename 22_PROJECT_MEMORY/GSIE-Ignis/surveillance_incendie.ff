@@ -1,0 +1,33 @@
+# ForeFire — Scénario de feu pour surveillance drone GSIE-Ignis
+# Zone : coordonnées PX4 SITL (Zurich : lat=47.398, lon=8.546)
+# Le drone décolle du point (47.397971, 8.546164) et survole la zone de feu
+
+# --- Parameters ---
+setParameter[ForeFireDataDirectory=.]
+setParameter[fuelsTableFile=fuels.csv]
+setParameter[propagationModel=Rothermel]
+setParameter[dumpMode=geojson]
+
+# Tuning
+setParameter[perimeterResolution=10]
+setParameter[spatialIncrement=3]
+setParameter[propagationSpeedAdjustmentFactor=0.6]
+setParameter[windReductionFactor=0.4]
+
+# --- Load Data & Domain ---
+loadData[data.nc;2025-02-10T17:35:54Z]
+
+# --- Ignition : feu près du point de décollage du drone ---
+# Le feu démarre à ~200 m à l'Est du point de décollage
+startFire[lonlat=(8.548, 47.398, 0);t=0]
+
+# --- Vent : 10 m/s depuis l'Ouest (pousse le feu vers l'Est) ---
+trigger[wind;loc=(0.,0.,0.);vel=(10,5,0.)]
+
+# --- Run Simulation : 600 s (10 min) ---
+goTo[t=600]
+
+# --- Output : front de feu en GeoJSON ---
+print[surveillance_fire_front.geojson]
+
+quit[]

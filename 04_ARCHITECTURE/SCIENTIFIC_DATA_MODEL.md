@@ -92,11 +92,21 @@ conflit est documenté et signalé. Aucune fusion arbitraire.
 │  ┌────▼─────┐    ┌────▼─────┐    ┌──────────┐              │
 │  │ Arbre    │───▶│ Obs.     │    │ Evidence │              │
 │  │ (Tree)   │    │ Terrain  │    │ (Proof)  │              │
+│  └────┬─────┘    └────┬─────┘    └──────────┘              │
+│       │               │                                      │
+│  ┌────▼─────┐         │                                      │
+│  │ Peuplement│        │                                      │
+│  │ (Stand)  │         │                                      │
+│  └────┬─────┘         │                                      │
+│       │               │                                      │
+│  ┌────▼─────┐    ┌────▼─────┐    ┌──────────┐              │
+│  │ Forest   │    │ Diagnostic│───▶│Recommand.│              │
+│  │ Dynamics │    │          │    │          │              │
 │  └──────────┘    └────┬─────┘    └──────────┘              │
 │                       │                                      │
 │                ┌──────▼─────┐    ┌──────────┐              │
-│                │ Diagnostic │───▶│Recommand.│              │
-│                │            │    │          │              │
+│                │ Simulation │───▶│ Entités  │              │
+│                │ Scenario   │    │ de sortie│              │
 │                └────────────┘    └──────────┘              │
 │                                                              │
 │  Transverses :                                               │
@@ -199,6 +209,61 @@ Tree {
 }
 ```
 
+#### Peuplement (Stand)
+
+L'entité **Peuplement** représente un ensemble d'arbres constituant
+une unité forestière cohérente sur une station ou une parcelle. Elle
+caractérise la structure, la composition et la dynamique du couvert.
+Elle est l'unité de raisonnement sylvicole et de projection (Forest
+Dynamics).
+
+```
+Stand {
+  stand_id         : string        // identifiant stable (UUID v7)
+  station_id       : string        // station de rattachement
+  parcelle_id      : string?       // parcelle de rattachement
+  label            : string        // nom lisible (ex: "Peuplement 12 - futaie régulière de chêne")
+
+  // --- Structure ---
+  structure_type   : enum          // futaie_reguliere | futaie_irreguliere | melange_futaie_taillis | taillis | plantation | parc
+  density          : float         // densité (tiges/ha)
+  density_range    : Range?        // intervalle de densité si variable (S-5)
+  age_mean         : Range         // âge moyen du peuplement (années)
+  age_structure    : enum?         // regulier | irregulier | jumele | multistrate
+
+  // --- Composition ---
+  composition      : SpeciesShare[]  // composition en essences (parts surfaciques ou en nombre)
+  dominant_species : string        // species_id de l'essence dominante
+  richness         : int?          // nombre d'essences présentes
+
+  // --- Dendrométrie de peuplement ---
+  basal_area_m2    : float         // surface terrière (m²/ha)
+  basal_area_range : Range?        // intervalle de surface terrière (S-5)
+  mean_dbh_cm      : Range?        // diamètre moyen à hauteur de poitrine
+  mean_height_m    : Range?        // hauteur moyenne de Lorey (m)
+  volume_m3_ha     : Range?        // volume sur pied (m³/ha)
+
+  // --- Relations ---
+  tree_ids         : string[]      // arbres inventoriés rattachés
+  growth_model_id  : string?       // référence vers GrowthModel (Forest Dynamics)
+
+  // --- Traçabilité ---
+  sources          : SourceRef[]   // IGN BD Forêt, inventaire terrain (S-1)
+  evidence_level   : enum          // niveau de preuve (A-F) (S-2)
+  version          : int           // numéro de version (CON-010)
+  created_at       : ISO 8601
+  updated_at       : ISO 8601
+  history          : Commit[]      // historique des révisions (RFC-0003 §4)
+}
+
+SpeciesShare {
+  species_id       : string        // référence vers Essence (Botanical)
+  share            : float         // part (0.0-1.0) ou % surfacique
+  share_type       : enum          // surfacique | nombre | volume
+  source           : SourceRef     // source de la part (S-1)
+}
+```
+
 ### 3.3 Entités domaine
 
 #### Sol (Pedology)
@@ -286,6 +351,82 @@ Species {
   taxonomy_version: string        // version du référentiel taxonomique (CON-010)
   version         : int
   history         : Commit[]
+}
+```
+
+#### Dynamique forestière (Forest Dynamics)
+
+L'entité **GrowthModel** représente un modèle de croissance et de
+production forestière mobilisé par le moteur Forest Dynamics pour
+projeter l'évolution d'un peuplement. L'entité **ForestProjection**
+matérialise une projection produite par un tel modèle sur un
+peuplement donné.
+
+```
+GrowthModel {
+  model_id          : string        // identifiant stable (UUID v7)
+  label             : string        // nom lisible (ex: "Modèle croissance chêne sessile - INRAE")
+  model_type        : enum          // diametre | hauteur | volume | biomasse | surface_terriere | complet
+  species_ids       : string[]      // essences couvertes (références Species)
+
+  // --- Paramètres du modèle ---
+  formulation       : string        // formulation mathématique (équation, référence)
+  parameters        : dict          // paramètres calibrés (nom → valeur)
+  calibration       : SourceRef     // jeu de calibration (S-1)
+  validation        : SourceRef?    // jeu de validation indépendant (S-1)
+  applicability     : string        // domaine de validité (plage de diamètre, station, âge)
+
+  // --- Projection ---
+  time_step_years   : int           // pas de temps (années)
+  max_horizon_years : int           // horizon maximal de projection
+  outputs           : string[]      // variables de sortie projetées (ex: ["dbh", "height", "volume"])
+
+  // --- Incertitude (S-5) ---
+  uncertainty       : Range?        // incertitude de projection moyenne
+  scenario          : string?       // scénario climatique associé si dépendant (RCP/SSP)
+
+  // --- Traçabilité ---
+  sources           : SourceRef[]   // publications, référentiels (S-1)
+  evidence_level    : enum          // niveau de preuve (A-F) (S-2)
+  version           : int           // numéro de version (CON-010)
+  created_at        : ISO 8601
+  updated_at        : ISO 8601
+  history           : Commit[]      // historique des révisions (RFC-0003 §4)
+}
+
+ForestProjection {
+  projection_id     : string        // identifiant stable (UUID v7)
+  stand_id          : string        // peuplement projeté (référence Stand)
+  model_id          : string        // modèle mobilisé (référence GrowthModel)
+
+  // --- Paramètres de projection ---
+  start_year        : int           // année de départ
+  horizon_years     : int           // horizon de projection (années)
+  intervention      : enum?         // plantation | eclaircie | coupe_rase | regeneration | none
+  intensity         : string?       // intensité de l'intervention (ex: "20% prélèvement")
+  climate_scenario  : string?       // scénario climatique (RCP/SSP) (S-5)
+
+  // --- Résultats projetés ---
+  time_series       : ProjectionPoint[]  // série temporelle projetée
+  outputs           : string[]      // variables projetées (ex: ["dbh", "height", "volume", "basal_area"])
+
+  // --- Incertitude (S-5) ---
+  uncertainty       : Range?        // incertitude globale de projection
+  confidence        : float         // 0.0-1.0
+
+  // --- Traçabilité ---
+  sources           : SourceRef[]   // modèle + données d'entrée (S-1)
+  evidence_level    : enum          // niveau de preuve (A-F) (S-2)
+  produced_at       : ISO 8601
+  trace_id          : UUID v7       // chaîne de trace (CON-004)
+  version           : int           // numéro de version (CON-010)
+  history           : Commit[]      // historique des révisions (RFC-0003 §4)
+}
+
+ProjectionPoint {
+  year              : int           // année projetée
+  values            : dict          // variables projetées (nom → valeur ou Range)
+  uncertainty       : Range?        // incertitude à ce pas (S-5)
 }
 ```
 
@@ -526,6 +667,133 @@ RiskAssessment {
 }
 ```
 
+### 3.5 Entités de sortie
+
+Les entités de sortie sont les produits structurés destinés à
+l'utilisateur et aux clients du moteur. Elles agrègent et formalisent
+les résultats du pipeline (diagnostic, recommandation, simulation) en
+gardant une traçabilité complète (S-1 à S-7, CON-004, CON-010).
+
+#### DiagnosticReport
+
+L'entité **DiagnosticReport** est le rapport de diagnostic final
+remis au client. Elle agrège un ou plusieurs `Diagnostic` et présente
+les conclusions de manière lisible et citable.
+
+```
+DiagnosticReport {
+  report_id         : string          // identifiant stable (UUID v7)
+  station_id        : string          // station concernée
+  diagnostic_ids    : string[]        // diagnostics agrégés (références Diagnostic)
+
+  // --- Contenu ---
+  title             : string          // titre du rapport (français)
+  summary           : string          // synthèse exécutive (français)
+  constraints       : DiagnosticItem[]  // contraintes identifiées
+  assets            : DiagnosticItem[]  // atouts identifiés
+  risks             : DiagnosticItem[]  // risques identifiés
+  findings          : Finding[]       // conclusions structurées
+
+  // --- Confiance ---
+  confidence        : float           // 0.0-1.0
+  evidence_level    : enum            // niveau de preuve global (S-2)
+  uncertainties     : Uncertainty[]   // incertitudes documentées (S-5)
+
+  // --- Traçabilité ---
+  sources           : SourceRef[]     // sources mobilisées (S-1)
+  reasoning_trace   : TraceEntry[]    // chaîne de raisonnement (CON-004)
+  produced_at       : ISO 8601
+  produced_by       : string          // moteur ou utilisateur émetteur
+  trace_id          : UUID v7
+  version           : int             // numéro de version (CON-010)
+  history           : Commit[]        // historique des révisions (RFC-0003 §4)
+}
+
+Finding {
+  label             : string          // intitulé de la conclusion
+  description       : string          // description (français)
+  severity          : enum            // info | minor | moderate | major | critical
+  source_refs       : SourceRef[]     // sources justifiant (S-1)
+  evidence_level    : enum            // niveau de preuve (S-2)
+}
+```
+
+#### RecommendationSet
+
+L'entité **RecommendationSet** est l'ensemble structuré de
+recommandations remis au décideur (forestier). Elle agrège un ou
+plusieurs `Recommendation` et explicite les alternatives et la
+contournabilité (CON-001).
+
+```
+RecommendationSet {
+  set_id            : string          // identifiant stable (UUID v7)
+  report_id         : string?         // rapport de diagnostic associé
+  recommendation_ids: string[]        // recommandations agrégées (références Recommendation)
+
+  // --- Contenu ---
+  title             : string          // titre (français)
+  summary           : string          // synthèse (français)
+  primary           : Recommendation  // recommandation principale
+  alternatives      : Alternative[]   // alternatives proposées (pas une seule option)
+  expected_outcomes : string[]        // résultats attendus par recommandation
+
+  // --- Confiance ---
+  confidence        : float           // 0.0-1.0
+  evidence_level    : enum            // niveau de preuve global (S-2)
+  uncertainties     : Uncertainty[]   // incertitudes documentées (S-5)
+
+  // --- Contournabilité (CON-001) ---
+  status            : enum            // proposed | accepted | refused | modified
+  user_feedback     : string?         // retour du forestier
+  refused_reason    : string?         // motif de refus si applicable
+
+  // --- Traçabilité ---
+  sources           : SourceRef[]     // sources mobilisées (S-1)
+  simulation_ids    : string[]?       // simulations mobilisées
+  produced_at       : ISO 8601
+  produced_by       : string
+  trace_id          : UUID v7
+  version           : int             // numéro de version (CON-010)
+  history           : Commit[]        // historique des révisions (RFC-0003 §4)
+}
+```
+
+#### SimulationResult
+
+L'entité **SimulationResult** est le résultat structuré d'une
+simulation remis au client. Elle formalise les projections d'un
+`SimulationScenario` (et/ou `ForestProjection`) avec leurs
+incertitudes.
+
+```
+SimulationResult {
+  result_id         : string          // identifiant stable (UUID v7)
+  scenario_id       : string          // scénario source (référence SimulationScenario)
+  projection_ids    : string[]?       // projections Forest Dynamics mobilisées
+
+  // --- Contenu ---
+  title             : string          // titre (français)
+  summary           : string          // synthèse (français)
+  projections       : ProjectionPoint[]  // série temporelle projetée
+  outputs           : string[]        // variables projetées
+  risks             : RiskAssessment[]   // évaluation des risques
+
+  // --- Confiance ---
+  confidence        : float           // 0.0-1.0
+  evidence_level    : enum            // niveau de preuve global (S-2)
+  uncertainty       : Range?          // incertitude globale de projection (S-5)
+
+  // --- Traçabilité ---
+  sources           : SourceRef[]     // modèles et données mobilisés (S-1)
+  produced_at       : ISO 8601
+  produced_by       : string
+  trace_id          : UUID v7
+  version           : int             // numéro de version (CON-010)
+  history           : Commit[]        // historique des révisions (RFC-0003 §4)
+}
+```
+
 ---
 
 ## 4. Relations entre entités
@@ -541,11 +809,19 @@ Parcelle ──contient──▶ Station ──a_pour_sol──▶ Sol
     │                     │
     │                     ├──fait_objet_de──▶ Observation
     │                     │
+    ├──compose──▶ Peuplement ──est_projete_par──▶ ForestProjection
+    │                  │                              │
+    │                  └──utilise──▶ GrowthModel ─────┘
+    │
     └──fait_objet_de──▶ Diagnostic ──produit──▶ Recommendation
                                               │
                                     ──évaluée_par──▶ SimulationScenario
                                     │
                           Validation Engine (validation, pas entité)
+
+Diagnostic ──agrégé_dans──▶ DiagnosticReport
+Recommendation ──agrégé_dans──▶ RecommendationSet
+SimulationScenario ──formalisé_dans──▶ SimulationResult
 
 KnowledgeItem ──est_preuvé_par──▶ Evidence
      │
@@ -564,9 +840,18 @@ KnowledgeItem ──est_preuvé_par──▶ Evidence
 | Parcelle → Arbre | Parcelle | Arbre | 1 → 0..n |
 | Arbre → Essence | Arbre | Essence | n → 1 |
 | Arbre → Observation | Arbre | Observation | 1 → 0..n |
+| Station → Peuplement | Station | Peuplement | 1 → 0..n |
+| Parcelle → Peuplement | Parcelle | Peuplement | 1 → 0..n |
+| Peuplement → Arbre | Peuplement | Arbre | 1 → 0..n |
+| Peuplement → GrowthModel | Peuplement | GrowthModel | n → 0..1 |
+| GrowthModel → ForestProjection | GrowthModel | ForestProjection | 1 → 0..n |
+| Peuplement → ForestProjection | Peuplement | ForestProjection | 1 → 0..n |
 | Station → Diagnostic | Station | Diagnostic | 1 → 0..n |
 | Diagnostic → Recommendation | Diagnostic | Recommendation | 1 → 0..n |
 | Recommendation → SimulationScenario | Recommendation | SimulationScenario | 1 → 0..n |
+| Diagnostic → DiagnosticReport | Diagnostic | DiagnosticReport | n → 1 |
+| Recommendation → RecommendationSet | Recommendation | RecommendationSet | n → 1 |
+| SimulationScenario → SimulationResult | SimulationScenario | SimulationResult | 1 → 0..n |
 | KnowledgeItem → Evidence | KnowledgeItem | Evidence | 1 → 1 |
 | KnowledgeItem → KnowledgeItem (Relation) | KnowledgeItem | KnowledgeItem | n → n |
 
@@ -654,7 +939,7 @@ Entité (identifiant stable)
 Commit {
   commit_id       : UUID v7       // identifiant unique du commit
   entity_id       : string        // entité modifiée
-  entity_type     : enum          // station | tree | soil | climate | species | ...
+  entity_type     : enum          // station | parcelle | tree | stand | soil | climate | species | growth_model | forest_projection | diagnostic | recommendation | simulation_scenario | diagnostic_report | recommendation_set | simulation_result | ...
   parent_commit   : UUID v7?      // commit parent (null si création)
   author          : string        // auteur (utilisateur ou moteur)
   timestamp       : ISO 8601      // horodatage
@@ -768,7 +1053,103 @@ TraceEntry {
 
 ---
 
-## 8. Ce que ce document ne fait PAS
+## 8. Contraintes d'intégrité
+
+Les contraintes ci-dessous sont des règles de validation applicables
+au moment de l'ingestion et de la révision des entités. Elles
+complètent les principes de traçabilité (S-1 à S-7) et garantissent la
+cohérence scientifique des données. Une entité non conforme est rejetée
+ou marquée comme `disputed` (S-3) selon la gravité.
+
+### 8.1 Contraintes géospatiales et stationnelles
+
+| Entité | Champ | Règle | Référence |
+|---|---|---|---|
+| Station | `altitude_m` | `min > 0` et `max >= min` (sauf altitude négative sous niveau marin, documentée) | S-5 |
+| Station | `slope_deg` | `min >= 0` et `max <= 90` et `max >= min` | — |
+| Station | `aspect` | valeur parmi `N, NE, E, SE, S, SW, W, NW, plat` | — |
+| Station | `drainage` | valeur parmi `bon, modéré, imparfait, mauvais, nul` | — |
+| Station | `geometry` | SRU WGS84 ou Lambert-93, polygone ou point valide | RFC-0003 |
+| Station | `sources` | au moins une `SourceRef` (S-1) | S-1 |
+| Parcelle | `area_ha` | `> 0` | — |
+| Parcelle | `geometry` | polygone fermé, Lambert-93 | — |
+| Parcelle | `station_id` | référence existante ou `null` | — |
+| Arbre | `dbh_cm` | `min > 0` et `max >= min` | — |
+| Arbre | `height_m` | `min > 0` et `max >= min` | — |
+| Arbre | `vitality` | entier `0` à `5` si renseigné | — |
+| Arbre | `sanitary_status` | valeur parmi `sain, dépérissant, mort, malade` si renseigné | — |
+| Arbre | `species_id` | référence vers `Species` existante | — |
+| Arbre | `measured_at` | date <= date courante | — |
+
+### 8.2 Contraintes domaine
+
+| Entité | Champ | Règle | Référence |
+|---|---|---|---|
+| Sol | `ph` | `min >= 0` et `max <= 14` et `max >= min` | — |
+| Sol | `depth_cm` | `min >= 0` et `max >= min` | — |
+| Sol | `water_reserve_mm` | `min >= 0` et `max >= min` | — |
+| Sol | `texture` | valeur parmi `sableux, limoneux, argileux, mixte` | — |
+| Sol | `drainage` | valeur parmi `bon, modéré, imparfait, mauvais, nul` | — |
+| Climat | `temp_mean_c` | `max >= min` (pas de borne absolue, projection possible) | S-5 |
+| Climat | `precip_mm` | `min >= 0` et `max >= min` | — |
+| Climat | `period` | format `"AAAA-AAAA"` avec `fin >= début` | — |
+| ClimateProjection | `horizon` | année entière >= année courante | — |
+| ClimateProjection | `uncertainty` | `min <= max` (S-5) | S-5 |
+| Species | `scientific_name` | non vide, référentiel BDNFF | — |
+| Species | `soil_ph_range` | `min >= 0` et `max <= 14` | — |
+| Species | `light_requirement` | valeur parmi `héliophile, demi-ombre, ombrophile` | — |
+| Stand | `density` | `>= 0` | — |
+| Stand | `basal_area_m2` | `>= 0` | — |
+| Stand | `age_mean` | `min >= 0` et `max >= min` | — |
+| Stand | `composition` | somme des `share` <= 1.0 (ou 100 %) selon `share_type` | — |
+| Stand | `dominant_species` | présente dans `composition` | — |
+| GrowthModel | `time_step_years` | `> 0` | — |
+| GrowthModel | `max_horizon_years` | `>= time_step_years` | — |
+| GrowthModel | `species_ids` | au moins une essence couverte | — |
+| ForestProjection | `horizon_years` | `> 0` et `<= model.max_horizon_years` | — |
+| ForestProjection | `start_year` | année entière | — |
+
+### 8.3 Contraintes de raisonnement et de sortie
+
+| Entité | Champ | Règle | Référence |
+|---|---|---|---|
+| Observation | `observed_at` | date <= date courante | — |
+| Observation | `location` | point GeoJSON valide | — |
+| Evidence | `evidence_level` | valeur parmi `A, B, C, D, E, F` (S-2) | S-2 |
+| Evidence | `confidence` | `0.0 <= x <= 1.0` | — |
+| KnowledgeItem | `concept` | non vide, ontologie référencée | S-7 |
+| KnowledgeItem | `sources` | au moins une `SourceRef` (S-1) | S-1 |
+| KnowledgeItem | `status` | valeur parmi `active, superseded, disputed` | S-4 |
+| Correlation | `source_entities` | au moins deux entités | — |
+| Diagnostic | `confidence` | `0.0 <= x <= 1.0` | — |
+| Diagnostic | `station_id` | référence existante | — |
+| Recommendation | `confidence` | `0.0 <= x <= 1.0` | — |
+| Recommendation | `diagnostic_id` | référence existante | — |
+| Recommendation | `alternatives` | au moins une alternative proposée (pas une seule option) | CON-001 |
+| SimulationScenario | `horizon_years` | `> 0` | — |
+| SimulationScenario | `intensity` | non vide si `intervention != none` | — |
+| DiagnosticReport | `diagnostic_ids` | au moins un diagnostic agrégé | — |
+| DiagnosticReport | `evidence_level` | valeur parmi `A` à `F` (S-2) | S-2 |
+| RecommendationSet | `recommendation_ids` | au moins une recommandation agrégée | — |
+| RecommendationSet | `primary` | présente parmi les recommandations agrégées | — |
+| SimulationResult | `scenario_id` | référence existante | — |
+| SimulationResult | `projections` | au moins un `ProjectionPoint` | — |
+
+### 8.4 Contraintes transverses (traçabilité et versioning)
+
+| Règle | Portée | Référence |
+|---|---|---|
+| Toute entité scientifique porte au moins une `SourceRef` | toutes | S-1 |
+| Toute entité scientifique porte un `evidence_level` (A-F) | toutes | S-2 |
+| Toute entité a un identifiant stable et un `version` >= 1 | toutes | CON-010, S-7 |
+| Toute entité a un `history` de `Commit` non vide après création | toutes | RFC-0003 §4 |
+| Toute donnée quantitative porte son incertitude si applicable | toutes (champs `Range`) | S-5 |
+| Aucune fusion arbitraire en cas de conflit de sources | toutes | S-3 |
+| Un `Commit` n'est jamais modifié ni supprimé | versioning | CON-010 |
+
+---
+
+## 9. Ce que ce document ne fait PAS
 
 - Il n'implémente aucun code (Phase 2 — interdit, DEC-000004).
 - Il ne définit pas le schéma physique de base de données (SQLite /
@@ -781,16 +1162,17 @@ TraceEntry {
 
 ---
 
-## 9. Historique
+## 10. Historique
 
 | Date | Événement |
 |---|---|
 | 2026-07-01 | Création — version squelette (Phase 1, 7 champs génériques) |
 | 2026-07-12 | Enrichissement Phase 2 — entités, relations, sources citées, versioning par commits |
+| 2026-07-12 | Correction audit — ajout Peuplement (Stand), Forest Dynamics (GrowthModel, ForestProjection), entités de sortie (DiagnosticReport, RecommendationSet, SimulationResult), contraintes d'intégrité |
 
 ---
 
-## 10. Validation
+## 11. Validation
 
 Document en statut **Draft**. Passage en `Review` soumis à
 validation du Fondateur. Aucune modification destructive sans

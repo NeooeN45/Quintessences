@@ -453,6 +453,69 @@ Tout conflit est **journalisé** avec les deux versions, les
 l'utilisateur si la résolution automatique n'est pas possible
 (RFC-0003 §8 — le serveur pilote la qualité).
 
+### 6.5 Priorisation des messages
+
+En mode hors-ligne, la file locale peut saturer (stockage limité sur
+mobile). Les messages sont **priorisés** pour garantir que les
+données critiques sont synchronisées en premier quand le réseau
+revient.
+
+| Priorité | Niveau | Types de messages | Comportement |
+|---|---|---|---|
+| **P0 — Critique** | Immédiate | Alertes sécurité, erreurs moteur, conflits de sync | Synchronisation dès la première fenêtre de connectivité |
+| **P1 — Haute** | Rapide | Diagnostics, recommandations, résultats de simulation | Synchronisation dans la première vague après P0 |
+| **P2 — Normale** | Standard | Connaissances qualifiées, corrélations, mises à jour de cache | Synchronisation par lots (batching) |
+| **P3 — Basse** | Différée | Logs debug, télémétrie non critique, métriques d'usage | Synchronisation en arrière-plan, rejet possible si file saturée |
+
+**Règles :**
+- un message hérite de la priorité de son `trace_id` parent (sauf
+  escalation explicite pour les alertes) ;
+- les messages P0 ne sont **jamais rejetés** en cas de saturation
+  (ils évincent les messages P3 — éviction LRU) ;
+- les messages P3 sont **rejetables** avec journalisation (le log
+  reste local, seule la télémétrie est perdue) ;
+- la priorisation est transparente pour les moteurs — elle est gérée
+  par la couche infrastructure (GSIE-Net).
+
+### 6.6 Limites et mode dégradé
+
+| Paramètre | Valeur cible | Justification |
+|---|---|---|
+| Taille max file locale | 50 Mo (mobile) / 500 Mo (desktop) | Évite la saturation du stockage terminal |
+| Taille max message | 1 Mo (sync) / 10 Mo (local in-process) | Évite les messages trop gros pour le réseau mobile |
+| Retention P0-P1 | Illimitée (jusqu'à sync) | Données critiques jamais perdues |
+| Retention P2 | 30 jours | Au-delà, les mises à jour de cache sont obsolètes |
+| Retention P3 | 7 jours | Télémétrie non critique, perte acceptable |
+
+**Mode dégradé (file saturée) :**
+1. Éviction des messages P3 les plus anciens (LRU) avec journalisation ;
+2. Si saturation persiste, éviction des messages P2 de plus de 30 jours ;
+3. Les messages P0 et P1 ne sont **jamais évincés** — si la file ne
+   peut plus les accepter, le moteur émetteur est notifié
+   (`QUEUE_FULL_CRITICAL`) et doit décider : bloquer la production ou
+   accepter la perte (avec accord utilisateur).
+
+> **Réf. constitutionnelle :** GSIE-CON-005 (traçabilité) — aucun
+> message évincé sans journalisation de l'éviction. GSIE-CON-004
+> (explicabilité) — l'utilisateur est informé du mode dégradé.
+
+### 6.7 Codes d'erreur spécifiques au mode hors-ligne
+
+| Code | Signification | Retryable | Action |
+|---|---|---|---|
+| `MESSAGE_QUEUED_OFFLINE` | Message accepté en file locale, en attente de sync | — | Informer l'utilisateur (sync en attente) |
+| `SYNC_PENDING` | Données pas encore synchronisées avec le serveur | — | Marquer `sync_pending = true` dans AuditContext |
+| `QUEUE_FULL_CRITICAL` | File saturée, message P0/P1 refusé | Oui | Notifier le moteur émetteur, demander décision |
+| `QUEUE_FULL_EVICTED` | Message P3 évincé par LRU | Non | Journaliser l'éviction, continuer |
+| `SYNC_CONFLICT_UNRESOLVED` | Conflit de sync non résolu automatiquement | Non | Signaler à l'utilisateur pour résolution manuelle |
+| `CONTRACT_VERSION_MISMATCH_OFFLINE` | Version de contrat incompatible détectée à la sync | Non | Reporter la sync, attendre mise à jour du nœud |
+
+> **Réf. constitutionnelle :** GSIE-CON-003 (connaissance avant code) —
+> les champs `evidence_level` et `source_refs` dans l'enveloppe
+> garantissent que la traçabilité de la connaissance transite avec
+> le message, même hors-ligne. La connaissance n'est jamais
+> séparée de ses sources.
+
 ---
 
 ## 7. Journalisation et traçabilité
@@ -530,6 +593,7 @@ synchronisé avec le serveur (GSIE-Net).
 |---|---|
 | 2026-07-01 | Création — version squelette (Phase 1) |
 | 2026-07-12 | Enrichissement Phase 2 — modes, format, erreurs, versioning, offline-first |
+| 2026-07-12 | Audit Phase 2 — ajout priorisation messages (§6.5), limites et mode dégradé (§6.6), codes d'erreur offline (§6.7), lien CON-003 |
 
 ---
 

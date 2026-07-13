@@ -5,8 +5,8 @@
 | **Livrable** | 201 — Architecture globale GSIE |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-12 |
-| **Lois fondatrices** | GSIE-CON-003, GSIE-CON-007, GSIE-CON-010 |
+| **Date de révision** | 2026-07-12 (correction audit) |
+| **Lois fondatrices** | GSIE-CON-001, GSIE-CON-002, GSIE-CON-003, GSIE-CON-004, GSIE-CON-005, GSIE-CON-007, GSIE-CON-010 |
 | **Constitutions liées** | Technique (T-1 à T-10), Scientifique (S-1 à S-7) |
 | **RFC de référence** | RFC-0003 (GSIE-Net) |
 | **Décision d'ouverture** | DEC-000004 |
@@ -87,30 +87,30 @@ Evidence → Knowledge → Correlation → Reasoning → Diagnostic
 
 | Moteur | Responsabilité |
 |---|---|
-| Evidence Engine | Évaluer la qualité scientifique (niveau de preuve) de chaque connaissance entrante |
-| Knowledge Engine | Centraliser et structurer les connaissances qualifiées (ontologie, graphe) |
-| Correlation Engine | Croiser automatiquement les données multi-domaines |
-| Reasoning Engine | Produire des conclusions par inférence explicite et auditable |
-| Diagnostic Engine | Synthétiser un diagnostic stationnel/sylvicole à partir des conclusions |
-| Recommendation Engine | Proposer des recommandations d'action contournables et justifiées |
-| Validation Engine | Valider la conformité de toute sortie avant présentation à l'utilisateur |
+| Evidence Engine | Évaluer la qualité scientifique (niveau de preuve) de chaque connaissance entrante. *Réf. : `06_RESEARCH/RESEARCH_METHOD.md` (pipeline d'évaluation), `SCIENTIFIC_CONSTITUTION.md` art. S-2 (niveaux A à F)* |
+| Knowledge Engine | Centraliser et structurer les connaissances qualifiées (ontologie, graphe). *Réf. : `06_RESEARCH/README.md` (sources scientifiques), `07_KNOWLEDGE/` (base structurée)* |
+| Correlation Engine | Croiser automatiquement les données multi-domaines. *Réf. : `06_RESEARCH/RESEARCH_METHOD.md` (modélisation conceptuelle des corrélations)* |
+| Reasoning Engine | Produire des conclusions par inférence explicite et auditable. *Réf. : `09_ENGINES/REASONING_ENGINE/REASONING_ENGINE.md`* |
+| Diagnostic Engine | Synthétiser un diagnostic stationnel/sylvicole à partir des conclusions. *Réf. : `09_ENGINES/DIAGNOSTIC_ENGINE/DIAGNOSTIC_ENGINE.md`* |
+| Recommendation Engine | Proposer des recommandations d'action contournables et justifiées. *Réf. : `09_ENGINES/RECOMMENDATION_ENGINE/RECOMMENDATION_ENGINE.md`* |
+| Validation Engine | Valider la conformité de toute sortie avant présentation à l'utilisateur. *Réf. : `09_ENGINES/VALIDATION_ENGINE/VALIDATION_ENGINE.md`* |
 
 **Moteurs domaine (alimentent le raisonnement) :**
 
 | Moteur | Responsabilité |
 |---|---|
-| GIS Engine | Données géospatiales (parcelles, relief, hydrographie) |
-| Climate Engine | Données climatiques et bioclimatiques (historiques + projections) |
-| Pedology Engine | Données pédologiques (texture, pH, drainage, réserve utile) |
-| Botanical Engine | Taxonomie, nomenclature et autécologie des essences |
-| Forest Dynamics Engine | Croissance et dynamique des peuplements forestiers |
+| GIS Engine | Données géospatiales (parcelles, relief, hydrographie). *Réf. : `08_DATASETS/README.md` (catalogue des datasets géospatiaux), `09_ENGINES/GIS_ENGINE/GIS_ENGINE.md`* |
+| Climate Engine | Données climatiques et bioclimatiques (historiques + projections). *Réf. : `08_DATASETS/README.md` (catalogue des datasets climatiques), `09_ENGINES/CLIMATE_ENGINE/CLIMATE_ENGINE.md`* |
+| Pedology Engine | Données pédologiques (texture, pH, drainage, réserve utile). *Réf. : `08_DATASETS/README.md` (catalogue des datasets pédologiques), `09_ENGINES/PEDOLOGY_ENGINE/PEDOLOGY_ENGINE.md`* |
+| Botanical Engine | Taxonomie, nomenclature et autécologie des essences. *Réf. : `08_DATASETS/README.md` (catalogue des datasets botaniques), `09_ENGINES/BOTANICAL_ENGINE/BOTANICAL_ENGINE.md`* |
+| Forest Dynamics Engine | Croissance et dynamique des peuplements forestiers. *Réf. : `06_RESEARCH/README.md` (travaux sur la dendrométrie et croissance), `09_ENGINES/FOREST_DYNAMICS_ENGINE/FOREST_DYNAMICS_ENGINE.md`* |
 
 **Moteurs transverses :**
 
 | Moteur | Responsabilité |
 |---|---|
-| Learning Engine | Amélioration continue des modèles à partir des retours terrain |
-| Simulation Engine | Projection de scénarios sylvicoles long terme |
+| Learning Engine | Amélioration continue des modèles à partir des retours terrain. *Réf. : `09_ENGINES/LEARNING_ENGINE/LEARNING_ENGINE.md`, `AI_CONSTITUTION.md` art. IA-4 (apprentissage encadré)* |
+| Simulation Engine | Projection de scénarios sylvicoles long terme. *Réf. : `09_ENGINES/SIMULATION_ENGINE/SIMULATION_ENGINE.md`* |
 
 ### 2.2 Spécialisations (applications clientes)
 
@@ -142,6 +142,11 @@ de la Constitution Technique. Aucun ne peut être contourné sans RFC.
 
 ### 3.1 Offline-first par nature (T-8, RFC-0003 §1)
 
+**Réf. constitutionnelle :** GSIE-CON-007 (modularité obligatoire —
+chaque moteur déclare son comportement hors-ligne), GSIE-CON-003
+(connaissance avant le code — les connaissances persistent localement,
+indépendamment de l'infrastructure).
+
 Le fonctionnement hors-ligne n'est pas un mode dégradé — c'est
 l'état normal d'un technicien de terrain. Chaque nœud terminal
 embarque localement les données, les bases de connaissances et les
@@ -155,6 +160,10 @@ pour fonctionner. Les moteurs nécessitant des données externes
 
 ### 3.2 Modularité obligatoire (CON-007, T-1)
 
+**Réf. constitutionnelle :** GSIE-CON-007 (la modularité est
+obligatoire — chaque moteur a une responsabilité unique, une interface
+stable et un graphe de dépendances acyclique).
+
 Chaque moteur a **une et une seule** responsabilité. Aucun moteur
 n'accède à l'implémentation interne d'un autre. La communication se
 fait exclusivement par des interfaces contractuelles versionnées
@@ -166,6 +175,11 @@ moteurs sont testables isolément.
 
 ### 3.3 Traçabilité complète (CON-005, CON-010, T-6)
 
+**Réf. constitutionnelle :** GSIE-CON-005 (toute connaissance doit être
+traçable — origine, historique, niveau de preuve, version),
+GSIE-CON-010 (toute connaissance doit pouvoir évoluer sans perdre son
+historique — les versions précédentes sont archivées, jamais supprimées).
+
 Toute connaissance, toute décision, toute modification est tracée et
 versionnée. L'historique n'est jamais supprimé — il évolue. Chaque
 connaissance a un identifiant stable et citable (S-7).
@@ -175,6 +189,10 @@ dans le pipeline produit un journal d'audit. Le versioning s'applique
 au code (Git), aux connaissances, aux API et aux documents.
 
 ### 3.4 Subordination du code à la connaissance (CON-003, T-3)
+
+**Réf. constitutionnelle :** GSIE-CON-003 (la connaissance avant le
+code — le code est un moyen, pas une fin ; aucune optimisation ne peut
+dégrader la traçabilité ou l'explicabilité).
 
 Le code est un moyen, pas une fin. En cas de conflit entre la qualité
 de la connaissance et la performance du code, la connaissance prime.
@@ -186,6 +204,11 @@ sont interdites.
 
 ### 3.5 Explicabilité native (CON-004, T-3)
 
+**Réf. constitutionnelle :** GSIE-CON-004 (toute décision doit être
+explicable — chaîne de raisonnement, sources, niveau de confiance,
+limites), GSIE-CON-001 (le forestier reste le décideur — l'explicabilité
+est la condition du consentement éclairé).
+
 Toute décision produite par le système doit être explicable. Chaque
 recommandation porte sa chaîne d'inférence, ses sources et son
 niveau de preuve (S-2).
@@ -196,6 +219,11 @@ sortie non expliquée.
 
 ### 3.6 Pas de logique métier dupliquée (T-4)
 
+**Réf. constitutionnelle :** GSIE-CON-007 (modularité obligatoire — une
+règle métier appartient à un seul moteur, les autres la consomment via
+API), GSIE-CON-002 (la science avant tout — toute règle est sourcée et
+identifiée à un seul endroit pour garantir la traçabilité).
+
 Toute règle métier (seuil, coefficient, formule) existe à un seul
 endroit. La duplication est interdite.
 
@@ -204,6 +232,10 @@ dans des modules partagés ou fournies via l'API d'un moteur
 propriétaire.
 
 ### 3.7 Couplage faible (T-2)
+
+**Réf. constitutionnelle :** GSIE-CON-007 (modularité obligatoire — les
+moteurs communiquent par interfaces contractuelles, jamais par accès
+direct à l'implémentation interne d'un autre).
 
 Les moteurs communiquent par interfaces contractuelles, jamais par
 accès direct. Un contrat définit les entrées, les sorties, les
@@ -245,6 +277,8 @@ domaine mais pas l'inverse.
 │  Réseau (GSIE-Net) · Transport (LoRa, Wi-Fi, 4G/5G)      │
 │  Sources externes (IGN, Météo-France, INRAE, GBIF…)      │
 │  → Persistance, communication, accès aux données.        │
+│  *Réf. : `08_DATASETS/README.md` (catalogue des datasets   │
+│    référencés et sourcés)*                                 │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -394,7 +428,10 @@ et produit un artefact traçable.
 
 - **Filtre amont obligatoire :** l'Evidence Engine est le premier
   moteur du pipeline. Aucune connaissance n'entre dans le système
-  sans niveau de preuve (S-2, `GSIE_CORE_BLUEPRINT.md`).
+  sans niveau de preuve (S-2, `GSIE_CORE_BLUEPRINT.md`). Les niveaux
+  de preuve (A=Prouvé → F=Observation) sont définis dans la
+  Constitution Scientifique article S-2 et le protocole d'évaluation
+  est documenté dans `06_RESEARCH/RESEARCH_METHOD.md`.
 - **Journalisation à chaque étape :** chaque transformation produit
   un journal d'audit (CON-005, T-6). Le journal est consultable et
   immuable.
@@ -405,6 +442,55 @@ et produit un artefact traçable.
 - **Mode hors-ligne :** l'intégralité du flux s'exécute localement
   sur le nœud terminal. La synchronisation avec le serveur se fait
   en arrière-plan (RFC-0003 §1, §4).
+
+### 5.2 Modes dégradés : fonctionnement hors-ligne vs en ligne
+
+**Réf. constitutionnelle :** GSIE-CON-007 (modularité — chaque moteur
+déclare son comportement hors-ligne), Constitution Technique article
+T-8 (fonctionnement hors-ligne — données de référence en cache local,
+moteurs critiques hors-ligne, mode dégradé documenté pour les moteurs
+à données externes).
+
+Le tableau ci-dessous précise, pour chaque moteur, ce qui est
+disponible hors-ligne (sur le nœud terminal, sans connexion réseau)
+versus en ligne (connexion au serveur GSIE ou Edge Node). Les données
+en cache sont préparées par la couche application lors du bundle de
+mission (RFC-0003 §7).
+
+#### Cœur de raisonnement
+
+| Moteur | Hors-ligne (cache local) | En ligne (serveur) | Fonctionnalités perdues hors-ligne |
+|---|---|---|---|
+| Evidence Engine | Évaluation complète des niveaux de preuve (A→F). Base des règles d'évaluation en cache local. | Idem + mise à jour des règles d'évaluation si évolution. | Aucune perte — moteur critique, conçu pour fonctionner hors-ligne. |
+| Knowledge Engine | Graphe de connaissances en cache (bundle de mission). Requêtes locales, intégration de nouvelles connaissances terrain. | Graphe complet (source). Synchronisation des connaissances produites hors-ligne, résolution des conflits de fusion. | Pas d'accès aux connaissances ajoutées sur le serveur depuis le bundle. Risque de conflit à la synchronisation (résolu par versioning). |
+| Correlation Engine | Croisement multi-domaine sur les données en cache. Pré-filtrage local. | Croisement complet sur l'ensemble des données serveur. | Corrélations limitées au périmètre du bundle de mission. |
+| Reasoning Engine | Inférence simple (chaîne courte, règles locales). | Inférence complexe (chaînes longues, règles volumineuses, inférence transverse). | Inférences complexes non disponibles. Le moteur signale la limite. |
+| Diagnostic Engine | Synthèse stationnelle/sylvicole complète à partir des données en cache. | Idem + accès aux modèles diagnostiques mis à jour. | Aucune perte — moteur critique. |
+| Recommendation Engine | Recommandations contournables et justifiées à partir du diagnostic local. | Idem + accès aux règles de recommandation mises à jour. | Aucune perte — moteur critique. |
+| Validation Engine | Conformité constitutionnelle complète (explicabilité, preuve, domaine). | Idem. | Aucune perte — moteur critique, conçu pour fonctionner hors-ligne. |
+
+#### Moteurs domaine
+
+| Moteur | Hors-ligne (cache local) | En ligne (serveur) | Fonctionnalités perdues hors-ligne |
+|---|---|---|---|
+| GIS Engine | Données géospatiales en cache (parcelles, relief, hydrographie du périmètre de mission). | Source complète (IGN, cadastre, LiDAR). Mise à jour des couches. | Pas d'accès aux couches non incluses dans le bundle. Pas de mise à jour des données IGN. |
+| Climate Engine | Données climatiques historiques en cache (normales, bioclimatiques du périmètre). | Projections climatiques complètes, mises à jour Météo-France/DSN. | Pas d'accès aux projections mises à jour. Les projections en cache restent utilisables avec date de validité signalée. |
+| Pedology Engine | Données pédologiques en cache (texture, pH, drainage, réserve utile du périmètre). | Source complète (BD Sols, Référentiel Pédologique Français). | Pas d'accès aux données pédologiques hors périmètre de mission. |
+| Botanical Engine | Modèle léger en cache (taxonomie, autécologie des essences du périmètre). | Base botanique complète (BDNFF, GBIF). | Pas d'accès aux espèces hors bundle. Autécologie limitée aux essences préchargées. |
+| Forest Dynamics Engine | Modèles de croissance partiels en cache (essences principales du périmètre). | Modèles complets (toutes essences, toutes stations). | Modèles de croissance indisponibles pour les essences non préchargées. |
+
+#### Moteurs transverses
+
+| Moteur | Hors-ligne (cache local) | En ligne (serveur) | Fonctionnalités perdues hors-ligne |
+|---|---|---|---|
+| Learning Engine | Indisponible hors-ligne. Les retours terrain sont stockés localement pour synchronisation différée. | Amélioration continue des modèles à partir des retours validés (serveur). | Pas d'apprentissage en temps réel. Les retours sont différés et traités au serveur. |
+| Simulation Engine | Indisponible hors-ligne (calcul lourd). | Projection de scénarios sylvicoles long terme. | Pas de simulation long terme sur le terrain. Le technicien peut demander une simulation qui sera exécutée au prochain passage serveur. |
+
+**Principe de transparence :** le technicien ne voit aucune différence
+entre les modes hors-ligne et en ligne — la couche application gère la
+transparence (RFC-0003 §6). Les fonctionnalités indisponibles
+hors-ligne sont signalées par une mention « nécessite synchronisation »
+dans l'interface, sans bloquer le travail en cours.
 
 ---
 
@@ -508,16 +594,123 @@ plusieurs décennies sans refonte complète. Les garanties sont :
 
 ---
 
-## 10. Historique
+## 10. Esquisse des contrats d'interface
+
+**Réf. constitutionnelle :** GSIE-CON-007 (modularité — communication
+par interfaces contractuelles), Constitution Technique article T-2
+(couplage faible — un contrat définit les entrées, les sorties, les
+erreurs et la version).
+
+Le tableau ci-dessous esquisse les entrées et sorties principales de
+chaque moteur. Il s'agit d'une vue d'overview : le détail complet
+(format, type, unité, domaine de validité, codes d'erreur, version) est
+défini dans le livrable 206 (`ENGINE_INTERFACE_CONTRACTS.md`).
+
+### Cœur de raisonnement
+
+| Moteur | Entrées principales | Sorties principales |
+|---|---|---|
+| Evidence Engine | Connaissance brute (source, métadonnées, contenu) | Connaissance qualifiée (niveau de preuve A→F, justification) |
+| Knowledge Engine | Connaissance qualifiée (Evidence Engine) | Nœud de graphe de connaissances (identifiant stable, ontologie, relations) |
+| Correlation Engine | Nœuds de connaissances multi-domaines (Knowledge Engine + moteurs domaine) | Corrélations détectées (paires/triplets, coefficient, niveau de confiance) |
+| Reasoning Engine | Corrélations + connaissances (Correlation + Knowledge Engine) | Conclusions inférées (chaîne d'inférence, prémisses, niveau de confiance) |
+| Diagnostic Engine | Conclusions inférées + données stationnelles (Reasoning + moteurs domaine) | Diagnostic stationnel/sylvicole (synthèse, facteurs limitants, niveau de confiance) |
+| Recommendation Engine | Diagnostic + alternatives (Diagnostic Engine + Simulation Engine optionnel) | Recommandations contournables (action, justification, alternatives, incertitude) |
+| Validation Engine | Recommandations + métadonnées de traçabilité (Recommendation Engine) | Sortie validée ou bloquée (conformité constitutionnelle, explication, sources) |
+
+### Moteurs domaine
+
+| Moteur | Entrées principales | Sorties principales |
+|---|---|---|
+| GIS Engine | Coordonnées géographiques, périmètre de mission | Données géospatiales (parcelles, relief, hydrographie, couches vectorielles/raster) |
+| Climate Engine | Localisation, période, scénario climatique | Données climatiques/bioclimatiques (températures, précipitations, indices, projections) |
+| Pedology Engine | Localisation, échantillons terrain (optionnel) | Données pédologiques (texture, pH, drainage, réserve utile, type de sol) |
+| Botanical Engine | Taxon ou essence, localisation (optionnel) | Données botaniques (taxonomie, nomenclature, autécologie, exigences stationnelles) |
+| Forest Dynamics Engine | Peuplement (composition, structure, âge), station, scénario sylvicole | Projections de croissance et dynamique (accroissement, volume, régénération) |
+
+### Moteurs transverses
+
+| Moteur | Entrées principales | Sorties principales |
+|---|---|---|
+| Learning Engine | Retours terrain validés, écarts recommandation/décision | Ajustements de modèles proposés (justification, source, réversibilité) |
+| Simulation Engine | Peuplement initial, scénario sylvicole, horizon temporel | Projections de scénarios (trajectoires, indicateurs, comparaison de scénarios) |
+
+**Note :** chaque contrat d'interface est versionné (T-6). Toute
+évolution de contrat est tracée et rétro-compatible ou documentée
+comme rupture. Le protocole de communication inter-moteurs est défini
+dans le livrable 203 (`ENGINE_COMMUNICATION_PROTOCOL.md`).
+
+---
+
+## 11. Sources et références scientifiques
+
+**Réf. constitutionnelle :** GSIE-CON-002 (la science avant tout —
+toute connaissance doit reposer sur une source scientifique
+identifiable et vérifiable), GSIE-CON-005 (traçabilité — chaque
+connaissance a une origine, un auteur, une date, une version).
+
+Ce document référence des domaines scientifiques couverts par GSIE.
+Chaque domaine est sourcé dans `06_RESEARCH/` (travaux scientifiques,
+bibliographie) et `08_DATASETS/` (jeux de données référencés). L'état
+actuel de ces dossiers est en constitutif — les sources spécifiques
+seront cataloguées au fur et à mesure de l'enrichissement de la base
+de recherche.
+
+| Domaine scientifique | Moteur(s) concerné(s) | Référence recherche | Référence datasets |
+|---|---|---|---|
+| Écologie forestière et stationnelle | Diagnostic, Forest Dynamics | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Pédologie | Pedology | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Dendrométrie et croissance | Forest Dynamics | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Climatologie et bioclimatologie | Climate | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Botanique et taxonomie | Botanical | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Géospatial (SIG) | GIS | — | `08_DATASETS/README.md` (à enrichir) |
+| Pathologie forestière | (futur moteur domaine) | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+| Entomologie forestière | (futur moteur domaine) | `06_RESEARCH/README.md` (à enrichir) | `08_DATASETS/README.md` (à enrichir) |
+
+### Documents de référence actuellement disponibles
+
+| Document | Rôle | Chemin |
+|---|---|---|
+| Research Method | Pipeline officiel d'évaluation scientifique (recherche → collecte → évaluation → niveau de preuve → modélisation → validation → intégration) | `06_RESEARCH/RESEARCH_METHOD.md` |
+| Research README | Cadre des travaux scientifiques et bibliographiques | `06_RESEARCH/README.md` |
+| Datasets README | Cadre du catalogue des jeux de données référencés | `08_DATASETS/README.md` |
+| Constitution Scientifique | Articles S-1 à S-7 (sources acceptées, niveaux de preuve, conflits, révision, incertitude, domaines, patrimoine) | `00_CONSTITUTION/SCIENTIFIC_CONSTITUTION.md` |
+| Constitution Technique | Articles T-1 à T-10 (architecture modulaire, couplage, versionnement, hors-ligne, etc.) | `00_CONSTITUTION/TECHNICAL_CONSTITUTION.md` |
+
+### Sources externes institutionnelles (couche infrastructure)
+
+Les sources externes suivantes sont référencées dans le flux de données
+(§5) et la couche infrastructure (§4.3). Leur catalogue détaillé
+(métadonnées, licence, couverture, qualité) sera documenté dans
+`08_DATASETS/` au fur et à mesure de l'intégration :
+
+- **IGN** — Institut National de l'Information Géographique et Forestière (données géospatiales, forestières) ;
+- **Météo-France / DSN** — données climatiques historiques et projections ;
+- **INRAE** — Institut National de Recherche pour l'Agriculture, l'Alimentation et l'Environnement (recherche forestière, pédologie) ;
+- **GBIF** — Global Biodiversity Information Facility (données de biodiversité) ;
+- **BDNFF** — Base de Données Nomenclaturale de la Flore de France (taxonomie botanique) ;
+- **BD Sols / Référentiel Pédologique Français** — données et référentiel pédologique ;
+- **ONF** — Office National des Forêts (données de gestion forestière) ;
+- **LiDAR** — données de relief et de structure de la canopée.
+
+> **Note :** conformément à GSIE-CON-002, aucune donnée de ces sources
+> ne sera intégrée sans métadonnées complètes (source, licence, date,
+> couverture, qualité). Le respect des contraintes de licence est
+> géré en coordination avec `19_LEGAL/`.
+
+---
+
+## 12. Historique
 
 | Date | Événement |
 |---|---|
 | 2026-07-01 | Création — version squelette (Phase 1) |
 | 2026-07-12 | Enrichissement Phase 2 — vue d'ensemble, principes, couches, diagramme de flux, relation RFC-0003 |
+| 2026-07-12 | Correction audit — références constitutionnelles explicites (§3), références sources (§2.1, §4.3, §5.1), modes dégradés détaillés (§5.2), esquisse des contrats d'interface (§10), sources et références scientifiques (§11) |
 
 ---
 
-## 11. Validation
+## 13. Validation
 
 Document en statut **Draft**. Passage en `Review` soumis à
 validation du Fondateur. Aucune modification destructive sans

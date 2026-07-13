@@ -537,17 +537,89 @@ GSIE reste en Rust.
 
 ---
 
+## 8bis. ADR-0007 — Unreal Engine 5.8 + Cesium pour le jumeau numérique vivant
+
+| Champ | Valeur |
+|---|---|
+| **ID** | ADR-0007 |
+| **Statut** | Accepté |
+| **Date** | 2026-07-12 |
+| **Auteur** | Fondateur GSIE |
+| **Décision liée** | DEC-000010 (adoption UE 5.8 + Cesium) |
+| **Directives servies** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif) |
+
+### Contexte
+
+GSIE-DIR-0005 fixe la vision du jumeau numérique vivant : terrain comme
+interface unique, zoom progressif, moteur 3D interchangeable sans logique
+métier. ADR-001 du livrable 208 pose le principe d'interchangeabilité.
+Il faut maintenant choisir le moteur 3D concret.
+
+### Options envisagées
+
+1. **Unreal Engine 5.8** — moteur triple-A, Cesium for Unreal, Niagara,
+   PCG production-ready, WebSockets natifs, Nanite/Lumen.
+2. **Unity 6** — moteur solide, mais moins de précédents académiques en
+   jumeau numérique incendie.
+3. **Three.js / web** — léger, mais pas adapté à la qualité visuelle
+   exigée (DIR-0005 « immersion comme outil de compréhension »).
+4. **Godot 4** — open source, mais écosystème Cesium immature.
+
+### Décision
+
+**Unreal Engine 5.8 + Cesium for Unreal** comme moteur 3D du jumeau
+numérique vivant.
+
+### Justification
+
+1. **GSIE-CON-002 (science)** : trois publications académiques récentes
+   (FIRETWIN 2025, FIRE-VLM 2026, IVSR 2026) valident l'approche dans UE.
+   Voir `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md`.
+2. **GSIE-CON-007 (modularité)** : UE 5.8 est un client de visualisation,
+   jamais une dépendance de calcul. Le jumeau numérique tourne côté
+   serveur (DIR-0006) ; UE reflète l'état, il ne le calcule pas.
+3. **Cesium for Unreal** (racheté par Bentley Systems 2024) : plugin
+   open source adossé à un acteur sérieux. Géoréférencement WGS84,
+   ingestion LAS/LAZ/GeoTIFF, Gaussian Splats via 3D Tiles.
+4. **WebSockets natifs** : aucun plugin tiers pour l'ingestion temps réel.
+5. **PCG production-ready** (depuis UE 5.7) : génération procédural
+   pilotée par landscape data layers — exactement le mécanisme pour
+   GeoSylva (gradient de fidélité).
+6. **Calendrier stable** : UE 5.8 = fin du cycle majeur UE5. UE6 stable
+   en 2028. Pas de question à se poser avant 2028.
+
+### Conséquences
+
+- **Positives :** base technique validée par la recherche, écosystème
+  mature, prototype WebSocket en cours.
+- **Négatives :** UE est un moteur lourd (compilation, stockage) —
+  compensé par la philosophie « lourd serveur / léger terrain » (C-06).
+- **Impact :** ADR-001 du livrable 208 est réalisé. Les livrables 211
+  (GCS-Cinéma Ignis) et 212 (GeoSylva-Unreal) documentent l'architecture
+  détaillée. C++ entre dans le périmètre (limité au plugin UE, cohérent
+  avec ADR-0006).
+
+### Garde-fous
+
+- RFC-0004 §8 (autonomie limitée à la navigation) — UE est un outil de
+  visualisation, pas de commandement.
+- GSIE-CON-001 (décideur humain) — le COS reste le décideur.
+- GeoSylva-Unreal (livrable 212) en attente volontaire jusqu'à MVP Ignis.
+
+---
+
 ## 9. Matrice de compatibilité inter-langages
 
 ```
-                    Python          Rust            Go (opt.)      TypeScript
-                    (orchest.)      (cœur IP)       (temps réel)   (présentation)
-  ┌──────────┬──────────────┬──────────────┬──────────────┬──────────────┐
-  │ Python   │      —       │  pyo3 (natif)│  gRPC/REST   │  OpenAPI     │
-  │ Rust     │   pyo3       │      —       │  FFI/gRPC    │  OpenAPI     │
-  │ Go       │  gRPC/REST   │  FFI/gRPC    │      —       │  OpenAPI/WS  │
-  │ TypeScr. │  OpenAPI     │  OpenAPI     │  OpenAPI/WS  │      —       │
-  └──────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+                    Python          Rust            Go (opt.)      TypeScript     C++ (UE 5.8)
+                    (orchest.)      (cœur IP)       (temps réel)   (présentation) (jumeau 3D)
+  ┌──────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Python   │      —       │  pyo3 (natif)│  gRPC/REST   │  OpenAPI     │  WebSocket   │
+  │ Rust     │   pyo3       │      —       │  FFI/gRPC    │  OpenAPI     │  WebSocket   │
+  │ Go       │  gRPC/REST   │  FFI/gRPC    │      —       │  OpenAPI/WS  │  WebSocket   │
+  │ TypeScr. │  OpenAPI     │  OpenAPI     │  OpenAPI/WS  │      —       │  N/A         │
+  │ C++ (UE) │  WebSocket   │  WebSocket   │  WebSocket   │  N/A         │      —       │
+  └──────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
 ```
 
 **Lecture :**
@@ -555,7 +627,10 @@ GSIE reste en Rust.
 - **Python ↔ Go :** gRPC ou REST (processus séparé) ;
 - **Go ↔ Rust :** FFI (CGo) ou gRPC (processus séparé) ;
 - **TypeScript ↔ * :** OpenAPI (REST/WebSockets) — les contrats sont
-  générés depuis les schémas serveur.
+  générés depuis les schémas serveur ;
+- **C++ (UE 5.8) ↔ * :** WebSocket/JSON natif (module `WebSockets` +
+  `Json` d'Unreal) — UE est un client de visualisation, jamais un
+  calculateur (ADR-0007, DEC-000010).
 
 ---
 
@@ -595,6 +670,7 @@ Conformément à T-10 (Constitution Technique) :
 | Date | Événement |
 |---|---|
 | 2026-07-12 | Création — 6 ADR (Python, Rust, Go, TypeScript, Julia, C++) |
+| 2026-07-12 | Ajout ADR-0007 — Unreal Engine 5.8 + Cesium (DEC-000010), matrice étendue C++/UE |
 
 ---
 

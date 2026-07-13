@@ -6,8 +6,8 @@
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
 | **Date de révision** | 2026-07-12 |
-| **Lois fondatrices** | GSIE-CON-007, GSIE-CON-010 |
-| **Constitutions liées** | Technique (T-1, T-2, T-5) |
+| **Lois fondatrices** | GSIE-CON-004, GSIE-CON-005, GSIE-CON-007, GSIE-CON-010 |
+| **Constitutions liées** | Technique (T-1, T-2, T-5, T-7) |
 | **RFC de référence** | RFC-0003 (GSIE-Net) |
 | **Décision d'ouverture** | DEC-000004 |
 
@@ -43,23 +43,18 @@ dépendances amont sont fonctionnelles (T-1 : graphe acyclique).
                     │  ENGINE      │
                     └──────┬───────┘
                            │
-          ┌────────────────┼────────────────┐
-          │                │                │
-   ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐
-   │    GIS      │  │  BOTANICAL  │  │  PEDOLOGY   │
-   │  ENGINE     │  │  ENGINE     │  │  ENGINE     │
-   └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-          │                │                │
-   ┌──────▼──────┐         │         ┌──────▼──────┐
-   │  CLIMATE    │         │         │      │       │
-   │  ENGINE     │         │         │      │       │
-   └──────┬──────┘         │         │      │       │
-          │                │         │      │       │
-          └────────────────┼─────────┘      │       │
-                           │                │       │
-                    ┌──────▼──────┐         │       │
-                    │ CORRELATION │ ◀───────┘───────┘
-                    │  ENGINE     │  (dépend: Knowledge + tous les moteurs domaine)
+          ┌────────────────┼────────────────┬────────────────┐
+          │                │                │                │
+   ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐
+   │    GIS      │  │  BOTANICAL  │  │  PEDOLOGY   │  │  CLIMATE    │
+   │  ENGINE     │  │  ENGINE     │  │  ENGINE     │  │  ENGINE     │
+   └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+          │                │                │                │
+          └────────────────┼────────────────┴────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │ CORRELATION │  (dépend: Knowledge + tous les moteurs domaine)
+                    │  ENGINE     │
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
@@ -97,6 +92,28 @@ dépendances amont sont fonctionnelles (T-1 : graphe acyclique).
                     │  ENGINE     │  (développé en dernier)
                     └─────────────┘
 ```
+
+> **Note de cohérence avec le livrable 206 (contrats d'interface) :**
+> Le graphe ci-dessus représente les **dépendances de développement**
+> (un moteur ne peut être implémenté que si ses dépendances amont sont
+> fonctionnelles). Il se distingue de la **matrice d'interactions** du
+> livrable `ENGINE_INTERFACE_CONTRACTS.md`, qui décrit les **flux de
+> données à l'exécution**. Les deux visions sont complémentaires et
+> cohérentes :
+>
+> - Les moteurs domaine (GIS, Botanical, Pedology, Climate) dépendent de
+>   Knowledge Engine **pour le développement** (cache, ontologie), mais
+>   n'échangent pas de flux direct avec Knowledge à l'exécution — la
+>   matrice d'interactions les montre émettant vers Diagnostic et
+>   Simulation uniquement.
+> - Correlation Engine dépend de tous les moteurs domaine pour le
+>   développement (les données doivent être disponibles pour être
+>   croisées), mais à l'exécution, Correlation requête Knowledge (flux
+>   direct `KnowledgeQuery`) — c'est Knowledge qui centralise l'accès
+>   aux données domaine.
+> - Forest Dynamics Engine est positionné en Vague 4 (dépend de
+>   Knowledge et Correlation pour le développement) ; à l'exécution, il
+>   émet vers Diagnostic et Simulation, conformément à la matrice.
 
 ---
 
@@ -203,6 +220,39 @@ sorties à valider.
 retour. Il ne peut être développé que lorsque le pipeline principal
 fonctionne de bout en bout, car il apprend des retours d'expérience
 sur le pipeline complet.
+
+### 3.1 Positionnement des moteurs transverses
+
+Trois moteurs ont un statut particulier par rapport à la chaîne
+principale (Evidence → Knowledge → Correlation → Reasoning →
+Diagnostic → Recommendation → Validation). Ils ne sont pas des
+maillons linéaires de cette chaîne mais des moteurs **transverses**
+qui l'alimentent ou la prolongent. Leur positionnement dans la
+séquence de développement est explicité ci-dessous.
+
+| Moteur | Vague | Positionnement | Justification |
+|---|---|---|---|
+| **Forest Dynamics Engine** | Vague 4 (parallèle à Diagnostic) | Après la chaîne Knowledge → Correlation, **en parallèle** de Diagnostic | Forest Dynamics modélise la croissance et la dynamique forestière. Il dépend de Knowledge (structures) et Correlation (croisements) mais **pas** de Reasoning ni de Diagnostic — il est donc indépendant de Diagnostic et peut être développé en parallèle. Il alimente Simulation (vague 5) en projections de croissance. |
+| **Simulation Engine** | Vague 5 (après Forest Dynamics, avant Recommendation) | **Après** Forest Dynamics et Climate, **avant** Recommendation | Simulation projette des scénarios long terme. Elle dépend de Forest Dynamics (croissance) et Climate (projections climatiques) pour ses conditions aux limites. Elle alimente Recommendation en scénarios comparés. Elle est strictement après Forest Dynamics (vague 4) et avant Recommendation (même vague 5, séquentiel). |
+| **Learning Engine** | Vague 7 (après le pipeline complet) | **En dernier**, après Validation (vague 6) | Learning est le seul moteur **rétroactif** : il remonte des corrections vers Evidence (réévaluation de preuve), Knowledge (mises à jour) et Correlation (feedback). Il nécessite un pipeline complet fonctionnel de bout en bout pour disposer de retours d'expérience à apprendre. Un démarrage en mode passif (collecte seule) est prévu avant l'apprentissage actif (voir §7, risques). |
+
+**Synthèse du positionnement :**
+
+- **Forest Dynamics** se développe **en parallèle** de la chaîne
+  principale (Vague 4), dès que Knowledge et Correlation sont
+  fonctionnels. Il n'attend pas Diagnostic.
+- **Simulation** se développe **après** Forest Dynamics et Climate,
+  mais **avant** Recommendation — il est sur le chemin critique entre
+  les moteurs domaine/transverses et la recommandation.
+- **Learning** se développe **en dernier** (Vague 7), une fois le
+  pipeline complet fonctionnel. Il est le seul moteur qui boucle le
+  système (rétroaction vers les moteurs amont).
+
+> **Note :** Forest Dynamics est classé parmi les moteurs domaine dans
+> la documentation des moteurs (`09_ENGINES/`) mais fonctionne ici
+> comme un moteur transverse car il n'est pas un maillon linéaire de
+> la chaîne d'intelligence — il alimente Simulation et Diagnostic
+> sans être traversé par le flux Evidence → Validation.
 
 ---
 
@@ -313,16 +363,16 @@ Constitution Technique (T-1, T-5) et de la Constitution Scientifique
 
 ## 6. Ordre synthétique
 
-| Vague | Moteur(s) | Parallélisable ? | Critère de passage à la vague suivante |
-|---|---|:---:|---|
-| 0 | Fondations (modèle, protocole, stack, contrats) | Partiel | Tous les livrables Phase 2 validés |
-| 1 | Evidence → Knowledge | Non | Knowledge Engine complet (C1-C10) |
-| 2 | GIS · Botanical · Pedology · Climate | **Oui** | Tous les moteurs domaine complets (C1-C10) |
-| 3 | Correlation → Reasoning | Non | Reasoning Engine complet (C1-C10) |
-| 4 | Diagnostic · Forest Dynamics | **Oui** | Les deux moteurs complets (C1-C10) |
-| 5 | Simulation → Recommendation | Non | Recommendation Engine complet (C1-C10) |
-| 6 | Validation | Non | Validation Engine complet (C1-C10) |
-| 7 | Learning | Non | Learning Engine complet (C1-C10) + pipeline complet fonctionnel |
+| Vague | Moteur(s) | Catégorie | Parallélisable ? | Critère de passage à la vague suivante |
+|---|---|---|:---:|---|
+| 0 | Fondations (modèle, protocole, stack, contrats) | Préalable | Partiel | Tous les livrables Phase 2 validés |
+| 1 | Evidence → Knowledge | Chaîne principale | Non | Knowledge Engine complet (C1-C10) |
+| 2 | GIS · Botanical · Pedology · Climate | Moteurs domaine | **Oui** | Tous les moteurs domaine complets (C1-C10) |
+| 3 | Correlation → Reasoning | Chaîne principale | Non | Reasoning Engine complet (C1-C10) |
+| 4 | Diagnostic · Forest Dynamics | Chaîne principale + transverse | **Oui** | Les deux moteurs complets (C1-C10) |
+| 5 | Simulation → Recommendation | Transverse + chaîne principale | Non | Recommendation Engine complet (C1-C10) |
+| 6 | Validation | Chaîne principale | Non | Validation Engine complet (C1-C10) |
+| 7 | Learning | Transverse | Non | Learning Engine complet (C1-C10) + pipeline complet fonctionnel |
 
 ---
 
@@ -355,6 +405,7 @@ Constitution Technique (T-1, T-5) et de la Constitution Scientifique
 |---|---|
 | 2026-07-01 | Création — version squelette (Phase 1, 13 moteurs listés) |
 | 2026-07-12 | Enrichissement Phase 2 — vagues, dépendances, parallélisation, critères de complétude, 14 moteurs |
+| 2026-07-12 | Correction audit — en-tête gouvernance (CON-004, CON-005, T-7), graphe dépendances (Climate Engine), note cohérence livrable 206, positionnement moteurs transverses, colonne Catégorie tableau synthétique |
 
 ---
 

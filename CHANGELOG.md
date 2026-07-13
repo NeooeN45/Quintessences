@@ -4,6 +4,216 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [UNREAL ENGINE — JUMEAU NUMÉRIQUE 3D] - 2026-07-12
+
+### Adoption Unreal Engine 5.8 + Cesium (DEC-000010)
+
+Le Fondateur acte l'adoption d'**Unreal Engine 5.8 + Cesium for Unreal**
+comme moteur 3D du jumeau numérique vivant (DIR-0005). Cette décision
+réalise l'ADR-001 du livrable 208 (moteur 3D interchangeable) et ouvre
+deux nouveaux livrables Phase 2.
+
+### Nouveaux livrables
+
+- **Livrable 211 — GCS-Cinéma Unreal Engine (Ignis)** : architecture du
+  poste de commandement 3D. UE 5.8 + Cesium (terrain géoréférencé, 3D
+  Tiles, Gaussian Splats) + WebSockets natifs (ingestion temps réel) +
+  Niagara (feu/fumée pilotés par données, façon FIRETWIN). Précédents
+  scientifiques : FIRETWIN (NASA/NSF 2025), FIRE-VLM (2026), IVSR (2026).
+  Prototype WebSocket en cours.
+- **Livrable 212 — GeoSylva-Unreal Architecture** : pipeline LiDAR HD IGN
+  → arbres individuels (PyCrown), génération procédurale scientifique
+  (PCG + landscape data layers), gradient de fidélité (contexte /
+  procédural / haute fidélité), synchronisation réel/simulé (CON-010).
+  **En attente volontaire** jusqu'à MVP Ignis (règle S-08).
+
+### Documents créés
+
+- `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` (livrable 211)
+- `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212)
+- `03_DECISIONS/DEC-000010.md` (adoption UE 5.8 + Cesium)
+- `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` (fiches FIRETWIN, FIRE-VLM, IVSR)
+
+### Documents mis à jour
+
+- `04_ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` (208) : ajout référence 211
+- `04_ARCHITECTURE/TECHNOLOGY_STACK.md` (202) : ajout ADR-0007 (UE 5.8 +
+  Cesium), matrice de compatibilité étendue C++/UE
+- `PROJECT_MEMORY.md` : DEC-000010 ajouté, documents d'architecture étendus
+- `ROADMAP.md` : livrables 211 et 212 ajoutés
+
+### Architecture partagée Ignis ↔ GeoSylva-Unreal
+
+| Partagé (plugin commun) | Séparé (logique propre) |
+|---|---|
+| Cesium (terrain géoréférencé) | Niagara feu/fumée (Ignis) |
+| WebSockets + JSON natif | PCG végétation (GeoSylva) |
+| Conventions de données | Mode d'usage (temps réel vs planification) |
+
+Recommandation : un seul projet Unreal en plugins internes (CON-007).
+
+---
+
+## [PHASE 2 — QUICK WINS] - 2026-07-12
+
+### Audit global des 10 livrables Phase 2
+
+Audit parallèle des 10 livrables (201-210) + 14 moteurs contre les critères
+de complétude Phase 2. Scores : 201 (8→9), 202 (7), 203 (6), 204 (8.5→9),
+205 (8→9), 206 (5 — point faible), 207 (97/100→100), 208 (6), 209 (6.5),
+210 (5.5).
+
+### Corrections apportées (4 quick wins initiaux)
+
+- **Livrable 201 — Master Architecture** (524→717 lignes) : ajout des
+  références sources scientifiques (mapping domaine → `06_RESEARCH/` /
+  `08_DATASETS/`), liaison explicite des principes constitutionnels
+  (CON-001 à CON-010), section modes dégradés (hors-ligne vs en ligne par
+  moteur), esquisse des contrats d'interface (table inputs/outputs).
+- **Livrable 204 — Development Order** (365→416 lignes) : en-tête complété
+  (CON-004, CON-005, T-7), incohérence graphe Climate↔GIS corrigée, note
+  de cohérence avec livrable 206, positionnement explicite des moteurs
+  transverses (Forest Dynamics, Simulation, Learning), colonne Catégorie
+  dans le tableau synthétique.
+- **Livrable 205 — Scientific Data Model** (797→1179 lignes) : entité
+  Peuplement (Stand) ajoutée, entités Forest Dynamics (GrowthModel,
+  ForestProjection) ajoutées, entités de sortie spécifiées
+  (DiagnosticReport, RecommendationSet, SimulationResult), section
+  contraintes d'intégrité (règles de validation par domaine), diagramme
+  et cardinalités mis à jour.
+- **Livrable 207 — Simulation Engine** : format dépendances harmonisé
+  (Type | Cible | Nature), contrat d'interface harmonisé (notation
+  `champ : type`), titres cas d'usage standardisés (« Cas 1 — », « Cas 2 — »).
+
+### Corrections apportées (vague 2 — complétion)
+
+- **Livrable 202 — Technology Stack** : audit confirmé — ADR-0002/0003/0004
+  déjà complets (Python, Rust, Go, TypeScript). Aucune modification nécessaire.
+- **Livrable 203 — Communication Protocol** (6→8/10) : ajout §6.5
+  priorisation des messages (critique/important/normal), §6.6 limites et
+  mode dégradé (taille de file, comportement sur dépassement), §6.7 codes
+  d'erreur offline, lien CON-003.
+- **Livrable 206 — Interface Contracts** (5→9/10, 140→1223 lignes) :
+  en-tête complété, types communs (SourceReference, EvidenceLevel,
+  ConfidenceLevel, EmpriseGeographique, PeriodeTemporelle, IntervalleConfiance,
+  IntervalleValeur), schémas formels des 14 moteurs (entrée + sortie +
+  messages transverses), garanties de service par interaction (mode, latence,
+  retry, timeout, idempotence), codes d'erreur par moteur, versioning SemVer
+  des contrats, tests d'interface (conformité schéma, contrat comportemental,
+  intégration inter-moteurs).
+- **Livrable 208 — GSIE-Ignis Architecture** (6→9/10, 549→847 lignes) :
+  alignement DIR-0005 (§2bis — jumeau numérique vivant : terrain comme
+  interface, zoom progressif, ADR-001 moteur 3D interchangeable, trois
+  usages d'un socle, immersion), alignement DIR-0006 (§2ter — moteur
+  cognitif : assimilation probabiliste, observateurs, graphe vivant,
+  raisonnement multi-échelle/temporel/probabiliste, intelligence distribuée,
+  IA collaborative, mémoire, explicabilité, auto-évaluation, curiosité
+  artificielle sous supervision humaine, anticipation « signale et propose »,
+  moteur scientifique), garde-fous RFC-0004 §8 référencés (non dupliqués).
+- **Livrable 209 — GSIE-Ignis Data Pipeline** (6.5→9/10, 569→829 lignes) :
+  alignement DIR-0006 (§10 assimilation probabiliste multi-observateurs avec
+  tableau de 16 observateurs, §11 raisonnement multi-échelle pixel→pays,
+  §12 auto-évaluation + curiosité artificielle sous supervision humaine),
+  alignement DIR-0005 (§13 présentation immersive du jumeau numérique,
+  terrain comme interface, moteur 3D interchangeable, zoom progressif,
+  interactions contextuelles), références DIR-0005/0006 ajoutées.
+- **Livrable 210 — Drone Architecture** (5.5→8.5/10, 506→642 lignes) :
+  alignement DIR-0006 (§11.1 drone comme observateur avec tableau capteurs,
+  §11.2 intelligence distribuée, §11.3 curiosité artificielle sous supervision
+  humaine), alignement DIR-0005 (§11.5 alimentation du jumeau numérique vivant,
+  interactions au clic drone), sources externes (IGN, Météo-France, Copernicus),
+  garde-fous RFC-0004 §8 référencés via §5.2 et §7.5 existants.
+
+### Bilan Phase 2
+
+Tous les livrables Phase 2 (201-210) sont maintenant Draft avec un niveau
+de complétude suffisant pour passage en Review. Les 10 livrables respectent
+les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
+
+---
+
+## [GSIE-IGNIS — VISION MOTEUR COGNITIF] - 2026-07-12
+
+### DEC-000009 — GSIE-DIR-0006 : le moteur cognitif GSIE-Ignis
+
+- **GSIE-DIR-0006** — Directive fondatrice compagnon de DIR-0005. Fixe la
+  vision du **moteur cognitif** GSIE-Ignis (le cerveau serveur).
+- **Articulation** : DIR-0005 = « Le moteur graphique montre le monde. » ;
+  DIR-0006 = « Le moteur cognitif le comprend. »
+- **Principes** : le serveur n'est pas un backend mais un système
+  d'intelligence (scientifique : collecte, compare, doute, vérifie, corrige,
+  prédit, explique, apprend) ; assimilation permanente par fusion
+  probabiliste multi-source ; monde comme graphe vivant de relations ;
+  raisonnement multi-échelle, temporel et probabiliste ; simulation
+  permanente même sans utilisateur ; intelligence distribuée (agents
+  spécialisés) et IA collaborative (orchestration de modèles) ; mémoire
+  versionnée ; explicabilité, auto-évaluation, curiosité artificielle,
+  anticipation ; moteur scientifique (test de théories/IA/simulations).
+- **Vision à long terme** : le feu n'est que le premier domaine ; architecture
+  conçue pour s'étendre (santé des forêts, biodiversité, tempêtes, sécheresses,
+  risques naturels, logistique de crise, gestion des territoires). Rejoint la
+  vocation du moteur GSIE et de l'écosystème Quintessences.
+- **Cadrage explicite** : curiosité artificielle et anticipation produisent
+  des **propositions** sous supervision humaine — jamais de déclenchement
+  automatique de mission, d'alerte ou d'intervention (RFC-0004 §8.3/§8.4,
+  GSIE-CON-001). Agents = responsabilité unique, fusion explicable
+  (GSIE-CON-007, GSIE-CON-004). Apprentissage versionné (GSIE-CON-010).
+- **Statut** : `Draft` (en attente de validation du Fondateur).
+- **Traçabilité** : `DEC-000009` acte l'adoption ; `PROJECT_MEMORY.md`,
+  `ROADMAP.md` synchronisés.
+- **Impact** : oriente les livrables Phase 2 n°208-210 (architecture
+  GSIE-Ignis) et les moteurs Reasoning / Correlation / Learning / Simulation.
+
+---
+
+## [GSIE-IGNIS — DIRECTIVE FONDATRICE GCS] - 2026-07-12
+
+### DEC-000008 — GSIE-DIR-0005 : jumeau numérique vivant
+
+- **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / Ground Control
+  System). Fixe la vision produit : GSIE-Ignis est un **jumeau numérique
+  vivant** des opérations de lutte contre les incendies, pas un logiciel de
+  cartographie, de drones ou de simulation.
+- **Principes** : le terrain devient l'interface unique ; le moteur 3D
+  (Unreal Engine ou successeur) est **interchangeable** et ne contient
+  **aucune logique métier** (l'intelligence reste dans GSIE) ; un seul socle,
+  trois usages (Opération, Formation, Recherche).
+- **Cadrage explicite de l'autonomie** : la section « Autonomie » (intention
+  vs commande) est cadrée par référence prioritaire à RFC-0004 §8.3/§8.4 —
+  l'autonomie d'intention porte sur la sélection des moyens d'observation et
+  la navigation ; la décision d'alerte, l'intervention et le commandement
+  restent humains (COS / CODIS) ; reprise manuelle toujours possible ;
+  aucune alerte directe à la population (FR-Alert).
+- **Statut** : `Draft` (en attente de validation du Fondateur).
+- **Traçabilité** : `DEC-000008` acte l'adoption ; `PROJECT_MEMORY.md`,
+  `ROADMAP.md` synchronisés.
+- **Impact** : oriente les livrables Phase 2 n°208-210 (architecture
+  GSIE-Ignis) et les futures spécifications.
+
+---
+
+## [GSIE-IGNIS — BANC DE SIMULATION] - 2026-07-12
+
+### Premier vol drone réussi + 4 tests de vol avancés
+
+- **PX4 SITL v1.18.0-beta1 + Gazebo Harmonic 8.14.0** opérationnels en
+  headless sur WSL2
+- **Diagnostic et résolution** du blocage au décollage (modèle x500_base
+  sans plugins moteurs + setpoint de position insuffisant → setpoint de
+  vélocité)
+- **Test 1 — Premier vol** : décollage → 34 m → stabilisation → atterrissage ✓
+- **Test 2 — Vol waypoint** : navigation 5 waypoints GPS (carré 100 m) ✓
+- **Test 3 — Pattern carré** : surveillance 200 m × 200 m à 8 m/s ✓
+- **Test 4 — Return-to-Home** : décollage + 150 m Nord + RTL (partiel :
+  RTL activé mais atterrissage non complété en 60 s)
+- **Test 5 — Surveillance incendie** : pattern lawnmower 4 lignes × 200 m
+  avec capture de positions GPS (simulation observation front de feu)
+- Scripts : `premier_vol.py`, `vol_waypoint.py`, `vol_pattern_carre.py`,
+  `vol_rth.py`, `vol_surveillance_incendie.py`, `run_test.sh`
+- ForeFire : compilation + démo propagation.png (Étape 2 validée)
+
+---
+
 ## [PHASE 2 — DÉMARRAGE EFFECTIF] - 2026-07-12
 
 ### Production de l'architecture (10 livrables)

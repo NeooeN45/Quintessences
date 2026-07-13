@@ -9,7 +9,8 @@
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
 | **Décisions liées** | DEC-000003 (adoption RFC-0004 + garde-fous), DEC-000005 (archive banc) |
-| **Documents connexes** | `GSIE_IGNIS_DATA_PIPELINE.md`, `GSIE_IGNIS_DRONE_ARCHITECTURE.md`, `22_PROJECT_MEMORY/GSIE-Ignis.md` (registre d'idées), `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md` |
+| **Directives liées** | GSIE-DIR-0005 (vision jumeau numérique vivant / GCS), GSIE-DIR-0006 (vision moteur cognitif) |
+| **Documents connexes** | `GSIE_IGNIS_GCS_CINEMA_UNREAL.md` (livrable 211, GCS-Cinéma UE 5.8), `GSIE_IGNIS_DATA_PIPELINE.md`, `GSIE_IGNIS_DRONE_ARCHITECTURE.md`, `22_PROJECT_MEMORY/GSIE-Ignis.md` (registre d'idées), `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md` |
 
 ---
 
@@ -85,6 +86,293 @@ Boucle d'assimilation (test)         Boucle d'assimilation (opérationnelle)
 —                                    Communications terrain (LoRa/4G/5G)
 —                                    Intégration SDIS (SITAC, NexSIS)
 ```
+
+---
+
+## 2bis. Vision du jumeau numérique vivant (alignement DIR-0005)
+
+> **Source directive** : `GSIE-DIR-0005` — vision GCS / jumeau numérique
+> vivant. Le but de GSIE-Ignis n'est pas de créer un logiciel de
+> cartographie, un logiciel de drones ou un simulateur d'incendie. Le but est
+> de créer un **jumeau numérique vivant** des opérations de lutte contre les
+> incendies. Chaque choix d'architecture doit servir cette vision.
+
+### 2bis.1 Le terrain comme interface unique
+
+Le terrain devient l'interface. Toutes les données — observations, prédictions,
+enjeux, moyens, météo — viennent se projeter dans le même espace géographique.
+L'utilisateur ne navigue plus entre plusieurs fenêtres ou plusieurs logiciels :
+il navigue dans le monde réel. La charge cognitive est réduite ; les
+informations ne sont jamais dispersées de leur contexte géographique.
+
+### 2bis.2 Zoom progressif — du globe au feu
+
+L'expérience d'ouverture est conçue comme une descente progressive dans la
+réalité :
+
+```
+Terre → France → régions → massifs forestiers → relief
+→ orthophotographies → forêts → routes → pistes DFCI
+→ points d'eau → bâtiments → réseaux → capteurs
+→ drones → véhicules → vents → fumée → feu
+```
+
+Le monde devient progressivement vivant. Chaque couche s'ajoute au contexte
+précédent, jamais en remplacement. L'utilisateur conserve à tout instant la
+perception de l'emboîtement des échelles.
+
+### 2bis.3 Moteur 3D interchangeable — principe architectural explicite
+
+> **Principe (DIR-0005, GSIE-CON-007)** : le moteur de rendu 3D est
+> interchangeable. Aujourd'hui Unreal Engine 5.x ; demain un successeur si
+> nécessaire. L'intelligence reste dans GSIE-Ignis ; le rendu n'est qu'une
+> fenêtre ouverte sur cette intelligence. **Aucune logique métier ne vit dans
+> le client 3D.**
+
+Le client 3D (GCS-Cinéma, Unreal Engine + Cesium for Unreal) reçoit des
+informations calculées par le serveur GSIE-Ignis via l'API temps réel
+(WebSocket/gRPC). Son rôle se limite à :
+
+- représenter le monde géographique ;
+- afficher les effets physiques (fumée, vent, flammes) ;
+- permettre l'interaction (clic-carte, sélection d'objets) ;
+- offrir une immersion maximale.
+
+Toute logique métier (assimilation, prédiction, analyse d'enjeux,
+recommandations) s'exécute côté serveur. Le client 3D est un consommateur
+passif de résultats — jamais un producteur de décisions. Cette séparation
+garantit que le remplacement du moteur graphique n'impacte aucune brique
+fonctionnelle (voir ADR-001 ci-dessous).
+
+> **ADR-001 — Moteur 3D interchangeable**
+>
+> - **Contexte** : DIR-0005 pose l'interchangeabilité du moteur 3D comme
+>   principe fondateur. GSIE-CON-007 impose la modularité.
+> - **Décision** : Le client 3D est isolé derrière le contrat d'interface de
+>   l'API temps réel (WebSocket/gRPC). Il ne contient aucune logique métier,
+>   aucun calcul scientifique, aucune règle opérationnelle. Il reçoit des
+>   objets sérialisés (position, intensité, incertitude, vecteurs, enjeux) et
+>   les restitue visuellement.
+> - **Conséquences** : Un changement de moteur 3D (Unreal → autre) ne
+>   modifie que la couche de rendu. Le contrat d'interface est la seule
+>   dépendance. La logique métier, l'assimilation, la prédiction et les
+>   garde-fous (RFC-0004 §8) restent côté serveur, indépendants du rendu.
+> - **Statut** : Draft (à formaliser en ADR dédié en Jalon 1).
+
+### 2bis.4 Trois usages d'un seul socle
+
+Le même socle technologique — même serveur cognitif, même API temps réel,
+même modèles — sert simultanément trois usages :
+
+| Usage | Description |
+|---|---|
+| **Opération** | Suivi temps réel d'un incendie, aide à la décision COS/CODIS |
+| **Formation** | Simulation et entraînement des COS, SDIS et écoles |
+| **Recherche** | Validation scientifique, expérimentation, génération de données synthétiques, amélioration continue des modèles |
+
+Une seule architecture. Trois usages. La différenciation se fait par
+configuration et par les données injectées, non par duplication de code.
+
+### 2bis.5 L'immersion comme outil de compréhension
+
+Le rendu 3D n'est pas un effet visuel — il est un outil de compréhension.
+Chaque élément visuel porte une signification opérationnelle :
+
+- la **fumée** indique un comportement (convectif, couvant, changement de
+  régime) ;
+- le **vent** montre une direction et une force locales ;
+- les **flammes** représentent une intensité calibrée ;
+- les **véhicules** et **drones** évoluent en temps réel.
+
+Le terrain devient un tableau de bord vivant : l'utilisateur comprend la
+situation en quelques secondes, sans lire un tableau de chiffres.
+
+---
+
+## 2ter. Architecture du moteur cognitif (alignement DIR-0006)
+
+> **Source directive** : `GSIE-DIR-0006` — vision du moteur cognitif. Le
+> serveur GSIE-Ignis n'est pas un simple backend : c'est un système
+> d'intelligence. Son rôle est de comprendre le monde, pas seulement de
+> stocker des données. Cette section traduit la directive en principes
+> architecturaux.
+>
+> Articulation : DIR-0005 dit « le moteur graphique montre le monde » ;
+> DIR-0006 dit « le moteur cognitif le comprend ».
+
+### 2ter.1 Assimilation probabiliste
+
+Aucune donnée n'est considérée comme une vérité absolue. Chaque source
+possède une précision, une latence, une fiabilité et une incertitude propres.
+Le serveur fusionne toutes les observations et construit un **consensus
+probabiliste** — il ne choisit jamais une source unique.
+
+> **Cadrage constitutionnel** (GSIE-CON-004, GSIE-CON-005) : toute
+> affirmation est traçable et son incertitude est explicitée. Le consensus
+> probabiliste est présenté comme un raisonnement justifiable, jamais comme
+> une vérité.
+
+### 2ter.2 Observateurs
+
+Chaque source d'information est un **observateur** du terrain, apportant une
+partie de la vérité :
+
+| Type | Observateurs |
+|---|---|
+| Spatial | Satellite, Copernicus, NASA FIRMS, Sentinel |
+| Aérien | Drone RGB, drone thermique |
+| Fixe | Caméra fixe, radar, lidar |
+| Sol | Station météo, capteur CO₂, capteur particules, LoRa |
+| Humain / institutionnel | Rapports SDIS, signalements citoyens, historique BDIFF, Météo-France |
+
+Aucun observateur n'est suffisant seul. La complémentarité des latences,
+résolutions et natures de mesure est exploitée par le moteur cognitif.
+
+### 2ter.3 Le monde comme graphe vivant
+
+Le territoire n'est pas une carte : c'est un **graphe dynamique**. Chaque
+élément est relié à d'autres par des relations porteuses de sens opérationnel :
+
+- un **arbre** influence un autre arbre (propagation de couronne) ;
+- une **pente** influence la propagation (effet accélérateur/décélérateur) ;
+- un **vent** influence une vallée (canalisation, turbulence) ;
+- une **route** influence les accès (temps d'intervention) ;
+- un **camion** influence le temps d'intervention ;
+- une **ligne électrique** influence le risque d'ignition.
+
+Le serveur manipule des **relations**, pas seulement des coordonnées. Cette
+représentation relationnelle est la base du raisonnement multi-échelle.
+
+### 2ter.4 Raisonnement multi-échelle
+
+Le moteur cognitif raisonne simultanément à plusieurs échelles, chaque niveau
+échangeant avec les autres :
+
+```
+pixel → arbre → parcelle → massif → département → région → pays
+```
+
+Une décision au niveau massif (pré-positionnement) s'appuie sur le niveau
+parcelle (combustible) et remonte au niveau département (moyens disponibles).
+
+### 2ter.5 Raisonnement temporel
+
+Le système ne connaît pas uniquement le présent. Il conserve et manipule trois
+horizons :
+
+- le **passé** : historique des observations, RETEX, apprentissage ;
+- le **présent** : état courant du monde, assimilation en temps réel ;
+- les **futurs probables** : scénarios de propagation, ensembles de
+  simulations.
+
+Chaque événement possède une histoire ; chaque simulation possède plusieurs
+avenirs. Le raisonnement temporel est explicite et traçable.
+
+### 2ter.6 Raisonnement probabiliste
+
+Le serveur ne répond jamais « cela arrivera ». Il répond « voici les scénarios
+les plus probables ». Chaque sortie est accompagnée :
+
+- d'un **niveau de confiance** ;
+- d'une **justification** (observations et raisonnements ayant conduit à la
+  conclusion) ;
+- des **observations** utilisées.
+
+> **Cadrage constitutionnel** (GSIE-CON-004) : explicabilité obligatoire.
+> Aucune sortie n'est présentée sans justification et niveau de confiance.
+
+### 2ter.7 Intelligence distribuée — agents spécialisés
+
+L'intelligence est distribuée en **agents spécialisés**, chacun raisonnant
+indépendamment dans son domaine. Le moteur cognitif fusionne leurs conclusions.
+
+| Agent | Domaine de raisonnement |
+|---|---|
+| Agent météo | Vent, température, hygrométrie, prévisions locales |
+| Agent propagation | Front de feu, vitesse, direction, sautes |
+| Agent végétation | Combustible, état hydrique, modèles de fuel |
+| Agent drone | Sélection de moyens d'observation, itinéraires, capteurs |
+| Agent communication | Liaisons radio, relais, dégradation |
+| Agent réseau | Couverture, latence, bandes passantes |
+| Agent RCCI | Lecture de la fumée, comportement du feu, hypothèses de cause |
+| Agent logistique | Temps d'intervention, pré-positionnement, moyens |
+| Agent santé des équipages | Fatigue, exposition, rotation |
+| Agent cybersécurité | Intégrité des données, détection d'intrusion, confiance |
+
+> **Cadrage constitutionnel** (GSIE-CON-007) : chaque agent = une
+> responsabilité unique, documentée, testée. La fusion reste explicable,
+> jamais une boîte noire (GSIE-CON-004).
+
+### 2ter.8 IA collaborative
+
+Aucune intelligence artificielle unique. Chaque modèle possède son domaine :
+vision, texte, prévision météo, détection, classification, optimisation,
+raisonnement. Le moteur cognitif **orchestre** leurs compétences — il ne
+dépend d'aucun modèle unique. Cette orchestration permet le remplacement ou
+l'amélioration d'un modèle sans impact sur les autres.
+
+### 2ter.9 Mémoire
+
+Chaque incendie devient une expérience. Le système apprend : ce qui était
+juste, ce qui était faux, ce qui aurait pu être anticipé. Le passé augmente
+l'intelligence du futur.
+
+> **Cadrage constitutionnel** (GSIE-CON-010) : toute connaissance doit
+> pouvoir évoluer sans perdre son historique. L'apprentissage est versionné
+> et traçable.
+
+### 2ter.10 Explicabilité
+
+Chaque résultat doit pouvoir être expliqué : pourquoi cette propagation ?
+pourquoi ce risque ? pourquoi cette recommandation ? Le système cite les
+données utilisées et expose ses raisonnements (GSIE-CON-004).
+
+### 2ter.11 Auto-évaluation
+
+Le moteur calcule continuellement :
+
+- son **niveau de confiance** global et par sous-système ;
+- ses **zones d'incertitude** (géographiques, temporelles, thématiques) ;
+- les **informations manquantes** ;
+- les **observations à demander** pour réduire l'incertitude.
+
+Il sait ce qu'il ignore. Cette méta-connaissance est exposée à l'utilisateur
+et alimente la curiosité artificielle (§2ter.12).
+
+### 2ter.12 Curiosité artificielle — sous supervision humaine
+
+Lorsque l'incertitude devient trop importante, le système **propose
+spontanément** des observations supplémentaires :
+
+- envoyer un drone sur une zone non observée ;
+- demander une mesure thermique complémentaire ;
+- repositionner un capteur ;
+- recalculer une simulation avec paramètres alternatifs ;
+- interroger une nouvelle source.
+
+> **Garde-fou — RFC-0004 §8.3/§8.4 (prioritaires sur DIR-0006)** : la
+> curiosité artificielle produit des **propositions** d'observation. Elle ne
+> déclenche **jamais** automatiquement une mission opérationnelle, une alerte
+> ou une intervention. La décision de missionner un moyen reste humaine
+> (télépilote, COS / CODIS). La reprise manuelle reste toujours possible et
+> prioritaire.
+
+### 2ter.13 Anticipation — « signale et propose », jamais « décide »
+
+Le moteur ne répond pas uniquement aux questions posées. Il détecte
+lui-même les risques, les anomalies, les incohérences et les comportements
+inhabituels. Il agit avant qu'un humain ne pose la question.
+
+> **Garde-fou — GSIE-CON-001, RFC-0004 §8.4** : « agit » signifie « signale
+> et propose », jamais « décide à la place de l'humain ». GSIE-Ignis est un
+> outil d'aide à la décision, pas un système de commandement.
+
+### 2ter.14 Moteur scientifique
+
+Toute nouvelle théorie peut être testée. Toute nouvelle IA peut être comparée.
+Toute nouvelle simulation peut être évaluée. GSIE-Ignis est une plateforme
+scientifique autant qu'opérationnelle — l'architecture est conçue dès le
+départ pour accueillir l'expérimentation et la validation comparative.
 
 ---
 
@@ -514,9 +802,19 @@ Les jalons GSIE-Ignis s'inscrivent dans les phases GSIE globales (voir
 ### 13.3 Documents de gouvernance
 
 - `00_CONSTITUTION/` — Constitution GSIE (prime sur tout)
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Directive fondatrice : vision
+  jumeau numérique vivant / GCS (terrain comme interface, moteur 3D
+  interchangeable, trois usages, immersion)
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0006.md` — Directive fondatrice : vision
+  moteur cognitif (assimilation probabiliste, observateurs, graphe vivant,
+  raisonnement multi-échelle/temporel/probabiliste, intelligence distribuée,
+  IA collaborative, mémoire, explicabilité, auto-évaluation, curiosité
+  artificielle sous supervision, anticipation, moteur scientifique)
 - `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ)
 - `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004 + garde-fous
 - `03_DECISIONS/DEC-000005.md` — Archive du banc
+- `03_DECISIONS/DEC-000008.md` — Adoption DIR-0005
+- `03_DECISIONS/DEC-000009.md` — Adoption DIR-0006
 - `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (60+ idées, 9
   sections)
 - `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`

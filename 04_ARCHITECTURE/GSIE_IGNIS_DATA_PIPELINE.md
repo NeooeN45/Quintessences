@@ -8,6 +8,7 @@
 | **Créé le** | 2026-07-12 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
+| **Directives fondatrices** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif) |
 | **Décisions liées** | DEC-000003 (garde-fous), DEC-000005 (archive banc) |
 | **Document parent** | `GSIE_IGNIS_ARCHITECTURE.md` |
 | **Document connexe** | `GSIE_IGNIS_DRONE_ARCHITECTURE.md` |
@@ -529,9 +530,260 @@ connexion rétablit, recale rétroactivement, et met à jour la prédiction.
 
 ---
 
-## 10. Sources et références
+## 10. Assimilation probabiliste multi-observateurs (DIR-0006)
 
-### 10.1 Sources scientifiques
+### 10.1 Principe
+
+Aucune source du catalogue (§7) n'est considérée comme une vérité
+absolue. Chaque source est conceptualisée comme un **observateur** du
+terrain, doté de caractéristiques propres : précision, latence, fiabilité
+et incertitude. Le moteur cognitif fusionne l'ensemble des observations
+et construit un **consensus probabiliste** — il ne sélectionne jamais une
+source unique.
+
+> **Cadrage constitutionnel** : toute affirmation doit être traçable et
+> son incertitude explicitée (GSIE-CON-004, GSIE-CON-005). Le consensus
+> probabiliste n'est jamais présenté comme une vérité, toujours comme un
+> raisonnement justifiable.
+
+### 10.2 Caractérisation des observateurs
+
+Le tableau ci-dessous caractérise les principaux observateurs du pipeline
+selon les quatre dimensions définies par DIR-0006. Les valeurs sont
+indicatives (Phase 2 — architecture) et seront affinées par qualification
+en Phase 3.
+
+| Observateur | Précision spatiale | Latence typique | Fiabilité | Incertitude dominante |
+|---|---|---|---|---|
+| Drone RGB (détection YOLO + VLM) | Métrique (projection au sol) | < 30 s (LoRa) / < 5 s (4G) | Élevée | Score de confiance [0, 1] ; faux positifs en zone urbaine |
+| Drone thermique LWIR (radiométrique) | Métrique | < 30 s (LoRa) / < 5 s (4G) | Élevée (mesure physique) | Covariance par pixel ; atténuation atmosphérique |
+| Capteurs atmosphériques drone (CO/CO₂, particules) | Métrique (position drone) | < 30 s | Moyenne | Dérive capteur ; représentativité ponctuelle |
+| Satellite Sentinel-2 (optique) | 10 m | 2–5 jours | Élevée | Masquage par nuages / fumée |
+| Satellite Sentinel-1 SAR (radar) | 10 m | 6 jours | Élevée | Sensibilité à l'humidité sol |
+| NASA FIRMS / MTG-FCI (thermique large échelle) | 375 m – 2 km | 10 min – 3 h | Moyenne | Fausses détections (soleil, industrie) ; résolution grossière |
+| Google FireSat / EFA (constellation dédiée) | 5 m | ≤ 20 min | À qualifier (pilote 2026) | Calibrage en cours |
+| AROME (modèle météo) | 1–2 km | Horaire | Élevée (modèle opérationnel) | Erreur de prévision ; descente d'échelle requise |
+| CorrDiff / Earth-2 (météo IA, descente d'échelle) | ~100 m | Horaire (lié AROME) | En recherche (M-09, M-12) | Erreur de super-résolution |
+| Stations Meshtastic solaires (LoRa sol) | Variable (position fixe) | Minutes | Moyenne (capteurs bas coût) | Dérive ; représentativité ponctuelle |
+| Capteurs citoyens (sensor.community) | Variable | Minutes | Faible à moyenne | Position approximative ; non étalonné |
+| Détections de foudre (Météorage / Blitzortung) | ~1 km | Minutes | Moyenne à élevée | Foudre sans ignition ; latence variable |
+| Rapports SDIS / CODIS | Variable (géolocalisation manuelle) | Minutes – heures | Très élevée (humain opérationnel) | Subjectivité ; délai de saisie |
+| Signalements citoyens (feuxdeforet.fr) | Variable | Minutes | Faible à moyenne | Non vérifié ; position approximative |
+| BDIFF (base historique officielle) | Communale | Jours – mois | Élevée (officiel) | Saisie rétroactive ; exhaustivité variable |
+| Copernicus EMS (contours validés) | Variable (post-événement) | 1–5 jours | Très élevée (officiel) | Post-événement ; résolution variable |
+
+### 10.3 Mécanisme de consensus
+
+La fusion des observations suit le principe d'assimilation permanente
+(DIR-0006) :
+
+1. **Pondération par incertitude** : chaque observation est pondérée par
+   sa covariance (cf. §3.3.4, champ `incertitude`). Les sources à faible
+   incertitude et faible latence (drone thermique) prédominent dans la
+   boucle temps réel ; les sources officielles différées (Copernicus EMS)
+   prédominent dans la validation post-feu.
+2. **Filtre d'ensemble** : le recalage ForeFire (§4.1) intègre
+   simultanément les observations disponibles, qu'elles proviennent du
+   drone, du satellite ou du sol. Le filtre propage l'incertitude de
+   chaque source dans l'état recalé du jumeau.
+3. **Détection de divergence** : lorsque les estimateurs divergent
+   significativement (§4.2, vecteur de feu multi-estimateurs), le système
+   **signale l'incertitude au COS** — jamais de fausse certitude.
+4. **Traçabilité** : chaque observation conserve son `source` et son
+   `niveau_preuve` (§3.3.4), attribué par l'Evidence Engine. Le
+   raisonnement qui a conduit au consensus est explicable et auditable
+   (GSIE-CON-004).
+
+> Les garde-fous RFC-0004 §8 (autonomie limitée au vol, alerte et
+> commandement humains) s'appliquent à l'ensemble du mécanisme. Ils ne
+> sont pas reproduits ici — voir RFC-0004 §8.3 et §8.4.
+
+---
+
+## 11. Raisonnement multi-échelle (DIR-0006)
+
+### 11.1 Principe
+
+Le moteur cognitif raisonne simultanément à plusieurs échelles
+spatiales. Chaque niveau échange avec les niveaux adjacentes : les
+observations locales alimentent l'analyse régionale, et le contexte
+régional contraint l'interprétation locale.
+
+### 11.2 Échelles du pipeline
+
+| Échelle | Résolution typique | Données impliquées | Rôle dans le pipeline |
+|---|---|---|---|
+| **Pixel** | 1 m (LiDAR) – 10 m (Sentinel-2) | Capteurs drone, imagerie satellite | Détection brute (fumée, flamme, anomalie thermique) ; entrée de l'Evidence Engine |
+| **Arbre** | Individuel | LiDAR HD, RGB drone | Identification d'ignition ponctuelle ; structure de peuplement |
+| **Parcelle** | 25 m (BD Forêt) | BD Forêt v2, classification combustible | Unité de combustible pour ForeFire ; caractérisation du couvert |
+| **Massif** | Hectares – km² | Atlas DFCI, MNT LiDAR HD | Unité tactique de propagation ; accès piste / points d'eau |
+| **Département** | Échelle SDIS | BDIFF, BD TOPO, AROME | Carte de risque dynamique (J-09) ; pré-positionnement des moyens |
+| **Région** | Échelle climatique | AROME, ERA5, Méso-NH | Contexte météo régional ; feux historiques (J-08) ; couplage feu→atmosphère |
+| **Pays** | Échelle nationale | BDIFF, Copernicus, EFFIS/GWIS | Tendances saisonnières ; apprentissage sur feux historiques ; benchmark européen |
+
+### 11.3 Flux d'information entre échelles
+
+```
+Pixel (drone / satellite)
+    ↓ détection + score de confiance
+Arbre (LiDAR HD / RGB)
+    ↓ ignition ponctuelle + structure
+Parcelle (BD Forêt)
+    ↓ combustible + couvert
+Massif (DFCI / MNT)
+    ↓ propagation ForeFire + enjeux
+Département (carte de risque)
+    ↓ pré-positionnement SDIS
+Région (AROME / ERA5)
+    ↓ contexte météo + feux historiques
+Pays (BDIFF / Copernicus)
+    ↓ tendances + apprentissage
+```
+
+L'information **remonte** (du pixel vers le pays) pour alimenter
+l'apprentissage et la validation. Elle **descend** (du pays vers le
+pixel) pour contraindre l'interprétation locale par le contexte. La
+boucle d'assimilation (§4.1) opère principalement aux échelles
+parcelle → massif, où la propagation physique est calculée. Les
+échelles supérieures fournissent le cadre (météo, historique) et les
+échelles inférieures fournissent les observations (détections,
+mesures).
+
+> **Cadrage constitutionnel** : chaque niveau doit pouvoir être expliqué
+> indépendamment (GSIE-CON-004). Le passage d'une échelle à l'autre est
+> tracé et justifié, jamais implicite.
+
+---
+
+## 12. Auto-évaluation et curiosité artificielle (DIR-0006)
+
+### 12.1 Auto-évaluation continue
+
+Le moteur cognitif calcule en permanence son propre état de connaissance.
+Le pipeline fournit les signaux suivants pour cette auto-évaluation :
+
+| Signal | Source dans le pipeline | Expression |
+|---|---|---|
+| **Divergence des estimateurs** | Vecteur de feu multi-estimateurs (§4.2) | Écart entre géométrie front, panache/vent et prédiction ForeFire |
+| **Densité d'observation** | Catalogue d'observateurs (§10.2) | Nombre d'observateurs actifs sur la zone, fraîcheur de la dernière observation |
+| **Incertitude propagée** | Filtre d'ensemble (§4.1) | Covariance de l'état recalé ; divergence des ensembles |
+| **Couverture spatiale** | Position des drones / satellites | Zones sans observation récente (trous de couverture) |
+| **Cohérence inter-sources** | Consensus probabiliste (§10.3) | Confrontation des observateurs ; détection d'incohérences |
+
+Le système identifie ainsi :
+
+- **les zones d'incertitude** : régions où la divergence des estimateurs
+  ou la covariance du filtre d'ensemble dépasse un seuil ;
+- **les informations manquantes** : paramètres ForeFire non contraints
+  (vent local, ROS, humidité combustible), zones sans observation
+  récente, sources attendues mais absentes (satellite masqué, drone hors
+  portée) ;
+- **les observations à demander** : actions d'observation susceptibles de
+  réduire l'incertitude (envoi de drone, mesure thermique, repositionnement
+  de capteur, interrogation d'une nouvelle source).
+
+### 12.2 Curiosité artificielle — propositions sous supervision humaine
+
+Lorsque l'incertitude devient trop importante, le moteur cognitif
+propose spontanément des actions d'observation. Ces propositions sont
+présentées au COS / CODIS et au télépilote comme des **suggestions**,
+jamais comme des ordres ou des déclenchements automatiques.
+
+| Type de proposition | Déclencheur | Destinataire |
+|---|---|---|
+| Envoyer un drone observer une zone | Trou de couverture + divergence d'estimateurs | Télépilote / COS |
+| Demander une mesure thermique ciblée | Incertitude sur l'intensité du front | Télépilote |
+| Repositionner un capteur sol | Zone aveugle persistante | COS / opérateur terrain |
+| Recalculer une simulation avec paramètres alternatifs | Divergence des ensembles > seuil | Système (automatique, sans action sur le terrain) |
+| Interroger une nouvelle source (satellite, station) | Information manquante identifiée | Système (automatique, sans action sur le terrain) |
+
+> **Garde-fous RFC-0004 §8.3 / §8.4 (prioritaires — non reproduits
+> ici)** : la curiosité artificielle produit des **propositions**
+> d'observation. Elle ne déclenche **jamais** automatiquement une mission
+> opérationnelle, une alerte ou une intervention. La décision de
+> missionner un moyen reste humaine (télépilote, COS / CODIS). La reprise
+> manuelle reste toujours possible et prioritaire. GSIE-Ignis est un
+> outil d'aide à la décision, pas un système de commandement.
+
+---
+
+## 13. Présentation immersive du jumeau numérique (DIR-0005)
+
+### 13.1 Principe
+
+Le pipeline ne se termine pas par un tableau de bord. Il se termine par
+une **projection sur le terrain**. Le terrain devient l'interface unique
+de compréhension : toutes les données — observations, prédictions,
+enjeux, moyens, incertitudes — viennent s'y superposer dans leur
+contexte géographique.
+
+L'objectif est de réduire la charge cognitive du décideur. Les
+informations ne sont jamais dispersées entre plusieurs fenêtres ou
+vues. L'utilisateur navigue dans le monde réel, pas dans un logiciel.
+
+### 13.2 Zoom progressif
+
+L'expérience est progressive. L'utilisateur part de la Terre et zoome
+progressivement vers le théâtre d'opération. Chaque niveau de zoom
+révèle des couches d'information supplémentaires :
+
+```
+Terre → France → Régions → Massifs forestiers → Relief
+→ Orthophotographies → Forêts → Routes → Pistes DFCI
+→ Points d'eau → Bâtiments → Réseaux → Capteurs
+→ Drones → Véhicules → Vents → Fumée → Feu
+```
+
+Le monde devient progressivement vivant. Toutes les informations sont
+superposées au même espace géographique.
+
+### 13.3 Rôle du moteur 3D
+
+Le moteur de rendu 3D (Unreal Engine ou successeur) est la
+représentation graphique du jumeau numérique. Il **ne contient aucune
+logique métier**. Il reçoit les résultats calculés par le serveur
+GSIE-Ignis (prédictions, observations, enjeux, incertitudes) et les
+projette sur le terrain.
+
+| Responsabilité | Acteur |
+|---|---|
+| Simulations, assimilation, IA, prévisions, calculs géospatiaux | Serveur GSIE-Ignis (moteur cognitif, §10–§12) |
+| Représentation du monde, effets physiques, interaction, immersion | Moteur 3D (client) |
+
+Le moteur 3D est **interchangeable** (GSIE-CON-007). L'intelligence
+reste dans GSIE ; le rendu n'est qu'une fenêtre sur cette intelligence.
+Aucune logique métier ne vit dans le client 3D.
+
+### 13.4 Interaction contextuelle
+
+Chaque élément de la scène est interactif et révèle son contexte
+opérationnel sans quitter la vue principale :
+
+- **Clic sur un camion** : indicatif, équipage, niveau d'eau, autonomie,
+  vitesse, destination, mission, ETA.
+- **Clic sur un drone** : flux vidéo, caméra thermique, batterie,
+  capteurs, mission, possibilité de reprise de contrôle.
+- **Clic sur le front de feu** : intensité, vitesse, direction,
+  incertitudes, scénarios de propagation, enjeux menacés.
+
+### 13.5 Immersion comme outil de compréhension
+
+Le rendu 3D n'est pas un effet visuel. Chaque élément a une
+signification opérationnelle : la fumée indique un comportement, le vent
+montre une direction, les flammes représentent une intensité, les
+véhicules évoluent en temps réel. Le terrain devient un tableau de bord
+vivant.
+
+> **Articulation DIR-0005 / DIR-0006** : le moteur cognitif (DIR-0006,
+> §10–§12) comprend le monde ; le moteur 3D (DIR-0005, présente section)
+> le montre. Les deux sont indissociables : l'un fournit l'intelligence,
+> l'autre la fenêtre.
+
+---
+
+## 14. Sources et références
+
+### 14.1 Sources scientifiques
 
 - Allaire, Filippi & Mallet (2020), *Int. J. Wildland Fire* — ensembles
   de simulations ForeFire
@@ -539,7 +791,7 @@ connexion rétablit, recale rétroactivement, et met à jour la prédiction.
   contours réels (F1 0,74 → 0,83)
 - Filippi et al. (2014/2018), ForeFire, RSFF — méthode front-tracking
 
-### 10.2 Sources de données
+### 14.2 Sources de données
 
 - Copernicus EMS : `emergency.copernicus.eu`
 - NASA FIRMS : `firms.modaps.eosdis.nasa.gov` (API FIRMS)
@@ -552,10 +804,18 @@ connexion rétablit, recale rétroactivement, et met à jour la prédiction.
 - EUMETSAT MTG : `eumetsat.int`
 - Google FireSat / EFA : `earthfirealliance.org`
 
-### 10.3 Documents de gouvernance
+### 14.3 Documents de gouvernance
 
-- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ)
-- `03_DECISIONS/DEC-000003.md` — Adoption + garde-fous
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Directive fondatrice GSIE-Ignis
+  (GCS / jumeau numérique vivant) — vision côté rendu, terrain comme
+  interface, moteur 3D interchangeable, immersion
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0006.md` — Directive fondatrice GSIE-Ignis
+  (moteur cognitif) — assimilation probabiliste, observateurs, graphe
+  vivant, raisonnement multi-échelle, curiosité artificielle sous
+  supervision humaine
+- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ) — §8 garde-fous
+  (autonomie limitée au vol, alerte et commandement humains)
+- `03_DECISIONS/DEC-000003.md` — Adoption RFC-0004 + garde-fous
 - `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (sections 1, 2, 6)
 - `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`
   — Comparatif moteurs et simulation
@@ -564,5 +824,6 @@ connexion rétablit, recale rétroactivement, et met à jour la prédiction.
 
 > **Rappel** : le pipeline sert la boucle d'assimilation (J-03), qui est
 > la brique différenciante de GSIE-Ignis. Toutes les données convergent
-> vers le recalage du jumeau numérique et la présentation au COS —
-> jamais vers une action automatique.
+> vers le recalage du jumeau numérique et la présentation immersive au
+> COS — jamais vers une action automatique. Le moteur cognitif
+> (DIR-0006) comprend le monde ; le moteur 3D (DIR-0005) le montre.

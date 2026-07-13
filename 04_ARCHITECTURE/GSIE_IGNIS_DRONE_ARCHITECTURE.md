@@ -9,6 +9,7 @@
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **RFC d'origine** | RFC-0004 (ADOPTÉ) |
 | **Décisions liées** | DEC-000003 (garde-fous), DEC-000005 (archive banc) |
+| **Directives fondatrices** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif) |
 | **Document parent** | `GSIE_IGNIS_ARCHITECTURE.md` |
 | **Document connexe** | `GSIE_IGNIS_DATA_PIPELINE.md` |
 
@@ -492,11 +493,146 @@ sécurité civile (S-11).
 
 ### 10.4 Documents de gouvernance
 
-- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ), §3.1, §3.5, §5.3
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Vision GCS / jumeau numérique
+  vivant (le drone alimente le jumeau, interactions immersives)
+- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0006.md` — Vision moteur cognitif (drone
+  comme observateur, intelligence distribuée, curiosité artificielle)
+- `02_RFC/RFC-0004.md` — RFC GSIE-Ignis (ADOPTÉ), §3.1, §3.5, §5.3, §8
+  (garde-fous : autonomie limitée à la navigation, reprise manuelle,
+  alerte humaine)
 - `03_DECISIONS/DEC-000003.md` — Adoption + garde-fous (RGPD, autonomie)
 - `22_PROJECT_MEMORY/GSIE-Ignis.md` — Registre d'idées (sections 1, 3, 4, 7)
 - `22_PROJECT_MEMORY/GSIE-Ignis/Phase0_comparatif_moteurs_simulation.md`
   — Comparatif PX4/ArduPilot, Gazebo, MAVSDK
+
+---
+
+## 11. Alignement sur les directives fondatrices
+
+> Cette section explicite l'articulation du sous-système drone avec les
+> directives fondatrices GSIE-DIR-0005 (jumeau numérique vivant) et
+> GSIE-DIR-0006 (moteur cognitif). Les garde-fous RFC-0004 §8
+> (autonomie limitée à la navigation, reprise manuelle, alerte humaine)
+> sont déjà intégrés au §5.2 et au rappel final — ils ne sont pas
+> dupliqués ici, mais référencés.
+
+### 11.1 Le drone comme observateur du terrain (DIR-0006)
+
+Au sens de la directive GSIE-DIR-0006, le drone n'est pas seulement un
+capteur volant : c'est un **observateur du terrain**. Chaque drone apporte
+une partie de la vérité, au même titre que les satellites, les caméras
+fixes, les stations météo ou les rapports SDIS. Le moteur cognitif ne
+choisit jamais une source unique : il construit un **consensus
+probabiliste** multi-observateurs.
+
+Chaque type de capteur drone est caractérisé par quatre dimensions
+(DIR-0006, §« Principe d'assimilation permanente ») :
+
+| Capteur drone | Précision | Latence | Fiabilité | Incertitude |
+|---|---|---|---|---|
+| **RGB** | Détection fumée/flamme à ~30 FPS ; résolution sub-mètre à 100 m AGL | < 100 ms par frame (edge) ; différé si large bande indisponible | Dépendante de l'éclairage, de la fumée, de la couverture nuageuse | Élevée sur détection précoce (faux positifs possibles) ; réduite par fusion VLM |
+| **Thermique LWIR radiométrique** | T° par pixel (±1–2 °C typique) ; estimation intensité/front | < 1 s (traitation edge) ; différé si liaison limitée | Bonne pénétration fumée ; insensible à l'éclairage | Étalonnage radiométrique requis ; confusion sources thermiques parasites |
+| **Capteurs atmosphériques** (CO/CO₂, particules, T°, hygrométrie) | Concentration gazeuse ± seuil capteur ; T° ±0,5 °C | Quelques secondes (acquisition + transmission) | Bonne répétabilité ; dérive capteur à étalonner | Représentativité ponctuelle (mesure in-situ, non spatialisée) |
+| **LiDAR embarqué** | Structure 3D combustible, hauteur panache (cm–dm) | Post-traitement (différé) | Haute précision géométrique | Dépend de la densité de points et de la végétation |
+| **Multispectral / NIR** | État hydrique végétation (indices NDVI/NDWI) | Différé (post-traitement) | Bonne pour suivi temporel | Sensible à l'atmosphère et à l'éclairage |
+
+Le drone s'intègre dans le **consensus probabiliste multi-observateurs**
+du moteur cognitif (DIR-0006, §« Les observateurs ») : ses observations
+sont fusionnées avec celles des satellites (Copernicus, Sentinel, NASA
+FIRMS), des caméras fixes, des stations météo (Météo-France), des capteurs
+LoRa et des rapports SDIS. Aucune source n'est considérée comme une
+vérité absolue ; chacune est pondérée par sa précision, sa latence, sa
+fiabilité et son incertitude.
+
+### 11.2 Le drone dans l'intelligence distribuée (DIR-0006)
+
+La directive GSIE-DIR-0006 définit une architecture d'agents
+spécialisés, chacun raisonnant indépendamment. Le **drone est un agent
+spécialisé** dans cette architecture (DIR-0006, §« Intelligence
+distribuée » : « Agent drone »).
+
+**Responsabilités de l'agent drone** :
+- **Navigation** : raisonnement local sur la trajectoire, l'optimisation
+  de route, la gestion d'énergie (batterie, RTH).
+- **Détection** : traitement embarqué (YOLO, VLM) et production de
+  conclusions structurées (type de fumée, comportement, contexte).
+- **Optimisation de trajectoire** : adaptation en vol selon les
+  observations (repositionnement sur zone d'intérêt, suivi de front).
+
+L'agent drone raisonne **indépendamment** sur ces domaines. Le moteur
+cognitif (serveur) **fusionne** ses conclusions avec celles des autres
+agents (agent météo, agent propagation, agent végétation, agent RCCI,
+etc.). La fusion reste explicable et tracée (GSIE-CON-004, GSIE-CON-005) :
+chaque conclusion drone est accompagnée de son niveau de confiance et des
+observations qui l'ont produite.
+
+> **Modularité** (GSIE-CON-007) : l'agent drone est une responsabilité
+> unique, documentée et testée. Il n'empiète pas sur le raisonnement de
+> l'agent propagation ou de l'agent météo — il leur fournit des
+> observations et des conclusions locales.
+
+### 11.3 Curiosité artificielle et propositions d'observation (DIR-0006)
+
+La directive GSIE-DIR-0006 (§« Curiosité artificielle ») prévoit que,
+lorsque l'incertitude devient trop importante sur une zone, le système
+**propose spontanément** d'envoyer un drone observer, de demander une
+mesure thermique ou de repositionner un capteur.
+
+**Application au sous-système drone** :
+- Le moteur cognitif détecte une **zone d'incertitude élevée** (front de
+  feu mal contraint, détection non confirmée, divergence entre sources).
+- Il génère une **proposition d'observation** : envoyer un drone sur la
+  zone, activer la thermique, repositionner un drone en patrouille.
+- Cette proposition est présentée au COS / télépilote via le GCS-Lite ou
+  l'interface immersive.
+
+> **Garde-fou — RFC-0004 §8.3 et §8.4 (prioritaires sur DIR-0006)** : la
+> curiosité artificielle produit des **propositions**, jamais un
+> déclenchement automatique. La décision de missionner un drone reste
+> **humaine** (télépilote, COS / CODIS). Le système peut suggérer un
+> repositionnement, mais la décision finale appartient à l'opérateur. La
+> reprise manuelle reste toujours possible et prioritaire (§5.2, §7.5).
+
+### 11.4 Sources de données externes pertinentes pour le drone
+
+> Le détail exhaustif des sources de données figure dans le document
+> parent (`GSIE_IGNIS_ARCHITECTURE.md`, livrable 209). Cette section ne
+> liste que les sources directement pertinentes pour le sous-système
+> drone.
+
+| Source | Usage drone | Référence |
+|---|---|---|
+| **IGN** (LiDAR HD, MNT/MNH) | Navigation (terrain following), optimisation de trajectoire, contexte relief pour plan de vol | `ign.fr` — RGE Alti®, LiDAR HD |
+| **Météo-France** | Go/no-go météo pré-mission (§4.2), recalage des conditions de vol, prévision de vent pour optimisation de route | `meteofrance.fr` — ARPEGE/AROME |
+| **Copernicus** (Sentinel) | Contexte satellite pour corrélation avec observations drone (consensus multi-observateurs) | `copernicus.eu` — Sentinel-2, EMS |
+
+### 11.5 Lien avec DIR-0005 — alimentation du jumeau numérique vivant
+
+La directive GSIE-DIR-0005 définit GSIE-Ignis comme un **jumeau numérique
+vivant** des opérations de lutte contre les incendies. Le drone en est un
+capteur actif : ses observations (RGB, thermique, environnementaux) sont
+**projetées sur le terrain** dans l'interface immersive.
+
+**Projection des observations drone dans le jumeau** :
+- Les détections (fumée, flamme, front) sont projetées à leur position
+  géographique sur le terrain 3D.
+- Les mesures thermiques alimentent l'intensité du front affiché.
+- Les capteurs atmosphériques enrichissent le contexte local (régime de
+  combustion, qualité de l'air).
+
+**Interactions immersives (DIR-0005, §« Exemples d'interactions »)** :
+lorsque l'utilisateur clique sur un drone dans l'interface immersive, il
+voit apparaître sans quitter la scène principale :
+- le **flux vidéo** en temps réel (si liaison large bande disponible) ;
+- la **caméra thermique** (LWIR radiométrique) ;
+- la **batterie** et l'état des capteurs ;
+- la **mission** en cours ;
+- la possibilité de **reprendre le contrôle** (V-04).
+
+Le drone n'est donc pas seulement un moyen d'observation : c'est un
+**élément vivant du jumeau numérique**, visible et interagissable dans
+l'interface immersive. Le flux vidéo et la caméra thermique apparaissent
+au clic, conformément à DIR-0005 §« Exemples d'interactions ».
 
 ---
 

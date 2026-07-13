@@ -5,7 +5,7 @@
 | **Écosystème** | Quintessences |
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 2 — Architecture |
-| **Directive courante** | GSIE-DIR-0003 |
+| **Directive courante** | GSIE-DIR-0006 |
 | **Dernière mise à jour** | 2026-07-12 |
 
 ---
@@ -61,6 +61,9 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
 - `04_ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
 - `04_ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `04_ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
+- `04_ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` — GCS-Cinéma UE 5.8 (livrable 211, DEC-000010)
+- `04_ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, en attente MVP Ignis)
+- `06_RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR
 
 ### Branche GSIE-Ignis (RFC-0004)
 
@@ -68,6 +71,15 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
   sections : perception, jumeau numérique, vol drone, communications, GCS,
   données, stratégie, modèles IA, veille concurrentielle). Version 0.7.x.
 - `22_PROJECT_MEMORY/GSIE-Ignis/` — Livrables du Jalon 0 (comparatifs sourcés).
+- **Banc de simulation GSIE-Ignis** (WSL2, hors dépôt) :
+  - ForeFire compilé + démo propagation.png ✓
+  - PX4 SITL v1.18.0-beta1 + Gazebo Harmonic 8.14.0 opérationnels ✓
+  - **5 tests de vol réussis** : premier vol (34 m), waypoint (carré 100 m),
+    pattern carré (200 m × 200 m), RTH (partiel), surveillance incendie
+    (pattern lawnmower + 15 captures GPS)
+  - Scripts : `premier_vol.py`, `vol_waypoint.py`, `vol_pattern_carre.py`,
+    `vol_rth.py`, `vol_surveillance_incendie.py`, `run_test.sh`
+  - Visualisation : `trajectoire_surveillance.png`
 
 ### Moteurs amorcés (14/14 — profondeur à qualifier)
 
@@ -118,12 +130,18 @@ simulation GSIE-Ignis (hors dépôt). Le code métier dans le dépôt
 - **DEC-000004** — Entrée en Phase 2 : Architecture (Phase 1 clôturée)
 - **DEC-000005** — Amendement DEC-000003/000004 : archivage du code du banc GSIE-Ignis (Jalon 0)
 - **DEC-000006** — Restructuration identité : Quintessences (écosystème) > GSIE (moteur) > GeoSylva (app forestière)
+- **DEC-000007** — Extension écosystème : Myhunt + QGISIA
+- **DEC-000008** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) — GSIE-DIR-0005
+- **DEC-000009** — Vision du Moteur Cognitif GSIE-Ignis — GSIE-DIR-0006
+- **DEC-000010** — Adoption Unreal Engine 5.8 + Cesium comme moteur 3D du jumeau numérique
 
 ## Documents structurants
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
 - **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
 - **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
+- **GSIE-DIR-0005** — Directive fondatrice GSIE-Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
+- **GSIE-DIR-0006** — Vision du Moteur Cognitif GSIE-Ignis (Draft — DEC-000009)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (Proposé, en attente de validation du Fondateur)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
@@ -148,9 +166,10 @@ code viendra en son temps, subordonné aux fondations.
 
 ## Prochaine étape
 
-**Phase 1 CLÔTURÉE** — tous les livrables sont Validated (9/12) ou
-Locked (3/12). Le projet peut entrer en Phase 2 (Architecture) après
-décision du Fondateur (DEC à tracer).
+**Phase 2 — Architecture : tous les livrables 201-210 sont Draft et
+complets.** Les 10 livrables respectent DIR-0005/0006 et les garde-fous
+RFC-0004 §8. Le projet peut passer à la revue Fondateur (Review) puis
+à la Phase 3 (Connaissance).
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
-> La roadmap complète des 12 livrables vit dans `ROADMAP.md`.
+> La roadmap complète vit dans `ROADMAP.md`.

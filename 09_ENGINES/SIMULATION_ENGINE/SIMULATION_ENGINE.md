@@ -42,44 +42,45 @@ des décisions avant qu'elles ne soient prises.
 
 ## 4. Dépendances
 
-| Dépendance | Type | Description |
+| Type | Cible | Nature |
 |---|---|---|
-| `FOREST_DYNAMICS_ENGINE` | Forte | Le moteur de simulation s'appuie sur les modèles de dynamique |
-| `CLIMATE_ENGINE` | Moyenne | Scénarios climatiques comme conditions aux limites |
-| `GIS_ENGINE` | Moyenne | Données spatiales pour la projection cartographique |
-| `LEARNING_ENGINE` | Faible | Calibration des paramètres de simulation |
-| ForeFire (GSIE-Ignis) | Externe | Moteur de propagation de feu pour les scénarios incendie |
+| Moteur | `FOREST_DYNAMICS_ENGINE` | Modèles de dynamique forestière (obligatoire) |
+| Moteur | `CLIMATE_ENGINE` | Scénarios climatiques comme conditions aux limites |
+| Moteur | `GIS_ENGINE` | Données spatiales pour la projection cartographique |
+| Moteur | `LEARNING_ENGINE` | Calibration des paramètres de simulation |
+| Externe | ForeFire (GSIE-Ignis) | Moteur de propagation de feu pour les scénarios incendie |
 
 ## 5. Contrat d'interface
 
-### Entrée — Scénario de simulation
+### Entrée — `ScenarioSimulation`
 
 ```
-ScenarioSimulation {
-  source_diagnostic:    DiagnosticRef        // référence vers diagnostic courant
-  intervention:         InterventionSpec     // action proposée (sylvicole, lutte feu)
-  horizon:              Duration             // horizon temporel (5 ans, 10 ans, 30 ans)
-  climate_scenario:     ClimateScenarioRef   // scénario climatique (RCP 4.5, 8.5, courant)
-  parameters:           Map<String, Value>   // paramètres de simulation ajustables
+ScenarioSimulation = {
+  scenario_id       : UUID
+  source_diagnostic : DiagnosticRef
+  intervention      : InterventionSpec
+  horizon           : Duration
+  climate_scenario  : ClimateScenarioRef
+  parameters        : Map<String, Value>
 }
 ```
 
-### Sortie — Résultat de simulation
+### Sortie — `SimulationResult`
 
 ```
-SimulationResult {
-  scenario_id:          ID
-  projections:          List<TimedProjection>  // état projeté à chaque pas de temps
-  confidence:           ConfidenceLevel         // niveau de confiance par projection
-  sources:              List<SourceRef>         // sources des modèles utilisés
-  assumptions:          List<String>            // hypothèses simplificatrices
-  alternatives:         List<SimulationResult>  // scénarios alternatifs comparés
+SimulationResult = {
+  scenario_id   : UUID
+  projections   : List<TimedProjection>
+  confidence    : ConfidenceLevel
+  sources       : List<SourceRef>
+  assumptions   : List<String>
+  alternatives  : List<SimulationResult>
 }
 
-TimedProjection {
-  timestamp:            DateTime
-  state:                SystemState             // état du système à cet instant
-  key_indicators:       Map<String, Value>      // biomasse, risque feu, biodiversité…
+TimedProjection = {
+  timestamp     : DateTime
+  state         : SystemState
+  key_indicators: Map<String, Value>
 }
 ```
 
@@ -98,7 +99,7 @@ TimedProjection {
 
 ## 7. Cas d'usage
 
-### Forestier — Sylviculture
+### Cas 1 — Forestier (sylviculture)
 
 Le forestier envisage une coupe d'éclaircie dans une parcelle de chêne.
 Il saisit le scénario (intensité d'éclaircie, horizon 30 ans). Le
@@ -106,7 +107,7 @@ Simulation Engine projette l'évolution du peuplement (biomasse,
 biodiversité, risque de dépérissement) avec et sans intervention. Le
 forestier compare et décide.
 
-### COS — Incendie (GSIE-Ignis)
+### Cas 2 — COS (incendie, GSIE-Ignis)
 
 Le COS envisage un positionnement de moyens sur un versant. Le
 Simulation Engine, couplé à ForeFire, projette la propagation du feu à
