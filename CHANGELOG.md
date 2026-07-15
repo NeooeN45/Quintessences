@@ -4,6 +4,52 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [KNOWLEDGE ENGINE — SEMAINE 3] - 2026-07-15
+
+### Implémentation du Knowledge Engine (DEC-000020)
+
+Moteur de base de connaissances — source unique de vérité pour tous les
+moteurs de raisonnement. Conforme à KNOWLEDGE_ENGINE.md §5 (contrat d'interface)
+et KNOWLEDGE_METHOD.md §2 (structure KnowledgeObject).
+
+**Fonctionnalités** :
+- **Ingestion** : reçoit les connaissances qualifiées (statut « accepte »
+  depuis Evidence Engine), rejette quarantine et refuse (CON-001).
+- **Requête** : 5 types (par_concept, par_relation, par_domaine,
+  par_essence, par_station) avec filtres clé-valeur, filtre par niveau
+  de preuve minimum, pagination.
+- **Versionnement** (CON-010) : chaque révision archive l'ancienne version
+  dans l'historique (VersionEntry avec justification), incrémente la
+  version, aucune connaissance supprimée silencieusement.
+- **Révision** : mise à jour du contenu, du niveau de preuve, de la source
+  ou des domaines de validité, avec justification obligatoire.
+- **Statistiques** : nombre d'objets par type.
+
+**Endpoints API** :
+- `GET  /api/v1/knowledge/status` — statut du moteur
+- `GET  /api/v1/knowledge/version` — version et backend
+- `POST /api/v1/knowledge/ingest` — ingère une connaissance (201)
+- `POST /api/v1/knowledge/query` — interroge le graphe (200)
+- `POST /api/v1/knowledge/revise` — révise une connaissance (200/404/400)
+- `GET  /api/v1/knowledge/stats` — statistiques du graphe
+
+**Qualité** :
+- 33 nouveaux tests (19 unitaires + 14 API), 155 tests au total.
+- Ruff + mypy --strict : zéro erreur.
+- Rate limiting sur ingest (30/min) et query (60/min).
+- Auth JWT obligatoire sur tous les endpoints POST/GET sensibles.
+
+**Fichiers créés** :
+- `GSIE/API/src/gsie_api/engines/knowledge/schemas.py` — schémas Pydantic
+- `GSIE/API/src/gsie_api/engines/knowledge/engine.py` — implémentation
+- `GSIE/API/src/gsie_api/engines/knowledge/router.py` — router FastAPI (remplace placeholder)
+- `GSIE/API/tests/unit/test_knowledge.py` — tests unitaires engine
+- `GSIE/API/tests/unit/test_knowledge_api.py` — tests API endpoints
+
+**Décision** : DEC-000020 — Knowledge Engine Semaine 3.
+
+---
+
 ## [STABILISATION QUALITE VAGUE 1] - 2026-07-14
 
 ### Passe qualité complète sur `GSIE/API` et `GSIE/ENGINES/EVIDENCE_ENGINE/rust`

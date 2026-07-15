@@ -24,7 +24,7 @@ def should_return_200_when_knowledge_status_requested():
     assert response.status_code == 200
     data = response.json()
     assert data["engine"] == "knowledge"
-    assert data["status"] == "not_implemented"
+    assert data["status"] == "active"
 
 
 def should_return_200_when_gis_status_requested():

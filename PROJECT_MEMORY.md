@@ -38,6 +38,22 @@ l'API GSIE, le Hub (Centre de Commandement Unreal Engine 5.8) et les
 applications clientes (GeoSylva, Ignis en priorité). Le code métier,
 interdit en Phase 3 (CON-003), est désormais autorisé.
 
+### Vague 1 — Fondations (semaines 1-4)
+
+- **Semaine 1** (livrée) : structure FastAPI + Docker Compose, auth JWT,
+  health/readiness, rate limiting, observabilité (Prometheus/OpenTelemetry).
+- **Semaine 2** (livrée) : Evidence Engine — cœur Rust + bindings PyO3,
+  matrice de décision A-F, détection de conflits, versionnement, 122 tests
+  Python + 41 tests Rust, couverture 100%.
+- **Semaine 3** (livrée) : Knowledge Engine — implémentation Python
+  (DEC-000020), ingestion de connaissances qualifiées (statut « accepte »
+  uniquement), requêtes typées (par_concept, par_relation, par_domaine,
+  par_essence, par_station), versionnement CON-010 (historique immuable),
+  révision avec archivage, filtre par niveau de preuve, pagination.
+  33 nouveaux tests (19 unitaires + 14 API), 155 tests au total.
+- **Semaine 4** (à venir) : intégration Evidence → Knowledge → validation
+  humaine testée de bout en bout.
+
 ### Centre de Commandement GSIE — configuration environnement (2026-07-13)
 
 Environnement Unreal Engine 5.8 configuré sur `E:\GSIE-Centre-Commandement`
@@ -185,6 +201,7 @@ Voir `CHANGELOG.md` pour le détail complet.
 - **DEC-000017** — Validation 10 livrables Phase 3 + clôture Phase 3 + lancement Phase 4 (GSIE-DIR-0011)
 - **DEC-000018** — Stratégie IA IGN : adoption geocontext MCP + capitalisation datasets IA (CoSIA, OCS GE, apprentissage LiDAR HD)
 - **DEC-000019** — Validation architecture Phase 4 + plan révisé 24 semaines (Python+Rust+Go différé, FastAPI+PostGIS+Redis, 6 vagues)
+- **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 
 ## Documents structurants
 
