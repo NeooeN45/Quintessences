@@ -236,11 +236,31 @@ code viendra en son temps, subordonné aux fondations.
 
 ## Prochaine étape
 
-**Phase 3 — Connaissance : les 10 livrables (301-310) sont passés en
-`Review`** (2026-07-13) — contenu rédigé, en attente de validation du
-Fondateur (`Draft → Review`, la validation `Review → Validated` relève
-du Fondateur, CON-001). Une fois validés, la Phase 3 pourra être
-clôturée selon les critères de complétude du `ROADMAP.md`.
+**Phase 4 — Implémentation (active — DEC-000017 / GSIE-DIR-0011,
+2026-07-13).** La Phase 3 est clôturée (10/10 livrables Validated). Le
+plan révisé à 24 semaines / 6 vagues (DEC-000019) est en cours
+d'exécution :
+
+- **Vague 1 — Fondations (semaines 1-4, Python + Rust)** : semaine 1
+  (structure FastAPI + Docker Compose, `GSIE/API/`) et semaine 2
+  (Evidence Engine — cœur Rust + bindings PyO3) disposent de prototypes
+  fonctionnels et de tests unitaires exhaustifs (122 tests Python, 41 tests
+  Rust au dernier relevé). **Gates de stabilisation atteints** : Ruff/mypy
+  strict et Clippy `-D warnings` passent à zéro, CI `.github/workflows/ci.yml`
+  étendue aux jobs Python (lint + type + tests unitaires + tests d'intégration
+  PostGIS/Redis via testcontainers), Rust (clippy + tests) et Docker build.
+  **Reste à clôturer** : validation scientifique des règles de
+  conflits/versionnement et gél du contrat Evidence 1.0. Semaine 3
+  (Knowledge Engine, Rust + PyO3) ne commence qu'après franchissement de ces
+  gates.
+- **Hub (Centre de Commandement GSIE, UE 5.8)** : environnement
+  configuré (voir ci-dessus, livrable 211). Le projet Unreal réel vit
+  hors dépôt (`E:\GSIE-Centre-Commandement`, dépôt GitHub
+  `NeooeN45/Hub` privé) et est en cours de constitution ;
+  `apps/Hub/README.md` sert de pointeur documentaire dans ce dépôt.
+- Vagues 2 à 6 (moteurs domaine, raisonnement, moteurs avancés,
+  validation) : non commencées. Voir `ROADMAP.md` pour le détail des
+  vagues et du calendrier.
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.

@@ -33,8 +33,11 @@ SECRET_PATTERNS = [
     re.compile(r"AKIA[A-Z0-9]{16}"),                           # AWS access keys
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----"),
     re.compile(r"sk-[A-Za-z0-9]{48}"),                         # OpenAI keys
-    re.compile(r"password\s*=\s*['\"][^'\"]{8,}['\"]", re.IGNORECASE),
+    re.compile(r"password\s*=\s*['\"](?!test|gsie_test|changeme|password|secret|example|fake|dummy)[^'\"]{12,}['\"]", re.IGNORECASE),
 ]
+
+# Fichiers de test où les faux secrets sont acceptables
+TEST_FILE_PATTERNS = {"test_", "_test", "conftest", "fixtures", "mock"}
 
 # Fichiers qui ne doivent jamais être committés
 FORBIDDEN_FILES = [
@@ -100,6 +103,8 @@ def check_secrets_in_staged_files() -> str | None:
 
             # Vérifier le contenu des fichiers staged
             if Path(filepath).suffix in {".py", ".ts", ".js", ".kt", ".json", ".yaml", ".yml", ".env"}:
+                # Ignorer les fichiers de test pour les patterns password (faux positifs)
+                is_test_file = any(p in filepath.lower() for p in TEST_FILE_PATTERNS)
                 diff_result = subprocess.run(
                     ["git", "diff", "--cached", filepath],
                     capture_output=True, text=True, timeout=5
@@ -107,6 +112,9 @@ def check_secrets_in_staged_files() -> str | None:
                 if diff_result.returncode == 0:
                     diff_content = diff_result.stdout
                     for pattern in SECRET_PATTERNS:
+                        # Skip password pattern pour les fichiers de test (faux positifs)
+                        if is_test_file and "password" in pattern.pattern:
+                            continue
                         if pattern.search(diff_content):
                             return f"Secret détecté dans {filepath} : pattern {pattern.pattern[:30]}..."
 

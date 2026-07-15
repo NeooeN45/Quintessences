@@ -4,6 +4,55 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [STABILISATION QUALITE VAGUE 1] - 2026-07-14
+
+### Passe qualité complète sur `GSIE/API` et `GSIE/ENGINES/EVIDENCE_ENGINE/rust`
+
+- **Lint / type / tests** : Ruff, mypy `--strict` et Clippy `-D warnings` passent à zéro.
+- **Tests** : 122 tests Python unitaires, 41 tests Rust et 2 tests d'intégration PostGIS/Redis passent (couverture Python 98 %).
+- **CI** : `.github/workflows/ci.yml` étendue avec les jobs `python-quality` (Ruff, mypy, pytest unitaires), `python-integration` (testcontainers PostGIS/Redis), `rust-quality` (clippy, test) et `docker-build`.
+- **Auth** : credentials dev (`admin/changeme`) retirés du code ; `auth_dev_username` et `auth_dev_password` sont désormais configurables via variables d'environnement. Dev login désactivé en production.
+- **Evidence** : détection de conflits/versionnement protégée par le feature flag `evidence_experimental_conflicts_enabled` (désactivé par défaut, à valider scientifiquement avant activation).
+- **Docker** : build multi-stage mis à jour pour compiler le moteur Rust via Maturin et installer le wheel `gsie_evidence` dans l'image API.
+- **Dépendances** : suppression de `types-redis` (obsolète et conflictuel avec Redis 5.x+ qui embarque ses propres stubs).
+- Fichiers modifiés : `GSIE/API/src/gsie_api/**/*.py`, `GSIE/API/src/gsie_api/engines/evidence/wrapper.py`, `GSIE/API/tests/**/*.py`, `GSIE/API/pyproject.toml`, `GSIE/API/.env.example`, `GSIE/API/Dockerfile`, `GSIE/ENGINES/EVIDENCE_ENGINE/rust/src/engine.rs`, `.github/workflows/ci.yml`.
+
+## [NETTOYAGE GOUVERNANCE DOCUMENTAIRE] - 2026-07-14
+
+### Correction d'incohérences résiduelles entre l'état réel du projet (Phase 4 active) et sa mémoire documentaire
+
+Aucun changement de statut de livrable, de décision ou de phase — correction
+de faits obsolètes dans `PROJECT_MEMORY.md` et `ROADMAP.md`, repérés lors
+d'une tâche précédente mais non corrigés à l'époque (hors périmètre).
+
+- `PROJECT_MEMORY.md`, section « Prochaine étape » : décrivait encore la
+  Phase 3 comme passée en `Review` en attente de validation, alors que la
+  Phase 3 est clôturée (DEC-000017) et que la Phase 4 est active depuis le
+  2026-07-13 (DEC-000017 / GSIE-DIR-0011). Remplacée par un état factuel de
+  la Phase 4 : Vague 1 (Fondations, DEC-000019) — semaines 1 et 2 livrées
+  (FastAPI + Docker Compose, Evidence Engine cœur Rust + bindings PyO3,
+  couverture de tests 100 %, durcissement sécurité), semaine 3 (Knowledge
+  Engine) à venir ; état du chantier Hub (Centre de Commandement GSIE,
+  environnement UE 5.8 configuré, projet réel hors dépôt sur
+  `E:\GSIE-Centre-Commandement` et dépôt GitHub `NeooeN45/Hub`).
+- `ROADMAP.md` : deux faits périmés corrigés — (1) la note d'audit
+  2026-07-06 sur « 3 moteurs dédiés / 11 READMEs de cadrage » ne reflétait
+  plus la réalité depuis le livrable 207 (Phase 2, les 14 moteurs ont
+  chacun un fichier d'architecture dédié) et l'enrichissement du
+  2026-07-13 (section « État de l'art » ajoutée aux 14 fichiers) ; note
+  annotée « statut dépassé » avec mise à jour, sans supprimer l'historique.
+  (2) le livrable 211 référençait encore l'ancien nom de fichier
+  `GSIE_IGNIS_GCS_CINEMA_UNREAL.md`, renommé `COMMAND_CENTER_UNREAL.md`
+  lors de l'élargissement du livrable au Centre de Commandement GSIE
+  (GSIE-DIR-0009). En outre, la note de clôture de la section Phase 3
+  (« la Phase 3 peut passer en Review ») était incohérente avec l'en-tête
+  de la même section (« clôturée ✅ ») et le reste du document ; corrigée
+  pour refléter la clôture effective par DEC-000017.
+
+Mémoire synchronisée : `PROJECT_MEMORY.md`, `ROADMAP.md`.
+
+---
+
 ## [CONFIGURATION CENTRE DE COMMANDEMENT UE5.8] - 2026-07-13
 
 ### Installation et configuration du poste de pilotage immersif (livrable 211)

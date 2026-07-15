@@ -99,15 +99,21 @@ Les livrables sont produits dans l'ordre. Un livrable ne peut passer en
 | `LEARNING_ENGINE` | `GSIE/ENGINES/LEARNING_ENGINE/` | Documenté (Phase 1) |
 | `SIMULATION_ENGINE` | `GSIE/ENGINES/SIMULATION_ENGINE/` | Documenté (Phase 1) |
 
-**14/14 moteurs amorcés — niveau de documentation à qualifier.**
+**14/14 moteurs amorcés en Phase 1 — documentation approfondie réalisée en Phase 2.**
 
-> Précision (audit 2026-07-06) : « amorcé » ne signifie pas « documenté en
-> profondeur ». Sur les 14 moteurs, **3** possèdent un fichier de moteur dédié
-> (`EVIDENCE`, `KNOWLEDGE`, `CORRELATION`, 14–18 lignes) et **11** ne disposent
-> pour l'instant que d'un `README` de cadrage (26–35 lignes). Quatre brouillons
-> (`DIAGNOSTIC`, `REASONING`, `RECOMMENDATION`, `VALIDATION`) subsistent dans
-> `22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/`. La documentation de moteur complète
-> relève de la **Phase 2 (Architecture)**.
+> Précision (audit 2026-07-06, **statut dépassé**) : à cette date, « amorcé »
+> ne signifiait pas « documenté en profondeur ». Sur les 14 moteurs, seuls
+> 3 possédaient un fichier de moteur dédié (`EVIDENCE`, `KNOWLEDGE`,
+> `CORRELATION`, 14–18 lignes) et 11 ne disposaient que d'un `README` de
+> cadrage (26–35 lignes). **Mise à jour** : le livrable 207 (Phase 2) a
+> depuis doté chacun des 14 moteurs d'un fichier d'architecture dédié
+> complet (responsabilité, entrées/sorties, dépendances, contrat
+> d'interface, garanties, cas d'usage), et l'enrichissement du 2026-07-13
+> (recherche sourcée multi-agents) y a ajouté une section « État de l'art
+> et pistes de recherche sourcées » à chacun (voir `PROJECT_MEMORY.md` et
+> `CHANGELOG.md`). Les quatre brouillons (`DIAGNOSTIC`, `REASONING`,
+> `RECOMMENDATION`, `VALIDATION`) restent archivés, à titre historique,
+> dans `22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/`.
 
 ### Hors des 12 livrables (dossiers annexes substantiels)
 
@@ -169,7 +175,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 208 | Architecture Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
 | 209 | Pipeline de données Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
 | 210 | Architecture drone Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
-| 211 | GCS-Cinéma Unreal Engine (Ignis) | `GSIE/ARCHITECTURE/GSIE_IGNIS_GCS_CINEMA_UNREAL.md` | Draft |
+| 211 | Centre de Commandement GSIE (Unreal Engine 5.8, ex GCS-Cinéma Ignis) | `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` | Draft |
 | 212 | GeoSylva-Unreal Architecture (LiDAR + PCG) | `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` | Draft (attente MVP Ignis) |
 
 ### Critères de complétude Phase 2
@@ -228,8 +234,10 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 - Base de connaissances : au moins 20 connaissances validées.
 
 > **Audit 2026-07-13 : les 8 critères sont satisfaits.** Tous les
-> livrables 301-308 sont complets et non stubs. La Phase 3 peut passer
-> en Review. Voir `CHANGELOG.md` pour le détail.
+> livrables 301-308 sont complets et non stubs. La Phase 3 est
+> effectivement passée en Review puis a été validée et **clôturée par
+> DEC-000017** le même jour (10/10 livrables Validated). Voir
+> `CHANGELOG.md` pour le détail.
 
 ## Phase 4 — Implémentation (active 🚀)
 
@@ -252,6 +260,35 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 4 — Avancés | 15-20 | Forest Dynamics + Simulation + Recommendation | Python + Rust |
 | 5 — Validation | 21-24 | Validation + Learning | Rust |
 | 6 — Go (optionnel) | 25-26 | Benchmark WebSocket + décision Go | Go si activé |
+
+### État d'exécution vérifié — 2026-07-14
+
+| Étape | État | Critère restant avant clôture |
+|---|---|---|
+| Semaine 1 — API + Docker | Prototype fonctionnel à stabiliser | CI Python/Rust/Docker verte, Ruff et mypy sans erreur, tests PostGIS/Redis réels, auth de démonstration impossible en production |
+| Semaine 2 — Evidence Engine | Prototype fonctionnel à valider scientifiquement | Wheel Rust intégré à l'image, Clippy sans avertissement, règles multi-sources/robustesse/incertitude conformes au framework, conflits validés par revue scientifique |
+| Semaine 3 — Knowledge Engine | Non commencé | Contrat Evidence 1.0 gelé, modèle de provenance et versionnement immuable validé |
+| Semaine 4 — Intégration | Non commencé | Pipeline Evidence → Knowledge → validation humaine testé de bout en bout |
+
+> La couverture de lignes ne constitue pas à elle seule un critère de livraison.
+> Une étape est clôturée uniquement si lint, typage, tests unitaires,
+> intégration, sécurité, packaging et critères scientifiques sont satisfaits.
+
+### Tranche verticale prioritaire
+
+La première démonstration intégrée cible un territoire pilote Ignis : ingestion
+multi-sources, qualification de la preuve, persistance versionnée, validation
+humaine, consultation API puis visualisation d'une couche dans le Hub. Cette
+tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
+
+### Gates obligatoires avant extension
+
+1. **Gouvernance** — phase, statuts, objectifs et contrats cohérents.
+2. **Reproductibilité** — clone vierge, build wheel Rust, image Docker et tests automatisés.
+3. **Sécurité** — identité de production, RBAC, secrets obligatoires, audit trail.
+4. **Science** — golden datasets, provenance, incertitude et validation experte.
+5. **Intégration** — Evidence → Knowledge → humain → Hub vérifié de bout en bout.
+6. **Performance** — SLO mesurés et profiling avant toute migration de code.
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008)
 

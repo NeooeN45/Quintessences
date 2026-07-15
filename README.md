@@ -10,11 +10,11 @@ GSIE (General System Intelligence Engine) est un moteur d'aide à la
 décision modulaire, traçable et explicable — conçu pour la forêt, le feu,
 le climat et les territoires.
 
-[![Phase](https://img.shields.io/badge/phase-2%20Architecture-blue)](ROADMAP.md)
+[![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-10%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](GSIE/ENGINES/)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-6%20DEC-yellow)](03_DECISIONS/)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-19%20DEC-yellow)](03_DECISIONS/)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
