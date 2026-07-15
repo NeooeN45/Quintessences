@@ -4,6 +4,41 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PIPELINE INTÉGRÉ EVIDENCE → KNOWLEDGE — SEMAINE 4] - 2026-07-15
+
+### Tranche verticale prioritaire validée (DEC-000021)
+
+Pipeline intégré chainant l'Evidence Engine et le Knowledge Engine de
+bout en bout : soumission → qualification A-F → ingestion (si accepte) →
+requête → révision (CON-010).
+
+**Module `pipeline.py`** :
+- `EvidenceKnowledgePipeline.process()` — traite une soumission de bout
+  en bout : qualification Evidence + ingestion Knowledge si statut « accepte »
+- `PipelineResult` — contient la connaissance qualifiée ET l'objet ingéré
+  (si applicable), avec statut (ingested | quarantined | refused)
+- `query()` et `revise()` — délèguent au Knowledge Engine
+- Validation humaine (CON-001) : les connaissances quarantined/refused
+  sont retournées à l'appelant, non ingérées automatiquement
+
+**Tests d'intégration E2E** (11 tests) :
+- 8 tests engine : ingest si accepte, refuse si F, quarantine si D,
+  query après ingest, revise après ingest, préservation evidence_level,
+  préservation source, type PipelineResult
+- 3 tests API : pipeline complet via endpoints (evaluate → ingest →
+  query), pipeline avec révision (evaluate → ingest → revise → query v2),
+  refus d'ingestion d'une connaissance refusée
+
+**Qualité** : 166 tests au total (155 + 11 nouveaux), Ruff + mypy --strict OK.
+
+**Fichiers créés** :
+- `GSIE/API/src/gsie_api/engines/pipeline.py` — module d'intégration
+- `GSIE/API/tests/unit/test_pipeline.py` — tests E2E
+
+**Décision** : DEC-000021 — Semaine 4 pipeline intégré.
+
+---
+
 ## [KNOWLEDGE ENGINE — SEMAINE 3] - 2026-07-15
 
 ### Implémentation du Knowledge Engine (DEC-000020)

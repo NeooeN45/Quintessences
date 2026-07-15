@@ -270,7 +270,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | Semaine 1 — API + Docker | Prototype fonctionnel à stabiliser | CI Python/Rust/Docker verte, Ruff et mypy sans erreur, tests PostGIS/Redis réels, auth de démonstration impossible en production |
 | Semaine 2 — Evidence Engine | Prototype fonctionnel à valider scientifiquement | Wheel Rust intégré à l'image, Clippy sans avertissement, règles multi-sources/robustesse/incertitude conformes au framework, conflits validés par revue scientifique |
 | Semaine 3 — Knowledge Engine | ✅ Implémenté (DEC-000020) | Persistance PostgreSQL/Neo4j (évolution future), seed Knowledge Base Seed (25 connaissances) |
-| Semaine 4 — Intégration | Non commencé | Pipeline Evidence → Knowledge → validation humaine testé de bout en bout |
+| Semaine 4 — Intégration | ✅ Implémenté (DEC-000021) | Persistance PostgreSQL, seed complet, tests de charge |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,

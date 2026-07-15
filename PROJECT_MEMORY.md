@@ -51,8 +51,11 @@ interdit en Phase 3 (CON-003), est désormais autorisé.
   par_essence, par_station), versionnement CON-010 (historique immuable),
   révision avec archivage, filtre par niveau de preuve, pagination.
   33 nouveaux tests (19 unitaires + 14 API), 155 tests au total.
-- **Semaine 4** (à venir) : intégration Evidence → Knowledge → validation
-  humaine testée de bout en bout.
+- **Semaine 4** (livrée) : pipeline intégré Evidence → Knowledge
+  (DEC-000021). Module `pipeline.py` chainant les deux moteurs :
+  soumission → qualification A-F → ingestion (si accepte) → requête →
+  révision (CON-010). 11 tests d'intégration E2E (8 engine + 3 API),
+  166 tests au total. Tranche verticale prioritaire validée.
 
 ### Centre de Commandement GSIE — configuration environnement (2026-07-13)
 
@@ -202,6 +205,7 @@ Voir `CHANGELOG.md` pour le détail complet.
 - **DEC-000018** — Stratégie IA IGN : adoption geocontext MCP + capitalisation datasets IA (CoSIA, OCS GE, apprentissage LiDAR HD)
 - **DEC-000019** — Validation architecture Phase 4 + plan révisé 24 semaines (Python+Rust+Go différé, FastAPI+PostGIS+Redis, 6 vagues)
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
+- **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 
 ## Documents structurants
 
