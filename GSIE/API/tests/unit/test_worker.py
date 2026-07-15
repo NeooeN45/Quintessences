@@ -14,8 +14,9 @@ def should_be_none_when_windows():
         from gsie_api.worker import SecureUvicornWorker
         assert SecureUvicornWorker is None
     else:
-        from gsie_api.worker import SecureUvicornWorker
         import uvicorn.workers
+
+        from gsie_api.worker import SecureUvicornWorker
         assert issubclass(SecureUvicornWorker, uvicorn.workers.UvicornWorker)
         assert SecureUvicornWorker.CONFIG_KWARGS["server_header"] is False
         assert SecureUvicornWorker.CONFIG_KWARGS["date_header"] is False

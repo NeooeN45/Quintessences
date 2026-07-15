@@ -9,6 +9,9 @@ Fonctionnalités exposées :
 - detect_conflicts : détection de conflits bibliographiques
 """
 
+from typing import cast
+
+from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.evidence.schemas import (
     ConflitBibliographique,
@@ -19,10 +22,11 @@ from gsie_api.engines.evidence.schemas import (
 )
 
 logger = get_logger("gsie_api.evidence.wrapper")
+_settings = get_settings()
 
 # Tentative d'import du module Rust compilé
 try:
-    import gsie_evidence as _rust_engine
+    import gsie_evidence as _rust_engine  # type: ignore[import-untyped]
 
     _RUST_AVAILABLE = True
     logger.info("evidence_engine_rust_loaded", version=_rust_engine.EvidenceEngine.version())
@@ -63,6 +67,9 @@ def evaluate_with_context(
         Connaissance qualifiée avec conflits détectés et version incrémentée.
     """
     sources = existing_sources or []
+    if sources and not _settings.evidence_experimental_conflicts_enabled:
+        logger.warning("experimental_conflict_detection_disabled")
+        sources = []
     if _RUST_AVAILABLE:
         return _evaluate_with_context_rust(submission, sources, parent_version)
     return _evaluate_python_fallback(submission, sources, parent_version)
@@ -221,10 +228,7 @@ def _evaluate_python_fallback(
     conflits = _detect_conflicts_python(submission.source_candidate, sources)
 
     # Statut : refuse si conflit, sinon selon le niveau
-    if conflits:
-        status = KnowledgeStatus.refuse
-    else:
-        status = _STATUS_MAP[level_str]
+    status = KnowledgeStatus.refuse if conflits else _STATUS_MAP[level_str]
 
     # Versionnement : incrément si parent fourni
     version = parent_version + 1 if parent_version is not None else 1
@@ -305,5 +309,5 @@ def is_rust_available() -> bool:
 def engine_version() -> str:
     """Retourne la version du moteur (Rust ou fallback)."""
     if _RUST_AVAILABLE:
-        return _rust_engine.EvidenceEngine.version()
+        return cast("str", _rust_engine.EvidenceEngine.version())
     return "0.1.0-python-fallback"

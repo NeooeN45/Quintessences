@@ -7,14 +7,14 @@ Conforme à ENGINE_INTERFACE_CONTRACTS.md :
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     """Type de source scientifique (EVIDENCE_FRAMEWORK.md)."""
     peer_reviewed = "peer_reviewed"
     referentiel_officiel = "referentiel_officiel"
@@ -22,7 +22,7 @@ class SourceType(str, Enum):
     observation_terrain = "observation_terrain"
 
 
-class ContentType(str, Enum):
+class ContentType(StrEnum):
     """Type de contenu soumis."""
     publication = "publication"
     referentiel = "referentiel"
@@ -30,7 +30,7 @@ class ContentType(str, Enum):
     observation = "observation"
 
 
-class EvidenceLevel(str, Enum):
+class EvidenceLevel(StrEnum):
     """Niveau de preuve scientifique (CON-002). A=meilleur, F=pire."""
     A = "A"
     B = "B"
@@ -40,7 +40,7 @@ class EvidenceLevel(str, Enum):
     F = "F"
 
 
-class KnowledgeStatus(str, Enum):
+class KnowledgeStatus(StrEnum):
     """Statut de la connaissance après qualification."""
     accepte = "accepte"
     quarantine = "quarantine"

@@ -41,6 +41,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi==0.50b0",
     "opentelemetry-instrumentation-sqlalchemy==0.50b0",
     "opentelemetry-instrumentation-redis==0.50b0",
+    "opentelemetry-exporter-otlp-proto-grpc==1.29.0",
 
     # Auth — bcrypt direct (passlib 1.7.4 non maintenu, CVE potentielles)
     "pyjwt[crypto]==2.10.1",
@@ -66,7 +67,8 @@ dev = [
     "testcontainers[postgres]==4.10.0",
     "ruff==0.8.4",
     "mypy==1.14.0",
-    "types-redis==4.6.0.20241018",
+    # redis 5.x+ ships its own py.typed stubs; types-redis is obsolete and conflicts
+    # "types-redis" must not be added here.
 ]
 
 [build-system]
@@ -89,6 +91,9 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
 
 [tool.mypy]
 python_version = "3.12"

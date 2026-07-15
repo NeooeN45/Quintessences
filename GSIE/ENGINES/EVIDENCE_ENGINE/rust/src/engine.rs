@@ -132,21 +132,21 @@ impl EvidenceEngine {
             }
 
             // Conflit type 2 : même auteur + même date, références différentes
-            if candidate.auteur.eq_ignore_ascii_case(&source.auteur)
-                && candidate.date_publication.is_some()
-                && candidate.date_publication == source.date_publication
-                && Self::normalize_reference(&candidate.reference)
-                    != Self::normalize_reference(&source.reference)
-            {
-                conflits.push(ConflitBibliographique {
-                    source_a: candidate.clone(),
-                    source_b: source.clone(),
-                    description: format!(
-                        "Même auteur ({}) et date ({}) mais références différentes — attribution erronée possible",
-                        candidate.auteur,
-                        candidate.date_publication.as_ref().unwrap()
-                    ),
-                });
+            if let Some(publication_date) = candidate.date_publication.as_ref() {
+                if candidate.auteur.eq_ignore_ascii_case(&source.auteur)
+                    && candidate.date_publication == source.date_publication
+                    && Self::normalize_reference(&candidate.reference)
+                        != Self::normalize_reference(&source.reference)
+                {
+                    conflits.push(ConflitBibliographique {
+                        source_a: candidate.clone(),
+                        source_b: source.clone(),
+                        description: format!(
+                            "Même auteur ({}) et date ({publication_date}) mais références différentes — attribution erronée possible",
+                            candidate.auteur,
+                        ),
+                    });
+                }
             }
         }
 

@@ -9,7 +9,9 @@ Séparation liveness/readiness (recommandation stress test) :
 - /ready (readiness) : avec DB+Redis + cache Redis 5s — pour Kubernetes readiness probe
 """
 
-from datetime import datetime, timezone
+from contextlib import suppress
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from redis.asyncio import Redis
@@ -69,7 +71,7 @@ async def liveness(request: Request) -> HealthResponse:
         status="healthy",
         version=_settings.app_version,
         environment=_settings.environment,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         dependencies={},
     )
 
@@ -77,8 +79,8 @@ async def liveness(request: Request) -> HealthResponse:
 @router.get("/ready", response_model=HealthResponse)
 async def readiness(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    redis: Redis = Depends(get_redis),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis: Annotated[Redis, Depends(get_redis)],
 ) -> HealthResponse:
     """Readiness probe — vérifie DB + Redis avec cache Redis 5s.
 
@@ -103,18 +105,16 @@ async def readiness(
         status="healthy" if all_healthy else "degraded",
         version=_settings.app_version,
         environment=_settings.environment,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         dependencies=dependencies,
     )
 
     # Mettre en cache le résultat (TTL 5s)
-    try:
+    with suppress(Exception):
         await redis.setex(
             _READY_CACHE_KEY,
             _settings.health_cache_ttl,
             response.model_dump_json(),
         )
-    except Exception:
-        pass  # Cache indisponible — non bloquant
 
     return response

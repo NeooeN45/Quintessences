@@ -13,10 +13,10 @@ Architecture (DEC-000019) :
 - 404 handler custom avec trace_id (ne divulgue pas l'arborescence)
 """
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -70,14 +70,14 @@ def _build_problem_detail(
     error_code: str,
     trace_id: str,
     request: Request,
-) -> dict:
+) -> dict[str, object]:
     """Construit une réponse d'erreur au format RFC 7807 Problem Details.
 
     RFC 7807 : https://datatracker.ietf.org/doc/html/rfc7807
     Champs : type, title, status, detail, instance + extensions (error_code, trace_id).
     """
     return {
-        "type": f"about:blank",
+        "type": "about:blank",
         "title": title,
         "status": status_code,
         "detail": detail,
@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         from gsie_api.infrastructure.redis_client import redis_pool
 
         await engine.dispose()
-        await redis_pool.aclose()
+        await redis_pool.disconnect()
         logger.info("connections_closed")
     except Exception as exc:
         logger.error(
@@ -187,7 +187,14 @@ def create_app() -> FastAPI:
 
     # Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    def _rate_limit_handler(request: Request, exc: Exception) -> Response:
+        if isinstance(exc, RateLimitExceeded):
+            return _rate_limit_exceeded_handler(request, exc)
+        logger.error("unexpected_rate_limit_exception", exc_type=type(exc).__name__)
+        raise TypeError(f"Unexpected exception type: {type(exc).__name__}")
+
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
     app.add_middleware(SlowAPIASGIMiddleware)
 
     # Middlewares (ordre important : outermost en premier)

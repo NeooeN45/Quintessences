@@ -3,6 +3,10 @@
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.auth import router as auth_router
+
+# Configure a dev account for tests (env-var based, not hardcoded in app code)
+auth_router._settings.auth_dev_password = "changeme"
 
 client = TestClient(create_app())
 
@@ -132,9 +136,9 @@ def should_create_and_verify_refresh_token():
 def should_reject_expired_token():
     """verify_token doit rejeter un token expiré."""
     from datetime import timedelta
-    from unittest.mock import patch
 
     import jwt
+
     from gsie_api.core.auth import _load_private_key, verify_token
     from gsie_api.core.config import get_settings
 
@@ -144,8 +148,11 @@ def should_reject_expired_token():
 
     payload = {
         "sub": "test",
+        "iss": settings.jwt_issuer,
+        "aud": settings.jwt_audience,
         "iat": datetime.now(UTC) - timedelta(hours=2),
         "exp": datetime.now(UTC) - timedelta(hours=1),
+        "jti": "test-jti-expired",
         "type": "access",
     }
     expired_token = jwt.encode(payload, _load_private_key(), algorithm=settings.jwt_algorithm)
@@ -154,7 +161,7 @@ def should_reject_expired_token():
 
     try:
         verify_token(expired_token, expected_type="access")
-        assert False, "Should have raised HTTPException"
+        raise AssertionError("Should have raised HTTPException")
     except HTTPException as exc:
         assert exc.status_code == 401
         assert "expired" in exc.detail.lower()

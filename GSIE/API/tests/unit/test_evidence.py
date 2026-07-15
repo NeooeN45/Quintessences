@@ -4,14 +4,14 @@ Teste l'intégration du cœur Rust (gsie_evidence) via le wrapper Python.
 Si le module Rust n'est pas disponible, teste le fallback Python.
 """
 
-import json
 from datetime import UTC, datetime
+from unittest.mock import patch
 from uuid import uuid4
 
-import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.core.auth import create_access_token
 from gsie_api.engines.evidence.schemas import (
     ContentType,
     EvidenceLevel,
@@ -24,6 +24,9 @@ from gsie_api.engines.evidence.wrapper import engine_version, evaluate, is_rust_
 
 app = create_app()
 client = TestClient(app)
+
+_ACCESS_TOKEN = create_access_token(subject="test-evidence")
+_AUTH_HEADERS = {"Authorization": f"Bearer {_ACCESS_TOKEN}"}
 
 
 def _make_submission(
@@ -161,6 +164,7 @@ def should_return_200_when_valid_submission_evaluated():
     response = client.post(
         "/api/v1/evidence/evaluate",
         json=sub.model_dump(mode="json"),
+        headers=_AUTH_HEADERS,
     )
     assert response.status_code == 200
     data = response.json()
@@ -174,7 +178,11 @@ def should_return_422_when_author_missing():
     sub = _make_submission()
     payload = sub.model_dump(mode="json")
     payload["source_candidate"]["auteur"] = ""
-    response = client.post("/api/v1/evidence/evaluate", json=payload)
+    response = client.post(
+        "/api/v1/evidence/evaluate",
+        json=payload,
+        headers=_AUTH_HEADERS,
+    )
     assert response.status_code == 422
 
 
@@ -183,7 +191,11 @@ def should_return_422_when_reference_missing():
     sub = _make_submission()
     payload = sub.model_dump(mode="json")
     payload["source_candidate"]["reference"] = ""
-    response = client.post("/api/v1/evidence/evaluate", json=payload)
+    response = client.post(
+        "/api/v1/evidence/evaluate",
+        json=payload,
+        headers=_AUTH_HEADERS,
+    )
     assert response.status_code == 422
 
 
@@ -192,7 +204,11 @@ def should_return_422_when_invalid_source_type():
     sub = _make_submission()
     payload = sub.model_dump(mode="json")
     payload["source_candidate"]["type_source"] = "invalid_type"
-    response = client.post("/api/v1/evidence/evaluate", json=payload)
+    response = client.post(
+        "/api/v1/evidence/evaluate",
+        json=payload,
+        headers=_AUTH_HEADERS,
+    )
     assert response.status_code == 422
 
 
@@ -205,6 +221,7 @@ def should_return_level_b_via_api_when_referentiel():
     response = client.post(
         "/api/v1/evidence/evaluate",
         json=sub.model_dump(mode="json"),
+        headers=_AUTH_HEADERS,
     )
     data = response.json()
     assert data["evidence_level"] == "B"
@@ -217,6 +234,7 @@ def should_return_quarantine_via_api_when_expert():
     response = client.post(
         "/api/v1/evidence/evaluate",
         json=sub.model_dump(mode="json"),
+        headers=_AUTH_HEADERS,
     )
     data = response.json()
     assert data["evidence_level"] == "D"
@@ -257,12 +275,14 @@ def should_return_level_f_via_fallback_when_unknown_combination():
 
     # Créer une soumission avec une combinaison qui n'est pas dans la matrice
     # En mockant le dictionnaire pour simuler un cas non couvert
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", False):
-        with patch.dict(wrapper_module._DECISION_MATRIX, {}, clear=True):
-            sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
-            result = wrapper_module.evaluate(sub)
-            assert result.evidence_level == EvidenceLevel.F
-            assert result.statut == KnowledgeStatus.refuse
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", False),
+        patch.dict(wrapper_module._DECISION_MATRIX, {}, clear=True),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate(sub)
+        assert result.evidence_level == EvidenceLevel.F
+        assert result.statut == KnowledgeStatus.refuse
 
 
 def should_fallback_to_python_when_rust_raises_exception():
@@ -277,17 +297,16 @@ def should_fallback_to_python_when_rust_raises_exception():
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
     # Simuler une exception lors de l'appel Rust
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True):
-        with patch.object(
-            wrapper_module._rust_engine.EvidenceEngine,
-            "evaluate_json",
-            side_effect=RuntimeError("Rust panic simulated"),
-        ):
-            sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
-            result = wrapper_module.evaluate(sub)
-            # Le fallback Python doit produire le même résultat
-            assert result.evidence_level == EvidenceLevel.B
-            assert result.statut == KnowledgeStatus.accepte
+    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
+        wrapper_module._rust_engine.EvidenceEngine,
+        "evaluate_json",
+        side_effect=RuntimeError("Rust panic simulated"),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate(sub)
+        # Le fallback Python doit produire le même résultat
+        assert result.evidence_level == EvidenceLevel.B
+        assert result.statut == KnowledgeStatus.accepte
 
 
 def should_include_trace_id_in_404_error():
@@ -404,20 +423,25 @@ def should_set_version_to_1_when_no_parent():
 
 def should_return_refuse_when_conflict_detected():
     """evaluate_with_context doit retourner refuse quand un conflit est détecté."""
-    from gsie_api.engines.evidence.wrapper import evaluate_with_context
+    import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
-    sub.source_candidate.reference = "DOI:10.1234/conflict"
-    existing = [
-        SourceReference(
-            type_source=SourceType.expert_identifie,
-            auteur="Other",
-            reference="DOI:10.1234/conflict",
-        )
-    ]
-    result = evaluate_with_context(sub, existing_sources=existing)
-    assert result.statut == KnowledgeStatus.refuse
-    assert len(result.conflits) > 0
+    with patch.object(
+        wrapper_module._settings,
+        "evidence_experimental_conflicts_enabled",
+        True,
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        sub.source_candidate.reference = "DOI:10.1234/conflict"
+        existing = [
+            SourceReference(
+                type_source=SourceType.expert_identifie,
+                auteur="Other",
+                reference="DOI:10.1234/conflict",
+            )
+        ]
+        result = wrapper_module.evaluate_with_context(sub, existing_sources=existing)
+        assert result.statut == KnowledgeStatus.refuse
+        assert len(result.conflits) > 0
 
 
 # --- Tests /metrics ---

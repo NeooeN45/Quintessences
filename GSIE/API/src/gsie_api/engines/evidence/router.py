@@ -10,10 +10,13 @@ Fallback Python si le module Rust n'est pas compilé.
 GRADE-CERQual, ASReview, Rayyan, claim verification (SciFact/FEVER).
 """
 
-from fastapi import APIRouter, Request, status
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from gsie_api.core.auth import get_current_user
 from gsie_api.engines.evidence.schemas import (
     QualifiedKnowledge,
     RawKnowledgeSubmission,
@@ -55,6 +58,7 @@ async def evidence_status(request: Request) -> EngineStatusResponse:
 async def evidence_evaluate(
     submission: RawKnowledgeSubmission,
     request: Request,
+    _user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> QualifiedKnowledge:
     """Évalue une soumission de connaissance brute.
 

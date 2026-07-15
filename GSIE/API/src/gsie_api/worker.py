@@ -23,4 +23,4 @@ if sys.platform != "win32":  # pragma: no cover (Unix-only, testé dans Docker)
 else:
     # Windows : fallback — SecureUvicornWorker non disponible
     # (gunicorn ne tourne pas sur Windows, uniquement dans Docker/Linux)
-    SecureUvicornWorker = None  # type: ignore[assignment, misc]
+    SecureUvicornWorker = None

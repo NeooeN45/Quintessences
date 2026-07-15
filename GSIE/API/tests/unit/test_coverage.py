@@ -12,20 +12,17 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
 from gsie_api.engines.evidence.schemas import (
-    ConflitBibliographique,
     ContentType,
     KnowledgeStatus,
     RawKnowledgeSubmission,
     SourceReference,
     SourceType,
 )
-
 
 # --- app.py : OpenTelemetry setup ---
 
@@ -54,12 +51,11 @@ def should_setup_opentelemetry_when_otel_enabled():
         "opentelemetry.sdk.resources": mock_resource,
         "opentelemetry.sdk.trace": mock_provider,
         "opentelemetry.sdk.trace.export": mock_processor,
-    }):
-        with patch("gsie_api.infrastructure.database.engine") as mock_engine:
-            mock_engine.sync_engine = MagicMock()
-            _setup_opentelemetry(app)
-            # Vérifier que l'instrumentation a été appelée
-            mock_fastapi_instr.FastAPIInstrumentor.instrument_app.assert_called_once_with(app)
+    }), patch("gsie_api.infrastructure.database.engine") as mock_engine:
+        mock_engine.sync_engine = MagicMock()
+        _setup_opentelemetry(app)
+        # Vérifier que l'instrumentation a été appelée
+        mock_fastapi_instr.FastAPIInstrumentor.instrument_app.assert_called_once_with(app)
 
 
 def should_log_error_when_opentelemetry_setup_fails():
@@ -90,18 +86,20 @@ def should_call_setup_opentelemetry_in_lifespan_when_enabled():
         mock_settings.rate_limit_storage_url = "memory://"
         mock_settings.max_request_body_size = 1_048_576
 
-        with patch("gsie_api.app._setup_opentelemetry") as mock_otel:
-            with patch("gsie_api.infrastructure.database.engine") as mock_engine:
-                mock_engine.dispose = AsyncMock()
-                with patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool:
-                    mock_pool.aclose = AsyncMock()
+        with (
+            patch("gsie_api.app._setup_opentelemetry") as mock_otel,
+            patch("gsie_api.infrastructure.database.engine") as mock_engine,
+            patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool,
+        ):
+            mock_engine.dispose = AsyncMock()
+            mock_pool.aclose = AsyncMock()
 
-                    app = create_app()
-                    client = TestClient(app)
-                    with client:
-                        pass
+            app = create_app()
+            client = TestClient(app)
+            with client:
+                pass
 
-                    mock_otel.assert_called_once()
+            mock_otel.assert_called_once()
 
 
 # --- app.py : Graceful shutdown ---
@@ -122,21 +120,23 @@ def should_close_connections_on_shutdown():
         mock_settings.rate_limit_storage_url = "memory://"
         mock_settings.max_request_body_size = 1_048_576
 
-        with patch("gsie_api.infrastructure.database.engine") as mock_engine:
+        with (
+            patch("gsie_api.infrastructure.database.engine") as mock_engine,
+            patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool,
+        ):
             mock_engine.dispose = AsyncMock()
-            with patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool:
-                mock_pool.aclose = AsyncMock()
+            mock_pool.disconnect = AsyncMock()
 
-                app = create_app()
-                client = TestClient(app)
+            app = create_app()
+            client = TestClient(app)
 
-                # Le TestClient déclenche le lifespan (startup + shutdown)
-                with client:
-                    pass  # Le shutdown se produit à la sortie du context manager
+            # Le TestClient déclenche le lifespan (startup + shutdown)
+            with client:
+                pass  # Le shutdown se produit à la sortie du context manager
 
-                # Vérifier que dispose et aclose ont été appelés
-                mock_engine.dispose.assert_called_once()
-                mock_pool.aclose.assert_called_once()
+            # Vérifier que dispose et disconnect ont été appelés
+            mock_engine.dispose.assert_called_once()
+            mock_pool.disconnect.assert_called_once()
 
 
 def should_log_error_when_shutdown_cleanup_fails():
@@ -262,49 +262,54 @@ def should_fallback_to_python_when_evaluate_with_context_rust_fails():
     """evaluate_with_context doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True):
-        with patch.object(
-            wrapper_module._rust_engine.EvidenceEngine,
-            "evaluate_with_context",
-            side_effect=RuntimeError("Rust panic"),
-        ):
-            sub = _make_submission()
-            result = wrapper_module.evaluate_with_context(sub)
-            assert result.version == 1
+    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
+        wrapper_module._rust_engine.EvidenceEngine,
+        "evaluate_with_context",
+        side_effect=RuntimeError("Rust panic"),
+    ):
+        sub = _make_submission()
+        result = wrapper_module.evaluate_with_context(sub)
+        assert result.version == 1
 
 
 def should_fallback_to_python_when_detect_conflicts_rust_fails():
     """detect_conflicts doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True):
-        with patch.object(
-            wrapper_module._rust_engine.EvidenceEngine,
-            "detect_conflicts",
-            side_effect=RuntimeError("Rust panic"),
-        ):
-            candidate = SourceReference(
-                type_source=SourceType.peer_reviewed,
-                auteur="Smith",
+    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
+        wrapper_module._rust_engine.EvidenceEngine,
+        "detect_conflicts",
+        side_effect=RuntimeError("Rust panic"),
+    ):
+        candidate = SourceReference(
+            type_source=SourceType.peer_reviewed,
+            auteur="Smith",
+            reference="DOI:10.1234/test",
+        )
+        existing = [
+            SourceReference(
+                type_source=SourceType.expert_identifie,
+                auteur="Jones",
                 reference="DOI:10.1234/test",
             )
-            existing = [
-                SourceReference(
-                    type_source=SourceType.expert_identifie,
-                    auteur="Jones",
-                    reference="DOI:10.1234/test",
-                )
-            ]
-            conflits = wrapper_module.detect_conflicts(candidate, existing)
-            # Le fallback Python doit détecter le conflit
-            assert len(conflits) == 1
+        ]
+        conflits = wrapper_module.detect_conflicts(candidate, existing)
+        # Le fallback Python doit détecter le conflit
+        assert len(conflits) == 1
 
 
 def should_return_refuse_when_conflits_detected_in_python_fallback():
     """Le fallback Python doit retourner refuse quand des conflits sont détectés."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", False):
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", False),
+        patch.object(
+            wrapper_module._settings,
+            "evidence_experimental_conflicts_enabled",
+            True,
+        ),
+    ):
         sub = _make_submission()
         sub.source_candidate.reference = "DOI:10.1234/conflict"
         existing = [

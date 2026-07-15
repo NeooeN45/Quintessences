@@ -120,7 +120,7 @@ def should_propagate_valid_trace_id_when_provided(client: TestClient):
 def should_not_expose_server_header_when_responding(client: TestClient):
     """Le header Server ne doit pas être exposé (anti-fingerprinting)."""
     response = client.get("/health")
-    assert "server" not in {k.lower() for k in response.headers.keys()}
+    assert "server" not in {k.lower() for k in response.headers}
 
 
 def should_return_413_when_body_too_large(client: TestClient):

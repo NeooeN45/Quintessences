@@ -6,6 +6,7 @@ Configuration PgBouncer :
 """
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -18,13 +19,13 @@ from gsie_api.core.config import Settings, get_settings
 _settings = get_settings()
 
 
-def _build_engine_kwargs(settings: Settings) -> dict:
+def _build_engine_kwargs(settings: Settings) -> dict[str, Any]:
     """Construit les kwargs du engine SQLAlchemy selon la configuration.
 
     Extracted function pour testabilité — PgBouncer mode désactive
     les prepared statements (DEC-000019 ajustement P0).
     """
-    kwargs: dict = {
+    kwargs: dict[str, Any] = {
         "echo": settings.db_echo,
         "pool_size": settings.db_pool_size,
         "max_overflow": settings.db_max_overflow,

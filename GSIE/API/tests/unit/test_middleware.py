@@ -52,7 +52,7 @@ def should_remove_server_header_when_present():
 
     client = TestClient(app)
     response = client.get("/test")
-    assert "server" not in {k.lower() for k in response.headers.keys()}
+    assert "server" not in {k.lower() for k in response.headers}
 
 
 def should_return_413_when_content_length_exceeds_limit():

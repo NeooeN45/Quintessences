@@ -1,11 +1,20 @@
 """Tests unitaires — application FastAPI (app.py)."""
 
+from datetime import UTC, datetime
 from unittest.mock import patch
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.core.auth import create_access_token
+from gsie_api.engines.evidence.schemas import (
+    ContentType,
+    RawKnowledgeSubmission,
+    SourceReference,
+    SourceType,
+)
 
 
 def should_create_app_with_correct_title():
@@ -100,40 +109,38 @@ def should_return_500_with_error_code_when_unhandled_exception():
         app = create_app()
         client = TestClient(app, raise_server_exceptions=False)
 
-        # Provoquer une exception non gérée en mockant le router evidence
-        with patch("gsie_api.engines.evidence.router.evaluate", side_effect=RuntimeError("boom")):
-            from gsie_api.engines.evidence.schemas import (
-                ContentType,
-                RawKnowledgeSubmission,
-                SourceReference,
-                SourceType,
-            )
-            from uuid import uuid4
-            from datetime import UTC, datetime
+        sub = RawKnowledgeSubmission(
+            soumission_id=uuid4(),
+            type_contenu=ContentType.publication,
+            contenu={"test": "data"},
+            source_candidate=SourceReference(
+                type_source=SourceType.peer_reviewed,
+                auteur="Test",
+                reference="DOI:test",
+            ),
+            date_soumission=datetime.now(UTC),
+            soumetteur="test",
+        )
+        token = create_access_token(subject="test")
 
-            sub = RawKnowledgeSubmission(
-                soumission_id=uuid4(),
-                type_contenu=ContentType.publication,
-                contenu={"test": "data"},
-                source_candidate=SourceReference(
-                    type_source=SourceType.peer_reviewed,
-                    auteur="Test",
-                    reference="DOI:test",
-                ),
-                date_soumission=datetime.now(UTC),
-                soumetteur="test",
-            )
+        # Provoquer une exception non gérée en mockant le router evidence
+        with patch(
+            "gsie_api.engines.evidence.router.evaluate",
+            side_effect=RuntimeError("boom"),
+        ):
             response = client.post(
                 "/api/v1/evidence/evaluate",
                 json=sub.model_dump(mode="json"),
+                headers={"Authorization": f"Bearer {token}"},
             )
-            assert response.status_code == 500
-            # La stack trace ne doit pas être divulguée dans la réponse
-            assert "RuntimeError" not in response.text
-            assert "boom" not in response.text
-            # RFC 7807 Problem Details
-            data = response.json()
-            assert data["title"] == "Internal Server Error"
-            assert data["status"] == 500
-            assert data["error_code"] == "INTERNAL_ERROR"
-            assert "instance" in data
+
+        assert response.status_code == 500
+        # La stack trace ne doit pas être divulguée dans la réponse
+        assert "RuntimeError" not in response.text
+        assert "boom" not in response.text
+        # RFC 7807 Problem Details
+        data = response.json()
+        assert data["title"] == "Internal Server Error"
+        assert data["status"] == 500
+        assert data["error_code"] == "INTERNAL_ERROR"
+        assert "instance" in data

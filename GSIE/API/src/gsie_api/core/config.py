@@ -3,6 +3,8 @@
 # Aucun secret n'est commité (CON-008 souveraineté, global_rules security).
 
 from functools import lru_cache
+from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,7 +27,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "GSIE API"
     app_version: str = "0.1.0"
-    environment: str = Field(default="development", description="development|staging|production")
+    environment: Literal["development", "staging", "production"] = "development"
     debug: bool = False
     log_level: str = "INFO"
 
@@ -71,11 +73,21 @@ class Settings(BaseSettings):
     rate_limit_storage_url: str = "memory://"
 
     # Auth — JWT RS256 (DEC-000019)
-    jwt_algorithm: str = "RS256"
-    jwt_access_token_expire_minutes: int = 15
-    jwt_refresh_token_expire_days: int = 7
+    jwt_algorithm: Literal["RS256"] = "RS256"
+    jwt_issuer: str = "gsie-api"
+    jwt_audience: str = "gsie-clients"
+    jwt_access_token_expire_minutes: int = Field(default=15, ge=1, le=60)
+    jwt_refresh_token_expire_days: int = Field(default=7, ge=1, le=30)
     jwt_private_key_path: str = "keys/private.pem"
     jwt_public_key_path: str = "keys/public.pem"
+    # Dev login — jamais en production ; credentials via variables d'environnement
+    auth_dev_login_enabled: bool = True
+    auth_dev_username: str = "admin"
+    auth_dev_password: str = ""
+
+    # Moteur Evidence
+    require_rust_backend: bool = False
+    evidence_experimental_conflicts_enabled: bool = False
 
     # Observabilité — OpenTelemetry (DEC-000019)
     otel_enabled: bool = False
@@ -94,9 +106,15 @@ class Settings(BaseSettings):
                 raise ValueError("Wildcard CORS origin not allowed in production")
             if any("localhost" in o for o in self.cors_origins):
                 raise ValueError("localhost CORS origins not allowed in production")
-            # Redis sans mot de passe en production = critique (OWASP A07)
-            if "localhost" in self.redis_url and ":@" not in self.redis_url:
+            redis_password = urlparse(self.redis_url).password
+            if not redis_password:
                 raise ValueError("Redis without password not allowed in production")
+            if self.rate_limit_storage_url == "memory://":
+                raise ValueError("Distributed rate-limit storage required in production")
+            if self.auth_dev_login_enabled:
+                raise ValueError("Development login must be disabled in production")
+            if not self.require_rust_backend:
+                raise ValueError("Rust Evidence backend must be required in production")
         return self
 
 

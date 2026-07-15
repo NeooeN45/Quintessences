@@ -7,14 +7,16 @@ import logging
 import sys
 import uuid
 from contextvars import ContextVar
+from typing import cast
 
 import structlog
+from structlog.typing import EventDict, WrappedLogger
 
 # Contexte de requête — trace_id propagé via contextvars
 trace_id_ctx: ContextVar[str] = ContextVar("trace_id", default="")
 
 
-def _add_trace_id(_: object, __: object, event_dict: dict) -> dict:
+def _add_trace_id(_: WrappedLogger, __: str, event_dict: EventDict) -> EventDict:
     """Injecte le trace_id dans chaque log (CON-005)."""
     tid = trace_id_ctx.get()
     if tid:
@@ -57,4 +59,4 @@ def set_trace_id(tid: str | None = None) -> str:
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Retourne un logger structlog nommé."""
-    return structlog.get_logger(name)
+    return cast("structlog.stdlib.BoundLogger", structlog.get_logger(name))

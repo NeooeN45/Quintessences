@@ -1,8 +1,6 @@
 """Tests unitaires — logging structuré (core/logging.py)."""
 
-import logging as stdlib_logging
 
-import structlog
 
 from gsie_api.core.logging import (
     _add_trace_id,

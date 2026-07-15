@@ -6,7 +6,6 @@ Sécurité : validation trace_id + headers OWASP A05 + limite taille corps.
 
 import re
 import time
-import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -55,7 +54,10 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
             except ValueError:
                 return JSONResponse(
                     status_code=400,
-                    content={"detail": "Invalid Content-Length header", "error_code": "BAD_REQUEST"},
+                    content={
+                        "detail": "Invalid Content-Length header",
+                        "error_code": "BAD_REQUEST",
+                    }
                 )
             if cl_value < 0 or cl_value > _MAX_BODY_SIZE:
                 return JSONResponse(

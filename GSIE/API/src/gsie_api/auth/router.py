@@ -9,10 +9,11 @@ Note : le modèle utilisateur (DB) sera implémenté en Phase 4 semaine 3.
 En attendant, un stub utilisateur est utilisé pour les tests.
 """
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC
+from typing import Annotated, TypedDict
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from gsie_api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, VerifyResponse
 from gsie_api.core.auth import (
@@ -29,28 +30,41 @@ logger = get_logger("gsie_api.auth.router")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Stub utilisateur — remplacé par DB en Phase 4 semaine 3
-# Format : { "username": { "password_hash": bytes, "roles": ["admin"] } }
-_DEV_USERS: dict[str, dict] = {
-    "admin": {
-        "password_hash": bcrypt.hashpw(b"changeme", bcrypt.gensalt()),
-        "roles": ["admin"],
-    },
-}
+class DevUser(TypedDict):
+    """Utilisateur local strictement réservé au développement."""
+
+    password_hash: bytes
+    roles: list[str]
 
 
-def _authenticate_user(username: str, password: str) -> dict | None:
+def _get_dev_user(username: str, password: str) -> DevUser | None:
+    """Authentifie un utilisateur de développement via env vars.
+
+    Returns:
+        Dict utilisateur si authentifié, None sinon.
+    """
+    if not _settings.auth_dev_login_enabled:
+        return None
+    if not _settings.auth_dev_username or not _settings.auth_dev_password:
+        return None
+    if username != _settings.auth_dev_username:
+        return None
+    password_hash = bcrypt.hashpw(
+        _settings.auth_dev_password.encode("utf-8"),
+        bcrypt.gensalt(),
+    )
+    if not bcrypt.checkpw(password.encode("utf-8"), password_hash):
+        return None
+    return DevUser(password_hash=password_hash, roles=["admin"])
+
+
+def _authenticate_user(username: str, password: str) -> DevUser | None:
     """Authentifie un utilisateur (stub — DB en Phase 4 semaine 3).
 
     Returns:
         Dict utilisateur si authentifié, None sinon.
     """
-    user = _DEV_USERS.get(username)
-    if user is None:
-        return None
-    if not bcrypt.checkpw(password.encode("utf-8"), user["password_hash"]):
-        return None
-    return user
+    return _get_dev_user(username, password)
 
 
 @router.post(
@@ -65,7 +79,10 @@ def _authenticate_user(username: str, password: str) -> dict | None:
     ),
 )
 async def login(credentials: LoginRequest) -> TokenResponse:
-    """Authentifie un utilisateur et retourne les tokens JWT."""
+    """Authentifie un utilisateur de développement et retourne les tokens JWT."""
+    if not _settings.auth_dev_login_enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
     user = _authenticate_user(credentials.username, credentials.password)
     if user is None:
         logger.warning("login_failed", username=credentials.username)
@@ -125,17 +142,19 @@ async def refresh_token(request: RefreshRequest) -> TokenResponse:
     description="Vérifie la validité du token d'accès fourni dans le header Authorization.",
 )
 async def verify_access_token(
-    user: dict = Depends(get_current_user),
+    user: Annotated[dict[str, object], Depends(get_current_user)],
 ) -> VerifyResponse:
     """Vérifie la validité du token d'accès."""
     from datetime import datetime as dt
 
     exp = user.get("exp")
-    expires_at = dt.fromtimestamp(exp, tz=UTC).isoformat() if exp else None
+    expires_at = dt.fromtimestamp(exp, tz=UTC).isoformat() if isinstance(exp, int | float) else None
+    subject = user.get("sub")
+    token_type = user.get("type")
 
     return VerifyResponse(
         valid=True,
-        subject=user.get("sub"),
-        token_type=user.get("type"),
+        subject=subject if isinstance(subject, str) else None,
+        token_type=token_type if isinstance(token_type, str) else None,
         expires_at=expires_at,
     )

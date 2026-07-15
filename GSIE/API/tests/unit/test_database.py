@@ -1,5 +1,6 @@
 """Tests unitaires — base de données (infrastructure/database.py)."""
 
+import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -62,10 +63,8 @@ async def should_rollback_when_exception_raised():
     try:
         gen = get_db()
         await gen.__anext__()  # yield session
-        try:
+        with contextlib.suppress(Exception):
             await gen.__anext__()  # commit → exception → rollback
-        except Exception:
-            pass
         mock_session.rollback.assert_called_once()
     finally:
         db_module.async_session_factory = original_factory
