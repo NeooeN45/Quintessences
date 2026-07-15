@@ -20,6 +20,14 @@ CLAUDE.md
 # Devin CLI — config locale (clés personnelles, non versionnée)
 .devin/config.local.json
 
+# Secrets — fichiers d'environnement réels (ne jamais committer)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
 # Temporaire
 tmp/
 *.tmp

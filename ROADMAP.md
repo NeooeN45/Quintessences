@@ -149,10 +149,12 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 ---
 
-## Phase 2 — Architecture (active)
+## Phase 2 — Architecture (clôturée ✅)
 
 > Lancée officiellement par **DEC-000004** le 2026-07-12.
 > Phase 1 clôturée — tous les livrables Validated ou Locked.
+> **Clôturée** par transition vers Phase 3 (DEC-000011) puis Phase 4
+> (DEC-000017). Les 12 livrables (201-212) sont en statut Draft.
 >
 > **Vision produit Ignis** fixée par **GSIE-DIR-0005** (Directive
 > fondatrice GCS / jumeau numérique vivant, DEC-000008) et **GSIE-DIR-0006**

@@ -264,6 +264,19 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | DEC-000004 | Entrée en Phase 2 : Architecture |
 | DEC-000005 | Archivage du code du banc Ignis (Jalon 0) |
 | DEC-000006 | Restructuration identité : Quintessences > GSIE > GeoSylva |
+| DEC-000007 | Extension de l'écosystème : Artemis et QGISIA |
+| DEC-000008 | Directive fondatrice Ignis (GCS / Ground Control System) |
+| DEC-000009 | Vision du Moteur Cognitif Ignis (GSIE-DIR-0006) |
+| DEC-000010 | Adoption Unreal Engine 5.8 + Cesium comme moteur 3D |
+| DEC-000011 | Entrée en Phase 3 : Connaissance |
+| DEC-000012 | L'Encyclopédie de l'Écosystème (base de connaissances écologiques) |
+| DEC-000013 | Restructuration de l'écosystème Quintessences |
+| DEC-000014 | Réorganisation de l'arborescence du dépôt |
+| DEC-000015 | Unification du système d'articles constitutionnels (RFC-0002) |
+| DEC-000016 | Extension Phase 3 à 10 livrables (amendement GSIE-DIR-0007) |
+| DEC-000017 | Validation Phase 3 + clôture + ouverture Phase 4 (GSIE-DIR-0011) |
+| DEC-000018 | Stratégie IA IGN : adoption geocontext MCP + datasets IA |
+| DEC-000019 | Validation architecture Phase 4 + plan révisé 24 semaines |
 
 ---
 
@@ -287,10 +300,10 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | Phase | Statut | Description |
 |---|---|---|
 | **Phase 1 — Foundation** | Clôturée | Constitution, 14 moteurs documentés, gouvernance, mémoire |
-| **Phase 2 — Architecture** | **Active** | Contrats d'interface, schémas de données, RFC d'architecture |
-| Phase 3 — Specification | À venir | Spécifications techniques détaillées par moteur |
-| Phase 4 — Implementation | À venir | Code métier des moteurs |
-| Phase 5 — Applications | À venir | GeoSylva, Ignis et interfaces |
+| **Phase 2 — Architecture** | Clôturée | Contrats d'interface, schémas de données, RFC d'architecture |
+| **Phase 3 — Connaissance** | Clôturée | Méthodes, ontologie, datasets, framework de preuve, base de connaissances |
+| **Phase 4 — Implémentation** | **Active 🚀** | Code métier des moteurs, API GSIE, Hub Unreal, applications clientes |
+| Phase 5 — Applications | À venir | Déploiement GeoSylva, Ignis et interfaces terrain |
 
 Voir `ROADMAP.md` pour le détail des livrables.
 
@@ -309,7 +322,7 @@ Quintessences/
 ├── GSIE/RESEARCH/            Travaux scientifiques et bibliographie
 ├── GSIE/KNOWLEDGE/           Base de connaissances structurée
 ├── GSIE/DATASETS/            Jeux de données référencés et sourcés
-├── GSIE/ENGINES/             14 moteurs GSIE (documentés, non implémentés)
+├── GSIE/ENGINES/             14 moteurs GSIE (documentés, Evidence Engine implémenté en Phase 4)
 ├── GSIE/ALGORITHMS/          Procédures computationnelles formelles
 ├── GSIE/MODELS/              Modèles scientifiques et d'apprentissage
 ├── GSIE/APPLICATIONS/        Interfaces utilisateurs (GeoSylva, Ignis, …)
