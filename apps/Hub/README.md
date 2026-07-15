@@ -31,5 +31,11 @@ compilés, mal adaptés à la structure documentaire de `A:\Quintessences`.
 Seule cette fiche de référence est versionnée ici ; le code et les assets
 vivent dans le dépôt GitHub `NeooeN45/Hub`, cloné sur E:.
 
-> Statut : Phase 4 (GSIE-DIR-0011, code métier autorisé). Projet Unreal en
-> cours de constitution — voir le README du dépôt Hub pour l'avancement.
+> Statut : Phase 4 (GSIE-DIR-0011, code métier autorisé). Projet Unreal
+> `CentreCommandement` créé (template Simulation Blank C++ reconstitué
+> fidèlement depuis le template officiel Epic), compilation validée
+> (`Build.bat CentreCommandementEditor Win64 Development` → Succeeded).
+> Voir `CONFIGURATION.md` et `RECHERCHE/` dans le dépôt Hub pour le détail
+> des décisions (World Partition écarté, Nanite/Lumen, structure C++) et
+> les sources officielles consultées. Prochaine étape : ouvrir l'éditeur
+> et suivre la procédure de configuration Cesium documentée.

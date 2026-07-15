@@ -2,7 +2,11 @@
 # GSIE ECOSYSTEM ENCYCLOPEDIA DIRECTIVE
 # Directive ID : GSIE-DIR-0008
 # Version : 1.0
-# Statut : ACTIVE
+# Statut : ACTIVE (amendée par DEC-000022 / RFC-0011 le 2026-07-15)
+#   §2.1 : Neo4j → PostgreSQL 16 canonique + Apache AGE (benchmark Vague 1)
+#   §2.3 : Jena RDF/OWL → différé (projection régénérable)
+#   §2.4 : GraphQL → différé (REST seul en Vague 1)
+#   Voir : 02_RFC/annexes/annexe-dir0008.md
 # Priorité : CRITIQUE
 # Classification : FONDATION
 # Auteur : Camille Perraudeau

@@ -208,15 +208,15 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | # | Livrable | Fichier / Dossier | Statut |
 |---|---|---|---|
 | 301 | Research Method (détaillée) | `GSIE/RESEARCH/RESEARCH_METHOD.md` | Validated ✅ |
-| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Validated ✅ |
+| 302 | Knowledge Method (détaillée) | `GSIE/KNOWLEDGE/KNOWLEDGE_METHOD.md` | Supersédé par RFC-0011 ⚠️ |
 | 303 | Forest Ontology | `GSIE/KNOWLEDGE/FOREST_ONTOLOGY.md` | Validated ✅ |
-| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Validated ✅ |
+| 304 | Knowledge Graph Specification | `GSIE/KNOWLEDGE/KNOWLEDGE_GRAPH_SPECIFICATION.md` | Supersédé par RFC-0011 ⚠️ |
 | 305 | Dataset Catalog (29 datasets) | `GSIE/DATASETS/DATASET_CATALOG.md` | Validated ✅ |
 | 306 | Evidence Framework | `GSIE/RESEARCH/EVIDENCE_FRAMEWORK.md` | Validated ✅ |
 | 307 | Sourcing Plan | `GSIE/RESEARCH/SOURCING_PLAN.md` | Validated ✅ |
 | 308 | Knowledge Base Seed (25 connaissances) | `GSIE/KNOWLEDGE/KNOWLEDGE_BASE_SEED.md` | Validated ✅ |
-| 309 | Schéma DB Encyclopédie (spécification) | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` | Validated ✅ |
-| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` | Validated ✅ |
+| 309 | Schéma DB Encyclopédie (spécification) | `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` | Supersédé par RFC-0011 ⚠️ |
+| 310 | Socle données 14 moteurs + liens apps | `GSIE/ARCHITECTURE/ENGINE_DATA_SOCLE.md` | Supersédé par RFC-0011 ⚠️ |
 
 ### Ordre de production
 
@@ -292,18 +292,55 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 5. **Intégration** — Evidence → Knowledge → humain → Hub vérifié de bout en bout.
 6. **Performance** — SLO mesurés et profiling avant toute migration de code.
 
-### Encyclopédie de l'Écosystème (GSIE-DIR-0008)
+### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 
-- Base de données graphe (Neo4j ou équivalent) — 10M+ nœuds
-- Identifiants uniques stables et citables (GSIE-K-XXXXXXXXXX)
-- Triple store sémantique (RDF/OWL, SPARQL, Linked Open Data)
-- Pipelines d'ingestion automatisés (Airflow + NLP + LLM)
-- 10 classificateurs (source, preuve, domaine, type, entités,
-  relations, seuils, conflits, doublons, conformité)
-- API GraphQL + REST (publique en lecture)
-- Interface web de consultation (Next.js + D3.js / Cytoscape)
-- Export en formats ouverts (JSON, RDF, CSV)
-- ADR-0008 à ADR-0013 (choix technologiques)
+> **Métamodèle v6.2** (RFC-0011 / DEC-000022, Proposé) — noyau 65 types,
+> 5 niveaux, PostgreSQL 16 + PostGIS canonique. Voir
+> `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (livrable 213).
+> v6.2 = v6.1 (42 types) + 18 types passe écologique Fondateur
+> (ScaleContext, Phenomenon, EcologicalProcess, RelationType,
+> SamplingEvent, TraitDefinition, TraitValue, Feature, FeatureSet,
+> Inference, Question, Hypothesis, Decision, Recommendation, Scenario,
+> Correlation, EcosystemService, Capability) + 1 Temporal Engine
+> (ResourceDiff) + 4 FAIR/RGPD/SOSA (Sample, Consent, DataSubject,
+> PersistentIdentifier).
+
+- **Vague 0** (~2 semaines) : RFC-0011 + DEC-000022 + 6 ADR + tests
+  contractuels Evidence + contrats d'interface noyau↔profils + audit
+  migration (ADR-004) + registre de traitement RGPD + DPIA
+- **Vague 1** (~4 semaines) : 65 types implémentés (resource + 65 tables,
+  class-table inheritance), migration schéma (ADR-004), benchmark AGE
+  (ADR-003), tranche verticale Essence 360° (chêne sessile, hêtre, pin
+  maritime, douglas, sapin pectiné) + FAIR (DOI, URI persistante,
+  tombstone) + RGPD (Consent, DataSubject, audit log, droit d'accès,
+  anonymisation) + SOSA/SSN (Sample, mapping) + endpoint découverte
+  (OGC API Records)
+- PostgreSQL 16 + PostGIS 3.4 comme vérité canonique (ADR-001)
+- Bitemporalité via **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff + PROV-O, ADR-002)
+- **Vague 2** (~6 semaines) : 16 actions P1 — projections Darwin Core,
+  EML, STAC, SOSA/SSN, ISO 19115, DCAT/GeoDCAT-AP ; web sémantique
+  RDF/JSON-LD/SKOS/SPARQL ; RO-Crate + CWL + Docker (reproductibilité) ;
+  système d'alertes ; CloudEvents + schema registry
+- **Vague 3+** (différé) : 20 actions P2 — recherche full-text +
+  sémantique + faceted ; annotation + peer review ; CARE principles ;
+  i18n ; data lifecycle ; partitioning/sharding/materialized views ;
+  caching Redis ; audit log accès ; DPIA ; Event Sourcing ; Iceberg/Delta
+- Apache AGE pour traversées de graphe — benchmark Vague 1 (ADR-003),
+  Neo4j différé si AGE passe le seuil
+- Identifiants uniques stables et citables (GSIE-K-XXXXXXXXXX) — champ
+  `gsie_id` sur table racine `resource`
+- Neo4j, Elasticsearch, Jena, GraphQL : **différés** (projections
+  régénérables, réintroduits si besoin mesuré)
+- Pipelines d'ingestion (6 niveaux : API REST, téléchargement, OGC,
+  STAC, fichier, publication) — `Distribution.access_method`
+- `Source.source_nature` : data_provider, knowledge_provider, reference,
+  expert_statement, regulatory, model_output
+- Catalogue de sources : `GSIE/RESEARCH/SOURCES/SOURCES_CATALOG.md`
+  (en cours de constitution, 20 subagents)
+- API REST (FastAPI) en Vague 1 — GraphQL différé
+- Interface web de consultation (différée)
+- Export en formats ouverts (JSON, RDF, CSV) — différé
+- ADR-001 à ADR-006 (choix technologiques v6.1)
 
 ### Moteurs
 

@@ -4,8 +4,8 @@
 |---|---|
 | **Livrable** | 205 — Modèle de données scientifique |
 | **Phase** | 2 — Architecture |
-| **Statut** | Draft |
-| **Date de révision** | 2026-07-12 |
+| **Statut** | Draft (annoté par RFC-0011 / DEC-000022 le 2026-07-15 — `evidence_level` direct → `EvidenceAssessment`, entités → profils du métamodèle v6.1, voir `02_RFC/annexes/annexe-205.md`) |
+| **Date de révision** | 2026-07-12 (dernière révision avant annotation) |
 | **Lois fondatrices** | GSIE-CON-002, GSIE-CON-005, GSIE-CON-010 |
 | **Constitutions liées** | Scientifique (S-1 à S-7), Technique (T-6, T-8) |
 | **RFC de référence** | RFC-0003 (GSIE-Net — synchronisation orientée données) |

@@ -4,6 +4,100 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [MÉTAMODÈLE V6.2 — RFC-0011 + DEC-000022 + 6 ADR] - 2026-07-15
+
+Rédaction complète du métamodèle v6.2 de l'Encyclopédie de l'Écosystème
+et soumission à adoption via RFC-0011 + DEC-000022. Le métamodèle
+définit un noyau universel de **65 types** en 5 niveaux, avec
+PostgreSQL 16 + PostGIS comme vérité canonique. Neo4j, Elasticsearch,
+Jena et GraphQL sont différés (projections régénérables, benchmark
+Apache AGE en Vague 1).
+
+La v6.2 enrichit la v6.1 (42 types) avec 18 types issus de la passe
+écologique du Fondateur :
+- ScaleContext (43) — multi-échelle écologique
+- Phenomenon (44) + EcologicalProcess (45) — phénomènes et processus
+- RelationType (46) — classification des prédicats
+- SamplingEvent (47) — hiérarchie d'échantillonnage
+- TraitDefinition (48) + TraitValue (49) — traits fonctionnels
+- Feature (50) + FeatureSet (51) + Inference (52) — IA/ML
+- Question (53) + Hypothesis (54) + Decision (55) + Recommendation (56) + Scenario (57) — raisonnement
+- Correlation (58) — objet de connaissance versionné
+- EcosystemService (59) — concept différé
+- Capability (60) — orchestration moteurs/apps
+- ResourceDiff (61) — GSIE Temporal & Provenance Engine (diff explicite entre revisions)
+- Sample (62) — échantillon physique, mapping SOSA/SSN `sosa:Sample`
+- Consent (63) + DataSubject (64) — conformité RGPD (art. 6 + 9.2.j)
+- PersistentIdentifier (65) — FAIR F1 (DOI, PURL, ORCID, GBIF, Wikidata)
+- + 2 champs : Assertion.rule_subtype, Dataset.purpose
+- + stratification méta-architecturale (niveau 0 : Universe → MetaOntology → Ontology → MetaModel → Profiles → Applications)
+- + section FAIR compliance §15.1 (audit 15 principes : 4/15 OK, cible 10/15 Vague 1, 15/15 Vague 2)
+- + section RGPD §15.2 (art. 6, 7, 9.2.j, 15, 16, 17, 20, 30, 32, 35)
+- + mapping SOSA/SSN §15.3 (W3C/OGC — 14 concepts mappés)
+- + roadmap Vague 2 exhaustive (16 actions P1 + 20 actions P2)
+
+**Documents créés** :
+- `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` — livrable 213 v6.1 (654 lignes, 42 types)
+- `02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md` — RFC principale (430 lignes)
+- `02_RFC/annexes/annexe-302.md` à `annexe-205.md` — 7 annexes de superseding/amendement
+- `03_DECISIONS/DEC-000022.md` — décision d'adoption (Proposé)
+- `GSIE/ARCHITECTURE/ADR-001-racine-resource.md` — class-table inheritance, FK fortes
+- `GSIE/ARCHITECTURE/ADR-002-pg-temporal.md` — GSIE Temporal & Provenance Engine (Revision + Snapshot + ResourceDiff + PROV-O)
+- `GSIE/ARCHITECTURE/ADR-003-age-benchmark.md` — stratégie d'évaluation AGE vs Neo4j
+- `GSIE/ARCHITECTURE/ADR-004-migration-schema.md` — migration knowledge_objects → v6.1
+- `GSIE/ARCHITECTURE/ADR-005-outbox-inbox.md` — transactional outbox pattern
+- `GSIE/ARCHITECTURE/ADR-006-object-storage.md` — interface MinIO/S3 pour DataAsset
+
+**Superseding** (contenu historique conservé intact, CON-010) :
+- Livrable 302 (Knowledge Method) — KnowledgeObject 6 types → Assertion + EvidenceAssessment
+- Livrable 304 (Knowledge Graph Spec) — topologie Neo4j → tables PG + AGE
+- Livrable 309 (Encyclopedia DB Schema) — 4 couches → PG canonique
+- Livrable 310 (Engine Data Socle) — contrats moteurs KnowledgeObject → Assertion
+
+**Amendements** :
+- GSIE-DIR-0008 §2.1/§2.3/§2.4 — Neo4j/Jena/GraphQL différés
+- DEC-000012 — ADR-0008/0009/0010/0011/0012/0013 → ADR-001 à ADR-006
+- DEC-000019 — Vague 0 ajoutée, Vague 1 étendue (42 types)
+- DEC-000020 — transition in-memory → schéma v6.1
+
+**Annotation** : livrable 205 (Scientific Data Model, Draft) —
+evidence_level → EvidenceAssessment, entités → profils v6.1.
+
+**19 corrections intégrées** (5 P0, 8 P1, 6 P2) + 11 arbitrages
+Fondateur additionnels. Statut : **Proposé** — en attente de validation
+du Fondateur. Gate documentaire Vague 0 avant toute implémentation.
+
+---
+
+## [ARCHIVAGE PROPOSITION MÉTAMODÈLE V5] - 2026-07-15
+
+Archivage de la proposition non adoptée de métamodèle v5 ; préparation
+d'une convergence v6.1 avant RFC. Aucun choix d'architecture adopté.
+Les deux documents v5 (`03_DECISIONS/DEC-000022.md` et
+`GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md`) ont été retirés des
+emplacements actifs et archivés intégralement dans
+`22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/` comme ressources historiques non
+normatives. Le numéro DEC-000022 reste disponible pour une future
+décision après RFC.
+
+---
+
+## [VEILLE TECHNOLOGIQUE GSIE — 6 DOMAINES] - 2026-07-15
+
+Rapport de veille technologique couvrant les 6 domaines GSIE (forestier,
+géospatial, IA environnementale, incendies, Unreal Engine, Python
+scientifique). Ajout de `GSIE/RESEARCH/VEILLE_2026-07-15.md`.
+
+Trouvailles principales : ForestFormer3D et SelectAnyTree (segmentation
+d'arbres LiDAR, candidats à évaluer pour succéder/compléter
+SegmentAnyTreeV2), SAGStree et ForestSplat (Gaussian Splatting
+forestier), citation JOSS officielle de ForeFire (DOI 10.21105/joss.08680,
+à référencer pour Ignis), PostGIS 3.6.x (`ST_CoverageClean`,
+`ST_ReclassExact`), Cesium for Unreal v2.28.0 (support UE 5.8, correctif
+`UCesiumGaussianSplatSubsystem`), TorchGeo 0.9.0. Aucune connaissance
+ingérée dans `GSIE/KNOWLEDGE/` — document au stade bibliographie brute,
+non qualifiée A-F par l'Evidence Engine.
+
 ## [PIPELINE INTÉGRÉ EVIDENCE → KNOWLEDGE — SEMAINE 4] - 2026-07-15
 
 ### Tranche verticale prioritaire validée (DEC-000021)

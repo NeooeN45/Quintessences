@@ -4,8 +4,9 @@
 |---|---|
 | **Livrable** | 310 — Engine Data Socle |
 | **Phase** | 3 — Connaissance |
-| **Statut** | Validated |
-| **Date de révision** | 2026-07-13 |
+| **Statut** | Supersédé par RFC-0011 / DEC-000022 (2026-07-15) — contenu conservé pour traçabilité historique (CON-010) |
+| **Date de révision** | 2026-07-13 (dernière révision avant superseding) |
+| **Supersédé par** | RFC-0011 (`02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md`), annexe `02_RFC/annexes/annexe-310.md`, DEC-000022 |
 | **Lois fondatrices** | GSIE-CON-003, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Scientifique (S-6), Technique (T-1, T-2) |
 | **Directive d'ouverture** | GSIE-DIR-0007 + GSIE-DIR-0008 |

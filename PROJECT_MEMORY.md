@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-13 (configuration Centre de Commandement UE5.8 — livrable 211) |
+| **Dernière mise à jour** | 2026-07-15 (Métamodèle v6.2 rédigé — RFC-0011 + DEC-000022 + 6 ADR + livrable 213, 65 types noyau (42 v6.1 + 18 v6.2 écologique + 1 Temporal Engine + 4 FAIR/RGPD/SOSA), superseding 302/304/309/310 + amendement DIR-0008/DEC-012/019/020/021, audit FAIR/RGPD/SOSA, roadmap Vague 2 exhaustive) |
 
 ---
 
@@ -71,6 +71,61 @@ template (Landiras — zone de test Ignis). Plugins Fab à installer
 manuellement : BlueprintWebSocket (gratuit), FluidFlux ($349.99, Hydro).
 Voir `CHANGELOG.md` pour le détail complet.
 
+### Métamodèle de l'Écosystème — statut courant (2026-07-15)
+
+Le métamodèle v6.2 de l'Encyclopédie de l'Écosystème a été rédigé et
+soumis à adoption via RFC-0011 + DEC-000022 (statut **Proposé**). Il
+définit un noyau universel de **65 types** organisés en 5 niveaux (noyau,
+profils, projections, infrastructure, vision), avec PostgreSQL 16 +
+PostGIS comme vérité canonique. Neo4j, Elasticsearch, Jena et GraphQL
+sont différés (projections régénérables, benchmark AGE en Vague 1).
+
+La v6.2 enrichit la v6.1 (42 types) avec 18 types issus de la passe
+écologique du Fondateur : ScaleContext (multi-échelle), Phenomenon +
+EcologicalProcess (phénomènes et processus écologiques), RelationType
+(classification des prédicats), SamplingEvent (hiérarchie
+d'échantillonnage), TraitDefinition + TraitValue (traits fonctionnels),
+Feature + FeatureSet + Inference (IA/ML), Question + Hypothesis +
+Decision + Recommendation + Scenario (couche raisonnement), Correlation
+(objet de connaissance versionné), EcosystemService (concept différé),
+Capability (orchestration moteurs/apps). Plus 2 champs : Assertion.rule_subtype
+et Dataset.purpose.
+
+**Documents produits** :
+- `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (livrable 213 v6.2, 65 types noyau)
+- `02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md` (RFC principale, 430 lignes)
+- `02_RFC/annexes/annexe-302.md` à `annexe-310.md`, `annexe-dir0008.md`,
+  `annexe-dec012-019-020.md`, `annexe-205.md` (7 annexes)
+- `03_DECISIONS/DEC-000022.md` (décision d'adoption, Proposé)
+- `GSIE/ARCHITECTURE/ADR-001-racine-resource.md` à `ADR-006-object-storage.md`
+  (6 ADR)
+
+**Superseding** : livrables 302, 304, 309, 310 (Validated → Supersédé,
+contenu conservé). Amendement : GSIE-DIR-0008 (§2.1/§2.3/§2.4),
+DEC-000012, DEC-000019, DEC-000020. Annotation : livrable 205 (Draft).
+
+**Arbitrages Fondateur** (19 corrections + 11 arbitrages v6.1 + 12 propositions v6.2) :
+65 types acceptés (42 v6.1 + 18 v6.2 écologique + 1 Temporal Engine + 4 FAIR/RGPD/SOSA), racine `resource` unique (class-table inheritance),
+`claim_kind` séparé de `lifecycle_status`, bitemporalité via **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff + PROV-O, ADR-002),
+benchmark AGE en Vague 1, adaptateur Evidence Rust évalue + Python
+enrichit, Vague 0 (gouvernance + RFC + ADR + audit) avant Vague 1
+(65 types + Essence 360° + FAIR + RGPD + SOSA/SSN). Passe écologique v6.2 : ScaleContext,
+Phenomenon, EcologicalProcess, RelationType, SamplingEvent, TraitDefinition,
+TraitValue, Feature, FeatureSet, Inference, Question, Hypothesis, Decision,
+Recommendation, Scenario, Correlation, EcosystemService, Capability.
+Audit FAIR/RGPD/SOSA : Sample (62), Consent (63), DataSubject (64),
+PersistentIdentifier (65). Conformité FAIR §15.1 (4/15 OK → cible 10/15 Vague 1, 15/15 Vague 2).
+Conformité RGPD §15.2 (art. 6 + 9.2.j). Mapping SOSA/SSN §15.3.
+Roadmap Vague 2 exhaustive : 16 actions P1 + 20 actions P2.
+
+**Catalogue de sources** : en cours de constitution par subagents (20
+subagents : 10 domaines + 10 types, 7/20 terminés au 2026-07-15).
+Consolidation prévue dans `GSIE/RESEARCH/SOURCES/SOURCES_CATALOG.md`.
+
+La proposition v5 reste archivée comme ressource non normative
+(`22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/`). Aucune architecture issue du
+brainstorming v5 n'est adoptée.
+
 ### Avancement des livrables
 
 - **Validated** : 9 / 12 (001, 005, 006, 007, 008, 009, 010, 011, 012)
@@ -119,6 +174,7 @@ Voir `CHANGELOG.md` pour le détail complet.
 - `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` — GeoSylva-Unreal (livrable 212, v1.1.0 — SegmentAnyTreeV2 + Crown-BERT + précédents ONF/SDIS/Arbonaut, en attente MVP Ignis)
 - `GSIE/RESEARCH/UNREAL_ENGINE_PRECEDENTS.md` — Fiches scientifiques FIRETWIN, FIRE-VLM, IVSR, Cesium Gaussian Splats, SegmentAnyTreeV2, Crown-BERT
 - `GSIE/RESEARCH/LIDAR_HD_SPECIFICATIONS.md` — Fiche LiDAR HD IGN (11 classes ASPRS+IGN, pipeline PDAL→GDAL→PostGIS, correspondance strates Ignis, bibliothèque IGN_LIDAR_HD_DATASET v4.1.2, implications Unreal/Cesium)
+- `GSIE/RESEARCH/VEILLE_2026-07-15.md` — Veille technologique (6 domaines) : ForestFormer3D, SelectAnyTree, SAGStree, ForestSplat (3DGS forestier), ForeFire (citation JOSS officielle), PostGIS 3.6.x, Cesium for Unreal v2.28.0 (UE 5.8), TorchGeo 0.9.0, limites LLM en écologie (cf. CON-002/CON-004). Aucune connaissance ingérée — bibliographie brute non qualifiée A-F.
 
 ### Branche Ignis (RFC-0004)
 
@@ -262,18 +318,10 @@ code viendra en son temps, subordonné aux fondations.
 plan révisé à 24 semaines / 6 vagues (DEC-000019) est en cours
 d'exécution :
 
-- **Vague 1 — Fondations (semaines 1-4, Python + Rust)** : semaine 1
-  (structure FastAPI + Docker Compose, `GSIE/API/`) et semaine 2
-  (Evidence Engine — cœur Rust + bindings PyO3) disposent de prototypes
-  fonctionnels et de tests unitaires exhaustifs (122 tests Python, 41 tests
-  Rust au dernier relevé). **Gates de stabilisation atteints** : Ruff/mypy
-  strict et Clippy `-D warnings` passent à zéro, CI `.github/workflows/ci.yml`
-  étendue aux jobs Python (lint + type + tests unitaires + tests d'intégration
-  PostGIS/Redis via testcontainers), Rust (clippy + tests) et Docker build.
-  **Reste à clôturer** : validation scientifique des règles de
-  conflits/versionnement et gél du contrat Evidence 1.0. Semaine 3
-  (Knowledge Engine, Rust + PyO3) ne commence qu'après franchissement de ces
-  gates.
+- **Vague 1 — Fondations (semaines 1-4, Python + Rust)** : **clôturée**
+  (DEC-000021). 166 tests au total (55 API + 67 Evidence + 33 Knowledge
+  + 11 pipeline E2E). Ruff + mypy --strict : zéro erreur. Pipeline
+  intégré Evidence → Knowledge validé (tranche verticale prioritaire).
 - **Hub (Centre de Commandement GSIE, UE 5.8)** : environnement
   configuré (voir ci-dessus, livrable 211). Le projet Unreal réel vit
   hors dépôt (`E:\GSIE-Centre-Commandement`, dépôt GitHub
