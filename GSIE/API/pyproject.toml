@@ -23,6 +23,7 @@ dependencies = [
     "asyncpg==0.30.0",
     "sqlalchemy[asyncio]==2.0.36",
     "geoalchemy2==0.16.0",
+    "alembic==1.14.0",
 
     # Cache & temps réel
     "redis[hiredis]==5.2.1",
@@ -91,6 +92,10 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH"]
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/versions/*" = ["E501"]  # Migrations : lignes longues inévitables
+"src/gsie_api/seeds/*_data.py" = ["E501"]  # Données de référence : descriptions longues
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends"]

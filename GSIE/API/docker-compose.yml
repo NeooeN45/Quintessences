@@ -10,13 +10,23 @@
 #   docker compose down           # arrêter
 
 services:
-  # PostgreSQL + PostGIS 3.4
+  # PostgreSQL 16 + PostGIS 3.4 + Apache AGE (graphe Cypher)
+  # Image personnalisée construite depuis Dockerfile.db
   db:
-    image: postgis/postgis:16-3.4
+    build:
+      context: .
+      dockerfile: Dockerfile.db
     environment:
       POSTGRES_USER: ${GSIE_DB_USER:-gsie}
       POSTGRES_PASSWORD: ${GSIE_DB_PASSWORD:?GSIE_DB_PASSWORD requis dans .env}
       POSTGRES_DB: ${GSIE_DB_NAME:-gsie}
+      # Apache AGE requiert shared_preload_libraries
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    command: >
+      postgres
+      -c shared_preload_libraries=age
+      -c search_path=ag_catalog,public,tiger
+      -c max_connections=100
     ports:
       - "127.0.0.1:5432:5432"
     volumes:

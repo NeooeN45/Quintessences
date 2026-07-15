@@ -1,0 +1,34 @@
+# Dockerfile DB — PostgreSQL 16 + PostGIS 3.4 + Apache AGE
+# Construit Apache AGE par-dessus l'image postgis/postgis officielle.
+# AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
+
+FROM postgis/postgis:16-3.4
+
+# Arguments de build pour la version d'Apache AGE
+ARG AGE_VERSION=1.5.0
+ARG AGE_PACKAGE=apache-age-1.5.0
+
+# Installation des dépendances de compilation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    ca-certificates \
+    postgresql-server-dev-16 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Téléchargement et compilation d'Apache AGE
+RUN curl -LJO "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
+    && tar -xvzf "${AGE_PACKAGE}-src.tar.gz" \
+    && cd "${AGE_PACKAGE}" \
+    && make PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config install \
+    && cd .. \
+    && rm -rf "${AGE_PACKAGE}" "${AGE_PACKAGE}-src.tar.gz"
+
+# Nettoyage des dépendances de compilation (image plus légère)
+RUN apt-get purge -y build-essential postgresql-server-dev-16 curl \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configuration PostgreSQL pour Apache AGE
+# shared_preload_libraries est requis pour AGE
+RUN echo "shared_preload_libraries = 'age'" >> /usr/share/postgresql/postgresql.conf.sample
