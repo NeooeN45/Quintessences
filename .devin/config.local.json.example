@@ -1,0 +1,26 @@
+{
+  "_comment": "Copier ce fichier en config.local.json et remplir avec vos clés réelles. config.local.json est gitignored.",
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@1.2.0"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_VOTRE_TOKEN_GITHUB_ICI"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres@0.6.2"],
+      "env": {
+        "DATABASE_URL": "postgresql://gsie_readonly:MOT_DE_PASSE_ICI@localhost:5432/gsie"
+      }
+    },
+    "devin": {
+      "url": "https://mcp.devin.ai/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer cog_VOTRE_CLE_API_DEVIN_ICI"
+      }
+    }
+  }
+}

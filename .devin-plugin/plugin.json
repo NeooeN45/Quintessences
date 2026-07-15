@@ -1,0 +1,24 @@
+{
+  "name": "gsie",
+  "version": "1.0.0",
+  "description": "Skills GSIE pour Quintessences — 14 moteurs, API FastAPI, PostGIS, Unreal Engine 5.8, Kotlin Android, Python scientifique, tests, sécurité, gouvernance",
+  "author": {
+    "name": "Quintessences",
+    "email": "dev@quintessences.local"
+  },
+  "homepage": "https://github.com/NeooeN45/Quintessences",
+  "repository": "https://github.com/NeooeN45/Quintessences",
+  "license": "MIT",
+  "keywords": [
+    "gsie",
+    "forest",
+    "gis",
+    "postgis",
+    "fastapi",
+    "unreal-engine",
+    "kotlin",
+    "ign",
+    "lidar",
+    "environmental"
+  ]
+}

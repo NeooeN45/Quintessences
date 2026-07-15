@@ -1,0 +1,48 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "^(edit|write)$",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python -c \"import os,sys,subprocess,pathlib; root=os.environ.get('DEVIN_PROJECT_DIR','.'); script=str(pathlib.Path(root)/'.devin'/'scripts'/'guard_locked.py'); data=sys.stdin.buffer.read(); r=subprocess.run([sys.executable,script],input=data,capture_output=True); sys.stdout.buffer.write(r.stdout); sys.exit(r.returncode)\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "exec",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python -c \"import os,sys,subprocess,pathlib; root=os.environ.get('DEVIN_PROJECT_DIR','.'); script=str(pathlib.Path(root)/'.devin'/'scripts'/'pre_commit_gsie.py'); data=sys.stdin.buffer.read(); r=subprocess.run([sys.executable,script],input=data,capture_output=True); sys.stdout.buffer.write(r.stdout); sys.exit(r.returncode)\"",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "^(edit|write)$",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python -c \"import os,sys,subprocess,pathlib; root=os.environ.get('DEVIN_PROJECT_DIR','.'); script=str(pathlib.Path(root)/'.devin'/'scripts'/'audit_log.py'); data=sys.stdin.buffer.read(); subprocess.run([sys.executable,script],input=data)\"",
+          "timeout": 3
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python -c \"import os,sys,subprocess,pathlib; root=os.environ.get('DEVIN_PROJECT_DIR','.'); script=str(pathlib.Path(root)/'.devin'/'scripts'/'inject_context.py'); r=subprocess.run([sys.executable,script],capture_output=True); sys.stdout.buffer.write(r.stdout)\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}
