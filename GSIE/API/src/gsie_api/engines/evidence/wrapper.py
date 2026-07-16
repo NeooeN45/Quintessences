@@ -25,8 +25,10 @@ logger = get_logger("gsie_api.evidence.wrapper")
 _settings = get_settings()
 
 # Tentative d'import du module Rust compilé
+# L'override mypy dans pyproject.toml (ignore_missing_imports) gère l'absence
+# de la wheel Rust en CI (job python-quality sans build Rust)
 try:
-    import gsie_evidence as _rust_engine  # type: ignore[import-untyped]
+    import gsie_evidence as _rust_engine
 
     _RUST_AVAILABLE = True
     logger.info("evidence_engine_rust_loaded", version=_rust_engine.EvidenceEngine.version())

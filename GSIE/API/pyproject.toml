@@ -104,3 +104,9 @@ extend-immutable-calls = ["fastapi.Depends"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+# Module Rust PyO3 — wheel gsie_evidence non installée en CI lint (job python-quality)
+# Installée uniquement dans l'image Docker (Dockerfile builder stage)
+[[tool.mypy.overrides]]
+module = "gsie_evidence"
+ignore_missing_imports = true
