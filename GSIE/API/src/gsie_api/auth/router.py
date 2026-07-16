@@ -90,9 +90,18 @@ async def login(request: Request, response: Response, credentials: LoginRequest)
     if not _settings.auth_dev_login_enabled:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
+    # Audit — IP et User-Agent pour traçabilité (CON-005, OWASP A09)
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("User-Agent", "unknown")
+
     user = _authenticate_user(credentials.username, credentials.password)
     if user is None:
-        logger.warning("login_failed", username=credentials.username)
+        logger.warning(
+            "login_failed",
+            username=credentials.username,
+            client_ip=client_ip,
+            user_agent=user_agent,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -105,7 +114,12 @@ async def login(request: Request, response: Response, credentials: LoginRequest)
     )
     refresh_token = create_refresh_token(subject=credentials.username)
 
-    logger.info("login_success", username=credentials.username)
+    logger.info(
+        "login_success",
+        username=credentials.username,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
 
     return TokenResponse(
         access_token=access_token,
@@ -132,7 +146,7 @@ async def refresh_token(request: RefreshRequest) -> TokenResponse:
     access_token = create_access_token(subject=username)
     new_refresh_token = create_refresh_token(subject=username)
 
-    logger.info("token_refreshed", username=username)
+    logger.info("token_refreshed", username=username, jti=payload.get("jti"))
 
     return TokenResponse(
         access_token=access_token,

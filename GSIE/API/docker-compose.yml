@@ -79,8 +79,12 @@ services:
 
   # API FastAPI — Gunicorn + UvicornWorker
   # Durcissement : read-only rootfs, no-new-privileges, cap_drop ALL
+  # Context = racine du projet (le Dockerfile COPY des fichiers depuis GSIE/API/
+  # et GSIE/ENGINES/EVIDENCE_ENGINE/rust/)
   api:
-    build: .
+    build:
+      context: ../..
+      dockerfile: GSIE/API/Dockerfile
     ports:
       - "127.0.0.1:8000:8000"
     environment:
@@ -92,11 +96,20 @@ services:
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
       GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
       GSIE_RATE_LIMIT_ENABLED: ${GSIE_RATE_LIMIT_ENABLED:-true}
+      # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
+      GSIE_JWT_PRIVATE_KEY_PATH: /keys/private.pem
+      GSIE_JWT_PUBLIC_KEY_PATH: /keys/public.pem
+      GSIE_AUTH_DEV_LOGIN_ENABLED: ${GSIE_AUTH_DEV_LOGIN_ENABLED:-true}
+      GSIE_AUTH_DEV_USERNAME: ${GSIE_AUTH_DEV_USERNAME:-admin}
+      GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:?GSIE_AUTH_DEV_PASSWORD requis dans .env}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      # Clés JWT RS256 — montées en lecture seule depuis le host
+      - ./keys:/keys:ro
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 30s

@@ -51,6 +51,9 @@ RUN pip install --no-cache-dir --upgrade pip uv
 COPY GSIE/API/pyproject.toml GSIE/API/README.md ./
 COPY GSIE/API/gunicorn.conf.py ./
 COPY GSIE/API/src/ src/
+COPY GSIE/API/alembic/ alembic/
+COPY GSIE/API/alembic.ini ./
+COPY GSIE/API/docker/ docker/
 RUN uv pip install --system .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
@@ -71,6 +74,12 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=gsie:gsie --from=builder /build/api/src/ ./src/
 COPY --chown=gsie:gsie --from=builder /build/api/pyproject.toml /build/api/gunicorn.conf.py ./
+# Alembic — migrations du schéma (lancées au démarrage par entrypoint.sh)
+COPY --chown=gsie:gsie --from=builder /build/api/alembic/ ./alembic/
+COPY --chown=gsie:gsie --from=builder /build/api/alembic.ini ./
+# Script d'entrée — migrations Alembic puis démarrage Gunicorn
+COPY --chown=gsie:gsie GSIE/API/docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 USER gsie
 
@@ -78,6 +87,8 @@ EXPOSE 8000
 
 # Gunicorn + SecureUvicornWorker (sans header Server, OWASP A05)
 # Config dans gunicorn.conf.py (workers, keep-alive, max-requests, timeouts)
+# entrypoint.sh lance les migrations Alembic avant Gunicorn
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["gunicorn", "gsie_api.app:app", \
      "--config", "gunicorn.conf.py", \
      "-k", "gsie_api.worker.SecureUvicornWorker"]

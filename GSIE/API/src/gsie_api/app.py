@@ -90,7 +90,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Startup :
     - OpenTelemetry instrumentation si otel_enabled=True (CON-005)
-    - Graceful shutdown : ferme proprement les connexions DB et Redis
+    - WebSocket : subscriber Redis + heartbeat
+    - Graceful shutdown : ferme proprement les connexions DB, Redis et WebSocket
     """
     setup_logging(_settings.log_level, _settings.environment)
     logger.info(
@@ -104,9 +105,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if _settings.otel_enabled:
         _setup_opentelemetry(app)
 
+    # WebSocket — démarrer le subscriber Redis + heartbeat
+    from gsie_api.websocket.manager import manager
+
+    await manager.start_redis_subscriber()
+    await manager.start_heartbeat()
+
     yield
     logger.info("api_stopping")
-    # Graceful shutdown — ferme les pools de connexions (P0 résilience)
+    # Graceful shutdown — ferme WebSocket, pools de connexions (P0 résilience)
+    try:
+        await manager.shutdown()
+    except Exception as exc:
+        logger.error(
+            "ws_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
     try:
         from gsie_api.infrastructure.database import engine
         from gsie_api.infrastructure.redis_client import redis_pool
@@ -257,21 +272,7 @@ def create_app() -> FastAPI:
             ),
         )
 
-    # Startup : démarrer le subscriber Redis + heartbeat WebSocket
-    @app.on_event("startup")
-    async def _startup_ws_background() -> None:
-        from gsie_api.websocket.manager import manager
-
-        await manager.start_redis_subscriber()
-        await manager.start_heartbeat()
-
-    # Shutdown : arrêter proprement les tâches de fond
-    @app.on_event("shutdown")
-    async def _shutdown_ws_background() -> None:
-        from gsie_api.websocket.manager import manager
-
-        await manager.shutdown()
-
+    # Startup/shutdown WebSocket gérés par le lifespan (plus de on_event déprécié)
     return app
 
 

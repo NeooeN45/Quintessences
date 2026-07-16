@@ -1,0 +1,79 @@
+# .dockerignore — racine du projet (context de build Docker)
+# Exclut tout ce qui n'est pas nécessaire à l'image API + DB
+
+# Git
+.git
+.gitignore
+
+# Secrets — ne jamais inclure dans le contexte de build
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python — caches et venvs
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+**/*.egg-info/
+**/dist/
+**/build/
+**/htmlcov/
+**/.coverage
+
+# Rust — target de build (la wheel est recompilée dans le Docker)
+**/target/
+
+# Tests — non inclus dans l'image de production
+GSIE/API/tests/
+
+# Scripts Docker — nécessaires au build (entrypoint, generate-jwt-keys)
+# Ne PAS exclure GSIE/API/docker/
+
+# Documentation — sauf README de l'API
+**/*.md
+!GSIE/API/README.md
+
+# Clés JWT — générées par script, jamais dans l'image
+**/keys/
+**/*.pem
+
+# Repos externes — non pertinents pour l'image API
+apps/
+Forge/
+
+# Éditeurs et OS
+.vscode/
+.idea/
+.obsidian/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Dossiers du projet non nécessaires au build Docker
+00_CONSTITUTION/
+01_DIRECTIVES/
+02_RFC/
+03_DECISIONS/
+05_SPECIFICATIONS/
+18_FINANCING/
+19_LEGAL/
+20_PARTNERSHIPS/
+21_EXPERIMENTS/
+22_PROJECT_MEMORY/
+23_QUALITY_MANAGEMENT/
+
+# Archives et temporaires
+**/tmp/
+**/*.tmp
+**/*.log
+**/*.zip
+Quintessences/

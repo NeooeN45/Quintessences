@@ -67,15 +67,25 @@ une ligne dans sa table spécifique (class-table inheritance).
 ## Démarrage rapide
 
 ```bash
-# 1. Copier la configuration
+# 1. Copier la configuration et définir les secrets
 cp .env.example .env
+# Éditer .env : GSIE_DB_PASSWORD, GSIE_REDIS_PASSWORD, GSIE_AUTH_DEV_PASSWORD
 
-# 2. Lancer les services (PostgreSQL+PostGIS, Redis, API)
+# 2. (Optionnel) Générer les clés JWT RS256 pour la production
+./docker/generate-jwt-keys.sh
+
+# 3. Lancer les services (PostgreSQL+PostGIS, Redis, API)
+#    Les migrations Alembic sont lancées automatiquement au démarrage (entrypoint.sh)
 docker compose up -d
 
-# 3. Vérifier l'API
+# 4. Vérifier l'API
 curl http://localhost:8000/health
 curl http://localhost:8000/docs
+
+# 5. Authentification (dev)
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your-dev-password"}'
 ```
 
 ## Développement local (sans Docker pour l'API)
