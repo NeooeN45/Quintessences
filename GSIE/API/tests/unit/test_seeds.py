@@ -64,9 +64,9 @@ class TestBotanicalGenres:
         for g in GENRES:
             nom = g["nom_scientifique"]
             famille = g["famille_nom"]
-            assert famille in famille_noms, (
-                f"Genre {nom} référence une famille inexistante : {famille}"
-            )
+            assert (
+                famille in famille_noms
+            ), f"Genre {nom} référence une famille inexistante : {famille}"
 
 
 class TestBotanicalEssences:
@@ -88,9 +88,9 @@ class TestBotanicalEssences:
     def test_essences_genre_exists(self) -> None:
         genre_noms = {g["nom_scientifique"] for g in GENRES}
         for e in ESSENCES:
-            assert e["genre_nom"] in genre_noms, (
-                f"Essence {e['nom_scientifique']} référence un genre inexistant : {e['genre_nom']}"
-            )
+            assert (
+                e["genre_nom"] in genre_noms
+            ), f"Essence {e['nom_scientifique']} référence un genre inexistant : {e['genre_nom']}"
 
     @pytest.mark.parametrize(
         "categorie",
@@ -157,9 +157,9 @@ class TestHabitatsNatura2000:
     def test_habitats_categories_valid(self) -> None:
         valid_categories = {"Forêts", "Landes", "Pelouses", "Tourbières", "Prairies", "Buissons"}
         for h in HABITATS_NATURA2000:
-            assert h["categorie"] in valid_categories, (
-                f"Habitat {h['code_eur28']} catégorie invalide : {h['categorie']}"
-            )
+            assert (
+                h["categorie"] in valid_categories
+            ), f"Habitat {h['code_eur28']} catégorie invalide : {h['categorie']}"
 
 
 class TestStationsForestieres:
@@ -180,9 +180,9 @@ class TestStationsForestieres:
 
     def test_stations_have_essences(self) -> None:
         for s in STATIONS_FORESTIERES:
-            assert len(s["essences_adaptees"]) > 0, (
-                f"Station {s['code_station']} sans essence adaptée"
-            )
+            assert (
+                len(s["essences_adaptees"]) > 0
+            ), f"Station {s['code_station']} sans essence adaptée"
 
 
 class TestGroupesEcologiques:
@@ -203,9 +203,9 @@ class TestGroupesEcologiques:
 
     def test_groupes_have_especes(self) -> None:
         for g in GROUPES_ECOLOGIQUES:
-            assert len(g["especes_caracteristiques"]) >= 3, (
-                f"Groupe {g['nom_groupe']} avec trop peu d'espèces"
-            )
+            assert (
+                len(g["especes_caracteristiques"]) >= 3
+            ), f"Groupe {g['nom_groupe']} avec trop peu d'espèces"
 
     def test_groupes_indicateurs_diverse(self) -> None:
         indicateurs = {g["indicateur"] for g in GROUPES_ECOLOGIQUES}

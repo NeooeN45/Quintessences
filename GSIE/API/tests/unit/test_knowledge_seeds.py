@@ -50,9 +50,9 @@ class TestKnowledgeObjectsFields:
     def test_all_have_required_fields(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
             missing = REQUIRED_FIELDS - set(k.keys())
-            assert not missing, (
-                f"Connaissance {k.get('connaissance_id', '?')} champs manquants : {missing}"
-            )
+            assert (
+                not missing
+            ), f"Connaissance {k.get('connaissance_id', '?')} champs manquants : {missing}"
 
     def test_type_valid(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
@@ -60,15 +60,15 @@ class TestKnowledgeObjectsFields:
 
     def test_evidence_level_valid(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
-            assert k["evidence_level"] in VALID_EVIDENCE, (
-                f"K {k['connaissance_id']} evidence_level invalide : {k['evidence_level']}"
-            )
+            assert (
+                k["evidence_level"] in VALID_EVIDENCE
+            ), f"K {k['connaissance_id']} evidence_level invalide : {k['evidence_level']}"
 
     def test_statut_valid(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
-            assert k["statut"] in VALID_STATUTS, (
-                f"K {k['connaissance_id']} statut invalide : {k['statut']}"
-            )
+            assert (
+                k["statut"] in VALID_STATUTS
+            ), f"K {k['connaissance_id']} statut invalide : {k['statut']}"
 
     def test_version_positive(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
