@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, String, func, text
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -65,7 +65,6 @@ class ResourceModel(Base, TimestampMixin):
         JSONB,
         nullable=False,
         default=dict,
-        server_default=text("'{}'::jsonb"),
     )
     # Soft delete (CON-010 — jamais DELETE physique)
     deleted_at: Mapped[datetime | None] = mapped_column(
