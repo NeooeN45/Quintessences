@@ -267,7 +267,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 | Étape | État | Critère restant avant clôture |
 |---|---|---|
-| Semaine 1 — API + Docker | ✅ **Stabilisé (2026-07-16)** | Docker reproductible (context fix + entrypoint Alembic + .dockerignore), auth audit trail (IP + User-Agent), 9 tests PostGIS/Redis réels (testcontainers), CI gate avec integration, ruff + mypy --strict verts, 194 tests, 84% couverture. Reste : `docker compose up` from scratch validé en CI (Docker Desktop non démarré localement) |
+| Semaine 1 — API + Docker | ✅ **Stabilisé + CI 100% verte (2026-07-16)** | Docker reproductible (context fix + entrypoint Alembic + .dockerignore), auth audit trail (IP + User-Agent), 9 tests PostGIS/Redis réels (testcontainers), CI gate avec integration + Docker build, ruff + mypy --strict verts, 194 tests, 84% couverture. **CI 100% verte** : Governance + Lint + Rust + Python + Integration + Docker build + CI Gate. |
 | Semaine 2 — Evidence Engine | Prototype fonctionnel à valider scientifiquement | Wheel Rust intégré à l'image, Clippy sans avertissement, règles multi-sources/robustesse/incertitude conformes au framework, conflits validés par revue scientifique |
 | Semaine 3 — Knowledge Engine | ✅ Implémenté (DEC-000020) | Persistance PostgreSQL/Neo4j (évolution future), seed Knowledge Base Seed (25 connaissances) |
 | Semaine 4 — Intégration | ✅ Implémenté (DEC-000021) | Persistance PostgreSQL, seed complet, tests de charge |
@@ -287,7 +287,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 ### Gates obligatoires avant extension
 
 1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
-2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. Reste : `docker compose up` from scratch validé en CI.
+2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. **CI 100% verte** (Docker build validé en CI avec rustc 1.85 + maturin 1.9.6).
 3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
 4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte.
 5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout.

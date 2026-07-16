@@ -4,6 +4,29 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — CI 100% VERTE] - 2026-07-16
+
+### CI GitHub Actions — tous jobs passent
+
+- **Governance Guard** — DEC-000019/020/021/023 : ajout champ Décideur manquant
+- **Python lint + type + test** — ruff 0.8.4 (pin CI), mypy override gsie_evidence,
+  aiosqlite dev dep, skip tests Rust fallback sans wheel, server_default JSONB
+  portable (retiré du modèle, gardé dans Alembic)
+- **Python integration tests** — drop postgis_tiger_geocoder extension (conflit
+  table place avec PlaceModel)
+- **Docker build** — rustc 1.80→1.85 (edition2024 dépendances transitives),
+  maturin 1.9.6 pin (compatible rustc 1.85)
+- **CI Gate** — bloque merge si un job échoue
+
+### Métriques
+
+- 194 tests unitaires passent, 79 skipped, 84% couverture
+- 9 tests integration PostGIS/Redis passent (testcontainers)
+- ruff + mypy --strict verts
+- Docker build reproductible (rustc 1.85 + maturin 1.9.6)
+
+---
+
 ## [PHASE 4 — VAGUE 1 : STABILISATION DOCKER + AUTH + TESTS POSTGIS] - 2026-07-16
 
 ### Gate 2 — Docker reproductible

@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-16 (Stabilisation Vague 1 — Docker reproductible + auth audit trail + 9 tests PostGIS/Redis réels, 194 tests, 84% couverture, CI gate avec integration, ruff + mypy --strict verts) |
+| **Dernière mise à jour** | 2026-07-16 (CI 100% verte — 8/8 jobs passent : Governance + Lint + Rust + Python + Integration PostGIS/Redis + Docker build + CI Gate. 194 tests, 84% couverture, ruff + mypy --strict verts. Docker reproductible rustc 1.85 + maturin 1.9.6) |
 
 ---
 
