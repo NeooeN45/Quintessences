@@ -549,3 +549,104 @@ class Permission(StrEnum):
     delete = "delete"
     export = "export"
     admin = "admin"
+
+
+# --- Enums métier (types 74-79 — audit métier ONF/CNPF) ---
+
+class ManagementPlanType(StrEnum):
+    """Type de plan de gestion forestier."""
+    psg = "psg"  # Plan Simple de Gestion (CNPF)
+    amf = "amf"  # Aménagement Forestier (ONF)
+    rtg = "rtg"  # Règlement Type de Gestion
+    custom = "custom"
+
+
+class PlanStatus(StrEnum):
+    """Statut d'un plan de gestion."""
+    draft = "draft"
+    submitted = "submitted"
+    approved = "approved"
+    active = "active"
+    revision = "revision"
+    expired = "expired"
+    cancelled = "cancelled"
+
+
+class InterventionType(StrEnum):
+    """Type d'intervention sylvicole."""
+    planting = "planting"
+    thinning = "thinning"
+    clear_cut = "clear_cut"
+    selective_cut = "selective_cut"
+    shelterwood = "shelterwood"
+    coppicing = "coppicing"
+    pruning = "pruning"
+    clearing = "clearing"
+    fertilization = "fertilization"
+    drainage = "drainage"
+    road_work = "road_work"
+    protection = "protection"
+    inventory = "inventory"
+    other = "other"
+
+
+class InterventionStatus(StrEnum):
+    """Statut d'une intervention."""
+    planned = "planned"
+    scheduled = "scheduled"
+    in_progress = "in_progress"
+    completed = "completed"
+    cancelled = "cancelled"
+    delayed = "delayed"
+
+
+class EconomicCategory(StrEnum):
+    """Catégorie économique."""
+    cost = "cost"
+    revenue = "revenue"
+    subsidy = "subsidy"
+    investment = "investment"
+    market_price = "market_price"
+
+
+class RegulationDomain(StrEnum):
+    """Domaine réglementaire."""
+    forest_code = "forest_code"
+    psg_obligations = "psg_obligations"
+    natura_2000 = "natura_2000"
+    water_protection = "water_protection"
+    biodiversity_protection = "biodiversity_protection"
+    urban_planning = "urban_planning"
+    environmental_impact = "environmental_impact"
+    other = "other"
+
+
+class ComplianceStatus(StrEnum):
+    """Statut de conformité réglementaire."""
+    compliant = "compliant"
+    non_compliant = "non_compliant"
+    pending_check = "pending_check"
+    waiver = "waiver"
+    not_applicable = "not_applicable"
+
+
+class OutcomeStatus(StrEnum):
+    """Statut du suivi de résultat (post-recommandation)."""
+    pending = "pending"
+    in_progress = "in_progress"
+    achieved = "achieved"
+    partially_achieved = "partially_achieved"
+    not_achieved = "not_achieved"
+    abandoned = "abandoned"
+
+
+class AdministrativeLevel(StrEnum):
+    """Niveau d'unité administrative."""
+    national = "national"
+    regional = "regional"
+    departmental = "departmental"
+    forest_domain = "forest_domain"  # Forêt domaniale
+    triage = "triage"
+    canton = "canton"
+    parcel = "parcel"  # Parcelle cadastrale
+    series = "series"  # Série forestière

@@ -15,13 +15,16 @@ from gsie_api.resources.validators import validate_resource_data
 class TestResourceTypes:
     """Tests du registry des types."""
 
-    def test_should_list_69_types_when_called(self) -> None:
+    def test_should_list_76_types_when_called(self) -> None:
         types = ResourceService.list_types()
-        assert len(types) == 69
+        assert len(types) == 76
         assert "assertion" in types
         assert "observation" in types
         assert "concept" in types
         assert "ecological_state" in types
+        assert "management_plan" in types
+        assert "intervention" in types
+        assert "outcome_tracking" in types
 
     def test_should_return_sorted_types(self) -> None:
         types = ResourceService.list_types()

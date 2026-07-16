@@ -87,6 +87,16 @@ _ENUMS: list[tuple[str, list[str]]] = [
     ("terrain_session_type", ["inventory", "martelage", "monitoring", "diagnosis", "research", "calibration"]),
     ("sync_status", ["synced", "partial", "pending", "failed"]),
     ("permission", ["read", "write", "delete", "admin", "rgpd_manager"]),
+    # Enums métier (types 74-80 — audit ONF/CNPF)
+    ("management_plan_type", ["psg", "amf", "rtg", "custom"]),
+    ("plan_status", ["draft", "submitted", "approved", "active", "revision", "expired", "cancelled"]),
+    ("intervention_type", ["planting", "thinning", "clear_cut", "selective_cut", "shelterwood", "coppicing", "pruning", "clearing", "fertilization", "drainage", "road_work", "protection", "inventory", "other"]),
+    ("intervention_status", ["planned", "scheduled", "in_progress", "completed", "cancelled", "delayed"]),
+    ("economic_category", ["cost", "revenue", "subsidy", "investment", "market_price"]),
+    ("regulation_domain", ["forest_code", "psg_obligations", "natura_2000", "water_protection", "biodiversity_protection", "urban_planning", "environmental_impact", "other"]),
+    ("compliance_status", ["compliant", "non_compliant", "pending_check", "waiver", "not_applicable"]),
+    ("outcome_status", ["pending", "in_progress", "achieved", "partially_achieved", "not_achieved", "abandoned"]),
+    ("administrative_level", ["national", "regional", "departmental", "forest_domain", "triage", "canton", "parcel", "series"]),
 ]
 
 
