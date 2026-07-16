@@ -123,7 +123,7 @@ class ResourceService:
         """Ajoute un ResourceDiff à une Revision."""
         resource_diff = ResourceDiffModel(
             id=uuid4(),
-            revision_id=revision.id,
+            to_revision_id=revision.id,
             field_changes=diff_data.get("field_changes", []),
             added_relations=diff_data.get("added_relations", []),
             removed_relations=diff_data.get("removed_relations", []),
@@ -230,9 +230,9 @@ class ResourceService:
                      type=request.type, gsie_id=gsie_id)
         await self._broadcast_event(
             EventType.resource_created, resource.id, request.type,
-            {"gsie_id": gsie_id, **request.data},
+            {"gsie_id": gsie_id, **safe_data},
         )
-        return self._to_resource_read(resource, request.data)
+        return await self._build_resource_read(resource)
 
     async def _insert_resource(
         self, type_name: str, gsie_id: str, model_cls: type, safe_data: dict[str, Any]
