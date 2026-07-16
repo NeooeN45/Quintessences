@@ -115,7 +115,9 @@ async def ws_hub(
     channel_list = channels.split(",") if channels else None
     validated = _validate_channels(channel_list)
 
-    await manager.connect(websocket, validated)
+    accepted = await manager.connect(websocket, validated)
+    if not accepted:
+        return
     ws_id = id(websocket)
 
     try:
@@ -159,7 +161,9 @@ async def ws_events(websocket: WebSocket) -> None:
     if user is None:
         return
 
-    await manager.connect(websocket, ["all"])
+    accepted = await manager.connect(websocket, ["all"])
+    if not accepted:
+        return
     ws_id = id(websocket)
 
     try:

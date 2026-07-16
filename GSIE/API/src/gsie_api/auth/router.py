@@ -13,9 +13,7 @@ from datetime import UTC
 from typing import Annotated, TypedDict
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from gsie_api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, VerifyResponse
 from gsie_api.core.auth import (
@@ -29,7 +27,8 @@ from gsie_api.core.logging import get_logger
 
 _settings = get_settings()
 logger = get_logger("gsie_api.auth.router")
-_limiter = Limiter(key_func=get_remote_address)
+
+from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -85,7 +84,7 @@ def _authenticate_user(username: str, password: str) -> DevUser | None:
     ),
 )
 @_limiter.limit("20/minute")
-async def login(request: Request, credentials: LoginRequest) -> TokenResponse:
+async def login(request: Request, response: Response, credentials: LoginRequest) -> TokenResponse:
     """Authentifie un utilisateur de développement et retourne les tokens JWT."""
     if not _settings.auth_dev_login_enabled:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")

@@ -12,11 +12,9 @@ Sécurité : auth JWT obligatoire sur tous les endpoints (OWASP A01).
 """
 
 from typing import Annotated, Any
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
@@ -33,22 +31,34 @@ from gsie_api.resources.service import ResourceService
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
-_limiter = Limiter(key_func=get_remote_address)
+# Réutiliser le limiter global (storage_uri Redis configuré)
+# — ne pas instancier un Limiter local (serait memory://, non distribué)
+from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 
 # Type aliases pour lisibilité
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
+# Namespace UUID fixe pour générer des author_id déterministes depuis les usernames
+# (login dev émet "admin" pas un UUID — uuid5 garantit la traçabilité CON-010)
+_GSIE_AUTHOR_NAMESPACE = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
 
 def _extract_author_id(user: dict[str, Any]) -> UUID | None:
-    """Extrait l'UUID de l'utilisateur depuis le payload JWT."""
+    """Extrait l'UUID de l'utilisateur depuis le payload JWT.
+
+    Le subject JWT peut être un UUID (DB users) ou un username (dev login).
+    Si ce n'est pas un UUID valide, on génère un UUID déterministe via uuid5
+    (namespace GSIE + username) pour garantir la traçabilité (CON-010).
+    """
     subject_claim = user.get("sub")
-    if subject_claim:
-        try:
-            return UUID(subject_claim)
-        except (ValueError, TypeError):
-            return None
-    return None
+    if not subject_claim:
+        return None
+    try:
+        return UUID(subject_claim)
+    except (ValueError, TypeError):
+        # subject est un username (ex: "admin") — UUID déterministe
+        return UUID(uuid5(_GSIE_AUTHOR_NAMESPACE, subject_claim))
 
 
 @router.get(

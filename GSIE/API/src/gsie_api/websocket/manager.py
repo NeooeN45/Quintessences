@@ -4,18 +4,27 @@ Chaque client peut s'abonner à des canaux :
 - Par type de resource (ex. "phenomenon", "observation", "alert")
 - Canal global "all" pour tous les events
 
-Redis Pub/Sub assure le fan-out entre les workers Gunicorn.
+Redis Pub/Sub assure le fan-out entre les workers Gunicorn :
+- publish() diffuse les events locaux vers les autres workers
+- subscribe() écoute les events des autres workers et les redistribue localement
+
+Sécurité :
+- Plafond de connexions (ws_max_connections) pour éviter l'OOM
+- Heartbeat serveur (ws_heartbeat_interval) pour détecter les connexions mortes
 """
 
+import asyncio
 import json
 from collections import defaultdict
 from typing import Any
 
 from fastapi import WebSocket
 
+from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
 
 logger = get_logger("gsie_api.websocket.manager")
+_settings = get_settings()
 
 
 class ConnectionManager:
@@ -28,7 +37,9 @@ class ConnectionManager:
     def __init__(self) -> None:
         self._connections: dict[WebSocket, set[str]] = {}
         self._channels: dict[str, set[WebSocket]] = defaultdict(set)
-        self._redis = None  # Initialisé lazy si Redis configuré
+        self._redis = None
+        self._pubsub_task: asyncio.Task | None = None
+        self._heartbeat_task: asyncio.Task | None = None
 
     async def _get_redis(self):
         """Récupère la connexion Redis (lazy init)."""
@@ -41,8 +52,99 @@ class ConnectionManager:
                 logger.warning("redis_unavailable_ws_fanout_degraded", exc_info=True)
         return self._redis
 
-    async def connect(self, websocket: WebSocket, channels: list[str] | None = None) -> None:
-        """Accepte une connexion WebSocket et l'abonne à des canaux."""
+    async def start_redis_subscriber(self) -> None:
+        """Démarre l'écoute Redis Pub/Sub pour le fan-out inter-workers.
+
+        Sans cette étape, les events publiés par d'autres workers ne sont
+        jamais reçus — le fan-out est à moitié fait (pub sans sub).
+        """
+        redis = await self._get_redis()
+        if redis is None:
+            return
+        if self._pubsub_task is not None:
+            return  # déjà démarré
+
+        self._pubsub_task = asyncio.create_task(self._redis_subscriber_loop())
+        logger.info("ws_redis_subscriber_started")
+
+    async def _redis_subscriber_loop(self) -> None:
+        """Boucle d'écoute Redis Pub/Sub — redistribue les events inter-workers."""
+        redis = await self._get_redis()
+        if redis is None:
+            return
+        try:
+            pubsub = redis.pubsub()
+            # S'abonner à tous les canaux gsie:ws:*
+            await pubsub.psubscribe("gsie:ws:*")
+            async for message in pubsub.listen():
+                if message["type"] != "pmessage":
+                    continue
+                channel = message["channel"]
+                if isinstance(channel, bytes):
+                    channel = channel.decode()
+                # Extraire le nom du canal (gsie:ws:phenomenon → phenomenon)
+                canal_name = channel.replace("gsie:ws:", "")
+                data = message["data"]
+                if isinstance(data, bytes):
+                    data = data.decode()
+                try:
+                    event = json.loads(data)
+                    # Diffusion locale uniquement (pas de re-publish pour éviter la boucle)
+                    await self._local_broadcast(canal_name, event)
+                except (json.JSONDecodeError, TypeError):
+                    logger.debug("ws_redis_invalid_message", channel=canal_name)
+        except asyncio.CancelledError:
+            logger.info("ws_redis_subscriber_stopped")
+        except Exception:
+            logger.warning("ws_redis_subscriber_error", exc_info=True)
+
+    async def start_heartbeat(self) -> None:
+        """Démarre le heartbeat serveur pour détecter les connexions mortes.
+
+        Sans heartbeat, une connexion qui meurt sans clôture propre (coupure
+        réseau du Hub Unreal) reste en mémoire indéfiniment → OOM potentiel.
+        """
+        if self._heartbeat_task is not None:
+            return
+        self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        logger.info("ws_heartbeat_started")
+
+    async def _heartbeat_loop(self) -> None:
+        """Boucle de heartbeat — ping périodique + nettoyage des connexions mortes."""
+        interval = _settings.ws_heartbeat_interval
+        try:
+            while True:
+                await asyncio.sleep(interval)
+                dead: list[WebSocket] = []
+                for ws in list(self._connections):
+                    try:
+                        await ws.send_json({"event_type": "ping"})
+                    except Exception:
+                        dead.append(ws)
+                for ws in dead:
+                    await self.disconnect(ws)
+                if dead:
+                    logger.info("ws_heartbeat_cleaned", cleaned=len(dead))
+        except asyncio.CancelledError:
+            logger.info("ws_heartbeat_stopped")
+
+    async def connect(
+        self, websocket: WebSocket, channels: list[str] | None = None
+    ) -> bool:
+        """Accepte une connexion WebSocket et l'abonne à des canaux.
+
+        Returns:
+            True si acceptée, False si le plafond de connexions est atteint.
+        """
+        if len(self._connections) >= _settings.ws_max_connections:
+            logger.warning(
+                "ws_connection_rejected",
+                total=len(self._connections),
+                max=_settings.ws_max_connections,
+            )
+            await websocket.close(code=1013)  # Try Again Later
+            return False
+
         await websocket.accept()
         subs = set(channels) if channels else {"all"}
         self._connections[websocket] = subs
@@ -53,6 +155,7 @@ class ConnectionManager:
             channels=list(subs),
             total_connections=len(self._connections),
         )
+        return True
 
     async def disconnect(self, websocket: WebSocket) -> None:
         """Déconnecte un client et le désabonne de tous ses canaux."""
@@ -74,19 +177,23 @@ class ConnectionManager:
             self._channels[channel].add(websocket)
         self._connections[websocket] = new_subs
 
-    async def broadcast(self, channel: str, message: dict[str, Any]) -> None:
-        """Diffuse un message à tous les abonnés d'un canal (local + Redis)."""
-        # 1. Diffusion locale (workers sur cette instance)
+    async def _local_broadcast(self, channel: str, message: dict[str, Any]) -> None:
+        """Diffuse un message aux abonnés locaux uniquement (pas de Redis)."""
         subscribers = self._channels.get(channel, set())
         subscribers_all = self._channels.get("all", set())
         targets = subscribers | subscribers_all
 
-        for ws in list(targets):  # copie car disconnect modifie pendant itération
+        for ws in list(targets):
             try:
                 await ws.send_json(message)
             except Exception:
                 logger.debug("ws_send_failed", exc_info=True)
                 await self.disconnect(ws)
+
+    async def broadcast(self, channel: str, message: dict[str, Any]) -> None:
+        """Diffuse un message à tous les abonnés d'un canal (local + Redis)."""
+        # 1. Diffusion locale (workers sur cette instance)
+        await self._local_broadcast(channel, message)
 
         # 2. Fan-out Redis pour les autres workers
         redis = await self._get_redis()
@@ -107,6 +214,16 @@ class ConnectionManager:
             channel=channel,
             event_type=event.get("event_type"),
         )
+
+    async def shutdown(self) -> None:
+        """Arrête proprement les tâches de fond (subscriber + heartbeat)."""
+        if self._pubsub_task:
+            self._pubsub_task.cancel()
+            self._pubsub_task = None
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            self._heartbeat_task = None
+        logger.info("ws_manager_shutdown")
 
 
 # Singleton — partagé entre les workers d'une même instance

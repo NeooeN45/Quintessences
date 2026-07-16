@@ -106,8 +106,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
-        """Valide que la configuration est sûre en production."""
-        if self.environment == "production":
+        """Valide que la configuration est sûre en production et staging."""
+        if self.environment in ("production", "staging"):
             if self.debug:
                 raise ValueError("debug must be False in production")
             if "gsie_dev" in self.database_url:

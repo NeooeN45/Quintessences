@@ -21,13 +21,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
-from slowapi.util import get_remote_address
 
 from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
+from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.engines.evidence.router import router as evidence_router
 from gsie_api.engines.gis.router import router as gis_router
@@ -40,22 +40,15 @@ from gsie_api.websocket.router import router as ws_router
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
-# Rate limiter — par IP, configurable (OWASP A07)
-# Stockage Redis pour distribution entre workers Gunicorn
-limiter = Limiter(
-    key_func=get_remote_address,
-    enabled=_settings.rate_limit_enabled,
-    default_limits=[_settings.rate_limit_default],
-    storage_uri=_settings.rate_limit_storage_url,
-    headers_enabled=True,
-)
+# Le limiter est défini dans core/limiter.py (storage_uri Redis configuré)
+# — importé ci-dessus pour éviter les imports circulaires
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
 _OPENAPI_TAGS = [
     {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
-    {"name": "resources", "description": "CRUD générique — 73 types du métamodèle v6.2 (RFC-0012, ADR-007)"},
+    {"name": "resources", "description": "CRUD générique — 73 types métamodèle v6.2"},
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -263,6 +256,21 @@ def create_app() -> FastAPI:
                 request=request,
             ),
         )
+
+    # Startup : démarrer le subscriber Redis + heartbeat WebSocket
+    @app.on_event("startup")
+    async def _startup_ws_background() -> None:
+        from gsie_api.websocket.manager import manager
+
+        await manager.start_redis_subscriber()
+        await manager.start_heartbeat()
+
+    # Shutdown : arrêter proprement les tâches de fond
+    @app.on_event("shutdown")
+    async def _shutdown_ws_background() -> None:
+        from gsie_api.websocket.manager import manager
+
+        await manager.shutdown()
 
     return app
 

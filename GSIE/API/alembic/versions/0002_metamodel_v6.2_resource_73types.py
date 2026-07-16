@@ -1,18 +1,27 @@
 """Migration 0002 — Métamodèle v6.2 : table racine resource + 73 types
 
-Crée la table racine `resource` (ADR-001) et toutes les tables spécifiques
-des 73 types du métamodèle v6.2 (RFC-0011, RFC-0012, ADR-007).
+⚠️ AVERTISSEMENT CRITIQUE — NE PAS EXÉCUTER CONTRE UNE BASE AVEC DONNÉES RÉELLES ⚠️
 
-Utilise Base.metadata.create_all pour auto-générer les tables depuis les
-modèles SQLAlchemy, puis crée les enums PostgreSQL et les index.
+Cette migration a 3 problèmes identifiés par audit (2026-07-16) :
+1. DOWNGRADE DESTRUCTIF : downgrade() drop toutes les tables (nouvelles ET
+   anciennes) sans recréer les tables v6.1. Un `alembic downgrade -1` efface
+   plus de données que l'upgrade n'en a créé.
+2. DONNÉES FANTÔMES : pour botanical_familles, ecosystem_habitats,
+   knowledge_conflits — seule une ligne vide est créée dans `resource` sans
+   la ligne fille correspondante. Les données métier (nom_scientifique,
+   code_eur28, description, source) sont perdues.
+3. TABLES NON MIGRÉES : 7 tables sur 12 de l'ancien schéma ne sont migrées
+   nulle part (knowledge_relations, knowledge_mots_cles,
+   knowledge_domaines_validite, botanical_genres, botanical_essences,
+   ecosystem_stations, ecosystem_groupes_ecologiques). Le docstring
+   prétendait traiter knowledge_relations — c'était faux.
 
-Migration des données existantes :
-- knowledge_objects → resource + assertion
-- knowledge_history → revision
-- knowledge_relations → predicate + assertion_participant
-- knowledge_conflits → conflict_cluster
-- botanical_* → concept + vocabulary + controlled_term
-- ecosystem_* → place + controlled_term
+Cette migration reste utilisable sur une base VIDE (création de schéma pur)
+mais ne doit JAMAIS être appliquée sur une base contenant des données
+v6.1 tant que les 3 problèmes ne sont pas corrigés.
+
+Décision en attente : ADR-004 (migration progressive en 4 étapes) vs
+RFC-0012 (big bang) — contradiction non réconciliée à ce jour.
 
 Revision ID: 0002
 Revises: 0001
