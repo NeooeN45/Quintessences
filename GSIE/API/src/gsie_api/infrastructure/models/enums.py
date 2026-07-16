@@ -1,17 +1,17 @@
 """Enums PostgreSQL pour le métamodèle v6.2 (§3 du métamodèle).
 
-Tous les enums sont définis comme des enums Python (str, Enum) pour
+Tous les enums sont définis comme des enums Python (StrEnum) pour
 SQLAlchemy 2.0 + Pydantic v2. En DB, ils sont créés comme des types
 ENUM PostgreSQL par la migration Alembic 0002.
 
 Source : GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md §3.3 à §3.22
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
 # §3.3 — Assertion.claim_kind
-class ClaimKind(str, Enum):
+class ClaimKind(StrEnum):
     observation = "observation"
     relation = "relation"
     rule = "rule"
@@ -22,7 +22,7 @@ class ClaimKind(str, Enum):
 
 
 # §3.4 — Assertion.lifecycle_status (réutilisé par Correlation)
-class LifecycleStatus(str, Enum):
+class LifecycleStatus(StrEnum):
     draft = "draft"
     proposed = "proposed"
     accepted = "accepted"
@@ -32,7 +32,7 @@ class LifecycleStatus(str, Enum):
 
 
 # §3.5 — Result.value_type
-class ValueType(str, Enum):
+class ValueType(StrEnum):
     numeric = "numeric"
     term = "term"
     media_ref = "media_ref"
@@ -42,7 +42,7 @@ class ValueType(str, Enum):
 
 
 # §3.6 — Source.source_nature
-class SourceNature(str, Enum):
+class SourceNature(StrEnum):
     data_provider = "data_provider"
     knowledge_provider = "knowledge_provider"
     reference = "reference"
@@ -52,7 +52,7 @@ class SourceNature(str, Enum):
 
 
 # §3.6b — Source.subtype
-class SourceSubtype(str, Enum):
+class SourceSubtype(StrEnum):
     publication = "publication"
     dataset = "dataset"
     api = "api"
@@ -63,7 +63,7 @@ class SourceSubtype(str, Enum):
 
 
 # §3.7 — Distribution.access_method
-class AccessMethod(str, Enum):
+class AccessMethod(StrEnum):
     api_rest = "api_rest"
     api_graphql = "api_graphql"
     ogc_wms = "ogc_wms"
@@ -78,7 +78,7 @@ class AccessMethod(str, Enum):
 
 
 # §3.8 — ScaleContext.level
-class ScaleLevel(str, Enum):
+class ScaleLevel(StrEnum):
     leaf = "leaf"
     tree = "tree"
     plot = "plot"
@@ -93,7 +93,7 @@ class ScaleLevel(str, Enum):
 
 
 # §3.9 — Phenomenon.phenomenon_type
-class PhenomenonType(str, Enum):
+class PhenomenonType(StrEnum):
     drought = "drought"
     storm = "storm"
     pest_outbreak = "pest_outbreak"
@@ -111,7 +111,7 @@ class PhenomenonType(str, Enum):
 
 
 # §3.10 — EcologicalProcess.process_type
-class EcologicalProcessType(str, Enum):
+class EcologicalProcessType(StrEnum):
     photosynthesis = "photosynthesis"
     transpiration = "transpiration"
     respiration = "respiration"
@@ -133,7 +133,7 @@ class EcologicalProcessType(str, Enum):
 
 
 # §3.11 — RelationType.category
-class RelationCategory(str, Enum):
+class RelationCategory(StrEnum):
     causal = "causal"
     spatial = "spatial"
     temporal = "temporal"
@@ -150,7 +150,7 @@ class RelationCategory(str, Enum):
 
 
 # §3.12 — Correlation.method
-class CorrelationMethod(str, Enum):
+class CorrelationMethod(StrEnum):
     pearson = "pearson"
     spearman = "spearman"
     kendall = "kendall"
@@ -163,7 +163,7 @@ class CorrelationMethod(str, Enum):
 
 
 # §3.13 — Capability.capability_type
-class CapabilityType(str, Enum):
+class CapabilityType(StrEnum):
     observe = "observe"
     predict = "predict"
     inventory = "inventory"
@@ -179,7 +179,7 @@ class CapabilityType(str, Enum):
 
 
 # §3.14 — Assertion.rule_subtype (quand claim_kind=rule)
-class RuleSubtype(str, Enum):
+class RuleSubtype(StrEnum):
     inference = "inference"
     scientific = "scientific"
     business = "business"
@@ -187,7 +187,7 @@ class RuleSubtype(str, Enum):
 
 
 # §3.15 — Dataset.purpose
-class DatasetPurpose(str, Enum):
+class DatasetPurpose(StrEnum):
     production = "production"
     training = "training"
     evaluation = "evaluation"
@@ -195,7 +195,7 @@ class DatasetPurpose(str, Enum):
 
 
 # §3.16 — Sample.sample_type
-class SampleType(str, Enum):
+class SampleType(StrEnum):
     soil = "soil"
     leaf = "leaf"
     bark = "bark"
@@ -210,7 +210,7 @@ class SampleType(str, Enum):
 
 
 # §3.17 — Consent.legal_basis (RGPD art. 6)
-class LegalBasis(str, Enum):
+class LegalBasis(StrEnum):
     consent = "consent"
     contract = "contract"
     legal_obligation = "legal_obligation"
@@ -221,7 +221,7 @@ class LegalBasis(str, Enum):
 
 
 # §3.18 — PersistentIdentifier.pid_type
-class PIDType(str, Enum):
+class PIDType(StrEnum):
     doi = "doi"
     purl = "purl"
     orcid = "orcid"
@@ -237,7 +237,7 @@ class PIDType(str, Enum):
 
 
 # §3.19 — Flow.flow_type
-class FlowType(str, Enum):
+class FlowType(StrEnum):
     carbon = "carbon"
     water = "water"
     nitrogen = "nitrogen"
@@ -255,7 +255,7 @@ class FlowType(str, Enum):
 
 
 # §3.20 — Goal.goal_type
-class GoalType(str, Enum):
+class GoalType(StrEnum):
     biodiversity = "biodiversity"
     production = "production"
     risk_reduction = "risk_reduction"
@@ -271,7 +271,7 @@ class GoalType(str, Enum):
 
 
 # §3.21 — Constraint.constraint_type
-class ConstraintType(str, Enum):
+class ConstraintType(StrEnum):
     regulatory = "regulatory"
     budget = "budget"
     accessibility = "accessibility"
@@ -285,7 +285,7 @@ class ConstraintType(str, Enum):
 
 
 # §3.22 — Scenario.scenario_subtype
-class ScenarioSubtype(str, Enum):
+class ScenarioSubtype(StrEnum):
     rcp_2_6 = "rcp_2.6"
     rcp_4_5 = "rcp_4.5"
     rcp_8_5 = "rcp_8.5"
@@ -307,7 +307,7 @@ class ScenarioSubtype(str, Enum):
 
 # Enums supplémentaires (non numérotés §3 mais définis dans le métamodèle)
 
-class ScenarioType(str, Enum):
+class ScenarioType(StrEnum):
     sylvicultural = "sylvicultural"
     climatic = "climatic"
     management = "management"
@@ -315,13 +315,13 @@ class ScenarioType(str, Enum):
     baseline = "baseline"
 
 
-class AgentType(str, Enum):
+class AgentType(StrEnum):
     person = "person"
     organisation = "organisation"
     software = "software"
 
 
-class ActivityType(str, Enum):
+class ActivityType(StrEnum):
     extraction = "extraction"
     transformation = "transformation"
     ingestion = "ingestion"
@@ -330,14 +330,14 @@ class ActivityType(str, Enum):
     simulation = "simulation"
 
 
-class MediaType(str, Enum):
+class MediaType(StrEnum):
     image = "image"
     audio = "audio"
     video = "video"
     document = "document"
 
 
-class ModelType(str, Enum):
+class ModelType(StrEnum):
     growth = "growth"
     dynamics = "dynamics"
     propagation = "propagation"
@@ -345,7 +345,7 @@ class ModelType(str, Enum):
     ml = "ml"
 
 
-class EvidenceLevel(str, Enum):
+class EvidenceLevel(StrEnum):
     a = "A"
     b = "B"
     c = "C"
@@ -354,7 +354,7 @@ class EvidenceLevel(str, Enum):
     f = "F"
 
 
-class TemporalGranularity(str, Enum):
+class TemporalGranularity(StrEnum):
     instant = "instant"
     day = "day"
     month = "month"
@@ -363,20 +363,20 @@ class TemporalGranularity(str, Enum):
     range = "range"
 
 
-class ParticipantRole(str, Enum):
+class ParticipantRole(StrEnum):
     subject = "subject"
     object = "object"
     context = "context"
 
 
-class CitationRole(str, Enum):
+class CitationRole(StrEnum):
     primary = "primary"
     supporting = "supporting"
     contradicting = "contradicting"
     cited = "cited"
 
 
-class QualityDimension(str, Enum):
+class QualityDimension(StrEnum):
     completeness = "completeness"
     positional_accuracy = "positional_accuracy"
     temporal_accuracy = "temporal_accuracy"
@@ -384,34 +384,34 @@ class QualityDimension(str, Enum):
     logical_consistency = "logical_consistency"
 
 
-class UncertaintyType(str, Enum):
+class UncertaintyType(StrEnum):
     confidence_interval = "confidence_interval"
     standard_error = "standard_error"
     range = "range"
     qualitative = "qualitative"
 
 
-class UsageRights(str, Enum):
+class UsageRights(StrEnum):
     open = "open"
     restricted = "restricted"
     private = "private"
 
 
-class SensitivityLevel(str, Enum):
+class SensitivityLevel(StrEnum):
     public = "public"
     restricted = "restricted"
     sensitive = "sensitive"
     critical = "critical"
 
 
-class ConflictStatus(str, Enum):
+class ConflictStatus(StrEnum):
     open = "open"
     resolved_by_consensus = "resolved_by_consensus"
     resolved_by_arbitrage = "resolved_by_arbitrage"
     unresolved = "unresolved"
 
 
-class CorrelationStrength(str, Enum):
+class CorrelationStrength(StrEnum):
     negligible = "negligible"
     weak = "weak"
     moderate = "moderate"
@@ -419,14 +419,14 @@ class CorrelationStrength(str, Enum):
     very_strong = "very_strong"
 
 
-class QuestionType(str, Enum):
+class QuestionType(StrEnum):
     scientific = "scientific"
     operational = "operational"
     diagnostic = "diagnostic"
     predictive = "predictive"
 
 
-class HypothesisStatus(str, Enum):
+class HypothesisStatus(StrEnum):
     proposed = "proposed"
     testing = "testing"
     supported = "supported"
@@ -434,23 +434,23 @@ class HypothesisStatus(str, Enum):
     inconclusive = "inconclusive"
 
 
-class ProviderType(str, Enum):
+class ProviderType(StrEnum):
     engine = "engine"
     application = "application"
 
 
-class ConsentScope(str, Enum):
+class ConsentScope(StrEnum):
     full = "full"
     anonymized_only = "anonymized_only"
     aggregated_only = "aggregated_only"
 
 
-class FlowDirection(str, Enum):
+class FlowDirection(StrEnum):
     source_to_sink = "source_to_sink"
     bidirectional = "bidirectional"
 
 
-class StateType(str, Enum):
+class StateType(StrEnum):
     health = "health"
     vitality = "vitality"
     risk = "risk"
@@ -460,7 +460,7 @@ class StateType(str, Enum):
     integrity = "integrity"
 
 
-class EcologicalGrade(str, Enum):
+class EcologicalGrade(StrEnum):
     excellent = "excellent"
     good = "good"
     moderate = "moderate"
@@ -468,21 +468,21 @@ class EcologicalGrade(str, Enum):
     critical = "critical"
 
 
-class Trend(str, Enum):
+class Trend(StrEnum):
     improving = "improving"
     stable = "stable"
     declining = "declining"
     unknown = "unknown"
 
 
-class FeatureSourceType(str, Enum):
+class FeatureSourceType(StrEnum):
     observation = "observation"
     trait = "trait"
     computed = "computed"
     external = "external"
 
 
-class RelationDirection(str, Enum):
+class RelationDirection(StrEnum):
     sortant = "sortant"
     entrant = "entrant"
     bidirectionnel = "bidirectionnel"
@@ -490,33 +490,33 @@ class RelationDirection(str, Enum):
 
 # --- Enums supplémentaires identifiés lors de l'audit ---
 
-class EcosystemServiceCategory(str, Enum):
+class EcosystemServiceCategory(StrEnum):
     regulation = "regulation"
     support = "support"
     provisioning = "provisioning"
     cultural = "cultural"
 
 
-class GoalPriority(str, Enum):
+class GoalPriority(StrEnum):
     primary = "primary"
     secondary = "secondary"
     tertiary = "tertiary"
 
 
-class ConstraintSeverity(str, Enum):
+class ConstraintSeverity(StrEnum):
     blocking = "blocking"
     limiting = "limiting"
     conditional = "conditional"
 
 
-class PropagationMethod(str, Enum):
+class PropagationMethod(StrEnum):
     bayesian = "bayesian"
     weighted_average = "weighted_average"
     dempster_shafer = "dempster_shafer"
     fuzzy = "fuzzy"
 
 
-class ProductionMethod(str, Enum):
+class ProductionMethod(StrEnum):
     inference = "inference"
     correlation = "correlation"
     synthesis = "synthesis"
@@ -526,7 +526,7 @@ class ProductionMethod(str, Enum):
     validation = "validation"
 
 
-class TerrainSessionType(str, Enum):
+class TerrainSessionType(StrEnum):
     inventory = "inventory"
     martelage = "martelage"
     monitoring = "monitoring"
@@ -535,14 +535,14 @@ class TerrainSessionType(str, Enum):
     calibration = "calibration"
 
 
-class SyncStatus(str, Enum):
+class SyncStatus(StrEnum):
     synced = "synced"
     partial = "partial"
     pending = "pending"
     failed = "failed"
 
 
-class Permission(str, Enum):
+class Permission(StrEnum):
     """Permissions pour AccessPolicy (type 38)."""
     read = "read"
     write = "write"

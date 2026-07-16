@@ -5,8 +5,14 @@ WS /api/v1/ws/events  — events système (resource.created, etc.)
 
 Sécurité :
 - Token JWT obligatoire en query param (?token=xxx)
+  Note : Le protocole WebSocket natif ne permet pas de passer des headers
+  personnalisés lors du handshake (seuls les subprotocols sont supportés).
+  Le token en query param est le standard de facto pour WS auth (Socket.io,
+  SignalR, Action Cable). Mitigations : HTTPS en prod (token chiffré en
+  transit), tokens courts (15min access), pas de log des query params par
+  le middleware (configuré dans shared/middleware.py).
 - Rate limiting : max 10 messages/minute par client
-- Validation des canaux : canaux autorisés uniquement
+- Validation des canaux : canaux autorisés uniquement (16 canaux)
 """
 
 import json
