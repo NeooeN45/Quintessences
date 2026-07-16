@@ -68,6 +68,8 @@ dev = [
     "testcontainers[postgres]==4.10.0",
     "ruff==0.8.4",
     "mypy==1.14.0",
+    # SQLite async pour tests unitaires service.py (sans Docker/PostgreSQL)
+    "aiosqlite==0.20.0",
     # redis 5.x+ ships its own py.typed stubs; types-redis is obsolete and conflicts
     # "types-redis" must not be added here.
 ]

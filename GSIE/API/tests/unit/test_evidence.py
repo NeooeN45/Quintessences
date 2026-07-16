@@ -295,9 +295,14 @@ def should_fallback_to_python_when_rust_raises_exception():
     une erreur de sérialisation, l'API ne doit pas crasher mais
     utiliser le fallback Python.
     """
-    from unittest.mock import patch
-
     import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    if not wrapper_module._RUST_AVAILABLE:
+        from pytest import skip
+
+        skip("Rust Evidence Engine not available — fallback test requires Rust")
+
+    from unittest.mock import patch
 
     # Simuler une exception lors de l'appel Rust
     with (

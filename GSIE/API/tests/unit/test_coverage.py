@@ -272,6 +272,11 @@ def should_fallback_to_python_when_evaluate_with_context_rust_fails():
     """evaluate_with_context doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
+    if not wrapper_module._RUST_AVAILABLE:
+        from pytest import skip
+
+        skip("Rust Evidence Engine not available — fallback test requires Rust")
+
     with (
         patch.object(wrapper_module, "_RUST_AVAILABLE", True),
         patch.object(
@@ -288,6 +293,11 @@ def should_fallback_to_python_when_evaluate_with_context_rust_fails():
 def should_fallback_to_python_when_detect_conflicts_rust_fails():
     """detect_conflicts doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    if not wrapper_module._RUST_AVAILABLE:
+        from pytest import skip
+
+        skip("Rust Evidence Engine not available — fallback test requires Rust")
 
     with (
         patch.object(wrapper_module, "_RUST_AVAILABLE", True),
