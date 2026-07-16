@@ -52,6 +52,27 @@ class ResourceService:
             )
         return RESOURCE_TYPES[type_name]
 
+    # Champs système non modifiables par l'utilisateur (mass assignment protection)
+    _FORBIDDEN_FIELDS: frozenset[str] = frozenset({
+        "id", "created_at", "updated_at", "deleted_at",
+        "revision_id", "version", "author_id",
+        "transaction_time", "valid_time_start", "valid_time_end",
+    })
+
+    def _filter_data(self, model_cls: type, data: dict[str, Any]) -> dict[str, Any]:
+        """Filtre les champs interdits (mass assignment protection, OWASP A01).
+
+        Seuls les champs qui existent dans le modèle SQLAlchemy et qui ne
+        sont pas dans _FORBIDDEN_FIELDS sont conservés.
+        """
+        allowed_columns = {
+            col.name for col in model_cls.__table__.columns if col.name != "id"
+        }
+        return {
+            k: v for k, v in data.items()
+            if k in allowed_columns and k not in self._FORBIDDEN_FIELDS
+        }
+
     @staticmethod
     def _generate_gsie_id(type_name: str) -> str:
         """Génère un identifiant lisible (ex. assertion:2026:a1b2c3d4)."""
@@ -113,7 +134,7 @@ class ResourceService:
                 resource_type, event.model_dump(mode="json")
             )
         except Exception:
-            logger.warning("ws_broadcast_failed", event_type=event_type)
+            logger.warning("ws_broadcast_failed", event_type=event_type, exc_info=True)
 
     async def create(self, request: ResourceCreate, author_id: UUID | None = None) -> ResourceRead:
         """Crée une resource + sa ligne dans la table du type + Revision v1."""
@@ -123,6 +144,9 @@ class ResourceService:
         errors = validate_resource_data(request.type, request.data)
         if errors:
             raise ValueError(f"Validation échouée : {'; '.join(errors)}")
+
+        # Mass assignment protection — filtrer les champs interdits
+        safe_data = self._filter_data(model_cls, request.data)
 
         gsie_id = request.gsie_id or self._generate_gsie_id(request.type)
 
@@ -135,7 +159,7 @@ class ResourceService:
         await self._session.flush()
 
         # Créer la ligne dans la table du type
-        type_instance = model_cls(id=resource.id, **request.data)
+        type_instance = model_cls(id=resource.id, **safe_data)
         self._session.add(type_instance)
 
         # Revision v1 (CON-010)
@@ -262,9 +286,12 @@ class ResourceService:
         if type_instance is None:
             return None
 
+        # Mass assignment protection — filtrer les champs interdits
+        safe_data = self._filter_data(model_cls, request.data)
+
         # Calculer le diff
         field_changes: list[dict[str, Any]] = []
-        for key, new_value in request.data.items():
+        for key, new_value in safe_data.items():
             if not hasattr(type_instance, key):
                 continue
             old_value = getattr(type_instance, key)

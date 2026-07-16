@@ -7,6 +7,8 @@ GET    /resources/{id}            — détail
 PUT    /resources/{id}            — mise à jour (crée une Revision)
 DELETE /resources/{id}            — soft delete (crée une Revision finale)
 GET    /resources/{id}/revisions  — historique des révisions (Temporal Engine)
+
+Sécurité : auth JWT obligatoire sur tous les endpoints (OWASP A01).
 """
 
 from typing import Annotated, Any
@@ -15,6 +17,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
 from gsie_api.infrastructure.database import get_db as get_db_session
@@ -27,19 +30,22 @@ from gsie_api.resources.schemas import (
     RevisionRead,
 )
 from gsie_api.resources.service import ResourceService
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
 _limiter = Limiter(key_func=get_remote_address)
 
+# Type aliases pour lisibilité
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
 
 def _extract_author_id(user: dict[str, Any]) -> UUID | None:
     """Extrait l'UUID de l'utilisateur depuis le payload JWT."""
-    sub = user.get("sub")
-    if sub:
+    subject_claim = user.get("sub")
+    if subject_claim:
         try:
-            return UUID(sub)
+            return UUID(subject_claim)
         except (ValueError, TypeError):
             return None
     return None
@@ -52,7 +58,7 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
 )
 async def list_types(
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: CurrentUser,
 ) -> ResourceTypesResponse:
     """Retourne la liste des 69 types de resources du métamodèle v6.2."""
     types = ResourceService.list_types()
@@ -67,11 +73,13 @@ async def list_types(
 @_limiter.limit("60/minute")
 async def list_resources(
     request: Request,
-    type: str | None = Query(None, description="Filtrer par type (ex. assertion, observation)"),
+    _user: CurrentUser,
+    session: DbSession,
+    type: str | None = Query(
+        None, description="Filtrer par type (ex. assertion, observation)"
+    ),
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(20, ge=1, le=100, description="Taille de page (max 100)"),
-    _user: Annotated[dict[str, Any], Depends(get_current_user)] = None,
-    session: Annotated[AsyncSession, Depends(get_db_session)] = None,
 ) -> ResourceListResponse:
     """Liste paginée de resources, optionnellement filtrée par type."""
     service = ResourceService(session)
@@ -88,8 +96,8 @@ async def list_resources(
 async def create_resource(
     body: ResourceCreate,
     request: Request,
-    user: Annotated[dict[str, Any], Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    user: CurrentUser,
+    session: DbSession,
 ) -> ResourceRead:
     """Crée une resource du type spécifié avec ses champs spécifiques."""
     service = ResourceService(session)
@@ -108,8 +116,8 @@ async def create_resource(
 async def get_resource(
     resource_id: UUID,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)] = None,
-    session: Annotated[AsyncSession, Depends(get_db_session)] = None,
+    _user: CurrentUser,
+    session: DbSession,
 ) -> ResourceRead:
     """Récupère une resource par son ID."""
     service = ResourceService(session)
@@ -129,8 +137,8 @@ async def update_resource(
     resource_id: UUID,
     body: ResourceUpdate,
     request: Request,
-    user: Annotated[dict[str, Any], Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    user: CurrentUser,
+    session: DbSession,
 ) -> ResourceRead:
     """Met à jour une resource — crée une Revision + ResourceDiff (CON-010)."""
     service = ResourceService(session)
@@ -154,16 +162,16 @@ async def update_resource(
 async def delete_resource(
     resource_id: UUID,
     request: Request,
+    user: CurrentUser,
+    session: DbSession,
     justification: str = Query("Suppression", description="Justification (CON-010)"),
-    user: Annotated[dict[str, Any], Depends(get_current_user)] = None,
-    session: Annotated[AsyncSession, Depends(get_db_session)] = None,
 ) -> None:
     """Soft delete — marque deleted_at + crée une Revision finale (CON-010)."""
     service = ResourceService(session)
     deleted = await service.delete(
         resource_id,
         justification=justification,
-        author_id=_extract_author_id(user) if user else None,
+        author_id=_extract_author_id(user),
     )
     if not deleted:
         raise HTTPException(status_code=404, detail="Resource non trouvée")
@@ -178,8 +186,8 @@ async def delete_resource(
 async def list_revisions(
     resource_id: UUID,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)] = None,
-    session: Annotated[AsyncSession, Depends(get_db_session)] = None,
+    _user: CurrentUser,
+    session: DbSession,
 ) -> list[RevisionRead]:
     """Retourne l'historique des révisions d'une resource (Temporal Engine)."""
     service = ResourceService(session)

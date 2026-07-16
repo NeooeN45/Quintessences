@@ -125,6 +125,8 @@ class Settings(BaseSettings):
                 raise ValueError("Development login must be disabled in production")
             if not self.require_rust_backend:
                 raise ValueError("Rust Evidence backend must be required in production")
+            if "*" in self.ws_allowed_origins:
+                raise ValueError("Wildcard WebSocket origins not allowed in production")
         return self
 
 

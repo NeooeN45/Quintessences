@@ -20,7 +20,9 @@ class ObjectStorage(ABC):
     """Interface abstraite pour le stockage objet."""
 
     @abstractmethod
-    async def put(self, key: str, data: BinaryIO, content_type: str = "application/octet-stream") -> str:
+    async def put(
+        self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
+    ) -> str:
         """Stocke un objet et retourne son URI."""
 
     @abstractmethod
@@ -47,7 +49,9 @@ class LocalStorage(ObjectStorage):
         self._base = Path(base_path)
         self._base.mkdir(parents=True, exist_ok=True)
 
-    async def put(self, key: str, data: BinaryIO, content_type: str = "application/octet-stream") -> str:
+    async def put(
+        self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
+    ) -> str:
         path = self._base / key
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
@@ -87,7 +91,9 @@ class S3Storage(ObjectStorage):
         self._bucket = bucket
         raise NotImplementedError("S3Storage implémenté en Vague 2 (GIS Engine)")
 
-    async def put(self, key: str, data: BinaryIO, content_type: str = "application/octet-stream") -> str:
+    async def put(
+        self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
+    ) -> str:
         raise NotImplementedError
 
     async def get(self, key: str) -> BinaryIO:

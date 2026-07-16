@@ -28,12 +28,11 @@ from gsie_api.infrastructure.models.enums import (
     LifecycleStatus,
     MediaType,
     ModelType,
-    ParticipantRole,
-    PIDType,
     PhenomenonType,
+    PIDType,
     ProviderType,
-    QuestionType,
     QualityDimension,
+    QuestionType,
     RelationCategory,
     RuleSubtype,
     SampleType,
@@ -239,5 +238,21 @@ def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
                     f"Valeur invalide pour {field} : '{value}'. "
                     f"Valeurs acceptées : {sorted(valid_values)}"
                 )
+
+    # 3. Validation de longueur des chaînes (protection DoS, OWASP A04)
+    max_string_length = 10000
+    for field, value in data.items():
+        if isinstance(value, str) and len(value) > max_string_length:
+            errors.append(
+                f"Champ {field} trop long : {len(value)} chars "
+                f"(max {max_string_length})"
+            )
+
+    # 4. Validation du nombre de champs (payload limit)
+    max_fields = 50
+    if len(data) > max_fields:
+        errors.append(
+            f"Trop de champs : {len(data)} (max {max_fields})"
+        )
 
     return errors

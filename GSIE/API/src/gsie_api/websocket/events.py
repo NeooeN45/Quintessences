@@ -4,14 +4,14 @@ Le Hub (Unreal Engine 5.8) se connecte en WebSocket et reçoit des events
 sur des canaux. Redis Pub/Sub assure le fan-out vers les clients connectés.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     """Types d'events diffusés sur le WebSocket."""
 
     resource_created = "resource.created"

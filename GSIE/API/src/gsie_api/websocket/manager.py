@@ -38,7 +38,7 @@ class ConnectionManager:
 
                 self._redis = await get_redis()
             except Exception:
-                logger.warning("redis_unavailable_ws_fanout_degraded")
+                logger.warning("redis_unavailable_ws_fanout_degraded", exc_info=True)
         return self._redis
 
     async def connect(self, websocket: WebSocket, channels: list[str] | None = None) -> None:
@@ -85,6 +85,7 @@ class ConnectionManager:
             try:
                 await ws.send_json(message)
             except Exception:
+                logger.debug("ws_send_failed", exc_info=True)
                 await self.disconnect(ws)
 
         # 2. Fan-out Redis pour les autres workers
@@ -96,7 +97,7 @@ class ConnectionManager:
                     json.dumps(message),
                 )
             except Exception:
-                logger.warning("redis_publish_failed", channel=channel)
+                logger.warning("redis_publish_failed", channel=channel, exc_info=True)
 
     async def broadcast_event(self, channel: str, event: dict[str, Any]) -> None:
         """Diffuse un event typé sur un canal."""

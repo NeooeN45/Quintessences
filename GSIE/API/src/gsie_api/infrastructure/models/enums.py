@@ -540,3 +540,12 @@ class SyncStatus(str, Enum):
     partial = "partial"
     pending = "pending"
     failed = "failed"
+
+
+class Permission(str, Enum):
+    """Permissions pour AccessPolicy (type 38)."""
+    read = "read"
+    write = "write"
+    delete = "delete"
+    export = "export"
+    admin = "admin"

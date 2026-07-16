@@ -2,13 +2,14 @@
 
 from uuid import UUID
 
-from sqlalchemy import Enum, ForeignKey, Index, String, Text
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_type
 from gsie_api.infrastructure.models.enums import (
     ConflictStatus,
+    Permission,
     SensitivityLevel,
     UsageRights,
 )
@@ -48,7 +49,9 @@ class AccessPolicyModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     principal: Mapped[str] = mapped_column(String(200), nullable=False)
-    permission: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    permission: Mapped[Permission] = mapped_column(
+        Enum(Permission, name="permission"), nullable=False, index=True
+    )
     condition: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 

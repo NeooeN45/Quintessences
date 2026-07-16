@@ -13,7 +13,9 @@ from datetime import UTC
 from typing import Annotated, TypedDict
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from gsie_api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, VerifyResponse
 from gsie_api.core.auth import (
@@ -27,6 +29,7 @@ from gsie_api.core.logging import get_logger
 
 _settings = get_settings()
 logger = get_logger("gsie_api.auth.router")
+_limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -49,12 +52,15 @@ def _get_dev_user(username: str, password: str) -> DevUser | None:
         return None
     if username != _settings.auth_dev_username:
         return None
+    # Comparaison directe en dev (le password de config n'est pas hashé)
+    # En production, les utilisateurs seront en DB avec un hash bcrypt.
+    if password != _settings.auth_dev_password:
+        return None
+    # Générer un hash pour le token (pas pour la vérification)
     password_hash = bcrypt.hashpw(
         _settings.auth_dev_password.encode("utf-8"),
         bcrypt.gensalt(),
     )
-    if not bcrypt.checkpw(password.encode("utf-8"), password_hash):
-        return None
     return DevUser(password_hash=password_hash, roles=["admin"])
 
 
@@ -78,7 +84,8 @@ def _authenticate_user(username: str, password: str) -> DevUser | None:
         "Les tokens sont signés en RS256 (DEC-000019)."
     ),
 )
-async def login(credentials: LoginRequest) -> TokenResponse:
+@_limiter.limit("20/minute")
+async def login(request: Request, credentials: LoginRequest) -> TokenResponse:
     """Authentifie un utilisateur de développement et retourne les tokens JWT."""
     if not _settings.auth_dev_login_enabled:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")

@@ -20,6 +20,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "debug": False,
         "database_url": "postgresql+asyncpg://gsie:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
+        "ws_allowed_origins": ["https://hub.example.com"],
         "redis_url": "redis://:secret@redis-host:6379/0",
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "auth_dev_login_enabled": False,
@@ -65,3 +66,9 @@ def should_accept_redis_with_password_in_production():
     """Settings doit accepter Redis avec mot de passe en production."""
     settings = Settings(**_production_kwargs())
     assert "secret" in settings.redis_url
+
+
+def should_reject_wildcard_ws_origins_in_production():
+    """Settings doit refuser les origines WebSocket wildcard en production."""
+    with pytest.raises(ValidationError, match="Wildcard WebSocket"):
+        Settings(**_production_kwargs(ws_allowed_origins=["*"]))
