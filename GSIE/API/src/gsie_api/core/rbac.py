@@ -23,12 +23,14 @@ from typing import Any
 from fastapi import HTTPException, status
 
 # Types RGPD — nécessitent le rôle rgpd_manager ou admin
-_RGPD_TYPES: frozenset[str] = frozenset({
-    "consent",
-    "data_subject",
-    "sensitivity_classification",
-    "access_policy",
-})
+_RGPD_TYPES: frozenset[str] = frozenset(
+    {
+        "consent",
+        "data_subject",
+        "sensitivity_classification",
+        "access_policy",
+    }
+)
 
 # Actions possibles
 _ACTIONS: frozenset[str] = frozenset({"read", "write", "delete", "admin", "export"})
@@ -64,22 +66,19 @@ def check_permission(
         return
 
     # Vérification des types RGPD
-    if resource_type in _RGPD_TYPES:
-        if "rgpd_manager" not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"Access to {resource_type} requires rgpd_manager or admin role"
-                ),
-            )
+    if resource_type in _RGPD_TYPES and "rgpd_manager" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(f"Access to {resource_type} requires rgpd_manager or admin role"),
+        )
 
     # Vérification des actions d'écriture
-    if action in ("write", "delete", "export"):
-        if "writer" not in roles and "rgpd_manager" not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"{action} action requires writer, rgpd_manager or admin role",
-            )
+    is_write_action = action in ("write", "delete", "export")
+    if is_write_action and "writer" not in roles and "rgpd_manager" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{action} action requires writer, rgpd_manager or admin role",
+        )
 
 
 def require_roles(*required_roles: str) -> Any:

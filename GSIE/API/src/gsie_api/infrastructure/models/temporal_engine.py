@@ -27,22 +27,20 @@ class RevisionModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     target_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     author_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
     )
     justification: Mapped[str] = mapped_column(Text, nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("revision.id"), nullable=True
-    )
+    parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("revision.id"), nullable=True)
     valid_time_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_time_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    transaction_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    transaction_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     activity_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
     )
@@ -53,9 +51,7 @@ class RevisionModel(Base):
         DateTime(timezone=True), server_default="now()", nullable=False
     )
 
-    __table_args__ = (
-        Index("ix_revision_target_version", "target_id", "version"),
-    )
+    __table_args__ = (Index("ix_revision_target_version", "target_id", "version"),)
 
 
 class SnapshotModel(Base):
@@ -65,8 +61,10 @@ class SnapshotModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     target_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     revision_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("revision.id"), nullable=True
@@ -99,11 +97,17 @@ class ResourceDiffModel(Base, TimestampMixin):
         Integer, ForeignKey("revision.id"), nullable=True, index=True
     )
     changes: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict,
+        JSONB,
+        nullable=False,
+        default=dict,
         comment="{added: {...}, modified: {field: {from, to}}, removed: {...}}",
     )
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Champs legacy pour compatibilité service (field_changes, added/removed_relations)
     field_changes: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
-    added_relations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
-    removed_relations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
+    added_relations: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
+    removed_relations: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, Text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -86,7 +86,8 @@ class DatasetModel(Base, TimestampMixin):
     topic: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True)
     purpose: Mapped[DatasetPurpose] = mapped_column(
         Enum(DatasetPurpose, name="dataset_purpose"),
-        nullable=False, default=DatasetPurpose.production,
+        nullable=False,
+        default=DatasetPurpose.production,
     )
 
 

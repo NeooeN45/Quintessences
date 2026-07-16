@@ -111,6 +111,8 @@ class ConflictClusterModel(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[ConflictStatus] = mapped_column(
         Enum(ConflictStatus, name="conflict_status"),
-        nullable=False, default=ConflictStatus.open, index=True,
+        nullable=False,
+        default=ConflictStatus.open,
+        index=True,
     )
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)

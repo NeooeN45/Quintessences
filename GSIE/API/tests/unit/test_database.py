@@ -57,6 +57,7 @@ async def should_rollback_when_exception_raised():
     mock_factory = MagicMock(return_value=mock_ctx)
 
     import gsie_api.infrastructure.database as db_module
+
     original_factory = db_module.async_session_factory
     db_module.async_session_factory = mock_factory
 

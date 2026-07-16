@@ -56,9 +56,7 @@ class TestKnowledgeObjectsFields:
 
     def test_type_valid(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
-            assert k["type"] in VALID_TYPES, (
-                f"K {k['connaissance_id']} type invalide : {k['type']}"
-            )
+            assert k["type"] in VALID_TYPES, f"K {k['connaissance_id']} type invalide : {k['type']}"
 
     def test_evidence_level_valid(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
@@ -84,9 +82,7 @@ class TestKnowledgeObjectsFields:
 
     def test_mots_cles_not_empty(self) -> None:
         for k in KNOWLEDGE_OBJECTS:
-            assert len(k["mots_cles"]) > 0, (
-                f"K {k['connaissance_id']} sans mot-clé"
-            )
+            assert len(k["mots_cles"]) > 0, f"K {k['connaissance_id']} sans mot-clé"
 
 
 class TestKnowledgeObjectsDiversity:

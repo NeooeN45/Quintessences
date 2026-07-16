@@ -155,9 +155,7 @@ def should_return_degraded_when_database_down():
 def should_return_degraded_when_redis_down():
     """/ready doit retourner degraded si Redis est inaccessible."""
     mock_db = AsyncMock()
-    mock_db.execute = AsyncMock(
-        return_value=MagicMock(scalar_one=MagicMock(return_value="3.4.2"))
-    )
+    mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one=MagicMock(return_value="3.4.2")))
 
     mock_redis = AsyncMock()
     mock_redis.ping = AsyncMock(side_effect=Exception("Connection refused"))
@@ -174,13 +172,15 @@ def should_return_degraded_when_redis_down():
 
 def should_return_cached_response_when_redis_has_cache():
     """/ready doit retourner la réponse en cache si disponible."""
-    cached_data = json.dumps({
-        "status": "healthy",
-        "version": "0.1.0",
-        "environment": "development",
-        "timestamp": "2026-07-13T12:00:00Z",
-        "dependencies": {"database": "healthy (PostGIS 3.4)", "redis": "healthy"},
-    })
+    cached_data = json.dumps(
+        {
+            "status": "healthy",
+            "version": "0.1.0",
+            "environment": "development",
+            "timestamp": "2026-07-13T12:00:00Z",
+            "dependencies": {"database": "healthy (PostGIS 3.4)", "redis": "healthy"},
+        }
+    )
 
     mock_db = AsyncMock()
     mock_redis = AsyncMock()
@@ -200,9 +200,7 @@ def should_return_cached_response_when_redis_has_cache():
 def should_return_unhealthy_when_redis_ping_returns_false():
     """/ready doit retourner unhealthy si Redis ping retourne False."""
     mock_db = AsyncMock()
-    mock_db.execute = AsyncMock(
-        return_value=MagicMock(scalar_one=MagicMock(return_value="3.4.2"))
-    )
+    mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one=MagicMock(return_value="3.4.2")))
 
     mock_redis = AsyncMock()
     mock_redis.ping = AsyncMock(return_value=False)
@@ -230,5 +228,6 @@ def should_use_simple_ping_in_production():
     with patch("gsie_api.infrastructure.health._settings") as mock_settings:
         mock_settings.environment = "production"
         import asyncio
+
         result = asyncio.run(_check_database(mock_db))
         assert result == "healthy"

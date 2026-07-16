@@ -67,6 +67,7 @@ def _make_submission(
 
 # --- Tests du pipeline (niveau engine) ---
 
+
 def should_ingest_when_evidence_accepts(pipeline: EvidenceKnowledgePipeline):
     """Le pipeline doit ingérer quand l'Evidence Engine accepte (niveau B)."""
     sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
@@ -201,6 +202,7 @@ def should_return_pipeline_result_type(pipeline: EvidenceKnowledgePipeline):
 
 # --- Tests E2E via l'API ---
 
+
 def should_complete_full_pipeline_via_api():
     """Le pipeline complet doit fonctionner via les endpoints API.
 
@@ -211,6 +213,7 @@ def should_complete_full_pipeline_via_api():
     """
     # Reset l'engine
     from gsie_api.engines.knowledge.router import _engine
+
     _engine._store.clear()
 
     # Étape 1 : qualification par l'Evidence Engine
@@ -280,6 +283,7 @@ def should_complete_full_pipeline_via_api():
 def should_complete_full_pipeline_with_revision_via_api():
     """Pipeline complet avec révision : evaluate → ingest → revise → query v2."""
     from gsie_api.engines.knowledge.router import _engine
+
     _engine._store.clear()
 
     # Étape 1 : qualification
@@ -363,6 +367,7 @@ def should_complete_full_pipeline_with_revision_via_api():
 def should_not_ingest_refused_knowledge_via_api():
     """Une connaissance refusée par Evidence ne doit pas être ingérée."""
     from gsie_api.engines.knowledge.router import _engine
+
     _engine._store.clear()
 
     # Soumission qui sera refusée (observation terrain → F → refuse)

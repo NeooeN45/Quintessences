@@ -477,7 +477,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 600,
         "ph_typique": {"min": 4.0, "max": 5.0, "mediane": 4.5},
         "rum_typique": {"min": 2.0, "max": 6.0, "mediane": 4.0},
-        "essences_adaptees": ["Quercus petraea", "Quercus robur", "Castanea sativa", "Pinus pinaster"],
+        "essences_adaptees": [
+            "Quercus petraea",
+            "Quercus robur",
+            "Castanea sativa",
+            "Pinus pinaster",
+        ],
         "essences_potentielles": ["Betula pendula", "Sorbus aucuparia", "Pinus sylvestris"],
         "source_reference": "Catalogue des types de stations — Limousin (INRAE/ONF, 1995)",
     },
@@ -496,7 +501,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 700,
         "ph_typique": {"min": 5.5, "max": 6.5, "mediane": 6.0},
         "rum_typique": {"min": 4.0, "max": 10.0, "mediane": 7.0},
-        "essences_adaptees": ["Fagus sylvatica", "Quercus petraea", "Fraxinus excelsior", "Carpinus betulus"],
+        "essences_adaptees": [
+            "Fagus sylvatica",
+            "Quercus petraea",
+            "Fraxinus excelsior",
+            "Carpinus betulus",
+        ],
         "essences_potentielles": ["Tilia cordata", "Acer pseudoplatanus", "Prunus avium"],
         "source_reference": "Catalogue des types de stations — Limousin (INRAE/ONF, 1995)",
     },
@@ -572,7 +582,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 900,
         "ph_typique": {"min": 5.5, "max": 7.0, "mediane": 6.3},
         "rum_typique": {"min": 5.0, "max": 12.0, "mediane": 8.0},
-        "essences_adaptees": ["Acer pseudoplatanus", "Fraxinus excelsior", "Ulmus glabra", "Tilia platyphyllos"],
+        "essences_adaptees": [
+            "Acer pseudoplatanus",
+            "Fraxinus excelsior",
+            "Ulmus glabra",
+            "Tilia platyphyllos",
+        ],
         "essences_potentielles": ["Fagus sylvatica", "Prunus avium", "Sorbus aucuparia"],
         "source_reference": "Catalogue des types de stations — Vosges (INRAE/ONF, 1993)",
     },
@@ -667,7 +682,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 1200,
         "ph_typique": {"min": 6.5, "max": 8.0, "mediane": 7.2},
         "rum_typique": {"min": 1.0, "max": 3.0, "mediane": 2.0},
-        "essences_adaptees": ["Acer pseudoplatanus", "Tilia platyphyllos", "Fraxinus excelsior", "Ulmus glabra"],
+        "essences_adaptees": [
+            "Acer pseudoplatanus",
+            "Tilia platyphyllos",
+            "Fraxinus excelsior",
+            "Ulmus glabra",
+        ],
         "essences_potentielles": ["Fagus sylvatica", "Sorbus aria"],
         "source_reference": "Catalogue des types de stations — Jura (INRAE/ONF, 1994)",
     },
@@ -686,7 +706,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 300,
         "ph_typique": {"min": 4.0, "max": 5.0, "mediane": 4.5},
         "rum_typique": {"min": 2.0, "max": 6.0, "mediane": 4.0},
-        "essences_adaptees": ["Quercus robur", "Castanea sativa", "Pinus pinaster", "Betula pendula"],
+        "essences_adaptees": [
+            "Quercus robur",
+            "Castanea sativa",
+            "Pinus pinaster",
+            "Betula pendula",
+        ],
         "essences_potentielles": ["Fagus sylvatica", "Sorbus aucuparia", "Ilex aquifolium"],
         "source_reference": "Catalogue des types de stations — Bretagne (INRAE/ONF, 1992)",
     },
@@ -724,7 +749,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 600,
         "ph_typique": {"min": 6.0, "max": 8.0, "mediane": 7.0},
         "rum_typique": {"min": 0.5, "max": 3.0, "mediane": 1.5},
-        "essences_adaptees": ["Quercus ilex", "Quercus pubescens", "Pinus halepensis", "Pinus pinea"],
+        "essences_adaptees": [
+            "Quercus ilex",
+            "Quercus pubescens",
+            "Pinus halepensis",
+            "Pinus pinea",
+        ],
         "essences_potentielles": ["Arbutus unedo", "Phillyrea angustifolia", "Juniperus oxycedrus"],
         "source_reference": "Catalogue des types de stations — Provence méditerranéenne (INRAE/ONF, 1999)",
     },
@@ -762,8 +792,18 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 200,
         "ph_typique": {"min": 5.5, "max": 6.5, "mediane": 6.0},
         "rum_typique": {"min": 4.0, "max": 10.0, "mediane": 7.0},
-        "essences_adaptees": ["Quercus robur", "Fraxinus excelsior", "Carpinus betulus", "Fagus sylvatica"],
-        "essences_potentielles": ["Tilia cordata", "Acer campestre", "Prunus avium", "Sorbus torminalis"],
+        "essences_adaptees": [
+            "Quercus robur",
+            "Fraxinus excelsior",
+            "Carpinus betulus",
+            "Fagus sylvatica",
+        ],
+        "essences_potentielles": [
+            "Tilia cordata",
+            "Acer campestre",
+            "Prunus avium",
+            "Sorbus torminalis",
+        ],
         "source_reference": "Catalogue des types de stations — Île-de-France (INRAE/ONF, 1991)",
     },
     {
@@ -781,7 +821,12 @@ STATIONS_FORESTIERES: list[dict[str, object]] = [
         "altitude_max": 180,
         "ph_typique": {"min": 6.0, "max": 7.5, "mediane": 6.8},
         "rum_typique": {"min": 6.0, "max": 15.0, "mediane": 10.0},
-        "essences_adaptees": ["Alnus glutinosa", "Fraxinus excelsior", "Salix alba", "Populus nigra"],
+        "essences_adaptees": [
+            "Alnus glutinosa",
+            "Fraxinus excelsior",
+            "Salix alba",
+            "Populus nigra",
+        ],
         "essences_potentielles": ["Quercus robur", "Ulmus minor", "Prunus padus"],
         "source_reference": "Catalogue des types de stations — Île-de-France (INRAE/ONF, 1991)",
     },
@@ -801,7 +846,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "arenosols. Forte valeur bio-indicatrice pour le pH et la trophie."
         ),
         "indicateur": "pH",
-        "valeurs_indicatrices": {"ph_min": 3.5, "ph_max": 5.0, "niveau": "acide", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "ph_min": 3.5,
+            "ph_max": 5.0,
+            "niveau": "acide",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Calluna vulgaris",
             "Deschampsia flexuosa",
@@ -822,7 +872,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "fertilité modérée à bonne et de pH équilibré."
         ),
         "indicateur": "pH",
-        "valeurs_indicatrices": {"ph_min": 5.5, "ph_max": 7.0, "niveau": "neutre", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "ph_min": 5.5,
+            "ph_max": 7.0,
+            "niveau": "neutre",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Mercurialis perennis",
             "Anemone nemorosa",
@@ -843,7 +898,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "d'alcalinité et de sécheresse édaphique fréquente."
         ),
         "indicateur": "pH",
-        "valeurs_indicatrices": {"ph_min": 6.5, "ph_max": 8.0, "niveau": "basique", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "ph_min": 6.5,
+            "ph_max": 8.0,
+            "niveau": "basique",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Sesleria caerulea",
             "Carex digitata",
@@ -864,7 +924,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "d'excès d'eau permanent ou saisonnier."
         ),
         "indicateur": "humidité",
-        "valeurs_indicatrices": {"rum_min": 6.0, "rum_max": 15.0, "niveau": "humide", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "rum_min": 6.0,
+            "rum_max": 15.0,
+            "niveau": "humide",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Molinia caerulea",
             "Juncus effusus",
@@ -885,7 +950,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "de déficit hydrique édaphique."
         ),
         "indicateur": "humidité",
-        "valeurs_indicatrices": {"rum_min": 0.5, "rum_max": 3.0, "niveau": "sec", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "rum_min": 0.5,
+            "rum_max": 3.0,
+            "niveau": "sec",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Sesleria caerulea",
             "Teucrium chamaedrys",
@@ -906,7 +976,12 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "édaphiques modérées, ni trop sèches ni trop humides."
         ),
         "indicateur": "humidité",
-        "valeurs_indicatrices": {"rum_min": 3.0, "rum_max": 6.0, "niveau": "moyen", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "rum_min": 3.0,
+            "rum_max": 6.0,
+            "niveau": "moyen",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Anemone nemorosa",
             "Oxalis acetosella",
@@ -948,7 +1023,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "déficit trophique et de faible fertilité."
         ),
         "indicateur": "trophie",
-        "valeurs_indicatrices": {"niveau": "oligotrophe", "nitrates": "très faible", "fiabilite": "élevée"},
+        "valeurs_indicatrices": {
+            "niveau": "oligotrophe",
+            "nitrates": "très faible",
+            "fiabilite": "élevée",
+        },
         "especes_caracteristiques": [
             "Calluna vulgaris",
             "Erica cinerea",
@@ -969,7 +1048,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "conditions trophiques intermédiaires et équilibrées."
         ),
         "indicateur": "trophie",
-        "valeurs_indicatrices": {"niveau": "mésotrophe", "nitrates": "modéré", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "niveau": "mésotrophe",
+            "nitrates": "modéré",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Anemone nemorosa",
             "Mercurialis perennis",
@@ -990,7 +1073,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "continentalité marquée (Alpes internes, Jura)."
         ),
         "indicateur": "climat",
-        "valeurs_indicatrices": {"amplitude_thermique": "élevée", "continentalite": "forte", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "amplitude_thermique": "élevée",
+            "continentalite": "forte",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Larix decidua",
             "Pinus cembra",
@@ -1011,7 +1098,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "Indicatrices d'océanité marquée (Bretagne, Normandie, Pays Basque)."
         ),
         "indicateur": "climat",
-        "valeurs_indicatrices": {"amplitude_thermique": "faible", "oceanite": "forte", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "amplitude_thermique": "faible",
+            "oceanite": "forte",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Lonicera periclymenum",
             "Ilex aquifolium",
@@ -1053,7 +1144,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "et de fermeture du couvert."
         ),
         "indicateur": "lumière",
-        "valeurs_indicatrices": {"luminosite": "faible", "ombrage": "élevé", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "luminosite": "faible",
+            "ombrage": "élevé",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Oxalis acetosella",
             "Lamium galeobdolon",
@@ -1074,7 +1169,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "élevée et d'ouverture du couvert."
         ),
         "indicateur": "lumière",
-        "valeurs_indicatrices": {"luminosite": "élevée", "ombrage": "faible", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "luminosite": "élevée",
+            "ombrage": "faible",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Calluna vulgaris",
             "Erica cinerea",
@@ -1095,7 +1194,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "texture grossière et de drainage rapide."
         ),
         "indicateur": "texture_sol",
-        "valeurs_indicatrices": {"texture": "sableuse", "drainage": "rapide", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "texture": "sableuse",
+            "drainage": "rapide",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Deschampsia flexuosa",
             "Calluna vulgaris",
@@ -1116,7 +1219,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "Indicatrices de texture fine et de drainage lent."
         ),
         "indicateur": "texture_sol",
-        "valeurs_indicatrices": {"texture": "argileuse", "drainage": "lent", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "texture": "argileuse",
+            "drainage": "lent",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Molinia caerulea",
             "Juncus effusus",
@@ -1137,7 +1244,11 @@ GROUPES_ECOLOGIQUES: list[dict[str, object]] = [
             "moyenne et de drainage modéré, fertilité généralement bonne."
         ),
         "indicateur": "texture_sol",
-        "valeurs_indicatrices": {"texture": "limoneuse", "drainage": "modéré", "fiabilite": "modérée"},
+        "valeurs_indicatrices": {
+            "texture": "limoneuse",
+            "drainage": "modéré",
+            "fiabilite": "modérée",
+        },
         "especes_caracteristiques": [
             "Anemone nemorosa",
             "Stellaria holostea",

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class LoginRequest(BaseModel):
     """Requête de login — username + password."""
+
     model_config = ConfigDict(extra="forbid")
 
     username: str = Field(min_length=1, max_length=255, description="Nom d'utilisateur")
@@ -13,6 +14,7 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     """Réponse token — access + refresh."""
+
     model_config = ConfigDict(extra="forbid")
 
     access_token: str
@@ -23,6 +25,7 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     """Requête de refresh — refresh token."""
+
     model_config = ConfigDict(extra="forbid")
 
     refresh_token: str = Field(min_length=1, description="Refresh token JWT")
@@ -30,6 +33,7 @@ class RefreshRequest(BaseModel):
 
 class VerifyResponse(BaseModel):
     """Réponse de vérification — statut du token."""
+
     model_config = ConfigDict(extra="forbid")
 
     valid: bool

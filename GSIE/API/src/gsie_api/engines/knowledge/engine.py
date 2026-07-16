@@ -147,10 +147,7 @@ class KnowledgeEngine:
         # Filtre par evidence_min
         if query.evidence_min is not None:
             min_rank = _EVIDENCE_RANKS[query.evidence_min.value]
-            objects = [
-                o for o in objects
-                if _EVIDENCE_RANKS[o.evidence_level.value] >= min_rank
-            ]
+            objects = [o for o in objects if _EVIDENCE_RANKS[o.evidence_level.value] >= min_rank]
 
         # Filtres additionnels (clé-valeur)
         objects = self._filter_by_custom_filters(objects, query.filtres)
@@ -218,31 +215,33 @@ class KnowledgeEngine:
 
         # Construire la nouvelle version
         new_version = current.version + 1
-        revised = current.model_copy(update={
-            "version": new_version,
-            "date_integration": datetime.now(UTC),
-            "historique": [*current.historique, history_entry],
-            "contenu": (
-                request.nouveau_contenu
-                if request.nouveau_contenu is not None
-                else current.contenu
-            ),
-            "evidence_level": (
-                request.nouveau_evidence_level
-                if request.nouveau_evidence_level is not None
-                else current.evidence_level
-            ),
-            "source": (
-                request.nouvelle_source
-                if request.nouvelle_source is not None
-                else current.source
-            ),
-            "domaines_validite": (
-                request.nouveaux_domaines_validite
-                if request.nouveaux_domaines_validite is not None
-                else current.domaines_validite
-            ),
-        })
+        revised = current.model_copy(
+            update={
+                "version": new_version,
+                "date_integration": datetime.now(UTC),
+                "historique": [*current.historique, history_entry],
+                "contenu": (
+                    request.nouveau_contenu
+                    if request.nouveau_contenu is not None
+                    else current.contenu
+                ),
+                "evidence_level": (
+                    request.nouveau_evidence_level
+                    if request.nouveau_evidence_level is not None
+                    else current.evidence_level
+                ),
+                "source": (
+                    request.nouvelle_source
+                    if request.nouvelle_source is not None
+                    else current.source
+                ),
+                "domaines_validite": (
+                    request.nouveaux_domaines_validite
+                    if request.nouveaux_domaines_validite is not None
+                    else current.domaines_validite
+                ),
+            }
+        )
 
         self._store[request.connaissance_id] = revised
         logger.info(
@@ -286,15 +285,13 @@ class KnowledgeEngine:
             # Filtre par mots_cles contenant le nom d'essence
             essence = query.filtres.get("essence", "").lower()
             if essence:
-                return [
-                    o for o in objects
-                    if any(essence in mc.lower() for mc in o.mots_cles)
-                ]
+                return [o for o in objects if any(essence in mc.lower() for mc in o.mots_cles)]
             return objects
         if query.type == QueryType.par_station:
             # Filtre par domaines_validite contenant « station »
             return [
-                o for o in objects
+                o
+                for o in objects
                 if any("station" in dv.parametre.lower() for dv in o.domaines_validite)
             ]
         return objects
@@ -320,10 +317,7 @@ class KnowledgeEngine:
             keywords = filtres["mots_cles"]
             if isinstance(keywords, list):
                 keyword_set = {str(k).lower() for k in keywords}
-                result = [
-                    o for o in result
-                    if any(mc.lower() in keyword_set for mc in o.mots_cles)
-                ]
+                result = [o for o in result if any(mc.lower() in keyword_set for mc in o.mots_cles)]
 
         # Filtre par titre (recherche substring)
         if "titre" in filtres:

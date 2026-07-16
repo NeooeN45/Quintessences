@@ -307,6 +307,7 @@ class ScenarioSubtype(StrEnum):
 
 # Enums supplémentaires (non numérotés §3 mais définis dans le métamodèle)
 
+
 class ScenarioType(StrEnum):
     sylvicultural = "sylvicultural"
     climatic = "climatic"
@@ -490,6 +491,7 @@ class RelationDirection(StrEnum):
 
 # --- Enums supplémentaires identifiés lors de l'audit ---
 
+
 class EcosystemServiceCategory(StrEnum):
     regulation = "regulation"
     support = "support"
@@ -544,6 +546,7 @@ class SyncStatus(StrEnum):
 
 class Permission(StrEnum):
     """Permissions pour AccessPolicy (type 38)."""
+
     read = "read"
     write = "write"
     delete = "delete"
@@ -553,8 +556,10 @@ class Permission(StrEnum):
 
 # --- Enums métier (types 74-79 — audit métier ONF/CNPF) ---
 
+
 class ManagementPlanType(StrEnum):
     """Type de plan de gestion forestier."""
+
     psg = "psg"  # Plan Simple de Gestion (CNPF)
     amf = "amf"  # Aménagement Forestier (ONF)
     rtg = "rtg"  # Règlement Type de Gestion
@@ -563,6 +568,7 @@ class ManagementPlanType(StrEnum):
 
 class PlanStatus(StrEnum):
     """Statut d'un plan de gestion."""
+
     draft = "draft"
     submitted = "submitted"
     approved = "approved"
@@ -574,6 +580,7 @@ class PlanStatus(StrEnum):
 
 class InterventionType(StrEnum):
     """Type d'intervention sylvicole."""
+
     planting = "planting"
     thinning = "thinning"
     clear_cut = "clear_cut"
@@ -592,6 +599,7 @@ class InterventionType(StrEnum):
 
 class InterventionStatus(StrEnum):
     """Statut d'une intervention."""
+
     planned = "planned"
     scheduled = "scheduled"
     in_progress = "in_progress"
@@ -602,6 +610,7 @@ class InterventionStatus(StrEnum):
 
 class EconomicCategory(StrEnum):
     """Catégorie économique."""
+
     cost = "cost"
     revenue = "revenue"
     subsidy = "subsidy"
@@ -611,6 +620,7 @@ class EconomicCategory(StrEnum):
 
 class RegulationDomain(StrEnum):
     """Domaine réglementaire."""
+
     forest_code = "forest_code"
     psg_obligations = "psg_obligations"
     natura_2000 = "natura_2000"
@@ -623,6 +633,7 @@ class RegulationDomain(StrEnum):
 
 class ComplianceStatus(StrEnum):
     """Statut de conformité réglementaire."""
+
     compliant = "compliant"
     non_compliant = "non_compliant"
     pending_check = "pending_check"
@@ -632,6 +643,7 @@ class ComplianceStatus(StrEnum):
 
 class OutcomeStatus(StrEnum):
     """Statut du suivi de résultat (post-recommandation)."""
+
     pending = "pending"
     in_progress = "in_progress"
     achieved = "achieved"
@@ -642,6 +654,7 @@ class OutcomeStatus(StrEnum):
 
 class AdministrativeLevel(StrEnum):
     """Niveau d'unité administrative."""
+
     national = "national"
     regional = "regional"
     departmental = "departmental"

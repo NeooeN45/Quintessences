@@ -1,6 +1,5 @@
 """Tests unitaires — modèles SQLAlchemy (infrastructure/models.py)."""
 
-
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -10,6 +9,7 @@ from gsie_api.infrastructure.models import Base, TimestampMixin
 def should_be_declarative_base_when_imported():
     """Base doit être une sous-classe de DeclarativeBase."""
     from sqlalchemy.orm import DeclarativeBase
+
     assert issubclass(Base, DeclarativeBase)
 
 

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, Text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -70,7 +70,9 @@ class HypothesisModel(Base, TimestampMixin):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[HypothesisStatus] = mapped_column(
         Enum(HypothesisStatus, name="hypothesis_status"),
-        nullable=False, default=HypothesisStatus.proposed, index=True,
+        nullable=False,
+        default=HypothesisStatus.proposed,
+        index=True,
     )
 
 
@@ -191,7 +193,8 @@ class CorrelationModel(Base, TimestampMixin):
     )
     lifecycle_status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
-        nullable=False, default=LifecycleStatus.draft,
+        nullable=False,
+        default=LifecycleStatus.draft,
     )
 
 

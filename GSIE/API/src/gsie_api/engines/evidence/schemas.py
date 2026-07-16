@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class SourceType(StrEnum):
     """Type de source scientifique (EVIDENCE_FRAMEWORK.md)."""
+
     peer_reviewed = "peer_reviewed"
     referentiel_officiel = "referentiel_officiel"
     expert_identifie = "expert_identifie"
@@ -24,6 +25,7 @@ class SourceType(StrEnum):
 
 class ContentType(StrEnum):
     """Type de contenu soumis."""
+
     publication = "publication"
     referentiel = "referentiel"
     expert = "expert"
@@ -32,6 +34,7 @@ class ContentType(StrEnum):
 
 class EvidenceLevel(StrEnum):
     """Niveau de preuve scientifique (CON-002). A=meilleur, F=pire."""
+
     A = "A"
     B = "B"
     C = "C"
@@ -42,6 +45,7 @@ class EvidenceLevel(StrEnum):
 
 class KnowledgeStatus(StrEnum):
     """Statut de la connaissance après qualification."""
+
     accepte = "accepte"
     quarantine = "quarantine"
     refuse = "refuse"
@@ -49,6 +53,7 @@ class KnowledgeStatus(StrEnum):
 
 class SourceReference(BaseModel):
     """Référence à une source scientifique."""
+
     model_config = ConfigDict(extra="forbid")
 
     type_source: SourceType
@@ -60,6 +65,7 @@ class SourceReference(BaseModel):
 
 class RawKnowledgeSubmission(BaseModel):
     """Soumission de connaissance brute — entrée de l'Evidence Engine."""
+
     model_config = ConfigDict(extra="forbid")
 
     soumission_id: UUID
@@ -72,6 +78,7 @@ class RawKnowledgeSubmission(BaseModel):
 
 class ConflitBibliographique(BaseModel):
     """Conflit entre deux sources (CON-002)."""
+
     model_config = ConfigDict(extra="forbid")
 
     source_a: SourceReference
@@ -81,6 +88,7 @@ class ConflitBibliographique(BaseModel):
 
 class QualifiedKnowledge(BaseModel):
     """Connaissance qualifiée — sortie de l'Evidence Engine."""
+
     model_config = ConfigDict(extra="forbid")
 
     connaissance_id: UUID

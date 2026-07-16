@@ -9,10 +9,6 @@ Assertion (type 9). Ces tests seront réécrits en Vague 2 quand le
 Knowledge Engine sera migré vers le nouveau schéma.
 """
 
-import pytest
-
-pytestmark = pytest.mark.skip(reason="Schéma v6.1 legacy — migration v6.2 (RFC-0012) remplace KnowledgeObject par Assertion")
-
 from uuid import uuid4
 
 import pytest
@@ -40,7 +36,12 @@ from gsie_api.engines.knowledge.schemas import (
     QueryType,
 )
 
+pytestmark = pytest.mark.skip(
+    reason="Schéma v6.1 legacy — migration v6.2 (RFC-0012) remplace KnowledgeObject par Assertion"
+)
+
 # --- Fixtures ---
+
 
 def _make_source(
     type_source: SourceType = SourceType.referentiel_officiel,
@@ -96,6 +97,7 @@ def engine() -> KnowledgeEngine:
 
 # --- Tests d'ingestion ---
 
+
 def should_ingest_knowledge_when_valid_request(engine: KnowledgeEngine):
     """L'ingestion d'une requête valide doit retourner un KnowledgeObject."""
     req = _make_ingest_request()
@@ -132,6 +134,7 @@ def should_raise_error_when_ingesting_quarantine_knowledge(engine: KnowledgeEngi
 
 # --- Tests de requête ---
 
+
 def should_return_empty_result_when_graph_is_empty(engine: KnowledgeEngine):
     """Une requête sur un graphe vide doit retourner un résultat vide."""
     query = KnowledgeQuery(requete_id=uuid4(), type=QueryType.par_concept)
@@ -147,9 +150,7 @@ def should_return_knowledge_when_querying_by_concept(engine: KnowledgeEngine):
     concept_req = _make_ingest_request(
         type_=KnowledgeType.concept, titre="Autécologie du chêne sessile"
     )
-    seuil_req = _make_ingest_request(
-        type_=KnowledgeType.seuil, titre="pH optimal du chêne sessile"
-    )
+    seuil_req = _make_ingest_request(type_=KnowledgeType.seuil, titre="pH optimal du chêne sessile")
     engine.ingest(concept_req)
     engine.ingest(seuil_req)
 
@@ -183,7 +184,9 @@ def should_filter_by_evidence_min_when_provided(engine: KnowledgeEngine):
 
 def should_filter_by_mots_cles_when_par_concept_with_filter(engine: KnowledgeEngine):
     """Le filtre par mots-clés doit restreindre les résultats."""
-    req1 = _make_ingest_request(titre="pH chêne", )
+    req1 = _make_ingest_request(
+        titre="pH chêne",
+    )
     req2 = _make_ingest_request(titre="Altitude hêtre")
     req2.mots_cles = ["hêtre", "altitude"]
     engine.ingest(req1)
@@ -219,6 +222,7 @@ def should_paginate_results_when_page_size_exceeded(engine: KnowledgeEngine):
 
 
 # --- Tests de révision (CON-010) ---
+
 
 def should_create_new_version_when_revising(engine: KnowledgeEngine):
     """La révision doit incrémenter la version et archiver l'ancienne (CON-010)."""
@@ -292,6 +296,7 @@ def should_preserve_history_across_multiple_revisions(engine: KnowledgeEngine):
 
 
 # --- Tests du graphe ---
+
 
 def should_return_graph_version_when_queried(engine: KnowledgeEngine):
     """Le résultat doit contenir une version de graphe non vide."""

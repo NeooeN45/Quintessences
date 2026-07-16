@@ -45,33 +45,40 @@ class ResourceService:
     """Service CRUD générique pour les 73 types du métamodèle v6.2."""
 
     # Champs système non modifiables par l'utilisateur (mass assignment protection)
-    _FORBIDDEN_FIELDS: frozenset[str] = frozenset({
-        "id", "created_at", "updated_at", "deleted_at",
-        "revision_id", "version", "author_id",
-        "transaction_time", "valid_time_start", "valid_time_end",
-    })
+    _FORBIDDEN_FIELDS: frozenset[str] = frozenset(
+        {
+            "id",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+            "revision_id",
+            "version",
+            "author_id",
+            "transaction_time",
+            "valid_time_start",
+            "valid_time_end",
+        }
+    )
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     # --- Helpers privés ---
 
-    def _get_model_cls(self, type_name: str) -> type:
+    def _get_model_cls(self, type_name: str) -> type[Any]:
         """Récupère la classe modèle SQLAlchemy pour un type donné."""
         if type_name not in RESOURCE_TYPES:
             raise ValueError(
-                f"Type inconnu : {type_name}. "
-                f"Types disponibles : {sorted(RESOURCE_TYPES.keys())}"
+                f"Type inconnu : {type_name}. Types disponibles : {sorted(RESOURCE_TYPES.keys())}"
             )
         return RESOURCE_TYPES[type_name]
 
-    def _filter_data(self, model_cls: type, data: dict[str, Any]) -> dict[str, Any]:
+    def _filter_data(self, model_cls: type[Any], data: dict[str, Any]) -> dict[str, Any]:
         """Filtre les champs interdits (mass assignment protection, OWASP A01)."""
-        allowed_columns = {
-            col.name for col in model_cls.__table__.columns if col.name != "id"
-        }
+        allowed_columns = {col.name for col in model_cls.__table__.columns if col.name != "id"}
         return {
-            k: v for k, v in data.items()
+            k: v
+            for k, v in data.items()
             if k in allowed_columns and k not in self._FORBIDDEN_FIELDS
         }
 
@@ -117,9 +124,7 @@ class ResourceService:
             self._add_resource_diff(revision, diff_data)
         return revision
 
-    def _add_resource_diff(
-        self, revision: RevisionModel, diff_data: dict[str, Any]
-    ) -> None:
+    def _add_resource_diff(self, revision: RevisionModel, diff_data: dict[str, Any]) -> None:
         """Ajoute un ResourceDiff à une Revision."""
         resource_diff = ResourceDiffModel(
             id=uuid4(),
@@ -147,9 +152,7 @@ class ResourceService:
             timestamp=datetime.now(UTC).isoformat(),
         )
         try:
-            await ws_manager.broadcast_event(
-                resource_type, event.model_dump(mode="json")
-            )
+            await ws_manager.broadcast_event(resource_type, event.model_dump(mode="json"))
         except Exception:
             logger.warning("ws_broadcast_failed", event_type=event_type, exc_info=True)
 
@@ -197,19 +200,19 @@ class ResourceService:
                 continue
             old_value = getattr(type_instance, key)
             if old_value != new_value:
-                changes.append({
-                    "field": key,
-                    "old_value": str(old_value) if old_value is not None else None,
-                    "new_value": str(new_value) if new_value is not None else None,
-                })
+                changes.append(
+                    {
+                        "field": key,
+                        "old_value": str(old_value) if old_value is not None else None,
+                        "new_value": str(new_value) if new_value is not None else None,
+                    }
+                )
                 setattr(type_instance, key, new_value)
         return changes
 
     # --- Opérations CRUD publiques ---
 
-    async def create(
-        self, request: ResourceCreate, author_id: UUID | None = None
-    ) -> ResourceRead:
+    async def create(self, request: ResourceCreate, author_id: UUID | None = None) -> ResourceRead:
         """Crée une resource + sa ligne dans la table du type + Revision v1."""
         model_cls = self._get_model_cls(request.type)
         errors = validate_resource_data(request.type, request.data)
@@ -221,15 +224,20 @@ class ResourceService:
         resource = await self._insert_resource(request.type, gsie_id, model_cls, safe_data)
 
         await self._create_revision(
-            resource_id=resource.id, version=1,
-            justification="Création initiale", author_id=author_id,
+            resource_id=resource.id,
+            version=1,
+            justification="Création initiale",
+            author_id=author_id,
         )
         await self._session.commit()
 
-        logger.info("resource_created", resource_id=str(resource.id),
-                     type=request.type, gsie_id=gsie_id)
+        logger.info(
+            "resource_created", resource_id=str(resource.id), type=request.type, gsie_id=gsie_id
+        )
         await self._broadcast_event(
-            EventType.resource_created, resource.id, request.type,
+            EventType.resource_created,
+            resource.id,
+            request.type,
             {"gsie_id": gsie_id, **safe_data},
         )
         return await self._build_resource_read(resource)
@@ -253,12 +261,17 @@ class ResourceService:
         return await self._build_resource_read(result)
 
     async def list_resources(
-        self, type_filter: str | None = None, page: int = 1, size: int = 20,
+        self,
+        type_filter: str | None = None,
+        page: int = 1,
+        size: int = 20,
     ) -> ResourceListResponse:
         """Liste paginée de resources, optionnellement filtrée par type."""
         query = select(ResourceModel).where(ResourceModel.deleted_at.is_(None))
-        count_query = select(func.count()).select_from(ResourceModel).where(
-            ResourceModel.deleted_at.is_(None)
+        count_query = (
+            select(func.count())
+            .select_from(ResourceModel)
+            .where(ResourceModel.deleted_at.is_(None))
         )
         if type_filter:
             query = query.where(ResourceModel.type == type_filter)
@@ -266,18 +279,22 @@ class ResourceService:
 
         total = (await self._session.execute(count_query)).scalar_one()
         offset = (page - 1) * size
-        query = query.offset(offset).limit(size).order_by(
-            ResourceModel.created_at.desc()
-        )
+        query = query.offset(offset).limit(size).order_by(ResourceModel.created_at.desc())
         results = (await self._session.execute(query)).scalars().all()
         items = [self._to_resource_read(r, {}) for r in results]
 
         return ResourceListResponse(
-            items=items, total=total, page=page, size=size, type_filter=type_filter,
+            items=items,
+            total=total,
+            page=page,
+            size=size,
+            type_filter=type_filter,
         )
 
     async def update(
-        self, resource_id: UUID, request: ResourceUpdate,
+        self,
+        resource_id: UUID,
+        request: ResourceUpdate,
         author_id: UUID | None = None,
     ) -> ResourceRead | None:
         """Met à jour une resource — crée une Revision + ResourceDiff (CON-010)."""
@@ -295,25 +312,35 @@ class ResourceService:
         next_version = await self._get_next_version(resource_id)
 
         await self._create_revision(
-            resource_id=resource_id, version=next_version,
-            justification=request.justification, author_id=author_id,
+            resource_id=resource_id,
+            version=next_version,
+            justification=request.justification,
+            author_id=author_id,
             diff_data={"field_changes": field_changes},
         )
         await self._session.commit()
 
-        logger.info("resource_updated", resource_id=str(resource_id),
-                     type=resource.type, version=next_version,
-                     justification=request.justification)
+        logger.info(
+            "resource_updated",
+            resource_id=str(resource_id),
+            type=resource.type,
+            version=next_version,
+            justification=request.justification,
+        )
         result = await self.get(resource_id)
         if result:
             await self._broadcast_event(
-                EventType.resource_updated, resource_id, resource.type,
+                EventType.resource_updated,
+                resource_id,
+                resource.type,
                 {"version": next_version, "changes": field_changes},
             )
         return result
 
     async def delete(
-        self, resource_id: UUID, justification: str = "Suppression",
+        self,
+        resource_id: UUID,
+        justification: str = "Suppression",
         author_id: UUID | None = None,
     ) -> bool:
         """Soft delete — marque deleted_at + crée une Revision finale (CON-010)."""
@@ -325,15 +352,18 @@ class ResourceService:
         next_version = await self._get_next_version(resource_id)
 
         await self._create_revision(
-            resource_id=resource_id, version=next_version,
-            justification=f"[DELETED] {justification}", author_id=author_id,
+            resource_id=resource_id,
+            version=next_version,
+            justification=f"[DELETED] {justification}",
+            author_id=author_id,
         )
         await self._session.commit()
 
-        logger.info("resource_soft_deleted", resource_id=str(resource_id),
-                     version=next_version)
+        logger.info("resource_soft_deleted", resource_id=str(resource_id), version=next_version)
         await self._broadcast_event(
-            EventType.resource_deleted, resource_id, resource.type,
+            EventType.resource_deleted,
+            resource_id,
+            resource.type,
             {"version": next_version},
         )
         return True
@@ -347,11 +377,15 @@ class ResourceService:
         )
         return [
             RevisionRead(
-                id=r.id, target_id=r.target_id, version=r.version,
-                author_id=r.author_id, justification=r.justification,
+                id=r.id,
+                target_id=r.target_id,
+                version=r.version,
+                author_id=r.author_id,
+                justification=r.justification,
                 valid_time_start=r.valid_time_start,
                 valid_time_end=r.valid_time_end,
-                transaction_time=r.transaction_time, created_at=r.created_at,
+                transaction_time=r.transaction_time,
+                created_at=r.created_at,
             )
             for r in result.scalars().all()
         ]

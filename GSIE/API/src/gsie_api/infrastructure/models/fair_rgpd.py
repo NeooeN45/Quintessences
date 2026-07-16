@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -65,7 +65,8 @@ class ConsentModel(Base, TimestampMixin):
     purpose: Mapped[str] = mapped_column(Text, nullable=False)
     scope: Mapped[ConsentScope] = mapped_column(
         Enum(ConsentScope, name="consent_scope"),
-        nullable=False, default=ConsentScope.full,
+        nullable=False,
+        default=ConsentScope.full,
     )
     granted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

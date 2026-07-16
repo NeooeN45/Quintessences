@@ -21,12 +21,8 @@ from __future__ import annotations
 # Sources de référence
 # ---------------------------------------------------------------------------
 
-_SOURCE_RAMEAU: str = (
-    "Rameau et al. (2008), Flore forestière française, tome 1 & 2, IDF"
-)
-_SOURCE_BDNFF: str = (
-    "BDNFF (Base de Données Nomenclaturale de la Flore de France)"
-)
+_SOURCE_RAMEAU: str = "Rameau et al. (2008), Flore forestière française, tome 1 & 2, IDF"
+_SOURCE_BDNFF: str = "BDNFF (Base de Données Nomenclaturale de la Flore de France)"
 _SOURCE_GBIF: str = "GBIF Backbone Taxonomy"
 
 # ---------------------------------------------------------------------------

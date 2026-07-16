@@ -18,6 +18,7 @@ Sécurité :
 import json
 from collections import defaultdict, deque
 from time import monotonic
+from typing import Any
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 
@@ -29,23 +30,25 @@ router = APIRouter(prefix="/ws", tags=["websocket"])
 logger = get_logger("gsie_api.websocket.router")
 
 # Canaux autorisés (sécurité — pas d'abonnement arbitraire)
-_ALLOWED_CHANNELS = frozenset({
-    "all",
-    "assertion",
-    "observation",
-    "phenomenon",
-    "alert",
-    "alert.fire_risk",
-    "alert.drought",
-    "alert.storm",
-    "alert.pest",
-    "model",
-    "recommendation",
-    "correlation",
-    "place",
-    "scenario",
-    "ecological_state",
-})
+_ALLOWED_CHANNELS = frozenset(
+    {
+        "all",
+        "assertion",
+        "observation",
+        "phenomenon",
+        "alert",
+        "alert.fire_risk",
+        "alert.drought",
+        "alert.storm",
+        "alert.pest",
+        "model",
+        "recommendation",
+        "correlation",
+        "place",
+        "scenario",
+        "ecological_state",
+    }
+)
 
 # Rate limiting simple — 10 messages / 60s par WebSocket
 _RATE_LIMIT_MAX = 10
@@ -84,7 +87,7 @@ def _validate_channels(channels: list[str] | None) -> list[str]:
     return valid if valid else ["all"]
 
 
-async def _authenticate_ws(websocket: WebSocket) -> dict | None:
+async def _authenticate_ws(websocket: WebSocket) -> dict[str, Any] | None:
     """Authentifie une connexion WebSocket via token en query param."""
     token = websocket.query_params.get("token")
     if not token:
@@ -124,10 +127,12 @@ async def ws_hub(
         while True:
             data = await websocket.receive_text()
             if not _rate_limiter.check(ws_id):
-                await websocket.send_json({
-                    "event_type": "rate_limited",
-                    "message": "Trop de messages. Réessayez dans 60s.",
-                })
+                await websocket.send_json(
+                    {
+                        "event_type": "rate_limited",
+                        "message": "Trop de messages. Réessayez dans 60s.",
+                    }
+                )
                 continue
 
             # Le Hub peut envoyer des commandes
@@ -144,10 +149,12 @@ async def ws_hub(
             elif cmd == "subscribe":
                 new_channels = _validate_channels(msg.get("channels", []))
                 manager.update_subscriptions(websocket, new_channels)
-                await websocket.send_json({
-                    "event_type": "subscribed",
-                    "channels": new_channels,
-                })
+                await websocket.send_json(
+                    {
+                        "event_type": "subscribed",
+                        "channels": new_channels,
+                    }
+                )
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
@@ -170,10 +177,12 @@ async def ws_events(websocket: WebSocket) -> None:
         while True:
             data = await websocket.receive_text()
             if not _rate_limiter.check(ws_id):
-                await websocket.send_json({
-                    "event_type": "rate_limited",
-                    "message": "Trop de messages. Réessayez dans 60s.",
-                })
+                await websocket.send_json(
+                    {
+                        "event_type": "rate_limited",
+                        "message": "Trop de messages. Réessayez dans 60s.",
+                    }
+                )
                 continue
             if data == "ping":
                 await websocket.send_json({"event_type": "pong"})

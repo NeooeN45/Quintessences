@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from sqlalchemy import Enum, Float, ForeignKey, Index, String, Text
+from sqlalchemy import Enum, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -80,7 +80,8 @@ class EcologicalProcessModel(Base, TimestampMixin):
     )
     process_type: Mapped[EcologicalProcessType] = mapped_column(
         Enum(EcologicalProcessType, name="ecological_process_type"),
-        nullable=False, index=True,
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(300), nullable=False)
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
@@ -114,7 +115,8 @@ class RelationTypeModel(Base, TimestampMixin):
     )
     category: Mapped[RelationCategory] = mapped_column(
         Enum(RelationCategory, name="relation_category"),
-        nullable=False, index=True,
+        nullable=False,
+        index=True,
     )
     label: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)

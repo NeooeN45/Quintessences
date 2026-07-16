@@ -7,11 +7,9 @@ NOTE : Ces tests référencent l'ancien schéma v6.1. La migration v6.2
 /knowledge/* seront migrés vers le CRUD générique /resources en Vague 2.
 """
 
-import pytest
-
-pytestmark = pytest.mark.skip(reason="Schéma v6.1 legacy — migration v6.2 (RFC-0012) remplace KnowledgeObject par Assertion")
-
 from uuid import uuid4
+
+import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
@@ -29,6 +27,10 @@ from gsie_api.engines.knowledge.schemas import (
     KnowledgeQuery,
     KnowledgeType,
     QueryType,
+)
+
+pytestmark = pytest.mark.skip(
+    reason="Schéma v6.1 legacy — migration v6.2 (RFC-0012) remplace KnowledgeObject par Assertion"
 )
 
 app = create_app()
@@ -81,6 +83,7 @@ def _make_ingest_payload(
 
 # --- Tests status et version ---
 
+
 def should_return_200_when_knowledge_status_requested():
     """GET /api/v1/knowledge/status doit retourner 200."""
     response = client.get("/api/v1/knowledge/status")
@@ -100,6 +103,7 @@ def should_return_200_when_knowledge_version_requested():
 
 
 # --- Tests ingest ---
+
 
 def should_return_201_when_valid_knowledge_ingested():
     """POST /api/v1/knowledge/ingest doit retourner 201 avec le KnowledgeObject."""
@@ -152,6 +156,7 @@ def should_return_422_when_ingest_missing_titre():
 
 # --- Tests query ---
 
+
 def should_return_200_when_querying_empty_graph():
     """POST /api/v1/knowledge/query doit retourner 200 sur graphe vide."""
     query = KnowledgeQuery(requete_id=uuid4(), type=QueryType.par_concept)
@@ -186,6 +191,7 @@ def should_return_knowledge_when_querying_after_ingest():
 
 
 # --- Tests revise ---
+
 
 def should_return_200_when_revising_existing_knowledge():
     """POST /api/v1/knowledge/revise doit retourner 200 avec la nouvelle version."""
@@ -252,6 +258,7 @@ def should_return_400_when_revising_without_changes():
 
 # --- Tests stats ---
 
+
 def should_return_200_when_stats_requested():
     """GET /api/v1/knowledge/stats doit retourner 200 avec les statistiques."""
     response = client.get(
@@ -264,6 +271,7 @@ def should_return_200_when_stats_requested():
 
 
 # --- Tests d'authentification ---
+
 
 def should_return_401_when_ingest_without_auth():
     """POST /api/v1/knowledge/ingest sans auth doit retourner 401."""

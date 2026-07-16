@@ -53,7 +53,8 @@ class FlowModel(Base, TimestampMixin):
     )
     direction: Mapped[FlowDirection] = mapped_column(
         Enum(FlowDirection, name="flow_direction"),
-        nullable=False, default=FlowDirection.source_to_sink,
+        nullable=False,
+        default=FlowDirection.source_to_sink,
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
@@ -116,7 +117,8 @@ class GoalModel(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     priority: Mapped[GoalPriority] = mapped_column(
         Enum(GoalPriority, name="goal_priority"),
-        nullable=False, default=GoalPriority.secondary,
+        nullable=False,
+        default=GoalPriority.secondary,
     )
     target_value: Mapped[float | None] = mapped_column(Float, nullable=True)
     parent_goal_id: Mapped[UUID | None] = mapped_column(
@@ -152,7 +154,8 @@ class ConstraintModel(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     severity: Mapped[ConstraintSeverity] = mapped_column(
         Enum(ConstraintSeverity, name="constraint_severity"),
-        nullable=False, default=ConstraintSeverity.limiting,
+        nullable=False,
+        default=ConstraintSeverity.limiting,
     )
     source_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
@@ -239,7 +242,8 @@ class TerrainSessionModel(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
     session_type: Mapped[TerrainSessionType] = mapped_column(
         Enum(TerrainSessionType, name="terrain_session_type"),
-        nullable=False, index=True,
+        nullable=False,
+        index=True,
     )
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -260,7 +264,8 @@ class TerrainSessionModel(Base, TimestampMixin):
     )
     sync_status: Mapped[SyncStatus] = mapped_column(
         Enum(SyncStatus, name="sync_status"),
-        nullable=False, default=SyncStatus.pending,
+        nullable=False,
+        default=SyncStatus.pending,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -296,9 +301,7 @@ class EcologicalStateModel(Base, TimestampMixin):
     computed_by: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
     )
-    trend: Mapped[Trend | None] = mapped_column(
-        Enum(Trend, name="trend"), nullable=True
-    )
+    trend: Mapped[Trend | None] = mapped_column(Enum(Trend, name="trend"), nullable=True)
 
 
 @register_type("ecosystem_service")
@@ -315,7 +318,8 @@ class EcosystemServiceModel(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
     category: Mapped[EcosystemServiceCategory] = mapped_column(
         Enum(EcosystemServiceCategory, name="ecosystem_service_category"),
-        nullable=False, index=True,
+        nullable=False,
+        index=True,
     )
     description: Mapped[str] = mapped_column(Text, nullable=False)
     spatial_scope_id: Mapped[UUID | None] = mapped_column(

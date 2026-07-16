@@ -91,10 +91,14 @@ def _generate_dev_public_key() -> str:
         from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
         private_key = load_pem_private_key(private_key_pem, password=None)
-        _dev_public_key = private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        ).decode("utf-8")
+        _dev_public_key = (
+            private_key.public_key()
+            .public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            .decode("utf-8")
+        )
     return _dev_public_key
 
 

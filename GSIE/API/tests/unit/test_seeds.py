@@ -62,8 +62,10 @@ class TestBotanicalGenres:
     def test_genres_famille_exists(self) -> None:
         famille_noms = {f["nom_scientifique"] for f in FAMILLES}
         for g in GENRES:
-            assert g["famille_nom"] in famille_noms, (
-                f"Genre {g['nom_scientifique']} référence une famille inexistante : {g['famille_nom']}"
+            nom = g["nom_scientifique"]
+            famille = g["famille_nom"]
+            assert famille in famille_noms, (
+                f"Genre {nom} référence une famille inexistante : {famille}"
             )
 
 
@@ -105,15 +107,11 @@ class TestBotanicalEssences:
         assert categorie in categories
 
     def test_essences_have_feuillus_principaux(self) -> None:
-        principaux = [
-            e for e in ESSENCES if e["categorie_forestiere"] == "feuillu_principal"
-        ]
+        principaux = [e for e in ESSENCES if e["categorie_forestiere"] == "feuillu_principal"]
         assert len(principaux) >= 10
 
     def test_essences_have_coniferes_principaux(self) -> None:
-        principaux = [
-            e for e in ESSENCES if e["categorie_forestiere"] == "conifere_principal"
-        ]
+        principaux = [e for e in ESSENCES if e["categorie_forestiere"] == "conifere_principal"]
         assert len(principaux) >= 8
 
     def test_essences_includes_key_species(self) -> None:
@@ -153,10 +151,7 @@ class TestHabitatsNatura2000:
             assert "source_reference" in h
 
     def test_habitats_include_priority(self) -> None:
-        priority = [
-            h for h in HABITATS_NATURA2000
-            if h.get("interet_patrimonial") == "prioritaire"
-        ]
+        priority = [h for h in HABITATS_NATURA2000 if h.get("interet_patrimonial") == "prioritaire"]
         assert len(priority) >= 1
 
     def test_habitats_categories_valid(self) -> None:
@@ -214,6 +209,4 @@ class TestGroupesEcologiques:
 
     def test_groupes_indicateurs_diverse(self) -> None:
         indicateurs = {g["indicateur"] for g in GROUPES_ECOLOGIQUES}
-        assert len(indicateurs) >= 4, (
-            f"Indicateurs insuffisamment diversifiés : {indicateurs}"
-        )
+        assert len(indicateurs) >= 4, f"Indicateurs insuffisamment diversifiés : {indicateurs}"

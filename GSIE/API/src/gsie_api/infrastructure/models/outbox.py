@@ -23,9 +23,7 @@ class OutboxEvent(Base):
 
     __tablename__ = "outbox_event"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     aggregate_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, index=True)
     aggregate_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -37,9 +35,7 @@ class OutboxEvent(Base):
     # Statut : pending, published, failed
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
 
-    __table_args__ = (
-        Index("ix_outbox_status_created", "status", "created_at"),
-    )
+    __table_args__ = (Index("ix_outbox_status_created", "status", "created_at"),)
 
 
 class InboxEvent(Base):
@@ -47,9 +43,7 @@ class InboxEvent(Base):
 
     __tablename__ = "inbox_event"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     source: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     external_id: Mapped[str] = mapped_column(String(200), nullable=False)
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -61,6 +55,4 @@ class InboxEvent(Base):
     # Statut : received, processed, failed
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="received", index=True)
 
-    __table_args__ = (
-        Index("ix_inbox_source_external", "source", "external_id", unique=True),
-    )
+    __table_args__ = (Index("ix_inbox_source_external", "source", "external_id", unique=True),)

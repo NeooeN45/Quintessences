@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class PageParams(BaseModel):
     """Paramètres de pagination (global_rules — pas de listes non bornées)."""
+
     model_config = ConfigDict(extra="forbid")
 
     page: int = Field(default=1, ge=1)
@@ -15,6 +16,7 @@ class PageParams(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Réponse d'erreur standardisée."""
+
     model_config = ConfigDict(extra="forbid")
 
     detail: str = Field(max_length=1000)
@@ -24,6 +26,7 @@ class ErrorResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Réponse des endpoints health/ready."""
+
     model_config = ConfigDict(extra="forbid")
 
     status: str = Field(description="healthy|degraded|unhealthy")
@@ -38,6 +41,7 @@ class HealthResponse(BaseModel):
 
 class EngineStatusResponse(BaseModel):
     """Réponse standardisée pour le statut d'un moteur."""
+
     model_config = ConfigDict(extra="forbid")
 
     engine: str = Field(description="Nom du moteur")
@@ -48,6 +52,7 @@ class EngineStatusResponse(BaseModel):
 
 class EngineVersionResponse(BaseModel):
     """Réponse standardisée pour la version d'un moteur."""
+
     model_config = ConfigDict(extra="forbid")
 
     version: str

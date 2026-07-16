@@ -3,14 +3,13 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_type
 from gsie_api.infrastructure.models.enums import (
     ClaimKind,
-    CitationRole,
     EvidenceLevel,
     LifecycleStatus,
     ParticipantRole,
@@ -63,8 +62,10 @@ class AssertionParticipantModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     assertion_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     role: Mapped[ParticipantRole] = mapped_column(
         Enum(ParticipantRole, name="participant_role"), nullable=False
@@ -81,8 +82,10 @@ class AssertionQualifierModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     assertion_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)

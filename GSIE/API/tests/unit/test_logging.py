@@ -1,7 +1,5 @@
 """Tests unitaires — logging structuré (core/logging.py)."""
 
-
-
 from gsie_api.core.logging import (
     _add_trace_id,
     get_logger,

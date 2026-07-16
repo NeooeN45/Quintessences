@@ -19,6 +19,7 @@ from collections import defaultdict
 from typing import Any
 
 from fastapi import WebSocket
+from redis.asyncio import Redis
 
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
@@ -37,11 +38,11 @@ class ConnectionManager:
     def __init__(self) -> None:
         self._connections: dict[WebSocket, set[str]] = {}
         self._channels: dict[str, set[WebSocket]] = defaultdict(set)
-        self._redis = None
-        self._pubsub_task: asyncio.Task | None = None
-        self._heartbeat_task: asyncio.Task | None = None
+        self._redis: Redis | None = None
+        self._pubsub_task: asyncio.Task[None] | None = None
+        self._heartbeat_task: asyncio.Task[None] | None = None
 
-    async def _get_redis(self):
+    async def _get_redis(self) -> Redis | None:
         """Récupère la connexion Redis (lazy init)."""
         if self._redis is None:
             try:
@@ -128,9 +129,7 @@ class ConnectionManager:
         except asyncio.CancelledError:
             logger.info("ws_heartbeat_stopped")
 
-    async def connect(
-        self, websocket: WebSocket, channels: list[str] | None = None
-    ) -> bool:
+    async def connect(self, websocket: WebSocket, channels: list[str] | None = None) -> bool:
         """Accepte une connexion WebSocket et l'abonne à des canaux.
 
         Returns:

@@ -3,10 +3,8 @@
 Teste le router, le manager, le rate limiter, la validation des canaux.
 """
 
-import pytest
-
 from gsie_api.websocket.manager import ConnectionManager
-from gsie_api.websocket.router import _validate_channels, _RATE_LIMIT_MAX
+from gsie_api.websocket.router import _RATE_LIMIT_MAX, _validate_channels
 
 
 class TestChannelValidation:
@@ -41,6 +39,7 @@ class TestRateLimiter:
 
     def test_should_allow_under_limit(self) -> None:
         from gsie_api.websocket.router import _rate_limiter
+
         ws_id = 999999
         for _ in range(_RATE_LIMIT_MAX):
             assert _rate_limiter.check(ws_id) is True

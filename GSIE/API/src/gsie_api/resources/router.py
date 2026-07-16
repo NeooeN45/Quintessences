@@ -59,7 +59,7 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
         return UUID(subject_claim)
     except (ValueError, TypeError):
         # subject est un username (ex: "admin") — UUID déterministe
-        return UUID(uuid5(_GSIE_AUTHOR_NAMESPACE, subject_claim))
+        return uuid5(_GSIE_AUTHOR_NAMESPACE, subject_claim)
 
 
 @router.get(
@@ -86,9 +86,7 @@ async def list_resources(
     request: Request,
     _user: CurrentUser,
     session: DbSession,
-    type: str | None = Query(
-        None, description="Filtrer par type (ex. assertion, observation)"
-    ),
+    type: str | None = Query(None, description="Filtrer par type (ex. assertion, observation)"),
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(20, ge=1, le=100, description="Taille de page (max 100)"),
 ) -> ResourceListResponse:
@@ -160,9 +158,7 @@ async def update_resource(
         raise HTTPException(status_code=404, detail="Resource non trouvée")
     check_permission(user, existing.type, "write")
     try:
-        result = await service.update(
-            resource_id, body, author_id=_extract_author_id(user)
-        )
+        result = await service.update(resource_id, body, author_id=_extract_author_id(user))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if result is None:

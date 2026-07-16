@@ -4,14 +4,13 @@ Utilise SQLite in-memory (aiosqlite) pour tester le service sans Docker.
 Les types UUID/JSONB/PostGIS sont adaptés pour SQLite via @compiles.
 """
 
-from datetime import datetime, UTC
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
-from sqlalchemy import JSON, String, event, func, text as sa_text
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
 
@@ -21,12 +20,11 @@ except ImportError:
     _GeometryType = None  # type: ignore
 
 from gsie_api.infrastructure.models import Base, ResourceModel
-from gsie_api.infrastructure.models.temporal_engine import RevisionModel
 from gsie_api.resources.schemas import ResourceCreate, ResourceUpdate
 from gsie_api.resources.service import ResourceService
 
-
 # --- Adaptateurs de types pour SQLite ----------------------------------------
+
 
 @compiles(JSONB, "sqlite")
 def _jsonb_to_sqlite(element: Any, compiler: Any, **kw: Any) -> str:
@@ -35,6 +33,7 @@ def _jsonb_to_sqlite(element: Any, compiler: Any, **kw: Any) -> str:
 
 
 if _GeometryType is not None:
+
     @compiles(_GeometryType, "sqlite")
     def _geometry_to_sqlite(element: Any, compiler: Any, **kw: Any) -> str:
         """Geometry → TEXT (WKT) en SQLite."""
@@ -57,6 +56,7 @@ async def session():
 
     # Patch des server_default incompatibles SQLite (restaurés après les tests)
     from sqlalchemy.sql.schema import DefaultClause
+
     replaced: list[tuple[Any, str, Any]] = []
     for table in Base.metadata.tables.values():
         for col in table.columns:
@@ -79,8 +79,10 @@ async def session():
     async with engine.begin() as conn:
         # Exclure les tables avec Geometry (GeoAlchemy2 ajoute des DDL PostGIS)
         from geoalchemy2 import Geometry
+
         tables_to_create = [
-            t for t in Base.metadata.sorted_tables
+            t
+            for t in Base.metadata.sorted_tables
             if not any(isinstance(c.type, Geometry) for c in t.columns)
         ]
         await conn.run_sync(Base.metadata.create_all, tables=tables_to_create)
@@ -208,9 +210,7 @@ class TestAppendOnlyRevisions:
     ) -> None:
         """Plusieurs updates créent plusieurs révisions, toutes préservées."""
         service = ResourceService(session)
-        created = await service.create(
-            ResourceCreate(type="entity", data={"entity_subtype": "v1"})
-        )
+        created = await service.create(ResourceCreate(type="entity", data={"entity_subtype": "v1"}))
 
         for i in range(2, 6):
             await service.update(
@@ -275,10 +275,11 @@ class TestSoftDelete:
         assert all(r.data.get("entity_subtype") != "dead" for r in result.items)
 
     @pytest.mark.asyncio
-    async def test_should_return_false_when_deleting_nonexistent(self, session: AsyncSession) -> None:
+    async def test_should_return_false_when_deleting_nonexistent(
+        self, session: AsyncSession
+    ) -> None:
         """delete() retourne False si la resource n'existe pas."""
         service = ResourceService(session)
-        from uuid import uuid4
         result = await service.delete(uuid4())
         assert result is False
 
@@ -336,9 +337,7 @@ class TestCreateAndRead:
     async def test_should_use_provided_gsie_id(self, session: AsyncSession) -> None:
         """Le gsie_id fourni est utilisé tel quel."""
         service = ResourceService(session)
-        req = ResourceCreate(
-            type="entity", gsie_id="entity:custom:123", data={}
-        )
+        req = ResourceCreate(type="entity", gsie_id="entity:custom:123", data={})
         result = await service.create(req)
         assert result.gsie_id == "entity:custom:123"
 
@@ -346,7 +345,6 @@ class TestCreateAndRead:
     async def test_should_return_none_for_nonexistent_id(self, session: AsyncSession) -> None:
         """get() retourne None pour un ID inexistant."""
         service = ResourceService(session)
-        from uuid import uuid4
         result = await service.get(uuid4())
         assert result is None
 
@@ -367,9 +365,7 @@ class TestListPagination:
         """list_resources pagine correctement."""
         service = ResourceService(session)
         for i in range(5):
-            await service.create(
-                ResourceCreate(type="entity", data={"entity_subtype": f"e{i}"})
-            )
+            await service.create(ResourceCreate(type="entity", data={"entity_subtype": f"e{i}"}))
 
         page1 = await service.list_resources(page=1, size=2)
         assert page1.total == 5
@@ -387,9 +383,9 @@ class TestListPagination:
         """list_resources filtre par type."""
         service = ResourceService(session)
         await service.create(ResourceCreate(type="entity", data={}))
-        await service.create(ResourceCreate(type="concept", data={
-            "preferred_label": "Test", "description": "Test"
-        }))
+        await service.create(
+            ResourceCreate(type="concept", data={"preferred_label": "Test", "description": "Test"})
+        )
 
         result = await service.list_resources(type_filter="entity")
         assert result.total == 1
@@ -404,15 +400,12 @@ class TestUpdateBehavior:
     async def test_should_return_none_for_nonexistent_update(self, session: AsyncSession) -> None:
         """update() retourne None pour un ID inexistant."""
         service = ResourceService(session)
-        from uuid import uuid4
         req = ResourceUpdate(data={"entity_subtype": "x"}, justification="test")
         result = await service.update(uuid4(), req)
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_should_return_none_for_soft_deleted_update(
-        self, session: AsyncSession
-    ) -> None:
+    async def test_should_return_none_for_soft_deleted_update(self, session: AsyncSession) -> None:
         """update() retourne None pour une resource soft-deleted."""
         service = ResourceService(session)
         created = await service.create(ResourceCreate(type="entity", data={}))

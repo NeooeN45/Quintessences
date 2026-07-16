@@ -26,6 +26,7 @@ from gsie_api.engines.evidence.schemas import (
 
 class KnowledgeType(StrEnum):
     """Type de KnowledgeObject (KNOWLEDGE_METHOD.md §2, livrable 302)."""
+
     concept = "concept"
     relation = "relation"
     regle = "regle"
@@ -36,6 +37,7 @@ class KnowledgeType(StrEnum):
 
 class QueryType(StrEnum):
     """Type de requête sur le graphe (KNOWLEDGE_ENGINE.md §5)."""
+
     par_concept = "par_concept"
     par_relation = "par_relation"
     par_domaine = "par_domaine"
@@ -45,6 +47,7 @@ class QueryType(StrEnum):
 
 class DomaineScientifique(StrEnum):
     """Domaine scientifique (Constitution Scientifique S-6)."""
+
     ecologie_forestiere = "ecologie_forestiere_et_stationnelle"
     pedologie = "pedologie"
     climatologie = "climatologie"
@@ -59,6 +62,7 @@ class DomaineScientifique(StrEnum):
 
 class VersionEntry(BaseModel):
     """Entrée d'historique de version (CON-010 — aucune connaissance supprimée silencieusement)."""
+
     model_config = ConfigDict(extra="forbid")
 
     version: int = Field(ge=1, description="Numéro de version")
@@ -71,6 +75,7 @@ class VersionEntry(BaseModel):
 
 class DomaineValidite(BaseModel):
     """Domaine de validité d'une connaissance (conditions d'application)."""
+
     model_config = ConfigDict(extra="forbid")
 
     parametre: str = Field(
@@ -83,16 +88,15 @@ class DomaineValidite(BaseModel):
 
 class RelationRef(BaseModel):
     """Référence vers une autre connaissance (KNOWLEDGE_GRAPH_SPECIFICATION.md)."""
+
     model_config = ConfigDict(extra="forbid")
 
     connaissance_id: UUID = Field(description="UUID de la connaissance liée")
     predicat: str = Field(
-        min_length=1, max_length=100,
-        description="Type de relation (est_adapte_a, influence, etc.)"
+        min_length=1, max_length=100, description="Type de relation (est_adapte_a, influence, etc.)"
     )
     sens: str = Field(
-        default="sortant", max_length=20,
-        description="sortant|entrant|bidirectionnel"
+        default="sortant", max_length=20, description="sortant|entrant|bidirectionnel"
     )
 
 
@@ -102,6 +106,7 @@ class KnowledgeObject(BaseModel):
     Source unique de vérité pour tous les moteurs de raisonnement.
     Versionné (CON-010), traçable (CON-005), sourcé (S-1).
     """
+
     model_config = ConfigDict(extra="forbid")
 
     # Identité
@@ -166,6 +171,7 @@ class KnowledgeIngestRequest(BaseModel):
     Le Knowledge Engine reçoit les connaissances au statut « accepte »
     depuis l'Evidence Engine (KNOWLEDGE_ENGINE.md §5).
     """
+
     model_config = ConfigDict(extra="forbid")
 
     # Champs de la connaissance qualifiée (depuis Evidence Engine)
@@ -193,6 +199,7 @@ class KnowledgeIngestRequest(BaseModel):
 
 class KnowledgeQuery(BaseModel):
     """Requête sur le graphe de connaissances (KNOWLEDGE_ENGINE.md §5)."""
+
     model_config = ConfigDict(extra="forbid")
 
     requete_id: UUID = Field(description="Identifiant de la requête (UUID)")
@@ -211,6 +218,7 @@ class KnowledgeQuery(BaseModel):
 
 class KnowledgeQueryResult(BaseModel):
     """Résultat d'une requête sur le graphe (KNOWLEDGE_ENGINE.md §5)."""
+
     model_config = ConfigDict(extra="forbid")
 
     requete_id: UUID = Field(description="Identifiant de la requête (UUID)")
@@ -231,6 +239,7 @@ class KnowledgeRevisionRequest(BaseModel):
     La révision archive l'ancienne version dans l'historique et crée
     une nouvelle version. La connaissance n'est jamais supprimée.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     connaissance_id: UUID = Field(description="UUID de la connaissance à réviser")

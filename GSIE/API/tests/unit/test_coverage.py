@@ -26,6 +26,7 @@ from gsie_api.engines.evidence.schemas import (
 
 # --- app.py : OpenTelemetry setup ---
 
+
 def should_setup_opentelemetry_when_otel_enabled():
     """_setup_opentelemetry doit instrumenter l'app si otel_enabled=True."""
     from gsie_api.app import _setup_opentelemetry
@@ -42,16 +43,22 @@ def should_setup_opentelemetry_when_otel_enabled():
     mock_sqlalchemy_instr = MagicMock()
     mock_redis_instr = MagicMock()
 
-    with patch.dict("sys.modules", {
-        "opentelemetry": mock_trace,
-        "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_exporter,
-        "opentelemetry.instrumentation.fastapi": mock_fastapi_instr,
-        "opentelemetry.instrumentation.redis": mock_redis_instr,
-        "opentelemetry.instrumentation.sqlalchemy": mock_sqlalchemy_instr,
-        "opentelemetry.sdk.resources": mock_resource,
-        "opentelemetry.sdk.trace": mock_provider,
-        "opentelemetry.sdk.trace.export": mock_processor,
-    }), patch("gsie_api.infrastructure.database.engine") as mock_engine:
+    with (
+        patch.dict(
+            "sys.modules",
+            {
+                "opentelemetry": mock_trace,
+                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_exporter,
+                "opentelemetry.instrumentation.fastapi": mock_fastapi_instr,
+                "opentelemetry.instrumentation.redis": mock_redis_instr,
+                "opentelemetry.instrumentation.sqlalchemy": mock_sqlalchemy_instr,
+                "opentelemetry.sdk.resources": mock_resource,
+                "opentelemetry.sdk.trace": mock_provider,
+                "opentelemetry.sdk.trace.export": mock_processor,
+            },
+        ),
+        patch("gsie_api.infrastructure.database.engine") as mock_engine,
+    ):
         mock_engine.sync_engine = MagicMock()
         _setup_opentelemetry(app)
         # Vérifier que l'instrumentation a été appelée
@@ -103,6 +110,7 @@ def should_call_setup_opentelemetry_in_lifespan_when_enabled():
 
 
 # --- app.py : Graceful shutdown ---
+
 
 def should_close_connections_on_shutdown():
     """Le lifespan doit fermer les connexions DB et Redis au shutdown."""
@@ -170,6 +178,7 @@ def should_log_error_when_shutdown_cleanup_fails():
 
 # --- core/auth.py : chargement clés depuis fichiers ---
 
+
 def should_load_private_key_from_file_when_exists():
     """_load_private_key doit charger depuis le fichier si il existe."""
     from gsie_api.core.auth import _load_private_key
@@ -207,6 +216,7 @@ def should_load_public_key_from_file_when_exists():
 
 
 # --- wrapper.py : fallbacks Python quand Rust indispo ---
+
 
 def _make_submission(
     source_type: SourceType = SourceType.peer_reviewed,
@@ -262,10 +272,13 @@ def should_fallback_to_python_when_evaluate_with_context_rust_fails():
     """evaluate_with_context doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
-        wrapper_module._rust_engine.EvidenceEngine,
-        "evaluate_with_context",
-        side_effect=RuntimeError("Rust panic"),
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.object(
+            wrapper_module._rust_engine.EvidenceEngine,
+            "evaluate_with_context",
+            side_effect=RuntimeError("Rust panic"),
+        ),
     ):
         sub = _make_submission()
         result = wrapper_module.evaluate_with_context(sub)
@@ -276,10 +289,13 @@ def should_fallback_to_python_when_detect_conflicts_rust_fails():
     """detect_conflicts doit fallback vers Python si Rust lève une exception."""
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
-        wrapper_module._rust_engine.EvidenceEngine,
-        "detect_conflicts",
-        side_effect=RuntimeError("Rust panic"),
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.object(
+            wrapper_module._rust_engine.EvidenceEngine,
+            "detect_conflicts",
+            side_effect=RuntimeError("Rust panic"),
+        ),
     ):
         candidate = SourceReference(
             type_source=SourceType.peer_reviewed,

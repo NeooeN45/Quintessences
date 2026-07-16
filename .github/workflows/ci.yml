@@ -225,3 +225,30 @@ jobs:
               fi
             fi
           done
+
+  # Job gate — bloque les merges si un job obligatoire échoue
+  ci-gate:
+    name: CI Gate (bloque merge)
+    runs-on: ubuntu-latest
+    needs: [markdown-lint, consistency-checks, python-quality, rust-quality, docker-build, governance-check]
+    if: always()
+    steps:
+      - name: Vérifier que tous les jobs obligatoires ont réussi
+        run: |
+          echo "Jobs status:"
+          echo "  markdown-lint: ${{ needs.markdown-lint.result }}"
+          echo "  consistency-checks: ${{ needs.consistency-checks.result }}"
+          echo "  python-quality: ${{ needs.python-quality.result }}"
+          echo "  rust-quality: ${{ needs.rust-quality.result }}"
+          echo "  docker-build: ${{ needs.docker-build.result }}"
+          echo "  governance-check: ${{ needs.governance-check.result }}"
+          if [[ "${{ needs.markdown-lint.result }}" != "success" || \
+                "${{ needs.consistency-checks.result }}" != "success" || \
+                "${{ needs.python-quality.result }}" != "success" || \
+                "${{ needs.rust-quality.result }}" != "success" || \
+                "${{ needs.docker-build.result }}" != "success" || \
+                "${{ needs.governance-check.result }}" != "success" ]]; then
+            echo "::error::Un ou plusieurs jobs CI ont échoué — merge bloqué."
+            exit 1
+          fi
+          echo "Tous les jobs CI ont réussi — merge autorisé."

@@ -6,8 +6,6 @@ Pas de DB requise — utilise des mocks pour la session.
 
 from uuid import uuid4
 
-import pytest
-
 from gsie_api.resources.service import ResourceService
 from gsie_api.resources.validators import validate_resource_data
 
@@ -35,25 +33,34 @@ class TestValidators:
     """Tests de la validation dynamique par type."""
 
     def test_should_pass_when_required_fields_present(self) -> None:
-        errors = validate_resource_data("assertion", {
-            "claim_kind": "relation",
-            "lifecycle_status": "draft",
-        })
+        errors = validate_resource_data(
+            "assertion",
+            {
+                "claim_kind": "relation",
+                "lifecycle_status": "draft",
+            },
+        )
         assert errors == []
 
     def test_should_fail_when_required_field_missing(self) -> None:
-        errors = validate_resource_data("assertion", {
-            "claim_kind": "relation",
-            # lifecycle_status manquant
-        })
+        errors = validate_resource_data(
+            "assertion",
+            {
+                "claim_kind": "relation",
+                # lifecycle_status manquant
+            },
+        )
         assert len(errors) == 1
         assert "lifecycle_status" in errors[0]
 
     def test_should_fail_when_enum_value_invalid(self) -> None:
-        errors = validate_resource_data("assertion", {
-            "claim_kind": "toto",  # invalide
-            "lifecycle_status": "draft",
-        })
+        errors = validate_resource_data(
+            "assertion",
+            {
+                "claim_kind": "toto",  # invalide
+                "lifecycle_status": "draft",
+            },
+        )
         assert len(errors) == 1
         assert "claim_kind" in errors[0]
 
@@ -67,19 +74,25 @@ class TestValidators:
         assert "subject_id" in errors[0]
 
     def test_should_pass_when_all_required_present(self) -> None:
-        errors = validate_resource_data("observation", {
-            "subject_id": uuid4(),
-        })
+        errors = validate_resource_data(
+            "observation",
+            {
+                "subject_id": uuid4(),
+            },
+        )
         assert errors == []
 
     def test_should_validate_flow_all_required(self) -> None:
-        errors = validate_resource_data("flow", {
-            "flow_type": "carbon",
-            "source_id": uuid4(),
-            "sink_id": uuid4(),
-            "magnitude": 12.5,
-            "magnitude_unit_id": uuid4(),
-        })
+        errors = validate_resource_data(
+            "flow",
+            {
+                "flow_type": "carbon",
+                "source_id": uuid4(),
+                "sink_id": uuid4(),
+                "magnitude": 12.5,
+                "magnitude_unit_id": uuid4(),
+            },
+        )
         assert errors == []
 
     def test_should_fail_when_flow_missing_fields(self) -> None:
@@ -87,19 +100,25 @@ class TestValidators:
         assert len(errors) == 4  # source_id, sink_id, magnitude, magnitude_unit_id
 
     def test_should_validate_consent_legal_basis(self) -> None:
-        errors = validate_resource_data("consent", {
-            "data_subject_id": uuid4(),
-            "purpose": "recherche",
-            "granted_at": "2026-07-16T00:00:00Z",
-            "legal_basis": "consent",
-        })
+        errors = validate_resource_data(
+            "consent",
+            {
+                "data_subject_id": uuid4(),
+                "purpose": "recherche",
+                "granted_at": "2026-07-16T00:00:00Z",
+                "legal_basis": "consent",
+            },
+        )
         assert errors == []
 
     def test_should_fail_when_consent_invalid_legal_basis(self) -> None:
-        errors = validate_resource_data("consent", {
-            "data_subject_id": uuid4(),
-            "purpose": "recherche",
-            "granted_at": "2026-07-16T00:00:00Z",
-            "legal_basis": "toto",  # invalide
-        })
+        errors = validate_resource_data(
+            "consent",
+            {
+                "data_subject_id": uuid4(),
+                "purpose": "recherche",
+                "granted_at": "2026-07-16T00:00:00Z",
+                "legal_basis": "toto",  # invalide
+            },
+        )
         assert len(errors) == 1

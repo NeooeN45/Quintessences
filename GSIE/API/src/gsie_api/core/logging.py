@@ -29,9 +29,7 @@ def setup_logging(log_level: str = "INFO", environment: str = "development") -> 
     is_production = environment == "production"
 
     renderer = (
-        structlog.processors.JSONRenderer()
-        if is_production
-        else structlog.dev.ConsoleRenderer()
+        structlog.processors.JSONRenderer() if is_production else structlog.dev.ConsoleRenderer()
     )
 
     structlog.configure(

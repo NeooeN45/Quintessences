@@ -42,9 +42,7 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
     Sinon, on génère un UUID4.
     """
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Limite taille corps de requête (OWASP A04)
         # Gestion robuste du Content-Length : valeur non numérique ou négative
         content_length = request.headers.get("content-length")
@@ -57,7 +55,7 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
                     content={
                         "detail": "Invalid Content-Length header",
                         "error_code": "BAD_REQUEST",
-                    }
+                    },
                 )
             if cl_value < 0 or cl_value > _MAX_BODY_SIZE:
                 return JSONResponse(

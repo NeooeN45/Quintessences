@@ -311,13 +311,13 @@ class BotanicalEssenceModel(Base, TimestampMixin):
     gbif_taxon_key: Mapped[int | None] = mapped_column(nullable=True, index=True)
 
     # Métadonnées JSONB (flexibilité pour attributs additionnels)
-    attributs: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+    attributs: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
 
     genre: Mapped[BotanicalGenreModel] = relationship(back_populates="essences")
 
-    __table_args__ = (
-        Index("ix_be_categorie_nom", "categorie_forestiere", "nom_vernaculaire"),
-    )
+    __table_args__ = (Index("ix_be_categorie_nom", "categorie_forestiere", "nom_vernaculaire"),)
 
 
 # --- Écosystèmes (Phase 4) ---
@@ -349,7 +349,9 @@ class EcosystemHabitatModel(Base, TimestampMixin):
     source_reference: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # Métadonnées JSONB
-    attributs: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+    attributs: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
 
 
 class EcosystemStationModel(Base, TimestampMixin):
@@ -366,9 +368,7 @@ class EcosystemStationModel(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Localisation
-    region_forestiere: Mapped[str | None] = mapped_column(
-        String(200), nullable=True, index=True
-    )
+    region_forestiere: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True)
     departements: Mapped[list[str]] = mapped_column(
         JSONB, default=list, server_default=text("'[]'::jsonb")
     )
@@ -395,7 +395,9 @@ class EcosystemStationModel(Base, TimestampMixin):
     source_reference: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # Métadonnées JSONB
-    attributs: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+    attributs: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
 
 
 class EcosystemGroupeEcologiqueModel(Base, TimestampMixin):

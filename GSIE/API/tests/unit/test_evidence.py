@@ -52,6 +52,7 @@ def _make_submission(
 
 # --- Tests du wrapper ---
 
+
 def should_return_version_when_engine_version_called():
     """engine_version doit retourner une version non vide."""
     version = engine_version()
@@ -140,6 +141,7 @@ def should_preserve_source_when_evaluated():
 
 
 # --- Tests de l'API ---
+
 
 def should_return_200_when_evidence_status_requested():
     """GET /api/v1/evidence/status doit retourner 200."""
@@ -243,6 +245,7 @@ def should_return_quarantine_via_api_when_expert():
 
 # --- Tests du fallback Python ---
 
+
 def should_use_python_fallback_when_rust_unavailable():
     """Le fallback Python doit fonctionner quand Rust n'est pas disponible."""
     from unittest.mock import patch
@@ -297,10 +300,13 @@ def should_fallback_to_python_when_rust_raises_exception():
     import gsie_api.engines.evidence.wrapper as wrapper_module
 
     # Simuler une exception lors de l'appel Rust
-    with patch.object(wrapper_module, "_RUST_AVAILABLE", True), patch.object(
-        wrapper_module._rust_engine.EvidenceEngine,
-        "evaluate_json",
-        side_effect=RuntimeError("Rust panic simulated"),
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.object(
+            wrapper_module._rust_engine.EvidenceEngine,
+            "evaluate_json",
+            side_effect=RuntimeError("Rust panic simulated"),
+        ),
     ):
         sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
         result = wrapper_module.evaluate(sub)
@@ -323,6 +329,7 @@ def should_include_trace_id_in_404_error():
 
 
 # --- Tests detect_conflicts ---
+
 
 def should_detect_conflict_when_same_reference_different_type():
     """detect_conflicts doit détecter un conflit : même référence, type différent."""
@@ -403,6 +410,7 @@ def should_return_empty_conflicts_when_no_existing():
 
 # --- Tests versionnement ---
 
+
 def should_set_version_to_2_when_parent_version_is_1():
     """evaluate_with_context doit incrémenter la version avec un parent."""
     from gsie_api.engines.evidence.wrapper import evaluate_with_context
@@ -445,6 +453,7 @@ def should_return_refuse_when_conflict_detected():
 
 
 # --- Tests /metrics ---
+
 
 def should_return_200_when_metrics_requested():
     """GET /metrics doit retourner les métriques Prometheus."""

@@ -1,9 +1,10 @@
 """Modèles provenance — types 1-8 (Entity, EntityAlias, Concept, etc.)."""
 
 from datetime import date
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Date, ForeignKey, Index, String, Text
+from sqlalchemy import Date, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -80,7 +81,7 @@ class ConceptVersionModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     label: Mapped[str] = mapped_column(String(300), nullable=False)
-    fusions: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    fusions: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
 
 @register_type("vocabulary")

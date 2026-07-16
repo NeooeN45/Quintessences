@@ -4,6 +4,7 @@ Valide les champs obligatoires et les enums pour chaque type avant
 l'insertion en DB. Évite d'envoyer n'importe quoi dans `data`.
 """
 
+from enum import Enum
 from typing import Any
 
 from gsie_api.infrastructure.models.enums import (
@@ -50,7 +51,7 @@ from gsie_api.infrastructure.models.enums import (
 
 # Mappe type_name → {champ: enum_class}
 # Seuls les champs enum sont validés ici. Les champs obligatoires (non-None) sont listés séparément.
-_ENUM_FIELDS: dict[str, dict[str, type]] = {
+_ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "assertion": {
         "claim_kind": ClaimKind,
         "lifecycle_status": LifecycleStatus,
@@ -243,16 +244,11 @@ def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
     max_string_length = 10000
     for field, value in data.items():
         if isinstance(value, str) and len(value) > max_string_length:
-            errors.append(
-                f"Champ {field} trop long : {len(value)} chars "
-                f"(max {max_string_length})"
-            )
+            errors.append(f"Champ {field} trop long : {len(value)} chars (max {max_string_length})")
 
     # 4. Validation du nombre de champs (payload limit)
     max_fields = 50
     if len(data) > max_fields:
-        errors.append(
-            f"Trop de champs : {len(data)} (max {max_fields})"
-        )
+        errors.append(f"Trop de champs : {len(data)} (max {max_fields})")
 
     return errors

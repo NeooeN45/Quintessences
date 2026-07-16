@@ -53,7 +53,9 @@ class ManagementPlanModel(Base, TimestampMixin):
         Enum(ManagementPlanType, name="management_plan_type"), nullable=False, index=True
     )
     status: Mapped[PlanStatus] = mapped_column(
-        Enum(PlanStatus, name="plan_status"), nullable=False, index=True,
+        Enum(PlanStatus, name="plan_status"),
+        nullable=False,
+        index=True,
         default=PlanStatus.draft,
     )
     spatial_scope_id: Mapped[UUID] = mapped_column(
@@ -70,9 +72,7 @@ class ManagementPlanModel(Base, TimestampMixin):
     revision_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     approval_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     approval_authority: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    objectives: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    objectives: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
@@ -94,8 +94,10 @@ class InterventionModel(Base, TimestampMixin):
         Enum(InterventionType, name="intervention_type"), nullable=False, index=True
     )
     status: Mapped[InterventionStatus] = mapped_column(
-        Enum(InterventionStatus, name="intervention_status"), nullable=False,
-        index=True, default=InterventionStatus.planned,
+        Enum(InterventionStatus, name="intervention_status"),
+        nullable=False,
+        index=True,
+        default=InterventionStatus.planned,
     )
     plan_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
@@ -107,9 +109,7 @@ class InterventionModel(Base, TimestampMixin):
     completed_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     area_ha: Mapped[float | None] = mapped_column(Float, nullable=True)
     volume_m3: Mapped[float | None] = mapped_column(Float, nullable=True)
-    target_species: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    target_species: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     operator_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
     )
@@ -145,9 +145,7 @@ class EconomicScenarioModel(Base, TimestampMixin):
     unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_reference: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    details: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    details: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
 
 @register_type("regulation")
@@ -174,9 +172,7 @@ class RegulationModel(Base, TimestampMixin):
     authority: Mapped[str | None] = mapped_column(String(200), nullable=True)
     effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    penalties: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    penalties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
 
 @register_type("compliance_check")
@@ -200,15 +196,15 @@ class ComplianceCheckModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[ComplianceStatus] = mapped_column(
-        Enum(ComplianceStatus, name="compliance_status"), nullable=False, index=True,
+        Enum(ComplianceStatus, name="compliance_status"),
+        nullable=False,
+        index=True,
         default=ComplianceStatus.pending_check,
     )
     checked_by: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
     )
-    checked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
     waiver_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -236,7 +232,9 @@ class OutcomeTrackingModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     status: Mapped[OutcomeStatus] = mapped_column(
-        Enum(OutcomeStatus, name="outcome_status"), nullable=False, index=True,
+        Enum(OutcomeStatus, name="outcome_status"),
+        nullable=False,
+        index=True,
         default=OutcomeStatus.pending,
     )
     expected_outcome: Mapped[str] = mapped_column(Text, nullable=False)
@@ -244,9 +242,7 @@ class OutcomeTrackingModel(Base, TimestampMixin):
     expected_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     actual_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     assessment: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metrics: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     recalibration_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     feedback_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     lessons_learned: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -280,6 +276,4 @@ class AdministrativeUnitModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     authority: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    attributes: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)

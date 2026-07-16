@@ -145,9 +145,7 @@ def _detect_conflicts_rust(
     try:
         candidate_json = candidate.model_dump_json()
         existing_json = f"[{','.join(s.model_dump_json() for s in existing)}]"
-        result_json = _rust_engine.EvidenceEngine.detect_conflicts(
-            candidate_json, existing_json
-        )
+        result_json = _rust_engine.EvidenceEngine.detect_conflicts(candidate_json, existing_json)
         import json
 
         raw = json.loads(result_json)

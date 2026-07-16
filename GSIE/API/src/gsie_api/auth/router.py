@@ -32,6 +32,7 @@ from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 class DevUser(TypedDict):
     """Utilisateur local strictement réservé au développement."""
 
