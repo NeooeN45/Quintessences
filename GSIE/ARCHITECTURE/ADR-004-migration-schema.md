@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | ADR-004 |
-| **Statut** | Proposé |
+| **Statut** | Validated |
 | **Date** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Décision liée** | DEC-000022, RFC-0011 |
@@ -121,3 +121,10 @@ def evidence_result_to_assessment(
 - Vague 0 : audit de migration détaillé (vérifier `knowledge_models.py`
   ↔ migration 0001 ↔ schéma v6.1)
 - Vague 1 : exécution des migrations 0002-0005 + tests
+
+## Validation (2026-07-16)
+
+ADR-004 validée par le Fondateur. Le plan en 4 migrations progressives
+(0002-0005) est retenu. La migration 0002 actuelle (big bang) sera
+réécrite pour suivre ce plan. RFC-0012 est amendée pour s'aligner sur
+cette ADR (voir RFC-0012 §6 — amendement de cohérence).

@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0012 |
-| **Statut** | Proposé |
+| **Statut** | Validated |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-16 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
@@ -291,3 +291,51 @@ avec création de DEC-000023 et ADR-007.
 - `GSIE/ARCHITECTURE/ADR-001-racine-resource.md` — table racine resource
 - `GSIE/ARCHITECTURE/ADR-002-pg-temporal.md` — Temporal & Provenance Engine
 - `GSIE/ARCHITECTURE/ADR-007-api-v6.2.md` — architecture API v6.2 (à créer)
+
+---
+
+## 9. Amendement de cohérence avec ADR-004 (2026-07-16)
+
+### Constat
+
+RFC-0012 décrivait à l'origine une migration big bang (migration 0002
+unique créant les 73 tables + migrant les données + supprimant les
+anciennes tables). ADR-004 prescrivait parallèlement une migration
+progressive en 4 étapes (0002-0005) avec rollback sûr à chaque étape.
+Les deux documents coexistaient sans réconciliation.
+
+### Décision
+
+Le Fondateur tranche en faveur d'ADR-004 (migration progressive). La
+migration 0002 actuelle (big bang) est marquée comme non exécutable
+contre des données réelles et sera réécrite selon le plan suivant :
+
+| Migration | Action | Rollback |
+|---|---|---|
+| 0002 | Créer `resource` + 73 tables v6.2 (vides) + index + enums | DROP tables v6.2 |
+| 0003 | Copier données : knowledge_objects → resource + assertion + participants + qualifiers + evidence_assessment + citation. Mapper toutes les colonnes (titre, description, contenu, source, evidence_level). | DELETE FROM tables v6.2 (anciennes tables intactes) |
+| 0004 | Bascule moteurs : repository PG sur schéma v6.2. Tests adaptés. | Repli sur store in-memory (feature flag) |
+| 0005 | Supprimer anciennes tables après validation complète | Restaurer depuis backup |
+
+### Tables à migrer (mapping complet)
+
+| Table ancienne | Tables cibles v6.2 | Colonnes à mapper |
+|---|---|---|
+| knowledge_objects | resource + assertion + assertion_participant + assertion_qualifier + evidence_assessment + citation | connaissance_id, type, titre, description, domaine_scientifique, contenu, evidence_level, source, statut, version, date_integration, moteurs_consommateurs |
+| knowledge_history | revision | connaissance_id, version, auteur, date_modification, description |
+| knowledge_relations | predicate + assertion_participant | source_id, target_id, relation_type, poids |
+| knowledge_conflits | conflict_cluster + assertion (conflit) | connaissance_id, source_a, source_b, description |
+| knowledge_mots_cles | controlled_term + resource (tag) | connaissance_id, mot_cle |
+| knowledge_domaines_validite | assertion_qualifier | connaissance_id, domaine |
+| botanical_familles | resource + controlled_term (vocabulary) | nom_scientifique, nom_commun, source_reference |
+| botanical_genres | resource + controlled_term (vocabulary) | nom_scientifique, nom_commun, famille_id |
+| botanical_essences | resource + instance + controlled_term | nom_scientifique, nom_vernaculaire, famille_id, genre_id, description, source_reference |
+| ecosystem_habitats | resource + place + controlled_term | code_eur28, nom_habitat, description, categorie, interet_patrimonial, source_reference, attributs |
+| ecosystem_stations | resource + place + controlled_term | code_station, nom_station, description, coordonnees, altitude, exposition, source_reference |
+| ecosystem_groupes_ecologiques | resource + controlled_term + assertion (relation) | nom_groupe, description, especes, habitats |
+
+### Superseding
+
+ADR-004 n'est pas supersédée — elle est confirmée. La section de
+RFC-0012 qui décrivait le big bang est implicitement supersédée par
+cet amendement.

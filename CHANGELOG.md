@@ -4,6 +4,18 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GOUVERNANCE — VALIDATIONS RÉTROACTIVES] - 2026-07-16
+
+### Gouvernance
+
+- **DEC-000022** (métamodèle v6.2) : Proposé → Validated (validation rétroactive)
+- **DEC-000023** (migration API v6.2) : Proposé → Validated (validation rétroactive)
+- **ADR-004** (migration progressive) : Proposé → Validated (plan en 4 migrations confirmé)
+- **RFC-0012** (migration API v6.2) : Proposé → Validated + amendement cohérence ADR-004
+- Note : l'implémentation a précédé la validation formelle — écart assumé, CI à venir
+
+---
+
 ## [MIGRATION API V6.2 — RFC-0012 + DEC-000023 + ADR-007] - 2026-07-16
 
 Migration complète de l'API GSIE du schéma v6.1 (12 tables, `KnowledgeObject`)
