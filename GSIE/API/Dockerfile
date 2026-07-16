@@ -26,12 +26,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Rust toolchain (requis pour Maturin / PyO3)
+# maturin 1.9.6 = dernière version compatible rustc 1.80 (1.14+ requiert rustc 1.89)
 ENV RUST_VERSION=1.80.0
+ENV MATURIN_VERSION=1.9.6
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --default-toolchain $RUST_VERSION && \
     . "$HOME/.cargo/env" && \
     rustup component add clippy && \
-    cargo install --locked maturin
+    cargo install --locked maturin --version $MATURIN_VERSION
 
 # Build du moteur Rust (Evidence Engine)
 WORKDIR /build/gsie_evidence
