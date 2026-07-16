@@ -18,6 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import check_permission
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.resources.schemas import (
     ResourceCreate,
@@ -110,6 +111,7 @@ async def create_resource(
     session: DbSession,
 ) -> ResourceRead:
     """Crée une resource du type spécifié avec ses champs spécifiques."""
+    check_permission(user, body.type, "write")
     service = ResourceService(session)
     try:
         return await service.create(body, author_id=_extract_author_id(user))
@@ -151,7 +153,12 @@ async def update_resource(
     session: DbSession,
 ) -> ResourceRead:
     """Met à jour une resource — crée une Revision + ResourceDiff (CON-010)."""
+    # Vérifier le type de la resource existante pour le RBAC
     service = ResourceService(session)
+    existing = await service.get(resource_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Resource non trouvée")
+    check_permission(user, existing.type, "write")
     try:
         result = await service.update(
             resource_id, body, author_id=_extract_author_id(user)
@@ -178,6 +185,10 @@ async def delete_resource(
 ) -> None:
     """Soft delete — marque deleted_at + crée une Revision finale (CON-010)."""
     service = ResourceService(session)
+    existing = await service.get(resource_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Resource non trouvée")
+    check_permission(user, existing.type, "delete")
     deleted = await service.delete(
         resource_id,
         justification=justification,
