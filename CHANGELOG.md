@@ -4,6 +4,28 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — VAGUE 1 : QUALITÉ + GOUVERNANCE + INGESTION] - 2026-07-16
+
+### Qualité API
+
+- **22 tests service.py** — mass-assignment, append-only, soft-delete (98% coverage)
+- **CI gate** — ruff + mypy --strict + pytest (83% couverture, 194 tests, 0 échec)
+- **Fix bugs** — revision_id → to_revision_id (ResourceDiffModel), create() retournait request.data non filtré
+- **Typage** — 14 erreurs mypy corrigées, 54 erreurs ruff corrigées
+
+### Gouvernance
+
+- **RFC-0013** — ingestion données forestières ONF/CNPF/IGN (Draft)
+- **DEC-000024** — décision ingestion données forestières (Proposé)
+
+### Métamodèle v6.2
+
+- **7 types métier ONF/CNPF** — management_plan, intervention, economic_scenario, regulation, compliance_check, outcome_tracking, administrative_unit (69 → 76 types)
+- **RBAC complet** — reader/writer/admin/rgpd_manager par type, 19 tests
+- **Migration progressive** — 0002-0005 selon ADR-004 (4 étapes au lieu d'un big bang)
+
+---
+
 ## [GOUVERNANCE — VALIDATIONS RÉTROACTIVES] - 2026-07-16
 
 ### Gouvernance
