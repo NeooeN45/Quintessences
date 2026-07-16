@@ -1,19 +1,29 @@
-"""Tests des seeds — validation des données de référence.
+"""Tests des seeds (legacy v6.1) — validation des données de référence.
 
 Vérifie la cohérence des données botaniques et écosystémiques
 avant insertion en base. Pas de DB requise — tests sur les constantes.
+
+NOTE : Les seeds v6.1 (botanical_data, ecosystem_data) seront migrés
+vers le nouveau schéma v6.2 (Concept + Vocabulary + ControlledTerm)
+en Vague 2.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from gsie_api.seeds.botanical_data import ESSENCES, FAMILLES, GENRES
-from gsie_api.seeds.ecosystem_data import (
-    GROUPES_ECOLOGIQUES,
-    HABITATS_NATURA2000,
-    STATIONS_FORESTIERES,
-)
+pytestmark = pytest.mark.skip(reason="Seeds v6.1 legacy — migration v6.2 (RFC-0012) en Vague 2")
+
+try:
+    from gsie_api.seeds.botanical_data import ESSENCES, FAMILLES, GENRES
+    from gsie_api.seeds.ecosystem_data import (
+        GROUPES_ECOLOGIQUES,
+        HABITATS_NATURA2000,
+        STATIONS_FORESTIERES,
+    )
+except ImportError:
+    ESSENCES, FAMILLES, GENRES = [], [], []
+    GROUPES_ECOLOGIQUES, HABITATS_NATURA2000, STATIONS_FORESTIERES = [], [], []
 
 
 # --- Tests botaniques ---

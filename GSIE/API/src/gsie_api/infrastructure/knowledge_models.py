@@ -28,7 +28,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
-    Check,
+    CheckConstraint,
     ForeignKey,
     Index,
     String,
@@ -112,9 +112,11 @@ class KnowledgeObjectModel(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_ko_type_evidence", "type", "evidence_level"),
         Index("ix_ko_domaine_type", "domaine_scientifique", "type"),
-        Check("evidence_level IN ('A', 'B', 'C', 'D', 'E', 'F')", name="ck_ko_evidence_level"),
-        Check("statut IN ('accepte', 'quarantine', 'refuse')", name="ck_ko_statut"),
-        Check(
+        CheckConstraint(
+            "evidence_level IN ('A', 'B', 'C', 'D', 'E', 'F')", name="ck_ko_evidence_level"
+        ),
+        CheckConstraint("statut IN ('accepte', 'quarantine', 'refuse')", name="ck_ko_statut"),
+        CheckConstraint(
             "type IN ('concept', 'relation', 'regle', 'seuil', 'modele', 'classification')",
             name="ck_ko_type",
         ),
@@ -194,7 +196,7 @@ class KnowledgeRelationModel(Base):
     knowledge_object: Mapped[KnowledgeObjectModel] = relationship(back_populates="relations_refs")
 
     __table_args__ = (
-        Check("sens IN ('sortant', 'entrant', 'bidirectionnel')", name="ck_kr_sens"),
+        CheckConstraint("sens IN ('sortant', 'entrant', 'bidirectionnel')", name="ck_kr_sens"),
     )
 
 

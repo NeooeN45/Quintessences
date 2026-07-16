@@ -15,6 +15,15 @@
 | **Documents connexes** | 205 (Scientific Data Model, Draft), 206 (Engine Interface Contracts, Draft), 305 (Dataset Catalog, Validated), 306 (Evidence Framework, Validated), 308 (Knowledge Base Seed, Validated) |
 | **Version précédente** | v6.1 (42 types, intégrée dans v6.2) → v5 (archivée dans `22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/`, non adoptée) |
 
+> **⚠️ Avertissement de gouvernance — document en cours de rédaction, rien n'est adopté.**
+> À la date de cette révision, **`RFC-0011.md` n'existe pas** dans `02_RFC/` et **`DEC-000022.md`
+> n'existe pas** dans `03_DECISIONS/`. Les mentions ci-dessus (« amendée par DEC-000022 »,
+> « RFC-0011 en cours d'adoption », « DEC-000022 (Proposé) », « Documents supersédés : 302,
+> 304, 309, 310 ») décrivent l'**intention du paquet en préparation** (RFC-0011 + DEC-000022 +
+> ADRs, rédigés ensemble), pas un fait acquis. Les livrables 302, 304, 309 et 310 restent
+> `Validated` et inchangés tant que RFC-0011 n'est pas déposée et DEC-000022 non adopté par le
+> Fondateur. Ne pas citer ce document comme source d'une décision déjà prise.
+
 ---
 
 ## 1. Objet
@@ -26,13 +35,16 @@ modèles, simulations, décisions et observations de terrain — le tout
 sourcé, versionné et traçable.
 
 Ce métamodèle remplace la structure `KnowledgeObject` à 6 types
-(livrable 302) par un noyau universel de **65 types** organisés en cinq
+(livrable 302) par un noyau universel de **73 types** organisés en cinq
 niveaux. Il corrige les contradictions identifiées par l'audit v6.1
 (voir RFC-0011), intègre les arbitrages du Fondateur, et enrichit la
 v6.1 (42 types) avec 18 types supplémentaires issus de la passe
 écologique du Fondateur (v6.2) + 1 type pour le Temporal Engine
 (ResourceDiff, type 61) + 4 types pour l'audit FAIR/RGPD/SOSA (types
-62-65 : Sample, Consent, DataSubject, PersistentIdentifier).
+62-65 : Sample, Consent, DataSubject, PersistentIdentifier) + 8 types
+pour la passe dynamiques écologiques (types 66-73 : Flow,
+ConfidenceGraph, Goal, Constraint, KnowledgeLineage, Experiment,
+TerrainSession, EcologicalState).
 écologique du Fondateur (v6.2) : ScaleContext, Phenomenon,
 EcologicalProcess, RelationType, SamplingEvent, TraitDefinition,
 TraitValue, Feature, FeatureSet, Inference, Question, Hypothesis,
@@ -62,6 +74,14 @@ Capability.
 | Conformité FAIR (Findable, Accessible, Interoperable, Reusable) | Audit comparatif v6.2 | `PersistentIdentifier` (65) pour F1 ; plan FAIR §15.1 |
 | Conformité RGPD (données personnelles) | Audit comparatif v6.2 | Types `Consent` (63) + `DataSubject` (64) ; plan RGPD §15.2 |
 | Interopérabilité SOSA/SSN (W3C/OGC observations) | Audit comparatif v6.2 | Type `Sample` (62) + mapping SOSA/SSN §15.3 |
+| Les écosystèmes fonctionnent par flux, pas seulement par relations | Passe dynamiques Fondateur v6.2 | Type `Flow` (66) — carbone, eau, nutriments, énergie, graines, gènes, pathogènes |
+| L'incertitude scientifique est globale, pas par assertion isolée | Passe dynamiques Fondateur v6.2 | Type `ConfidenceGraph` (67) — propagation de confiance à travers les dépendances |
+| Toute décision dépend d'objectifs et est limitée par des contraintes | Passe dynamiques Fondateur v6.2 | Types `Goal` (68) + `Constraint` (69) — orientent et limitent les recommandations |
+| Le lignage de connaissance est un DAG explicite, pas seulement des citations | Passe dynamiques Fondateur v6.2 | Type `KnowledgeLineage` (70) — chaîne A → B → Recommendation → Decision |
+| Un scientifique fait des séries de simulations, pas une simulation | Passe dynamiques Fondateur v6.2 | Type `Experiment` (71) — groupe de ModelRuns avec cadre de comparaison |
+| Une mission terrain GeoSylva est plus large qu'un échantillonnage | Passe dynamiques Fondateur v6.2 | Type `TerrainSession` (72) — météo, GPS, matériel, martelage, inventaire, sync |
+| L'état de santé d'un écosystème mérite une représentation synthétique | Passe dynamiques Fondateur v6.2 | Type `EcologicalState` (73) — santé, vitalité, risque, résilience, biodiversité |
+| GSIE est un Knowledge Operating System, pas une base de données | Passe dynamiques Fondateur v6.2 | Document d'orchestration séparé (§9.4) — orchestration moteurs IA, physiques, statistiques, SIG |
 
 ### 1.2 Ce que ce document n'est pas
 
@@ -79,7 +99,7 @@ Le métamodèle sépare explicitement cinq niveaux de préoccupation pour
 éviter le mélange qui caractérisait la proposition v5 (110 classes).
 
 ```
-Niveau A — Noyau universel (65 types)
+Niveau A — Noyau universel (73 types)
     Types conceptuels indépendants du domaine forestier.
     Tout domaine (forêt, faune, eau, incendie) les réutilise.
 
@@ -134,7 +154,7 @@ Niveau 2 — Ontology
     Concept, ControlledTerm, TraitDefinition, RelationType.
 
 Niveau 3 — MetaModel (ce document)
-    Les types du noyau (65 types) qui structurent la connaissance.
+    Les types du noyau (73 types) qui structurent la connaissance.
     Définit comment on représente entités, observations, assertions,
     phénomènes, processus, corrélations, raisonnement.
 
@@ -163,7 +183,7 @@ manipule le noyau mais n'ajoute pas de types métier.
 
 ---
 
-## 3. Niveau A — Noyau universel (65 types)
+## 3. Niveau A — Noyau universel (73 types)
 
 ### 3.1 Racine relationnelle : `Resource`
 
@@ -178,7 +198,7 @@ des tables polymorphes `target_type/target_id`.
 type a sa propre table, avec FK vers `resource(id)`. Pas de single-table
 inheritance (colonnes sparse massives), pas de tables polymorphes.
 
-### 3.2 Les 65 types du noyau
+### 3.2 Les 73 types du noyau
 
 #### Identité et référentiels (types 1-8)
 
@@ -336,7 +356,7 @@ CREATE TABLE model_run_output (
 | 54 | **Hypothesis** | Hypothèse testable liée à une Question. Référence des Assertions qui la supportent ou la contredisent. | `id`, `question_id` → Question, `text`, `status` (enum : proposed, testing, supported, refuted, inconclusive), `supporting_assertions` (via table de jonction), `contradicting_assertions` (via table de jonction) |
 | 55 | **Decision** | Décision prise par un humain (CON-001 : l'IA assiste, ne décide jamais). Référence les Recommendations considérées et les Evidence qui ont motivé le choix. | `id`, `question_id` → Question (optionnel), `decided_by` → Agent, `decision_text`, `rationale` (texte obligatoire), `recommendations_considered` (liste → Recommendation via table de jonction), `evidence_refs` (liste → Citation via table de jonction), `decided_at`, `scale_context_id` → ScaleContext (optionnel) |
 | 56 | **Recommendation** | Recommandation produite par un moteur GSIE. Référence les Assertions et Scenarios qui la justifient. Est contournable par le forestier (CON-001). | `id`, `question_id` → Question (optionnel), `recommended_by` → Agent (le moteur), `recommendation_text`, `confidence` (decimal 0-1), `supporting_assertions` (via table de jonction), `scenarios_evaluated` (liste → Scenario via table de jonction), `scale_context_id` → ScaleContext, `spatial_scope_id` → Place (optionnel), `temporal_context_id` → TemporalContext (optionnel) |
-| 57 | **Scenario** | Scénario (sylvicole, climatique, de gestion) qui alimente des ModelRuns et des Recommendations. Un Scenario définit des hypothèses sur le futur (ex. "RCP 4.5 2050", "sylviculture dynamique rapprochée"). | `id`, `name`, `scenario_type` (enum : sylvicultural, climatic, management, disturbance, baseline), `description`, `parameters` (JSONB), `scale_context_id` → ScaleContext, `temporal_context_id` → TemporalContext |
+| 57 | **Scenario** | Scénario (sylvicole, climatique, de gestion) qui alimente des ModelRuns et des Recommendations. Un Scenario définit des hypothèses sur le futur (ex. "RCP 4.5 2050", "sylviculture dynamique rapprochée"). `scenario_subtype` spécialise les scénarios climatiques (RCP, SSP, DRIAS) qui reviennent partout dans GSIE (v6.2 enrichissement). | `id`, `name`, `scenario_type` (enum : sylvicultural, climatic, management, disturbance, baseline), `scenario_subtype` (enum §3.22, optionnel), `description`, `parameters` (JSONB), `scale_context_id` → ScaleContext, `temporal_context_id` → TemporalContext |
 
 #### Corrélations (type 58)
 
@@ -380,6 +400,49 @@ CREATE TABLE model_run_output (
 | # | Type | Description | Champs clés |
 |---|---|---|---|
 | 65 | **PersistentIdentifier** | Identifiant persistant externe pour une ressource GSIE. Permet la citation académique (DOI), la découverte (PURL/w3id), l'interopérabilité (ORCID, ROR, GBIF taxonKey, Wikidata QID). Un objet GSIE peut avoir plusieurs PersistentIdentifiers (ex. un Dataset a un DOI DataCite + un URI PURL). Répond au principe FAIR F1 (identifiant persistant global). | `id`, `target_id` → resource.id, `pid_type` (enum §3.18), `value` (ex. "10.5281/zenodo.1234567", "https://w3id.org/gsie/assertion/1234", "0000-0002-1825-0097"), `authority` (ex. "DataCite", "Wikidata", "ORCID", "GBIF"), `registered_at`, `active` (bool, défaut true) |
+
+#### Flux écologiques (type 66)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 66 | **Flow** | Flux écologique entre compartiments de l'écosystème (carbone, eau, nutriments, énergie, graines, gènes, maladies, champignons, pollens). Un flux a une source, une destination, une magnitude, une direction, une unité et une dynamique temporelle. Distinct d'une relation (Assertion) car un flux est une **quantité qui se déplace**, pas juste un lien. Exemple : carbone → atmosphère → photosynthèse → bois → mort → décomposition → sol → atmosphère. Essentiel pour les bilans (carbone, hydrique, azote). | `id`, `flow_type` (enum §3.19), `source_id` → resource.id (compartiment source : Place, Instance, Phenomenon), `sink_id` → resource.id (compartiment destination), `magnitude` (decimal), `magnitude_unit_id` → Unit, `direction` (enum : source_to_sink, bidirectional), `temporal_context_id` → TemporalContext, `scale_context_id` → ScaleContext, `driver_process_id` → EcologicalProcess (optionnel), `uncertainty_id` → Uncertainty (optionnel) |
+
+#### Graphe de confiance (type 67)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 67 | **ConfidenceGraph** | Graphe de confiance calculé qui propage l'incertitude à travers les dépendances de connaissance. Une recommandation peut dépendre de 14 publications, 6 observations, 2 modèles, 1 IA, 3 experts — le ConfidenceGraph agrège ces sources en un score de confiance global avec propagation. Distinct d'EvidenceAssessment (qui évalue une assertion individuelle) : ConfidenceGraph évalue la **chaîne complète** et propage l'incertitude amont→aval. Calculé par le Reasoning Engine ou un moteur dédié. | `id`, `target_id` → resource.id (ressource évaluée : Assertion, Recommendation, Decision), `confidence_score` (decimal 0-1, score global propagé), `propagation_method` (enum : bayesian, weighted_average, dempster_shafer, fuzzy), `source_nodes` (JSONB : liste de `{resource_id, individual_confidence, weight, evidence_level}`), `propagation_tree` (JSONB : arbre de propagation avec nœuds et arêtes), `computed_at`, `computed_by` → Agent (moteur), `valid_for_revision_id` → Revision (état de la connaissance au moment du calcul) |
+
+#### Objectifs et contraintes (types 68-69)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 68 | **Goal** | Objectif de gestion ou scientifique qui oriente les décisions. Exemples : « favoriser la biodiversité », « maximiser la production », « limiter les risques incendies », « restaurer la continuité écologique ». Toute Recommendation et Decision référence un ou plusieurs Goals. Un Goal peut être hiérarchique (objectif national → régional → local) et peut entrer en conflit avec d'autres Goals (production vs biodiversité). | `id`, `goal_type` (enum §3.20), `name`, `description`, `priority` (enum : primary, secondary, tertiary), `parent_goal_id` → Goal (optionnel, hiérarchie), `spatial_scope_id` → Place (optionnel), `temporal_context_id` → TemporalContext (optionnel), `scale_context_id` → ScaleContext (optionnel), `success_criteria` (texte, optionnel — comment mesurer l'atteinte) |
+| 69 | **Constraint** | Contrainte qui limite la faisabilité d'une Recommendation. Peut être réglementaire (Natura 2000, arrêté préfectoral), opérationnelle (budget, accessibilité, météo, machine indisponible), écologique (pente, sensibilité du sol), ou temporelle (fenêtre de travail). Le moteur doit savoir **pourquoi** une recommandation n'est pas réalisable. Une Constraint peut bloquer, limiter, ou conditionner une Recommendation. | `id`, `constraint_type` (enum §3.21), `name`, `description`, `severity` (enum : blocking, limiting, conditional), `source_id` → Source (optionnel, ex. texte réglementaire), `spatial_scope_id` → Place (optionnel), `temporal_context_id` → TemporalContext (optionnel), `affected_recommendation_id` → Recommendation (optionnel), `mitigation` (texte, optionnel — comment contourner) |
+
+#### Lignage de connaissance (type 70)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 70 | **KnowledgeLineage** | Nœud explicite du DAG de lignage de connaissance. Pas seulement Source → Citation, mais la chaîne complète : Connaissance A → a servi à produire → Connaissance B → qui produit → Recommendation → Decision. Chaque nœud documente quelle ressource a été dérivée de quelles autres, par quel processus, avec quelle confiance. Complète PROV-O (qui est générique) avec la sémantique de **production de connaissance scientifique**. Permet de répondre : « si je invalide l'assertion X, quelles recommandations et décisions sont affectées ? » | `id`, `resource_id` → resource.id (ressource produite), `derived_from` (liste → resource.id via table de jonction, avec role : primary_input, supporting_input, method), `produced_by` → Activity (processus PROV), `production_method` (enum : inference, correlation, synthesis, expert_judgment, model_output, extraction, validation), `confidence_graph_id` → ConfidenceGraph (optionnel), `lineage_depth` (entier, profondeur dans le DAG) |
+
+#### Expériences scientifiques (type 71)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 71 | **Experiment** | Série d'expérimentations scientifiques groupant plusieurs ModelRuns avec un cadre de comparaison. Un scientifique ne fait pas 1 simulation — il fait 500 simulations, compare, publie. Un Experiment définit l'hypothèse testée, les scénarios comparés, les métriques d'évaluation, et référence les ModelRuns. Peut produire une Assertion (claim_kind=model) si les résultats sont concluants, ou une Publication (via Source). | `id`, `name`, `hypothesis_id` → Hypothesis (optionnel), `scenario_ids` (liste → Scenario via table de jonction), `model_run_ids` (liste → ModelRun via table de jonction), `comparison_metrics` (JSONB : métriques d'évaluation), `conclusion` (texte, optionnel), `resulting_assertion_id` → Assertion (optionnel), `resulting_source_id` → Source (optionnel, publication), `conducted_by` → Agent, `scale_context_id` → ScaleContext |
+
+#### Missions terrain (type 72)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 72 | **TerrainSession** | Mission terrain GeoSylva — plus large qu'un SamplingEvent. Une sortie terrain contient : météo, GPS, opérateur, matériel, précision GPS, photos, LiDAR, remarques, martelage, inventaire, arbres, placettes, protocole, erreurs, synchronisation. Une TerrainSession peut contenir plusieurs SamplingEvents (placettes), des Observations, des Samples, des Media (photos), et produire des Assertions (inventaire, martelage). C'est l'unité de **production de connaissance terrain** pour GeoSylva. | `id`, `name`, `operator_id` → Agent (forestier/opérateur), `session_type` (enum : inventory, martelage, monitoring, diagnosis, research, calibration), `started_at`, `ended_at`, `weather` (JSONB : température, humidité, vent, précipitations), `gps_precision_m` (decimal, optionnel), `equipment` (JSONB : liste du matériel utilisé), `spatial_scope_id` → Place, `scale_context_id` → ScaleContext, `protocol_id` → Method (optionnel), `sampling_event_ids` (liste → SamplingEvent via table de jonction), `media_ids` (liste → Media via table de jonction), `sync_status` (enum : synced, partial, pending, failed), `notes` (texte, optionnel) |
+
+#### État écologique synthétique (type 73)
+
+| # | Type | Description | Champs clés |
+|---|---|---|---|
+| 73 | **EcologicalState** | État écologique synthétique d'un écosystème à un endroit et un instant donnés. Répond à « quel est l'état de santé de cet écosystème ? » plutôt qu'à « quel est le pH ? ». Agrège des Observations, Traits, Correlations et Assertions en un état synthétique avec des indicateurs (biodiversité, vitalité, risque, résilience). Peut être calculé par le Diagnostic Engine ou le Forest Dynamics Engine. Versionné via Revision (l'état évolue dans le temps). | `id`, `spatial_scope_id` → Place, `temporal_context_id` → TemporalContext, `scale_context_id` → ScaleContext, `state_type` (enum : health, vitality, risk, resilience, biodiversity, productivity, integrity), `indicators` (JSONB : `{indicator_name: {value, unit, confidence, trend}}`), `overall_score` (decimal 0-1, optionnel), `overall_grade` (enum : excellent, good, moderate, poor, critical, optionnel), `based_on` (liste → resource.id via table de jonction : observations, traits, correlations, assertions), `computed_by` → Agent (moteur), `trend` (enum : improving, stable, declining, unknown, optionnel) |
 
 ### 3.3 Enum `claim_kind` (Assertion)
 
@@ -641,7 +704,90 @@ Typologie des identifiants persistants (FAIR F1).
 
 ---
 
-## 3.19 Relation Observation ↔ Assertion
+### 3.19 Enum `flow_type` (Flow)
+
+Typologie des flux écologiques entre compartiments de l'écosystème.
+
+| Valeur | Description | Exemple |
+|---|---|---|
+| `carbon` | Flux de carbone | Photosynthèse, respiration, décomposition |
+| `water` | Flux d'eau | Transpiration, ruissellement, infiltration |
+| `nitrogen` | Flux d'azote | Fixation, minéralisation, lessivage |
+| `phosphorus` | Flux de phosphore | Absorption, retour au sol |
+| `nutrient` | Flux de nutriments (générique) | Cycle NPK |
+| `energy` | Flux d'énergie | Rayonnement, biomasse, trophique |
+| `seed` | Dissémination de graines | Vent, zoochorie, barochorie |
+| `pollen` | Flux de pollen | Anémophilie, entomophilie |
+| `gene` | Flux génétique | Pollinisation croisée, dispersion |
+| `pathogen` | Propagation de pathogènes | Spores, vecteurs, contact |
+| `spore` | Dispersion de spores (champignons) | Mycorhization, pathogènes |
+| `biomass` | Transfert de biomasse | Litière, nécromasse, herbivorie |
+| `sediment` | Flux de sédiments | Érosion, dépôt |
+| `other` | Autre flux | (à préciser dans `name`) |
+
+### 3.20 Enum `goal_type` (Goal)
+
+| Valeur | Description | Exemple |
+|---|---|---|
+| `biodiversity` | Favoriser la biodiversité | Continuité écologique, mixité d'essences |
+| `production` | Maximiser la production | Volume bois, croissance |
+| `risk_reduction` | Limiter les risques | Incendie, tempête, ravageurs |
+| `conservation` | Conserver un état / une espèce | Natura 2000, espèce protégée |
+| `restoration` | Restaurer un écosystème dégradé | Reconstitution post-tempête |
+| `carbon_sequestration` | Séquestrer du carbone | Plantation, gestion carbone |
+| `water_protection` | Protéger la ressource en eau | Zones humides, ripisylves |
+| `soil_protection` | Protéger les sols | Anti-érosion, fertilité |
+| `recreation` | Fonction récréative / sociale | Accueil du public, paysage |
+| `research` | Objectif scientifique | Suivi long terme, expérimentation |
+| `regulatory` | Conformité réglementaire | Code forestier, Natura 2000 |
+| `other` | Autre objectif | (à préciser dans `name`) |
+
+### 3.21 Enum `constraint_type` (Constraint)
+
+| Valeur | Description | Exemple |
+|---|---|---|
+| `regulatory` | Contrainte réglementaire | Natura 2000, arrêté préfectoral, Code forestier |
+| `budget` | Contrainte budgétaire | Coût d'intervention, budget annuel |
+| `accessibility` | Accessibilité du site | Pente, distance, route, saison |
+| `weather` | Contrainte météorologique | Pluie, vent, gel, fenêtre de travail |
+| `equipment` | Matériel indisponible ou inadapté | Débardage, scie, LiDAR |
+| `ecological` | Contrainte écologique | Sensibilité du sol, période de reproduction |
+| `temporal` | Contrainte temporelle | Délai, saisonnalité, urgence |
+| `social` | Contrainte sociale / acceptabilité | Opposition locale, usage traditionnel |
+| `technical` | Contrainte technique | Précision GPS, résolution satellite |
+| `other` | Autre contrainte | (à préciser dans `name`) |
+
+### 3.22 Enum `scenario_subtype` (Scenario — enrichissement)
+
+Enrichissement du type Scenario (57) pour spécialiser les scénarios
+climatiques qui reviennent partout dans GSIE (RCP, SSP, DRIAS).
+
+| Valeur de `scenario_type` | `scenario_subtype` | Description |
+|---|---|---|
+| `climatic` | `rcp_2.6` | RCP 2.6 — réchauffement limité (+1.5-2°C) |
+| `climatic` | `rcp_4.5` | RCP 4.5 — réchauffement modéré (+2-3°C) |
+| `climatic` | `rcp_8.5` | RCP 8.5 — réchauffement sévère (+4-5°C) |
+| `climatic` | `ssp1_2.6` | SSP1-2.6 — développement durable |
+| `climatic` | `ssp3_7.0` | SSP3-7.0 — rivalité régionale |
+| `climatic` | `ssp5_8.5` | SSP5-8.5 — développement basé sur énergies fossiles |
+| `climatic` | `drias_2020` | DRIAS 2020 — downscaled France |
+| `sylvicultural` | `clear_cut` | Coupe rase |
+| `sylvicultural` | `selective_thinning` | Éclaircie sélective |
+| `sylvicultural` | `shelterwood` | Coupe d'abri |
+| `sylvicultural` | `coppice` | Taillis |
+| `management` | `no_intervention` | Non-intervention (libre évolution) |
+| `management` | `adaptive` | Gestion adaptative |
+| `disturbance` | `wildfire` | Incendie |
+| `disturbance` | `storm` | Tempête |
+| `disturbance` | `pest_outbreak` | Épidémie de ravageurs |
+| `baseline` | `current_conditions` | Conditions actuelles (référence) |
+
+> Le champ `scenario_subtype` est ajouté au type Scenario (57). C'est un
+> champ optionnel qui spécialise `scenario_type`. Pas un nouveau type.
+
+---
+
+## 3.23 Relation Observation ↔ Assertion
 
 Une confusion potentielle existe entre `Observation` (type 14, acte
 d'observer qui produit des `Result`) et `Assertion` avec
@@ -818,7 +964,7 @@ CREATE TABLE resource (
 );
 ```
 
-### 6.2 Tables des 65 types (class-table inheritance)
+### 6.2 Tables des 73 types (class-table inheritance)
 
 Chaque type a sa propre table avec `id` comme PK ET FK vers
 `resource(id)`. Exemple pour `assertion` :
@@ -966,6 +1112,33 @@ CREATE TABLE outbox_event (
 Interface `put/get/delete` pour les `DataAsset` volumineux (rasters,
 LAZ, NetCDF). MinIO en développement, S3 en production. Différé (ADR-006).
 
+### 9.4 Knowledge Operating System — Orchestration
+
+GSIE n'est pas une base de données — c'est un **Knowledge Operating
+System** qui orchestre des moteurs hétérogènes (IA, physiques,
+statistiques, SIG, métiers, climatiques, incendies, forestiers) pour
+produire, évaluer et faire évoluer de la connaissance environnementale.
+
+Le type `Capability` (60) permet aux moteurs de déclarer leurs capacités
+(observe, predict, inventory, diagnose, simulate, recommend, correlate,
+reason, validate, learn, extract, assess_evidence). L'orchestrateur lit
+les Capabilities pour composer des pipelines.
+
+**Document dédié** : l'orchestration complète (routing, pipelines,
+séquenceurs, parallélisation, dépendances, failover, observabilité) est
+spécifiée dans un document séparé — `GSIE/ARCHITECTURE/KNOWLEDGE_ORCHESTRATION.md`
+(à rédiger en Vague 0). Ce document couvrira :
+
+- Architecture de l'orchestrateur (réactif, event-driven)
+- Déclaration de Capabilities par moteur (manifest)
+- Composition de pipelines (DAG d'exécution)
+- Séquençage et parallélisation des moteurs
+- Gestion des dépendances (KnowledgeLineage → ordre d'exécution)
+- Failover et résilience (moteur indisponible → repli)
+- Observabilité (traces, métriques, SLO par moteur)
+- Priorité et arbitrage (conflits entre moteurs)
+- Scaling (horizontal, vertical, cloud burst)
+
 ---
 
 ## 10. Niveau E — Vision long terme (différée)
@@ -1053,7 +1226,7 @@ enrichit — arbitrage T4).
 
 ### Vague 1 — Noyau complet + Essence 360° (~4 semaines)
 
-- **65 types implémentés dès le départ** (arbitrage T3 — pas de
+- **73 types implémentés dès le départ** (arbitrage T3 — pas de
   migration de schéma entre vagues)
 - Schéma PostgreSQL + PostGIS + **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff, ADR-002)
 - Migration depuis le schéma actuel (ADR-004)
@@ -1144,11 +1317,13 @@ impact et dépendances.
 
 ## 14. Compteur de types et justification
 
-**65 types au noyau** (v6.2). La v6.1 en comportait 42 ; la passe
+**73 types au noyau** (v6.2). La v6.1 en comportait 42 ; la passe
 écologique du Fondateur en a ajouté 18 (types 43-60), le Temporal Engine
-1 (type 61 ResourceDiff), et l'audit FAIR/RGPD/SOSA 4 (types 62-65 :
-Sample, Consent, DataSubject, PersistentIdentifier). Chaque type est
-justifié par :
+1 (type 61 ResourceDiff), l'audit FAIR/RGPD/SOSA 4 (types 62-65 : Sample,
+Consent, DataSubject, PersistentIdentifier), et la passe dynamiques
+écologiques 8 (types 66-73 : Flow, ConfidenceGraph, Goal, Constraint,
+KnowledgeLineage, Experiment, TerrainSession, EcologicalState). Chaque
+type est justifié par :
 
 | Catégorie | Types | Justification |
 |---|---|---|
@@ -1175,6 +1350,13 @@ justifié par :
 | **Échantillon physique** | 1 (62) | Sample — échantillon matériel prélevé, mapping SOSA/SSN `sosa:Sample` (v6.2 audit FAIR) |
 | **RGPD** | 2 (63-64) | Consent + DataSubject — conformité RGPD art. 6 + 9.2.j (recherche) (v6.2 audit FAIR) |
 | **Identifiants persistants** | 1 (65) | PersistentIdentifier — DOI, PURL, ORCID, GBIF, Wikidata (FAIR F1) (v6.2 audit FAIR) |
+| **Flux écologiques** | 1 (66) | Flow — carbone, eau, nutriments, énergie, graines, gènes, pathogènes (v6.2 dynamiques) |
+| **Graphe de confiance** | 1 (67) | ConfidenceGraph — propagation d'incertitude à travers les dépendances de connaissance (v6.2 dynamiques) |
+| **Objectifs + contraintes** | 2 (68-69) | Goal + Constraint — objectifs de gestion + contraintes qui limitent la faisabilité (v6.2 dynamiques) |
+| **Lignage de connaissance** | 1 (70) | KnowledgeLineage — DAG explicite de production de connaissance (v6.2 dynamiques) |
+| **Expériences scientifiques** | 1 (71) | Experiment — série de ModelRuns avec cadre de comparaison (v6.2 dynamiques) |
+| **Missions terrain** | 1 (72) | TerrainSession — mission GeoSylva (météo, GPS, matériel, martelage, inventaire) (v6.2 dynamiques) |
+| **État écologique** | 1 (73) | EcologicalState — état synthétique de santé/vitalité/risque/résilience (v6.2 dynamiques) |
 
 **Champs ajoutés (pas de nouveaux types)** :
 - `Assertion.rule_subtype` (enum §3.14) — typologie des règles (inference, scientific, business, regulatory)
@@ -1212,6 +1394,14 @@ indéfiniment. Ces décisions sont différées après la Vague 1.
 | **v6.2 : RGPD** | `Consent` (63) + `DataSubject` (64) — conformité art. 6 + art. 9.2.j (recherche) |
 | **v6.2 : FAIR F1** | `PersistentIdentifier` (65) — DOI, PURL, ORCID, GBIF, Wikidata |
 | **v6.2 : SOSA/SSN** | `Sample` (62) — mapping W3C/OGC `sosa:Sample` |
+| **v6.2 : flux écologiques** | `Flow` (66) — carbone, eau, nutriments, énergie, graines, gènes, pathogènes |
+| **v6.2 : confiance globale** | `ConfidenceGraph` (67) — propagation d'incertitude à travers les dépendances |
+| **v6.2 : objectifs + contraintes** | `Goal` (68) + `Constraint` (69) — orientent et limitent les décisions |
+| **v6.2 : lignage DAG** | `KnowledgeLineage` (70) — chaîne explicite A → B → Recommendation → Decision |
+| **v6.2 : expériences** | `Experiment` (71) — série de ModelRuns avec comparaison et publication |
+| **v6.2 : missions terrain** | `TerrainSession` (72) — mission GeoSylva (météo, GPS, matériel, martelage) |
+| **v6.2 : état écologique** | `EcologicalState` (73) — santé, vitalité, risque, résilience synthétiques |
+| **v6.2 : Knowledge OS** | `Capability` (60) + document orchestration §9.4 — GSIE est un système d'exploitation de la connaissance |
 
 ### 15.1 Conformité FAIR (Findable, Accessible, Interoperable, Reusable)
 
@@ -1232,7 +1422,7 @@ Europe et EOSC l'exigent. Audit des 15 principes :
 | **I1** | Langage formel de représentation | **Partiel** — SQL | Vague 2 : exposition RDF/JSON-LD (projection niveau C) |
 | **I2** | Vocabulaires FAIR | **Partiel** — ControlledTerm interne | Vague 2 : SKOS pour vocabulaires + mapping vers ENVO, GBIF, Wikidata |
 | **I3** | Références qualifiées vers autres (meta)data | **Partiel** — Citation | Vague 2 : liens RDF typés (owl:sameAs, skos:exactMatch) |
-| **R1** | Attributs précis et pertinents | **OK** — 65 types avec champs riches | - |
+| **R1** | Attributs précis et pertinents | **OK** — 73 types avec champs riches | - |
 | **R1.1** | Licence claire et accessible | **OK** — RightsStatement | Vague 1 : licence par défaut sur tous les datasets |
 | **R1.2** | Provenance | **OK** — PROV-O (Activity, ProvEntity, Agent) + Revision | - |
 | **R1.3** | Standards communautaires | **Partiel** — mentionnés, pas implémentés | Vague 2 : Darwin Core (occurrences), EML (datasets), STAC (rasters), SOSA/SSN (observations) |
@@ -1318,7 +1508,7 @@ pendant la Vague 0 (avant implémentation).
 |---|---|---|---|
 | Q1 | **Exemple end-to-end manquant** | Rédiger un exemple concret complet : « chêne sessile adapté au pH 4.5-6.0, source Rameau 2018, preuve B » avec toutes les tables impliquées et leurs valeurs. Valider la structure par cet exemple. | Haute |
 | Q2 | **Essence 360° sans profil forestier** | La tranche verticale Vague 1 prévoit Essence 360° mais les profils forestiers (Tree, Placette, Peuplement) sont différés en Vague 2+. Résoudre : soit définir un profil forestier minimal en Vague 1, soit faire Essence 360° sur le noyau seul (Concept + Assertion + Observation + Citation + EvidenceAssessment, sans Instance d'arbre individuel). | Haute |
-| Q3 | **ConceptVersion.fusions (FusionEntry)** | Le champ `fusions` référence un type `FusionEntry` qui n'est pas défini dans les 65 types. Spécifier : soit un type JSONB structuré (liste de `{old_concept_id, new_concept_id, date}`), soit une table de jonction `concept_fusion`. | Moyenne |
+| Q3 | **ConceptVersion.fusions (FusionEntry)** | Le champ `fusions` référence un type `FusionEntry` qui n'est pas défini dans les 73 types. Spécifier : soit un type JSONB structuré (liste de `{old_concept_id, new_concept_id, date}`), soit une table de jonction `concept_fusion`. | Moyenne |
 | Q4 | **Resource.type vs Entity.type** | Deux champs `type` avec des sémantiques différentes (discriminant de table vs sous-type d'entité). Renommer `Entity.type` en `Entity.subtype` pour lever l'ambiguïté. | Moyenne |
 | Q5 | **Temporal Engine : spécification interface + tests** | Spécifier l'interface du `TemporalEngine` Python (create_revision, get_state_as_of, compute_diff) + tests unitaires avant implémentation Vague 1. Valider que le pattern Revision + triggers SQL append-only couvre tous les cas d'usage bitemporel. | Haute |
 

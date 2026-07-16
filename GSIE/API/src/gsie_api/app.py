@@ -33,7 +33,9 @@ from gsie_api.engines.evidence.router import router as evidence_router
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.infrastructure.health import router as health_router
+from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import TraceIdMiddleware
+from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
@@ -53,9 +55,11 @@ _OPENAPI_TAGS = [
     {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
+    {"name": "resources", "description": "CRUD générique — 73 types du métamodèle v6.2 (RFC-0012, ADR-007)"},
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
+    {"name": "websocket", "description": "WebSocket temps réel — Hub (UE5.8) et events système"},
 ]
 
 # CORS — méthodes et headers explicites (sécurité OWASP A05)
@@ -214,9 +218,11 @@ def create_app() -> FastAPI:
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
+    app.include_router(resources_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(gis_router, prefix=_settings.api_v1_prefix)
+    app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
     # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
     @app.exception_handler(404)

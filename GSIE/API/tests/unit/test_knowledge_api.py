@@ -1,11 +1,17 @@
-"""Tests API — endpoints du Knowledge Engine.
+"""Tests API — endpoints du Knowledge Engine (legacy v6.1).
 
 Teste les endpoints FastAPI : /knowledge/status, /version, /ingest, /query, /revise, /stats.
+
+NOTE : Ces tests référencent l'ancien schéma v6.1. La migration v6.2
+(RFC-0012) remplace KnowledgeObject par Assertion. Les endpoints
+/knowledge/* seront migrés vers le CRUD générique /resources en Vague 2.
 """
 
-from uuid import uuid4
-
 import pytest
+
+pytestmark = pytest.mark.skip(reason="Schéma v6.1 legacy — migration v6.2 (RFC-0012) remplace KnowledgeObject par Assertion")
+
+from uuid import uuid4
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app

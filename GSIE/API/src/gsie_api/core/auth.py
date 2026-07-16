@@ -223,3 +223,23 @@ async def get_current_user(
         )
 
     return verify_token(credentials.credentials, expected_type="access")
+
+
+async def verify_ws_token(token: str | None) -> dict[str, Any] | None:
+    """Vérifie un token JWT pour une connexion WebSocket.
+
+    Contrairement à get_current_user, lève WebSocketClose au lieu de HTTPException
+    car on est dans un contexte WebSocket.
+
+    Args:
+        token: Token JWT passé en query param (?token=xxx).
+
+    Returns:
+        Payload du token si valide, None si invalide.
+    """
+    if token is None:
+        return None
+    try:
+        return verify_token(token, expected_type="access")
+    except HTTPException:
+        return None

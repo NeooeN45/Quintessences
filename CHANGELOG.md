@@ -4,11 +4,92 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [MIGRATION API V6.2 — RFC-0012 + DEC-000023 + ADR-007] - 2026-07-16
+
+Migration complète de l'API GSIE du schéma v6.1 (12 tables, `KnowledgeObject`)
+vers le métamodèle v6.2 (73 types noyau, table racine `resource`).
+
+### Ajouts
+
+- **RFC-0012** — migration API v6.2 (73 types, resource racine, WebSocket, SDK)
+- **ADR-007** — architecture API v6.2 (CRUD générique + modules par domaine)
+- **DEC-000023** — décision de migration API v6.2
+- **Table racine `resource`** (ADR-001) — class-table inheritance, 73 types, soft delete (CON-010)
+- **73 modèles SQLAlchemy** groupés par domaine (12 fichiers) :
+  - `provenance.py` — types 1-8 (Entity, Concept, Vocabulary, Instance, etc.)
+  - `assertion.py` — types 9-13 (Assertion, Predicate, EvidenceAssessment, etc.)
+  - `observation.py` — types 14-19 (Observation, Result, Method, Instrument, etc.)
+  - `prov.py` — types 20-24 (Activity, ProvEntity, Agent, Source, Citation)
+  - `spatial_temporal.py` — types 25-28 (Unit, Place avec PostGIS Geometry, TemporalContext, Media)
+  - `temporal_engine.py` — types 29-30, 61 (Revision, Snapshot, ResourceDiff)
+  - `models_ai.py` — types 31-36, 41, 50-52 (Model, Dataset, Feature, Inference, etc.)
+  - `ecology.py` — types 43-49 (ScaleContext, Phenomenon, EcologicalProcess, etc.)
+  - `reasoning.py` — types 53-60 (Question, Decision, Recommendation, Scenario, etc.)
+  - `governance.py` — types 37-40, 42 (Rights, Access, Sensitivity, Conflict)
+  - `dynamics.py` — types 59, 66-73 (EcosystemService, Flow, Goal, Constraint, etc.)
+  - `fair_rgpd.py` — types 62-65 (Sample, Consent, DataSubject, PersistentIdentifier)
+- **52 enums PostgreSQL** (§3.3 à §3.22 + enums supplémentaires + 7 enums audit)
+- **17 tables de jonction n:m** (`junctions.py`) — ModelRun inputs/outputs, ConflictCluster assertions, Hypothesis supporting/contradicting, Decision recommendations/evidence, Recommendation assertions/scenarios, FeatureSet features, Experiment scenarios/model_runs, EcologicalState basis, Correlation variables, KnowledgeLineage derived, TerrainSession sampling/media
+- **Outbox/Inbox pattern** (ADR-005) — `outbox.py` pour la cohérence événementielle
+- **Object Storage abstraction** (ADR-006) — `object_storage.py` (S3/MinIO/local)
+- **Registry pattern** — `@register_type` pour auto-enregistrement des 69 types resources
+- **CRUD générique** — 8 endpoints `/api/v1/resources` pour les 69 types :
+  - GET `/resources/types` — liste des types
+  - GET `/resources` — liste paginée (filtre par type)
+  - POST `/resources` — créer (Revision v1, validation dynamique, gsie_id auto)
+  - GET `/resources/{id}` — détail
+  - PUT `/resources/{id}` — mettre à jour (Revision + ResourceDiff, CON-010)
+  - DELETE `/resources/{id}` — soft delete (Revision finale, CON-010)
+  - GET `/resources/{id}/revisions` — historique des révisions (Temporal Engine)
+- **Validation dynamique** — `validators.py` valide les champs obligatoires et enums par type
+- **WebSocket** — `/api/v1/ws/hub` et `/api/v1/ws/events` pour le Hub (UE5.8) :
+  - Auth JWT obligatoire (token en query param)
+  - Rate limiting (10 messages/60s par client)
+  - Validation des canaux (16 canaux autorisés)
+  - Redis Pub/Sub pour fan-out inter-workers
+  - Broadcast events sur create/update/delete
+- **Migration Alembic 0002** — création des 73 tables + 17 jonctions + Outbox/Inbox + migration des données existantes
+- **Tests** — 19 nouveaux tests (resources + WebSocket), 152 tests passent, 79 skipped (legacy v6.1)
+- **Config** — paramètres WebSocket (max connections, heartbeat, allowed origins) + Object Storage (local path, S3 endpoint, bucket)
+
+### Corrections (audit post-implémentation)
+
+- **Soft delete au lieu de hard delete** (CON-010 respecté)
+- **Revision créée dans update** (CON-010 respecté, avec ResourceDiff)
+- **PostGIS Geometry** pour Place (GeoAlchemy2, SRID 2154)
+- **Auth WebSocket** (token JWT en query param, close si invalide)
+- **Validation dynamique** des `data` par type (champs obligatoires + enums)
+- **17 tables de jonction n:m** manquantes ajoutées
+- **12 types avec champs manquants** corrigés (ModelRun, DatasetVersion, ModelVersion, DataSubject, ConfidenceGraph, Goal, Constraint, KnowledgeLineage, TerrainSession, EcosystemService, ResourceDiff)
+- **7 enums manquants** ajoutés (EcosystemServiceCategory, GoalPriority, ConstraintSeverity, PropagationMethod, ProductionMethod, TerrainSessionType, SyncStatus)
+- **Redis Pub/Sub** pour WebSocket fan-out inter-workers
+- **Outbox/Inbox** (ADR-005) pour la cohérence événementielle
+- **Object Storage** (ADR-006) abstraction S3/local
+- **4 fichiers de tests legacy** marqués skip (migration Vague 2)
+- **gsie_id auto-généré** quand non fourni (ex. `assertion:2026:a1b2c3d4`)
+- **Broadcast WebSocket** sur create/update/delete
+- **Endpoint `/resources/{id}/revisions`** implémenté
+
+### Breaking changes
+
+- `KnowledgeObject` → `Assertion` (type 9 du métamodèle v6.2)
+- `knowledge_objects` table → supprimée après migration vers `resource` + `assertion`
+- Endpoints `/knowledge/*` migrés vers le CRUD générique `/resources` (Vague 2)
+
+### Conservation
+
+- Endpoint `/evidence/evaluate` — conservé (pas de breaking change)
+- Auth JWT RS256 — conservée
+- Middlewares (TraceId, CORS, rate limiting, Gzip) — conservés
+- Pipeline Evidence → Knowledge devient Evidence → Assertion
+
+---
+
 ## [MÉTAMODÈLE V6.2 — RFC-0011 + DEC-000022 + 6 ADR] - 2026-07-15
 
 Rédaction complète du métamodèle v6.2 de l'Encyclopédie de l'Écosystème
 et soumission à adoption via RFC-0011 + DEC-000022. Le métamodèle
-définit un noyau universel de **65 types** en 5 niveaux, avec
+définit un noyau universel de **73 types** en 5 niveaux, avec
 PostgreSQL 16 + PostGIS comme vérité canonique. Neo4j, Elasticsearch,
 Jena et GraphQL sont différés (projections régénérables, benchmark
 Apache AGE en Vague 1).
@@ -29,7 +110,15 @@ La v6.2 enrichit la v6.1 (42 types) avec 18 types issus de la passe
 - Sample (62) — échantillon physique, mapping SOSA/SSN `sosa:Sample`
 - Consent (63) + DataSubject (64) — conformité RGPD (art. 6 + 9.2.j)
 - PersistentIdentifier (65) — FAIR F1 (DOI, PURL, ORCID, GBIF, Wikidata)
-- + 2 champs : Assertion.rule_subtype, Dataset.purpose
+- Flow (66) — flux écologiques (carbone, eau, nutriments, énergie, graines, gènes, pathogènes)
+- ConfidenceGraph (67) — graphe de confiance, propagation d'incertitude
+- Goal (68) + Constraint (69) — objectifs de gestion + contraintes de faisabilité
+- KnowledgeLineage (70) — DAG explicite de production de connaissance
+- Experiment (71) — série de ModelRuns avec cadre de comparaison
+- TerrainSession (72) — mission terrain GeoSylva (météo, GPS, martelage, inventaire)
+- EcologicalState (73) — état synthétique de santé/vitalité/risque/résilience
+- + 3 champs : Assertion.rule_subtype, Dataset.purpose, Scenario.scenario_subtype
+- + document orchestration Knowledge OS §9.4 (à rédiger Vague 0)
 - + stratification méta-architecturale (niveau 0 : Universe → MetaOntology → Ontology → MetaModel → Profiles → Applications)
 - + section FAIR compliance §15.1 (audit 15 principes : 4/15 OK, cible 10/15 Vague 1, 15/15 Vague 2)
 - + section RGPD §15.2 (art. 6, 7, 9.2.j, 15, 16, 17, 20, 30, 32, 35)
@@ -79,6 +168,13 @@ emplacements actifs et archivés intégralement dans
 `22_PROJECT_MEMORY/SUPERSEDED_DRAFTS/` comme ressources historiques non
 normatives. Le numéro DEC-000022 reste disponible pour une future
 décision après RFC.
+
+> **Correction (même jour)** : l'emplacement `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md`
+> n'est pas resté vide comme annoncé ci-dessus — un nouveau brouillon de travail (v6.1
+> puis v6.2, non commité) y a été redéposé en parallèle pendant la préparation de
+> RFC-0011. Ce brouillon porte désormais son propre avertissement de gouvernance en tête
+> de fichier. RFC-0011.md et DEC-000022.md restent inexistants à ce jour ; rien n'est
+> adopté.
 
 ---
 

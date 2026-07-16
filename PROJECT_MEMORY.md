@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-15 (Métamodèle v6.2 rédigé — RFC-0011 + DEC-000022 + 6 ADR + livrable 213, 65 types noyau (42 v6.1 + 18 v6.2 écologique + 1 Temporal Engine + 4 FAIR/RGPD/SOSA), superseding 302/304/309/310 + amendement DIR-0008/DEC-012/019/020/021, audit FAIR/RGPD/SOSA, roadmap Vague 2 exhaustive) |
+| **Dernière mise à jour** | 2026-07-16 (Migration API v6.2 — RFC-0012 + DEC-000023 + ADR-007, 73 modèles SQLAlchemy sur table racine resource, 45 enums PostgreSQL, CRUD générique 7 endpoints, WebSocket pour Hub UE5.8, migration Alembic 0002, registry pattern @register_type pour 71 types resources) |
 
 ---
 
@@ -75,7 +75,7 @@ Voir `CHANGELOG.md` pour le détail complet.
 
 Le métamodèle v6.2 de l'Encyclopédie de l'Écosystème a été rédigé et
 soumis à adoption via RFC-0011 + DEC-000022 (statut **Proposé**). Il
-définit un noyau universel de **65 types** organisés en 5 niveaux (noyau,
+définit un noyau universel de **73 types** organisés en 5 niveaux (noyau,
 profils, projections, infrastructure, vision), avec PostgreSQL 16 +
 PostGIS comme vérité canonique. Neo4j, Elasticsearch, Jena et GraphQL
 sont différés (projections régénérables, benchmark AGE en Vague 1).
@@ -92,7 +92,7 @@ Capability (orchestration moteurs/apps). Plus 2 champs : Assertion.rule_subtype
 et Dataset.purpose.
 
 **Documents produits** :
-- `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (livrable 213 v6.2, 65 types noyau)
+- `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (livrable 213 v6.2, 73 types noyau)
 - `02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md` (RFC principale, 430 lignes)
 - `02_RFC/annexes/annexe-302.md` à `annexe-310.md`, `annexe-dir0008.md`,
   `annexe-dec012-019-020.md`, `annexe-205.md` (7 annexes)
@@ -105,17 +105,20 @@ contenu conservé). Amendement : GSIE-DIR-0008 (§2.1/§2.3/§2.4),
 DEC-000012, DEC-000019, DEC-000020. Annotation : livrable 205 (Draft).
 
 **Arbitrages Fondateur** (19 corrections + 11 arbitrages v6.1 + 12 propositions v6.2) :
-65 types acceptés (42 v6.1 + 18 v6.2 écologique + 1 Temporal Engine + 4 FAIR/RGPD/SOSA), racine `resource` unique (class-table inheritance),
+73 types acceptés (42 v6.1 + 18 v6.2 écologique + 1 Temporal Engine + 4 FAIR/RGPD/SOSA), racine `resource` unique (class-table inheritance),
 `claim_kind` séparé de `lifecycle_status`, bitemporalité via **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff + PROV-O, ADR-002),
 benchmark AGE en Vague 1, adaptateur Evidence Rust évalue + Python
 enrichit, Vague 0 (gouvernance + RFC + ADR + audit) avant Vague 1
-(65 types + Essence 360° + FAIR + RGPD + SOSA/SSN). Passe écologique v6.2 : ScaleContext,
+(73 types + Essence 360° + FAIR + RGPD + SOSA/SSN). Passe écologique v6.2 : ScaleContext,
 Phenomenon, EcologicalProcess, RelationType, SamplingEvent, TraitDefinition,
 TraitValue, Feature, FeatureSet, Inference, Question, Hypothesis, Decision,
 Recommendation, Scenario, Correlation, EcosystemService, Capability.
 Audit FAIR/RGPD/SOSA : Sample (62), Consent (63), DataSubject (64),
 PersistentIdentifier (65). Conformité FAIR §15.1 (4/15 OK → cible 10/15 Vague 1, 15/15 Vague 2).
 Conformité RGPD §15.2 (art. 6 + 9.2.j). Mapping SOSA/SSN §15.3.
+Passe dynamiques écologiques : Flow (66), ConfidenceGraph (67), Goal (68),
+Constraint (69), KnowledgeLineage (70), Experiment (71), TerrainSession (72),
+EcologicalState (73). Document orchestration Knowledge OS §9.4 (à rédiger Vague 0).
 Roadmap Vague 2 exhaustive : 16 actions P1 + 20 actions P2.
 
 **Catalogue de sources** : en cours de constitution par subagents (20

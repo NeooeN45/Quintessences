@@ -10,7 +10,7 @@
 
 ## Contexte
 
-Le métamodèle v6.2 définit 65 types. Plusieurs types (QualityAssessment,
+Le métamodèle v6.2 définit 73 types. Plusieurs types (QualityAssessment,
 Citation, Revision, ConflictCluster) doivent référencer n'importe quel
 type cible. Dans le schéma v5 et dans le code actuel, cela se faisait
 par **FK polymorphique** (`target_type VARCHAR, target_id UUID`) — ce
@@ -65,7 +65,7 @@ FK forte garantie par PostgreSQL.
 - **Positives** : intégrité référentielle SQL complète, pas de FK
   polymorphe, indexation efficace par table, schéma lisible, migration
   par table possible.
-- **Négatives** : 66 tables (65 types + racine) — plus de DDL à
+- **Négatives** : 74 tables (73 types + racine) — plus de DDL à
   maintenir. Jointures multi-tables pour récupérer une entité complète
   (mais rare en pratique — on interroge par type).
 - **Impact moteurs** : les repositories moteurs interrogent par type

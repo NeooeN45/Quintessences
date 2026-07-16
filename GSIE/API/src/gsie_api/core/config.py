@@ -72,6 +72,16 @@ class Settings(BaseSettings):
     # En développement/test, "memory://" est utilisé (pas de Redis requis)
     rate_limit_storage_url: str = "memory://"
 
+    # WebSocket (ADR-007)
+    ws_max_connections: int = 1000
+    ws_heartbeat_interval: int = 30  # secondes
+    ws_allowed_origins: list[str] = ["*"]  # CORS WS — restreindre en prod
+
+    # Object Storage (ADR-006)
+    object_storage_local_path: str = "./data/assets"
+    object_storage_s3_endpoint: str | None = None
+    object_storage_s3_bucket: str = "gsie-assets"
+
     # Auth — JWT RS256 (DEC-000019)
     jwt_algorithm: Literal["RS256"] = "RS256"
     jwt_issuer: str = "gsie-api"

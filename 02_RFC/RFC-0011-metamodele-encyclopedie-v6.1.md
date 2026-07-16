@@ -22,7 +22,7 @@ l'Écosystème** (livrable 213) en remplacement de la structure
 schéma de base de données à 4 couches (Neo4j + PostgreSQL + Elasticsearch
 + Jena) défini par le livrable 309.
 
-Le métamodèle v6.2 introduit un **noyau universel de 65 types** organisés
+Le métamodèle v6.2 introduit un **noyau universel de 73 types** organisés
 en cinq niveaux (noyau, profils, projections, infrastructure, vision),
 avec PostgreSQL 16 + PostGIS comme vérité canonique unique. Les
 technologies Neo4j, Elasticsearch, Jena et GraphQL deviennent des
@@ -35,7 +35,7 @@ RelationType, SamplingEvent, TraitDefinition, TraitValue, Feature,
 FeatureSet, Inference, Question, Hypothesis, Decision, Recommendation,
 Scenario, Correlation, EcosystemService, Capability — plus 1 type pour
 le GSIE Temporal & Provenance Engine (ResourceDiff, type 61), portant
-le noyau à 65 types.
+le noyau à 73 types.
 
 Cette RFC **supersède explicitement** trois livrables Validated (302,
 309, 310) et **amende** une directive Active (GSIE-DIR-0008) et trois
@@ -66,7 +66,7 @@ le Fondateur (voir §5).
 
 | Problème | Source | Solution v6.1 |
 |---|---|---|
-| `KnowledgeObject` à 6 types trop limité | Livrable 302 | Noyau 65 types avec `Assertion` unifiée |
+| `KnowledgeObject` à 6 types trop limité | Livrable 302 | Noyau 73 types avec `Assertion` unifiée |
 | `evidence_level` direct sur KnowledgeObject | Livrable 302, code actuel | `EvidenceAssessment` multiples (type 13) |
 | 4 couches de stockage (Neo4j+PG+ES+Jena) prématurées | Livrable 309 | PostgreSQL 16 canonique, autres différés |
 | Pas de bitemporalité | Audit F-P1-02 | `TemporalContext` + **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff + PROV-O, ADR-002) |
@@ -96,17 +96,17 @@ canonique) est saine et compatible avec la Constitution.
 ### 3.1 Métamodèle v6.1 (livrable 213)
 
 Le métamodèle complet est défini dans
-`GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (65 types noyau v6.2). Cette
+`GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (73 types noyau v6.2). Cette
 RFC en propose l'adoption.
 
 **Cinq niveaux** :
-- **A — Noyau universel** (65 types) : indépendant du domaine
+- **A — Noyau universel** (73 types) : indépendant du domaine
 - **B — Profils métier** (différés) : spécialisations par domaine
 - **C — Projections standards** (différées) : STAC, OGC, Darwin Core, PROV-O
 - **D — Infrastructure** (spécifiée, implémentation différée) : ConnectorRegistry, Outbox, object storage
 - **E — Vision long terme** (différée) : services écosystémiques, jumeaux numériques
 
-**65 types du noyau** (détail dans ECOSYSTEM_METAMODEL.md §3) :
+**73 types du noyau** (détail dans ECOSYSTEM_METAMODEL.md §3) :
 1-8 : Identité + référentiels (Entity, EntityAlias, Concept, ConceptVersion, Vocabulary, VocabularyRelease, ControlledTerm, Instance)
 9-13 : Assertions (Assertion, AssertionParticipant, AssertionQualifier, Predicate, EvidenceAssessment)
 14-19 : Observations (Observation, Result, Method, Instrument, Uncertainty, QualityAssessment)
@@ -131,6 +131,13 @@ RFC en propose l'adoption.
 62 : Échantillon physique (Sample) — mapping SOSA/SSN
 63-64 : RGPD (Consent + DataSubject) — conformité art. 6 + 9.2.j
 65 : Identifiants persistants (PersistentIdentifier) — FAIR F1 (DOI, PURL, ORCID)
+66 : Flux écologiques (Flow) — carbone, eau, nutriments, énergie, graines, gènes, pathogènes
+67 : Graphe de confiance (ConfidenceGraph) — propagation d'incertitude
+68-69 : Objectifs + contraintes (Goal + Constraint) — orientent et limitent les décisions
+70 : Lignage de connaissance (KnowledgeLineage) — DAG explicite A → B → Recommendation → Decision
+71 : Expériences scientifiques (Experiment) — série de ModelRuns avec comparaison
+72 : Missions terrain (TerrainSession) — mission GeoSylva (météo, GPS, martelage, inventaire)
+73 : État écologique (EcologicalState) — santé, vitalité, risque, résilience synthétiques
 
 ### 3.2 Architecture technique
 
@@ -151,7 +158,7 @@ RFC en propose l'adoption.
 | Vague | Durée | Contenu |
 |---|---|---|
 | 0 | ~2 semaines | RFC + DEC + 6 ADR + tests contractuels Evidence + contrats interface + audit migration |
-| 1 | ~4 semaines | 65 types implémentés + migration schéma + benchmark AGE + Essence 360° |
+| 1 | ~4 semaines | 73 types implémentés + migration schéma + benchmark AGE + Essence 360° |
 | 2+ | — | Profils métier + ingestion massive + projections standards |
 
 ---
@@ -185,7 +192,7 @@ contenu historique des documents supersédés est **conservé intact**
 | Décision | Sujet | Action | Annexe |
 |---|---|---|---|
 | DEC-000012 | Encyclopédie (ADR Neo4j/Jena/ES/GraphQL) | **Amendée** — ADR remplacés par ADR-001 à ADR-006 | `annexe-dec012-019-020.md` |
-| DEC-000019 | Architecture Phase 4 (plan 24 semaines) | **Amendée** — Vague 0 ajoutée, Vague 1 étendue (65 types) | `annexe-dec012-019-020.md` |
+| DEC-000019 | Architecture Phase 4 (plan 24 semaines) | **Amendée** — Vague 0 ajoutée, Vague 1 étendue (73 types) | `annexe-dec012-019-020.md` |
 | DEC-000020 | Knowledge Engine (Python in-memory) | **Amendée** — transition vers schéma v6.1 en Vague 0/1 | `annexe-dec012-019-020.md` |
 | DEC-000021 | Pipeline intégré Evidence→Knowledge | **Amendée** — pipeline adapté au schéma v6.1 (KnowledgeObject → Assertion, adaptateur Rust+Python) | `annexe-dec012-019-020.md` |
 
@@ -250,12 +257,12 @@ RFC.
 | # | Sujet | Arbitrage | Intégré dans |
 |---|---|---|---|
 | A1 | Superseding | RFC-0011 + DEC-000022 unique (un seul vote) | §4 + DEC-000022 |
-| A2 | Noyau 65 types (42 v6.1 + 18 v6.2) | Accepté, chacun justifié | ECOSYSTEM_METAMODEL §14 |
+| A2 | Noyau 73 types (42 v6.1 + 18 v6.2) | Accepté, chacun justifié | ECOSYSTEM_METAMODEL §14 |
 | A3 | Racine relationnelle | Table `resource` unique, class-table inheritance | ECOSYSTEM_METAMODEL §3.1 + ADR-001 |
 | A4 | Subagents sources | 10 domaines + 10 types (parallèle, autre agent) | Hors périmètre RFC — voir SOURCES_CATALOG.md |
 | T1 | Bitemporalité | GSIE Temporal & Provenance Engine (Revision + Snapshot + ResourceDiff + PROV-O) | ADR-002 |
 | T2 | AGE | Benchmark Vague 1 | ADR-003 |
-| T3 | Vague 1 scope | 65 types dès le départ | ECOSYSTEM_METAMODEL §13 |
+| T3 | Vague 1 scope | 73 types dès le départ | ECOSYSTEM_METAMODEL §13 |
 | T4 | Evidence adapter | Rust évalue (A-F) + Python enrichit | ADR-004 + §6.2 |
 | P1 | RFC structure | Principal + annexes séparées | Cette RFC + §8 |
 | P2 | Vague 0 | RFC + 6 ADR + tests contractuels + contrats interface | ECOSYSTEM_METAMODEL §13 |
@@ -297,7 +304,7 @@ RFC.
 | Risque | Sévérité | Mitigation |
 |---|---|---|
 | PostgreSQL seul pour million d'assertions | Moyen | Benchmark AGE Vague 1 (ADR-003) ; Neo4j différé mais pas exclu |
-| 65 types = sur-ingénierie | Moyen | Justification par type (§14) ; stratégie de réduction si confirmée |
+| 73 types = sur-ingénierie | Moyen | Justification par type (§14) ; stratégie de réduction si confirmée |
 | Migration 25 connaissances seed | Faible | ADR-004, migration scriptée, tests avant/après |
 | AGE inerte (aucune requête Cypher existante) | Moyen | Benchmark Vague 1 sur données réelles avant décision |
 | Contrats moteurs cassés | Moyen | Adaptateur + mapping 1:1 + claim_kind élargi couvre les 6 types |
@@ -324,14 +331,14 @@ classification) ne couvrent pas les observations (mesures de terrain),
 les absences, les prédictions de simulation, les hypothèses, ni les
 conflits entre assertions. L'audit a montré que 3 scénarios sur 10
 échouent avec le schéma actuel (absence, donnée sensible,
-reproductibilité). Le noyau 65 types corrige ces lacunes.
+reproductibilité). Le noyau 73 types corrige ces lacunes.
 
 ### 7.3 Noyau réduit (24-32 types)
 
 **Rejeté par le Fondateur**. La cible initiale 24-32 types ne couvre pas
 les 4 types de confidentialité (scénario D), les 4 types de dataset
 (scénario E, H), ModelVersion (reproductibilité), ConflictCluster
-(scénario B). Le Fondateur a arbitré : 65 types acceptés (42 v6.1 + 18 v6.2), chacun
+(scénario B). Le Fondateur a arbitré : 73 types acceptés (42 v6.1 + 18 v6.2), chacun
 justifié. Une stratégie de réduction est prévue si l'usage confirme la
 sur-ingénierie de certains types.
 
@@ -391,7 +398,7 @@ contenu historique conservé intact et un en-tête explicite.
 5. **Validation** — DEC-000022 passe à `Validated`, RFC-0011 à `Adopté`,
    ADR à `Accepté`
 6. **Vague 0** — tests contractuels, contrats interface, audit migration
-7. **Vague 1** — implémentation 65 types + Essence 360°
+7. **Vague 1** — implémentation 73 types + Essence 360°
 
 **Gate documentaire** : aucune implémentation de code ne démarre avant
 l'étape 6. C'est l'application de CON-003 (connaissance avant code) et
@@ -440,7 +447,7 @@ directive DIR-0008 sont traitées par superseding explicite via DEC-000022
 — c'est précisément le rôle d'une RFC.
 
 La Vague 0 (gouvernance + RFC + ADR + audit) précède toute
-implémentation. La Vague 1 implémente les 65 types complets dès le
+implémentation. La Vague 1 implémente les 73 types complets dès le
 départ, avec l'Essence 360° comme tranche verticale.
 
 **Recommandation** : adopter cette RFC et DEC-000022, puis démarrer la

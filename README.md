@@ -12,9 +12,10 @@ le climat et les territoires.
 
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
-[![Constitution](https://img.shields.io/badge/constitution-10%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
+[![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](GSIE/ENGINES/)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-19%20DEC-yellow)](03_DECISIONS/)
+[![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-22%20DEC-yellow)](03_DECISIONS/)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
@@ -48,7 +49,7 @@ contournable.
 
 | Critère | Concurrents (SilvIA, ForestNet, EcoAudit-AI…) | Quintessences |
 |---|---|---|
-| **Gouvernance** | Aucun cadre formel | Constitution de 10 articles + 3 sectorielles |
+| **Gouvernance** | Aucun cadre formel | Constitution de 11 articles + 3 sectorielles |
 | **Traçabilité** | Décisions non tracées | Chaque décision a un identifiant (DEC-xxx) et un historique |
 | **Explicabilité** | Boîte noire | Chaque recommandation cite ses sources et son raisonnement |
 | **Hors-ligne** | Supposent une connexion | Conçu pour le terrain isolé (offline-first) |
@@ -61,28 +62,139 @@ contournable.
 
 ## Architecture
 
+### Vue d'ensemble — écosystème Quintessences
+
+```mermaid
+graph TB
+    subgraph ECO["Quintessences (écosystème)"]
+        GSIE["GSIE<br/>General System Intelligence Engine"]
+
+        subgraph CHAIN["Chaîne d'intelligence (7 moteurs)"]
+            E["Evidence"] --> K["Knowledge"]
+            K --> C["Correlation"]
+            C --> R["Reasoning"]
+            R --> D["Diagnostic"]
+            D --> REC["Recommendation"]
+            REC --> V["Validation"]
+            V --> U["Utilisateur"]
+        end
+
+        subgraph DOMAIN["Moteurs domaine (5)"]
+            GIS["GIS"]
+            CLIM["Climate"]
+            PED["Pedology"]
+            BOT["Botanical"]
+            FD["Forest Dynamics"]
+        end
+
+        subgraph TRANS["Moteurs transverses (2)"]
+            LEARN["Learning"]
+            SIM["Simulation"]
+        end
+
+        DOMAIN -.-> CHAIN
+        TRANS -.-> CHAIN
+
+        subgraph APPS["Spécialisations (applications clientes)"]
+            GS_APP["GeoSylva<br/>forêt"]
+            IGNIS["Ignis<br/>incendies"]
+            ARTEMIS["Artemis<br/>faune"]
+            HYDRO["Hydro<br/>eau"]
+            FLORA["Flora<br/>végétation"]
+            QGISIA["QGISIA<br/>plugin QGIS"]
+            HUB["Centre de Commandement<br/>Unreal Engine 5.8"]
+        end
+
+        GSIE --- CHAIN
+        GSIE --- DOMAIN
+        GSIE --- TRANS
+        GSIE ===|API GSIE| APPS
+    end
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b
+    style APPS fill:#fdebd0,stroke:#ca6f1e
+    style HUB fill:#f5b7b1,stroke:#cb4335
 ```
-Quintessences (écosystème)
-└── GSIE (General System Intelligence Engine — moteur)
-    │
-    ├── 14 moteurs communs (chaîne d'intelligence)
-    │   Evidence → Knowledge → Correlation → Reasoning
-    │   → Diagnostic → Recommendation → Validation → Utilisateur
-    │
-    ├── Moteurs domaine (alimentent le raisonnement)
-    │   GIS · Climate · Pedology · Botanical · Forest Dynamics
-    │
-    ├── Moteurs transverses
-    │   Learning (apprentissage encadré) · Simulation (scénarios)
-    │
-    └── Spécialisations (applications clientes)
-        ├── GeoSylva        — app forestière (diagnostics sylvicoles)
-        ├── Ignis           — spécialisation incendie (surveillance, propagation)
-        ├── Artemis         — suivi faune (habitats, territoires)
-        ├── Hydro           — gestion de l'eau (réseau hydrographique, régimes hydriques)
-        ├── Flora           — végétation (flore, taxonomie, phénologie)
-        ├── QGISIA          — agent IA QGIS (SIG desktop, analyses géospatiales)
-        └── Centre de Commandement GSIE — Unreal Engine 5.8 (poste de pilotage immersif, convergence de toutes les apps)
+
+### Chaîne d'intelligence — flux de preuve à décision
+
+```mermaid
+flowchart LR
+    SOURCES["Sources scientifiques<br/>datasets, terrain, littérature"]
+    E["Evidence Engine<br/>qualification A–F"]
+    K["Knowledge Engine<br/>connaissances qualifiées"]
+    C["Correlation Engine<br/>corrélations multiparamètres"]
+    R["Reasoning Engine<br/>raisonnement"]
+    D["Diagnostic Engine<br/>diagnostics"]
+    REC["Recommendation Engine<br/>recommandations contournables"]
+    V["Validation Engine<br/>validation sorties"]
+    USER["Forestier<br/>décideur final (CON-001)"]
+
+    SOURCES --> E
+    E -->|"preuve qualifiée"| K
+    K --> C
+    C --> R
+    R --> D
+    D --> REC
+    REC --> V
+    V --> USER
+    USER -.->|"feedback terrain"| LEARN["Learning Engine"]
+    LEARN -.-> K
+
+    style E fill:#abebc6,stroke:#1e8449
+    style K fill:#aed6f1,stroke:#1a5276
+    style USER fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style LEARN fill:#fadbd8,stroke:#cb4335
+```
+
+### Métamodèle de l'Encyclopédie — 73 types noyau
+
+```mermaid
+graph TB
+    subgraph N1["Niveau 1 — Noyau universel"]
+        R["resource<br/>racine (class-table inheritance)"]
+    end
+
+    subgraph N2["Niveau 2 — Profils écologiques"]
+        P1["Place · Instance · Unit"]
+        P2["Assertion · Citation"]
+        P3["Dataset · ModelRun"]
+        P4["ScaleContext · Phenomenon<br/>EcologicalProcess · Flow"]
+        P5["TraitDefinition · TraitValue<br/>Feature · FeatureSet · Inference"]
+    end
+
+    subgraph N3["Niveau 3 — Raisonnement"]
+        Q1["Question · Hypothesis"]
+        Q2["Decision · Recommendation"]
+        Q3["Scenario · Correlation"]
+        Q4["Goal · Constraint · Experiment"]
+    end
+
+    subgraph N4["Niveau 4 — Infrastructure"]
+        I1["Agent · Capability"]
+        I2["Temporal Engine<br/>Revision · Snapshot · ResourceDiff"]
+        I3["SamplingEvent · TerrainSession<br/>EcologicalState"]
+    end
+
+    subgraph N5["Niveau 5 — Conformité"]
+        F1["Sample (62) — SOSA/SSN"]
+        F2["Consent (63) · DataSubject (64) — RGPD"]
+        F3["PersistentIdentifier (65) — FAIR"]
+    end
+
+    R --> N2
+    R --> N3
+    R --> N4
+    R --> N5
+
+    style R fill:#1a5276,color:#fff,stroke:none
+    style N2 fill:#eaf2f8,stroke:#1a5276
+    style N3 fill:#eafaf1,stroke:#1e8449
+    style N4 fill:#fef9e7,stroke:#b7950b
+    style N5 fill:#fdebd0,stroke:#ca6f1e
 ```
 
 ---
@@ -120,9 +232,9 @@ hypothèse exploratoire, jamais une conclusion.
 
 Plateforme de suivi de la faune premium orientée terrain. Application
 Android native, API NestJS et backoffice Next.js. Gestion des
-observations, zones, espèces et synchronisation hors-ligne.
+observations, zones, espèces and synchronisation hors-ligne.
 
-- **Repo** : [github.com/NeooeN45/Artemis](https://github.com/NeooeN45/Artemis)
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Artemis/`
 - **Lien GSIE** : moteurs GIS, Knowledge, Correlation, Learning (analyse
   des populations, prédiction de présence, gestion durable).
 
@@ -215,6 +327,65 @@ maintenabilité, la testabilité et l'extensibilité.
 | Learning Engine | Apprentissage encadré (retours terrain, feedback) |
 | Simulation Engine | Simulation de scénarios (interventions, évolutions) |
 
+> **Implémentation Phase 4** : Evidence Engine (cœur Rust + bindings
+> PyO3) et Knowledge Engine (Python) sont implémentés et testés
+> (166 tests, couverture 100%). Le pipeline intégré
+> Evidence → Knowledge est opérationnel (Semaines 1-4, Vague 1).
+
+---
+
+## Métamodèle de l'Encyclopédie de l'Écosystème
+
+Le métamodèle v6.2 (livrable 213, RFC-0011, DEC-000022) définit un
+**noyau universel de 73 types** organisés en 5 niveaux, avec
+PostgreSQL 16 + PostGIS + Apache AGE comme vérité canonique. Il
+remplace la structure `KnowledgeObject` à 6 types (livrable 302) et
+unifie données, connaissances, modèles, simulations, décisions et
+observations de terrain.
+
+| Niveau | Types | Exemples |
+|---|---|---|
+| **Noyau universel** | `resource` (racine, class-table inheritance) | Type 1 |
+| **Profils écologiques** | 42 types v6.1 + 18 v6.2 | Place, Instance, Assertion, Dataset, ScaleContext, Phenomenon, EcologicalProcess, Flow, TraitDefinition, Feature, Inference |
+| **Raisonnement** | Question, Hypothesis, Decision, Recommendation, Scenario, Correlation, Goal, Constraint, Experiment | Types 53-71 |
+| **Infrastructure** | Agent, Capability, Temporal Engine (Revision + Snapshot + ResourceDiff), SamplingEvent, TerrainSession, EcologicalState | Types 40-73 |
+| **Conformité** | Sample (SOSA/SSN), Consent + DataSubject (RGPD), PersistentIdentifier (FAIR) | Types 62-65 |
+
+**Architecture** : 6 ADR (racine `resource`, Temporal & Provenance
+Engine, benchmark Apache AGE, migration schéma, Outbox/Inbox, object
+storage). PostgreSQL 16 + PostGIS + Apache AGE (graphe Cypher) comme
+vérité canonique. Neo4j, Elasticsearch, Jena et GraphQL différés
+(projections régénérables).
+
+Voir `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` pour le document
+complet.
+
+---
+
+## Avancement Phase 4
+
+### Vague 1 — Fondations (semaines 1-4, livrées)
+
+| Semaine | Livrable | Statut |
+|---|---|---|
+| S1 | Structure FastAPI + Docker Compose, auth JWT, health/readiness, rate limiting, observabilité | Livrée |
+| S2 | Evidence Engine — cœur Rust + bindings PyO3, matrice A-F, détection de conflits, versionnement | Livrée |
+| S3 | Knowledge Engine — ingestion, requêtes typées, versionnement CON-010, révision avec archivage | Livrée |
+| S4 | Pipeline intégré Evidence → Knowledge (tranche verticale prioritaire) | Livrée |
+
+**Tests** : 166 tests au total (122 Python + 41 Rust + 3 API E2E),
+couverture 100% sur la logique métier.
+
+### Vagues 2-6 — Plan révisé 24 semaines (DEC-000019)
+
+Correlation Engine, Reasoning Engine, Diagnostic Engine,
+Recommendation Engine, Validation Engine, moteurs domaine (GIS,
+Climate, Pedology, Botanical, Forest Dynamics), moteurs transverses
+(Learning, Simulation), Centre de Commandement UE 5.8, applications
+clientes (GeoSylva, Ignis).
+
+Voir `ROADMAP.md` pour le détail complet.
+
 ---
 
 ## Gouvernance
@@ -224,7 +395,7 @@ principes intangibles qui s'imposent à tout le projet, y compris au
 Fondateur. Aucun autre projet d'IA environnementale n'a ce niveau de
 garde-fou formel.
 
-### Les 10 articles constitutionnels
+### Les 11 articles constitutionnels
 
 | Article | Principe |
 |---|---|
@@ -245,9 +416,19 @@ garde-fou formel.
 Le code est toujours le **dernier niveau**. Aucun niveau ne contredit
 un niveau supérieur.
 
-```
-Vision → Constitution → RFC → Directive → Décision
-→ Architecture → Spécification → Implémentation → Code
+```mermaid
+flowchart TD
+    V["Vision"] --> C["Constitution<br/>(primauté absolue)"]
+    C --> RFC["RFC<br/>(propositions d'évolution)"]
+    RFC --> DIR["Directive"]
+    DIR --> DEC["Décision<br/>(DEC-xxxxxx)"]
+    DEC --> ARCH["Architecture"]
+    ARCH --> SPEC["Spécification"]
+    SPEC --> IMPL["Implémentation"]
+    IMPL --> CODE["Code<br/>(dernier niveau)"]
+
+    style C fill:#cb4335,color:#fff,stroke:none
+    style CODE fill:#abebc6,stroke:#1e8449
 ```
 
 ### Traçabilité
@@ -277,6 +458,9 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | DEC-000017 | Validation Phase 3 + clôture + ouverture Phase 4 (GSIE-DIR-0011) |
 | DEC-000018 | Stratégie IA IGN : adoption geocontext MCP + datasets IA |
 | DEC-000019 | Validation architecture Phase 4 + plan révisé 24 semaines |
+| DEC-000020 | Knowledge Engine Semaine 3 — implémentation Python (ingest, query, revise, CON-010) |
+| DEC-000021 | Semaine 4 — pipeline intégré Evidence → Knowledge (tranche verticale) |
+| DEC-000022 | Métamodèle v6.2 — 73 types noyau + RFC-0011 + 6 ADR (Proposé) |
 
 ---
 
@@ -368,8 +552,6 @@ Copyright (c) 2026 Camille Perraudeau — Quintessences / GSIE.
 
 Le code source est public pour transparence et évaluation. Toute
 utilisation commerciale nécessite une licence séparée.
-
-Contact : `fondateur@gsie.fr`
 
 Voir `LICENSE` pour le texte complet.
 

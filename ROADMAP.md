@@ -1,6 +1,6 @@
 # ROADMAP — Quintessences / GSIE
 
-## Phase 1 — Foundation (courante)
+## Phase 1 — Foundation (clôturée ✅)
 
 > Lancée officiellement par **GSIE-DIR-0003**.
 > La documentation est le produit principal de cette phase.
@@ -263,7 +263,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 5 — Validation | 21-24 | Validation + Learning | Rust |
 | 6 — Go (optionnel) | 25-26 | Benchmark WebSocket + décision Go | Go si activé |
 
-### État d'exécution vérifié — 2026-07-14
+### État d'exécution vérifié — 2026-07-16
 
 | Étape | État | Critère restant avant clôture |
 |---|---|---|
@@ -271,6 +271,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | Semaine 2 — Evidence Engine | Prototype fonctionnel à valider scientifiquement | Wheel Rust intégré à l'image, Clippy sans avertissement, règles multi-sources/robustesse/incertitude conformes au framework, conflits validés par revue scientifique |
 | Semaine 3 — Knowledge Engine | ✅ Implémenté (DEC-000020) | Persistance PostgreSQL/Neo4j (évolution future), seed Knowledge Base Seed (25 connaissances) |
 | Semaine 4 — Intégration | ✅ Implémenté (DEC-000021) | Persistance PostgreSQL, seed complet, tests de charge |
+| **Migration v6.2** — **RFC-0012 + DEC-000023 + ADR-007** | ✅ **Implémenté (2026-07-16)** | 73 types SQLAlchemy, table racine resource, CRUD générique 8 endpoints, WebSocket auth JWT + Redis Pub/Sub, 17 tables de jonction n:m, Outbox/Inbox (ADR-005), Object Storage (ADR-006), validation dynamique, soft delete (CON-010), 152 tests passent |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -294,7 +295,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 
-> **Métamodèle v6.2** (RFC-0011 / DEC-000022, Proposé) — noyau 65 types,
+> **Métamodèle v6.2** (RFC-0011 / DEC-000022, Proposé) — noyau 73 types,
 > 5 niveaux, PostgreSQL 16 + PostGIS canonique. Voir
 > `GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md` (livrable 213).
 > v6.2 = v6.1 (42 types) + 18 types passe écologique Fondateur
@@ -303,18 +304,21 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 > Inference, Question, Hypothesis, Decision, Recommendation, Scenario,
 > Correlation, EcosystemService, Capability) + 1 Temporal Engine
 > (ResourceDiff) + 4 FAIR/RGPD/SOSA (Sample, Consent, DataSubject,
-> PersistentIdentifier).
+> PersistentIdentifier) + 8 dynamiques écologiques (Flow,
+> ConfidenceGraph, Goal, Constraint, KnowledgeLineage, Experiment,
+> TerrainSession, EcologicalState).
 
 - **Vague 0** (~2 semaines) : RFC-0011 + DEC-000022 + 6 ADR + tests
   contractuels Evidence + contrats d'interface noyau↔profils + audit
   migration (ADR-004) + registre de traitement RGPD + DPIA
-- **Vague 1** (~4 semaines) : 65 types implémentés (resource + 65 tables,
+- **Vague 1** (~4 semaines) : 73 types implémentés (resource + 73 tables,
   class-table inheritance), migration schéma (ADR-004), benchmark AGE
   (ADR-003), tranche verticale Essence 360° (chêne sessile, hêtre, pin
   maritime, douglas, sapin pectiné) + FAIR (DOI, URI persistante,
   tombstone) + RGPD (Consent, DataSubject, audit log, droit d'accès,
   anonymisation) + SOSA/SSN (Sample, mapping) + endpoint découverte
-  (OGC API Records)
+  (OGC API Records) + Flow + Goal/Constraint + EcologicalState +
+  TerrainSession (GeoSylva) + document orchestration Knowledge OS
 - PostgreSQL 16 + PostGIS 3.4 comme vérité canonique (ADR-001)
 - Bitemporalité via **GSIE Temporal & Provenance Engine** (Revision + Snapshot + ResourceDiff + PROV-O, ADR-002)
 - **Vague 2** (~6 semaines) : 16 actions P1 — projections Darwin Core,

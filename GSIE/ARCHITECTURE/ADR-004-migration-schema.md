@@ -64,7 +64,7 @@ la migration vers le schéma v6.1 (`resource` + 42 tables).
 
 | Migration | Action | Rollback |
 |---|---|---|
-| 0002 | Créer `resource` + 65 tables v6.2 (vides) + index + tables Temporal Engine (revision, snapshot, resource_diff) + tables FAIR/RGPD (sample, consent, data_subject, persistent_identifier) | DROP tables v6.2 |
+| 0002 | Créer `resource` + 73 tables v6.2 (vides) + index + tables Temporal Engine (revision, snapshot, resource_diff) + tables FAIR/RGPD (sample, consent, data_subject, persistent_identifier) + tables dynamiques (flow, confidence_graph, goal, constraint, knowledge_lineage, experiment, terrain_session, ecological_state) | DROP tables v6.2 |
 | 0003 | Copier `knowledge_objects` → `resource` + `assertion` + `assertion_participant` + `assertion_qualifier` + `evidence_assessment` + `citation`. Mapper `evidence_level` → `EvidenceAssessment(level)`. Mapper `source` → `Citation` + `Source`. Mapper `contenu` → participants + qualifiers. | DELETE FROM tables v6.1 (les anciennes tables sont intactes) |
 | 0004 | Bascule `engine.py` : repository PG sur schéma v6.1. Tests adaptés. | Repli sur store in-memory (feature flag) |
 | 0005 | Supprimer anciennes tables `knowledge_objects`, `knowledge_history` après validation | Restaurer depuis backup (les données sont conservées dans les tables v6.1) |
