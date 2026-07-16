@@ -4,6 +4,48 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — VAGUE 1 : STABILISATION DOCKER + AUTH + TESTS POSTGIS] - 2026-07-16
+
+### Gate 2 — Docker reproductible
+
+- **Fix docker-compose.yml** — context=project root (le Dockerfile COPY depuis
+  `GSIE/API/` et `GSIE/ENGINES/EVIDENCE_ENGINE/rust/`, le context doit être la
+  racine du projet, pas `GSIE/API/`)
+- **.dockerignore racine** — exclut `apps/`, `Forge/`, `.git/`, dossiers
+  gouvernance, caches Python/Rust, secrets
+- **entrypoint.sh** — lance `alembic upgrade head` avant Gunicorn (fail fast si
+  migration échoue)
+- **Dockerfile** — copie `alembic/`, `alembic.ini`, `docker/` dans l'image
+- **docker-compose.yml** — monte `keys/` en lecture seule pour JWT RS256
+- **generate-jwt-keys.sh** — script génération paire RSA 2048 bits (openssl)
+
+### Gate 3 — Auth production
+
+- **Audit trail** — IP + User-Agent tracés sur `login_success` et `login_failed`
+  (CON-005, OWASP A09)
+- **Refresh token** — `jti` tracé pour corrélation
+- **.env.example** — documentation procédure production (4 étapes)
+- **README** — démarrage rapide mis à jour (clés JWT, migrations auto, curl login)
+
+### Gate 4 — Tests PostGIS/Redis réels
+
+- **9 tests d'intégration testcontainers** (PostgreSQL/PostGIS + Redis) :
+  - Connexion PostgreSQL + PostGIS (extension vérifiée)
+  - CRUD resource : insert, read, soft delete (CON-010)
+  - JSONB : requête `metadata_json->>'essence' = 'chene_sessile'`
+  - PostGIS : Place avec Geometry SRID 2154 (Lambert-93)
+  - PostGIS : `ST_DWithin` — places proches de Landiras (zone test Ignis)
+  - Redis : set/get + Pub/Sub (WebSocket fan-out)
+- **CI** — `python-integration` ajouté au CI gate (bloque merge si échec)
+
+### Qualité
+
+- **app.py** — migration `on_event` (déprécié) → `lifespan` (FastAPI 0.115+)
+- **194 tests passent**, 84% couverture, 0 warning deprecation
+- **ruff check** : 0 erreur | **mypy --strict** : 0 erreur
+
+---
+
 ## [PHASE 4 — VAGUE 1 : QUALITÉ + GOUVERNANCE + INGESTION] - 2026-07-16
 
 ### Qualité API

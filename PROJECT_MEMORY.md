@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-16 (Migration API v6.2 — RFC-0012 + DEC-000023 + ADR-007, 73 modèles SQLAlchemy sur table racine resource, 45 enums PostgreSQL, CRUD générique 7 endpoints, WebSocket pour Hub UE5.8, migration Alembic 0002, registry pattern @register_type pour 71 types resources) |
+| **Dernière mise à jour** | 2026-07-16 (Stabilisation Vague 1 — Docker reproductible + auth audit trail + 9 tests PostGIS/Redis réels, 194 tests, 84% couverture, CI gate avec integration, ruff + mypy --strict verts) |
 
 ---
 

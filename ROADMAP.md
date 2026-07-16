@@ -267,11 +267,11 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 | Étape | État | Critère restant avant clôture |
 |---|---|---|
-| Semaine 1 — API + Docker | Prototype fonctionnel à stabiliser | CI Python/Rust/Docker verte, Ruff et mypy sans erreur, tests PostGIS/Redis réels, auth de démonstration impossible en production |
+| Semaine 1 — API + Docker | ✅ **Stabilisé (2026-07-16)** | Docker reproductible (context fix + entrypoint Alembic + .dockerignore), auth audit trail (IP + User-Agent), 9 tests PostGIS/Redis réels (testcontainers), CI gate avec integration, ruff + mypy --strict verts, 194 tests, 84% couverture. Reste : `docker compose up` from scratch validé en CI (Docker Desktop non démarré localement) |
 | Semaine 2 — Evidence Engine | Prototype fonctionnel à valider scientifiquement | Wheel Rust intégré à l'image, Clippy sans avertissement, règles multi-sources/robustesse/incertitude conformes au framework, conflits validés par revue scientifique |
 | Semaine 3 — Knowledge Engine | ✅ Implémenté (DEC-000020) | Persistance PostgreSQL/Neo4j (évolution future), seed Knowledge Base Seed (25 connaissances) |
 | Semaine 4 — Intégration | ✅ Implémenté (DEC-000021) | Persistance PostgreSQL, seed complet, tests de charge |
-| **Migration v6.2** — **RFC-0012 + DEC-000023 + ADR-007** | ✅ **Implémenté (2026-07-16)** | 73 types SQLAlchemy, table racine resource, CRUD générique 8 endpoints, WebSocket auth JWT + Redis Pub/Sub, 17 tables de jonction n:m, Outbox/Inbox (ADR-005), Object Storage (ADR-006), validation dynamique, soft delete (CON-010), 152 tests passent |
+| **Migration v6.2** — **RFC-0012 + DEC-000023 + ADR-007** | ✅ **Implémenté (2026-07-16)** | 76 types SQLAlchemy, table racine resource, CRUD générique 8 endpoints, WebSocket auth JWT + Redis Pub/Sub, 17 tables de jonction n:m, Outbox/Inbox (ADR-005), Object Storage (ADR-006), validation dynamique, soft delete (CON-010), 194 tests passent |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -286,12 +286,12 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 
 ### Gates obligatoires avant extension
 
-1. **Gouvernance** — phase, statuts, objectifs et contrats cohérents.
-2. **Reproductibilité** — clone vierge, build wheel Rust, image Docker et tests automatisés.
-3. **Sécurité** — identité de production, RBAC, secrets obligatoires, audit trail.
-4. **Science** — golden datasets, provenance, incertitude et validation experte.
-5. **Intégration** — Evidence → Knowledge → humain → Hub vérifié de bout en bout.
-6. **Performance** — SLO mesurés et profiling avant toute migration de code.
+1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
+2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. Reste : `docker compose up` from scratch validé en CI.
+3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
+4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte.
+5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout.
+6. **Performance** — ❌ SLO mesurés et profiling avant toute migration de code.
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 
