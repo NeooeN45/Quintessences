@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Rust toolchain (requis pour Maturin / PyO3)
-# maturin 1.9.6 = dernière version compatible rustc 1.80 (1.14+ requiert rustc 1.89)
-ENV RUST_VERSION=1.80.0
+# rustc 1.85+ requis : dépendances transitives Cargo.lock utilisent edition2024
+# maturin 1.9.6 = dernière version compatible rustc 1.80, mais on monte à 1.85+
+ENV RUST_VERSION=1.85.0
 ENV MATURIN_VERSION=1.9.6
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --default-toolchain $RUST_VERSION && \

@@ -71,9 +71,10 @@ async def db_session(postgres_url: str):
     engine = create_async_engine(postgres_url, pool_pre_ping=True)
 
     # Activer PostGIS si non présent (l'image postgis/postgis l'a déjà, mais par sécurité)
+    # NB : postgis_topology crée une table `place` qui entre en conflit avec PlaceModel
+    #      → on ne l'active pas (non requis pour nos tests)
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis_topology"))
 
     # Créer toutes les tables (schéma métamodèle v6.2 complet)
     async with engine.begin() as conn:
