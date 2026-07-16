@@ -248,6 +248,8 @@ class OutcomeTrackingModel(Base, TimestampMixin):
         JSONB, nullable=False, default=dict
     )
     recalibration_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    feedback_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lessons_learned: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 @register_type("administrative_unit")

@@ -231,3 +231,17 @@ data_subject_consent = Table(
     Index("ix_ds_consent_subject", "data_subject_id"),
     Index("ix_ds_consent_consent", "consent_id"),
 )
+
+# 19. OutcomeTracking (79) evidence_ids → resource.id (observations, résultats)
+# Trace les observations qui ont permis d'évaluer le résultat réel
+outcome_evidence = Table(
+    "outcome_evidence",
+    Base.metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("outcome_id", PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"), nullable=False),
+    Column("evidence_id", PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False),
+    Column("role", String(50), nullable=False, default="supporting"),
+    Index("ix_oe_outcome", "outcome_id"),
+    Index("ix_oe_evidence", "evidence_id"),
+)
