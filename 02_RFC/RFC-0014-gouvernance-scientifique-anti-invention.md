@@ -217,7 +217,8 @@ Enseignements du pilote, à retenir pour la suite de l'implémentation :
 
 ### Phase 1 — garde-fou (immédiat, avant tout nouveau moteur de raisonnement)
 
-1. Formaliser la règle §3.1 en ADR dédié (ADR-007 — à créer)
+1. Formaliser la règle §3.1 en ADR dédié — fait, voir
+   `GSIE/ARCHITECTURE/ADR-007-garde-fou-anti-invention.md` (Accepté)
 2. Étendre le checker de gouvernance avec une détection best-effort
    des valeurs numériques non sourcées dans les moteurs
 3. Ajouter la checklist de revue de code aux contributions de moteurs
