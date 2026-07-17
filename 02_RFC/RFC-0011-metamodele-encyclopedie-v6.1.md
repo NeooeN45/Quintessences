@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0011 |
-| **Statut** | Proposé |
+| **Statut** | Adopté |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
@@ -455,6 +455,6 @@ Vague 0.
 
 ---
 
-> Cette RFC est **Proposée**. Elle devient **Adoptée** après validation
-> du Fondateur via DEC-000022. Aucune implémentation ne démarre avant
-> le gate documentaire de la Vague 0.
+> Cette RFC est **Adoptée** depuis le 2026-07-17, conformément à la
+> validation du Fondateur via DEC-000022 (Validated depuis le
+> 2026-07-16).

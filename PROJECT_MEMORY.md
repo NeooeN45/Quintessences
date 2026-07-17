@@ -71,11 +71,12 @@ template (Landiras — zone de test Ignis). Plugins Fab à installer
 manuellement : BlueprintWebSocket (gratuit), FluidFlux ($349.99, Hydro).
 Voir `CHANGELOG.md` pour le détail complet.
 
-### Métamodèle de l'Écosystème — statut courant (2026-07-15)
+### Métamodèle de l'Écosystème — statut courant (2026-07-17)
 
 Le métamodèle v6.2 de l'Encyclopédie de l'Écosystème a été rédigé et
-soumis à adoption via RFC-0011 + DEC-000022 (statut **Proposé**). Il
-définit un noyau universel de **73 types** organisés en 5 niveaux (noyau,
+adopté via RFC-0011 (Adopté) + DEC-000022 (**Validated**, validation
+rétroactive du 2026-07-16). Les 6 ADR (ADR-001 à ADR-006) sont
+**Accepté**/Validated. Il définit un noyau universel de **73 types** organisés en 5 niveaux (noyau,
 profils, projections, infrastructure, vision), avec PostgreSQL 16 +
 PostGIS comme vérité canonique. Neo4j, Elasticsearch, Jena et GraphQL
 sont différés (projections régénérables, benchmark AGE en Vague 1).
@@ -96,9 +97,9 @@ et Dataset.purpose.
 - `02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md` (RFC principale, 430 lignes)
 - `02_RFC/annexes/annexe-302.md` à `annexe-310.md`, `annexe-dir0008.md`,
   `annexe-dec012-019-020.md`, `annexe-205.md` (7 annexes)
-- `03_DECISIONS/DEC-000022.md` (décision d'adoption, Proposé)
+- `03_DECISIONS/DEC-000022.md` (décision d'adoption, Validated)
 - `GSIE/ARCHITECTURE/ADR-001-racine-resource.md` à `ADR-006-object-storage.md`
-  (6 ADR)
+  (6 ADR, tous Accepté/Validated)
 
 **Superseding** : livrables 302, 304, 309, 310 (Validated → Supersédé,
 contenu conservé). Amendement : GSIE-DIR-0008 (§2.1/§2.3/§2.4),

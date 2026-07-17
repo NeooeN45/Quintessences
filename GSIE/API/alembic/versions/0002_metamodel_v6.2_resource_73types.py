@@ -126,14 +126,24 @@ def upgrade() -> None:
 
     # --- 3. Auto-création des 73 tables depuis les modèles SQLAlchemy ---
     # Import des modèles pour peupler Base.metadata
-    from gsie_api.infrastructure.models import Base  # noqa: F401
     from gsie_api.infrastructure.models import (  # noqa: F401
-        assertion, dynamics, ecology, fair_rgpd, governance,
-        models_ai, observation, prov, provenance, reasoning,
-        spatial_temporal, temporal_engine,
+        Base,  # noqa: F401
+        assertion,
+        business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
+        dynamics,
+        ecology,
+        fair_rgpd,
+        governance,
+        junctions,  # noqa: F401
+        models_ai,
+        observation,
+        outbox,  # noqa: F401
+        prov,
+        provenance,
+        reasoning,
+        spatial_temporal,
+        temporal_engine,
     )
-    from gsie_api.infrastructure.models import junctions  # noqa: F401
-    from gsie_api.infrastructure.models import outbox  # noqa: F401
 
     # Créer toutes les tables sauf resource (déjà créée ci-dessus)
     tables_to_create = [
@@ -162,21 +172,42 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # --- 1. Supprimer les tables v6.2 (uniquement) ---
-    from gsie_api.infrastructure.models import Base  # noqa: F401
     from gsie_api.infrastructure.models import (  # noqa: F401
-        assertion, dynamics, ecology, fair_rgpd, governance,
-        models_ai, observation, prov, provenance, reasoning,
-        spatial_temporal, temporal_engine,
+        Base,  # noqa: F401
+        assertion,
+        business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
+        dynamics,
+        ecology,
+        fair_rgpd,
+        governance,
+        junctions,  # noqa: F401
+        models_ai,
+        observation,
+        outbox,  # noqa: F401
+        prov,
+        provenance,
+        reasoning,
+        spatial_temporal,
+        temporal_engine,
     )
-    from gsie_api.infrastructure.models import junctions  # noqa: F401
-    from gsie_api.infrastructure.models import outbox  # noqa: F401
 
-    # Drop uniquement les tables v6.2 (celles dans Base.metadata)
-    # Les tables v6.1 (knowledge_objects, botanical_*, ecosystem_*) ne sont
-    # PAS dans Base.metadata — elles ne seront pas touchées.
+    # ATTENTION (corrigé — voir historique) : `knowledge_models.py` (schéma
+    # v6.1, migration 0001) importe le MÊME Base déclaratif que les modèles
+    # v6.2, et `alembic/env.py` importe systématiquement `knowledge_models`
+    # avant `run_migrations()`. Résultat : Base.metadata contient TOUJOURS
+    # les 12 tables v6.1 en plus des tables v6.2 au moment où ce downgrade()
+    # s'exécute — un simple filtre "tout sauf resource" sur Base.metadata les
+    # droppe aussi. On exclut donc ces 12 tables NOMMÉMENT, indépendamment de
+    # ce que contient Base.metadata au runtime.
+    legacy_v1_tables = {
+        "knowledge_objects", "knowledge_history", "knowledge_domaines_validite",
+        "knowledge_relations", "knowledge_mots_cles", "knowledge_conflits",
+        "botanical_familles", "botanical_genres", "botanical_essences",
+        "ecosystem_habitats", "ecosystem_stations", "ecosystem_groupes_ecologiques",
+    }
     tables_to_drop = [
         t for t in reversed(Base.metadata.sorted_tables)
-        if t.name != "resource"
+        if t.name != "resource" and t.name not in legacy_v1_tables
     ]
     Base.metadata.drop_all(
         bind=op.get_bind(),
@@ -189,4 +220,5 @@ def downgrade() -> None:
     for enum_name, _ in _ENUMS:
         op.execute(f"DROP TYPE IF EXISTS {enum_name}")
 
-    # Les tables v6.1 sont préservées — rollback sûr.
+    # Les tables v6.1 (legacy_v1_tables) sont explicitement exclues ci-dessus
+    # et donc bien préservées — rollback sûr, vérifié empiriquement (voir test).

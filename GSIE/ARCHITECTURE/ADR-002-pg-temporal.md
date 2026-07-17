@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | ADR-002 |
-| **Statut** | Proposé |
+| **Statut** | Accepté |
 | **Date** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Décision liée** | DEC-000022, RFC-0011 |
@@ -312,3 +312,10 @@ class TemporalEngine:
   schéma SQL + triggers)
 - Vague 1 : implémentation TemporalEngine + tests + intégration
   Evidence/Decision
+
+## Validation (2026-07-17)
+
+ADR-002 accepté par le Fondateur, conformément à DEC-000022 (§ « Adopte
+les 6 ADR-001 à ADR-006 »), déjà Validated depuis le 2026-07-16. Le
+Temporal & Provenance Engine (Revision append-only) est déjà implémenté
+(migration 0002) et testé.

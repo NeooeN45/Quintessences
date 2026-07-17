@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | ADR-006 |
-| **Statut** | Proposé |
+| **Statut** | Accepté |
 | **Date** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Décision liée** | DEC-000022, RFC-0011 |
@@ -104,3 +104,9 @@ traçabilité de l'origine (indépendance API).
 - 2026-07-15 : Proposé (RFC-0011 / DEC-000022)
 - Vague 0 : spécification interface `ObjectStorage`
 - Vague 2+ : implémentation MinIO + intégration DataAsset
+
+## Validation (2026-07-17)
+
+ADR-006 accepté par le Fondateur, conformément à DEC-000022 (§ « Adopte
+les 6 ADR-001 à ADR-006 »), déjà Validated depuis le 2026-07-16.
+L'implémentation MinIO reste différée à Vague 2+ (inchangé).

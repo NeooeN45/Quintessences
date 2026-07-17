@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | ADR-001 |
-| **Statut** | Proposé |
+| **Statut** | Accepté |
 | **Date** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Décision liée** | DEC-000022, RFC-0011 |
@@ -75,3 +75,10 @@ FK forte garantie par PostgreSQL.
 ## Statut de suivi
 
 - 2026-07-15 : Proposé (RFC-0011 / DEC-000022)
+
+## Validation (2026-07-17)
+
+ADR-001 accepté par le Fondateur, conformément à DEC-000022 (§ « Adopte
+les 6 ADR-001 à ADR-006 »), déjà Validated depuis le 2026-07-16. La
+racine `resource` et l'héritage par table sont déjà implémentés (migration
+0002) et testés.
