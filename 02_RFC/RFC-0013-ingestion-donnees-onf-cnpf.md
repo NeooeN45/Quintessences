@@ -251,6 +251,9 @@ catalogues stations CNPF).
 ## 9. Références
 
 - `GSIE/DATASETS/DATASET_CATALOG.md` — catalogue des 29 datasets
+- `GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` — catalogue étendu
+  (~179 sources, dont DS-001 à DS-029) avec méthodes d'accès concrètes
+  par source (endpoints API, auth, formats) — complète §3.2 de cette RFC
 - `GSIE/ARCHITECTURE/` — architecture GSIE
 - `02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md` — métamodèle v6.2
 - `02_RFC/RFC-0012-migration-api-v6.2.md` — migration API v6.2

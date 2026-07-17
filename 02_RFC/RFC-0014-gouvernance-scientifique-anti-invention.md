@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0014 |
-| **Statut** | Draft |
+| **Statut** | Adopté |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-17 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
@@ -185,6 +185,34 @@ stations CNPF. Cette RFC ajoute au périmètre d'intégration réelle :
 | *Flore forestière française* (Rameau et al., 3 tomes) | Autécologie | Corpus déjà partiellement cité dans `KNOWLEDGE_BASE_SEED.md` — à ingérer intégralement via §3.2 |
 | Guides sylvicoles et guides des stations (CNPF/IDF) | Sylviculture | Sous réserve de vérification des droits d'usage (point légal, pas technique — à trancher par le Fondateur avant ingestion) |
 
+Catalogue exhaustif des ~179 sources par moteur, avec méthodes d'accès
+concrètes (endpoints API, auth, formats) : voir
+`GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` — référence de premier
+plan pour prioriser les intégrations §3.4/§3.5, complémentaire à
+`DATASET_CATALOG.md` (DS-001 à DS-029) et à RFC-0013.
+
+### 3.6 Pilote réalisé (2026-07-17)
+
+Premier document pilote testé de bout en bout : *Lettre du DSF n°61*
+(Département Santé des Forêts, septembre 2024, PDF public
+`agriculture.gouv.fr`, identifié via `SOURCES_DONNEES_EXHAUSTIVES.md`
+§10.13). Résultat : 8 faits réels extraits (page 3, biologie d'Epinotia
+subsequana et données de piégeage 2022), tous vérifiés (citation
+retrouvée mot pour mot dans le texte source), tous en statut
+« quarantine » — aucun jamais accepté automatiquement. Implémentation :
+`Forge/src/dataset_forge/documents/extraction.py` (`KnowledgeExtractor`).
+
+Enseignements du pilote, à retenir pour la suite de l'implémentation :
+- Les modèles de raisonnement (ex. `nemotron-3-nano`) peuvent épuiser
+  leur budget de tokens en chaîne de pensée avant de produire la
+  réponse finale — préférer un modèle direct (`deepseek-v4-flash`) pour
+  ce type de tâche d'extraction structurée.
+- Certains PDF administratifs ont un encodage de police cassé (accents
+  perdus) — n'invalide pas la garantie anti-invention (la citation est
+  vérifiée contre le même texte, corrompu des deux côtés), mais un
+  fallback OCR sera nécessaire pour une exploitation humaine propre en
+  production.
+
 ## 4. Plan d'implémentation
 
 ### Phase 1 — garde-fou (immédiat, avant tout nouveau moteur de raisonnement)
@@ -277,9 +305,14 @@ désigner par le Fondateur.
 - `00_CONSTITUTION/GSIE-CON-005.md` — traçabilité
 - `GSIE/ENGINES/CORRELATION_ENGINE/CORRELATION_ENGINE.md` — garanties
   déjà posées (§6 : sourcé, pas de causalité non justifiée)
+- `GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` — catalogue exhaustif
+  (~179 sources) avec méthodes d'accès concrètes par source, utilisé
+  pour identifier le document pilote §3.6
 
 ## 10. Historique
 
 | Date | Modification | Auteur |
 |---|---|---|
 | 2026-07-17 | Création — RFC-0014 Draft | Camille Perraudeau |
+| 2026-07-17 | Validation Fondateur — Adopté (DEC-000025 Validated) | Camille Perraudeau |
+| 2026-07-17 | Pilote réalisé (§3.6) + lien vers SOURCES_DONNEES_EXHAUSTIVES.md | Camille Perraudeau |
