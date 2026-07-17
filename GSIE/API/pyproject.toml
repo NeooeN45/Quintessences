@@ -115,3 +115,9 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "gsie_evidence"
 ignore_missing_imports = true
+
+# shapely n'a pas de stubs officiels installés (types-shapely existe mais
+# n'est pas encore ajouté aux dépendances dev) — GIS Engine (v1)
+[[tool.mypy.overrides]]
+module = "shapely.*"
+ignore_missing_imports = true
