@@ -30,8 +30,10 @@ from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.engines.botanical.router import router as botanical_router
+from gsie_api.engines.climate.router import router as climate_router
 from gsie_api.engines.correlation.router import router as correlation_router
 from gsie_api.engines.evidence.router import router as evidence_router
+from gsie_api.engines.forest_dynamics.router import router as forest_dynamics_router
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.pedology.router import router as pedology_router
@@ -236,6 +238,8 @@ def create_app() -> FastAPI:
     app.include_router(gis_router, prefix=_settings.api_v1_prefix)
     app.include_router(botanical_router, prefix=_settings.api_v1_prefix)
     app.include_router(pedology_router, prefix=_settings.api_v1_prefix)
+    app.include_router(forest_dynamics_router, prefix=_settings.api_v1_prefix)
+    app.include_router(climate_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
     # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
