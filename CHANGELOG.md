@@ -4,6 +4,36 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — BOTANICAL ENGINE + PEDOLOGY ENGINE] - 2026-07-17
+
+### Nouveaux moteurs — Botanical (GBIF) et Pedology (SoilGrids)
+
+- **Botanical Engine** : résolution taxonomique via GBIF Backbone
+  Taxonomy (`species/match`, aucune clé API), résolution de synonymes
+  vers le taxon accepté (vérifié : *Quercus sessiliflora* → *Quercus
+  petraea*), déduplication par clé GBIF (`entity` + `entity_alias`,
+  CON-010). Pas d'autécologie en v1 — nécessite des connaissances
+  sourcées (Rameau et al.) pas encore ingérées (RFC-0014). 8 tests.
+- **Pedology Engine** : pH (H2O) + texture (argile/sable/limon) via
+  SoilGrids (ISRIC, aucune clé), valeurs mises à l'échelle par
+  `d_factor` (vérifié empiriquement : argile+sable+limon ≈ 100%).
+  `evidence_level=B` — source unique peer-reviewed (Poggio et al.,
+  2021), jamais A sans convergence multi-sources
+  (EVIDENCE_FRAMEWORK.md). Pas de persistance en v1 (estimation
+  ponctuelle sans identité stable). 6 tests.
+- **Fix checker de gouvernance** : la règle 3 (ADR-007) signalait à
+  tort une `SourceReference(...)` contenant "v2.0" dans une URL comme
+  valeur non sourcée — une SourceReference EST déjà la citation
+  structurée, désormais exclue explicitement.
+
+### Métriques
+
+- 6/14 moteurs GSIE codés (Evidence, Knowledge, Correlation, GIS,
+  Botanical, Pedology). 255 tests passent, 0 échec, 60 skipped, 86%
+  couverture. ruff + mypy --strict verts.
+
+---
+
 ## [PHASE 4 — GARDE-FOU ANTI-INVENTION + GIS ENGINE] - 2026-07-17
 
 ### Gouvernance — RFC-0014, ADR-007

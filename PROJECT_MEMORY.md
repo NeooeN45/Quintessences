@@ -338,10 +338,23 @@ d'exécution :
     et altitude (API de calcul altimétrique IGN), données réelles
     vérifiables sans clé API, géométrie persistée en Lambert-93
     (`place`, PostGIS), 7 tests.
+  - **Botanical Engine** — codé : résolution taxonomique GBIF Backbone
+    Taxonomy (species/match, aucune clé), synonymes résolus vers le
+    taxon accepté, déduplication `entity`/`entity_alias`. Pas
+    d'autécologie en v1 (nécessite Rameau et al. non encore ingéré).
+    8 tests.
+  - **Pedology Engine** — codé : pH + texture via SoilGrids ISRIC
+    (aucune clé), evidence_level=B (source unique peer-reviewed,
+    plafond selon EVIDENCE_FRAMEWORK.md). Pas de persistance v1. 6 tests.
   - **RFC-0014** (Adopté) + **ADR-007** (Accepté) : garde-fou
     transverse anti-invention de données, applicable à tous les
-    moteurs de raisonnement (Correlation, GIS, et futurs Reasoning/
-    Diagnostic/Recommendation).
+    moteurs de raisonnement (Correlation, GIS, Botanical, Pedology, et
+    futurs Reasoning/Diagnostic/Recommendation).
+  - 6/14 moteurs GSIE codés (Evidence, Knowledge, Correlation, GIS,
+    Botanical, Pedology). Reste : Climate (nécessite une clé API
+    Météo-France), Forest Dynamics (données bulk IFN), puis la chaîne
+    Reasoning/Diagnostic/Recommendation/Validation, puis Learning/
+    Simulation.
   - Pipeline d'extraction documentaire sourcée (`Forge/src/dataset_forge/
     documents/extraction.py`) : pilote réussi sur un document réel
     (Lettre du DSF n°61) — 8 faits vérifiés, tous en quarantine.
