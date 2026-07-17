@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Garde-fou de gouvernance GSIE — vérifie que le dépôt ne se contredit pas lui-même.
 
-Deux règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
+Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
 
 1. Intégrité des références : toute mention d'un RFC-XXXX / DEC-XXXXXX / ADR-XXX
    dans un document de gouvernance doit pointer vers un fichier qui existe,
@@ -14,6 +14,13 @@ Deux règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
    d'implémentation (migrations Alembic, modèles infra) ne doit s'y référer
    comme base déjà actée (CON-003 : « la connaissance avant le code » ;
    hiérarchie Décision avant Implémentation).
+
+3. Valeurs non sourcées (ADR-007) : dans les moteurs de raisonnement
+   (`engines/*/engine.py`), toute constante module-level contenant un
+   littéral décimal (seuil, coefficient) doit avoir une citation détectable
+   (« Nom (Année) », « Nom et al. (Année) », ou référence RFC-/ADR-/DEC-/
+   CON-) dans les 5 lignes qui la précèdent. Détection best-effort — ne
+   prouve pas l'absence de donnée inventée, attrape les cas évidents.
 
 Usage : python tools/check_governance_consistency.py
 Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
@@ -59,6 +66,17 @@ IMPLEMENTATION_GLOBS = [
     "GSIE/API/src/gsie_api/infrastructure/knowledge_models.py",
 ]
 
+# Règle 3 (ADR-007) — moteurs de raisonnement à auditer pour valeurs non sourcées
+REASONING_ENGINE_GLOBS = ["GSIE/API/src/gsie_api/engines/*/engine.py"]
+# Citation détectable : « Nom (Année) », « Nom et al. (Année) », ou référence
+# de gouvernance (RFC-/ADR-/DEC-/CON-).
+CITATION_PATTERN = re.compile(
+    r"[A-Z][a-zA-Z\-]+(?:\s+et al\.?)?\s*\(\d{4}\)|\b(?:RFC-\d{4}|DEC-\d{6}|ADR-\d{3,4}|CON-\d{3})\b"
+)
+FLOAT_LITERAL_PATTERN = re.compile(r"\d+\.\d+")
+CONSTANT_DEF_PATTERN = re.compile(r"^(_[A-Z][A-Z0-9_]*)\s*(?::[^=]+)?=\s*(.+)$")
+_CITATION_LOOKBACK_LINES = 5
+
 
 def find_doc_file(doc_id: str) -> Path | None:
     """Cherche le fichier correspondant à un identifiant RFC/DEC/ADR."""
@@ -86,6 +104,41 @@ def find_superseded_ids(text: str) -> set[str]:
         window = text[max(0, match.start() - 200) : match.end() + 200]
         ids.update(ID_PATTERN.findall(window))
     return ids
+
+
+def find_unsourced_numeric_constants(text: str) -> list[str]:
+    """Détecte les constantes module-level à littéral décimal sans citation proche.
+
+    Best-effort (ADR-007) : repère les blocs `_NOM = ...` (éventuellement
+    multi-lignes, listes/dicts inclus) contenant un nombre décimal, et
+    vérifie qu'une citation (« Nom (Année) » ou référence de gouvernance)
+    apparaît dans les quelques lignes qui précèdent — typiquement un
+    commentaire expliquant la source du seuil/coefficient.
+    """
+    lines = text.split("\n")
+    findings: list[str] = []
+    i = 0
+    while i < len(lines):
+        match = CONSTANT_DEF_PATTERN.match(lines[i])
+        if not match:
+            i += 1
+            continue
+        name = match.group(1)
+        block_lines = [lines[i]]
+        depth = sum(lines[i].count(c) for c in "([{") - sum(lines[i].count(c) for c in ")]}")
+        j = i
+        while depth > 0 and j + 1 < len(lines):
+            j += 1
+            block_lines.append(lines[j])
+            depth += sum(lines[j].count(c) for c in "([{") - sum(lines[j].count(c) for c in ")]}")
+        block_text = "\n".join(block_lines)
+        if FLOAT_LITERAL_PATTERN.search(block_text):
+            context_start = max(0, i - _CITATION_LOOKBACK_LINES)
+            context = "\n".join(lines[context_start:i])
+            if not CITATION_PATTERN.search(context):
+                findings.append(name)
+        i = j + 1
+    return findings
 
 
 def main() -> int:
@@ -146,6 +199,21 @@ def main() -> int:
                     f"(pas Validé/Adopté) — l'implémentation ne doit pas précéder "
                     f"la décision (CON-003)."
                 )
+
+    # --- Règle 3 (ADR-007) : valeurs numériques potentiellement non sourcées ---
+    reasoning_files: list[Path] = []
+    for pattern in REASONING_ENGINE_GLOBS:
+        reasoning_files.extend(ROOT.glob(pattern))
+
+    for path in reasoning_files:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for name in find_unsourced_numeric_constants(text):
+            violations.append(
+                f"[valeur non sourcée] {path.relative_to(ROOT)} : la constante {name} "
+                f"contient un littéral décimal sans citation détectée dans les "
+                f"{_CITATION_LOOKBACK_LINES} lignes précédentes (ADR-007) — vérifier "
+                f"qu'elle est bien sourcée."
+            )
 
     if not violations:
         print("OK — aucune incohérence de gouvernance détectée.")
