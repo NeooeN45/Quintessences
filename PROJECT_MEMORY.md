@@ -323,17 +323,30 @@ plan révisé à 24 semaines / 6 vagues (DEC-000019) est en cours
 d'exécution :
 
 - **Vague 1 — Fondations (semaines 1-4, Python + Rust)** : **clôturée**
-  (DEC-000021). 166 tests au total (55 API + 67 Evidence + 33 Knowledge
-  + 11 pipeline E2E). Ruff + mypy --strict : zéro erreur. Pipeline
-  intégré Evidence → Knowledge validé (tranche verticale prioritaire).
+  (DEC-000021). Knowledge Engine reconnecté sur PostgreSQL v6.2
+  (2026-07-17, remplace le stockage en mémoire de la Vague 1).
 - **Hub (Centre de Commandement GSIE, UE 5.8)** : environnement
   configuré (voir ci-dessus, livrable 211). Le projet Unreal réel vit
   hors dépôt (`E:\GSIE-Centre-Commandement`, dépôt GitHub
   `NeooeN45/Hub` privé) et est en cours de constitution ;
   `apps/Hub/README.md` sert de pointeur documentaire dans ce dépôt.
-- Vagues 2 à 6 (moteurs domaine, raisonnement, moteurs avancés,
-  validation) : non commencées. Voir `ROADMAP.md` pour le détail des
-  vagues et du calendrier.
+- **Vague 2 (démarrée, 2026-07-17)** :
+  - **Correlation Engine** — codé (v1 réduite, périmètre documenté
+    RFC-0014 §1.1) : pearson/spearman/kendall (scipy), persistance
+    `resource(type=correlation)`, 10 tests.
+  - **GIS Engine** — sorti du placeholder : cadastre (API Carto IGN)
+    et altitude (API de calcul altimétrique IGN), données réelles
+    vérifiables sans clé API, géométrie persistée en Lambert-93
+    (`place`, PostGIS), 7 tests.
+  - **RFC-0014** (Adopté) + **ADR-007** (Accepté) : garde-fou
+    transverse anti-invention de données, applicable à tous les
+    moteurs de raisonnement (Correlation, GIS, et futurs Reasoning/
+    Diagnostic/Recommendation).
+  - Pipeline d'extraction documentaire sourcée (`Forge/src/dataset_forge/
+    documents/extraction.py`) : pilote réussi sur un document réel
+    (Lettre du DSF n°61) — 8 faits vérifiés, tous en quarantine.
+  - Reste à démarrer : Climate, Pedology, Botanical, Forest Dynamics
+    (P0/P1 — voir feuille de route RFC-0014 §3.4).
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.
