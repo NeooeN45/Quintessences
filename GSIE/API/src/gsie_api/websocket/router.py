@@ -17,13 +17,18 @@ Sécurité :
 
 import json
 from collections import defaultdict, deque
+from datetime import UTC, datetime
 from time import monotonic
 from typing import Any
+from uuid import uuid4
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
+from pydantic import BaseModel
 
 from gsie_api.core.auth import verify_ws_token
 from gsie_api.core.logging import get_logger
+from gsie_api.core.rbac import require_roles
+from gsie_api.websocket.events import EventType, WSEvent
 from gsie_api.websocket.manager import manager
 
 router = APIRouter(prefix="/ws", tags=["websocket"])
@@ -77,6 +82,7 @@ class _RateLimiter:
 
 
 _rate_limiter = _RateLimiter()
+_require_admin = require_roles("admin")
 
 
 def _validate_channels(channels: list[str] | None) -> list[str]:
@@ -190,3 +196,72 @@ async def ws_events(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
         _rate_limiter.cleanup(ws_id)
+
+
+# --- Endpoint REST de test broadcast (Gate 5 — E2E) --------------------------
+
+
+class BroadcastTestRequest(BaseModel):
+    """Payload pour publier un event de test sur le WebSocket."""
+
+    channel: str = "all"
+    event_type: EventType = EventType.observation_received
+    message: str = "Test E2E Gate 5 — Hub UE5.8"
+
+
+class BroadcastTestResponse(BaseModel):
+    """Réponse de l'endpoint de test broadcast."""
+
+    success: bool
+    channel: str
+    event_type: str
+    subscribers: int
+
+
+@router.post(
+    "/broadcast-test",
+    response_model=BroadcastTestResponse,
+    summary="Publie un event de test sur le WebSocket (admin uniquement)",
+    description=(
+        "Endpoint REST pour valider la chaîne E2E : "
+        "API → WebSocket → Hub UE5.8. "
+        "Publie un event sur le canal spécifié et retourne le nombre d'abonnés."
+    ),
+)
+async def broadcast_test(
+    payload: BroadcastTestRequest,
+    _user: dict[str, Any] = Depends(_require_admin),
+) -> BroadcastTestResponse:
+    """Publie un event de test sur le WebSocket pour validation E2E."""
+    if payload.channel not in _ALLOWED_CHANNELS:
+        return BroadcastTestResponse(
+            success=False,
+            channel=payload.channel,
+            event_type=payload.event_type.value,
+            subscribers=0,
+        )
+
+    event = WSEvent(
+        event_type=payload.event_type,
+        data={"message": payload.message, "test_id": str(uuid4())},
+        timestamp=datetime.now(UTC).isoformat(),
+        trace_id=f"GATE5-E2E-{uuid4().hex[:8]}",
+    )
+
+    await manager.broadcast(payload.channel, event.model_dump(mode="json"))
+
+    subscriber_count = len(manager._channels.get(payload.channel, set()))
+
+    logger.info(
+        "ws_broadcast_test",
+        channel=payload.channel,
+        event_type=payload.event_type.value,
+        subscribers=subscriber_count,
+    )
+
+    return BroadcastTestResponse(
+        success=True,
+        channel=payload.channel,
+        event_type=payload.event_type.value,
+        subscribers=subscriber_count,
+    )

@@ -32,6 +32,16 @@ from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# UUID fixe pour l'utilisateur de développement (stub — DB en Phase 4 semaine 3).
+# BUG CORRIGÉ : le JWT émettait auparavant `sub=credentials.username` (ex.
+# "admin"), une chaîne non-UUID. `resources/router.py::_extract_author_id`
+# attend un UUID et échoue silencieusement (except ValueError -> None) sur
+# "admin", donc `author_id` restait NULL sur toute Revision créée via le
+# CRUD générique — traçabilité d'auteur cassée (CON-010/CON-005). Le
+# `subject` du token est maintenant ce UUID fixe ; `credentials.username`
+# reste utilisé uniquement pour la vérification des identifiants de login.
+DEV_USER_ID = "00000000-0000-0000-0000-000000000001"
+
 
 class DevUser(TypedDict):
     """Utilisateur local strictement réservé au développement."""
@@ -109,10 +119,10 @@ async def login(request: Request, response: Response, credentials: LoginRequest)
         )
 
     access_token = create_access_token(
-        subject=credentials.username,
-        claims={"roles": user["roles"]},
+        subject=DEV_USER_ID,
+        claims={"roles": user["roles"], "username": credentials.username},
     )
-    refresh_token = create_refresh_token(subject=credentials.username)
+    refresh_token = create_refresh_token(subject=DEV_USER_ID)
 
     logger.info(
         "login_success",

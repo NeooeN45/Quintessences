@@ -21,6 +21,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
 from gsie_api.engines.knowledge.engine import (
@@ -35,6 +36,7 @@ from gsie_api.engines.knowledge.schemas import (
     KnowledgeQueryResult,
     KnowledgeRevisionRequest,
 )
+from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
@@ -43,8 +45,7 @@ router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 _ingest_limiter = Limiter(key_func=get_remote_address)
 _query_limiter = Limiter(key_func=get_remote_address)
 
-# Instance singleton du moteur (Vague 1 — stockage en mémoire)
-_engine = KnowledgeEngine()
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 @router.get("/status", response_model=EngineStatusResponse)
@@ -67,7 +68,7 @@ async def knowledge_version(request: Request) -> EngineVersionResponse:
     """Retourne la version du moteur et le backend utilisé."""
     return EngineVersionResponse(
         version=KnowledgeEngine.version(),
-        backend="python-in-memory",
+        backend="postgresql",
     )
 
 
@@ -87,6 +88,7 @@ async def knowledge_version(request: Request) -> EngineVersionResponse:
 async def knowledge_ingest(
     request_body: KnowledgeIngestRequest,
     request: Request,
+    session: DbSession,
     _user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> KnowledgeObject:
     """Ingère une connaissance dans le graphe.
@@ -95,7 +97,7 @@ async def knowledge_ingest(
         400: Si la connaissance existe déjà ou si le statut n'est pas « accepte ».
     """
     try:
-        return _engine.ingest(request_body)
+        return await KnowledgeEngine(session).ingest(request_body)
     except KnowledgeEngineError as exc:
         from fastapi import HTTPException
 
@@ -117,10 +119,11 @@ async def knowledge_ingest(
 async def knowledge_query(
     query: KnowledgeQuery,
     request: Request,
+    session: DbSession,
     _user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> KnowledgeQueryResult:
     """Interroge le graphe de connaissances."""
-    return _engine.query(query)
+    return await KnowledgeEngine(session).query(query)
 
 
 @router.post(
@@ -138,6 +141,7 @@ async def knowledge_query(
 async def knowledge_revise(
     revision: KnowledgeRevisionRequest,
     request: Request,
+    session: DbSession,
     _user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> KnowledgeObject:
     """Révise une connaissance existante.
@@ -149,7 +153,7 @@ async def knowledge_revise(
     from fastapi import HTTPException
 
     try:
-        return _engine.revise(revision)
+        return await KnowledgeEngine(session).revise(revision)
     except KnowledgeNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except KnowledgeEngineError as exc:
@@ -162,7 +166,8 @@ async def knowledge_revise(
 )
 async def knowledge_stats(
     request: Request,
+    session: DbSession,
     _user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> dict[str, int]:
     """Retourne les statistiques du graphe (nombre d'objets par type)."""
-    return _engine.stats()
+    return await KnowledgeEngine(session).stats()

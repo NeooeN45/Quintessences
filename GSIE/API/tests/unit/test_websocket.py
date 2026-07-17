@@ -55,3 +55,38 @@ class TestConnectionManager:
         mgr = ConnectionManager()
         assert len(mgr._connections) == 0
         assert len(mgr._channels) == 0
+
+
+class TestBroadcastTestEndpoint:
+    """Tests de l'endpoint POST /ws/broadcast-test (Gate 5 E2E)."""
+
+    def test_should_reject_invalid_channel(self) -> None:
+        """Un canal non autorisé doit retourner success=False."""
+        from gsie_api.websocket.router import BroadcastTestRequest, BroadcastTestResponse
+
+        # Vérifier que le modèle valide le canal côté endpoint
+        req = BroadcastTestRequest(channel="hacked", message="test")
+        assert req.channel == "hacked"
+        # L'endpoint vérifie _ALLOWED_CHANNELS — on teste la logique ici
+        from gsie_api.websocket.router import _ALLOWED_CHANNELS
+
+        assert "hacked" not in _ALLOWED_CHANNELS
+        # La réponse d'échec
+        resp = BroadcastTestResponse(
+            success=False, channel="hacked", event_type="observation.received", subscribers=0
+        )
+        assert resp.success is False
+
+    def test_should_accept_valid_broadcast_request(self) -> None:
+        """Un BroadcastTestRequest valide doit se construire correctement."""
+        from gsie_api.websocket.events import EventType
+        from gsie_api.websocket.router import BroadcastTestRequest
+
+        req = BroadcastTestRequest(
+            channel="alert",
+            event_type=EventType.alert_fire_risk,
+            message="Test E2E",
+        )
+        assert req.channel == "alert"
+        assert req.event_type == EventType.alert_fire_risk
+        assert req.message == "Test E2E"

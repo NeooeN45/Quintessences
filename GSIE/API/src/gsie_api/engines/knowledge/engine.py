@@ -14,16 +14,37 @@ Garanties (KNOWLEDGE_ENGINE.md §6) :
 - Le graphe est interrogeable hors-ligne (article T-8)
 - Une connaissance dont la source est invalidée est révisée, jamais supprimée
 
-Implémentation Vague 1 : stockage en mémoire (dict indexé par UUID).
-La persistance PostgreSQL/Neo4j est une évolution future (pistes §8).
+Implémentation : persistance PostgreSQL réelle (resource + assertion +
+evidence_assessment + revision, schéma v6.2 — RFC-0011). Remplace le
+stockage en mémoire de la Vague 1, qui ne survivait pas à un redémarrage
+et n'était pas partagé entre workers Gunicorn.
+
+Le contenu du KnowledgeObject qui n'a pas encore de colonne dédiée dans le
+schéma v6.2 (titre, description, domaine_scientifique, contenu, source,
+domaines_validite, moteurs_consommateurs, relations, mots_cles, conflits)
+est conservé dans `resource.metadata_json` — la même convention que la
+migration 0003 pour les données v6.1 déjà migrées, afin que les deux
+sources restent interrogeables de façon uniforme. Le type d'origine
+(KnowledgeType) et le statut d'origine (KnowledgeStatus) sont eux aussi
+conservés tels quels dans metadata_json plutôt que reconstruits depuis
+claim_kind/lifecycle_status, car ce mapping est à sens unique (concept ET
+classification convergent tous deux vers claim_kind=classification —
+RFC-0011 §3.3) et ne permettrait pas un aller-retour exact.
 """
 
 from datetime import UTC, datetime
-from uuid import UUID
+from typing import Any
+from uuid import UUID, uuid4
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.evidence.schemas import KnowledgeStatus
+from gsie_api.engines.evidence.schemas import KnowledgeStatus, SourceReference
 from gsie_api.engines.knowledge.schemas import (
+    ConflitBibliographique,
+    DomaineScientifique,
+    DomaineValidite,
     KnowledgeIngestRequest,
     KnowledgeObject,
     KnowledgeQuery,
@@ -31,13 +52,37 @@ from gsie_api.engines.knowledge.schemas import (
     KnowledgeRevisionRequest,
     KnowledgeType,
     QueryType,
+    RelationRef,
     VersionEntry,
 )
+from gsie_api.infrastructure.models import ResourceModel
+from gsie_api.infrastructure.models.assertion import AssertionModel, EvidenceAssessmentModel
+from gsie_api.infrastructure.models.enums import ClaimKind, EvidenceLevel, LifecycleStatus
+from gsie_api.infrastructure.models.temporal_engine import RevisionModel
 
 logger = get_logger("gsie_api.knowledge.engine")
 
 # Rangs des niveaux de preuve pour le filtrage (A=meilleur, F=pire)
 _EVIDENCE_RANKS: dict[str, int] = {"A": 6, "B": 5, "C": 4, "D": 3, "E": 2, "F": 1}
+
+# Mapping KnowledgeType (v6.1, 6 valeurs) -> ClaimKind (v6.2, RFC-0011 §3.3).
+# Même mapping que celui utilisé par la migration 0003 pour les données v6.1
+# existantes — concept et classification convergent tous deux vers
+# claim_kind=classification (mapping à sens unique, voir docstring du module).
+_TYPE_TO_CLAIM_KIND: dict[KnowledgeType, ClaimKind] = {
+    KnowledgeType.concept: ClaimKind.classification,
+    KnowledgeType.relation: ClaimKind.relation,
+    KnowledgeType.regle: ClaimKind.rule,
+    KnowledgeType.seuil: ClaimKind.threshold,
+    KnowledgeType.modele: ClaimKind.model,
+    KnowledgeType.classification: ClaimKind.classification,
+}
+
+_STATUS_TO_LIFECYCLE: dict[KnowledgeStatus, LifecycleStatus] = {
+    KnowledgeStatus.accepte: LifecycleStatus.accepted,
+    KnowledgeStatus.quarantine: LifecycleStatus.proposed,
+    KnowledgeStatus.refuse: LifecycleStatus.rejected,
+}
 
 
 class KnowledgeEngineError(Exception):
@@ -51,37 +96,27 @@ class KnowledgeNotFoundError(KnowledgeEngineError):
 class KnowledgeEngine:
     """Moteur de base de connaissances — stockage, requête, versionnement.
 
-    Thread-safety : l'implémentation en mémoire n'est pas thread-safe.
-    En production (multi-worker), utiliser la persistance PostgreSQL.
-    Pour la Vague 1 (single-worker Gunicorn), c'est suffisant.
+    Persistance PostgreSQL. Une instance est créée par requête HTTP avec la
+    session DB de la requête (voir knowledge/router.py), suivant le même
+    schéma que ResourceService — pas de singleton, pas d'état en mémoire.
     """
 
-    def __init__(self) -> None:
-        self._store: dict[UUID, KnowledgeObject] = {}
-        self._version: str = "0.1.0"
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
     # --- API publique ---
 
     @staticmethod
     def version() -> str:
         """Version du moteur."""
-        return "0.1.0"
+        return "0.2.0"
 
-    def ingest(self, request: KnowledgeIngestRequest) -> KnowledgeObject:
+    async def ingest(self, request: KnowledgeIngestRequest) -> KnowledgeObject:
         """Ingère une connaissance qualifiée dans le graphe.
 
         Le Knowledge Engine ne reçoit que les connaissances au statut
         « accepte » depuis l'Evidence Engine (KNOWLEDGE_ENGINE.md §5).
         Les statuts « quarantine » et « refuse » sont rejetés.
-
-        Args:
-            request: Requête d'ingestion avec métadonnées complètes.
-
-        Returns:
-            Le KnowledgeObject créé et stocké.
-
-        Raises:
-            KnowledgeEngineError: Si l'UUID existe déjà ou si le statut n'est pas « accepte ».
         """
         if request.statut == KnowledgeStatus.refuse:
             raise KnowledgeEngineError(
@@ -94,107 +129,148 @@ class KnowledgeEngine:
                 f"validation humaine requise avant ingestion (CON-001)"
             )
 
-        if request.connaissance_id in self._store:
+        existing = await self._session.get(ResourceModel, request.connaissance_id)
+        if existing is not None:
             raise KnowledgeEngineError(
                 f"La connaissance {request.connaissance_id} existe déjà dans le graphe "
                 f"— utilisez revise() pour la mettre à jour (CON-010)"
             )
 
         now = datetime.now(UTC)
-        obj = KnowledgeObject(
-            connaissance_id=request.connaissance_id,
-            type=request.type,
-            titre=request.titre,
-            description=request.description,
-            domaine_scientifique=request.domaine_scientifique,
-            contenu=request.contenu_normalise,
-            evidence_level=request.evidence_level,
-            source=request.source,
-            statut=request.statut,
+        metadata = self._build_metadata(request)
+
+        resource = ResourceModel(
+            id=request.connaissance_id,
+            type="assertion",
+            gsie_id=f"gsie:assertion:{request.connaissance_id}",
+            metadata_json=metadata,
+        )
+        self._session.add(resource)
+        evidence_resource_id = uuid4()
+        self._session.add(
+            ResourceModel(
+                id=evidence_resource_id,
+                type="evidence_assessment",
+                gsie_id=f"gsie:evidence:{request.connaissance_id}",
+                metadata_json={},
+            )
+        )
+        # Flush les deux `resource` avant les tables satellites qui les
+        # référencent (assertion.id, evidence_assessment.id sont des FK vers
+        # resource.id) — l'ordre de flush automatique de SQLAlchemy entre
+        # classes mappées indépendantes (sans relationship() déclarée) n'est
+        # pas garanti, vérifié empiriquement (ForeignKeyViolationError sans
+        # ce flush intermédiaire).
+        await self._session.flush()
+
+        assertion = AssertionModel(
+            id=request.connaissance_id,
+            claim_kind=_TYPE_TO_CLAIM_KIND[request.type],
+            lifecycle_status=_STATUS_TO_LIFECYCLE[request.statut],
             version=1,
-            date_integration=now,
-            historique=[],
-            domaines_validite=request.domaines_validite,
-            moteurs_consommateurs=request.moteurs_consommateurs,
-            relations=request.relations,
-            mots_cles=request.mots_cles,
-            conflits=request.conflits,
+        )
+        self._session.add(assertion)
+
+        evidence = EvidenceAssessmentModel(
+            id=evidence_resource_id,
+            assertion_id=request.connaissance_id,
+            level=EvidenceLevel(request.evidence_level.value),
+            method="knowledge_engine_ingest",
+            evaluated_at=now,
+        )
+        self._session.add(evidence)
+
+        self._session.add(
+            RevisionModel(
+                target_id=request.connaissance_id,
+                version=1,
+                justification="Ingestion initiale (Evidence Engine -> Knowledge Engine)",
+                valid_time_start=now,
+                transaction_time=now,
+            )
         )
 
-        self._store[request.connaissance_id] = obj
+        await self._session.flush()
         logger.info(
             "knowledge_ingested",
             connaissance_id=str(request.connaissance_id),
             type=request.type.value,
             version=1,
         )
-        return obj
 
-    def query(self, query: KnowledgeQuery) -> KnowledgeQueryResult:
-        """Interroge le graphe de connaissances.
+        return self._to_knowledge_object(
+            connaissance_id=request.connaissance_id,
+            metadata=metadata,
+            evidence_level=request.evidence_level,
+            version=1,
+            date_integration=now,
+            historique=[],
+        )
 
-        Args:
-            query: Requête typée (par_concept, par_relation, par_domaine, etc.)
+    async def query(self, query: KnowledgeQuery) -> KnowledgeQueryResult:
+        """Interroge le graphe de connaissances."""
+        result = await self._session.execute(
+            select(ResourceModel, AssertionModel, EvidenceAssessmentModel)
+            .join(AssertionModel, AssertionModel.id == ResourceModel.id)
+            .join(EvidenceAssessmentModel, EvidenceAssessmentModel.assertion_id == ResourceModel.id)
+            .where(ResourceModel.type == "assertion")
+        )
 
-        Returns:
-            KnowledgeQueryResult avec les connaissances correspondantes (paginées).
-        """
-        objects = list(self._store.values())
+        objects = [
+            self._to_knowledge_object(
+                connaissance_id=resource.id,
+                metadata=resource.metadata_json or {},
+                evidence_level=None,
+                version=assertion.version,
+                date_integration=resource.updated_at,
+                historique=None,
+                evidence_model=evidence,
+            )
+            for resource, assertion, evidence in result.all()
+        ]
 
-        # Filtre par type selon le QueryType
         objects = self._filter_by_query_type(objects, query)
 
-        # Filtre par evidence_min
         if query.evidence_min is not None:
             min_rank = _EVIDENCE_RANKS[query.evidence_min.value]
             objects = [o for o in objects if _EVIDENCE_RANKS[o.evidence_level.value] >= min_rank]
 
-        # Filtres additionnels (clé-valeur)
         objects = self._filter_by_custom_filters(objects, query.filtres)
-
-        # Tri par date_integration (plus récent d'abord)
         objects.sort(key=lambda o: o.date_integration, reverse=True)
 
         total = len(objects)
-
-        # Pagination
         start = (query.page - 1) * query.page_size
         end = start + query.page_size
         page_objects = objects[start:end]
+
+        # Historique chargé seulement pour la page retournée (évite de charger
+        # tout l'historique de toutes les connaissances pour une simple liste).
+        for obj in page_objects:
+            obj.historique = await self._load_historique(obj.connaissance_id, obj.version)
 
         return KnowledgeQueryResult(
             requete_id=query.requete_id,
             connaissances=page_objects,
             total=total,
-            version_graph=self._version,
+            version_graph=self.version(),
             page=query.page,
             page_size=query.page_size,
         )
 
-    def revise(self, request: KnowledgeRevisionRequest) -> KnowledgeObject:
+    async def revise(self, request: KnowledgeRevisionRequest) -> KnowledgeObject:
         """Révise une connaissance existante (CON-010).
 
-        Archive l'ancienne version dans l'historique et crée une nouvelle
-        version. La connaissance n'est jamais supprimée silencieusement.
-
-        Args:
-            request: Requête de révision avec justification obligatoire.
-
-        Returns:
-            Le KnowledgeObject révisé (nouvelle version).
-
-        Raises:
-            KnowledgeNotFoundError: Si l'UUID n'existe pas.
-            KnowledgeEngineError: Si aucun champ n'est modifié.
+        Crée une nouvelle Revision (append-only) plutôt que de modifier
+        silencieusement — l'ancienne version reste reconstructible via
+        l'historique des Revision.
         """
-        if request.connaissance_id not in self._store:
+        resource = await self._session.get(ResourceModel, request.connaissance_id)
+        assertion = await self._session.get(AssertionModel, request.connaissance_id)
+        if resource is None or assertion is None:
             raise KnowledgeNotFoundError(
                 f"Connaissance {request.connaissance_id} introuvable dans le graphe"
             )
 
-        current = self._store[request.connaissance_id]
-
-        # Vérifier qu'au moins un champ est modifié
         if (
             request.nouveau_contenu is None
             and request.nouveau_evidence_level is None
@@ -205,66 +281,215 @@ class KnowledgeEngine:
                 "Aucun champ modifié dans la révision — au moins un champ requis"
             )
 
-        # Archiver la version courante dans l'historique (CON-010)
-        history_entry = VersionEntry(
-            version=current.version,
-            date=current.date_integration,
-            justification=request.justification,
-            rfc_reference=request.rfc_reference,
+        evidence = (
+            await self._session.execute(
+                select(EvidenceAssessmentModel)
+                .where(EvidenceAssessmentModel.assertion_id == request.connaissance_id)
+                .order_by(EvidenceAssessmentModel.evaluated_at.desc())
+            )
+        ).scalars().first()
+
+        metadata = dict(resource.metadata_json or {})
+        if request.nouveau_contenu is not None:
+            metadata["contenu"] = request.nouveau_contenu
+        if request.nouvelle_source is not None:
+            metadata["source"] = request.nouvelle_source.model_dump(mode="json")
+        if request.nouveaux_domaines_validite is not None:
+            metadata["domaines_validite"] = [
+                dv.model_dump(mode="json") for dv in request.nouveaux_domaines_validite
+            ]
+
+        now = datetime.now(UTC)
+        new_version = assertion.version + 1
+
+        justification = request.justification
+        if request.rfc_reference:
+            justification = f"{justification} (RFC: {request.rfc_reference})"
+
+        self._session.add(
+            RevisionModel(
+                target_id=request.connaissance_id,
+                version=new_version,
+                justification=justification,
+                valid_time_start=now,
+                transaction_time=now,
+            )
         )
 
-        # Construire la nouvelle version
-        new_version = current.version + 1
-        revised = current.model_copy(
-            update={
-                "version": new_version,
-                "date_integration": datetime.now(UTC),
-                "historique": [*current.historique, history_entry],
-                "contenu": (
-                    request.nouveau_contenu
-                    if request.nouveau_contenu is not None
-                    else current.contenu
-                ),
-                "evidence_level": (
-                    request.nouveau_evidence_level
-                    if request.nouveau_evidence_level is not None
-                    else current.evidence_level
-                ),
-                "source": (
-                    request.nouvelle_source
-                    if request.nouvelle_source is not None
-                    else current.source
-                ),
-                "domaines_validite": (
-                    request.nouveaux_domaines_validite
-                    if request.nouveaux_domaines_validite is not None
-                    else current.domaines_validite
-                ),
-            }
-        )
+        resource.metadata_json = metadata
+        assertion.version = new_version
 
-        self._store[request.connaissance_id] = revised
+        new_evidence_level = request.nouveau_evidence_level
+        if new_evidence_level is not None and evidence is not None:
+            evidence_resource_id = uuid4()
+            self._session.add(
+                ResourceModel(
+                    id=evidence_resource_id,
+                    type="evidence_assessment",
+                    gsie_id=f"gsie:evidence:{request.connaissance_id}:{new_version}",
+                    metadata_json={},
+                )
+            )
+            # Même contrainte d'ordre que dans ingest() — flush avant la FK.
+            await self._session.flush()
+            self._session.add(
+                EvidenceAssessmentModel(
+                    id=evidence_resource_id,
+                    assertion_id=request.connaissance_id,
+                    level=EvidenceLevel(new_evidence_level.value),
+                    method="knowledge_engine_revise",
+                    evaluated_at=now,
+                )
+            )
+
+        await self._session.flush()
         logger.info(
             "knowledge_revised",
             connaissance_id=str(request.connaissance_id),
-            old_version=current.version,
             new_version=new_version,
             justification=request.justification[:100],
         )
-        return revised
 
-    def stats(self) -> dict[str, int]:
+        effective_evidence_level = new_evidence_level.value if new_evidence_level else None
+        result = self._to_knowledge_object(
+            connaissance_id=request.connaissance_id,
+            metadata=metadata,
+            evidence_level=None,
+            version=new_version,
+            date_integration=now,
+            historique=None,
+            evidence_model=evidence if effective_evidence_level is None else None,
+        )
+        if effective_evidence_level is not None:
+            result.evidence_level = new_evidence_level
+        result.historique = await self._load_historique(request.connaissance_id, new_version)
+        return result
+
+    async def stats(self) -> dict[str, int]:
         """Retourne les statistiques du graphe."""
+        result = await self._session.execute(
+            select(AssertionModel.claim_kind, ResourceModel.metadata_json)
+            .join(ResourceModel, ResourceModel.id == AssertionModel.id)
+        )
         type_counts: dict[str, int] = {}
-        for obj in self._store.values():
-            type_counts[obj.type.value] = type_counts.get(obj.type.value, 0) + 1
+        total = 0
+        for claim_kind, metadata in result.all():
+            total += 1
+            original_type = (metadata or {}).get("type", claim_kind.value)
+            type_counts[original_type] = type_counts.get(original_type, 0) + 1
 
         return {
-            "total_objects": len(self._store),
+            "total_objects": total,
             **{f"type_{k}": v for k, v in type_counts.items()},
         }
 
-    # --- Filtres internes ---
+    # --- Reconstruction / helpers internes ---
+
+    def _build_metadata(self, request: KnowledgeIngestRequest) -> dict[str, Any]:
+        """Construit le metadata_json à partir d'une requête d'ingestion."""
+        return {
+            "type": request.type.value,
+            "statut": request.statut.value,
+            "titre": request.titre,
+            "description": request.description,
+            "domaine_scientifique": request.domaine_scientifique.value,
+            "contenu": request.contenu_normalise,
+            "source": request.source.model_dump(mode="json"),
+            "domaines_validite": [dv.model_dump(mode="json") for dv in request.domaines_validite],
+            "moteurs_consommateurs": list(request.moteurs_consommateurs),
+            "relations": [r.model_dump(mode="json") for r in request.relations],
+            "mots_cles": list(request.mots_cles),
+            "conflits": [c.model_dump(mode="json") for c in request.conflits],
+        }
+
+    def _to_knowledge_object(
+        self,
+        connaissance_id: UUID,
+        metadata: dict[str, Any],
+        evidence_level: Any,
+        version: int,
+        date_integration: datetime,
+        historique: list[VersionEntry] | None,
+        evidence_model: EvidenceAssessmentModel | None = None,
+    ) -> KnowledgeObject:
+        """Reconstruit un KnowledgeObject depuis resource.metadata_json + colonnes typées."""
+        from gsie_api.engines.evidence.schemas import EvidenceLevel as PydanticEvidenceLevel
+
+        if evidence_level is None:
+            evidence_level = (
+                PydanticEvidenceLevel(evidence_model.level.value)
+                if evidence_model is not None
+                else PydanticEvidenceLevel.F
+            )
+
+        return KnowledgeObject(
+            connaissance_id=connaissance_id,
+            type=KnowledgeType(metadata.get("type")),
+            titre=metadata.get("titre", ""),
+            description=metadata.get("description", ""),
+            domaine_scientifique=DomaineScientifique(metadata.get("domaine_scientifique")),
+            contenu=metadata.get("contenu", {}),
+            evidence_level=evidence_level,
+            source=SourceReference.model_validate(metadata.get("source", {})),
+            statut=KnowledgeStatus(metadata.get("statut", KnowledgeStatus.accepte.value)),
+            version=version,
+            date_integration=date_integration,
+            historique=historique or [],
+            domaines_validite=[
+                DomaineValidite.model_validate(dv) for dv in metadata.get("domaines_validite", [])
+            ],
+            moteurs_consommateurs=list(metadata.get("moteurs_consommateurs", [])),
+            relations=[RelationRef.model_validate(r) for r in metadata.get("relations", [])],
+            mots_cles=list(metadata.get("mots_cles", [])),
+            conflits=[
+                ConflitBibliographique.model_validate(c) for c in metadata.get("conflits", [])
+            ],
+        )
+
+    async def _load_historique(
+        self, connaissance_id: UUID, current_version: int
+    ) -> list[VersionEntry]:
+        """Reconstruit l'historique (CON-010) depuis les Revision antérieures.
+
+        Sémantique héritée de l'implémentation en mémoire (Vague 1) : une
+        entrée d'historique « version N » porte la date de création de la
+        version N, mais la JUSTIFICATION de la révision qui l'a fait passer
+        à N+1 (« pourquoi on a quitté cette version »), pas celle de sa
+        propre création. On associe donc row(version=N).valid_time_start à
+        row(version=N+1).justification — vérifié empiriquement (le test
+        should_create_new_version_when_revising attend exactement ce couplage).
+
+        Note : RevisionModel n'a pas de colonne rfc_reference dédiée — elle est
+        embarquée dans `justification` (« ... (RFC: xxx) ») par revise(), et
+        n'est pas re-décomposée ici (limitation connue, sans perte d'information
+        puisque le texte complet est conservé).
+        """
+        if current_version <= 1:
+            return []
+        rows = (
+            await self._session.execute(
+                select(RevisionModel)
+                .where(
+                    RevisionModel.target_id == connaissance_id,
+                    RevisionModel.version <= current_version,
+                )
+                .order_by(RevisionModel.version)
+            )
+        ).scalars().all()
+        by_version = {row.version: row for row in rows}
+        return [
+            VersionEntry(
+                version=v,
+                date=by_version[v].valid_time_start,
+                justification=by_version[v + 1].justification,
+                rfc_reference=None,
+            )
+            for v in range(1, current_version)
+            if v in by_version and (v + 1) in by_version
+        ]
+
+    # --- Filtres internes (inchangés — opèrent sur des KnowledgeObject déjà
+    # reconstruits, indépendants de la source de stockage) ---
 
     def _filter_by_query_type(
         self,
@@ -282,13 +507,11 @@ class KnowledgeEngine:
                 return [o for o in objects if o.domaine_scientifique.value == domaine]
             return objects
         if query.type == QueryType.par_essence:
-            # Filtre par mots_cles contenant le nom d'essence
             essence = query.filtres.get("essence", "").lower()
             if essence:
                 return [o for o in objects if any(essence in mc.lower() for mc in o.mots_cles)]
             return objects
         if query.type == QueryType.par_station:
-            # Filtre par domaines_validite contenant « station »
             return [
                 o
                 for o in objects
@@ -307,24 +530,20 @@ class KnowledgeEngine:
 
         result = objects
 
-        # Filtre par connaissance_id (recherche directe)
         if "connaissance_id" in filtres:
             target_id = UUID(str(filtres["connaissance_id"]))
             result = [o for o in result if o.connaissance_id == target_id]
 
-        # Filtre par mots_cles (intersection non vide)
         if "mots_cles" in filtres:
             keywords = filtres["mots_cles"]
             if isinstance(keywords, list):
                 keyword_set = {str(k).lower() for k in keywords}
                 result = [o for o in result if any(mc.lower() in keyword_set for mc in o.mots_cles)]
 
-        # Filtre par titre (recherche substring)
         if "titre" in filtres:
             titre_search = str(filtres["titre"]).lower()
             result = [o for o in result if titre_search in o.titre.lower()]
 
-        # Filtre par domaine_scientifique
         if "domaine_scientifique" in filtres:
             domaine = str(filtres["domaine_scientifique"])
             result = [o for o in result if o.domaine_scientifique.value == domaine]

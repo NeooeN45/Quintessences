@@ -93,7 +93,12 @@ def should_return_200_when_verify_with_valid_token():
     assert response.status_code == 200
     data = response.json()
     assert data["valid"] is True
-    assert data["subject"] == "admin"
+    # subject est un UUID fixe (DEV_USER_ID), pas le username — corrigé pour
+    # que resources/router.py::_extract_author_id puisse le parser (bug
+    # author_id NULL). Le username reste dans le claim "username".
+    from gsie_api.auth.router import DEV_USER_ID
+
+    assert data["subject"] == DEV_USER_ID
     assert data["token_type"] == "access"
 
 

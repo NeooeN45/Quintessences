@@ -82,7 +82,7 @@ class EvidenceKnowledgePipeline:
     def __init__(self, knowledge_engine: KnowledgeEngine) -> None:
         self._knowledge = knowledge_engine
 
-    def process(
+    async def process(
         self,
         submission: RawKnowledgeSubmission,
         type_: KnowledgeType,
@@ -151,7 +151,7 @@ class EvidenceKnowledgePipeline:
         )
 
         try:
-            knowledge_obj = self._knowledge.ingest(ingest_req)
+            knowledge_obj = await self._knowledge.ingest(ingest_req)
             logger.info(
                 "pipeline_knowledge_ingested",
                 connaissance_id=str(knowledge_obj.connaissance_id),
@@ -173,11 +173,11 @@ class EvidenceKnowledgePipeline:
                 reason=f"Échec d'ingestion : {exc}",
             )
 
-    def query(self, query: KnowledgeQuery) -> KnowledgeQueryResult:
+    async def query(self, query: KnowledgeQuery) -> KnowledgeQueryResult:
         """Interroge le graphe de connaissances (délègue au Knowledge Engine)."""
-        return self._knowledge.query(query)
+        return await self._knowledge.query(query)
 
-    def revise(
+    async def revise(
         self,
         connaissance_id: UUID,
         justification: str,
@@ -189,4 +189,4 @@ class EvidenceKnowledgePipeline:
             justification=justification,
             nouveau_contenu=nouveau_contenu,
         )
-        return self._knowledge.revise(revision)
+        return await self._knowledge.revise(revision)

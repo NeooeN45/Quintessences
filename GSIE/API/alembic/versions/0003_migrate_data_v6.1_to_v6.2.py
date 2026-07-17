@@ -179,6 +179,23 @@ def upgrade() -> None:
         ON CONFLICT DO NOTHING
     """)
 
+    # Ligne satellite `source` manquante (corrigée — la ressource existait
+    # sans elle, "orpheline", exactement le défaut relevé par l'audit).
+    # title/subtype/source_nature sont NOT NULL : extraits du JSONB libre
+    # avec des replis raisonnables faute de schéma garanti sur k.source.
+    op.execute("""
+        INSERT INTO source (id, title, subtype, source_nature)
+        SELECT
+            r.id,
+            COALESCE(k.source->>'titre', k.source->>'title', k.source->>'nom', 'Source migrée (v6.1)'),
+            'dataset'::source_subtype,
+            'data_provider'::source_nature
+        FROM knowledge_objects k
+        JOIN resource r ON r.gsie_id = 'gsie:source:' || k.connaissance_id::text
+        WHERE k.source IS NOT NULL AND k.source != 'null'::jsonb
+        ON CONFLICT DO NOTHING
+    """)
+
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT
@@ -217,7 +234,7 @@ def upgrade() -> None:
         SELECT
             h.connaissance_id,
             h.version,
-            COALESCE(h.description, ''),
+            h.justification,
             h.date,
             h.date,
             h.date
@@ -228,18 +245,23 @@ def upgrade() -> None:
     # ===================================================================
     # 4. knowledge_relations → predicate + assertion_participant
     # ===================================================================
+    # CORRIGÉ : cette section référençait des colonnes inexistantes
+    # (relation_type, source_id, target_id). La vraie table knowledge_relations
+    # (migration 0001) a : connaissance_id (source), cible_connaissance_id
+    # (cible), predicat (libellé), sens. Vérifié contre le schéma réel avant
+    # correction — ne pas deviner les noms de colonnes.
 
-    # 4a. predicate (un par relation_type distinct)
+    # 4a. predicate (un par predicat distinct)
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT DISTINCT
             gen_random_uuid(),
             'predicate',
-            'gsie:predicate:' || md5(kr.relation_type),
+            'gsie:predicate:' || md5(kr.predicat),
             '{}'::jsonb,
             now(), now()
         FROM knowledge_relations kr
-        WHERE kr.relation_type IS NOT NULL
+        WHERE kr.predicat IS NOT NULL
         ON CONFLICT DO NOTHING
     """)
 
@@ -247,37 +269,43 @@ def upgrade() -> None:
         INSERT INTO predicate (id, label, created_at, updated_at)
         SELECT
             r.id,
-            kr.relation_type,
+            kr.predicat,
             now(), now()
         FROM (
-            SELECT DISTINCT relation_type
+            SELECT DISTINCT predicat
             FROM knowledge_relations
-            WHERE relation_type IS NOT NULL
+            WHERE predicat IS NOT NULL
         ) kr
-        JOIN resource r ON r.gsie_id = 'gsie:predicate:' || md5(kr.relation_type)
+        JOIN resource r ON r.gsie_id = 'gsie:predicate:' || md5(kr.predicat)
         ON CONFLICT DO NOTHING
     """)
 
-    # 4b. assertion_participant (sujet + objet)
+    # 4b. assertion_participant (sujet + objet). Garde EXISTS sur
+    # cible_connaissance_id : contrairement à connaissance_id (FK réelle vers
+    # knowledge_objects dans 0001), cible_connaissance_id n'a pas de
+    # contrainte — une cible orpheline planterait l'INSERT sur la FK
+    # assertion_participant -> resource sinon.
     op.execute("""
         INSERT INTO assertion_participant (assertion_id, role, participant_id)
         SELECT
-            kr.source_id,
+            kr.connaissance_id,
             'subject'::participant_role,
-            kr.target_id
+            kr.cible_connaissance_id
         FROM knowledge_relations kr
-        WHERE kr.source_id IS NOT NULL AND kr.target_id IS NOT NULL
+        WHERE kr.connaissance_id IS NOT NULL AND kr.cible_connaissance_id IS NOT NULL
+          AND EXISTS (SELECT 1 FROM resource r WHERE r.id = kr.cible_connaissance_id)
         ON CONFLICT DO NOTHING
     """)
 
     op.execute("""
         INSERT INTO assertion_participant (assertion_id, role, participant_id)
         SELECT
-            kr.target_id,
+            kr.cible_connaissance_id,
             'object'::participant_role,
-            kr.source_id
+            kr.connaissance_id
         FROM knowledge_relations kr
-        WHERE kr.source_id IS NOT NULL AND kr.target_id IS NOT NULL
+        WHERE kr.connaissance_id IS NOT NULL AND kr.cible_connaissance_id IS NOT NULL
+          AND EXISTS (SELECT 1 FROM resource r WHERE r.id = kr.cible_connaissance_id)
         ON CONFLICT DO NOTHING
     """)
 
@@ -298,6 +326,19 @@ def upgrade() -> None:
             ),
             now(), now()
         FROM knowledge_conflits kc
+        ON CONFLICT DO NOTHING
+    """)
+
+    # Ligne satellite `conflict_cluster` manquante (corrigée — même défaut
+    # "ressource orpheline" que pour `source` ci-dessus).
+    op.execute("""
+        INSERT INTO conflict_cluster (id, description, status)
+        SELECT
+            r.id,
+            kc.description,
+            'unresolved'::conflict_status
+        FROM knowledge_conflits kc
+        JOIN resource r ON r.gsie_id = 'gsie:conflict:' || kc.id::text
         ON CONFLICT DO NOTHING
     """)
 
@@ -335,12 +376,18 @@ def upgrade() -> None:
     # ===================================================================
     # 7. knowledge_domaines_validite → assertion_qualifier
     # ===================================================================
+    # CORRIGÉ : knowledge_domaines_validite (0001) n'a pas de colonne
+    # "domaine" — les vraies colonnes sont parametre/minimum/maximum/unite.
     op.execute("""
         INSERT INTO assertion_qualifier (assertion_id, key, value)
         SELECT
             dv.connaissance_id,
-            'domaine_validite',
-            dv.domaine
+            dv.parametre,
+            TRIM(CONCAT_WS(
+                ' ',
+                NULLIF(CONCAT_WS('-', dv.minimum::text, dv.maximum::text), ''),
+                dv.unite
+            ))
         FROM knowledge_domaines_validite dv
         WHERE dv.connaissance_id IS NOT NULL
         ON CONFLICT DO NOTHING
@@ -380,6 +427,9 @@ def upgrade() -> None:
     # ===================================================================
     # 9. botanical_genres → controlled_term (vocabulary)
     # ===================================================================
+    # CORRIGÉ : botanical_genres (0001) n'a pas de colonne nom_commun (ce
+    # champ n'existe que sur botanical_familles) — vérifié empiriquement
+    # (UndefinedColumnError reproduite puis corrigée, base de test réelle).
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT
@@ -387,8 +437,8 @@ def upgrade() -> None:
             'controlled_term',
             'gsie:genre:' || bg.nom_scientifique,
             jsonb_build_object(
-                'nom_commun', bg.nom_commun,
-                'famille_id', bg.famille_id
+                'famille_id', bg.famille_id,
+                'source_reference', bg.source_reference
             ),
             bg.created_at, bg.updated_at
         FROM botanical_genres bg
@@ -401,7 +451,7 @@ def upgrade() -> None:
             r.id,
             v.id,
             bg.nom_scientifique,
-            COALESCE(bg.nom_commun, bg.nom_scientifique)
+            bg.nom_scientifique
         FROM botanical_genres bg
         JOIN resource r ON r.gsie_id = 'gsie:genre:' || bg.nom_scientifique
         JOIN resource v ON v.gsie_id = 'gsie:vocabulary:botanical_genres'
@@ -413,6 +463,9 @@ def upgrade() -> None:
     # ===================================================================
 
     # 10a. concept (l'essence comme concept taxonomique)
+    # CORRIGÉ : botanical_essences (0001) n'a pas de famille_id direct
+    # (seulement genre_id — la famille se déduit via genre_id -> famille_id) ;
+    # vérifié empiriquement (UndefinedColumnError reproduite).
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT
@@ -421,8 +474,9 @@ def upgrade() -> None:
             'gsie:essence:' || be.nom_scientifique,
             jsonb_build_object(
                 'nom_vernaculaire', be.nom_vernaculaire,
-                'famille_id', be.famille_id,
                 'genre_id', be.genre_id,
+                'categorie_forestiere', be.categorie_forestiere,
+                'gbif_taxon_key', be.gbif_taxon_key,
                 'source_reference', be.source_reference
             ),
             be.created_at, be.updated_at
@@ -466,10 +520,11 @@ def upgrade() -> None:
     """)
 
     op.execute("""
-        INSERT INTO place (id, label)
+        INSERT INTO place (id, label, srid)
         SELECT
             r.id,
-            eh.nom_habitat
+            eh.nom_habitat,
+            2154
         FROM ecosystem_habitats eh
         JOIN resource r ON r.gsie_id = 'gsie:habitat:' || eh.code_eur28
         ON CONFLICT DO NOTHING
@@ -478,6 +533,9 @@ def upgrade() -> None:
     # ===================================================================
     # 12. ecosystem_stations → place + controlled_term
     # ===================================================================
+    # CORRIGÉ : ecosystem_stations (0001) n'a pas coordonnees/altitude/
+    # exposition — vraies colonnes : region_forestiere, departements,
+    # altitude_min/max, ph_typique, rum_typique.
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT
@@ -487,9 +545,12 @@ def upgrade() -> None:
             jsonb_build_object(
                 'code_station', es.code_station,
                 'description', es.description,
-                'coordonnees', es.coordonnees,
-                'altitude', es.altitude,
-                'exposition', es.exposition,
+                'region_forestiere', es.region_forestiere,
+                'departements', es.departements,
+                'altitude_min', es.altitude_min,
+                'altitude_max', es.altitude_max,
+                'ph_typique', es.ph_typique,
+                'rum_typique', es.rum_typique,
                 'source_reference', es.source_reference
             ),
             es.created_at, es.updated_at
@@ -498,10 +559,11 @@ def upgrade() -> None:
     """)
 
     op.execute("""
-        INSERT INTO place (id, label)
+        INSERT INTO place (id, label, srid)
         SELECT
             r.id,
-            es.nom_station
+            es.nom_station,
+            2154
         FROM ecosystem_stations es
         JOIN resource r ON r.gsie_id = 'gsie:station:' || es.code_station
         ON CONFLICT DO NOTHING
@@ -510,6 +572,8 @@ def upgrade() -> None:
     # ===================================================================
     # 13. ecosystem_groupes_ecologiques → controlled_term
     # ===================================================================
+    # CORRIGÉ : ecosystem_groupes_ecologiques (0001) n'a pas especes/habitats
+    # — vraies colonnes : indicateur, valeurs_indicatrices, especes_caracteristiques.
     op.execute("""
         INSERT INTO resource (id, type, gsie_id, metadata_json, created_at, updated_at)
         SELECT
@@ -518,8 +582,10 @@ def upgrade() -> None:
             'gsie:groupe_eco:' || md5(eg.nom_groupe),
             jsonb_build_object(
                 'description', eg.description,
-                'especes', eg.especes,
-                'habitats', eg.habitats
+                'indicateur', eg.indicateur,
+                'valeurs_indicatrices', eg.valeurs_indicatrices,
+                'especes_caracteristiques', eg.especes_caracteristiques,
+                'source_reference', eg.source_reference
             ),
             eg.created_at, eg.updated_at
         FROM ecosystem_groupes_ecologiques eg
@@ -546,9 +612,28 @@ def downgrade() -> None:
     Les tables v6.1 ne sont pas touchées — elles restent intactes.
     """
     # Supprimer les données structurées créées par cette migration
-    op.execute("DELETE FROM assertion_qualifier WHERE key = 'domaine_validite'")
-    op.execute("DELETE FROM assertion_participant WHERE assertion_id IN (SELECT connaissance_id FROM knowledge_relations)")
-    op.execute("DELETE FROM citation WHERE gsie_id LIKE 'gsie:citation:%'")
+    # (key est désormais dv.parametre, variable — on cible par provenance
+    # via knowledge_domaines_validite plutôt que par une valeur fixe).
+    op.execute("""
+        DELETE FROM assertion_qualifier
+        WHERE (assertion_id, key) IN (
+            SELECT connaissance_id, parametre FROM knowledge_domaines_validite
+        )
+    """)
+    # Les deux inserts (4b) créent une ligne assertion_id=connaissance_id
+    # (rôle subject) ET une ligne assertion_id=cible_connaissance_id (rôle
+    # object) — il faut nettoyer les deux, pas seulement la première.
+    op.execute("""
+        DELETE FROM assertion_participant
+        WHERE assertion_id IN (SELECT connaissance_id FROM knowledge_relations)
+           OR assertion_id IN (SELECT cible_connaissance_id FROM knowledge_relations)
+    """)
+    # CORRIGÉ : citation n'a pas de colonne gsie_id (elle est sur resource,
+    # pas les tables satellites) — vérifié empiriquement (UndefinedColumnError
+    # reproduite). source/conflict_cluster n'ont pas besoin de DELETE
+    # explicite : leur FK vers resource.id est ON DELETE CASCADE, couverte
+    # par le DELETE FROM resource plus bas.
+    op.execute("DELETE FROM citation WHERE id IN (SELECT id FROM resource WHERE gsie_id LIKE 'gsie:citation:%')")
     op.execute("DELETE FROM evidence_assessment WHERE method = 'migration_v6.1'")
     op.execute("DELETE FROM controlled_term WHERE vocabulary_id IN (SELECT id FROM resource WHERE gsie_id LIKE 'gsie:vocabulary:%')")
     op.execute("DELETE FROM place WHERE id IN (SELECT id FROM resource WHERE gsie_id LIKE 'gsie:habitat:%' OR gsie_id LIKE 'gsie:station:%')")

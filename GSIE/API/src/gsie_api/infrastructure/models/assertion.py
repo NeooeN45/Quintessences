@@ -129,8 +129,15 @@ class EvidenceAssessmentModel(Base, TimestampMixin):
     assertion_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
+    # values_callable requis : les membres EvidenceLevel ont un nom en
+    # minuscule (a, b, c...) mais une valeur en majuscule ("A", "B"...) —
+    # sans values_callable, SQLAlchemy envoie le NOM ("b") au lieu de la
+    # VALEUR ("B") attendue par le type enum Postgres, ce qui échoue
+    # (InvalidTextRepresentationError). Vérifié empiriquement.
     level: Mapped[EvidenceLevel] = mapped_column(
-        Enum(EvidenceLevel, name="evidence_level"), nullable=False, index=True
+        Enum(EvidenceLevel, name="evidence_level", values_callable=lambda e: [m.value for m in e]),
+        nullable=False,
+        index=True
     )
     evaluator_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
