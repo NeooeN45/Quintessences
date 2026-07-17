@@ -59,6 +59,20 @@ _MAPPING = {
     assert find_unsourced_numeric_constants(text) == ["_MAPPING"]
 
 
+def test_source_reference_constructor_is_not_flagged():
+    """Un littéral décimal dans un URL de version (v2.0) au sein d'une SourceReference(...)
+    ne doit pas être signalé — la SourceReference EST déjà la citation structurée."""
+    text = """
+_SOILGRIDS_SOURCE = SourceReference(
+    type_source=SourceType.peer_reviewed,
+    auteur="Poggio, L. et al.",
+    date_publication="2021",
+    reference="rest.isric.org/soilgrids/v2.0/properties/query",
+)
+"""
+    assert find_unsourced_numeric_constants(text) == []
+
+
 def test_citation_with_et_al_is_recognized():
     """Le format « Nom et al. (Année) » doit être reconnu comme citation."""
     text = """

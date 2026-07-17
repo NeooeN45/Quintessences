@@ -1,0 +1,85 @@
+"""Engine Botanical — taxonomie et nomenclature, sourcées et vérifiables.
+
+Responsabilité : résoudre une essence vers son taxon (GBIF Backbone
+Taxonomy), résoudre les synonymes vers le taxon accepté
+(BOTANICAL_ENGINE.md). Périmètre v1 : taxonomie/nomenclature
+uniquement — pas d'autécologie (voir docstring engine.py).
+
+Endpoints :
+- GET  /botanical/status   — statut du moteur
+- GET  /botanical/version  — version et backend
+- POST /botanical/query     — résout une essence vers son taxon GBIF
+"""
+
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from gsie_api.core.auth import get_current_user
+from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+from gsie_api.engines.botanical.schemas import BotanicalData, BotanicalQuery
+from gsie_api.infrastructure.database import get_db as get_db_session
+from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
+
+router = APIRouter(prefix="/botanical", tags=["botanical"])
+
+_botanical_limiter = Limiter(key_func=get_remote_address)
+
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
+
+@router.get("/status", response_model=EngineStatusResponse)
+async def botanical_status(request: Request) -> EngineStatusResponse:
+    """Statut du moteur Botanical."""
+    return EngineStatusResponse(
+        engine="botanical",
+        status="active",
+        planned_week=9,
+        language="python",
+    )
+
+
+@router.get(
+    "/version",
+    response_model=EngineVersionResponse,
+    summary="Version du moteur Botanical",
+)
+async def botanical_version(request: Request) -> EngineVersionResponse:
+    """Retourne la version du moteur et le backend utilisé."""
+    return EngineVersionResponse(
+        version=BotanicalEngine.version(),
+        backend="postgresql",
+    )
+
+
+@router.post(
+    "/query",
+    response_model=BotanicalData,
+    status_code=status.HTTP_200_OK,
+    summary="Résoudre une essence vers son taxon GBIF",
+    description=(
+        "Résout un nom scientifique vers son taxon accepté (GBIF Backbone "
+        "Taxonomy), en résolvant les synonymes. Persiste le taxon comme "
+        "resource `entity` (dédupliqué par clé GBIF). Retourne une liste "
+        "vide si aucune correspondance — jamais de taxon inventé (ADR-007)."
+    ),
+)
+@_botanical_limiter.limit("30/minute")
+async def botanical_query(
+    request_body: BotanicalQuery,
+    request: Request,
+    session: DbSession,
+    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> BotanicalData:
+    """Résout une essence vers son taxon GBIF.
+
+    Raises:
+        502: Si l'API GBIF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).query(request_body)
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

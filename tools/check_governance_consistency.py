@@ -132,10 +132,16 @@ def find_unsourced_numeric_constants(text: str) -> list[str]:
             block_lines.append(lines[j])
             depth += sum(lines[j].count(c) for c in "([{") - sum(lines[j].count(c) for c in ")]}")
         block_text = "\n".join(block_lines)
+        if "SourceReference(" in block_text:
+            # Une SourceReference EST la citation structurée (auteur,
+            # date_publication, reference en kwargs) — pas de prose
+            # "Nom (Année)" à chercher, la structure elle-même en tient lieu.
+            i = j + 1
+            continue
         if FLOAT_LITERAL_PATTERN.search(block_text):
             context_start = max(0, i - _CITATION_LOOKBACK_LINES)
             context = "\n".join(lines[context_start:i])
-            if not CITATION_PATTERN.search(context):
+            if not CITATION_PATTERN.search(context) and not CITATION_PATTERN.search(block_text):
                 findings.append(name)
         i = j + 1
     return findings
