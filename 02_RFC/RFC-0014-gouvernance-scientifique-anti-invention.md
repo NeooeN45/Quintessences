@@ -213,6 +213,15 @@ Enseignements du pilote, à retenir pour la suite de l'implémentation :
   fallback OCR sera nécessaire pour une exploitation humaine propre en
   production.
 
+**Deuxième pilote (2026-07-17)** : *Guide de sylviculture dynamique
+(feuillus)* (CNPF Grand Est, accès libre, `grandest.cnpf.fr`). Résultat :
+10 faits extraits sur 3 pages (techniques de détourage, seuils de
+régénération par îlot, règles d'espacement) — **8 vérifiés
+(quarantine), 2 correctement rejetés** (citation non retrouvée
+verbatim) : le garde-fou fonctionne aussi en rejet, pas seulement en
+acceptation. Confirme la généralisation du pipeline à un type de
+document différent (guide technique vs. lettre de bilan sanitaire).
+
 ## 4. Plan d'implémentation
 
 ### Phase 1 — garde-fou (immédiat, avant tout nouveau moteur de raisonnement)
