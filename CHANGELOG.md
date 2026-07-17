@@ -4,6 +4,49 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — GARDE-FOU ANTI-INVENTION + GIS ENGINE] - 2026-07-17
+
+### Gouvernance — RFC-0014, ADR-007
+
+- **RFC-0014** (Adopté) : garde-fou anti-invention de données + pipeline
+  d'ingestion de littérature scientifique non structurée, en réponse à
+  une exigence explicite du Fondateur (aucune fausse donnée, corrélations
+  basées uniquement sur des sources scientifiques réelles).
+- **ADR-007** (Accepté) : formalise le garde-fou en décision opposable —
+  tout moteur de raisonnement doit justifier source, evidence_level et
+  chaîne de provenance pour chaque valeur produite.
+- **Checker de gouvernance** : règle 3 ajoutée — détection best-effort de
+  constantes numériques (seuils, coefficients) sans citation détectable
+  dans les moteurs (`engines/*/engine.py`). 7 tests.
+- Lien vers `GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` (catalogue de
+  ~179 sources avec méthodes d'accès concrètes) depuis RFC-0013/RFC-0014.
+
+### Pipeline d'extraction sourcée (Forge)
+
+- `Forge/src/dataset_forge/documents/extraction.py` — `KnowledgeExtractor` :
+  extraction de faits scientifiques via NVIDIA NIM sous contrainte de
+  citation exacte, vérifiée automatiquement contre le texte source,
+  statut `quarantine`/`rejete` uniquement (jamais `accepte` automatique).
+- Pilote réussi sur un document réel (*Lettre du DSF n°61*, sept. 2024,
+  agriculture.gouv.fr) : 8 faits extraits, tous vérifiés.
+- Corrections apportées en cours de route : fix venv Forge (chemin
+  obsolète après renommage), fix TLS (`truststore`, interception réseau
+  locale), modèle `deepseek-v4-flash` préféré à un modèle de raisonnement
+  qui épuisait son budget de tokens, parsing JSON tolérant.
+
+### Nouveau moteur — GIS Engine (sort du placeholder)
+
+- Cadastre (API Carto IGN) et altitude (API de calcul altimétrique IGN) —
+  données réelles vérifiables sans clé API, géométrie persistée en
+  Lambert-93 (`place`, PostGIS). 7 tests (respx, réponses réelles).
+
+### Métriques
+
+- 241 tests API GSIE passent, 0 échec, 60 skipped, 85% couverture
+- ruff + mypy --strict verts
+
+---
+
 ## [PHASE 4 — CORRELATION ENGINE (v1 réduite)] - 2026-07-17
 
 ### Nouveau moteur — Correlation Engine
