@@ -350,16 +350,43 @@ d'exécution :
     transverse anti-invention de données, applicable à tous les
     moteurs de raisonnement (Correlation, GIS, Botanical, Pedology, et
     futurs Reasoning/Diagnostic/Recommendation).
-  - 6/14 moteurs GSIE codés (Evidence, Knowledge, Correlation, GIS,
-    Botanical, Pedology). Reste : Climate (nécessite une clé API
-    Météo-France), Forest Dynamics (données bulk IFN), puis la chaîne
-    Reasoning/Diagnostic/Recommendation/Validation, puis Learning/
+  - **Forest Dynamics Engine** — codé, périmètre volontairement
+    restreint à la surface terrière (identité géométrique G = π/4×D²×N,
+    aucun coefficient empirique) — volume et projection de croissance
+    hors périmètre (coefficients de forme/modèles publiés pas encore
+    sourcés). 6 tests.
+  - **Climate Engine** — codé : dernière observation SYNOP Météo-France
+    (data.gouv.fr, aucune clé), conversions Kelvin→Celsius et Pa→hPa
+    vérifiées. Pas de projection climatique (DRIAS/RCP) — nécessite la
+    clé API portail Météo-France (en attente). 8 tests.
+  - **8/14 moteurs GSIE codés** (Evidence, Knowledge, Correlation, GIS,
+    Botanical, Pedology, Forest Dynamics, Climate). Reste : la chaîne
+    Reasoning/Diagnostic/Recommendation/Validation (bloquée par le
+    manque d'autécologie réelle — voir ci-dessous), puis Learning/
     Simulation.
-  - Pipeline d'extraction documentaire sourcée (`Forge/src/dataset_forge/
+  - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
+    françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
+    (Pedology) → Correlation Engine (spearman) → persisté en base.
+    Résultat honnête : coefficient 0,24, non significatif (p=0,57,
+    n=8) — démontre la chaîne fonctionnelle sans sur-interpréter un
+    échantillon trop petit et un proxy (comptage brut d'occurrences)
+    biaisé par l'effort d'observation.
+  - **Constat Reasoning/Diagnostic/Recommendation** : leur contrat
+    exige de raisonner sur l'autécologie des essences (optimum pH,
+    tolérance gel), absente de Botanical Engine v1. Les construire
+    maintenant forcerait soit un moteur vide, soit l'invention de
+    règles — reporté jusqu'à l'ingestion réelle (Rameau et al., RFC-0014
+    §3.2) ou une décision explicite du Fondateur.
+  - **Pipeline d'extraction documentaire sourcée** (`Forge/src/dataset_forge/
     documents/extraction.py`) : pilote réussi sur un document réel
     (Lettre du DSF n°61) — 8 faits vérifiés, tous en quarantine.
-  - Reste à démarrer : Climate, Pedology, Botanical, Forest Dynamics
-    (P0/P1 — voir feuille de route RFC-0014 §3.4).
+  - **GeoSylva** (`apps/GeoSylva`, repo externe) : `CLAUDE.md` créé
+    (articulation réseau GSIE serveur/Bluetooth/LoRa, RFC-0003). Bug
+    trouvé et corrigé : `ExpertForestryCalculator.getSchumacherHallParameters()`
+    utilisait 3 coefficients inventés alors que `SylvicultureDatabase.kt`
+    contient déjà 30 essences sourcées (Vallet et al. 2006) jamais
+    appelées — branché. Non vérifié par build réel (TLS/JVM local
+    bloqué) — à valider.
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.
