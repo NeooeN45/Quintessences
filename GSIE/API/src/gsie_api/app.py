@@ -29,6 +29,7 @@ from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
+from gsie_api.engines.correlation.router import router as correlation_router
 from gsie_api.engines.evidence.router import router as evidence_router
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
@@ -229,6 +230,7 @@ def create_app() -> FastAPI:
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
+    app.include_router(correlation_router, prefix=_settings.api_v1_prefix)
     app.include_router(gis_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 

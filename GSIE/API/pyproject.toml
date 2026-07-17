@@ -55,6 +55,9 @@ dependencies = [
     # Note : pygeoapi 0.19 exige pydantic<2.0, incompatible avec pydantic v2
     # Solution : fastgeoapi (P1) ou wrapper Starlette custom (P0)
 
+    # Statistiques — Correlation Engine (Pearson/Spearman + p-valeur)
+    "scipy==1.15.3",
+
     # Utilitaires
     "python-multipart==0.0.20",
     "httpx==0.28.1",

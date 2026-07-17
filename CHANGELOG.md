@@ -4,6 +4,71 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — CORRELATION ENGINE (v1 réduite)] - 2026-07-17
+
+### Nouveau moteur — Correlation Engine
+
+- `GSIE/API/src/gsie_api/engines/correlation/` (schemas.py, engine.py,
+  router.py) — 3e moteur codé après Evidence et Knowledge.
+- Calcule pearson/spearman/kendall (scipy) + p-valeur, classe la force
+  selon l'échelle Evans (1996), persiste comme `resource(type=correlation)`
+  + `CorrelationModel` (schéma v6.2 déjà en place, jusque-là orphelin).
+- **Périmètre v1 assumé et documenté** (voir docstring `schemas.py`) :
+  contrairement à CORRELATION_ENGINE.md §5, les valeurs sont fournies
+  directement dans la requête (les moteurs domaine GIS/Climate/Pedology/
+  Botanical/Forest Dynamics n'existent pas encore — seul GIS a un
+  placeholder), et une seule paire de variables par requête (pas de
+  matrice N×N). Le contrat de sortie respecte la forme cible pour une
+  extension future sans rupture.
+- 4 endpoints : `/correlation/{status,version,compute,stats}`, branchés
+  dans `app.py`.
+- 10 tests d'intégration (`tests/integration/test_correlation.py`),
+  tous verts, contre Postgres réel.
+- Dépendance ajoutée : `scipy==1.15.3`.
+
+---
+
+## [PHASE 4 — GOUVERNANCE : ADOPTION RFC-0011 / ADR-001-006 + FIX MIGRATION] - 2026-07-17
+
+### Gouvernance
+
+- **RFC-0011** : Proposé → Adopté (validation Fondateur)
+- **ADR-001, ADR-002, ADR-003, ADR-005, ADR-006** : Proposé → Accepté
+  (ADR-004 déjà Validated). Les 6 ADR adoptés par DEC-000022 (déjà
+  Validated depuis le 2026-07-16) affichaient encore leur statut
+  d'origine — décalage détecté par `tools/check_governance_consistency.py`
+  (5 findings « implémentation prématurée »), résolu par mise à jour des
+  statuts propres des ADR/RFC pour refléter la décision déjà prise.
+- Checker de gouvernance : 0 incohérence (5 → 0)
+
+### Migration 0002 — bug de tables manquantes corrigé
+
+- `alembic/versions/0002_metamodel_v6.2_resource_73types.py` n'important
+  pas le module `business.py`, les 7 tables métier ONF/CNPF
+  (`management_plan`, `intervention`, `economic_scenario`, `regulation`,
+  `compliance_check`, `outcome_tracking`, `administrative_unit`)
+  n'étaient jamais créées par `alembic upgrade head` sur une vraie base,
+  bien qu'exposées via le CRUD générique (`RESOURCE_TYPES`). Corrigé en
+  ajoutant l'import `business` dans `upgrade()` et `downgrade()`.
+  Vérifié empiriquement (upgrade réel contre Postgres/AGE/PostGIS,
+  les 7 tables sont créées).
+
+### Tests E2E API — mismatch de boucle asyncio résolu
+
+- `tests/integration/test_pipeline_api.py` : remplacement de
+  `TestClient` (synchrone) par `httpx.AsyncClient(transport=ASGITransport(...))`
+  — supprime le mismatch de boucle événementielle qui bloquait les 2
+  tests d'écriture réelle en base. Les 3 tests E2E (pipeline complet,
+  pipeline avec révision, rejet connaissance refusée) passent désormais
+  réellement, plus aucun skip sur ce fichier.
+
+### Métriques
+
+- 224 tests passent, 0 échec, 60 skipped, 85% couverture
+- ruff clean
+
+---
+
 ## [PHASE 4 — CI 100% VERTE] - 2026-07-16
 
 ### CI GitHub Actions — tous jobs passent
