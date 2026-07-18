@@ -2,6 +2,7 @@
 
 from gsie_api.governance.source_registry import (
     SCIENTIFIC_SOURCES,
+    IngestionMode,
     ScientificSourceEntry,
     SourceIngestionForbiddenError,
     SourceLegalStatus,
@@ -11,6 +12,7 @@ from gsie_api.governance.source_registry import (
 
 __all__ = [
     "SCIENTIFIC_SOURCES",
+    "IngestionMode",
     "ScientificSourceEntry",
     "SourceIngestionForbiddenError",
     "SourceLegalStatus",

@@ -4,6 +4,7 @@ import pytest
 
 from gsie_api.governance import (
     SCIENTIFIC_SOURCES,
+    IngestionMode,
     SourceIngestionForbiddenError,
     SourceLegalStatus,
     get_source,
@@ -58,3 +59,23 @@ def test_climessences_and_bioclimsol_are_not_ingestible_by_design():
     assert SCIENTIFIC_SOURCES["bioclimsol"].statut_juridique == (
         SourceLegalStatus.licensed_partner
     )
+
+
+def test_climessences_mode_is_metadata_link():
+    """Stratégie juridique 2026-07-18 : ClimEssences en METADATA_LINK, pas OPEN_COPY."""
+    assert SCIENTIFIC_SOURCES["climessences"].mode_ingestion == IngestionMode.metadata_link
+
+
+def test_bioclimsol_mode_is_partner_license():
+    """Stratégie juridique 2026-07-18 : BioClimSol en PARTNER_LICENSE, pas OPEN_COPY."""
+    assert SCIENTIFIC_SOURCES["bioclimsol"].mode_ingestion == IngestionMode.partner_license
+
+
+def test_require_ingestible_gates_on_ingestion_mode_not_legal_status_alone():
+    """Le mode d'ingestion, pas seulement le statut juridique, gouverne la porte automatique."""
+    for identifiant, entry in SCIENTIFIC_SOURCES.items():
+        if entry.mode_ingestion == IngestionMode.open_copy:
+            assert require_ingestible(identifiant) is entry
+        else:
+            with pytest.raises(SourceIngestionForbiddenError):
+                require_ingestible(identifiant)

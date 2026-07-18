@@ -33,11 +33,30 @@ class SourceLegalStatus(StrEnum):
     legal_review_pending = "LEGAL_REVIEW_PENDING"
 
 
-# Statuts qui autorisent une ingestion technique (appel API, téléchargement,
-# indexation) sans démarche juridique préalable supplémentaire.
-_INGESTIBLE_STATUSES = frozenset(
-    {SourceLegalStatus.open_confirmed, SourceLegalStatus.public_document_reuse_confirmed}
-)
+class IngestionMode(StrEnum):
+    """Mode d'ingestion technique opérationnel d'une source.
+
+    Reprend la note juridique du Fondateur (19_LEGAL/STRATEGIE_ACCES_
+    SOURCES_PROTEGEES_2026-07-18.md) : le statut juridique (ci-dessus)
+    qualifie la source, le mode d'ingestion dicte ce que le pipeline a
+    techniquement le droit de faire avec elle.
+    """
+
+    open_copy = "OPEN_COPY"  # copie et redistribution autorisées
+    tdm_ephemeral = "TDM_EPHEMERAL"  # fouille temporaire, source non redistribuée
+    local_user_only = "LOCAL_USER_ONLY"  # importé et indexé uniquement sur l'appareil
+    metadata_link = "METADATA_LINK"  # titre, version, citation et lien uniquement
+    partner_license = "PARTNER_LICENSE"  # selon accord CNPF/ONF
+    forbidden = "FORBIDDEN"  # aucune ingestion
+
+
+# Seul OPEN_COPY autorise le pipeline d'ingestion automatique complet
+# (téléchargement, structuration, indexation RAG, pack offline). Les
+# autres modes exigent soit une action humaine (TDM_EPHEMERAL —
+# destruction des copies après fouille, LOCAL_USER_ONLY — jamais côté
+# serveur), soit restent bloqués (METADATA_LINK, PARTNER_LICENSE,
+# FORBIDDEN).
+_INGESTIBLE_MODES = frozenset({IngestionMode.open_copy})
 
 
 class ScientificSourceEntry(BaseModel):
@@ -50,6 +69,9 @@ class ScientificSourceEntry(BaseModel):
     url: str
     licence: str
     statut_juridique: SourceLegalStatus
+    mode_ingestion: IngestionMode = Field(
+        description="Ce que le pipeline a le droit de faire techniquement avec cette source"
+    )
     usage_commercial_autorise: bool | None = None
     droit_indexation: bool | None = Field(
         default=None, description="Peut être indexé dans un RAG/index vectoriel"
@@ -84,6 +106,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://portail-api.meteofrance.fr",
             licence="Licence Ouverte / Etalab 2.0",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -102,6 +125,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://api.gbif.org",
             licence="CC0 / CC-BY selon jeu de données constitutif",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -115,6 +139,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://www.gbif.org/dataset/0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6",
             licence="Licence Ouverte / Etalab (TAXREF)",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -129,6 +154,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://www.isric.org/explore/soilgrids",
             licence="CC-BY 4.0",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -142,6 +168,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://apicarto.ign.fr",
             licence="Licence Ouverte / Etalab 2.0",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -155,6 +182,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://inventaire-forestier.ign.fr/dataifn/",
             licence="Licence Ouverte / Etalab 2.0",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -173,6 +201,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://doi.org/10.57745/DHJHGS",
             licence="Etalab Open License 2.0",
             statut_juridique=SourceLegalStatus.open_confirmed,
+            mode_ingestion=IngestionMode.open_copy,
             usage_commercial_autorise=True,
             droit_indexation=True,
             droit_derives=True,
@@ -187,6 +216,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://climessences.fr",
             licence="CGU ClimEssences — propriétaire",
             statut_juridique=SourceLegalStatus.permission_required,
+            mode_ingestion=IngestionMode.metadata_link,
             usage_commercial_autorise=False,
             droit_indexation=False,
             droit_derives=False,
@@ -204,6 +234,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://www.cnpf.fr/decouvrez-bioclimsol",
             licence="Licence certifiante CNPF",
             statut_juridique=SourceLegalStatus.licensed_partner,
+            mode_ingestion=IngestionMode.partner_license,
             usage_commercial_autorise=False,
             droit_indexation=False,
             droit_derives=False,
@@ -217,6 +248,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://www.cnpf.fr/gestion-durable-des-forets/mise-en-oeuvre/fiches-itineraires-techniques-par-essence",
             licence="Mentions légales CNPF — propriétaire",
             statut_juridique=SourceLegalStatus.permission_required,
+            mode_ingestion=IngestionMode.metadata_link,
             usage_commercial_autorise=False,
             droit_indexation=False,
             droit_derives=False,
@@ -230,6 +262,7 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             url="https://www.onf.fr/onf/recherche-pour-les-tags-et-les-collections?collection=Guides+de+sylviculture",
             licence="À qualifier document par document",
             statut_juridique=SourceLegalStatus.legal_review_pending,
+            mode_ingestion=IngestionMode.metadata_link,
             territoire="France",
             notes=(
                 "Collection d'au moins 51 guides/mémentos — les documents "
@@ -247,13 +280,18 @@ def get_source(identifiant: str) -> ScientificSourceEntry | None:
 
 
 def require_ingestible(identifiant: str) -> ScientificSourceEntry:
-    """Vérifie qu'une source peut être ingérée techniquement sans démarche juridique préalable.
+    """Vérifie qu'une source peut être ingérée automatiquement (pipeline complet).
+
+    Seul le mode `OPEN_COPY` passe cette porte. `TDM_EPHEMERAL` et
+    `LOCAL_USER_ONLY` restent des modes d'usage légitimes mais exigent
+    un traitement différent (fouille non redistribuée, import côté
+    client) — voir `19_LEGAL/STRATEGIE_ACCES_SOURCES_PROTEGEES_
+    2026-07-18.md` — pas une ingestion serveur automatique.
 
     Raises:
         SourceIngestionForbiddenError: si la source est absente du
-            registre, ou si son statut n'autorise pas l'ingestion
-            directe (`PERMISSION_REQUIRED`, `LICENSED_PARTNER`,
-            `DO_NOT_INGEST`, `LEGAL_REVIEW_PENDING`, `METADATA_ONLY`).
+            registre, ou si son mode d'ingestion n'autorise pas le
+            pipeline automatique complet.
     """
     entry = SCIENTIFIC_SOURCES.get(identifiant)
     if entry is None:
@@ -261,9 +299,9 @@ def require_ingestible(identifiant: str) -> ScientificSourceEntry:
             f"Source '{identifiant}' absente du registre — l'ajouter à "
             "SCIENTIFIC_SOURCES avant toute intégration technique (SCI-001)"
         )
-    if entry.statut_juridique not in _INGESTIBLE_STATUSES:
+    if entry.mode_ingestion not in _INGESTIBLE_MODES:
         raise SourceIngestionForbiddenError(
-            f"Source '{identifiant}' a le statut {entry.statut_juridique.value} — "
-            "ingestion directe interdite sans démarche juridique préalable"
+            f"Source '{identifiant}' a le mode d'ingestion {entry.mode_ingestion.value} — "
+            "pipeline automatique interdit sans démarche complémentaire"
         )
     return entry
