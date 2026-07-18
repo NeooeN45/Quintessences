@@ -1,0 +1,50 @@
+Caractérisation de l'indigénat des espèces arborées de France à l'échelle des sylvoécorégions		
+		
+Données liées à l'article suivant, qui décrit la méthodologie mise en place :		
+Bellifa M. et al., 2026. Indigénat des espèces arborées de France à l’échelle des sylvoécorégions. Journal de Botanique de la Société Botanique de France, 124 (002)		
+		
+Date de publication :		
+2025		
+		
+Métadonnées:		
+Feuille Synthese_indigenat_SER		
+Nom_scientifique	Chaine de caractères	Nom scientifique du taxon caractérisé. Nomenclature d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Nom_vernaculaire	Chaine de caractères	Nom vernaculaire français du taxon caractérisé, d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+CD_NOM_TaxRefv18.0	Nombre	Identifiant CD_NOM du taxon considéré, issu du référentiel TAXREFv18.0. Vaut "NA" si absent de ce référentiel
+Famille	Chaine de caractères	Famille botanique du taxon caractérisé d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Synonyme	Chaine de caractères	Synonyme du taxon considéré sous format d'un nom scientifique, dans le cas d'une mise en synonymie récente ou non encore entrée dans les habitudes. Nomenclature d'après le référentiel TAXREFv18.0. Vide si non pertinent.
+Indigenat FR	Chaine de caractères	Caractérisation du statut d'indigénat à l'échelle de la France hexagonale, Corse comprise. Vaut "0 - A" si taxon exogène archéophyte, "0 - N" si exogène néophyte, "1" si indigène, "9" si cryptogène
+A11 à K13 (86 colonnes)	Nombre	Caractérisation du statut d'indigénat à l'échelle de la sylvoécorégion (SER, code indiqué en intitulé de colonne). Vaut "0" si taxon exogène ou absent, "1" si indigène, "2" si probablement indigène, "3" si probablement exogène, "9" si exogène
+		
+Feuille Synthese_indigenat_GRECO		
+Nom_scientifique	Chaine de caractères	Nom scientifique du taxon caractérisé. Nomenclature d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Nom_vernaculaire	Chaine de caractères	Nom vernaculaire français du taxon caractérisé, d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+CD_NOM_TaxRefv18.0	Nombre	Identifiant CD_NOM du taxon considéré, issu du référentiel TAXREFv18.0. Vaut "NA" si absent de ce référentiel
+Famille	Chaine de caractères	Famille botanique du taxon caractérisé d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Synonyme	Chaine de caractères	Synonyme du taxon considéré sous format d'un nom scientifique, dans le cas d'une mise en synonymie récente ou non encore entrée dans les habitudes. Nomenclature d'après le référentiel TAXREFv18.0. Vide si non pertinent.
+Indigenat FR	Chaine de caractères	Caractérisation du statut d'indigénat à l'échelle de la France hexagonale, Corse comprise. Vaut "0 - A" si taxon exogène archéophyte, "0 - N" si exogène néophyte, "1" si indigène, "9" si cryptogène
+A à K (11 colonnes)	Nombre	Caractérisation du statut d'indigénat à l'échelle de la grande région écologique (GRECO, code indiqué en intitulé de colonne). Vaut "0" si taxon exogène ou absent, "1" si indigène, "2" si probablement indigène, "3" si probablement exogène, "9" si exogène
+		
+Feuille Synthese_binaire_SER		
+Nom_scientifique	Chaine de caractères	Nom scientifique du taxon caractérisé. Nomenclature d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Nom_vernaculaire	Chaine de caractères	Nom vernaculaire français du taxon caractérisé, d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+CD_NOM_TaxRefv18.0	Nombre	Identifiant CD_NOM du taxon considéré, issu du référentiel TAXREFv18.0. Vaut "NA" si absent de ce référentiel
+Famille	Chaine de caractères	Famille botanique du taxon caractérisé d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Synonyme	Chaine de caractères	Synonyme du taxon considéré sous format d'un nom scientifique, dans le cas d'une mise en synonymie récente ou non encore entrée dans les habitudes. Nomenclature d'après le référentiel TAXREFv18.0. Vide si non pertinent.
+Indigenat FR	Chaine de caractères	Caractérisation du statut d'indigénat à l'échelle de la France hexagonale, Corse comprise. Vaut "0 - A" si taxon exogène archéophyte, "0 - N" si exogène néophyte, "1" si indigène ou probablement indigène ou exogène
+A11 à K13 (86 colonnes)	Nombre	Caractérisation binaire du statut d'indigénat à l'échelle de la sylvoécorégion (SER, code indiqué en intitulé de colonne). Vaut "0" si taxon exogène ou absent ou probablement exogène, "1" si indigène ou probablement indigène ou exogène
+		
+Feuille Synthese_binaire_GRECO		
+Nom_scientifique	Chaine de caractères	Nom scientifique du taxon caractérisé. Nomenclature d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Nom_vernaculaire	Chaine de caractères	Nom vernaculaire français du taxon caractérisé, d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+CD_NOM_TaxRefv18.0	Nombre	Identifiant CD_NOM du taxon considéré, issu du référentiel TAXREFv18.0. Vaut "NA" si absent de ce référentiel
+Famille	Chaine de caractères	Famille botanique du taxon caractérisé d'après le référentiel TAXREFv18.0, ou World Flora Online Plan List si absent du premier
+Synonyme	Chaine de caractères	Synonyme du taxon considéré sous format d'un nom scientifique, dans le cas d'une mise en synonymie récente ou non encore entrée dans les habitudes. Nomenclature d'après le référentiel TAXREFv18.0. Vide si non pertinent.
+Indigenat FR	Chaine de caractères	Caractérisation du statut d'indigénat à l'échelle de la France hexagonale, Corse comprise. Vaut "0 - A" si taxon exogène archéophyte, "0 - N" si exogène néophyte, "1" si indigène ou probablement indigène ou exogène
+A à K (11 colonnes)	Nombre	Caractérisation binaire du statut d'indigénat à l'échelle de la grande région écologique (GRECO, code indiqué en intitulé de colonne). Vaut "0" si taxon exogène ou absent ou probablement exogène, "1" si indigène ou probablement indigène ou exogène
+		
+Feuille Correspondance_SER_GRECO		
+Code SER	Chaine de caractères	Code de la sylvoécorégion (SER)
+Nom SER	Chaine de caractères	Libellé de la sylvoécorégion (SER)
+Code GRECO	Chaine de caractères	Code de la grande région écologique (GRECO)
+Nom GRECO	Chaine de caractères	Libellé de la grande région écologique (GRECO)

@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from gsie_api.engines.evidence.schemas import SourceReference
 
@@ -74,3 +74,64 @@ class BotanicalData(BaseModel):
     especes: list[EspeceData] = Field(default_factory=list, max_length=50)
     source: SourceReference
     date_donnees: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class StatutIndigenatFrance(StrEnum):
+    """Statut d'indigénat à l'échelle de la France hexagonale + Corse (Bellifa et al. 2026)."""
+
+    exogene_archeophyte = "0 - A"
+    exogene_neophyte = "0 - N"
+    indigene = "1"
+    cryptogene = "9"
+
+
+class StatutIndigenatRegion(StrEnum):
+    """Statut d'indigénat à l'échelle de la sylvoécorégion (SER) — Bellifa et al. 2026."""
+
+    exogene_ou_absent = "0"
+    indigene = "1"
+    probablement_indigene = "2"
+    probablement_exogene = "3"
+    exogene = "9"
+
+
+class IndigenatQuery(BaseModel):
+    """Requête de statut d'indigénat d'une essence pour une sylvoécorégion (SER) donnée.
+
+    Une des deux identifications du taxon est requise : `cd_nom` (exact,
+    référentiel TAXREFv18.0) ou `nom_scientifique` (recherche exacte,
+    sensible aux variantes de nomenclature — préférer cd_nom si connu).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID = Field(default_factory=uuid4)
+    cd_nom: int | None = Field(default=None, description="Identifiant CD_NOM TAXREFv18.0")
+    nom_scientifique: str | None = Field(
+        default=None, min_length=1, max_length=200, description="Ex. « Quercus petraea »"
+    )
+    code_ser: str = Field(
+        min_length=2, max_length=3, description="Code de sylvoécorégion, ex. « A11 »"
+    )
+
+    @model_validator(mode="after")
+    def _identifiant_requis(self) -> "IndigenatQuery":
+        if self.cd_nom is None and not self.nom_scientifique:
+            raise ValueError("cd_nom ou nom_scientifique requis")
+        return self
+
+
+class IndigenatResult(BaseModel):
+    """Statut d'indigénat réel d'une essence pour une sylvoécorégion donnée."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    nom_scientifique: str
+    nom_vernaculaire: str | None = None
+    cd_nom: int | None = None
+    famille: str | None = None
+    statut_france: StatutIndigenatFrance
+    code_ser: str
+    statut_ser: StatutIndigenatRegion
+    source: SourceReference

@@ -23,10 +23,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.botanical.gbif_client import GBIFClient, GBIFClientError
+from gsie_api.engines.botanical.indigenat_loader import IndigenatLoader, IndigenatLoaderError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
     BotanicalQuery,
     EspeceData,
+    IndigenatQuery,
+    IndigenatResult,
+    StatutIndigenatFrance,
+    StatutIndigenatRegion,
     TaxonStatus,
 )
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
@@ -41,6 +46,17 @@ _GBIF_SOURCE = SourceReference(
     reference="GBIF Backbone Taxonomy (api.gbif.org/v1/species/match)",
 )
 
+_INDIGENAT_SOURCE = SourceReference(
+    type_source=SourceType.peer_reviewed,
+    auteur="Bellifa M. et al. (2026)",
+    date_publication="2026",
+    reference=(
+        "Indigénat des espèces arborées de France à l'échelle des "
+        "sylvoécorégions, Journal de Botanique de la Société Botanique "
+        "de France, 124(002) — dataset DOI 10.57745/DHJHGS"
+    ),
+)
+
 
 class BotanicalEngineError(Exception):
     """Erreur de base du Botanical Engine."""
@@ -53,9 +69,15 @@ class BotanicalEngine:
     (même schéma que GISEngine/CorrelationEngine).
     """
 
-    def __init__(self, session: AsyncSession, gbif_client: GBIFClient | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        gbif_client: GBIFClient | None = None,
+        indigenat_loader: IndigenatLoader | None = None,
+    ) -> None:
         self._session = session
         self._gbif_client = gbif_client or GBIFClient()
+        self._indigenat_loader = indigenat_loader or IndigenatLoader()
 
     @staticmethod
     def version() -> str:
@@ -173,3 +195,55 @@ class BotanicalEngine:
         )
         await self._session.flush()
         return entity_id
+
+    def get_indigenat(self, request: IndigenatQuery) -> IndigenatResult | None:
+        """Statut d'indigénat réel d'une essence pour une sylvoécorégion (Bellifa et al. 2026).
+
+        Returns:
+            None si le taxon est absent du dataset ou si `code_ser` ne
+            correspond à aucune colonne réelle — jamais un statut
+            approximé (ADR-007).
+
+        Raises:
+            BotanicalEngineError: si le dataset local est introuvable.
+        """
+        try:
+            row = self._indigenat_loader.find(request.cd_nom, request.nom_scientifique)
+        except IndigenatLoaderError as exc:
+            raise BotanicalEngineError(str(exc)) from exc
+
+        if row is None:
+            logger.info(
+                "botanical_indigenat_taxon_not_found",
+                cd_nom=request.cd_nom,
+                nom_scientifique=request.nom_scientifique,
+            )
+            return None
+
+        statut_ser_raw = row.get(request.code_ser)
+        if statut_ser_raw is None:
+            logger.info("botanical_indigenat_code_ser_unknown", code_ser=request.code_ser)
+            return None
+
+        try:
+            statut_france = StatutIndigenatFrance(row["Indigenat FR"])
+            statut_ser = StatutIndigenatRegion(statut_ser_raw.strip())
+        except ValueError as exc:
+            raise BotanicalEngineError(
+                f"Valeur de statut d'indigénat inattendue dans le dataset : {exc}"
+            ) from exc
+
+        cd_nom_raw = (row.get("CD_NOM_TaxRefv18.0") or "").strip()
+        cd_nom = int(cd_nom_raw) if cd_nom_raw and cd_nom_raw.upper() != "NA" else None
+
+        return IndigenatResult(
+            requete_id=request.requete_id,
+            nom_scientifique=row["Nom_scientifique"],
+            nom_vernaculaire=row.get("Nom_vernaculaire") or None,
+            cd_nom=cd_nom,
+            famille=row.get("Famille") or None,
+            statut_france=statut_france,
+            code_ser=request.code_ser,
+            statut_ser=statut_ser,
+            source=_INDIGENAT_SOURCE,
+        )

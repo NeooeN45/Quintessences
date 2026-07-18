@@ -20,7 +20,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
 from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
-from gsie_api.engines.botanical.schemas import BotanicalData, BotanicalQuery
+from gsie_api.engines.botanical.schemas import (
+    BotanicalData,
+    BotanicalQuery,
+    IndigenatQuery,
+    IndigenatResult,
+)
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
@@ -81,5 +86,36 @@ async def botanical_query(
     """
     try:
         return await BotanicalEngine(session).query(request_body)
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/indigenat",
+    response_model=IndigenatResult | None,
+    status_code=status.HTTP_200_OK,
+    summary="Statut d'indigénat réel d'une essence pour une sylvoécorégion",
+    description=(
+        "Interroge le dataset réel Bellifa et al. (2026, DOI "
+        "10.57745/DHJHGS) pour le statut d'indigénat d'une essence "
+        "(France + sylvoécorégion). Retourne null si le taxon ou le "
+        "code SER est introuvable — jamais un statut approximé (ADR-007)."
+    ),
+)
+@_botanical_limiter.limit("30/minute")
+async def botanical_indigenat(
+    request_body: IndigenatQuery,
+    request: Request,
+    session: DbSession,
+    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> IndigenatResult | None:
+    """Récupère le statut d'indigénat réel d'une essence.
+
+    Raises:
+        502: Si le dataset local d'indigénat est introuvable.
+        400: Si une valeur de statut inattendue est rencontrée dans le dataset.
+    """
+    try:
+        return BotanicalEngine(session).get_indigenat(request_body)
     except BotanicalEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
