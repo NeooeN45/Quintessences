@@ -31,6 +31,8 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
+import numpy as np
+from numpy.random import Generator
 from scipy import stats as scipy_stats
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,6 +41,7 @@ from gsie_api.core.logging import get_logger
 from gsie_api.engines.correlation.schemas import (
     CorrelationComputeRequest,
     CorrelationResult,
+    RefutationResult,
     TypeRelation,
 )
 from gsie_api.infrastructure.models import ResourceModel
@@ -76,8 +79,9 @@ class CorrelationEngine:
     requête (même schéma que KnowledgeEngine/ResourceService).
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, rng: Generator | None = None) -> None:
         self._session = session
+        self._rng = rng or np.random.default_rng()
 
     @staticmethod
     def version() -> str:
@@ -116,6 +120,17 @@ class CorrelationEngine:
         now = datetime.now(UTC)
         correlation_id = uuid4()
 
+        refutation = None
+        if request.avec_refutation:
+            refutation = self._refute(
+                method_func,
+                request.variable_a.valeurs,
+                request.variable_b.valeurs,
+                coefficient,
+                request.n_permutations,
+                request.seuil_significativite,
+            )
+
         variable_a_label = self._format_variable(
             request.variable_a.variable, request.variable_a.unite
         )
@@ -134,6 +149,7 @@ class CorrelationEngine:
             "source": request.source.model_dump(mode="json"),
             "evidence_level": request.evidence_level.value,
             "type_relation": type_relation.value,
+            "refutation": refutation.model_dump(mode="json") if refutation else None,
         }
 
         self._session.add(
@@ -186,6 +202,7 @@ class CorrelationEngine:
             evidence_level=request.evidence_level,
             confidence=confidence,
             date_calcul=now,
+            refutation=refutation,
         )
 
     async def stats(self) -> dict[str, int]:
@@ -208,6 +225,48 @@ class CorrelationEngine:
             "total_correlations": total,
             **{f"methode_{method.value}": count for method, count in by_method_rows},
         }
+
+    def _refute(
+        self,
+        method_func: Any,
+        valeurs_a: list[float],
+        valeurs_b: list[float],
+        coefficient_observe: float,
+        n_permutations: int,
+        seuil_significativite: float,
+    ) -> RefutationResult:
+        """Test de réfutation par permutation — RFC-0015 §3.5, étape 6.
+
+        Mélange `valeurs_b` `n_permutations` fois (brise tout lien réel
+        tout en conservant chaque distribution marginale), recalcule le
+        coefficient à chaque tirage, et compare le coefficient observé à
+        cette distribution « placebo ». Aucune dépendance externe (DoWhy
+        non installé — voir RFC-0015 §3.5, candidat à benchmarker avant
+        adoption formelle) : implémentation directe du même principe
+        statistique (permutation/placebo test).
+        """
+        array_b = np.array(valeurs_b, dtype=float)
+        coefficients_placebo = np.empty(n_permutations)
+        for i in range(n_permutations):
+            permuted = self._rng.permutation(array_b)
+            coefficients_placebo[i] = float(method_func(valeurs_a, permuted).statistic)
+
+        n_extreme = int(np.sum(np.abs(coefficients_placebo) >= abs(coefficient_observe)))
+        p_valeur_permutation = (n_extreme + 1) / (n_permutations + 1)  # correction +1 standard
+        robuste = p_valeur_permutation < seuil_significativite
+
+        interpretation = (
+            "association observée, robuste au test de permutation"
+            if robuste
+            else "association observée, non robuste au test de permutation"
+        )
+
+        return RefutationResult(
+            n_permutations=n_permutations,
+            p_valeur_permutation=p_valeur_permutation,
+            robuste=robuste,
+            interpretation=interpretation,
+        )
 
     @staticmethod
     def _classify_strength(abs_coefficient: float) -> CorrelationStrength:

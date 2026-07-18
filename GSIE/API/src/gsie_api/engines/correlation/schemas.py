@@ -106,6 +106,20 @@ class CorrelationComputeRequest(BaseModel):
     domaine_validite: str | None = Field(
         default=None, max_length=300, description="Ex. « France atlantique, altitude < 800 m »"
     )
+    avec_refutation: bool = Field(
+        default=False,
+        description=(
+            "Si vrai, exécute un test de réfutation par permutation (RFC-0015 "
+            "§3.5, étape 6) en plus du calcul de corrélation. Coûteux "
+            "(n_permutations recalculs) — désactivé par défaut."
+        ),
+    )
+    n_permutations: int = Field(
+        default=200,
+        ge=100,
+        le=5_000,
+        description="Nombre de permutations pour le test de réfutation (si avec_refutation=true)",
+    )
 
     @model_validator(mode="after")
     def _valeurs_appariees(self) -> "CorrelationComputeRequest":
@@ -116,6 +130,47 @@ class CorrelationComputeRequest(BaseModel):
                 f"{len(self.variable_b.valeurs)}"
             )
         return self
+
+
+class RefutationResult(BaseModel):
+    """Résultat d'un test de réfutation par permutation (RFC-0015 §3.5, étape 6).
+
+    Principe (identique au « placebo test » de DoWhy, sans la dépendance) :
+    on mélange aléatoirement variable_b `n_permutations` fois — brisant
+    tout lien réel entre les deux variables tout en conservant leur
+    distribution marginale — et on recalcule le coefficient à chaque
+    fois. Si le coefficient observé n'est pas exceptionnel par rapport à
+    cette distribution de coefficients « placebo », l'association ne
+    résiste pas au test le plus élémentaire de robustesse.
+
+    Ce test ne prouve JAMAIS une causalité — il ne fait qu'écarter
+    l'hypothèse que le coefficient observé soit un artefact statistique
+    aussi probable qu'un mélange aléatoire (RFC-0015 §3.2, vocabulaire
+    imposé : rester à « association observée », jamais « cause »).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    methode: str = Field(default="permutation_placebo")
+    n_permutations: int = Field(ge=100)
+    p_valeur_permutation: float = Field(
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Proportion des coefficients placebo dont |valeur| >= |coefficient observé| — "
+            "PAS la p-valeur du test de corrélation initial (voir p_valeur de CorrelationResult)"
+        ),
+    )
+    robuste: bool = Field(
+        description="p_valeur_permutation < seuil_significativite de la requête d'origine"
+    )
+    interpretation: str = Field(
+        description=(
+            "Texte imposé par RFC-0015 §3.2 — jamais le mot « cause » : "
+            "« association observée, robuste au test de permutation » ou "
+            "« association observée, non robuste au test de permutation »"
+        )
+    )
 
 
 class CorrelationResult(BaseModel):
@@ -144,3 +199,6 @@ class CorrelationResult(BaseModel):
         ),
     )
     date_calcul: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    refutation: RefutationResult | None = Field(
+        default=None, description="Présent uniquement si avec_refutation=true dans la requête"
+    )

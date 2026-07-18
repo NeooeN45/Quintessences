@@ -76,6 +76,63 @@ async def should_compute_strong_positive_correlation(engine: CorrelationEngine):
     assert result.strength == CorrelationStrength.very_strong
     assert result.n_observations == 5
     assert result.evidence_level == EvidenceLevel.B
+    assert result.refutation is None
+
+
+async def should_omit_refutation_by_default(engine: CorrelationEngine):
+    """Sans avec_refutation=true, le résultat ne contient pas de RefutationResult."""
+    request = _make_request([1.0, 2.0, 3.0, 4.0, 5.0], [2.0, 4.0, 6.0, 8.0, 10.0])
+
+    result = await engine.compute(request)
+
+    assert result.refutation is None
+
+
+async def should_flag_strong_linear_correlation_as_robust_to_permutation(
+    engine: CorrelationEngine,
+):
+    """Une corrélation linéaire parfaite doit résister au test de permutation."""
+    request = _make_request([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], [2, 4, 6, 8, 10, 12, 14, 16])
+    request = request.model_copy(update={"avec_refutation": True, "n_permutations": 200})
+
+    result = await engine.compute(request)
+
+    assert result.refutation is not None
+    assert result.refutation.n_permutations == 200
+    assert result.refutation.robuste is True
+    assert result.refutation.interpretation == "association observée, robuste au test de permutation"
+    assert "cause" not in result.refutation.interpretation
+
+
+async def should_flag_noise_correlation_as_not_robust_to_permutation():
+    """Une corrélation issue du bruit ne doit pas résister au test de permutation."""
+    import numpy as np
+
+    from gsie_api.infrastructure.models import ResourceModel  # noqa: F401  (import guard only)
+
+    rng = np.random.default_rng(seed=42)
+    valeurs_a = list(rng.normal(size=30))
+    valeurs_b = list(rng.normal(size=30))
+
+    request = _make_request(valeurs_a, valeurs_b, methode=CorrelationMethod.pearson)
+    request = request.model_copy(
+        update={"avec_refutation": True, "n_permutations": 300, "seuil_significativite": 0.4}
+    )
+
+    class _FakeSession:
+        def add(self, *_args: object, **_kwargs: object) -> None:
+            pass
+
+        async def flush(self) -> None:
+            pass
+
+    engine = CorrelationEngine(_FakeSession(), rng=np.random.default_rng(seed=7))  # type: ignore[arg-type]
+    result = await engine.compute(request)
+
+    assert result.refutation is not None
+    # Coefficient de bruit — le test de permutation ne doit pas le déclarer robuste
+    # à un seuil aussi permissif (0.4) que celui utilisé pour p_valeur elle-même.
+    assert result.refutation.p_valeur_permutation > 0.05
 
 
 async def should_compute_negative_correlation(engine: CorrelationEngine):
