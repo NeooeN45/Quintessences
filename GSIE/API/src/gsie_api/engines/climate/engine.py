@@ -23,6 +23,11 @@ from datetime import datetime
 from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
+from gsie_api.engines.climate.arome_client import AromeClient, AromeClientError
+from gsie_api.engines.climate.arome_grib_decoder import (
+    AromeGribDecodeError,
+    extract_nearest_temperature_celsius,
+)
 from gsie_api.engines.climate.dpclim_client import DPClimClient, DPClimClientError
 from gsie_api.engines.climate.meteofrance_client import MeteoFranceClient, MeteoFranceClientError
 from gsie_api.engines.climate.paquet_observation_client import (
@@ -30,6 +35,8 @@ from gsie_api.engines.climate.paquet_observation_client import (
     PaquetObservationClientError,
 )
 from gsie_api.engines.climate.schemas import (
+    AromeTemperatureQuery,
+    AromeTemperatureResult,
     ClimateQuery,
     ClimatologieQuotidienneQuery,
     DangerFeuxDepartement,
@@ -77,6 +84,18 @@ _VIGILANCE_SOURCE = SourceReference(
         "DonneesPubliquesVigilance v1) — carte de vigilance en cours"
     ),
 )
+
+def _arome_source(run_modele: str) -> SourceReference:
+    """Construit la SourceReference AROME — le run utilisé varie par requête."""
+    return SourceReference(
+        type_source=SourceType.referentiel_officiel,
+        auteur="Météo-France",
+        reference=(
+            "Modèle AROME France (portail-api.meteofrance.fr, API WCS "
+            f"MF-NWP-HIGHRES-AROME-001-FRANCE-WCS) — run {run_modele}"
+        ),
+    )
+
 
 _PAQUET_OBSERVATION_SOURCE = SourceReference(
     type_source=SourceType.referentiel_officiel,
@@ -127,6 +146,7 @@ class ClimateEngine:
         dpclim_client: DPClimClient | None = None,
         vigilance_client: VigilanceClient | None = None,
         paquet_observation_client: PaquetObservationClient | None = None,
+        arome_client: AromeClient | None = None,
     ) -> None:
         self._synop_client = synop_client or SynopClient()
         self._meteofrance_client = meteofrance_client or MeteoFranceClient()
@@ -135,6 +155,7 @@ class ClimateEngine:
         self._paquet_observation_client = (
             paquet_observation_client or PaquetObservationClient()
         )
+        self._arome_client = arome_client or AromeClient()
 
     @staticmethod
     def version() -> str:
@@ -370,3 +391,50 @@ class ClimateEngine:
         )
 
         return resultats
+
+    async def get_temperature_arome(
+        self, request: AromeTemperatureQuery
+    ) -> AromeTemperatureResult:
+        """Récupère la température 2 m réelle du modèle AROME (décodage GRIB2 réel).
+
+        Utilise le run de modèle le plus récent réellement publié pour
+        ce paramètre — l'échéance demandée doit être couverte par ce
+        run (typiquement les prochaines ~17h), sinon l'API Météo-France
+        rejette la requête explicitement (voir AromeClientError).
+
+        Raises:
+            ClimateEngineError: clé absente, échec réseau, échéance
+                hors du run disponible, ou GRIB2 non décodable —
+                jamais une température approximée (ADR-007).
+        """
+        try:
+            run_modele = await self._arome_client.get_latest_temperature_2m_run()
+            grib_bytes = await self._arome_client.get_temperature_2m_grib(
+                run_modele, request.latitude, request.longitude, request.echeance
+            )
+        except AromeClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        try:
+            temperature_c = extract_nearest_temperature_celsius(
+                grib_bytes, request.latitude, request.longitude
+            )
+        except AromeGribDecodeError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        logger.info(
+            "climate_arome_temperature_retrieved",
+            run_modele=run_modele,
+            latitude=request.latitude,
+            longitude=request.longitude,
+        )
+
+        return AromeTemperatureResult(
+            requete_id=request.requete_id,
+            latitude=request.latitude,
+            longitude=request.longitude,
+            echeance=request.echeance,
+            temperature_c=temperature_c,
+            run_modele=run_modele,
+            source=_arome_source(run_modele),
+        )

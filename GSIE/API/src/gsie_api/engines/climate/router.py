@@ -19,6 +19,8 @@ from slowapi.util import get_remote_address
 from gsie_api.core.auth import get_current_user
 from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 from gsie_api.engines.climate.schemas import (
+    AromeTemperatureQuery,
+    AromeTemperatureResult,
     ClimateQuery,
     ClimatologieQuotidienneQuery,
     DangerFeuxDepartement,
@@ -226,5 +228,35 @@ async def climate_observations_horaires(
     """
     try:
         return await ClimateEngine().get_observations_horaires(id_departement)
+    except ClimateEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/arome-temperature",
+    response_model=AromeTemperatureResult,
+    status_code=status.HTTP_200_OK,
+    summary="Température 2 m réelle du modèle AROME (décodage GRIB2)",
+    description=(
+        "Interroge l'API WCS du modèle AROME (portail-api.meteofrance.fr, "
+        "clé de compte requise) pour la température à 2 m sur le run de "
+        "modèle le plus récent. L'échéance demandée doit être couverte "
+        "par ce run (typiquement les prochaines ~17h)."
+    ),
+)
+@_climate_limiter.limit("10/minute")
+async def climate_arome_temperature(
+    request_body: AromeTemperatureQuery,
+    request: Request,
+    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> AromeTemperatureResult:
+    """Récupère la température 2 m réelle du modèle AROME.
+
+    Raises:
+        502: Si l'API AROME est indisponible, la clé absente, l'échéance
+            hors du run disponible, ou le GRIB2 non décodable.
+    """
+    try:
+        return await ClimateEngine().get_temperature_arome(request_body)
     except ClimateEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

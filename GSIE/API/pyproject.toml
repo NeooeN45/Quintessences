@@ -58,6 +58,14 @@ dependencies = [
     # Statistiques — Correlation Engine (Pearson/Spearman + p-valeur)
     "scipy==1.15.3",
 
+    # Décodage GRIB2 — Climate Engine, modèle AROME (WCS Météo-France)
+    # eccodes embarque les binaires dans la wheel Windows (vérifié
+    # réel le 2026-07-18, pas de compilation/conda nécessaire)
+    "eccodes==2.47.0",
+    "cfgrib==0.9.15.1",
+    "xarray==2026.4.0",
+    "defusedxml==0.7.1",
+
     # Utilitaires
     "python-multipart==0.0.20",
     "httpx==0.28.1",
@@ -120,4 +128,10 @@ ignore_missing_imports = true
 # n'est pas encore ajouté aux dépendances dev) — GIS Engine (v1)
 [[tool.mypy.overrides]]
 module = "shapely.*"
+ignore_missing_imports = true
+
+# cfgrib/defusedxml n'ont pas de stubs officiels installés — Climate
+# Engine, decodage GRIB2 AROME
+[[tool.mypy.overrides]]
+module = ["cfgrib.*", "defusedxml.*"]
 ignore_missing_imports = true

@@ -155,3 +155,31 @@ class ObservationHoraireDepartement(BaseModel):
     vent_vitesse_ms: float | None = None
     precipitations_1h_mm: float | None = None
     source: SourceReference
+
+
+class AromeTemperatureQuery(BaseModel):
+    """Requête de température 2 m réelle du modèle AROME pour un point et une échéance."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID = Field(default_factory=uuid4)
+    latitude: float = Field(ge=37.5, le=55.4, description="Domaine réel du service AROME France")
+    longitude: float = Field(ge=-12.0, le=16.0, description="Domaine réel du service AROME France")
+    echeance: datetime = Field(
+        description="Instant UTC souhaité (doit être dans le run le plus récent)"
+    )
+
+
+class AromeTemperatureResult(BaseModel):
+    """Température 2 m réelle du modèle AROME (décodée depuis un GRIB2 réel)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    latitude: float
+    longitude: float
+    echeance: datetime
+    temperature_c: float
+    run_modele: str = Field(description="Identifiant de couverture WCS (run de modèle utilisé)")
+    resolution_deg: float = Field(default=0.01, description="Résolution native AROME France")
+    source: SourceReference
