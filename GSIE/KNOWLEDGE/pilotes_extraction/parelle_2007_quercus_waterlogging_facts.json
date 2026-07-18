@@ -1,0 +1,312 @@
+[
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quercus robur est plus tolérant à l'engorgement que Quercus petraea.",
+    "citation_extrait": "Quercus robur is more tolerant to waterlogging than Q. petraea.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quercus petraea est plus tolérant à la sécheresse que Quercus robur.",
+    "citation_extrait": "Q. petraea is known to be more tolerant to drought (Bréda et al. 1992, 1993, Cochard et al. 1992), whereas Q. robur displays a higher tolerance to waterlogging and root hypoxia",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "La distribution locale de Quercus robur et Quercus petraea en forêts anciennes est fortement contrainte par le type de sol.",
+    "citation_extrait": "The local distribution of Q. robur and Q. petraea in old-growth forests is highly constrained by soil type: Q. petraea is found on deep and well drained acidic soils, whereas Q. robur is more common on deep and fertile bottomland soils",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quercus petraea se trouve sur des sols acides profonds et bien drainés.",
+    "citation_extrait": "Q. petraea is found on deep and well drained acidic soils",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quercus robur est plus commun sur des sols alluviaux profonds et fertiles.",
+    "citation_extrait": "whereas Q. robur is more common on deep and fertile bottomland soils",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quatre semaines d'engorgement ont entraîné une épinasthie plus forte chez Quercus petraea que chez Quercus robur.",
+    "citation_extrait": "Four weeks of waterlogging resulted in greater epinasty in Q. petraea than in Q. robur",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quatre semaines d'engorgement ont entraîné moins de lenticelles hypertrophiées chez Quercus petraea (16 ± 6 cm⁻²) que chez Quercus robur (21 ± 9 cm⁻²).",
+    "citation_extrait": "but fewer hypertrophied lenticels (16 ± 6 versus 21 ± 9 cm – 2)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Quatre semaines d'engorgement ont entraîné moins de racines adventives chez Quercus petraea (2,7 ± 4,7) que chez Quercus robur (5,2 ± 5,9).",
+    "citation_extrait": "and adventitious roots (2.7 ± 4.7 versus 5.2 ± 5.9)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "Les différences entre espèces pour ces traits étaient associées à des différences de fréquence des phénotypes extrêmes plutôt qu'à une tolérance généralement plus élevée à l'engorgement chez les semis de Quercus robur.",
+    "citation_extrait": "Differences between speciesin these traits were associatedwith differences in the frequencies of extreme phenotypes rather than with a generallyhigher tolerancetowaterlogging in Q.roburseedlings.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 2,
+    "fait": "L'épinasthie foliaire pendant l'hypoxie racinaire était un prédicteur précoce de la mortalité des semis.",
+    "citation_extrait": "Leaf epinasty during root hypoxia was an early predictor of seedling mortality.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "La formation de lenticelles hypertrophiées peut être induite localement par l'application d'un mastic imperméable aux gaz sur la tige, créant une hypoxie locale, indépendamment de l'hypoxie racinaire.",
+    "citation_extrait": "we first tested the ability of seedlings to form hypertrophied lenticels independent of root hypoxia by applying a gas-impermeable mastic to seedling stems to induce a local hypoxia.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Le degré de variabilité dans la formation de lenticelles hypertrophiées et de racines adventives a été déterminé durant l'engorgement.",
+    "citation_extrait": "Then, on the same seedlings, we determined the degree of variability in the formation of hypertrophied lenticels and adventitious roots during waterlogging.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "L'épinastie foliaire est une réponse hautement spécifique à l'hypoxie et un indicateur de la sévérité de l'hypoxie.",
+    "citation_extrait": "The time course of leaf epinasty, which is known to be a highly specific response to hypoxia and an indicator of the severity of hypoxia",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "L'épinastie foliaire a été utilisée pour tester son potentiel comme marqueur d'hypoxie et pour déterminer la variabilité de l'épinastie au sein de chaque population de semis.",
+    "citation_extrait": "The time course of leaf epinasty, which is known to be a highly specific response to hypoxia and an indicator of the severity of hypoxia, was established to test its potential as a hypoxia marker, and to determine the variability of leaf epinasty within each seedling population.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Les semis de chênes (Q. robur et Q. petraea) ont été cultivés dans un mélange tourbe et sable (2:1 v/v) et fertilisés chaque semaine avec un engrais liquide commercial (N,P,K 5,5,7).",
+    "citation_extrait": "Eighty seedlings of each species were grown in 4-l pots containing a peat and sand mixture (2:1 v/v). Seedlings were grown in a greenhouse from March to June 2005 and fertilized each week with commercial liquid fertilizer (N,P,K 5,5,7).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Le traitement d'engorgement a consisté en une submersion de 4 semaines, avec un niveau d'eau maintenu à 5 cm au-dessus de la surface du substrat de croissance.",
+    "citation_extrait": "The seedlings were subjected to waterlogging for 4 weeks from June 27 to July 23. Each block of seedlings was placed in a large container in which a permanent water table was maintained 5 cm above the growth substrate surface.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "La concentration en O2 de l'eau a été maintenue en dessous de 3 mg/l en bullant du N2 à travers l'eau.",
+    "citation_extrait": "The O2 concentration of the water was kept below 3 mg l –1 by bubbling N2 through the water.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Un gradient de concentration en O2 dissous a été observé de l'extérieur (4,3 ± 1,1 mg/l) vers l'intérieur (3,2 ± 1,1 mg/l) des pots, résultant de la consommation d'O2 dans la rhizosphère.",
+    "citation_extrait": "A gradient from outside (4.3 ± 1.1 mg l –1) to inside (3.2 ± 1.1 mg l –1) the pots was a result of O2 consumption in the rhizosphere, probably resulting in a lower O2 concentration in close vicinity to the roots.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "L'absence de différences dans les moyennes et variances entre les deux populations, et l'absence de corrélation avec les traits analysés, indiquaient des conditions hypoxiques stables à travers les populations.",
+    "citation_extrait": "Lack of differences in means and variances between the two populations (Figure 1), and lack of correlation with any of the analyzed traits (not shown), indicated stable hypoxic conditions across populations.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "L'épinastie a été estimée comme l'angle que la face adaxiale du pétiole forme avec la tige, avec trois classes ordinales : au-delà de perpendiculaire, perpendiculaire, et moins que perpendiculaire, assignées respectivement aux valeurs numériques 120°, 90° et 60°.",
+    "citation_extrait": "The degree of epinasty (E) was estimated as the angle that the adaxial face of the petiole formed with stems after 9, 13, 17 and 29 days of treatment. Three ordinal classes were defined: beyond perpendicular, perpendicular and less than perpendicular to the stem axis, and assigned numerical values of 120, 90 and 60°, respectively, to obtain quantitative values.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Les lenticelles hypertrophiées ont été comptées sur la portion submergée de chaque tige 8 et 15 jours après l'engorgement, avant que les lenticelles voisines ne fusionnent.",
+    "citation_extrait": "Hypertrophied lenticels were counted on the submerged portion of each stem 8 and 15 days after waterlogging, before neighboring lenticels merged.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Les stades de développement des lenticelles hypertrophiées ont été quantifiés après 27 jours d'engorgement (DS) basés sur une échelle ordinale de 1 à 14, allant de l'apparition d'un disque noir visible sur l'écorce (début de l'hypertrophie) à l'éclatement de l'écorce et finalement à l'apparition de lenticelles totalement blanches qui s'étendent et fusionnent graduellement.",
+    "citation_extrait": "Hypertrophied lenticel developmental stages were quantified after 27 days of waterlogging (DS) based on an ordinal scale from 1 to 14. This scale extends from the appearance of a black disk visible on the bark, corresponding to the start of hypertrophy, to splitting of the bark, and finally to the appearance of totally white lenticels that expand and gradually merge.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "Les racines adventives ont été identifiées comme les racines latérales blanches et plagiotropes insérées sur la tige principale ou à la base de la racine pivotante.",
+    "citation_extrait": "Adventitious roots were identified as the white and plagiotropic lateral roots inserted on the main stem or at the base of the tap root.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 3,
+    "fait": "En raison du grand nombre d'individus, les tests ont été considérés significatifs lorsque P < 0,01.",
+    "citation_extrait": "Because of the large number of individuals, tests were considered significant when P < 0.01.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "L'épinastie (E) est corrélée à la mortalité chez les semis de chêne, elle augmente de manière marquée juste avant la mort.",
+    "citation_extrait": "a close correlation was detected between E and mortality (Table 1); the time course of E differed among individuals and was a function of the date of mortality, E increased markedly before death (Figure 3)",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "Les semis mourants présentent un stade de développement des lenticelles hypertrophiées (DS) plus faible que les semis survivants, quelle que soit l'espèce.",
+    "citation_extrait": "Only E and DS were significantly different among plants with respect to mortality; these differences were similar for the two species.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "Il n'y a pas de corrélation entre les traits caractérisant les lenticelles hypertrophiées et les traits caractérisant les racines adventives.",
+    "citation_extrait": "No correlations were found among traits characterizing hypertrophied lenticels and traits characterizing adventitious roots.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "Une corrélation positive a été détectée entre le nombre de racines adventives (Nadv) et la masse sèche de racines adventives (Madv).",
+    "citation_extrait": "A positive correlation was detected between Nadv and Madv",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "Une corrélation négative significative a été détectée entre l'épinastie (E) et le stade de développement des lenticelles hypertrophiées (DS).",
+    "citation_extrait": "there was a significant negative correlation between E and DS (Table 2).",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "L'hypoxie locale induit la formation de lenticelles hypertrophiées indépendamment de l'hypoxie racinaire.",
+    "citation_extrait": "Local hypoxia induced lenticel formation independent of root hypoxia.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Intra- and interspecific diversity in the response to waterlogging of two co-occurring white oak species (Quercus robur and Q. petraea)",
+    "document_reference": "Parelle J., Brendel O., Jolivet Y. (2007), Annals of Forest Science, hal-02653679",
+    "page_number": 6,
+    "fait": "Les différences entre espèces pour la densité de lenticelles hypertrophiées induites par l'eau stagnante sont plus importantes que celles induites par le mastic.",
+    "citation_extrait": "The density of induced lenticels was much lower, and species differences were smaller than those induced by waterlogging.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

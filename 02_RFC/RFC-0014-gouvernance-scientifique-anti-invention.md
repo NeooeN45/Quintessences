@@ -222,6 +222,37 @@ verbatim) : le garde-fou fonctionne aussi en rejet, pas seulement en
 acceptation. Confirme la généralisation du pipeline à un type de
 document différent (guide technique vs. lettre de bilan sanitaire).
 
+**Troisième pilote (2026-07-18)** : premier essai du chemin « clean
+room » (19_LEGAL/STRATEGIE_ACCES_SOURCES_PROTEGEES_2026-07-18.md) pour
+alimenter `AutecologyProfile` (RFC-0016) sans dépendre de ClimEssences/
+BioClimSol. Recherche via `MultiSourceDocumentSearcher` (HAL/OpenAlex,
+déjà connectés) sur l'autécologie du chêne sessile → article réel
+identifié : Parelle J., Brendel O., Jolivet Y. (2007), « Intra- and
+interspecific diversity in the response to waterlogging of two
+co-occurring white oak species (Quercus robur and Q. petraea) »,
+*Annals of Forest Science* (hal-02653679, INRAE, PDF en accès libre).
+Résultat : **29 faits vérifiés (quarantine) sur 31 extraits, 2
+correctement rejetés**, couvrant tolérance à la sécheresse, préférence
+de sol (acide/drainé pour *Q. petraea* vs alluvial/fertile pour *Q.
+robur*), et réponses physiologiques à l'engorgement racinaire —
+premières données `AutecologyProfile` réelles et sourcées pour
+l'essence pilote, obtenues sans recopier ClimEssences/BioClimSol.
+
+Bug réel trouvé et corrigé pendant ce pilote : `_verify_citation`
+rejetait à tort des citations verbatim correctes à cause des césures
+de fin de ligne introduites par l'extraction PDF d'un texte justifié
+(« ecological re-\nquirements » au lieu de « ecological requirements »)
+— corrigé dans `Forge/src/dataset_forge/documents/extraction.py`
+(`_normalize` recolle désormais les césures avant comparaison, sans
+assouplir l'exigence de correspondance exacte par ailleurs).
+
+Conforme à la stratégie juridique (mode `TDM_EPHEMERAL`, article
+L122-5-3 CPI) : le PDF source a été détruit immédiatement après
+extraction — seuls les faits atomiques cités sont conservés
+(`GSIE/KNOWLEDGE/pilotes_extraction/parelle_2007_quercus_waterlogging_facts.json`),
+jamais le texte intégral de l'article. Source enregistrée dans le
+registre (`hal-depot-auteur`, SCI-001) avec ce mode explicite.
+
 ## 4. Plan d'implémentation
 
 ### Phase 1 — garde-fou (immédiat, avant tout nouveau moteur de raisonnement)

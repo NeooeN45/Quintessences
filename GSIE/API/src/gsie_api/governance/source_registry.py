@@ -257,6 +257,29 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             notes="Autorisation CNPF requise pour réutilisation/redistribution au-delà des usages permis.",
         ),
         ScientificSourceEntry(
+            identifiant="hal-depot-auteur",
+            organisme="HAL (CCSD/CNRS) — dépôts sous licence d'auteur",
+            url="https://hal.science",
+            licence="Licence de dépôt HAL par défaut — droits conservés par l'auteur/éditeur",
+            statut_juridique=SourceLegalStatus.legal_review_pending,
+            mode_ingestion=IngestionMode.tdm_ephemeral,
+            usage_commercial_autorise=None,
+            droit_indexation=False,
+            droit_derives=True,
+            droit_redistribution_offline=False,
+            territoire="France",
+            notes=(
+                "Fouille de textes et données (article L122-5-3 CPI) : accès "
+                "licite, extraction de faits atomiques cités puis destruction "
+                "de la copie locale — jamais de redistribution du PDF/texte "
+                "intégral. Voir 19_LEGAL/STRATEGIE_ACCES_SOURCES_PROTEGEES_"
+                "2026-07-18.md. Premier pilote réel (2026-07-18) : Parelle J., "
+                "Brendel O., Jolivet Y. (2007), hal-02653679 — 29 faits "
+                "vérifiés, PDF détruit après extraction, voir "
+                "GSIE/KNOWLEDGE/pilotes_extraction/."
+            ),
+        ),
+        ScientificSourceEntry(
             identifiant="onf-guides-sylviculture",
             organisme="ONF",
             url="https://www.onf.fr/onf/recherche-pour-les-tags-et-les-collections?collection=Guides+de+sylviculture",
