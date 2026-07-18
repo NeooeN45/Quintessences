@@ -244,6 +244,21 @@ brainstorming v5 n'est adoptée.
   signés GeoSylva, progression par vertical slices. Issue de l'étude
   `GSIE/RESEARCH/ETUDE_MODELES_OPEN_SOURCE_QUINTESSENCES_2026-07-18.md`.
   Voir `02_RFC/RFC-0015-environmental-model-fabric.md`.
+- **RFC-0016** — Schéma forestier spécialisé (**ADOPTÉ** — 2026-07-18,
+  DEC-000027) : applique RFC-0014/RFC-0015 au domaine sylvicole. 10
+  entités (AutecologyProfile, StationType/StationObservation,
+  SiteIndexModel/FertilityClass, SilviculturalSystem/SilviculturalRule/
+  Intervention, ProvenanceMaterial, DiagnosticProtocol/HealthRisk,
+  EvidenceStatement/ConflictRecord), chaîne de décision en 10 étapes,
+  passeport de décision à 5 catégories (observé/calculé/modélisé/
+  documenté/incertain). Principe non négociable : une classe de
+  fertilité n'est jamais universelle (essence+modèle+âge+région+source
+  obligatoires). Pilote proposé : Nouvelle-Aquitaine, 12-20 essences.
+  SCI-001 (registre des sources) et SCI-003 (TAXREF canonique) déjà
+  implémentés — voir `gsie_api.governance.source_registry` et
+  `BotanicalEngine.resolve_taxref`. Issue de
+  `GSIE/RESEARCH/CORPUS_SYLVICOLE_SCIENTIFIQUE_QUINTESSENCES_2026-07-18.md`.
+  Voir `02_RFC/RFC-0016-schema-forestier-specialise.md`.
 
 ---
 
@@ -278,6 +293,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
+- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine
 
 ## Documents structurants
 
