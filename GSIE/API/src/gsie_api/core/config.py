@@ -95,6 +95,9 @@ class Settings(BaseSettings):
     auth_dev_username: str = "admin"
     auth_dev_password: str = ""
 
+    # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
+    meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")
+
     # Moteur Evidence
     require_rust_backend: bool = False
     evidence_experimental_conflicts_enabled: bool = False

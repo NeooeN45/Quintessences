@@ -17,11 +17,31 @@ cette station) reste `None` dans le résultat, jamais remplacé par une
 valeur par défaut (ADR-007).
 """
 
+import csv
+import io
 from datetime import datetime
+from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.climate.schemas import ClimateQuery, ObservationClimatique
+from gsie_api.engines.climate.dpclim_client import DPClimClient, DPClimClientError
+from gsie_api.engines.climate.meteofrance_client import MeteoFranceClient, MeteoFranceClientError
+from gsie_api.engines.climate.paquet_observation_client import (
+    PaquetObservationClient,
+    PaquetObservationClientError,
+)
+from gsie_api.engines.climate.schemas import (
+    ClimateQuery,
+    ClimatologieQuotidienneQuery,
+    DangerFeuxDepartement,
+    ObservationClimatique,
+    ObservationClimatologiqueQuotidienne,
+    ObservationHoraireDepartement,
+    VigilanceBulletin,
+    VigilanceDomaine,
+    VigilancePhenomene,
+)
 from gsie_api.engines.climate.synop_client import SynopClient, SynopClientError
+from gsie_api.engines.climate.vigilance_client import VigilanceClient, VigilanceClientError
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
 logger = get_logger("gsie_api.climate.engine")
@@ -40,6 +60,42 @@ _SYNOP_SOURCE = SourceReference(
     ),
 )
 
+_METEO_FORETS_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="Météo-France",
+    reference=(
+        "API Météo des forêts (portail-api.meteofrance.fr, "
+        "DonneesPubliquesMeteoForets v1) — danger de feux de forêt J+1/J+2"
+    ),
+)
+
+_VIGILANCE_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="Météo-France",
+    reference=(
+        "API Bulletin Vigilance (portail-api.meteofrance.fr, "
+        "DonneesPubliquesVigilance v1) — carte de vigilance en cours"
+    ),
+)
+
+_PAQUET_OBSERVATION_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="Météo-France",
+    reference=(
+        "API Package Observations (portail-api.meteofrance.fr, "
+        "DonneesPubliquesPaquetObservation v2) — observations horaires 24h/département"
+    ),
+)
+
+_DPCLIM_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="Météo-France",
+    reference=(
+        "API Données Climatologiques (portail-api.meteofrance.fr, "
+        "DonneesPubliquesClimatologie v1, DPClim) — produit quotidien par station"
+    ),
+)
+
 
 def _parse_float(raw: dict[str, str], key: str) -> float | None:
     """Parse un champ CSV optionnel — chaîne vide ou absente -> None (jamais 0.0 par défaut)."""
@@ -49,6 +105,14 @@ def _parse_float(raw: dict[str, str], key: str) -> float | None:
     return float(value)
 
 
+def _parse_french_float(raw: dict[str, str], key: str) -> float | None:
+    """Parse un nombre décimal DPClim (virgule française) — vide/absent -> None."""
+    value = raw.get(key, "").strip()
+    if not value:
+        return None
+    return float(value.replace(",", "."))
+
+
 class ClimateEngineError(Exception):
     """Erreur de base du Climate Engine."""
 
@@ -56,8 +120,21 @@ class ClimateEngineError(Exception):
 class ClimateEngine:
     """Moteur Climate — pas de persistance en v1 (observation ponctuelle, non versionnée)."""
 
-    def __init__(self, synop_client: SynopClient | None = None) -> None:
+    def __init__(
+        self,
+        synop_client: SynopClient | None = None,
+        meteofrance_client: MeteoFranceClient | None = None,
+        dpclim_client: DPClimClient | None = None,
+        vigilance_client: VigilanceClient | None = None,
+        paquet_observation_client: PaquetObservationClient | None = None,
+    ) -> None:
         self._synop_client = synop_client or SynopClient()
+        self._meteofrance_client = meteofrance_client or MeteoFranceClient()
+        self._dpclim_client = dpclim_client or DPClimClient()
+        self._vigilance_client = vigilance_client or VigilanceClient()
+        self._paquet_observation_client = (
+            paquet_observation_client or PaquetObservationClient()
+        )
 
     @staticmethod
     def version() -> str:
@@ -110,3 +187,186 @@ class ClimateEngine:
         )
 
         return observation
+
+    async def get_danger_feux(self) -> list[DangerFeuxDepartement]:
+        """Récupère le niveau de danger de feux de forêt réel, tous départements.
+
+        Raises:
+            ClimateEngineError: si l'API Météo des forêts est indisponible
+                ou la clé absente — jamais un niveau approximé (ADR-007).
+        """
+        try:
+            rows = await self._meteofrance_client.get_danger_feux_departements()
+        except MeteoFranceClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        resultats = [
+            DangerFeuxDepartement(
+                dep_code=row["dep_code"],
+                dep_nom=row["dep_nom"],
+                niveau_j1=int(row["niveau_j1"]),
+                niveau_j2=int(row["niveau_j2"]),
+                reference_time=datetime.fromisoformat(
+                    row["reference_time"].replace("Z", "+00:00")
+                ),
+                source=_METEO_FORETS_SOURCE,
+            )
+            for row in rows
+        ]
+
+        logger.info("climate_danger_feux_retrieved", nb_departements=len(resultats))
+
+        return resultats
+
+    async def list_stations_climatologie(self, id_departement: str) -> list[dict]:
+        """Liste réelle des stations DPClim d'un département (id_station 8 chiffres).
+
+        Raises:
+            ClimateEngineError: si l'API DPClim est indisponible ou la clé absente.
+        """
+        try:
+            return await self._dpclim_client.list_stations(id_departement)
+        except DPClimClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+    async def get_climatologie_quotidienne(
+        self, request: ClimatologieQuotidienneQuery
+    ) -> list[ObservationClimatologiqueQuotidienne]:
+        """Récupère les données climatologiques quotidiennes réelles d'une station DPClim.
+
+        Le jeu de colonnes CSV varie selon la station (voir schemas.py) —
+        chaque ligne conserve toutes ses colonnes brutes dans
+        `valeurs_brutes`, en plus des champs pratiques typés (RR/TN/TX/TM).
+
+        Raises:
+            ClimateEngineError: clé absente, échec réseau, ou commande
+                jamais prête (station sans donnée sur la période, ou
+                délai dépassé) — jamais une donnée approximée (ADR-007).
+        """
+        try:
+            csv_text = await self._dpclim_client.get_donnees_quotidiennes(
+                request.id_station,
+                request.date_deb_periode.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                request.date_fin_periode.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            )
+        except DPClimClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
+        resultats = [
+            ObservationClimatologiqueQuotidienne(
+                requete_id=request.requete_id,
+                id_station=row["POSTE"],
+                date=datetime.strptime(row["DATE"], "%Y%m%d").date(),
+                rr_mm=_parse_french_float(row, "RR"),
+                tn_c=_parse_french_float(row, "TN"),
+                tx_c=_parse_french_float(row, "TX"),
+                tm_c=_parse_french_float(row, "TM"),
+                valeurs_brutes={k: (v if v else None) for k, v in row.items()},
+                source=_DPCLIM_SOURCE,
+            )
+            for row in reader
+        ]
+
+        logger.info(
+            "climate_climatologie_quotidienne_retrieved",
+            id_station=request.id_station,
+            nb_lignes=len(resultats),
+        )
+
+        return resultats
+
+    async def get_vigilance(self) -> list[VigilanceBulletin]:
+        """Récupère la carte de vigilance réelle en cours (échéances J et J+1).
+
+        Raises:
+            ClimateEngineError: si l'API Vigilance est indisponible ou
+                la clé absente — jamais un niveau approximé (ADR-007).
+        """
+        try:
+            data = await self._vigilance_client.get_carte_vigilance()
+        except VigilanceClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        update_time = datetime.fromisoformat(
+            data["product"]["update_time"].replace("Z", "+00:00")
+        )
+
+        bulletins = [
+            VigilanceBulletin(
+                requete_id=uuid4(),
+                echeance=period["echeance"],
+                update_time=update_time,
+                domaines=[
+                    VigilanceDomaine(
+                        domain_id=domaine["domain_id"],
+                        max_color_id=domaine["max_color_id"],
+                        phenomenes=[
+                            VigilancePhenomene(
+                                phenomenon_id=item["phenomenon_id"],
+                                color_id=item["phenomenon_max_color_id"],
+                            )
+                            for item in domaine.get("phenomenon_items", [])
+                        ],
+                    )
+                    for domaine in period.get("timelaps", {}).get("domain_ids", [])
+                ],
+                source=_VIGILANCE_SOURCE,
+            )
+            for period in data["product"]["periods"]
+        ]
+
+        logger.info("climate_vigilance_retrieved", nb_echeances=len(bulletins))
+
+        return bulletins
+
+    async def get_observations_horaires(
+        self, id_departement: str
+    ) -> list[ObservationHoraireDepartement]:
+        """Récupère les observations horaires réelles des 24h, toutes stations d'un département.
+
+        Raises:
+            ClimateEngineError: si l'API Package Observations est
+                indisponible ou la clé absente — jamais une observation
+                approximée (ADR-007).
+        """
+        try:
+            rows = await self._paquet_observation_client.get_observations_horaires(
+                id_departement
+            )
+        except PaquetObservationClientError as exc:
+            raise ClimateEngineError(str(exc)) from exc
+
+        resultats = []
+        for row in rows:
+            temperature_k = _parse_float(row, "t")
+            pression_pa = _parse_float(row, "pmer")
+            resultats.append(
+                ObservationHoraireDepartement(
+                    geo_id_insee=row["geo_id_insee"],
+                    latitude=float(row["lat"]),
+                    longitude=float(row["lon"]),
+                    date_observation=datetime.fromisoformat(
+                        row["validity_time"].replace("Z", "+00:00")
+                    ),
+                    temperature_c=(
+                        temperature_k - _KELVIN_TO_CELSIUS
+                        if temperature_k is not None
+                        else None
+                    ),
+                    humidite_pct=_parse_float(row, "u"),
+                    pression_hpa=pression_pa / 100.0 if pression_pa is not None else None,
+                    vent_direction_deg=_parse_float(row, "dd"),
+                    vent_vitesse_ms=_parse_float(row, "ff"),
+                    precipitations_1h_mm=_parse_float(row, "rr1"),
+                    source=_PAQUET_OBSERVATION_SOURCE,
+                )
+            )
+
+        logger.info(
+            "climate_observations_horaires_retrieved",
+            id_departement=id_departement,
+            nb_observations=len(resultats),
+        )
+
+        return resultats
