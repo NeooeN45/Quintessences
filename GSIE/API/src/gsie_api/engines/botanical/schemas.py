@@ -135,3 +135,28 @@ class IndigenatResult(BaseModel):
     code_ser: str
     statut_ser: StatutIndigenatRegion
     source: SourceReference
+
+
+class TaxrefQuery(BaseModel):
+    """Requête de résolution TAXREF (référentiel taxonomique canonique — SCI-003)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID = Field(default_factory=uuid4)
+    nom_scientifique: str = Field(min_length=1, max_length=200)
+
+
+class TaxrefResult(BaseModel):
+    """Entrée TAXREF réelle résolue (cd_nom = `taxonID` du miroir GBIF)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    cd_nom: int = Field(description="Identifiant CD_NOM TAXREF (champ taxonID du miroir GBIF)")
+    nom_scientifique: str
+    nom_scientifique_complet: str = Field(description="Avec auteur et année (scientificName)")
+    nom_vernaculaire: str | None = None
+    famille: str | None = None
+    statut: TaxonStatus
+    taxonomie_version: str = Field(default="TAXREF (miroir GBIF)")
+    source: SourceReference

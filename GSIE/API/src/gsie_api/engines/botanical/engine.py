@@ -33,7 +33,10 @@ from gsie_api.engines.botanical.schemas import (
     StatutIndigenatFrance,
     StatutIndigenatRegion,
     TaxonStatus,
+    TaxrefQuery,
+    TaxrefResult,
 )
+from gsie_api.engines.botanical.taxref_client import TaxrefClient, TaxrefClientError
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.infrastructure.models import ResourceModel
 from gsie_api.infrastructure.models.provenance import EntityAliasModel, EntityModel
@@ -57,6 +60,16 @@ _INDIGENAT_SOURCE = SourceReference(
     ),
 )
 
+_TAXREF_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="MNHN — TAXREF",
+    reference=(
+        "Référentiel taxonomique TAXREF (via miroir GBIF datasetKey "
+        "0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6 — infrastructure MNHN "
+        "directe dégradée depuis le piratage de septembre 2025)"
+    ),
+)
+
 
 class BotanicalEngineError(Exception):
     """Erreur de base du Botanical Engine."""
@@ -74,10 +87,12 @@ class BotanicalEngine:
         session: AsyncSession,
         gbif_client: GBIFClient | None = None,
         indigenat_loader: IndigenatLoader | None = None,
+        taxref_client: TaxrefClient | None = None,
     ) -> None:
         self._session = session
         self._gbif_client = gbif_client or GBIFClient()
         self._indigenat_loader = indigenat_loader or IndigenatLoader()
+        self._taxref_client = taxref_client or TaxrefClient()
 
     @staticmethod
     def version() -> str:
@@ -246,4 +261,45 @@ class BotanicalEngine:
             code_ser=request.code_ser,
             statut_ser=statut_ser,
             source=_INDIGENAT_SOURCE,
+        )
+
+    async def resolve_taxref(self, request: TaxrefQuery) -> TaxrefResult | None:
+        """Résout un nom scientifique vers son entrée TAXREF réelle (SCI-003).
+
+        Returns:
+            None si aucune entrée TAXREF ne correspond — jamais un
+            cd_nom inventé (ADR-007).
+
+        Raises:
+            BotanicalEngineError: si le miroir GBIF de TAXREF est indisponible.
+        """
+        try:
+            result = await self._taxref_client.search(request.nom_scientifique)
+        except TaxrefClientError as exc:
+            raise BotanicalEngineError(str(exc)) from exc
+
+        if result is None:
+            logger.info("botanical_taxref_no_match", nom_scientifique=request.nom_scientifique)
+            return None
+
+        try:
+            statut = TaxonStatus(result["taxonomicStatus"])
+        except (KeyError, ValueError):
+            statut = TaxonStatus.doubtful
+
+        vernacular_names = result.get("vernacularNames", [])
+        nom_vernaculaire = next(
+            (v["vernacularName"] for v in vernacular_names if v.get("language") == "fra"),
+            None,
+        )
+
+        return TaxrefResult(
+            requete_id=request.requete_id,
+            cd_nom=int(result["taxonID"]),
+            nom_scientifique=result.get("species") or result["canonicalName"],
+            nom_scientifique_complet=result["scientificName"],
+            nom_vernaculaire=nom_vernaculaire,
+            famille=result.get("family"),
+            statut=statut,
+            source=_TAXREF_SOURCE,
         )

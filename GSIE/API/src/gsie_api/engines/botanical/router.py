@@ -25,6 +25,8 @@ from gsie_api.engines.botanical.schemas import (
     BotanicalQuery,
     IndigenatQuery,
     IndigenatResult,
+    TaxrefQuery,
+    TaxrefResult,
 )
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
@@ -117,5 +119,34 @@ async def botanical_indigenat(
     """
     try:
         return BotanicalEngine(session).get_indigenat(request_body)
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/taxref",
+    response_model=TaxrefResult | None,
+    status_code=status.HTTP_200_OK,
+    summary="Résout un nom scientifique vers son entrée TAXREF réelle (SCI-003)",
+    description=(
+        "Interroge le référentiel taxonomique TAXREF (miroir GBIF, "
+        "infrastructure MNHN directe dégradée). Retourne null si aucune "
+        "entrée ne correspond — jamais un cd_nom inventé (ADR-007)."
+    ),
+)
+@_botanical_limiter.limit("30/minute")
+async def botanical_taxref(
+    request_body: TaxrefQuery,
+    request: Request,
+    session: DbSession,
+    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> TaxrefResult | None:
+    """Résout un nom scientifique vers son entrée TAXREF réelle.
+
+    Raises:
+        502: Si le miroir GBIF de TAXREF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).resolve_taxref(request_body)
     except BotanicalEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
