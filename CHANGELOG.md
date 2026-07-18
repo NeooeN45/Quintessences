@@ -4,6 +4,47 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — RFC-0015 ENVIRONMENTAL MODEL FABRIC + CLIMATE ENGINE ÉTENDU] - 2026-07-18
+
+### RFC-0015 adoptée (DEC-000026)
+
+- Étend ADR-007/RFC-0014 (garde-fou anti-invention des données) aux
+  modèles scientifiques : registre de modèles (`ModelRegistry`/
+  `ModelArtifact`/`LicenseRecord`/`ApplicabilityDomain`/
+  `ValidationRun`), LLM strictement orchestrateur non autoritaire,
+  vocabulaire imposé (observation/estimation/simulation/
+  recommandation ; association/hypothèse causale/effet estimé),
+  Correlation Engine v2 (pipeline causal 8 étapes, candidats DoWhy/
+  Tigramite/PyMC/MAPIE), packs offline signés GeoSylva, progression
+  par vertical slices mesurables.
+- Issue de l'étude externe versée
+  `GSIE/RESEARCH/ETUDE_MODELES_OPEN_SOURCE_QUINTESSENCES_2026-07-18.md`.
+- Voir `02_RFC/RFC-0015-environmental-model-fabric.md`,
+  `03_DECISIONS/DEC-000026.md`.
+
+### Climate Engine — 4 nouvelles sources réelles Météo-France (portail API)
+
+- Météo des forêts (danger feux J+1/J+2), DPClim (climatologie
+  quotidienne, flux 3 étapes commande/polling/fichier), Vigilance
+  (carte de vigilance J/J+1), Package Observations (24h glissantes) —
+  en plus du flux SYNOP déjà en place. 21 tests, formes de réponse
+  réelles capturées.
+
+### Forge — audit et corrections réelles
+
+- Identité git configurée (blocage de commit résolu).
+- Recherche documentaire (`documents search`) : agrégation réelle
+  HAL + OpenAlex + arXiv au lieu d'arXiv seul (bug de pertinence
+  corrigé — requêtes françaises renvoyaient des résultats hors sujet).
+  Correction du paramètre OpenAlex (`query` retiré par l'API,
+  remplacé par `search`).
+- Scraping (`scrape`) : branchement des 5 connecteurs jusqu'ici
+  inutilisés (Flickr, Wikimedia, Zenodo, Roboflow, images web), en
+  plus de Hugging Face.
+- 105 tests passent, mypy --strict propre.
+
+---
+
 ## [PHASE 4 — BOTANICAL ENGINE + PEDOLOGY ENGINE] - 2026-07-17
 
 ### Nouveaux moteurs — Botanical (GBIF) et Pedology (SoilGrids)

@@ -233,6 +233,17 @@ brainstorming v5 n'est adoptée.
   cliente de GSIE. Registre d'idées dans `apps/Ignis/REGISTRE.md` ;
   livrables Jalon 0 dans `apps/Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
+- **RFC-0015** — Environmental Model Fabric (**ADOPTÉ** — 2026-07-18,
+  DEC-000026) : étend ADR-007/RFC-0014 (garde-fou anti-invention des
+  données) aux modèles scientifiques. Registre de modèles
+  (`ModelRegistry`/`ModelArtifact`/`LicenseRecord`/
+  `ApplicabilityDomain`/`ValidationRun`), LLM orchestrateur non
+  autoritaire, vocabulaire imposé (observation/estimation/simulation/
+  recommandation ; association/hypothèse causale/effet estimé),
+  Correlation Engine v2 (pipeline causal 8 étapes), packs offline
+  signés GeoSylva, progression par vertical slices. Issue de l'étude
+  `GSIE/RESEARCH/ETUDE_MODELES_OPEN_SOURCE_QUINTESSENCES_2026-07-18.md`.
+  Voir `02_RFC/RFC-0015-environmental-model-fabric.md`.
 
 ---
 
@@ -266,6 +277,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000019** — Validation architecture Phase 4 + plan révisé 24 semaines (Python+Rust+Go différé, FastAPI+PostGIS+Redis, 6 vagues)
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
+- **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
 
 ## Documents structurants
 
