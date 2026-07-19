@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "expected": "valid",
+      "file": "valid-minimal.gsiecap",
+      "id": "valid-minimal",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "divergente",
+      "expected": "invalid",
+      "file": "tampered-payload.gsiecap",
+      "id": "tampered-payload",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "clé publique approuvée",
+      "expected": "invalid",
+      "file": "untrusted-key.gsiecap",
+      "id": "untrusted-key",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Chemin d'archive non s",
+      "expected": "invalid",
+      "file": "path-traversal.gsiecap",
+      "id": "path-traversal",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Chemin d'archive interdit",
+      "expected": "invalid",
+      "file": "windows-separator-name.gsiecap",
+      "id": "windows-separator-name",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "non canonique",
+      "expected": "invalid",
+      "file": "unexpected-directory-entry.gsiecap",
+      "id": "unexpected-directory-entry",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "non déclar",
+      "expected": "invalid",
+      "file": "ambiguous-unicode-name.gsiecap",
+      "id": "ambiguous-unicode-name",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "membres dupliqués",
+      "expected": "invalid",
+      "file": "duplicate-members.gsiecap",
+      "id": "duplicate-members",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "manquants",
+      "expected": "invalid",
+      "file": "missing-member.gsiecap",
+      "id": "missing-member",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Membre obligatoire absent",
+      "expected": "invalid",
+      "file": "empty-archive.gsiecap",
+      "id": "empty-archive",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Ratio de compression suspect",
+      "expected": "invalid",
+      "file": "budget-exceeded-ratio.gsiecap",
+      "id": "budget-exceeded-ratio",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Version majeure de manifeste non supportée",
+      "expected": "invalid",
+      "file": "unsupported-schema-version.gsiecap",
+      "id": "unsupported-schema-version",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Taille invalide",
+      "expected": "invalid",
+      "file": "invalid-negative-size.gsiecap",
+      "id": "invalid-negative-size",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "identifiants de clé du manifeste divergent",
+      "expected": "invalid",
+      "file": "inconsistent-key-fingerprint.gsiecap",
+      "id": "inconsistent-key-fingerprint",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Signature cryptographique invalide",
+      "expected": "invalid",
+      "file": "falsified-key-id-crypto-invalid.gsiecap",
+      "id": "falsified-key-id-crypto-invalid",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Constante JSON non finie interdite",
+      "expected": "invalid",
+      "file": "nan-in-manifest.gsiecap",
+      "id": "nan-in-manifest",
+      "public_key": "trusted-public.pem"
+    },
+    {
+      "error_contains": "Clé JSON dupliquée",
+      "expected": "invalid",
+      "file": "duplicate-json-keys.gsiecap",
+      "id": "duplicate-json-keys",
+      "public_key": "trusted-public.pem"
+    }
+  ],
+  "generated_at": "2026-07-19T08:00:00Z",
+  "other_key_id": "sha256:262139a53522bd8ea22c9296af440b39a5af708ee3b73dc8fd1ea8620502103a",
+  "schema_version": "1.0.0",
+  "trusted_key_id": "sha256:dd1ddd14b8b197b46fd69156dffae965db8b3d1d307a675ff12b36b668f735d7"
+}
