@@ -189,3 +189,95 @@ class FertilityClassRecord(FertilityClassCreate):
     status: str = Field(
         description="draft | proposed | accepted | superseded | rejected | deprecated"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 2/10 (StationType,
+# StationObservation) — diagnostic stationnel, étape 2 de la chaîne de
+# décision professionnelle (RFC-0016 §3.3).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class StationTypeCreate(BaseModel):
+    """Unité conceptuelle de station issue d'un guide — pas une observation terrain.
+
+    RFC-0016 §4.3 : `StationType` décrit ce qu'un guide définit ;
+    `StationObservation` décrit ce qui est réellement observé sur une
+    parcelle. Ne jamais confondre les deux : un `StationType` ne peut
+    pas être créé à partir d'une seule parcelle observée.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    guide: str = Field(
+        min_length=1, max_length=300, description="Ex. « Guide des stations Aquitaine »"
+    )
+    guide_version: str = Field(min_length=1, max_length=100)
+    validity_zone_description: str = Field(
+        min_length=1, description="Zone de validité en texte libre (pas de géométrie en tranche 2)"
+    )
+    ser_greco_code: str | None = Field(default=None, max_length=50)
+    topography_description: str | None = None
+    substrate_description: str | None = None
+    hydromorphy_description: str | None = None
+    indicator_flora_description: str | None = None
+    source: SourceReference
+
+
+class StationTypeRecord(StationTypeCreate):
+    """`StationTypeCreate` persisté — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
+
+
+class StationObservationCreate(BaseModel):
+    """Ce qui est réellement observé sur une parcelle — jamais confondu avec `StationType`.
+
+    RFC-0016 §4.3 : conserve le chemin suivi dans la clé du guide
+    (`key_path_followed`). Si aucun `StationType` ne peut être déterminé
+    avec certitude, `station_type_id` reste `None` mais
+    `determination_uncertainty` devient alors obligatoire (imposé par
+    `model_post_init`, reflète la contrainte SQL
+    `ck_station_observation_uncertainty_when_undetermined`) — jamais un
+    rattachement arbitraire pour "faire simple".
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    plot_reference: str = Field(min_length=1, max_length=200)
+    station_type_id: UUID | None = None
+    key_path_followed: str | None = Field(
+        default=None, description="Réponses saisies et embranchement obtenu dans la clé du guide"
+    )
+    topography_observed: str | None = None
+    substrate_observed: str | None = None
+    hydromorphy_observed: str | None = None
+    indicator_flora_observed: str | None = None
+    available_water_capacity_mm: float | None = Field(default=None, ge=0)
+    available_water_capacity_method: str | None = Field(default=None, max_length=300)
+    determination_uncertainty: str | None = None
+    observed_at: datetime
+    source: SourceReference
+
+    def model_post_init(self, __context: object) -> None:
+        if self.station_type_id is None and not self.determination_uncertainty:
+            raise ValueError(
+                "determination_uncertainty requis lorsque station_type_id est absent "
+                "(aucune StationType déterminée avec certitude)"
+            )
+
+
+class StationObservationRecord(StationObservationCreate):
+    """`StationObservationCreate` persistée — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )

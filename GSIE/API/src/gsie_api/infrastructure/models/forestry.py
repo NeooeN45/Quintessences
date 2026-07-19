@@ -1,18 +1,21 @@
 """Modèles forestiers spécialisés — RFC-0016 (schéma forestier spécialisé).
 
-Implémente une première tranche verticale des dix entités du §4 du RFC :
-`AutecologyProfile`, `SiteIndexModel`, `FertilityClass` — les trois
-entités qui portent la règle non négociable :
+Implémente les tranches verticales suivantes des dix entités du §4 du RFC :
 
-    Une `FertilityClass` sans `species_entity_id`, `site_index_model_id`,
-    âge de référence et région de calibration est un bug de sécurité
-    scientifique, pas une simplification acceptable.
+- tranche 1/10 : `AutecologyProfile`, `SiteIndexModel`, `FertilityClass`
+  — les trois entités qui portent la règle non négociable :
 
-Les sept autres entités du §4 (`StationType`/`StationObservation`,
-`SilviculturalSystem`/`SilviculturalRule`/`Intervention`,
-`ProvenanceMaterial`, `DiagnosticProtocol`/`HealthRisk`,
-`EvidenceStatement`/`ConflictRecord`) restent à implémenter dans une
-tranche ultérieure.
+      Une `FertilityClass` sans `species_entity_id`, `site_index_model_id`,
+      âge de référence et région de calibration est un bug de sécurité
+      scientifique, pas une simplification acceptable.
+
+- tranche 2/10 : `StationType`, `StationObservation` — diagnostic
+  stationnel (étape 2 de la chaîne de décision, RFC-0016 §3.3).
+
+Les cinq entités restantes du §4 (`SilviculturalSystem`/
+`SilviculturalRule`/`Intervention`, `ProvenanceMaterial`,
+`DiagnosticProtocol`/`HealthRisk`, `EvidenceStatement`/`ConflictRecord`)
+restent à implémenter dans une tranche ultérieure.
 
 Convention reprise du Botanical Engine (`_get_or_create_taxon`) : un taxon
 est une resource de type `entity` (`entity_subtype="taxon"`), jamais un
@@ -21,9 +24,10 @@ identifiants externes passent par `entity_alias`. `species_entity_id`
 référence donc systématiquement `entity.id`, jamais un code TAXREF brut.
 """
 
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import CheckConstraint, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -169,5 +173,93 @@ class FertilityClassModel(Base, TimestampMixin):
         CheckConstraint(
             "lower_bound_m IS NULL OR upper_bound_m IS NULL OR lower_bound_m <= upper_bound_m",
             name="ck_fertility_class_bounds_order",
+        ),
+    )
+
+
+@register_type("station_type")
+class StationTypeModel(Base, TimestampMixin):
+    """Unité conceptuelle de station issue d'un guide — pas une observation terrain.
+
+    RFC-0016 §4 : porte le guide, sa version et la zone de validité. Une
+    `StationObservation` détermine, via la clé de ce guide, quel
+    `StationType` s'applique à une parcelle réelle — jamais l'inverse.
+    """
+
+    __tablename__ = "station_type"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    guide: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
+    guide_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    validity_zone_description: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        doc="Zone de validité du guide en texte libre (pas de géométrie en tranche 2)",
+    )
+    ser_greco_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    topography_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    substrate_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hydromorphy_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    indicator_flora_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+
+@register_type("station_observation")
+class StationObservationModel(Base, TimestampMixin):
+    """Ce qui est réellement observé sur une parcelle — jamais confondu avec `StationType`.
+
+    RFC-0016 §4 : conserve le chemin suivi dans la clé du guide
+    (`key_path_followed`) et l'incertitude de détermination — une
+    observation qui ne résout aucun `StationType` avec certitude doit le
+    dire explicitement (`station_type_id` nullable, `determination_uncertainty`
+    obligatoire dans ce cas), jamais forcer un rattachement arbitraire.
+    """
+
+    __tablename__ = "station_observation"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    plot_reference: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    station_type_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("station_type.id"), nullable=True, index=True
+    )
+    key_path_followed: Mapped[str | None] = mapped_column(
+        Text, nullable=True, doc="Réponses saisies et embranchement obtenu dans la clé du guide"
+    )
+    topography_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    substrate_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hydromorphy_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    indicator_flora_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    available_water_capacity_mm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    available_water_capacity_method: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    determination_uncertainty: Mapped[str | None] = mapped_column(Text, nullable=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "station_type_id IS NOT NULL OR determination_uncertainty IS NOT NULL",
+            name="ck_station_observation_uncertainty_when_undetermined",
         ),
     )

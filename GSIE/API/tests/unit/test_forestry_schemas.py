@@ -1,13 +1,16 @@
-"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranche 1/10).
+"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-2/10).
 
 Vérifie la règle non négociable du §3.1 : une classe de fertilité (ou un
 modèle de fertilité, ou un profil autécologique) ne peut pas être
 construit sans ses champs obligatoires — Pydantic doit refuser la
-construction, pas produire un objet incomplet silencieusement.
+construction, pas produire un objet incomplet silencieusement. Vérifie
+aussi (tranche 2) qu'une StationObservation sans StationType déterminé
+doit obligatoirement porter une incertitude explicite (§4.3).
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -18,6 +21,8 @@ from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.engines.forest_dynamics.schemas import (
     FertilityClassCreate,
     SiteIndexModelCreate,
+    StationObservationCreate,
+    StationTypeCreate,
 )
 
 
@@ -193,3 +198,70 @@ def test_autecology_profile_accepts_text_value_without_numeric() -> None:
         source=_source(),
     )
     assert profile.value_text == "Élevée"
+
+
+# --- StationTypeCreate / StationObservationCreate (tranche 2/10) ---
+
+
+def test_station_type_requires_guide_and_validity_zone() -> None:
+    station_type = StationTypeCreate(
+        guide="Guide des stations forestières Aquitaine",
+        guide_version="2019",
+        validity_zone_description="Landes de Gascogne, plateau sableux",
+        ser_greco_code="B22",
+        source=_source(),
+    )
+    assert station_type.guide_version == "2019"
+
+
+@pytest.mark.parametrize(
+    "missing_field", ["guide", "guide_version", "validity_zone_description", "source"]
+)
+def test_station_type_missing_required_field_raises(missing_field: str) -> None:
+    payload = {
+        "guide": "Guide des stations forestières Aquitaine",
+        "guide_version": "2019",
+        "validity_zone_description": "Landes de Gascogne, plateau sableux",
+        "source": _source(),
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError):
+        StationTypeCreate(**payload)
+
+
+def test_station_observation_with_determined_type_does_not_require_uncertainty() -> None:
+    observation = StationObservationCreate(
+        plot_reference="parcelle-12-A",
+        station_type_id=uuid4(),
+        key_path_followed="Q1=oui, Q2=drainé -> type B22-a",
+        observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+        source=_source(),
+    )
+    assert observation.station_type_id is not None
+
+
+def test_station_observation_without_determined_type_requires_uncertainty() -> None:
+    """Reproduit littéralement RFC-0016 §4.3 : pas de rattachement arbitraire
+
+    quand la clé du guide ne résout aucun StationType avec certitude —
+    l'incertitude doit être explicite, pas silencieusement absente.
+    """
+    with pytest.raises(ValidationError, match="determination_uncertainty"):
+        StationObservationCreate(
+            plot_reference="parcelle-12-A",
+            station_type_id=None,
+            observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+            source=_source(),
+        )
+
+
+def test_station_observation_without_determined_type_accepted_with_uncertainty() -> None:
+    observation = StationObservationCreate(
+        plot_reference="parcelle-12-A",
+        station_type_id=None,
+        determination_uncertainty="Deux embranchements possibles selon l'humidité au relevé",
+        observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+        source=_source(),
+    )
+    assert observation.station_type_id is None
+    assert observation.determination_uncertainty is not None
