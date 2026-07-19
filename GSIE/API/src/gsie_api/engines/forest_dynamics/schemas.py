@@ -85,3 +85,107 @@ class DendrometricResult(BaseModel):
     )
     source: SourceReference
     date_calcul: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 1/10 (SiteIndexModel,
+# FertilityClass). Voir gsie_api.infrastructure.models.forestry pour la
+# persistance (satellite tables du métamodèle v6.2).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class SiteIndexModelCreate(BaseModel):
+    """Modèle de fertilité (équation/table) pour une essence.
+
+    RFC-0016 §4 : porte la méthode, l'âge de référence, sa convention et
+    la région de calibration — sans ces champs, une classe de fertilité
+    n'est pas comparable entre deux guides (exemple documenté : mémento
+    ONF pin d'Alep, classe 1 = hauteur dominante > 14 m à 50 ans, une
+    convention parmi d'autres).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    species_gbif_taxon_key: int = Field(
+        description="Clé GBIF du taxon accepté (usageKey) — résolu en entity_id par l'engine"
+    )
+    name: str = Field(min_length=1, max_length=300)
+    method: str = Field(min_length=1, max_length=200, description="Ex. « table_de_production »")
+    reference_age_years: int = Field(gt=0)
+    age_convention: str = Field(
+        min_length=1, max_length=200, description="Ex. « âge réel », « âge à 1,30 m »"
+    )
+    calibration_region: str = Field(min_length=1, max_length=200)
+    valid_age_min_years: int | None = Field(default=None, ge=0)
+    valid_age_max_years: int | None = Field(default=None, ge=0)
+    source: SourceReference
+
+    def model_post_init(self, __context: object) -> None:
+        if (
+            self.valid_age_min_years is not None
+            and self.valid_age_max_years is not None
+            and self.valid_age_min_years > self.valid_age_max_years
+        ):
+            raise ValueError("valid_age_min_years doit être <= valid_age_max_years")
+
+
+class SiteIndexModelRecord(SiteIndexModelCreate):
+    """`SiteIndexModelCreate` persisté — identifiants réels et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    species_entity_id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
+
+
+class FertilityClassCreate(BaseModel):
+    """Classe de fertilité contextualisée — jamais un entier nu.
+
+    Règle non négociable (RFC-0016 §3.1) : `species_gbif_taxon_key`,
+    `site_index_model_id`, `reference_age_years`, `calibration_region` et
+    `source` sont tous obligatoires. Pydantic les impose déjà via leur
+    absence de valeur par défaut — un appelant ne peut pas construire
+    cet objet sans les fournir tous, contrairement à un entier nu stocké
+    isolément.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    species_gbif_taxon_key: int = Field(
+        description="Clé GBIF du taxon accepté (usageKey) — résolu en entity_id par l'engine"
+    )
+    site_index_model_id: UUID = Field(
+        description="Référence au SiteIndexModel dont cette classe dépend — jamais nu"
+    )
+    class_label: str = Field(
+        min_length=1, max_length=100, description="Ex. « Classe 1 », « I » — jamais un entier seul"
+    )
+    dominant_height_m: float | None = Field(default=None, gt=0)
+    reference_age_years: int = Field(gt=0)
+    lower_bound_m: float | None = Field(default=None, gt=0)
+    upper_bound_m: float | None = Field(default=None, gt=0)
+    calibration_region: str = Field(min_length=1, max_length=200)
+    source: SourceReference
+
+    def model_post_init(self, __context: object) -> None:
+        if (
+            self.lower_bound_m is not None
+            and self.upper_bound_m is not None
+            and self.lower_bound_m > self.upper_bound_m
+        ):
+            raise ValueError("lower_bound_m doit être <= upper_bound_m")
+
+
+class FertilityClassRecord(FertilityClassCreate):
+    """`FertilityClassCreate` persistée — identifiants réels et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    species_entity_id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )

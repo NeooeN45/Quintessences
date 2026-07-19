@@ -2,11 +2,15 @@
 
 Conforme à BOTANICAL_ENGINE.md §5 (contrat d'interface), avec un
 périmètre v1 restreint à la taxonomie et à la nomenclature (GBIF
-Backbone Taxonomy, aucune clé requise) — pas d'autécologie en v1 :
-ces données (optimum pH, tolérance gel, etc.) exigent des connaissances
-sourcées (Rameau et al.) pas encore ingérées dans le Knowledge Engine
-(voir RFC-0014 §3.2). Un `EspeceData` v1 a donc `autecologie=None`
-plutôt qu'une valeur inventée (ADR-007).
+Backbone Taxonomy, aucune clé requise). Un `EspeceData` v1 a donc
+`autecologie=None` plutôt qu'une valeur inventée (ADR-007).
+
+Depuis RFC-0016 (tranche 1/10), le schéma `AutecologyProfileCreate` ci-
+dessous permet de modéliser une observation autécologique réelle et
+sourcée (une variable à la fois) — mais reste vide tant qu'aucune
+donnée réelle n'est ingérée depuis une source vérifiée (Rameau et al.,
+CNPF, etc., voir RFC-0014 §3.2) : ce schéma fournit la structure, pas
+son contenu.
 """
 
 from datetime import UTC, datetime
@@ -160,3 +164,63 @@ class TaxrefResult(BaseModel):
     statut: TaxonStatus
     taxonomie_version: str = Field(default="TAXREF (miroir GBIF)")
     source: SourceReference
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 1/10 (AutecologyProfile).
+# Lève partiellement la restriction documentée en tête de ce module :
+# l'autécologie devient modélisable (une variable sourcée à la fois),
+# mais reste vide tant qu'aucune valeur réelle n'est ingérée (ADR-007 —
+# ce schéma ne fournit aucune valeur par défaut inventée).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class AutecologyProfileCreate(BaseModel):
+    """Une observation autécologique sourcée pour un taxon — une variable à la fois.
+
+    RFC-0016 §4 : jamais une « note globale » par essence. Chaque valeur
+    (pH optimal, tolérance sécheresse, etc.) est sa propre ligne, avec sa
+    propre source et sa propre incertitude — `value_numeric` et
+    `value_text` sont mutuellement facultatifs mais au moins l'un des
+    deux est requis (imposé par `model_post_init`, reflète la contrainte
+    SQL `ck_autecology_profile_value_present`).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    species_gbif_taxon_key: int = Field(
+        description="Clé GBIF du taxon accepté (usageKey) — résolu en entity_id par l'engine"
+    )
+    variable: str = Field(
+        min_length=1, max_length=200, description="Ex. « ph_optimal », « tolerance_secheresse »"
+    )
+    value_numeric: float | None = None
+    value_text: str | None = Field(default=None, max_length=2000)
+    unit: str | None = Field(default=None, max_length=50)
+    life_stage: str | None = Field(
+        default=None, max_length=100, description="Ex. « adulte », « semis »"
+    )
+    season: str | None = Field(default=None, max_length=50)
+    territory_description: str | None = Field(default=None, max_length=2000)
+    method: str | None = None
+    uncertainty: str | None = None
+    evidence_level: str = Field(
+        description="Grade A-F, voir gsie_api.infrastructure.models.enums.EvidenceLevel"
+    )
+    source: SourceReference
+
+    def model_post_init(self, __context: object) -> None:
+        if self.value_numeric is None and self.value_text is None:
+            raise ValueError("value_numeric ou value_text requis (au moins l'un des deux)")
+
+
+class AutecologyProfileRecord(AutecologyProfileCreate):
+    """`AutecologyProfileCreate` persistée — identifiants réels et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    species_entity_id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
