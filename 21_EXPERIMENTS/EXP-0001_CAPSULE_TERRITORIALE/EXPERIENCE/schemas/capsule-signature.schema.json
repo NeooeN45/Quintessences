@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.gsie.fr/capsule/signature-1.0.0.schema.json",
+  "title": "Signature détachée d'une capsule territoriale GSIE",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "algorithm",
+    "key_id",
+    "signature_base64"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "algorithm": { "const": "Ed25519" },
+    "key_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "signature_base64": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "minLength": 88,
+      "maxLength": 88
+    }
+  }
+}

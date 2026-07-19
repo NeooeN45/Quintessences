@@ -1,0 +1,17 @@
+{
+  "bbox": [
+    1.89,
+    47.79,
+    1.9,
+    47.8
+  ],
+  "crs": "EPSG:4326",
+  "data_classification": "public_synthetic",
+  "description": "Zone fictive pour la démonstration technique GSIE ; aucune réalité cadastrale ou forestière.",
+  "license": "CC0-1.0",
+  "name": "Territoire démonstrateur synthétique GSIE",
+  "operational_use": "forbidden",
+  "synthetic": true,
+  "territory_id": "gsie-demo-territoire-001"
+}
+

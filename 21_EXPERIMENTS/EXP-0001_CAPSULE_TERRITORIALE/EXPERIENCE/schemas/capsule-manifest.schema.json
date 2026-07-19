@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.gsie.fr/capsule/manifest-1.0.0.schema.json",
+  "title": "Manifeste de capsule territoriale GSIE",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capsule_id",
+    "schema_version",
+    "created_at",
+    "producer",
+    "territory",
+    "files",
+    "signature"
+  ],
+  "properties": {
+    "capsule_id": {
+      "type": "string",
+      "pattern": "^cap_[0-9a-f]{32}$"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "tool", "tool_version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "tool": { "const": "gsie-execution-kit" },
+        "tool_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "territory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "territory_id",
+        "name",
+        "crs",
+        "bbox",
+        "synthetic",
+        "operational_use"
+      ],
+      "properties": {
+        "territory_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{2,127}$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "crs": { "type": "string", "minLength": 1 },
+        "bbox": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "number" }
+        },
+        "synthetic": { "type": "boolean" },
+        "operational_use": { "type": "string", "minLength": 1 },
+        "data_classification": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+          },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id"],
+      "properties": {
+        "algorithm": { "const": "Ed25519" },
+        "key_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}
+

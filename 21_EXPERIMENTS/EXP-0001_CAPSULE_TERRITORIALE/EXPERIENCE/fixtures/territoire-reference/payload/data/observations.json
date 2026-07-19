@@ -1,0 +1,31 @@
+{
+  "dataset_id": "gsie-demo-observations-001",
+  "territory_id": "gsie-demo-territoire-001",
+  "synthetic": true,
+  "operational_use": "forbidden",
+  "unit": {
+    "diameter": "cm",
+    "measurement_height": "m"
+  },
+  "observations": [
+    {
+      "observation_id": "tree-001",
+      "species_code": "DEMO-A",
+      "diameter_cm": 20.0,
+      "measurement_height_m": 1.3
+    },
+    {
+      "observation_id": "tree-002",
+      "species_code": "DEMO-A",
+      "diameter_cm": 30.0,
+      "measurement_height_m": 1.3
+    },
+    {
+      "observation_id": "tree-003",
+      "species_code": "DEMO-B",
+      "diameter_cm": 40.0,
+      "measurement_height_m": 1.3
+    }
+  ]
+}
+

@@ -1,0 +1,40 @@
+{
+  "case_schema_version": "1.0.0",
+  "case_id": "GSIE-GB-DENDRO-ST-003",
+  "title": "Somme stable sur diamètres synthétiques hétérogènes",
+  "domain": "dendrometrie",
+  "algorithm": "basal_area_m2",
+  "algorithm_version": "1.0.0",
+  "inputs": {
+    "diameters_cm": [12.5, 27.5, 55.0, 55.0]
+  },
+  "expected": {
+    "value": 0.5468334712654734,
+    "unit": "m2",
+    "absolute_tolerance": 1e-12,
+    "derivation": "pi * (12.5^2 + 27.5^2 + 55^2 + 55^2) / 40000"
+  },
+  "provenance": {
+    "fixture_nature": "synthetic",
+    "sources": [
+      {
+        "type": "internal_cross_check",
+        "title": "GeoSylva — méthodes de calcul du volume et surface terrière",
+        "locator": "https://github.com/NeooeN45/GeoSylva/blob/main/docs/methodes_calcul_volume.md",
+        "accessed_at": "2026-07-18",
+        "independent_scientific_authority": false
+      }
+    ]
+  },
+  "applicability": {
+    "description": "Contrôle de sommation flottante et de diamètres décimaux.",
+    "measurement_height_m": 1.3,
+    "operational_use": "forbidden_until_approved"
+  },
+  "scientific_review": {
+    "status": "needs_domain_review",
+    "reviewers": [],
+    "notes": "Cas numérique, non représentatif d'un peuplement."
+  }
+}
+

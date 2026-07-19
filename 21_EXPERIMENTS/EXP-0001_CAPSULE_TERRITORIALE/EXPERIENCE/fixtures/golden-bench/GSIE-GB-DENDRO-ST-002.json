@@ -1,0 +1,47 @@
+{
+  "case_schema_version": "1.0.0",
+  "case_id": "GSIE-GB-DENDRO-ST-002",
+  "title": "Agrégation des trois tiges du territoire synthétique",
+  "domain": "dendrometrie",
+  "algorithm": "basal_area_m2",
+  "algorithm_version": "1.0.0",
+  "inputs": {
+    "diameters_cm": [20.0, 30.0, 40.0]
+  },
+  "expected": {
+    "value": 0.22776546738526002,
+    "unit": "m2",
+    "absolute_tolerance": 1e-12,
+    "derivation": "pi * (20^2 + 30^2 + 40^2) / 40000"
+  },
+  "provenance": {
+    "fixture_nature": "synthetic",
+    "sources": [
+      {
+        "type": "fixture",
+        "title": "Observations synthétiques EXP-0001",
+        "locator": "../territoire-reference/payload/data/observations.json",
+        "accessed_at": "2026-07-18",
+        "independent_scientific_authority": false
+      },
+      {
+        "type": "internal_cross_check",
+        "title": "GeoSylva — méthodes de calcul du volume et surface terrière",
+        "locator": "https://github.com/NeooeN45/GeoSylva/blob/main/docs/methodes_calcul_volume.md",
+        "accessed_at": "2026-07-18",
+        "independent_scientific_authority": false
+      }
+    ]
+  },
+  "applicability": {
+    "description": "Contrôle d'agrégation sur trois diamètres synthétiques mesurés à 1,30 m.",
+    "measurement_height_m": 1.3,
+    "operational_use": "forbidden_until_approved"
+  },
+  "scientific_review": {
+    "status": "needs_domain_review",
+    "reviewers": [],
+    "notes": "Cas relié au payload de démonstration ; aucune représentativité forestière."
+  }
+}
+
