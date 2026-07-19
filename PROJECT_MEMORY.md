@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-16 (CI 100% verte — 8/8 jobs passent : Governance + Lint + Rust + Python + Integration PostGIS/Redis + Docker build + CI Gate. 194 tests, 84% couverture, ruff + mypy --strict verts. Docker reproductible rustc 1.85 + maturin 1.9.6) |
+| **Dernière mise à jour** | 2026-07-19 (RFC-0016 Phase A **complète** — 10/10 entités du schéma forestier spécialisé implémentées en 6 tranches, registre de types 76→86, 364 tests dont 304 passed/60 skipped) |
 
 ---
 
@@ -258,6 +258,10 @@ brainstorming v5 n'est adoptée.
   implémentés — voir `gsie_api.governance.source_registry` et
   `BotanicalEngine.resolve_taxref`. Issue de
   `GSIE/RESEARCH/CORPUS_SYLVICOLE_SCIENTIFIQUE_QUINTESSENCES_2026-07-18.md`.
+  **Phase A (schéma de données) complète le 2026-07-19** — voir détail
+  dans « Vague 2 » ci-dessous et `DEC-000027`. Phases B (intégration
+  Botanical/Forest Dynamics Engine, passeport à 5 catégories) et C
+  (pilote Nouvelle-Aquitaine) restent à faire.
   Voir `02_RFC/RFC-0016-schema-forestier-specialise.md`.
 
 ---
@@ -293,7 +297,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
-- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine
+- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire.
 
 ## Documents structurants
 
@@ -415,6 +419,40 @@ d'exécution :
     contient déjà 30 essences sourcées (Vallet et al. 2006) jamais
     appelées — branché. Non vérifié par build réel (TLS/JVM local
     bloqué) — à valider.
+  - **RFC-0016 Phase A — schéma forestier spécialisé, complète
+    (2026-07-19)** : les 10 entités du §3.1 sont implémentées en 6
+    tranches successives (`9a87d98` à `f1cb482`, branche
+    `handoff/audit-2026-07-19`) :
+    1. `AutecologyProfile`, `SiteIndexModel`, `FertilityClass`
+    2. `StationType`, `StationObservation`
+    3. `SilviculturalSystem`, `SilviculturalRule` (`Intervention` réutilisée, déjà existante)
+    4. `ProvenanceMaterial`
+    5. `DiagnosticProtocol`, `HealthRisk`
+    6. `EvidenceStatement`/`ConflictRecord` — aucune nouvelle table,
+       réutilisation documentée de `AssertionModel`/
+       `EvidenceAssessmentModel`/`ConflictClusterModel` déjà existants,
+       + schéma Pydantic dédié `EvidenceStatementCreate`/`Record`
+       (`evidence/schemas.py`) imposant `page_or_table` obligatoire.
+    Bilan : 10 nouvelles tables satellite (`autecology_profile`,
+    `site_index_model`, `fertility_class`, `station_type`,
+    `station_observation`, `silvicultural_system`,
+    `silvicultural_rule`, `provenance_material`, `diagnostic_protocol`,
+    `health_risk`) + 3 entités réutilisées sans duplication
+    (`Intervention`, `EvidenceStatement`, `ConflictRecord`). Registre de
+    types resources 76→86. 364 tests unitaires (304 passed, 60
+    skipped), `check_governance_consistency.py` OK après chaque
+    commit. Fichiers modifiés : `GSIE/API/src/gsie_api/infrastructure/
+    models/forestry.py` (nouveau, 10 modèles SQLAlchemy),
+    `infrastructure/models/enums.py` (nouveaux enums :
+    `SilviculturalSystemCategory`, `MaterielBaseCategory`,
+    `HealthRiskSeverity`), `alembic/versions/0006` à `0010` (5
+    migrations), `engines/forest_dynamics/schemas.py`,
+    `engines/botanical/schemas.py` (AutecologyProfile),
+    `engines/evidence/schemas.py` (EvidenceStatement),
+    `tests/unit/test_forestry_schemas.py` (nouveau, ~50 tests),
+    `tests/unit/test_resources.py`. **Phases B (intégration
+    Botanical/Forest Dynamics Engine, passeport de décision à 5
+    catégories) et C (pilote Nouvelle-Aquitaine) non commencées.**
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.

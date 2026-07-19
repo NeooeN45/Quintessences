@@ -272,6 +272,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | Semaine 3 — Knowledge Engine | ✅ Implémenté (DEC-000020) | Persistance PostgreSQL/Neo4j (évolution future), seed Knowledge Base Seed (25 connaissances) |
 | Semaine 4 — Intégration | ✅ Implémenté (DEC-000021) | Persistance PostgreSQL, seed complet, tests de charge |
 | **Migration v6.2** — **RFC-0012 + DEC-000023 + ADR-007** | ✅ **Implémenté (2026-07-16)** | 76 types SQLAlchemy, table racine resource, CRUD générique 8 endpoints, WebSocket auth JWT + Redis Pub/Sub, 17 tables de jonction n:m, Outbox/Inbox (ADR-005), Object Storage (ADR-006), validation dynamique, soft delete (CON-010), 194 tests passent |
+| **RFC-0016 Phase A** — Schéma forestier spécialisé (DEC-000027) | ✅ **Complète (2026-07-19)** | 10/10 entités du §3.1 implémentées en 6 tranches (10 tables satellite + 3 entités réutilisées : Intervention, EvidenceStatement, ConflictRecord), registre de types 76→86, 364 tests (304 passed/60 skipped). Restent : Phase B (intégration Botanical/Forest Dynamics Engine, passeport de décision à 5 catégories) et Phase C (pilote Nouvelle-Aquitaine) |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,

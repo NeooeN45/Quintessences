@@ -4,6 +4,49 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — RFC-0016 SCHÉMA FORESTIER SPÉCIALISÉ — PHASE A COMPLÈTE] - 2026-07-19
+
+### RFC-0016 Phase A (schéma de données) — 10/10 entités implémentées
+
+- 6 tranches successives sur la branche `handoff/audit-2026-07-19` :
+  1. `9a87d98` — `AutecologyProfile`, `SiteIndexModel`, `FertilityClass`.
+  2. `1807670` — `StationType`, `StationObservation`.
+  3. `0995cb5` — `SilviculturalSystem`, `SilviculturalRule`
+     (`Intervention` réutilisée, déjà existante).
+  4. `0ca7d1a` — `ProvenanceMaterial`.
+  5. `635b8af` — `DiagnosticProtocol`, `HealthRisk`.
+  6. `f1cb482` — `EvidenceStatement`/`ConflictRecord` : aucune nouvelle
+     table, réutilisation documentée de `AssertionModel`/
+     `EvidenceAssessmentModel`/`ConflictClusterModel` déjà existants,
+     + nouveau schéma Pydantic `EvidenceStatementCreate`/`Record`
+     (`evidence/schemas.py`) imposant `page_or_table` obligatoire.
+- Bilan : les 10 entités du §3.1 du RFC-0016 sont désormais toutes
+  couvertes — 10 nouvelles tables satellite (`autecology_profile`,
+  `site_index_model`, `fertility_class`, `station_type`,
+  `station_observation`, `silvicultural_system`, `silvicultural_rule`,
+  `provenance_material`, `diagnostic_protocol`, `health_risk`) + 3
+  entités réutilisées sans duplication (`Intervention`,
+  `EvidenceStatement`, `ConflictRecord`).
+- Registre de types resources : 76 → 86 types.
+- Nouveaux enums : `SilviculturalSystemCategory`,
+  `MaterielBaseCategory`, `HealthRiskSeverity`
+  (`infrastructure/models/enums.py`).
+- 5 migrations Alembic (`0006` à `0010`).
+- 364 tests unitaires (304 passed, 60 skipped),
+  `tools/check_governance_consistency.py` OK après chaque commit.
+- Fichiers principaux : `GSIE/API/src/gsie_api/infrastructure/models/
+  forestry.py` (nouveau), `engines/forest_dynamics/schemas.py`,
+  `engines/botanical/schemas.py`, `engines/evidence/schemas.py`,
+  `tests/unit/test_forestry_schemas.py` (nouveau), `tests/unit/
+  test_resources.py`.
+- **Reste à faire** : Phase B (intégration Botanical/Forest Dynamics
+  Engine, passeport de décision à 5 catégories) et Phase C (pilote
+  Nouvelle-Aquitaine) — non commencées. Voir `02_RFC/
+  RFC-0016-schema-forestier-specialise.md` et `03_DECISIONS/
+  DEC-000027.md`.
+
+---
+
 ## [PHASE 4 — RFC-0015 ENVIRONMENTAL MODEL FABRIC + CLIMATE ENGINE ÉTENDU] - 2026-07-18
 
 ### RFC-0015 adoptée (DEC-000026)
