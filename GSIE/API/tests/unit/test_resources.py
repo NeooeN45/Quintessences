@@ -141,3 +141,56 @@ class TestValidators:
             },
         )
         assert len(errors) == 1
+
+    def test_should_validate_fertility_class_all_required(self) -> None:
+        """Porte de validation RFC-0016 §5 Phase A point 3 : même via l'API
+
+        générique de resources (pas seulement les schémas Pydantic des
+        engines), une FertilityClass sans ses 5 champs non négociables
+        est rejetée.
+        """
+        errors = validate_resource_data(
+            "fertility_class",
+            {
+                "species_entity_id": uuid4(),
+                "site_index_model_id": uuid4(),
+                "class_label": "Classe 1",
+                "reference_age_years": 50,
+                "calibration_region": "Provence calcaire",
+                "source_id": uuid4(),
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_fertility_class_missing_fields(self) -> None:
+        errors = validate_resource_data("fertility_class", {"species_entity_id": uuid4()})
+        assert len(errors) == 5
+
+    def test_should_fail_when_silvicultural_rule_invalid_evidence_level(self) -> None:
+        errors = validate_resource_data(
+            "silvicultural_rule",
+            {
+                "required_context": "Peuplement régulier",
+                "trigger": "Densité > 800 tiges/ha",
+                "action": "Éclaircie",
+                "intensity": "25 %",
+                "evidence_level": "Z",  # invalide
+                "source_id": uuid4(),
+            },
+        )
+        assert len(errors) == 1
+
+    def test_should_fail_when_provenance_material_invalid_category(self) -> None:
+        errors = validate_resource_data(
+            "provenance_material",
+            {
+                "species_entity_id": uuid4(),
+                "provenance_region": "Massif central",
+                "base_material": "Verger à graines VG-034",
+                "base_material_category": "invente",  # invalide
+                "aid_eligible": True,
+                "decree_version": "Arrêté du 6 mars 2026",
+                "source_id": uuid4(),
+            },
+        )
+        assert len(errors) == 1

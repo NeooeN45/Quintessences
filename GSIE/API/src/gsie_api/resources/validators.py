@@ -24,9 +24,11 @@ from gsie_api.infrastructure.models.enums import (
     FlowDirection,
     FlowType,
     GoalType,
+    HealthRiskSeverity,
     HypothesisStatus,
     LegalBasis,
     LifecycleStatus,
+    MaterielBaseCategory,
     MediaType,
     ModelType,
     PhenomenonType,
@@ -40,6 +42,7 @@ from gsie_api.infrastructure.models.enums import (
     ScaleLevel,
     ScenarioSubtype,
     ScenarioType,
+    SilviculturalSystemCategory,
     SourceNature,
     SourceSubtype,
     StateType,
@@ -101,6 +104,17 @@ _ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "ecological_state": {
         "state_type": StateType,
     },
+    # RFC-0016 — schéma forestier spécialisé (types 81-90, tranches 1-5/10)
+    "autecology_profile": {"evidence_level": EvidenceLevel},
+    "site_index_model": {},
+    "fertility_class": {},
+    "station_type": {},
+    "station_observation": {},
+    "silvicultural_system": {"category": SilviculturalSystemCategory},
+    "silvicultural_rule": {"evidence_level": EvidenceLevel},
+    "provenance_material": {"base_material_category": MaterielBaseCategory},
+    "diagnostic_protocol": {},
+    "health_risk": {"severity": HealthRiskSeverity},
 }
 
 # Champs obligatoires (non-None) par type
@@ -207,6 +221,61 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "instance": ["concept_id"],
     "predicate": ["label"],
     "evidence_assessment": ["assertion_id", "level", "method", "evaluated_at"],
+    # RFC-0016 — schéma forestier spécialisé (§3.1, §5 Phase A point 3 : porte
+    # de validation, aucune de ces entités sans ses champs non négociables,
+    # même à travers l'API générique de resources, pas seulement via les
+    # schémas Pydantic des engines).
+    "autecology_profile": [
+        "species_entity_id",
+        "variable",
+        "evidence_level",
+        "source_id",
+    ],
+    "site_index_model": [
+        "species_entity_id",
+        "name",
+        "method",
+        "reference_age_years",
+        "age_convention",
+        "calibration_region",
+        "source_id",
+    ],
+    "fertility_class": [
+        "species_entity_id",
+        "site_index_model_id",
+        "class_label",
+        "reference_age_years",
+        "calibration_region",
+        "source_id",
+    ],
+    "station_type": ["guide", "guide_version", "validity_zone_description", "source_id"],
+    "station_observation": ["plot_reference", "observed_at", "source_id"],
+    "silvicultural_system": ["name", "category", "source_id"],
+    "silvicultural_rule": [
+        "required_context",
+        "trigger",
+        "action",
+        "intensity",
+        "evidence_level",
+        "source_id",
+    ],
+    "provenance_material": [
+        "species_entity_id",
+        "provenance_region",
+        "base_material",
+        "base_material_category",
+        "aid_eligible",
+        "decree_version",
+        "source_id",
+    ],
+    "diagnostic_protocol": [
+        "name",
+        "version",
+        "criteria_description",
+        "thresholds_description",
+        "source_id",
+    ],
+    "health_risk": ["subject_id", "symptom_observed", "observed_at", "source_id"],
 }
 
 
