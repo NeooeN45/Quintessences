@@ -1440,30 +1440,703 @@ def fetch_firms_fire_detections(
 | **Xiaomi** | Redmi K60 Pro | Snapdragon 8 Gen 2 | 12 GB | 7B (NPU) | Hexagon v73 | mllm-NPU |
 | **Snapdragon 855** | (various) | Snapdragon 855 | 6 GB | 2B max (Q3-Q5) | Hexagon v69 | llama.cpp CPU (limité) |
 
-### 14.7 Recommandations pour GeoSylva / GSIE
+### 14.7 Architecture LLM multi-tiers pour GeoSylva
 
-**Pour GeoSylva Android (Kotlin + Jetpack Compose)** :
+> Architecture adaptative complète — du téléphone d'entrée de gamme (sans LLM) au flagship (LLM hybride NPU+GPU). 6 tiers de capacités, détection automatique au lancement.
 
-1. **LiteRT-LM Kotlin API** — Production-ready, GPU+NPU, Gemma 4 E2B multimodal (text+image+audio). Maven package. **Recommandé pour production**.
-2. **llama.cpp + OpenCL (llama-droid)** — Pour dev/exploration. Pas de root. Termux. Qwen2.5-1.5B Q4_0 = 34.5 tok/s (S25).
-3. **Gemini Nano (AICore)** — Si device compatible (Pixel 9+, Samsung S25+). Gratuit, optimisé, safety intégré. ML Kit GenAI APIs.
-4. **Qualcomm AI Hub (GENIE)** — Pour devices Snapdragon 8 Elite+. NPU Hexagon. Llama 3.1 8B = 16.4 tok/s.
+#### 14.7.1 Détection device — DeviceCapabilityProfiler
 
-**Modèles recommandés par cas d'usage** :
+Au lancement, GeoSylva profile le device et sélectionne le tier approprié. **23 critères** sont évalués :
 
-| Cas d'usage | Modèle | Taille | Vitesse attendue | Format |
+##### 14.7.1a — Système d'exploitation
+
+| Critère | Méthode Android | Méthode iOS | Valeurs possibles | Impact sur le tier |
 |---|---|---|---|---|
-| Chat assistant temps réel | Qwen2.5-0.5B Q4_0 | 403 MB | 63 tok/s | GGUF (llama.cpp) |
-| Assistant qualité/vitesse | Qwen2.5-1.5B Q4_0 | 1.0 GB | 34 tok/s | GGUF (llama.cpp) |
-| Assistant multimodal | Gemma 4 E2B | 2.6 GB | 52 tok/s | .litertlm (LiteRT-LM) |
-| Reasoning complexe | Llama 3.1 8B w4a16 | 4 GB | 16 tok/s | Qualcomm AI Hub NPU |
-| Identification botanique (image) | Gemma-3n E4B | 5 GB | 20-30 tok/s | .litertlm (LiteRT-LM) |
-| Résumé / preuve | Gemini Nano | 0 (système) | ~30 tok/s | AICore (Android système) |
+| **Type d'OS** | `Build.VERSION.RELEASE` (présence) | `ProcessInfo.operatingSystemVersion` | `ANDROID`, `IOS`, `HARMONYOS`, `OTHER` | Android → moteurs open source. iOS → Apple Intelligence + LiteRT-LM Metal. HarmonyOS → moteurs open source (compatibilité partielle). |
+| **Version Android** | `Build.VERSION.RELEASE` | — | `10`, `11`, `12`, `13`, `14`, `15`, `16` | < 12 → T0/T1 max (pas AICore, API limitées). 12-13 → T2/T3 max. 14+ → AICore possible (T3+). 15+ → NPU API étendues (T4+). 16+ → toutes capacités (T5). |
+| **API level** | `Build.VERSION.SDK_INT` | — | 29 (Android 10) → 36+ (Android 16+) | < 31 → pas AICore. < 33 → pas NeuralNetworks API 1.3. ≥ 34 → AICore. ≥ 35 → NPU API native. |
+| **Version iOS** | — | `ProcessInfo.operatingSystemVersion` | `15`, `16`, `17`, `18`, `19` | < 17 → T0/T1 max (pas Apple Intelligence). 17+ → AFM on-device (T3 si A17 Pro+). 18+ → Apple Intelligence complet (T4). 19+ → AFM v2 + Foundation Models framework (T5). |
+| **HarmonyOS** | `Build.DISPLAY` contains "HarmonyOS" | — | `3.0`, `4.0`, `5.0`, `NEXT` | HarmonyOS NEXT (5.0+) → Android compat layer. Moteurs open source via APK. Pas AICore. Pas Apple Intelligence. Tier max T3 (GPU Mali). |
+| **Security patch** | `Build.VERSION.SECURITY_PATCH` | — | `2024-01-01`, `2025-07-01`, etc. | Patch > 12 mois → warning sécurité. Pas d'impact direct sur tier mais bloque téléchargement modèles si patch < 2023-06 (vulnérabilités critiques). |
 
-**Pour Ignis / Artemis (app mobile wildfire)** :
-- **Gemini Nano** (AICore) pour summarization + smart reply (gratuit, intégré)
-- **LiteRT-LM + Gemma 4 E2B** pour analyse multimodale offline (photo → texte)
-- **llama.cpp + Qwen2.5-1.5B** pour reasoning offline sur devices plus anciens
+##### 14.7.1b — Architecture CPU
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **Architecture CPU** | `Build.SUPPORTED_ABIS` | `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86` | `arm64-v8a` → tous moteurs. `x86_64` → émulateur/desktop (llama.cpp, LiteRT-LM JVM). `armeabi-v7a` (32-bit ARM) → T0/T1 max (pas de LLM > 0.5B, mémoire limitée 2 GB/process). `x86` → T0 uniquement. |
+| **Cores CPU** | `Runtime.getRuntime().availableProcessors()` | 4, 6, 8, 10, 12 | < 6 → T0/T1 max. 6-7 → T2 max. 8+ → T3+. 10+ → T4+. |
+| **Fréquence CPU max** | `/sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq` | 1.8 GHz → 3.5+ GHz | < 2.0 GHz → T0/T1. 2.0-2.8 GHz → T2/T3. > 2.8 GHz → T4/T5. |
+| **Extensions CPU** | `/proc/cpuinfo` (features line) | `asimd`, `dotprod`, `i8mm`, `sve`, `sve2` | `dotprod` + `i8mm` → INT8 accéléré (MLLM-NPU prérequis). `sve` → Snapdragon 8 Gen 3+ (T4+). Pas `dotprod` → T0/T1 max. |
+
+##### 14.7.1c — SoC et NPU
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **Fabricant SoC** | `Build.SOC_MANUFACTURER` | `Qualcomm`, `Mediatek`, `Google`, `Samsung` (Exynos), `Huawei` (HiSilicon), `Apple` | Qualcomm → QNN SDK + AI Hub. Mediatek → NeuroPilot SDK. Google → Tensor TPU + AICore. Samsung Exynos → GPU Mali + Edge HAL. Apple → Neural Engine + Metal. |
+| **Modèle SoC** | `Build.SOC_MODEL` | `SM8650` (8 Gen 3), `SM8750` (8 Elite), `SM8850` (8 Elite Gen 5), `MT6989` (Dimensity 9300), `Tensor G4`, `Exynos 2400`, etc. | Mapping direct vers tier. SM8850 → T5. SM8750 → T4/T5. SM8650 → T4. SM8550 → T3. SM8450 → T2. SM8350 → T1. |
+| **NPU disponible** | QNN SDK `qnn_init()` probe | `true` / `false` | false → pas MLLM-NPU, pas Qualcomm AI Hub. Tier max T3 (GPU only). |
+| **NPU version Hexagon** | QNN `QNN_INTERFACE_VER_NAME` + device arch mapping | `v69`, `v73`, `v75`, `v79`, `v81` | v69 → NPU basique (T2 max NPU). v73 → NPU optimal (T4). v75/v79 → T4+. v81 → T5 (MLLM-NPU full graph). |
+| **NPU TOPS** | AI-Benchmark ou QNN profile | 4 → 73 TOPS | < 10 TOPS → T1/T2. 10-30 TOPS → T3. 30-50 TOPS → T4. > 50 TOPS → T5. |
+| **NPU constructeur alternatif** | NeuroPilot SDK probe (Mediatek) | `APU 790`, `APU 790 Dual` | APU 790 (60 TOPS) → T4 max (pas MLLM-NPU, mais Transformer-Lite GPU Mali). Pas QNN. |
+
+##### 14.7.1d — GPU
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **GPU modèle** | `ActivityManager` + `/sys/devices/gpu/model` ou OpenCL `CL_DEVICE_NAME` | `Adreno-830`, `Adreno-750`, `Adreno-740`, `Adreno-730`, `Adreno-660`, `Mali-G720`, `Mali-G715`, `Mali-G610`, `PowerVR`, `Apple-GPU-15core` | Adreno 8xx → T5. Adreno 7xx → T3/T4. Adreno 6xx → T1/T2. Mali-G7xx → T2/T3. Mali-G6xx → T1/T2. Apple GPU 5+ core → T3+. |
+| **GPU VRAM partagée** | `ActivityManager.MemoryInfo` (GPU partage RAM système) | = RAM totale (shared) | Pas de VRAM dédiée sur mobile. RAM ≥ 8 GB → GPU peut allouer 2-3 GB pour modèles. RAM < 4 GB → GPU limité à < 500 MB. |
+| **OpenCL support** | `PackageManager` + `clGetPlatformIDs` | `OpenCL 2.0`, `OpenCL 3.0`, `absent` | Absent → pas llama.cpp GPU, pas MLC LLM. Tier max T1 (CPU only). OpenCL 2.0+ → llama.cpp GPU + MLC LLM. |
+| **Vulkan support** | `PackageManager.FEATURE_VULKAN_HARDWARE_LEVEL` | `true` / `false` | true → MLC LLM Vulkan backend (alternative OpenCL). Pas requis mais améliore compatibilité. |
+| **Metal (iOS)** | `MTLCreateSystemDefaultDevice()` | `Metal 3`, `Metal 4` | Metal 3+ → LiteRT-LM Swift API (T3+). Metal 4 → T5 (Gemma 4 E2B 56 tok/s). |
+
+##### 14.7.1e — Mémoire et stockage
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **RAM totale** | `ActivityManager.MemoryInfo.totalMem` | 2 → 24 GB | < 3 GB → T0. 3-4 → T1. 4-6 → T2. 6-8 → T3. 8-12 → T4. ≥ 12 → T5. |
+| **RAM disponible** | `ActivityManager.MemoryInfo.availMem` | variable | < 1 GB disponible → dégradation 1 tier. < 500 MB → dégradation 2 tiers. |
+| **Storage disponible** | `Environment.getDataDirectory().getUsableSpace()` | 0 → 256+ GB | < 1 GB → T0/T1 only. 1-3 GB → T2/T3 only. 3-6 GB → T4 possible. ≥ 6 GB → T5 possible. |
+| **Storage type** | `StatFs.getBlockType()` | `FLASH`, `EMMC`, `UFS 2.x`, `UFS 3.x`, `UFS 4.x` | eMMC → lent, modèles > 2 GB déconseillés (load time > 30s). UFS 3.x+ → tous modèles OK. UFS 4.x → load instantané. |
+
+##### 14.7.1f — Services système et APIs
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **AICore** | `PackageManager.getPackageInfo("com.google.android.aicore")` | présent / absent | Présent → Gemini Nano disponible (T3+). Absent → pas Gemini Nano. |
+| **Google Play Services** | `GoogleApiAvailability.isGooglePlayServicesAvailable()` | `SUCCESS`, `SERVICE_MISSING`, `SERVICE_DISABLED` | Missing → pas AICore, pas ML Kit. Tier max T2 (moteurs open source only). |
+| **ML Kit GenAI** | `MLKitGenAI.getClient()` init | disponible / indisponible | Disponible → Gemini Nano ML Kit APIs (summarize, proofread, rewrite, image description). |
+| **Apple Intelligence** | `if #available(iOS 18.0, *)` + `intelligenceStatus` | `enabled`, `disabled`, `unavailable` | Enabled → AFM on-device (T4+). Disabled → user peut activer dans Settings. Unavailable → device non compatible (T2 max). |
+| **Foundation Models framework** | `if #available(iOS 19.0, *)` | disponible / indisponible | Disponible → API Swift directe pour AFM v2. Guided generation, tool calling, LoRA. T5. |
+| **Neural Networks API** | `PackageManager.FEATURE_NNAPI` + `NnApiDelegate` | `NNAPI 1.0` → `NNAPI 1.3` | 1.0 → T1 max. 1.1+ → T2. 1.2+ → T3. 1.3+ → T4 (TensorFlow Lite GPU delegate + NPU). |
+
+##### 14.7.1g — Device identification
+
+| Critère | Méthode | Valeurs possibles | Impact |
+|---|---|---|---|
+| **Constructeur** | `Build.MANUFACTURER` | `Samsung`, `Google`, `Xiaomi`, `OPPO`, `OnePlus`, `vivo`, `Honor`, `Motorola`, `Apple`, `Huawei` | Samsung → AICore + Samsung AI. Google → AICore + Tensor TPU. Huawei → HarmonyOS, pas Google services. |
+| **Modèle device** | `Build.MODEL` + `Build.DEVICE` | `SM-S931B` (S25), `SM-S921B` (S24), `Pixel 9`, `23116PN5BC` (Xiaomi 14), etc. | Mapping direct vers tier via base de données devices connus. |
+| **Écran** | `DisplayManager` + `WindowManager` | taille (5.5" → 7.6"), densité (hdpi → xxxhdpi), refresh rate (60 → 120+ Hz) | Pas d'impact sur tier LLM mais influence UX (chat streaming, rendu rapports). |
+| **Batterie** | `BatteryManager` + `PowerManager` | capacité (3000 → 6000 mAh), niveau (0-100%), charging (true/false) | < 20% → dégradation 1 tier. < 10% → T0. Charging → pas de dégradation batterie. |
+| **Réseau** | `ConnectivityManager` | `WIFI`, `CELLULAR_5G`, `CELLULAR_4G`, `CELLULAR_3G`, `OFFLINE` | OFFLINE → pas cloud fallback, pas téléchargement modèles. WIFI → téléchargement modèles autorisé. CELLULAR → téléchargement models avec opt-in utilisateur (data saver). |
+
+#### 14.7.2 Les 6 tiers de capacités
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    GEOSYLVA — ARCHITECTURE MULTI-TIERS                    │
+├──────────┬──────────────────────────────────────────────────────────────┤
+│  TIER 5  │  Flagship 2025-2026 — Hybride NPU + GPU + Cloud fallback     │
+│ (ULTRA)  │  Samsung S25/S26, Xiaomi 17, OnePlus 15, iPhone 17 Pro      │
+│          │  RAM ≥ 12 GB, NPU Hexagon v81+ ou Apple Neural Engine 4     │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│  TIER 4  │  Haut de gamme 2024-2025 — GPU + NPU + AICore               │
+│ (HIGH)   │  Samsung S24, Pixel 9, iPhone 16 Pro, Xiaomi 14            │
+│          │  RAM 8-12 GB, NPU Hexagon v73+ ou Apple Neural Engine 3     │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│  TIER 3  │  Milieu-haut 2023-2024 — GPU + AICore optionnel            │
+│ (MID+)   │  Samsung S23, Pixel 8, iPhone 15 Pro, OnePlus 12           │
+│          │  RAM 6-8 GB, GPU Adreno 7xx+ ou Mali-G7xx                   │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│  TIER 2  │  Milieu 2022-2023 — GPU limité + CPU LLM                   │
+│ (MID)    │  Samsung S22, Pixel 7, iPhone 14, Redmi Note 12 Pro        │
+│          │  RAM 4-6 GB, GPU Adreno 6xx-7xx ou Mali-G6xx               │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│  TIER 1  │  Entrée 2020-2022 — CPU only, tiny LLM optionnel           │
+│ (LOW)    │  Samsung S21, Pixel 6, iPhone 12/13, Redmi Note 10         │
+│          │  RAM 3-4 GB, CPU only, pas de NPU/GPU utilisable           │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│  TIER 0  │  Legacy < 2020 — Algorithme pur, AUCUN LLM                 │
+│ (LEGACY) │  Samsung S20, Pixel 4, iPhone 11, Redmi Note 9             │
+│          │  RAM < 3 GB, CPU faible, Android 10-11                     │
+└──────────┴──────────────────────────────────────────────────────────────┘
+```
+
+#### 14.7.3 Détail des tiers — capacités et moteurs
+
+##### TIER 0 — LEGACY (algorithme pur, aucun LLM)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S20/S21 (4 GB), Pixel 4a/5, iPhone 11/12, Redmi Note 9/10, tous devices < 3 GB RAM |
+| **Moteur LLM** | **Aucun** — GeoSylva fonctionne en mode dégradé |
+| **Moteurs internes** | Algorithmes déterministes : identification botanique par clé dichotomique, calculs sylvicoles (formules fermées), FWI standard, indices de biodiversité |
+| **Identification botanique** | Clé dichotomique + matching morphologique (pas d'IA). Base de données locale SQLite. Précision: ~60-70% |
+| **Analyse terrain** | Formules fermées : volume bois (formule de Huber), âge estimé (cernes), hauteur (clinomètre trigonométrique) |
+| **Cache** | SQLite local, données préchargées (offline complet) |
+| **Taille app** | ~50 MB (pas de modèle) |
+| **UX** | Interface classique, formulaires, listes. Pas de chat. Pas de génération de texte. |
+| **Avantage** | **Fonctionne partout** — batterie optimale, offline total, aucun téléchargement de modèle |
+
+##### TIER 1 — LOW (CPU tiny LLM optionnel)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S21 (6 GB), Pixel 6 (6 GB), iPhone 12/13 (4-6 GB), Redmi Note 10 Pro |
+| **Moteur LLM** | **llama.cpp CPU** — Qwen2.5-0.5B Q4_0 (403 MB) |
+| **Performance** | ~5-10 tok/s (CPU 1-2 threads). Lent mais utilisable. |
+| **Moteurs internes** | Algorithmes T0 + légers modèles ML : MobileNetV3 pour identification botanique (TensorFlow Lite), Random Forest pour risque incendie |
+| **Identification botanique** | MobileNetV3 fine-tuned (TF Lite, ~5 MB). Précision: ~75-80%. Plus rapide que clé dichotomique. |
+| **Analyse terrain** | Formules fermées + ML léger (XGBoost pour prédiction croissance) |
+| **Cache** | SQLite + modèles ML embarqués (~10 MB total) |
+| **Taille app** | ~60 MB + 403 MB (modèle LLM optionnel, téléchargement différé) |
+| **UX** | Chat basique (réponse lente ~5 tok/s). Formulaires intelligents. Suggestions automatiques. |
+| **Fallback** | Si utilisateur refuse téléchargement LLM → mode T0 automatique |
+
+##### TIER 2 — MID (GPU limité + CPU LLM)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S22 (8 GB), Pixel 7 (8 GB), iPhone 14 (6 GB), OnePlus 11, Redmi K60 |
+| **Moteur LLM** | **llama.cpp GPU (OpenCL)** — Qwen2.5-1.5B Q4_0 (1.0 GB) ou Qwen2.5-0.5B Q4_0 (403 MB) |
+| **Performance** | Qwen2.5-0.5B: ~20-30 tok/s (GPU). Qwen2.5-1.5B: ~10-15 tok/s (GPU limité). |
+| **Moteurs internes** | Algorithmes + MobileNetV3 + EfficientNet-Lite pour botanique. TF Lite GPU delegate. |
+| **Identification botanique** | EfficientNet-Lite0 fine-tuned (TF Lite GPU, ~15 MB). Précision: ~82-85%. |
+| **Analyse terrain** | Algorithmes + ML + LLM pour génération de rapports simples |
+| **Multimodal** | Non (texte seul pour LLM). Identification via modèle ML dédié (pas LLM vision). |
+| **Cache** | SQLite + Room + modèles ML + GGUF |
+| **Taille app** | ~80 MB + 1.0 GB (LLM) + 15 MB (ML) |
+| **UX** | Chat fluide (20+ tok/s avec 0.5B). Rapports auto. Analyse de terrain assistée. |
+
+##### TIER 3 — MID+ (GPU + AICore optionnel)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S23 (8 GB), Pixel 8 (8 GB), iPhone 15 Pro (8 GB), OnePlus 12, OPPO Find X6 |
+| **Moteur LLM** | **llama.cpp GPU** — Qwen2.5-1.5B Q4_0 (34 tok/s) **OU** MLC LLM — Llama 3 8B Q4 (~10-15 tok/s) |
+| **AICore** | Si disponible → Gemini Nano pour summarization, proofreading, smart reply (gratuit, système) |
+| **Apple** | MLC LLM Metal — Llama 3 8B Q4 (~15 tok/s) ou llama.cpp CPU (17 tok/s 1B) |
+| **Performance** | 34 tok/s (Qwen 1.5B GPU), 15 tok/s (Llama 3 8B), ~30 tok/s (Gemini Nano si AICore) |
+| **Moteurs internes** | Algorithmes + EfficientNet-B0 + YOLOv8n pour détection objets terrain (TF Lite GPU) |
+| **Identification botanique** | EfficientNet-B0 + LLM pour description espèce (génération texte à partir de prédiction ML) |
+| **Multimodal** | Partiel — Gemini Nano image description (si AICore). Sinon ML dédié uniquement. |
+| **Cache** | Room + GGUF + .task (TF Lite) |
+| **Taille app** | ~100 MB + 1.0-4.0 GB (LLM selon choix utilisateur) |
+| **UX** | Chat rapide (34 tok/s). Rapports détaillés. Suggestions contextuelles. Smart reply. |
+
+##### TIER 4 — HIGH (GPU + NPU + AICore)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S24/S24 Ultra (12 GB), Pixel 9/9 Pro (12-16 GB), iPhone 16 Pro (8 GB), Xiaomi 14 (12 GB) |
+| **Moteur LLM principal** | **LiteRT-LM GPU** — Gemma 4 E2B (2.6 GB, multimodal text+image+audio) |
+| **Moteur LLM secondaire** | **Qualcomm AI Hub NPU** — Llama 3.1 8B w4a16 (4 GB, reasoning complexe) **OU** Gemini Nano (AICore) |
+| **Moteur LLM Apple** | **Apple Intelligence** (AFM 3B, 30 tok/s, intégré iOS 18+) + LiteRT-LM Metal Gemma 4 E2B |
+| **Performance** | Gemma 4 E2B: 40-52 tok/s (GPU). Llama 3.1 8B: 15-16 tok/s (NPU). AFM: 30 tok/s. |
+| **Moteurs internes** | Algorithmes + YOLOv8s + EfficientNet-B2 + modèles géospatiaux légers (Prithvi nano si possible) |
+| **Identification botanique** | **LLM multimodal** — Gemma 4 E2B analyse directement la photo (texte + image). Précision: ~88-92%. |
+| **Analyse terrain** | LLM génère rapports complets, analyse croisée multi-facteurs, recommandations sylvicoles |
+| **Multimodal** | **Oui** — photo → analyse LLM, audio → transcription, texte → rapport |
+| **Architecture** | **Hybride** : LiteRT-LM (chat + multimodal) + Qualcomm AI Hub (reasoning) + AICore (summarization) |
+| **Cache** | Room + .litertlm + GGUF/w4a16 + .task |
+| **Taille app** | ~120 MB + 2.6 GB (Gemma) + 4 GB (Llama NPU optionnel) |
+| **UX** | Chat fluide multimodal (52 tok/s). Analyse photo temps réel. Rapports professionnels. Tool calling. |
+
+##### TIER 5 — ULTRA (Hybride NPU + GPU + MLLM-NPU + Cloud fallback)
+
+| Élément | Détail |
+|---|---|
+| **Devices** | Samsung S25/S26 Ultra (12-16 GB), Xiaomi 17 Ultra, OnePlus 15, iPhone 17 Pro, OPPO Find X7 (24 GB) |
+| **Moteur prefill** | **MLLM-NPU** — 1000+ tok/s prefill (NPU Hexagon). Traitement instantané des prompts longs. 30.7x économies batterie. |
+| **Moteur decode** | **LiteRT-LM GPU + MTP** — Gemma 4 E2B (52-56 tok/s decode). Multi-Token Prediction >2x. |
+| **Moteur reasoning** | **Qualcomm AI Hub NPU** — Llama 3.1 8B w4a16 (16.4 tok/s). Pour analyses complexes. |
+| **Moteur système** | **Gemini Nano v3** (AICore) — summarization, smart reply, image description. Gratuit, intégré. |
+| **Apple** | **Apple Intelligence** (AFM 3B v2, 2-bit QAT) + LiteRT-LM Metal Gemma 4 E2B (56 tok/s GPU) |
+| **Performance** | Prefill: 1000+ tok/s. Decode: 52-56 tok/s. Reasoning: 16 tok/s. Batterie: 30x économies. |
+| **Moteurs internes** | Algorithmes + YOLOv8m + EfficientNet-B3 + Prithvi-EO-2.0 nano (si fine-tuned forêt française) |
+| **Identification botanique** | **LLM multimodal + ML dédié** — Gemma 4 E2B analyse photo + YOLOv8m détecte objets + Prithvi analyse canopy. Précision: ~92-95%. |
+| **Analyse terrain** | **Pipeline complet** : photo → ML détection → LLM analyse → raisonnement Llama 8B → rapport professionnel |
+| **Multimodal** | **Complet** — texte + image + audio (Gemma 4 E2B multimodal natif) |
+| **Tool calling** | **Oui** — LLM peut appeler API GeoSylva (calculs sylvicoles, requêtes PostGIS, fetch données capteurs) |
+| **Cloud fallback** | Si raisonnement > 8B nécessaire → Groq API (Llama 3.3 70B) ou Gemini API (cloud, payant, opt-in) |
+| **Architecture** | **4 moteurs en parallèle** : MLLM-NPU (prefill) + LiteRT-LM (decode multimodal) + Qualcomm AI Hub (reasoning) + AICore (système) |
+| **Cache** | Room + .litertlm + QNN context + GGUF + .task + cache MLLM |
+| **Taille app** | ~150 MB + 2.6 GB (Gemma) + 4 GB (Llama NPU) + 500 MB (ML modèles) = ~7.2 GB total |
+| **UX** | **Expérience complète** — chat instantané multimodal, analyse photo temps réel, raisonnement complexe, rapports professionnels, tool calling, offline total. |
+
+#### 14.7.4 Matrice de dégradation gracieuse
+
+> Quand un tier ne peut pas fonctionner (modèle non téléchargé, NPU indisponible, batterie faible), GeoSylva descend automatiquement au tier inférieur.
+
+```
+T5 ULTRA ──batterie < 20%──→ T4 HIGH ──NPU indisponible──→ T3 MID+
+    │                              │                            │
+    │                              │                            ├──modèle non téléchargé──→ T2 MID
+    │                              │                            │
+    └──storage < 5 GB──→ T3 MID+   └──RAM pressure──→ T2 MID    │
+                                                                  │
+    T2 MID ──GPU indisponible──→ T1 LOW ──modèle non téléchargé──→ T0 LEGACY
+```
+
+| Trigger | Action |
+|---|---|
+| Batterie < 20% | Désactive NPU + LLM 8B. Garde LiteRT-LM GPU Gemma 4 E2B (léger). |
+| Batterie < 10% | Désactive tous les LLM. Mode T0 (algorithme pur). |
+| RAM pressure (onTrimMemory LEVEL_LOW) | Décharge LLM 8B de la mémoire. Garde LLM léger. |
+| RAM pressure (onTrimMemory LEVEL_CRITICAL) | Décharge tous les LLM. Mode T0. |
+| Storage < 1 GB | Empêche téléchargement nouveaux modèles. Mode T0/T1. |
+| NPU indisponible (QNN init fail) | Fallback GPU → CPU. Tier -1. |
+| AICore absent | Désactive features Gemini Nano. Pas de fallback (features désactivées). |
+| Pas de réseau | Tout fonctionne offline (sauf cloud fallback T5). |
+
+#### 14.7.5 Modèles par tier — récapitulatif
+
+| Tier | LLM principal | LLM secondaire | LLM système | ML botanique | ML détection | Taille totale modèles |
+|---|---|---|---|---|---|---|
+| **T0** | — | — | — | — | — | 0 MB |
+| **T1** | Qwen2.5-0.5B Q4 (CPU) | — | — | MobileNetV3 (5 MB) | — | 408 MB |
+| **T2** | Qwen2.5-1.5B Q4 (GPU) | Qwen2.5-0.5B Q4 (fallback) | — | EfficientNet-Lite0 (15 MB) | — | 1.4 GB |
+| **T3** | Qwen2.5-1.5B Q4 (GPU) | Llama 3 8B Q4 (GPU, opt) | Gemini Nano (si AICore) | EfficientNet-B0 (20 MB) | YOLOv8n (12 MB) | 1.0-4.0 GB |
+| **T4** | Gemma 4 E2B (LiteRT-LM GPU) | Llama 3.1 8B w4a16 (NPU) | Gemini Nano (AICore) | EfficientNet-B2 (35 MB) | YOLOv8s (25 MB) | 6.7 GB |
+| **T5** | Gemma 4 E2B (LiteRT-LM GPU) | Llama 3.1 8B w4a16 (NPU) | Gemini Nano v3 (AICore) | EfficientNet-B3 (50 MB) | YOLOv8m (40 MB) | 7.2 GB |
+
+#### 14.7.6 Pipeline d'inférence par tier — cas d'usage "identification botanique + rapport"
+
+```
+TIER 0 — LEGACY:
+  Photo → clé dichotomique (SQLite) → espèce probable (60%) → formulaire manuel
+
+TIER 1 — LOW:
+  Photo → MobileNetV3 (TF Lite CPU) → espèce (75%) → Qwen 0.5B génère description (5 tok/s)
+
+TIER 2 — MID:
+  Photo → EfficientNet-Lite0 (TF Lite GPU) → espèce (82%) → Qwen 1.5B génère rapport (20 tok/s)
+
+TIER 3 — MID+:
+  Photo → EfficientNet-B0 (TF Lite GPU) → espèce (85%) → Qwen 1.5B rapport (34 tok/s)
+  + Gemini Nano smart reply (si AICore)
+
+TIER 4 — HIGH:
+  Photo → Gemma 4 E2B multimodal (LiteRT-LM GPU) → analyse directe (88%)
+  → Llama 3.1 8B (NPU) raisonnement croisé → rapport professionnel complet
+
+TIER 5 — ULTRA:
+  Photo → YOLOv8m détection objets + Gemma 4 E2B analyse multimodale
+  → MLLM-NPU prefill contexte (1000 tok/s) + LiteRT-LM decode (52 tok/s)
+  → Llama 3.1 8B (NPU) raisonnement + tool calling API GeoSylva
+  → rapport professionnel + recommandations sylvicoles + alertes
+```
+
+#### 14.7.7 Implémentation Kotlin — DeviceCapabilityProfiler
+
+```kotlin
+enum class DeviceTier {
+    T0_LEGACY, T1_LOW, T2_MID, T3_MID_PLUS, T4_HIGH, T5_ULTRA
+}
+
+enum class OsType { ANDROID, IOS, HARMONYOS, OTHER }
+
+enum class CpuArch { ARM64_V8A, ARMEABI_V7A, X86_64, X86 }
+
+enum class GpuTier { NONE, LIMITED, CAPABLE, HIGH_END }
+
+enum class StorageType { EMMC, UFS_2X, UFS_3X, UFS_4X, UNKNOWN }
+
+enum class NetworkType { WIFI, CELLULAR_5G, CELLULAR_4G, CELLULAR_3G, OFFLINE }
+
+data class DeviceCapabilities(
+    // Système d'exploitation
+    val osType: OsType,
+    val osVersion: String,              // "14", "15", "18.1", "HarmonyOS 5.0"
+    val apiLevel: Int,                  // Build.VERSION.SDK_INT (Android)
+    val securityPatch: String?,         // "2025-07-01" (Android)
+    // Architecture CPU
+    val cpuArch: CpuArch,
+    val cpuCores: Int,                  // 4, 6, 8, 10, 12
+    val cpuMaxFreqGHz: Double,          // 2.0, 2.8, 3.5
+    val hasDotprod: Boolean,            // INT8 dot product (MLLM-NPU prereq)
+    val hasI8mm: Boolean,               // INT8 matmul acceleration
+    val hasSve: Boolean,                // Scalable Vector Extension (T4+)
+    // SoC et NPU
+    val socManufacturer: String,        // "Qualcomm", "Mediatek", "Google", "Samsung", "Apple"
+    val socModel: String,               // "SM8750", "MT6989", "Tensor G4"
+    val hasNpu: Boolean,
+    val npuVersion: String?,            // "v69", "v73", "v81", null
+    val npuTops: Int?,                  // 4, 30, 73
+    // GPU
+    val gpuModel: String,               // "Adreno-830", "Mali-G720", "Apple-GPU-15core"
+    val gpuTier: GpuTier,               // NONE, LIMITED, CAPABLE, HIGH_END
+    val hasOpenCL: Boolean,
+    val openclVersion: String?,         // "2.0", "3.0", null
+    val hasVulkan: Boolean,
+    val hasMetal: Boolean,              // iOS only
+    val metalVersion: String?,          // "3", "4", null
+    // Mémoire et stockage
+    val totalRamMB: Int,                // 2048, 4096, 8192, 12288, 24576
+    val availableRamMB: Int,            // dynamic
+    val availableStorageMB: Long,
+    val storageType: StorageType,       // EMMC, UFS_2X, UFS_3X, UFS_4X
+    // Services système
+    val hasAICore: Boolean,             // Gemini Nano
+    val hasGooglePlayServices: Boolean,
+    val hasMlKitGenAI: Boolean,
+    val hasAppleIntelligence: Boolean,
+    val hasFoundationModelsFramework: Boolean,  // iOS 19+
+    val nnApiVersion: String?,          // "1.0", "1.1", "1.2", "1.3"
+    // Device identification
+    val manufacturer: String,           // "Samsung", "Google", "Xiaomi", "Apple"
+    val deviceModel: String,            // "SM-S931B", "Pixel 9", "iPhone17,1"
+    val screenInches: Double,           // 5.5, 6.7, 7.6
+    val screenRefreshHz: Int,           // 60, 90, 120
+    val batteryCapacityMah: Int,        // 3000, 4000, 5000, 6000
+    val batteryLevel: Int,              // 0-100
+    val isCharging: Boolean,
+    val networkType: NetworkType,
+    // Résultat
+    val tier: DeviceTier,
+    // Apple spécifique
+    val appleNeuralEngine: String?      // "A15", "A17Pro", "A19Pro", null
+)
+
+class DeviceCapabilityProfiler(private val context: Context) {
+
+    fun profile(): DeviceCapabilities {
+        // 1. Système d'exploitation
+        val osType = detectOsType()
+        val osVersion = detectOsVersion()
+        val apiLevel = if (osType == OsType.ANDROID) Build.VERSION.SDK_INT else 0
+        val securityPatch = if (osType == OsType.ANDROID) Build.VERSION.SECURITY_PATCH else null
+
+        // 2. Architecture CPU
+        val cpuArch = detectCpuArch()
+        val cpuCores = Runtime.getRuntime().availableProcessors()
+        val cpuMaxFreq = readCpuMaxFreqGHz()
+        val cpuFeatures = readCpuFeatures()
+        val hasDotprod = cpuFeatures.contains("dotprod")
+        val hasI8mm = cpuFeatures.contains("i8mm")
+        val hasSve = cpuFeatures.contains("sve")
+
+        // 3. SoC et NPU
+        val socManufacturer = Build.SOC_MANUFACTURER ?: "Unknown"
+        val socModel = Build.SOC_MODEL ?: "Unknown"
+        val hasNpu = probeNpuAvailability(socManufacturer)
+        val npuVersion = detectHexagonVersion()
+        val npuTops = estimateNpuTops(socModel)
+
+        // 4. GPU
+        val gpuModel = detectGpuModel()
+        val gpuTier = classifyGpu(gpuModel)
+        val hasOpenCL = probeOpenCL()
+        val openclVersion = getOpenCLVersion()
+        val hasVulkan = hasVulkanSupport()
+        val hasMetal = osType == OsType.IOS
+        val metalVersion = if (hasMetal) detectMetalVersion() else null
+
+        // 5. Mémoire et stockage
+        val totalRamMB = getTotalRamMB()
+        val availableRamMB = getAvailableRamMB()
+        val availableStorageMB = getAvailableStorageMB()
+        val storageType = detectStorageType()
+
+        // 6. Services système
+        val hasAICore = checkAICore()
+        val hasGooglePlayServices = checkGooglePlayServices()
+        val hasMlKitGenAI = checkMlKitGenAI()
+        val hasAppleIntelligence = checkAppleIntelligence(osType, osVersion)
+        val hasFoundationModels = checkFoundationModels(osType, osVersion)
+        val nnApiVersion = detectNnApiVersion()
+
+        // 7. Device identification
+        val manufacturer = Build.MANUFACTURER ?: "Unknown"
+        val deviceModel = Build.MODEL ?: "Unknown"
+        val screenInches = getScreenInches()
+        val screenRefreshHz = getScreenRefreshHz()
+        val batteryCapacityMah = getBatteryCapacityMah()
+        val batteryLevel = getBatteryLevel()
+        val isCharging = isDeviceCharging()
+        val networkType = detectNetworkType()
+
+        // 8. Apple spécifique
+        val appleNeuralEngine = detectAppleNeuralEngine(osType, deviceModel)
+
+        // 9. Détermination du tier
+        val tier = determineTier(
+            osType, osVersion, apiLevel, cpuArch, cpuCores, cpuMaxFreq,
+            hasDotprod, hasI8mm, hasSve,
+            socManufacturer, socModel, hasNpu, npuVersion, npuTops,
+            gpuTier, hasOpenCL, hasMetal, metalVersion,
+            totalRamMB, availableRamMB, availableStorageMB, storageType,
+            hasAICore, hasGooglePlayServices, hasAppleIntelligence,
+            hasFoundationModels, nnApiVersion,
+            batteryLevel, isCharging, networkType
+        )
+
+        return DeviceCapabilities(
+            osType, osVersion, apiLevel, securityPatch,
+            cpuArch, cpuCores, cpuMaxFreq, hasDotprod, hasI8mm, hasSve,
+            socManufacturer, socModel, hasNpu, npuVersion, npuTops,
+            gpuModel, gpuTier, hasOpenCL, openclVersion, hasVulkan, hasMetal, metalVersion,
+            totalRamMB, availableRamMB, availableStorageMB, storageType,
+            hasAICore, hasGooglePlayServices, hasMlKitGenAI,
+            hasAppleIntelligence, hasFoundationModels, nnApiVersion,
+            manufacturer, deviceModel, screenInches, screenRefreshHz,
+            batteryCapacityMah, batteryLevel, isCharging, networkType,
+            tier, appleNeuralEngine
+        )
+    }
+
+    private fun determineTier(
+        osType: OsType, osVersion: String, apiLevel: Int,
+        cpuArch: CpuArch, cpuCores: Int, cpuMaxFreq: Double,
+        hasDotprod: Boolean, hasI8mm: Boolean, hasSve: Boolean,
+        socManufacturer: String, socModel: String,
+        hasNpu: Boolean, npuVersion: String?, npuTops: Int?,
+        gpu: GpuTier, hasOpenCL: Boolean, hasMetal: Boolean, metalVersion: String?,
+        totalRamMB: Int, availableRamMB: Int, availableStorageMB: Long, storageType: StorageType,
+        hasAICore: Boolean, hasGooglePlayServices: Boolean,
+        hasAppleIntelligence: Boolean, hasFoundationModels: Boolean,
+        nnApiVersion: String?,
+        batteryLevel: Int, isCharging: Boolean, networkType: NetworkType
+    ): DeviceTier {
+        // Filtres prélables — blocages hard
+        // 32-bit ARM → T0/T1 max (limite 2 GB/process)
+        if (cpuArch == CpuArch.ARMEABI_V7A || cpuArch == CpuArch.X86)
+            return if (totalRamMB >= 3072) DeviceTier.T1_LOW else DeviceTier.T0_LEGACY
+
+        // Android < 12 → T2 max (pas AICore, API limitées)
+        val androidVersionCap = if (apiLevel < 31) 2
+            else if (apiLevel < 34) 3
+            else if (apiLevel < 35) 4
+            else 5
+
+        // iOS < 17 → T2 max (pas Apple Intelligence)
+        val iosVersionCap = when {
+            osType != OsType.IOS -> 5
+            osVersion.startsWith("15") -> 1
+            osVersion.startsWith("16") -> 2
+            osVersion.startsWith("17") -> 3
+            osVersion.startsWith("18") -> 4
+            else -> 5
+        }
+
+        // HarmonyOS → T3 max (pas AICore, pas Apple Intelligence)
+        val osCap = if (osType == OsType.HARMONYOS) 3 else minOf(androidVersionCap, iosVersionCap)
+
+        // Pas Google Play Services (Android) → T2 max
+        val gpsCap = if (osType == OsType.ANDROID && !hasGooglePlayServices) 2 else 5
+
+        // Pas OpenCL et pas Metal → T1 max (CPU only)
+        val gpuCap = when {
+            hasMetal && metalVersion in listOf("3", "4") -> 5
+            hasOpenCL -> 5
+            else -> 1
+        }
+
+        // CPU cores cap
+        val cpuCoreCap = when {
+            cpuCores < 6 -> 1
+            cpuCores < 8 -> 2
+            cpuCores < 10 -> 3
+            else -> 5
+        }
+
+        // CPU freq cap
+        val cpuFreqCap = when {
+            cpuMaxFreq < 2.0 -> 1
+            cpuMaxFreq < 2.8 -> 3
+            else -> 5
+        }
+
+        // NPU cap
+        val npuCap = when {
+            !hasNpu -> 3  // Pas NPU → T3 max (GPU only)
+            npuVersion == "v81" || npuVersion == "v82" || npuVersion == "v83" -> 5
+            npuVersion == "v73" || npuVersion == "v75" || npuVersion == "v79" -> 4
+            npuVersion == "v69" -> 2
+            else -> 3
+        }
+
+        // MLLM-NPU prereq: dotprod + i8mm
+        val mllmCap = if (hasDotprod && hasI8mm) 5 else 3
+
+        // RAM cap
+        val ramCap = when {
+            totalRamMB < 3072 -> 0
+            totalRamMB < 4096 -> 1
+            totalRamMB < 6144 -> 2
+            totalRamMB < 8192 -> 3
+            totalRamMB < 12288 -> 4
+            else -> 5
+        }
+
+        // Storage cap
+        val storageCap = when {
+            availableStorageMB < 1024 -> 1
+            availableStorageMB < 3072 -> 2
+            availableStorageMB < 6144 -> 4
+            else -> 5
+        }
+
+        // Storage type cap (load time impact)
+        val storageTypeCap = when (storageType) {
+            StorageType.EMMC -> 2  // Modèles > 2 GB déconseillés
+            StorageType.UFS_2X -> 3
+            StorageType.UFS_3X -> 5
+            StorageType.UFS_4X -> 5
+            StorageType.UNKNOWN -> 3
+        }
+
+        // Apple Intelligence cap
+        val appleCap = if (hasAppleIntelligence) 4 else if (hasFoundationModels) 5 else 0
+
+        // AICore cap
+        val aicoreCap = if (hasAICore) 5 else 0
+
+        // NNAPI cap
+        val nnapiCap = when (nnApiVersion) {
+            "1.3" -> 4
+            "1.2" -> 3
+            "1.1" -> 2
+            "1.0" -> 1
+            else -> 3
+        }
+
+        // Batterie cap (dynamic)
+        val batteryCap = when {
+            isCharging -> 5
+            batteryLevel < 10 -> 0
+            batteryLevel < 20 -> 4
+            else -> 5
+        }
+
+        // Tier = minimum de tous les caps
+        val tierInt = listOf(
+            osCap, gpsCap, gpuCap, cpuCoreCap, cpuFreqCap,
+            npuCap, mllmCap, ramCap, storageCap, storageTypeCap,
+            appleCap.coerceAtLeast(if (osType == OsType.IOS) 0 else 5),
+            aicoreCap.coerceAtLeast(if (osType == OsType.ANDROID) 0 else 5),
+            nnapiCap, batteryCap
+        ).min()
+
+        return when (tierInt) {
+            0 -> DeviceTier.T0_LEGACY
+            1 -> DeviceTier.T1_LOW
+            2 -> DeviceTier.T2_MID
+            3 -> DeviceTier.T3_MID_PLUS
+            4 -> DeviceTier.T4_HIGH
+            else -> DeviceTier.T5_ULTRA
+        }
+    }
+}
+```
+
+#### 14.7.8 Implémentation Kotlin — LlmEngineManager
+
+```kotlin
+class LlmEngineManager(private val caps: DeviceCapabilities) {
+    private var primaryEngine: LlmEngine? = null
+    private var reasoningEngine: LlmEngine? = null
+    private var systemEngine: LlmEngine? = null
+    private var prefillEngine: LlmEngine? = null  // T5 only (MLLM-NPU)
+
+    fun initialize() {
+        when (caps.tier) {
+            DeviceTier.T0_LEGACY -> { /* No LLM engines */ }
+            DeviceTier.T1_LOW -> {
+                primaryEngine = LlamaCppEngine(
+                    modelPath = "qwen2.5-0.5b-q4_0.gguf",
+                    backend = Backend.CPU(threads = 2)
+                )
+            }
+            DeviceTier.T2_MID -> {
+                primaryEngine = LlamaCppEngine(
+                    modelPath = "qwen2.5-1.5b-q4_0.gguf",
+                    backend = Backend.GPU_OPENCL
+                )
+            }
+            DeviceTier.T3_MID_PLUS -> {
+                primaryEngine = LlamaCppEngine(
+                    modelPath = "qwen2.5-1.5b-q4_0.gguf",
+                    backend = Backend.GPU_OPENCL
+                )
+                if (caps.hasAICore)
+                    systemEngine = AICoreEngine()
+            }
+            DeviceTier.T4_HIGH -> {
+                primaryEngine = LiteRtLmEngine(
+                    modelPath = "gemma-4-e2b-it.litertlm",
+                    backend = Backend.GPU,
+                    enableMtp = true
+                )
+                if (caps.hasNpu)
+                    reasoningEngine = QualcommAihubEngine(
+                        modelPath = "llama-3.1-8b-w4a16.bin",
+                        backend = Backend.NPU
+                    )
+                if (caps.hasAICore)
+                    systemEngine = AICoreEngine()
+            }
+            DeviceTier.T5_ULTRA -> {
+                prefillEngine = MllmNpuEngine(
+                    modelPath = "qwen3-1.7b-qnn.bin",
+                    npuVersion = caps.npuVersion!!
+                )
+                primaryEngine = LiteRtLmEngine(
+                    modelPath = "gemma-4-e2b-it.litertlm",
+                    backend = Backend.GPU,
+                    enableMtp = true
+                )
+                reasoningEngine = QualcommAihubEngine(
+                    modelPath = "llama-3.1-8b-w4a16.bin",
+                    backend = Backend.NPU
+                )
+                if (caps.hasAICore)
+                    systemEngine = AICoreEngine()
+            }
+        }
+    }
+
+    suspend fun generate(prompt: String, mode: GenerateMode): String {
+        return when (mode) {
+            GenerateMode.CHAT -> primaryEngine?.generate(prompt) ?: fallbackAlgorithmic(prompt)
+            GenerateMode.REASONING -> reasoningEngine?.generate(prompt) ?: primaryEngine?.generate(prompt) ?: fallbackAlgorithmic(prompt)
+            GenerateMode.SUMMARIZE -> systemEngine?.summarize(prompt) ?: primaryEngine?.generate(prompt) ?: fallbackAlgorithmic(prompt)
+            GenerateMode.MULTIMODAL -> (primaryEngine as? LiteRtLmEngine)?.generateWithImage(prompt, imageBytes) ?: fallbackAlgorithmic(prompt)
+        }
+    }
+
+    private fun fallbackAlgorithmic(prompt: String): String {
+        // T0 fallback — algorithmic response, no LLM
+        return AlgorithmicEngine.process(prompt)
+    }
+}
+```
+
+#### 14.7.9 Téléchargement progressif des modèles
+
+> Les modèles ne sont pas embarqués dans l'APK. Téléchargement à la demande selon tier et choix utilisateur.
+
+| Tier | Modèle | Taille | Quand télécharger | Source |
+|---|---|---|---|---|
+| T1 | Qwen2.5-0.5B Q4_0 | 403 MB | Opt-in utilisateur (dialogue "Activer l'assistant IA ?") | HuggingFace |
+| T2 | Qwen2.5-1.5B Q4_0 | 1.0 GB | Opt-in utilisateur | HuggingFace |
+| T3 | Qwen2.5-1.5B Q4_0 | 1.0 GB | Au premier lancement (recommandé) | HuggingFace |
+| T3 | Llama 3 8B Q4 (optionnel) | 4.0 GB | Opt-in explicite ("Mode raisonnement avancé") | HuggingFace |
+| T4 | Gemma 4 E2B .litertlm | 2.6 GB | Au premier lancement (recommandé) | HuggingFace LiteRT Community |
+| T4 | Llama 3.1 8B w4a16 (optionnel) | 4.0 GB | Opt-in explicite | Qualcomm AI Hub |
+| T5 | Gemma 4 E2B .litertlm | 2.6 GB | Au premier lancement | HuggingFace LiteRT Community |
+| T5 | Llama 3.1 8B w4a16 | 4.0 GB | Au premier lancement (recommandé pour T5) | Qualcomm AI Hub |
+| T5 | Qwen3-1.7B QNN (MLLM-NPU) | 1.5 GB | Opt-in ("Mode ultra-performance") | ModelScope |
+
+**Stratégie de téléchargement** :
+1. App s'installe en mode T0 (50 MB, aucun modèle)
+2. Au premier lancement, DeviceCapabilityProfiler détecte le tier
+3. Dialogue : "Votre téléphone supporte l'assistant IA. Télécharger le modèle recommandé (X GB) ?"
+4. Téléchargement en background avec WorkManager + progress bar
+5. Modèles optionnels (reasoning, MLLM-NPU) → menu Settings > "Capacités IA avancées"
+6. Si utilisateur refuse → mode T0/T1 (algorithme + ML léger embarqué dans l'APK)
+
+#### 14.7.10 Pour Ignis / Artemis (app mobile wildfire)
+
+L'architecture multi-tiers s'applique aussi à Ignis, avec des adaptations :
+
+| Tier | Ignis — capacités | Modèle |
+|---|---|---|
+| T0 | Calcul FWI manuel + alertes SMS. Pas d'analyse IA. | — |
+| T1 | Détection fumée MobileNetV3 + chat basique | Qwen 0.5B + MobileNetV3 |
+| T2 | Détection feu YOLOv8n + analyse risque + chat | Qwen 1.5B + YOLOv8n |
+| T3 | Détection feu YOLOv8n + analyse satellite + Gemini Nano | Qwen 1.5B + YOLOv8n + AICore |
+| T4 | Analyse multimodale photo terrain + raisonnement + alertes intelligentes | Gemma 4 E2B + Llama 3.1 8B NPU |
+| T5 | Pipeline complet : photo → détection → analyse → raisonnement → alerte + recommandation tactique | Gemma 4 E2B + Llama 3.1 8B + MLLM-NPU + AICore |
 
 ### 14.8 Solutions payantes / commerciales
 
@@ -1475,20 +2148,197 @@ def fetch_firms_fire_detections(
 | **Anthropic Claude API** | Cloud LLM | **Payant** ($3-15/M tokens) | Claude 3.5 Sonnet. Pas offline. |
 | **Groq API** | Cloud LLM | **Payant** (gratuit tier limité) | Llama 3.3 70B ultra-rapide. Pas offline. |
 
-> **Note** : Toutes les solutions on-device listées en sections 14.1-14.4 sont **gratuites**. Les solutions payantes sont uniquement cloud (alternative complémentaire, pas replacement).
+> **Note** : Toutes les solutions on-device listées en sections 14.1-14.4 sont **gratuites**. Les solutions payantes sont uniquement cloud (alternative complémentaire, pas replacement). Le cloud fallback est **opt-in** et uniquement proposé en T5 pour les requêtes nécessitant un modèle > 8B.
 
 ---
+
+## 14.9 Architecture validée — GeoSylva Android, LLM et offline-first
+
+> **Décision d'architecture validée** : GeoSylva doit rester totalement fonctionnel hors connexion. Le LLM assiste les moteurs internes ; il ne remplace pas les calculs forestiers, dendrométriques ou réglementaires.
+
+### 14.9.1 Hiérarchie des traitements
+
+```text
+Question / observation utilisateur
+        ↓
+Classification de l'intention
+        ↓
+Moteurs GeoSylva déterministes
+        ↓
+Modèles ML spécialisés
+        ↓
+LLM local pour interprétation et rédaction
+        ↓
+Validation des valeurs, unités et sources
+        ↓
+Réponse avec preuves, incertitudes et données manquantes
+```
+
+Les calculs de volume, âge, croissance, risque incendie, pédologie, biodiversité et sylviculture sont produits par les moteurs internes et les modèles spécialisés. Le LLM peut expliquer, comparer, résumer, interroger les moteurs via des outils typés et générer un rapport ; il ne peut pas inventer une valeur ni modifier directement les données.
+
+### 14.9.2 Offline-first
+
+La base locale est la source de vérité pour l'interface, y compris lorsque le réseau est disponible. Elle contient les observations, parcelles, arbres, mesures, cartes préchargées, règles, résultats calculés, sources et versions de modèles.
+
+Chaque observation doit conserver :
+
+- un identifiant unique, la date, la position et la précision GPS ;
+- l'utilisateur et l'appareil d'origine ;
+- les sources et versions de données utilisées ;
+- l'algorithme ou modèle utilisé ;
+- le résultat, le niveau de confiance et les avertissements ;
+- le statut de synchronisation.
+
+Les écritures distantes sont placées dans une **outbox locale**. Room conserve la file et WorkManager la vide lorsque les contraintes réseau, batterie et alimentation sont favorables. En cas de conflit, la résolution doit être explicite et historisée.
+
+### 14.9.3 Moteurs et LLM
+
+| Niveau | Responsabilité | Technologie cible |
+|---|---|---|
+| Algorithmes | Calculs exacts et explicables | Kotlin, SQLite, règles, formules |
+| ML spécialisé | Botanique, images, risques | LiteRT/TFLite, EfficientNet, MobileNet |
+| Petit LLM local | Dialogue, aide et rapports simples | Qwen 0.5B–1.5B, llama.cpp |
+| LLM avancé | Multimodal et raisonnement | LiteRT-LM, Gemma, NPU constructeur |
+
+Les fonctions doivent utiliser des appels d'outils structurés et validés : calcul dendrométrique, recherche dans le graphe de connaissances, requête cartographique, comparaison de peuplements et génération de rapport. Chaque réponse doit exposer les sources, les hypothèses, les données manquantes et un niveau de confiance.
+
+### 14.9.4 Connexions externes optionnelles
+
+Lorsque la connexion est disponible et que l'utilisateur l'autorise, GeoSylva peut interroger :
+
+- **GSIE Serveur** : synchronisation, graphe de connaissances, modèles validés, catalogues et calculs lourds ;
+- **GSIE PC** : traitement géospatial avancé, recalcul de parcelle, rapports volumineux, simulation et export ;
+- des services externes autorisés : données IGN, météo, satellite, référentiels forestiers et modèles cloud.
+
+Le fonctionnement local reste prioritaire. Les données sensibles — coordonnées précises, photos, inventaires et informations de propriété — ne quittent pas l'appareil sans consentement explicite. Le cloud fallback est désactivé par défaut.
+
+## 14.10 Page Âge / Martelage — refonte par le moteur interne GeoSylva
+
+> **Objectif** : remplacer la page actuelle par un poste de décision forestière complet, utilisable en forêt hors ligne, alimenté par les mesures dendrométriques et assisté par l'IA.
+
+### 14.10.1 Principes
+
+La page ne doit plus être un simple écran d'affichage du volume et du prix. Elle devient une vue de synthèse de la parcelle et du peuplement, avec séparation stricte entre :
+
+1. les mesures observées ;
+2. les valeurs calculées ;
+3. les estimations ;
+4. les recommandations ;
+5. les décisions validées par l'utilisateur.
+
+### 14.10.2 Données d'entrée
+
+| Domaine | Données |
+|---|---|
+| Localisation | Parcelle, peuplement, GPS, pente, altitude, exposition |
+| Dendrométrie | Essence, diamètre à 1,30 m, hauteur, âge, qualité, état sanitaire |
+| Inventaire | Nombre de tiges, placettes, surface terrière, coefficient de forme |
+| Production | Volume par arbre, volume marchand, accroissement, stock, mortalité |
+| Martelage | Arbre conservé, à marteler, réserve, sanitaire, objectif |
+| Économie | Prix par essence et qualité, coûts, débardage, frais, revenu net |
+| Contexte | Sol, climat, réglementation, biodiversité, risques et objectifs du propriétaire |
+
+Les données saisies manuellement, importées d'un capteur ou détectées par image sont distinguées et accompagnées de leur précision.
+
+### 14.10.3 Moteur de calcul dendrométrique
+
+Le moteur interne doit calculer et historiser au minimum :
+
+- volume individuel et volume total par essence ;
+- volume brut, marchand et exploitable ;
+- diamètre quadratique moyen et surface terrière ;
+- hauteur dominante et structure de peuplement ;
+- âge observé, âge estimé et intervalle d'incertitude ;
+- accroissement moyen et accroissement courant ;
+- stock de carbone et biomasse, avec facteur utilisé ;
+- taux de prélèvement et volume après martelage ;
+- prix brut, coûts estimés, revenu net et scénarios de sensibilité.
+
+Chaque résultat doit afficher la formule, les paramètres, la source et l'incertitude. Aucun prix ne doit être présenté comme définitif sans préciser la date, le marché, la qualité et les coûts retenus.
+
+### 14.10.4 Nouvelle organisation de l'écran
+
+```text
+En-tête parcelle / peuplement
+  → synthèse rapide : âge, surface, volume, valeur, alertes
+
+Onglet 1 — Inventaire
+  → arbres, mesures, photos, GPS, corrections
+
+Onglet 2 — Dendrométrie
+  → volumes, surface terrière, croissance, biomasse, incertitudes
+
+Onglet 3 — Martelage
+  → carte, liste des arbres, filtres, scénarios, validation
+
+Onglet 4 — Économie
+  → prix, coûts, revenu net, sensibilité et variantes
+
+Onglet 5 — Analyse IA
+  → explication, anomalies, comparaison, questions et rapport
+
+Onglet 6 — Sources / synchronisation
+  → données utilisées, versions, statut local/GSIE
+```
+
+### 14.10.5 Assistance IA sur la page
+
+L'IA doit enrichir la page à partir des résultats du moteur interne :
+
+- détecter les mesures incohérentes ou atypiques ;
+- signaler un diamètre incompatible avec une hauteur ou une essence ;
+- expliquer les écarts entre deux inventaires ;
+- proposer plusieurs scénarios de martelage sans les appliquer automatiquement ;
+- comparer le peuplement à des références locales ;
+- expliquer l'effet d'une variation de prix, de volume ou de coût ;
+- générer une note de martelage et un rapport professionnel ;
+- répondre à des questions telles que : « Que se passe-t-il si je conserve 20 % de surface terrière ? »
+
+La réponse IA doit toujours indiquer : **résultat calculé**, **interprétation**, **hypothèses**, **incertitudes**, **sources** et **validation requise**.
+
+### 14.10.6 Scénarios de martelage
+
+Le moteur doit permettre de comparer au moins :
+
+- martelage sanitaire ;
+- martelage d'amélioration ;
+- éclaircie par le bas ou par le haut ;
+- prélèvement selon un pourcentage de surface terrière ;
+- maintien d'arbres-habitats et de la biodiversité ;
+- scénario économique maximum ;
+- scénario de résilience climatique.
+
+Un scénario est une simulation réversible. Il ne devient une décision opérationnelle qu'après validation de l'utilisateur, avec journal de modification et signature éventuelle.
+
+### 14.10.7 Fonctionnement sans réseau et avec GSIE
+
+Hors connexion, la page utilise les mesures locales, les règles embarquées, les tarifs mis en cache, les modèles ML disponibles et le LLM installé sur le téléphone. Avec connexion, elle peut demander à GSIE Serveur ou GSIE PC un recalcul plus complet, une mise à jour des prix, une comparaison régionale ou un rapport enrichi.
+
+Les résultats distants sont enregistrés localement avec leur date, leur version de moteur et leur source. Si la connexion disparaît, l'écran revient automatiquement au dernier résultat local fiable et indique clairement ce qui n'est pas à jour.
+
+### 14.10.8 Critères de validation
+
+- Tous les calculs sont reproductibles à partir des mesures et paramètres enregistrés.
+- Le mode avion permet la saisie, le calcul et l'export d'un martelage.
+- L'IA ne modifie jamais silencieusement un arbre ou une décision.
+- Chaque prix possède une date, une source et une unité.
+- Chaque recommandation expose ses données manquantes et son niveau de confiance.
+- La synchronisation GSIE est différée, traçable et réversible.
+- La page reste utilisable sur les appareils T0 à T5 avec une dégradation fonctionnelle maîtrisée.
 
 ## 15. Historique
 
 | Date | Événement |
 |---|---|
+| 2026-07-17 | Validation et intégration de l'architecture GeoSylva Android offline-first : hiérarchie algorithmes → ML → LLM, outbox Room/WorkManager, dégradation T0-T5 et connexions optionnelles GSIE Serveur / GSIE PC |
+| 2026-07-17 | Ajout de la refonte de la page Âge / Martelage : moteur dendrométrique, scénarios de martelage, économie, assistance IA, traçabilité et fonctionnement hors connexion |
 | 2026-07-17 | Création de la note — compilation exhaustive depuis DATASET_CATALOG, IGNIS_DATA_PIPELINE, ENGINE_DATA_SOCLE, SOURCING_PLAN, GIS_ENGINE + recherche web (30 nouvelles sources) |
 | 2026-07-17 | Ajout section 10-11 : méthodes d'ingestion par source + architecture d'ingestion recommandée |
 | 2026-07-17 | Ajout section 12 : 40+ projets GitHub pertinents (simulation incendie, LiDAR, botanique, santé forêt, ingestion satellite, sol, drone AI, backend géo, UE5, KG écologique) |
 | 2026-07-17 | Extension section 12 : +30 projets (carbone forestier, downscaling AROME, distribution espèces MaxEnt, risque incendie/FWI, croissance forestière FVS, plugins QGIS, apps mobiles, XAI environnemental) — total 70+ projets |
 | 2026-07-17 | Ajout section 13 : modèles d'IA open source, LLM et plateformes (Prithvi EO 2.0, IBM Granite geospatial, WildfireGPT, GeoGPT-RAG, NVIDIA NIM, Azure AI Foundry, Ollama/vLLM, ClimateBench-M, ClimAgent) — 30+ ressources IA |
 | 2026-07-17 | Ajout section 14 : LLM sur téléphone — 10 moteurs d'inférence, 11 modèles HuggingFace, 20+ téléphones compatibles, classement par efficacité, recommandations GeoSylva/Ignis |
+| 2026-07-17 | Extension section 14.7 : architecture LLM multi-tiers complète pour GeoSylva — 6 tiers (T0 Legacy → T5 Ultra), dégradation gracieuse, DeviceCapabilityProfiler (23 critères), LlmEngineManager, téléchargement progressif, adaptation Ignis |
 
 ---
 
