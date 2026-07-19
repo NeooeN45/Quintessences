@@ -25,9 +25,22 @@ Implémente les tranches verticales suivantes des dix entités du §4 du RFC :
   sanitaires (ARCHI, DEPERIS, IBP, RFC-0016 §3.1). Distingue toujours
   symptôme observé / agent causal suspecté / agent confirmé — jamais
   une confirmation sans méthode de confirmation.
+- tranche 6/10 (dernière tranche) : `EvidenceStatement`/`ConflictRecord`
+  — ni l'une ni l'autre n'a de nouvelle table ici. `EvidenceStatement`
+  est couverte par un schéma Pydantic renforcé
+  (`gsie_api.engines.evidence.schemas.EvidenceStatementCreate`) au-dessus
+  de `AssertionModel`/`EvidenceAssessmentModel` (déjà existants).
+  `ConflictRecord` est déjà entièrement couverte par
+  `ConflictClusterModel` (ce module d'infrastructure, `governance.py`)
+  et `ConflitBibliographique` (evidence/schemas.py) — les dupliquer
+  violerait le principe « une responsabilité, une table » déjà appliqué
+  à `Intervention` (tranche 3/10).
 
-L'entité restante du §4 (`EvidenceStatement`/`ConflictRecord`) reste à
-implémenter dans une tranche ultérieure.
+Phase A du RFC-0016 (§5 — schéma de données) est ainsi complète : les
+10 entités du §3.1 sont toutes couvertes, soit par une nouvelle table
+satellite (8 tables créées, tranches 1-5), soit par réutilisation
+explicite d'une table/schéma déjà conforme au même principe non
+négociable (`Intervention`, `EvidenceStatement`, `ConflictRecord`).
 
 Convention reprise du Botanical Engine (`_get_or_create_taxon`) : un taxon
 est une resource de type `entity` (`entity_subtype="taxon"`), jamais un

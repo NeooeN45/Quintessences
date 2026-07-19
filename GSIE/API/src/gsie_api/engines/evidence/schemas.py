@@ -4,6 +4,20 @@ Conforme à ENGINE_INTERFACE_CONTRACTS.md :
 - RawKnowledgeSubmission (entrée)
 - QualifiedKnowledge (sortie)
 - EvidenceLevel (A-F)
+
+RFC-0016 §3.1, tranche 6/10 (dernière tranche du schéma forestier
+spécialisé) : `EvidenceStatementCreate`/`Record` couvrent l'entité
+`EvidenceStatement` — assertion atomique sourcée avec une localisation
+précise obligatoire (page/table), renforçant `AssertionModel` +
+`EvidenceAssessmentModel` (déjà existants,
+`gsie_api.infrastructure.models.assertion`) sans les dupliquer.
+`ConflictRecord` (l'autre entité de cette tranche) n'a pas de schéma
+dédié ici : `ConflitBibliographique` (ce module) et `ConflictClusterModel`
+(`gsie_api.infrastructure.models.governance`) couvrent déjà exactement
+le même besoin (désaccord explicite entre sources, statut de
+résolution) — les dupliquer violerait le principe « une
+responsabilité, une table » déjà appliqué à `Intervention` (RFC-0016
+tranche 3/10).
 """
 
 from datetime import datetime
@@ -99,3 +113,34 @@ class QualifiedKnowledge(BaseModel):
     date_qualification: datetime
     conflits: list[ConflitBibliographique] = Field(default_factory=list, max_length=100)
     statut: KnowledgeStatus
+
+
+class EvidenceStatementCreate(BaseModel):
+    """Assertion atomique sourcée — jamais une citation vague.
+
+    RFC-0016 §3.1 : `page_or_table` est obligatoire — une affirmation
+    qui cite une source sans indiquer où (page, table, paragraphe) dans
+    cette source n'est pas vérifiable, exactement le risque que
+    RFC-0014 a nommé pour les données individuelles.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    claim: str = Field(min_length=1, description="Assertion atomique, une seule affirmation")
+    page_or_table: str = Field(
+        min_length=1, max_length=200, description="Localisation précise dans la source citée"
+    )
+    territory_description: str | None = None
+    evidence_level: EvidenceLevel
+    source: SourceReference
+
+
+class EvidenceStatementRecord(EvidenceStatementCreate):
+    """`EvidenceStatementCreate` persistée — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )

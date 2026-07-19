@@ -1,4 +1,4 @@
-"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-5/10).
+"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-6/10).
 
 Vérifie la règle non négociable du §3.1 : une classe de fertilité (ou un
 modèle de fertilité, ou un profil autécologique) ne peut pas être
@@ -9,8 +9,10 @@ doit obligatoirement porter une incertitude explicite (§4.3), (tranche 3)
 qu'une SilviculturalRule passée à accepted sans validateur humain est
 refusée (§3.2), (tranche 4) qu'un ProvenanceMaterial sans ses champs de
 traçabilité MFR (région de provenance, catégorie, admissibilité, version
-de l'arrêté) est refusé, et (tranche 5) qu'un HealthRisk avec un agent
-causal confirmé mais sans méthode de confirmation est refusé.
+de l'arrêté) est refusé, (tranche 5) qu'un HealthRisk avec un agent
+causal confirmé mais sans méthode de confirmation est refusé, et
+(tranche 6, dernière tranche) qu'un EvidenceStatement sans localisation
+précise (page/table) dans sa source est refusé.
 """
 
 from __future__ import annotations
@@ -22,7 +24,11 @@ import pytest
 from pydantic import ValidationError
 
 from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
-from gsie_api.engines.evidence.schemas import SourceReference, SourceType
+from gsie_api.engines.evidence.schemas import (
+    EvidenceStatementCreate,
+    SourceReference,
+    SourceType,
+)
 from gsie_api.engines.forest_dynamics.schemas import (
     FertilityClassCreate,
     HealthRiskCreate,
@@ -502,3 +508,51 @@ def test_health_risk_confirmed_agent_with_method_passes() -> None:
         source=_source(),
     )
     assert risk.confirmed_causal_agent == "Phytophthora cinnamomi"
+
+
+# --- EvidenceStatementCreate (tranche 6/10, dernière tranche) ---
+
+
+def test_evidence_statement_requires_page_or_table() -> None:
+    statement = EvidenceStatementCreate(
+        claim="Le pin d'Alep atteint la classe 1 de fertilité au-dessus de 14 m à 50 ans",
+        page_or_table="Table 3, p. 42",
+        evidence_level="A",
+        source=_source(),
+    )
+    assert statement.page_or_table == "Table 3, p. 42"
+
+
+def test_evidence_statement_missing_page_or_table_raises() -> None:
+    """Reproduit littéralement RFC-0016 §3.1 : une assertion qui cite une
+
+    source sans indiquer où (page, table, paragraphe) n'est pas
+    vérifiable — exactement le risque nommé par RFC-0014.
+    """
+    with pytest.raises(ValidationError):
+        EvidenceStatementCreate(
+            claim="Le pin d'Alep atteint la classe 1 de fertilité au-dessus de 14 m à 50 ans",
+            page_or_table="",
+            evidence_level="A",
+            source=_source(),
+        )
+
+
+def test_evidence_statement_missing_required_field_raises() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceStatementCreate(
+            page_or_table="Table 3, p. 42",
+            evidence_level="A",
+            source=_source(),
+        )
+
+
+def test_evidence_statement_extra_field_rejected() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceStatementCreate(
+            claim="Le pin d'Alep atteint la classe 1 de fertilité au-dessus de 14 m à 50 ans",
+            page_or_table="Table 3, p. 42",
+            evidence_level="A",
+            source=_source(),
+            evidence_bare_integer=1,
+        )
