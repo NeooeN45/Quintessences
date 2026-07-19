@@ -4,6 +4,67 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PHASE 4 — RFC-0016 SCHÉMA FORESTIER SPÉCIALISÉ — PHASE B COMPLÈTE] - 2026-07-19
+
+### RFC-0016 Phase B (intégration Botanical/Forest Dynamics Engine) — 3/3 points implémentés
+
+- 3 commits successifs sur la branche `handoff/audit-2026-07-19`,
+  faisant suite à la Phase A :
+  1. `f0abd6c` — fermeture d'un trou de la Phase A : les 10 types de
+     resource forestiers n'avaient aucune entrée dans le validateur
+     générique `resources/validators.py` — un appel direct à l'API
+     générique `POST /resources` pouvait contourner la règle déjà
+     imposée par les schémas Pydantic (champs obligatoires + enums
+     ajoutés pour les 10 types). Dans le même commit, démarrage du
+     point 6 (passeport de décision) : `DecisionPassportCategory`/
+     `DecisionPassportItem`/`DecisionPassport`
+     (`shared/schemas.py`, cross-engine, pas spécifique à un moteur),
+     5 catégories (observe, calcule, modelise,
+     documente_recommande, incertain), chacune avec justification
+     obligatoire imposée par `model_post_init`.
+  2. `3afd358` — point 5 : extension du Forest Dynamics Engine.
+     `DendrometricRequest`/`Result` portent désormais
+     `station_observation_id` optionnel (passthrough, pas de
+     résolution DB — le moteur reste une fonction pure v1). Ajout de
+     `ForestDynamicsEngine.to_decision_passport_items()` construisant
+     des `DecisionPassportItem` (catégorie `calcule`) à partir d'un
+     résultat dendrométrique — connecte ce moteur au passeport de
+     décision.
+  3. `948802b` — point 4 : nouveau module
+     `gsie_api.engines.botanical.extraction_bridge`
+     (`QuarantinedFact`,
+     `build_autecology_profile_from_quarantined_fact()`). Fait le pont
+     entre le pipeline d'extraction documentaire (RFC-0014 §3.2,
+     `KnowledgeExtractor` dans `Forge/`) et la table
+     `autecology_profile` (RFC-0016 tranche 1/10). Ne dérive jamais
+     `variable`/valeur par heuristique — le curateur humain fournit
+     toujours ces champs explicitement ; seul le champ `method`
+     (citation + page + référence) est construit automatiquement à
+     partir d'un fait déjà vérifié. Refuse tout fait dont
+     `statut != "quarantine"`. Testé directement sur les 29 faits réels
+     du 3e pilote RFC-0014 §3.6
+     (`GSIE/KNOWLEDGE/pilotes_extraction/parelle_2007_quercus_waterlogging_facts.json`,
+     Quercus robur/petraea, waterlogging).
+- Bilan : les 3 points de la Phase B (points 4, 5, 6 du RFC-0016 §5)
+  sont désormais couverts. 387 tests unitaires (327 passed, 60
+  skipped), `tools/check_governance_consistency.py` OK après chaque
+  commit.
+- Fichiers principaux : `GSIE/API/src/gsie_api/resources/validators.py`,
+  `shared/schemas.py`, `engines/forest_dynamics/schemas.py`,
+  `engines/forest_dynamics/engine.py`,
+  `engines/botanical/extraction_bridge.py` (nouveau),
+  `tests/unit/test_decision_passport.py` (nouveau),
+  `tests/unit/test_forest_dynamics.py`,
+  `tests/unit/test_extraction_bridge.py` (nouveau),
+  `tests/unit/test_resources.py`.
+- **Reste à faire** : Phase C (pilote Nouvelle-Aquitaine — constitution
+  du corpus 12-20 essences, 50 cas « or » validés par un forestier
+  référent, premier pack offline signé) — non commencée. Voir
+  `02_RFC/RFC-0016-schema-forestier-specialise.md` et
+  `03_DECISIONS/DEC-000027.md`.
+
+---
+
 ## [PHASE 4 — RFC-0016 SCHÉMA FORESTIER SPÉCIALISÉ — PHASE A COMPLÈTE] - 2026-07-19
 
 ### RFC-0016 Phase A (schéma de données) — 10/10 entités implémentées

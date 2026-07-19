@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-19 (RFC-0016 Phase A **complète** — 10/10 entités du schéma forestier spécialisé implémentées en 6 tranches, registre de types 76→86, 364 tests dont 304 passed/60 skipped) |
+| **Dernière mise à jour** | 2026-07-19 (RFC-0016 Phase B **complète** — intégration Botanical/Forest Dynamics Engine et passeport de décision à 5 catégories, sur les acquis de la Phase A ; 387 tests dont 327 passed/60 skipped ; seule la Phase C — pilote Nouvelle-Aquitaine — reste à faire) |
 
 ---
 
@@ -259,9 +259,11 @@ brainstorming v5 n'est adoptée.
   `BotanicalEngine.resolve_taxref`. Issue de
   `GSIE/RESEARCH/CORPUS_SYLVICOLE_SCIENTIFIQUE_QUINTESSENCES_2026-07-18.md`.
   **Phase A (schéma de données) complète le 2026-07-19** — voir détail
-  dans « Vague 2 » ci-dessous et `DEC-000027`. Phases B (intégration
-  Botanical/Forest Dynamics Engine, passeport à 5 catégories) et C
-  (pilote Nouvelle-Aquitaine) restent à faire.
+  dans « Vague 2 » ci-dessous et `DEC-000027`. **Phase B (intégration
+  Botanical/Forest Dynamics Engine, passeport à 5 catégories) également
+  complète le 2026-07-19** — voir détail dans « Vague 2 » ci-dessous et
+  `DEC-000027`. Seule la Phase C (pilote Nouvelle-Aquitaine) reste à
+  faire.
   Voir `02_RFC/RFC-0016-schema-forestier-specialise.md`.
 
 ---
@@ -450,9 +452,47 @@ d'exécution :
     `engines/botanical/schemas.py` (AutecologyProfile),
     `engines/evidence/schemas.py` (EvidenceStatement),
     `tests/unit/test_forestry_schemas.py` (nouveau, ~50 tests),
-    `tests/unit/test_resources.py`. **Phases B (intégration
-    Botanical/Forest Dynamics Engine, passeport de décision à 5
-    catégories) et C (pilote Nouvelle-Aquitaine) non commencées.**
+    `tests/unit/test_resources.py`.
+  - **RFC-0016 Phase B — intégration Botanical/Forest Dynamics Engine,
+    complète (2026-07-19)** : les 3 points de la Phase B sont
+    implémentés sur la branche `handoff/audit-2026-07-19` :
+    1. `f0abd6c` — fermeture d'un trou de la Phase A : les 10 types de
+       resource forestiers n'avaient aucune entrée dans le validateur
+       générique `resources/validators.py` (champs obligatoires + enums
+       ajoutés pour les 10 types) ; dans le même commit, démarrage du
+       point 6 (passeport de décision) : `DecisionPassportCategory`/
+       `DecisionPassportItem`/`DecisionPassport`
+       (`shared/schemas.py`, cross-engine), 5 catégories (observe,
+       calcule, modelise, documente_recommande, incertain) chacune avec
+       justification obligatoire imposée par `model_post_init`.
+    2. `3afd358` — point 5 : `DendrometricRequest`/`Result` du Forest
+       Dynamics Engine portent désormais `station_observation_id`
+       optionnel (passthrough, pas de résolution DB — moteur reste une
+       fonction pure v1) ; nouvelle méthode
+       `ForestDynamicsEngine.to_decision_passport_items()` connectant ce
+       moteur au passeport de décision (catégorie `calcule`).
+    3. `948802b` — point 4 : nouveau module
+       `gsie_api.engines.botanical.extraction_bridge`
+       (`QuarantinedFact`, `build_autecology_profile_from_quarantined_fact()`)
+       reliant le pipeline d'extraction documentaire (RFC-0014 §3.2,
+       `KnowledgeExtractor` dans `Forge/`) à `autecology_profile` — le
+       curateur humain fournit toujours `variable`/valeur, seul `method`
+       (citation + page + référence) est construit automatiquement à
+       partir d'un fait déjà vérifié ; refuse tout fait dont
+       `statut != "quarantine"`. Testé sur les 29 faits réels du 3e
+       pilote RFC-0014 §3.6 (Quercus robur/petraea, waterlogging,
+       Parelle 2007).
+    Bilan : 387 tests unitaires (327 passed, 60 skipped),
+    `check_governance_consistency.py` OK après chaque commit. Fichiers
+    modifiés : `GSIE/API/src/gsie_api/resources/validators.py`,
+    `shared/schemas.py`, `engines/forest_dynamics/schemas.py`,
+    `engines/forest_dynamics/engine.py`,
+    `engines/botanical/extraction_bridge.py` (nouveau),
+    `tests/unit/test_decision_passport.py` (nouveau),
+    `tests/unit/test_forest_dynamics.py`,
+    `tests/unit/test_extraction_bridge.py` (nouveau),
+    `tests/unit/test_resources.py`. Seule **Phase C (pilote
+    Nouvelle-Aquitaine)** reste à faire — voir `DEC-000027`.
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.
