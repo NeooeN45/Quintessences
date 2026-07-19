@@ -1,4 +1,4 @@
-"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-4/10).
+"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-5/10).
 
 Vérifie la règle non négociable du §3.1 : une classe de fertilité (ou un
 modèle de fertilité, ou un profil autécologique) ne peut pas être
@@ -7,9 +7,10 @@ construction, pas produire un objet incomplet silencieusement. Vérifie
 aussi (tranche 2) qu'une StationObservation sans StationType déterminé
 doit obligatoirement porter une incertitude explicite (§4.3), (tranche 3)
 qu'une SilviculturalRule passée à accepted sans validateur humain est
-refusée (§3.2), et (tranche 4) qu'un ProvenanceMaterial sans ses champs
-de traçabilité MFR (région de provenance, catégorie, admissibilité,
-version de l'arrêté) est refusé.
+refusée (§3.2), (tranche 4) qu'un ProvenanceMaterial sans ses champs de
+traçabilité MFR (région de provenance, catégorie, admissibilité, version
+de l'arrêté) est refusé, et (tranche 5) qu'un HealthRisk avec un agent
+causal confirmé mais sans méthode de confirmation est refusé.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.engines.forest_dynamics.schemas import (
     FertilityClassCreate,
+    HealthRiskCreate,
     ProvenanceMaterialCreate,
     SilviculturalRuleCreate,
     SilviculturalRuleRecord,
@@ -438,3 +440,65 @@ def test_provenance_material_extra_field_rejected() -> None:
             source=_source(),
             provenance_bare_integer=1,
         )
+
+
+# --- HealthRiskCreate (tranche 5/10) ---
+
+
+def test_health_risk_requires_symptom_observed() -> None:
+    risk = HealthRiskCreate(
+        subject_id=uuid4(),
+        symptom_observed="Défoliation de la couronne, jaunissement des aiguilles",
+        observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+        source=_source(),
+    )
+    assert risk.symptom_observed.startswith("Défoliation")
+
+
+def test_health_risk_missing_symptom_observed_raises() -> None:
+    with pytest.raises(ValidationError):
+        HealthRiskCreate(
+            subject_id=uuid4(),
+            observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+            source=_source(),
+        )
+
+
+def test_health_risk_accepts_suspected_agent_without_confirmation() -> None:
+    risk = HealthRiskCreate(
+        subject_id=uuid4(),
+        symptom_observed="Chancre au collet",
+        suspected_causal_agent="Phytophthora sp. (suspecté)",
+        observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+        source=_source(),
+    )
+    assert risk.confirmed_causal_agent is None
+
+
+def test_health_risk_confirmed_agent_without_method_raises() -> None:
+    """Reproduit littéralement RFC-0016 §3.1 : un agent causal « confirmé »
+
+    sans méthode de confirmation citée serait une invention silencieuse
+    (ADR-007), pas une simplification acceptable.
+    """
+    with pytest.raises(ValidationError, match="confirmation_method"):
+        HealthRiskCreate(
+            subject_id=uuid4(),
+            symptom_observed="Chancre au collet",
+            confirmed_causal_agent="Phytophthora cinnamomi",
+            observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+            source=_source(),
+        )
+
+
+def test_health_risk_confirmed_agent_with_method_passes() -> None:
+    risk = HealthRiskCreate(
+        subject_id=uuid4(),
+        symptom_observed="Chancre au collet",
+        confirmed_causal_agent="Phytophthora cinnamomi",
+        confirmation_method="Analyse PCR en laboratoire agréé, 2026-07-15",
+        severity="high",
+        observed_at=datetime(2026, 7, 19, tzinfo=UTC),
+        source=_source(),
+    )
+    assert risk.confirmed_causal_agent == "Phytophthora cinnamomi"

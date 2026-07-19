@@ -13,7 +13,7 @@ from gsie_api.resources.validators import validate_resource_data
 class TestResourceTypes:
     """Tests du registry des types."""
 
-    def test_should_list_84_types_when_called(self) -> None:
+    def test_should_list_86_types_when_called(self) -> None:
         # 76 types + 3 types forestiers spécialisés (RFC-0016, tranche 1/10 :
         # autecology_profile, site_index_model, fertility_class) + 2 types
         # de diagnostic stationnel (RFC-0016, tranche 2/10 : station_type,
@@ -21,9 +21,10 @@ class TestResourceTypes:
         # (RFC-0016, tranche 3/10 : silvicultural_system,
         # silvicultural_rule — Intervention réutilise le type existant) +
         # 1 type provenance/MFR (RFC-0016, tranche 4/10 :
-        # provenance_material).
+        # provenance_material) + 2 types sanitaires (RFC-0016, tranche
+        # 5/10 : diagnostic_protocol, health_risk).
         types = ResourceService.list_types()
-        assert len(types) == 84
+        assert len(types) == 86
         assert "assertion" in types
         assert "observation" in types
         assert "concept" in types
@@ -39,6 +40,8 @@ class TestResourceTypes:
         assert "silvicultural_system" in types
         assert "silvicultural_rule" in types
         assert "provenance_material" in types
+        assert "diagnostic_protocol" in types
+        assert "health_risk" in types
 
     def test_should_return_sorted_types(self) -> None:
         types = ResourceService.list_types()

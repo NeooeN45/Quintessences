@@ -652,6 +652,16 @@ class OutcomeStatus(StrEnum):
     abandoned = "abandoned"
 
 
+class HealthRiskSeverity(StrEnum):
+    """Sévérité d'un risque sanitaire observé (RFC-0016 §3.1, tranche 5/10)."""
+
+    negligible = "negligible"
+    low = "low"
+    moderate = "moderate"
+    high = "high"
+    critical = "critical"
+
+
 class MaterielBaseCategory(StrEnum):
     """Catégorie de matériel de base (Code forestier, MFR — RFC-0016 §3.1,
     tranche 4/10). Catégories réglementaires françaises, pas une échelle

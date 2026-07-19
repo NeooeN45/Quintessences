@@ -21,10 +21,13 @@ Implémente les tranches verticales suivantes des dix entités du §4 du RFC :
 - tranche 4/10 : `ProvenanceMaterial` — provenance/MFR (matériel
   forestier de reproduction) pour une proposition de plantation
   (RFC-0016 §3.1).
+- tranche 5/10 : `DiagnosticProtocol`, `HealthRisk` — protocoles
+  sanitaires (ARCHI, DEPERIS, IBP, RFC-0016 §3.1). Distingue toujours
+  symptôme observé / agent causal suspecté / agent confirmé — jamais
+  une confirmation sans méthode de confirmation.
 
-Les trois entités restantes du §4 (`DiagnosticProtocol`/`HealthRisk`,
-`EvidenceStatement`/`ConflictRecord`) restent à implémenter dans une
-tranche ultérieure.
+L'entité restante du §4 (`EvidenceStatement`/`ConflictRecord`) reste à
+implémenter dans une tranche ultérieure.
 
 Convention reprise du Botanical Engine (`_get_or_create_taxon`) : un taxon
 est une resource de type `entity` (`entity_subtype="taxon"`), jamais un
@@ -43,6 +46,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_type
 from gsie_api.infrastructure.models.enums import (
     EvidenceLevel,
+    HealthRiskSeverity,
     LifecycleStatus,
     MaterielBaseCategory,
     SilviculturalSystemCategory,
@@ -363,6 +367,89 @@ class SilviculturalRuleModel(Base, TimestampMixin):
         CheckConstraint(
             "status <> 'accepted' OR human_validator IS NOT NULL",
             name="ck_silvicultural_rule_human_validation_required",
+        ),
+    )
+
+
+@register_type("diagnostic_protocol")
+class DiagnosticProtocolModel(Base, TimestampMixin):
+    """Protocole sanitaire documenté (ARCHI, DEPERIS, IBP, etc.).
+
+    RFC-0016 §3.1 : porte les critères, les seuils, la version et les
+    limites du protocole — un `HealthRisk` doit pouvoir remonter au
+    protocole exact qui a produit son diagnostic, jamais une évaluation
+    sanitaire flottante sans méthode citée.
+    """
+
+    __tablename__ = "diagnostic_protocol"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(100), nullable=False)
+    criteria_description: Mapped[str] = mapped_column(Text, nullable=False)
+    thresholds_description: Mapped[str] = mapped_column(Text, nullable=False)
+    limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+
+@register_type("health_risk")
+class HealthRiskModel(Base, TimestampMixin):
+    """Diagnostic sanitaire sur un sujet — jamais une certitude sans méthode.
+
+    RFC-0016 §3.1 : distingue structurellement `symptom_observed`
+    (toujours obligatoire — ce qui a réellement été vu),
+    `suspected_causal_agent` (une hypothèse, jamais affirmée comme
+    confirmée) et `confirmed_causal_agent` (nécessite une
+    `confirmation_method` explicite — un agent « confirmé » sans
+    méthode de confirmation citée serait une invention silencieuse,
+    exactement le risque nommé par ADR-007).
+    """
+
+    __tablename__ = "health_risk"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    subject_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
+    )
+    diagnostic_protocol_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("diagnostic_protocol.id"), nullable=True, index=True
+    )
+    symptom_observed: Mapped[str] = mapped_column(Text, nullable=False)
+    suspected_causal_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    confirmed_causal_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    confirmation_method: Mapped[str | None] = mapped_column(Text, nullable=True)
+    severity: Mapped[HealthRiskSeverity | None] = mapped_column(
+        Enum(HealthRiskSeverity, name="health_risk_severity"), nullable=True
+    )
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "confirmed_causal_agent IS NULL OR confirmation_method IS NOT NULL",
+            name="ck_health_risk_confirmation_requires_method",
         ),
     )
 

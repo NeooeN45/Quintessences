@@ -423,3 +423,75 @@ class ProvenanceMaterialRecord(ProvenanceMaterialCreate):
     status: str = Field(
         description="draft | proposed | accepted | superseded | rejected | deprecated"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 5/10 (DiagnosticProtocol,
+# HealthRisk) — protocoles sanitaires (ARCHI, DEPERIS, IBP, RFC-0016 §3.1).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class DiagnosticProtocolCreate(BaseModel):
+    """Protocole sanitaire documenté (ARCHI, DEPERIS, IBP, etc.)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=200)
+    version: str = Field(min_length=1, max_length=100)
+    criteria_description: str = Field(min_length=1)
+    thresholds_description: str = Field(min_length=1)
+    limitations: str | None = None
+    source: SourceReference
+
+
+class DiagnosticProtocolRecord(DiagnosticProtocolCreate):
+    """`DiagnosticProtocolCreate` persisté — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
+
+
+class HealthRiskCreate(BaseModel):
+    """Diagnostic sanitaire sur un sujet — jamais une certitude sans méthode.
+
+    RFC-0016 §3.1 : `symptom_observed` est toujours obligatoire (ce qui a
+    réellement été vu). `confirmed_causal_agent` exige
+    `confirmation_method` — un agent « confirmé » sans méthode de
+    confirmation citée serait une invention silencieuse (ADR-007).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    subject_id: UUID
+    diagnostic_protocol_id: UUID | None = None
+    symptom_observed: str = Field(min_length=1)
+    suspected_causal_agent: str | None = Field(default=None, max_length=300)
+    confirmed_causal_agent: str | None = Field(default=None, max_length=300)
+    confirmation_method: str | None = None
+    severity: str | None = Field(
+        default=None, description="negligible | low | moderate | high | critical"
+    )
+    observed_at: datetime
+    source: SourceReference
+
+    def model_post_init(self, __context: object) -> None:
+        if self.confirmed_causal_agent and not self.confirmation_method:
+            raise ValueError(
+                "confirmation_method requis lorsque confirmed_causal_agent est renseigné "
+                "(un agent confirmé sans méthode citée serait une invention silencieuse)"
+            )
+
+
+class HealthRiskRecord(HealthRiskCreate):
+    """`HealthRiskCreate` persisté — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
