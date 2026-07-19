@@ -18,10 +18,13 @@ Implémente les tranches verticales suivantes des dix entités du §4 du RFC :
   type 75, audit ONF/CNPF du 2026-07-16) et couvre exactement le même
   besoin (intervention sylvicole programmée/exécutée) — la dupliquer
   violerait le principe « une responsabilité, une table ».
+- tranche 4/10 : `ProvenanceMaterial` — provenance/MFR (matériel
+  forestier de reproduction) pour une proposition de plantation
+  (RFC-0016 §3.1).
 
-Les quatre entités restantes du §4 (`ProvenanceMaterial`,
-`DiagnosticProtocol`/`HealthRisk`, `EvidenceStatement`/`ConflictRecord`)
-restent à implémenter dans une tranche ultérieure.
+Les trois entités restantes du §4 (`DiagnosticProtocol`/`HealthRisk`,
+`EvidenceStatement`/`ConflictRecord`) restent à implémenter dans une
+tranche ultérieure.
 
 Convention reprise du Botanical Engine (`_get_or_create_taxon`) : un taxon
 est une resource de type `entity` (`entity_subtype="taxon"`), jamais un
@@ -41,6 +44,7 @@ from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_t
 from gsie_api.infrastructure.models.enums import (
     EvidenceLevel,
     LifecycleStatus,
+    MaterielBaseCategory,
     SilviculturalSystemCategory,
 )
 
@@ -360,4 +364,52 @@ class SilviculturalRuleModel(Base, TimestampMixin):
             "status <> 'accepted' OR human_validator IS NOT NULL",
             name="ck_silvicultural_rule_human_validation_required",
         ),
+    )
+
+
+@register_type("provenance_material")
+class ProvenanceMaterialModel(Base, TimestampMixin):
+    """Provenance / matériel forestier de reproduction (MFR) pour une plantation.
+
+    RFC-0016 §3.1 : `species_entity_id`, `provenance_region`,
+    `base_material_category`, `decree_version` et `source_id` sont tous
+    obligatoires — une proposition de plantation qui cite un « matériel
+    admissible » sans la version de l'arrêté qui le rend admissible est
+    exactement le même bug de sécurité scientifique qu'une classe de
+    fertilité sans région de calibration (§3.1, principe non négociable).
+    """
+
+    __tablename__ = "provenance_material"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    species_entity_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
+    )
+    provenance_region: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    base_material: Mapped[str] = mapped_column(
+        String(300),
+        nullable=False,
+        doc="Identifiant du matériel de base (verger à graines, " "peuplement classé, etc.)",
+    )
+    base_material_category: Mapped[MaterielBaseCategory] = mapped_column(
+        Enum(MaterielBaseCategory, name="materiel_base_category"), nullable=False, index=True
+    )
+    aid_eligible: Mapped[bool] = mapped_column(nullable=False)
+    decree_version: Mapped[str] = mapped_column(
+        String(300),
+        nullable=False,
+        doc="Version de l'arrêté MFR qui fonde l'admissibilité (ex. « arrêté du 6 mars 2026 »)",
+    )
+    valid_region_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
     )

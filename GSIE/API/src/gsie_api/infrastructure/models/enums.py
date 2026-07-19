@@ -652,6 +652,18 @@ class OutcomeStatus(StrEnum):
     abandoned = "abandoned"
 
 
+class MaterielBaseCategory(StrEnum):
+    """Catégorie de matériel de base (Code forestier, MFR — RFC-0016 §3.1,
+    tranche 4/10). Catégories réglementaires françaises, pas une échelle
+    inventée : identifié < sélectionné < qualifié < testé.
+    """
+
+    identifie = "identifie"
+    selectionne = "selectionne"
+    qualifie = "qualifie"
+    teste = "teste"
+
+
 class SilviculturalSystemCategory(StrEnum):
     """Catégorie de système sylvicole (RFC-0016 §3.1, tranche 3/10)."""
 

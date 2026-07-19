@@ -1,13 +1,15 @@
-"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-3/10).
+"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-4/10).
 
 Vérifie la règle non négociable du §3.1 : une classe de fertilité (ou un
 modèle de fertilité, ou un profil autécologique) ne peut pas être
 construit sans ses champs obligatoires — Pydantic doit refuser la
 construction, pas produire un objet incomplet silencieusement. Vérifie
 aussi (tranche 2) qu'une StationObservation sans StationType déterminé
-doit obligatoirement porter une incertitude explicite (§4.3), et
-(tranche 3) qu'une SilviculturalRule passée à accepted sans validateur
-humain est refusée (§3.2).
+doit obligatoirement porter une incertitude explicite (§4.3), (tranche 3)
+qu'une SilviculturalRule passée à accepted sans validateur humain est
+refusée (§3.2), et (tranche 4) qu'un ProvenanceMaterial sans ses champs
+de traçabilité MFR (région de provenance, catégorie, admissibilité,
+version de l'arrêté) est refusé.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.engines.forest_dynamics.schemas import (
     FertilityClassCreate,
+    ProvenanceMaterialCreate,
     SilviculturalRuleCreate,
     SilviculturalRuleRecord,
     SilviculturalSystemCreate,
@@ -372,3 +375,66 @@ def test_silvicultural_rule_record_draft_does_not_require_human_validator() -> N
         status="draft",
     )
     assert rule.human_validator is None
+
+
+# --- ProvenanceMaterialCreate (tranche 4/10) ---
+
+
+def test_provenance_material_requires_all_non_negotiable_fields() -> None:
+    material = ProvenanceMaterialCreate(
+        species_gbif_taxon_key=5285725,
+        provenance_region="Massif central",
+        base_material="Verger à graines qualifié VG-034",
+        base_material_category="qualifie",
+        aid_eligible=True,
+        decree_version="Arrêté MFR du 6 mars 2026",
+        source=_source(),
+    )
+    assert material.aid_eligible is True
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "species_gbif_taxon_key",
+        "provenance_region",
+        "base_material",
+        "base_material_category",
+        "aid_eligible",
+        "decree_version",
+        "source",
+    ],
+)
+def test_provenance_material_missing_required_field_raises(missing_field: str) -> None:
+    """Reproduit littéralement RFC-0016 §3.1 : un matériel « admissible »
+
+    sans la version de l'arrêté qui le rend admissible est le même bug
+    de sécurité scientifique qu'une classe de fertilité sans région de
+    calibration — vérifié champ par champ.
+    """
+    payload = {
+        "species_gbif_taxon_key": 5285725,
+        "provenance_region": "Massif central",
+        "base_material": "Verger à graines qualifié VG-034",
+        "base_material_category": "qualifie",
+        "aid_eligible": True,
+        "decree_version": "Arrêté MFR du 6 mars 2026",
+        "source": _source(),
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError):
+        ProvenanceMaterialCreate(**payload)
+
+
+def test_provenance_material_extra_field_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ProvenanceMaterialCreate(
+            species_gbif_taxon_key=5285725,
+            provenance_region="Massif central",
+            base_material="Verger à graines qualifié VG-034",
+            base_material_category="qualifie",
+            aid_eligible=True,
+            decree_version="Arrêté MFR du 6 mars 2026",
+            source=_source(),
+            provenance_bare_integer=1,
+        )

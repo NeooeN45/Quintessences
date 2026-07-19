@@ -371,3 +371,55 @@ class SilviculturalRuleRecord(SilviculturalRuleCreate):
                 "human_validator requis lorsque status='accepted' "
                 "(jamais d'auto-validation par le pipeline d'extraction)"
             )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 4/10 (ProvenanceMaterial)
+# — provenance / matériel forestier de reproduction (MFR) pour une
+# proposition de plantation (RFC-0016 §3.1).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class ProvenanceMaterialCreate(BaseModel):
+    """Provenance / MFR pour une proposition de plantation — jamais une essence nue.
+
+    RFC-0016 §3.1 : `species_gbif_taxon_key`, `provenance_region`,
+    `base_material_category`, `aid_eligible`, `decree_version` et
+    `source` sont tous obligatoires — une proposition de plantation qui
+    cite un matériel « admissible aux aides » sans la version de
+    l'arrêté qui le rend admissible est le même bug de sécurité
+    scientifique qu'une classe de fertilité sans région de calibration.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    species_gbif_taxon_key: int = Field(
+        description="Clé GBIF du taxon accepté (usageKey) — résolu en entity_id par l'engine"
+    )
+    provenance_region: str = Field(min_length=1, max_length=200)
+    base_material: str = Field(
+        min_length=1,
+        max_length=300,
+        description="Identifiant du matériel de base (verger à graines, peuplement classé, etc.)",
+    )
+    base_material_category: str = Field(description="identifie | selectionne | qualifie | teste")
+    aid_eligible: bool = Field(description="Admissibilité aux aides publiques, selon l'arrêté cité")
+    decree_version: str = Field(
+        min_length=1,
+        max_length=300,
+        description="Version de l'arrêté MFR (ex. « arrêté du 6 mars 2026 »)",
+    )
+    valid_region_description: str | None = None
+    source: SourceReference
+
+
+class ProvenanceMaterialRecord(ProvenanceMaterialCreate):
+    """`ProvenanceMaterialCreate` persisté — identifiants réels et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    species_entity_id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
