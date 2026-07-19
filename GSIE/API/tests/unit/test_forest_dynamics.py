@@ -3,9 +3,12 @@
 Purement géométrique (identité mathématique, pas d'appel réseau,
 pas de persistance) — voir docstring engine.py pour le périmètre v1
 et les raisons documentées du non-périmètre (volume, projection).
+Couvre aussi (RFC-0016 §5 Phase B, point 5) le passthrough de
+`station_observation_id` et la construction du passeport de décision.
 """
 
 import math
+from uuid import uuid4
 
 import pytest
 
@@ -16,6 +19,7 @@ from gsie_api.engines.forest_dynamics.schemas import (
     PeuplementState,
     StructurePeuplement,
 )
+from gsie_api.shared.schemas import DecisionPassportCategory
 
 
 def _source() -> SourceReference:
@@ -26,9 +30,7 @@ def _source() -> SourceReference:
     )
 
 
-def _request(
-    diametre_moyen_cm: float = 20.0, densite_t_ha: float = 500.0
-) -> DendrometricRequest:
+def _request(diametre_moyen_cm: float = 20.0, densite_t_ha: float = 500.0) -> DendrometricRequest:
     return DendrometricRequest(
         etat_initial=PeuplementState(
             essence_principale="Quercus petraea",
@@ -103,3 +105,49 @@ def test_no_volume_or_trajectory_in_v1_result():
 def test_return_engine_version():
     """version() doit retourner une chaîne non vide."""
     assert len(ForestDynamicsEngine.version()) > 0
+
+
+def test_station_observation_id_is_none_by_default():
+    """Sans référence de station fournie, le résultat n'en invente pas une."""
+    engine = ForestDynamicsEngine()
+    result = engine.compute_dendrometrics(_request())
+    assert result.station_observation_id is None
+
+
+def test_station_observation_id_passes_through_to_result():
+    """RFC-0016 §5 Phase B point 5 : la référence à la station diagnostiquée
+
+    doit être transmise telle quelle, sans être résolue ni modifiée par
+    le moteur (fonction pure, aucune session DB en v1).
+    """
+    engine = ForestDynamicsEngine()
+    station_id = uuid4()
+    request = DendrometricRequest(
+        station_observation_id=station_id,
+        etat_initial=PeuplementState(
+            essence_principale="Quercus petraea",
+            age_moyen=40.0,
+            densite_t_ha=500.0,
+            diametre_moyen_cm=20.0,
+            hauteur_moyenne_m=18.0,
+            structure=StructurePeuplement.reguliere,
+            source_inventaire=_source(),
+        ),
+    )
+    result = engine.compute_dendrometrics(request)
+    assert result.station_observation_id == station_id
+
+
+def test_to_decision_passport_items_produces_calcule_category():
+    """RFC-0016 §3.4 : une surface terrière calculée est toujours étiquetée
+
+    `calcule`, jamais affichée comme une mesure directe ou un modèle.
+    """
+    engine = ForestDynamicsEngine()
+    result = engine.compute_dendrometrics(_request())
+    items = ForestDynamicsEngine.to_decision_passport_items(result)
+
+    assert len(items) == 1
+    assert items[0].category == DecisionPassportCategory.calcule
+    assert items[0].label == "surface_terriere"
+    assert items[0].method == "G = (π/4) × D² × N"

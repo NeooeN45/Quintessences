@@ -10,6 +10,18 @@ CAPSIS) exige des coefficients publiés que nous n'avons pas encore
 sourcés et vérifiés, ou une calibration IFN réelle (RFC-0013, données
 bulk non encore ingérées) — les inventer violerait la garantie du
 moteur (§6 : « aucun coefficient n'est inventé ») et ADR-007.
+
+RFC-0016 §5 Phase B, point 5 : `DendrometricRequest`/`Result` portent
+désormais un `station_observation_id` optionnel — la référence à la
+`StationObservation` (RFC-0016 tranche 2/10) qui a diagnostiqué la
+station du peuplement mesuré. Le moteur reste v1 : une simple
+référence transmise en aller-retour (traçabilité), pas une lecture DB
+ni un calcul dépendant de la station (le moteur reste une fonction
+pure de son entrée — voir docstring `engine.py`, aucune session DB
+requise). Croiser réellement la station avec la fertilité attendue
+(ex. comparer une surface terrière mesurée à ce qu'annonce le
+`SiteIndexModel` de la station) est un chantier ultérieur qui exige un
+accès DB — hors périmètre de cette extension.
 """
 
 from datetime import UTC, datetime
@@ -56,6 +68,11 @@ class DendrometricRequest(BaseModel):
     requete_id: UUID = Field(default_factory=uuid4)
     peuplement_id: UUID = Field(default_factory=uuid4)
     etat_initial: PeuplementState
+    station_observation_id: UUID | None = Field(
+        default=None,
+        description="Référence à la StationObservation qui diagnostique la station "
+        "de ce peuplement (RFC-0016 tranche 2/10) — traçabilité seule, non résolue par le moteur",
+    )
 
 
 class CaracteristiqueDendrometrique(BaseModel):
@@ -80,6 +97,7 @@ class DendrometricResult(BaseModel):
 
     requete_id: UUID
     peuplement_id: UUID
+    station_observation_id: UUID | None = None
     caracteristiques: list[CaracteristiqueDendrometrique] = Field(
         default_factory=list, max_length=20
     )

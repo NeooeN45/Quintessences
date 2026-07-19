@@ -26,6 +26,13 @@ Ce qui n'est PAS implémenté en v1, et pourquoi :
 Ces limitations sont volontaires et documentées plutôt que comblées
 par une approximation inventée — cohérent avec le principe du
 Correlation Engine (v1 réduite) et du GIS/Botanical/Pedology Engine.
+
+RFC-0016 §5 Phase B, point 5 : le moteur transmet désormais
+`station_observation_id` (s'il est fourni) de la requête vers le
+résultat, et sait construire un `DecisionPassportItem` (§3.4) pour
+chaque caractéristique calculée — catégorie `calcule`, justifiée par
+la formule géométrique elle-même (jamais un résultat affiché sans sa
+méthode).
 """
 
 import math
@@ -37,6 +44,7 @@ from gsie_api.engines.forest_dynamics.schemas import (
     DendrometricRequest,
     DendrometricResult,
 )
+from gsie_api.shared.schemas import DecisionPassportCategory, DecisionPassportItem
 
 logger = get_logger("gsie_api.forest_dynamics.engine")
 
@@ -99,6 +107,25 @@ class ForestDynamicsEngine:
         return DendrometricResult(
             requete_id=request.requete_id,
             peuplement_id=request.peuplement_id,
+            station_observation_id=request.station_observation_id,
             caracteristiques=[caracteristique],
             source=_GEOMETRY_SOURCE,
         )
+
+    @staticmethod
+    def to_decision_passport_items(result: DendrometricResult) -> list[DecisionPassportItem]:
+        """Construit les éléments de passeport de décision (RFC-0016 §3.4) pour un résultat.
+
+        Catégorie `calcule` uniquement — v1 ne produit que des
+        caractéristiques géométriques déterministes, jamais de sortie
+        `modelisee` (voir docstring module).
+        """
+        return [
+            DecisionPassportItem(
+                label=carac.nom,
+                value=f"{carac.valeur:.4g} {carac.unite}",
+                category=DecisionPassportCategory.calcule,
+                method=carac.methode,
+            )
+            for carac in result.caracteristiques
+        ]
