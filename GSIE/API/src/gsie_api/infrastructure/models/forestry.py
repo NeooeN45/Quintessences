@@ -11,9 +11,15 @@ Implémente les tranches verticales suivantes des dix entités du §4 du RFC :
 
 - tranche 2/10 : `StationType`, `StationObservation` — diagnostic
   stationnel (étape 2 de la chaîne de décision, RFC-0016 §3.3).
+- tranche 3/10 : `SilviculturalSystem`, `SilviculturalRule` — itinéraires
+  sylvicoles (RFC-0016 §3.1). `Intervention` (troisième entité citée par
+  le RFC) n'est PAS réimplémentée ici : elle existe déjà
+  (`gsie_api.infrastructure.models.business.InterventionModel`,
+  type 75, audit ONF/CNPF du 2026-07-16) et couvre exactement le même
+  besoin (intervention sylvicole programmée/exécutée) — la dupliquer
+  violerait le principe « une responsabilité, une table ».
 
-Les cinq entités restantes du §4 (`SilviculturalSystem`/
-`SilviculturalRule`/`Intervention`, `ProvenanceMaterial`,
+Les quatre entités restantes du §4 (`ProvenanceMaterial`,
 `DiagnosticProtocol`/`HealthRisk`, `EvidenceStatement`/`ConflictRecord`)
 restent à implémenter dans une tranche ultérieure.
 
@@ -32,7 +38,11 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_type
-from gsie_api.infrastructure.models.enums import EvidenceLevel, LifecycleStatus
+from gsie_api.infrastructure.models.enums import (
+    EvidenceLevel,
+    LifecycleStatus,
+    SilviculturalSystemCategory,
+)
 
 
 @register_type("autecology_profile")
@@ -261,5 +271,93 @@ class StationObservationModel(Base, TimestampMixin):
         CheckConstraint(
             "station_type_id IS NOT NULL OR determination_uncertainty IS NOT NULL",
             name="ck_station_observation_uncertainty_when_undetermined",
+        ),
+    )
+
+
+@register_type("silvicultural_system")
+class SilviculturalSystemModel(Base, TimestampMixin):
+    """Système sylvicole — futaie régulière/irrégulière, taillis, conversion.
+
+    RFC-0016 §3.1 : catégorie conceptuelle de gestion, sans champ clé
+    imposé au-delà de la catégorie et d'une description sourcée.
+    """
+
+    __tablename__ = "silvicultural_system"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
+    category: Mapped[SilviculturalSystemCategory] = mapped_column(
+        Enum(SilviculturalSystemCategory, name="silvicultural_system_category"),
+        nullable=False,
+        index=True,
+    )
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+
+@register_type("silvicultural_rule")
+class SilviculturalRuleModel(Base, TimestampMixin):
+    """Règle d'intervention sylvicole — contexte, déclencheur, action, preuve.
+
+    RFC-0016 §3.2 : toute règle extraite par LLM reste `draft`. Le
+    passage à `accepted` (équivalent du `APPROVED` du corpus source)
+    exige une validation humaine explicite (`human_validator` non nul)
+    — jamais une auto-validation par le pipeline d'extraction. Imposé
+    à la fois par la contrainte SQL
+    `ck_silvicultural_rule_human_validation_required` et par
+    `SilviculturalRuleRecord.model_post_init` côté schéma.
+    """
+
+    __tablename__ = "silvicultural_rule"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    silvicultural_system_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("silvicultural_system.id"), nullable=True, index=True
+    )
+    species_entity_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
+    )
+    required_context: Mapped[str] = mapped_column(Text, nullable=False)
+    trigger: Mapped[str] = mapped_column(Text, nullable=False)
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+    intensity: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_level: Mapped[EvidenceLevel] = mapped_column(
+        Enum(EvidenceLevel, name="evidence_level"), nullable=False
+    )
+    human_validator: Mapped[str | None] = mapped_column(
+        String(300),
+        nullable=True,
+        doc="Nom/qualité du validateur humain (curateur + forestier compétent) — "
+        "obligatoire dès que status passe à accepted",
+    )
+    source_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+    )
+    status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+        default=LifecycleStatus.draft,
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status <> 'accepted' OR human_validator IS NOT NULL",
+            name="ck_silvicultural_rule_human_validation_required",
         ),
     )

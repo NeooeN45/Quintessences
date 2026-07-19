@@ -1,11 +1,13 @@
-"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-2/10).
+"""Tests unitaires — schémas RFC-0016 (schéma forestier spécialisé, tranches 1-3/10).
 
 Vérifie la règle non négociable du §3.1 : une classe de fertilité (ou un
 modèle de fertilité, ou un profil autécologique) ne peut pas être
 construit sans ses champs obligatoires — Pydantic doit refuser la
 construction, pas produire un objet incomplet silencieusement. Vérifie
 aussi (tranche 2) qu'une StationObservation sans StationType déterminé
-doit obligatoirement porter une incertitude explicite (§4.3).
+doit obligatoirement porter une incertitude explicite (§4.3), et
+(tranche 3) qu'une SilviculturalRule passée à accepted sans validateur
+humain est refusée (§3.2).
 """
 
 from __future__ import annotations
@@ -20,6 +22,9 @@ from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.engines.forest_dynamics.schemas import (
     FertilityClassCreate,
+    SilviculturalRuleCreate,
+    SilviculturalRuleRecord,
+    SilviculturalSystemCreate,
     SiteIndexModelCreate,
     StationObservationCreate,
     StationTypeCreate,
@@ -265,3 +270,105 @@ def test_station_observation_without_determined_type_accepted_with_uncertainty()
     )
     assert observation.station_type_id is None
     assert observation.determination_uncertainty is not None
+
+
+# --- SilviculturalSystemCreate / SilviculturalRuleCreate (tranche 3/10) ---
+
+
+def test_silvicultural_system_requires_name_and_category() -> None:
+    system = SilviculturalSystemCreate(
+        name="Futaie régulière de pin d'Alep",
+        category="futaie_reguliere",
+        source=_source(),
+    )
+    assert system.category == "futaie_reguliere"
+
+
+@pytest.mark.parametrize("missing_field", ["name", "category", "source"])
+def test_silvicultural_system_missing_required_field_raises(missing_field: str) -> None:
+    payload = {
+        "name": "Futaie régulière de pin d'Alep",
+        "category": "futaie_reguliere",
+        "source": _source(),
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError):
+        SilviculturalSystemCreate(**payload)
+
+
+def test_silvicultural_rule_requires_all_non_negotiable_fields() -> None:
+    rule = SilviculturalRuleCreate(
+        required_context="Peuplement régulier, densité > 800 tiges/ha",
+        trigger="Surface terrière > 30 m²/ha",
+        action="Éclaircie par le bas",
+        intensity="Prélever 25 % de la surface terrière",
+        evidence_level="B",
+        source=_source(),
+    )
+    assert rule.action == "Éclaircie par le bas"
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    ["required_context", "trigger", "action", "intensity", "evidence_level", "source"],
+)
+def test_silvicultural_rule_missing_required_field_raises(missing_field: str) -> None:
+    payload = {
+        "required_context": "Peuplement régulier, densité > 800 tiges/ha",
+        "trigger": "Surface terrière > 30 m²/ha",
+        "action": "Éclaircie par le bas",
+        "intensity": "Prélever 25 % de la surface terrière",
+        "evidence_level": "B",
+        "source": _source(),
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError):
+        SilviculturalRuleCreate(**payload)
+
+
+def test_silvicultural_rule_record_accepted_requires_human_validator() -> None:
+    """Reproduit littéralement RFC-0016 §3.2 : jamais d'auto-validation par
+
+    le pipeline d'extraction — le passage à accepted exige un validateur
+    humain explicite (curateur de données + forestier compétent).
+    """
+    with pytest.raises(ValidationError, match="human_validator"):
+        SilviculturalRuleRecord(
+            id=uuid4(),
+            required_context="Peuplement régulier, densité > 800 tiges/ha",
+            trigger="Surface terrière > 30 m²/ha",
+            action="Éclaircie par le bas",
+            intensity="Prélever 25 % de la surface terrière",
+            evidence_level="B",
+            source=_source(),
+            status="accepted",
+        )
+
+
+def test_silvicultural_rule_record_accepted_with_human_validator_passes() -> None:
+    rule = SilviculturalRuleRecord(
+        id=uuid4(),
+        required_context="Peuplement régulier, densité > 800 tiges/ha",
+        trigger="Surface terrière > 30 m²/ha",
+        action="Éclaircie par le bas",
+        intensity="Prélever 25 % de la surface terrière",
+        evidence_level="B",
+        source=_source(),
+        status="accepted",
+        human_validator="J. Dupont, forestier référent CNPF",
+    )
+    assert rule.status == "accepted"
+
+
+def test_silvicultural_rule_record_draft_does_not_require_human_validator() -> None:
+    rule = SilviculturalRuleRecord(
+        id=uuid4(),
+        required_context="Peuplement régulier, densité > 800 tiges/ha",
+        trigger="Surface terrière > 30 m²/ha",
+        action="Éclaircie par le bas",
+        intensity="Prélever 25 % de la surface terrière",
+        evidence_level="B",
+        source=_source(),
+        status="draft",
+    )
+    assert rule.human_validator is None

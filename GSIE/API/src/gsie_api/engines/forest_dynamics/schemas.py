@@ -281,3 +281,93 @@ class StationObservationRecord(StationObservationCreate):
     status: str = Field(
         description="draft | proposed | accepted | superseded | rejected | deprecated"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0016 — Schéma forestier spécialisé, tranche 3/10 (SilviculturalSystem,
+# SilviculturalRule) — itinéraires sylvicoles (RFC-0016 §3.1). `Intervention`
+# (troisième entité citée par le RFC) n'a pas de schéma dédié ici : elle
+# existe déjà (gsie_api.engines côté business, type resource `intervention`,
+# audit ONF/CNPF 2026-07-16) et couvre le même besoin.
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class SilviculturalSystemCreate(BaseModel):
+    """Système sylvicole — futaie régulière/irrégulière, taillis, conversion."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=300)
+    category: str = Field(
+        description="futaie_reguliere | futaie_irreguliere | taillis | "
+        "taillis_sous_futaie | conversion | autre"
+    )
+    description: str | None = None
+    source: SourceReference
+
+
+class SilviculturalSystemRecord(SilviculturalSystemCreate):
+    """`SilviculturalSystemCreate` persisté — identifiant réel et statut de cycle de vie."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
+
+
+class SilviculturalRuleCreate(BaseModel):
+    """Règle d'intervention sylvicole — contexte, déclencheur, action, preuve.
+
+    RFC-0016 §3.1 : `required_context`, `trigger`, `action`, `intensity`,
+    `evidence_level` et `source` sont tous obligatoires — une règle sans
+    ces champs ne serait pas actionnable ni traçable jusqu'à sa preuve.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    silvicultural_system_id: UUID | None = None
+    species_gbif_taxon_key: int | None = Field(
+        default=None,
+        description="Clé GBIF du taxon accepté, si la règle est spécifique à une essence",
+    )
+    required_context: str = Field(
+        min_length=1, description="Contexte requis pour appliquer la règle"
+    )
+    trigger: str = Field(
+        min_length=1, description="Déclencheur (ex. seuil de densité, âge, sanitaire)"
+    )
+    action: str = Field(min_length=1, description="Action recommandée (ex. éclaircie, coupe rase)")
+    intensity: str = Field(
+        min_length=1, description="Intensité de l'action, qualitative ou chiffrée"
+    )
+    evidence_level: str = Field(description="A | B | C | D | E | F")
+    source: SourceReference
+
+
+class SilviculturalRuleRecord(SilviculturalRuleCreate):
+    """`SilviculturalRuleCreate` persistée — identifiant réel, statut et validation humaine.
+
+    RFC-0016 §3.2 : le passage à `accepted` (équivalent du `APPROVED` du
+    corpus source) exige `human_validator` non nul — jamais une
+    auto-validation par le pipeline d'extraction.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    species_entity_id: UUID | None = None
+    human_validator: str | None = Field(
+        default=None, max_length=300, description="Nom/qualité du validateur humain"
+    )
+    status: str = Field(
+        description="draft | proposed | accepted | superseded | rejected | deprecated"
+    )
+
+    def model_post_init(self, __context: object) -> None:
+        if self.status == "accepted" and not self.human_validator:
+            raise ValueError(
+                "human_validator requis lorsque status='accepted' "
+                "(jamais d'auto-validation par le pipeline d'extraction)"
+            )

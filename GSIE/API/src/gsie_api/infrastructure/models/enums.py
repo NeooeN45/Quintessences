@@ -652,6 +652,17 @@ class OutcomeStatus(StrEnum):
     abandoned = "abandoned"
 
 
+class SilviculturalSystemCategory(StrEnum):
+    """Catégorie de système sylvicole (RFC-0016 §3.1, tranche 3/10)."""
+
+    futaie_reguliere = "futaie_reguliere"
+    futaie_irreguliere = "futaie_irreguliere"
+    taillis = "taillis"
+    taillis_sous_futaie = "taillis_sous_futaie"
+    conversion = "conversion"
+    autre = "autre"
+
+
 class AdministrativeLevel(StrEnum):
     """Niveau d'unité administrative."""
 
