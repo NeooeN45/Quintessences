@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0018 |
-| **Statut** | Review |
+| **Statut** | Adopté (2026-07-20, DEC-000030 — volet en ligne §5 uniquement ; volet §6 hors périmètre) |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-20 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
@@ -156,13 +156,32 @@ par ce RFC pour l'entraînement lui-même.
   développement, conformément à la règle §5 de `CLAUDE.md` (Draft →
   Review → Validated).
 
-## 9. Prochaine étape
+## 9. Suivi d'implémentation
 
-Le fondateur a priorisé ce RFC le 2026-07-20. Statut passé en
-`Review` : la spécification fonctionnelle détaillée
-(`05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md`)
-a été rédigée pour préparer la décision. Reste avant adoption : revue
-du fondateur sur ce RFC et sur GEO-004, puis décision explicite
-(`03_DECISIONS/`). Une fois adopté, seul le §5 (volet en ligne) est
-autorisé en implémentation immédiate ; le §6 (modèle embarqué) reste à
-l'étude jusqu'à un jalon de faisabilité séparé.
+**Adopté le 2026-07-20 (DEC-000030)** — volet en ligne (§5) uniquement.
+Implémentation par tranches verticales, sur le modèle de RFC-0016 :
+
+**Tranche 1/N (schéma de données) — Complète (2026-07-20).** Les trois
+entités du §5.1 sont implémentées, sans aucun appel réseau vers
+Pl@ntNet :
+
+| Entité | Statut |
+|---|---|
+| `BotanicalIdentificationRequest` | Implémentée (nouvelle table `botanical_identification_request`) |
+| `BotanicalIdentificationResult` | Implémentée (nouvelle table `botanical_identification_result`) |
+| `BotanicalIdentificationDecision` | Implémentée (nouvelle table `botanical_identification_decision`), contrainte SQL empêchant une validation/rejet sans validateur et date de décision |
+
+Fichiers : `gsie_api.infrastructure.models.identification` (nouveau),
+extension de `resources/validators.py` et
+`infrastructure/models/enums.py` (2 nouveaux enums :
+`PlantOrgan`, `IdentificationDecisionStatus`). Registre de types
+resources 86 → 89. 339 tests unitaires (279 passed + 60 skipped avant
+cette tranche → 339 passed après, aucun échec).
+`check_governance_consistency.py` OK.
+
+**Reste à faire** : Tranche 2 (client Pl@ntNet côté serveur — appel
+réseau réel, nécessite la confirmation écrite de Pl@ntNet sur les
+conditions commerciales, préalable §8), Tranche 3 (routes serveur
+GSIE), Tranche 4 (intégration app mobile GeoSylva, retrait EXIF GPS
+effectif, UI des 3 hypothèses). Le §6 (modèle embarqué) reste à
+l'étude, hors périmètre de DEC-000030.

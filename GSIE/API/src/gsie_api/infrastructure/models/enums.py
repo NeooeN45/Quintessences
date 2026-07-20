@@ -696,3 +696,27 @@ class AdministrativeLevel(StrEnum):
     canton = "canton"
     parcel = "parcel"  # Parcelle cadastrale
     series = "series"  # Série forestière
+
+
+# RFC-0018 — identification botanique assistée (Pl@ntNet), tranche 1/N.
+class PlantOrgan(StrEnum):
+    """Organe photographié pour une requête d'identification (GEO-ID-01)."""
+
+    feuille = "feuille"
+    fleur = "fleur"
+    fruit = "fruit"
+    ecorce = "ecorce"
+    port = "port"  # silhouette / port général de l'individu
+
+
+class IdentificationDecisionStatus(StrEnum):
+    """Statut d'une identification botanique assistée (RFC-0018 §4, GEO-ID-10).
+
+    Une identification `SUGGESTION_IA` ne devient jamais `VALIDEE_UTILISATEUR`
+    automatiquement, quel que soit le score de confiance retourné par le
+    fournisseur (GSIE-CON-001).
+    """
+
+    suggestion_ia = "suggestion_ia"
+    validee_utilisateur = "validee_utilisateur"
+    rejetee = "rejetee"

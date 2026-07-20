@@ -26,6 +26,7 @@ from gsie_api.infrastructure.models.enums import (
     GoalType,
     HealthRiskSeverity,
     HypothesisStatus,
+    IdentificationDecisionStatus,
     LegalBasis,
     LifecycleStatus,
     MaterielBaseCategory,
@@ -115,6 +116,10 @@ _ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "provenance_material": {"base_material_category": MaterielBaseCategory},
     "diagnostic_protocol": {},
     "health_risk": {"severity": HealthRiskSeverity},
+    # RFC-0018 — identification botanique assistée Pl@ntNet (tranche 1/N, DEC-000030)
+    "botanical_identification_request": {},
+    "botanical_identification_result": {},
+    "botanical_identification_decision": {"status": IdentificationDecisionStatus},
 }
 
 # Champs obligatoires (non-None) par type
@@ -276,6 +281,16 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
         "source_id",
     ],
     "health_risk": ["subject_id", "symptom_observed", "observed_at", "source_id"],
+    # RFC-0018 — identification botanique assistée Pl@ntNet (tranche 1/N, DEC-000030)
+    "botanical_identification_request": ["requested_by_id", "photos", "captured_at"],
+    "botanical_identification_result": [
+        "request_id",
+        "provider",
+        "provider_engine_version",
+        "candidates",
+        "received_at",
+    ],
+    "botanical_identification_decision": ["result_id", "status"],
 }
 
 

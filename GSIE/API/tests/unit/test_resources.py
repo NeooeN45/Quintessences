@@ -13,7 +13,7 @@ from gsie_api.resources.validators import validate_resource_data
 class TestResourceTypes:
     """Tests du registry des types."""
 
-    def test_should_list_86_types_when_called(self) -> None:
+    def test_should_list_89_types_when_called(self) -> None:
         # 76 types + 3 types forestiers spécialisés (RFC-0016, tranche 1/10 :
         # autecology_profile, site_index_model, fertility_class) + 2 types
         # de diagnostic stationnel (RFC-0016, tranche 2/10 : station_type,
@@ -22,9 +22,11 @@ class TestResourceTypes:
         # silvicultural_rule — Intervention réutilise le type existant) +
         # 1 type provenance/MFR (RFC-0016, tranche 4/10 :
         # provenance_material) + 2 types sanitaires (RFC-0016, tranche
-        # 5/10 : diagnostic_protocol, health_risk).
+        # 5/10 : diagnostic_protocol, health_risk) + 3 types d'identification
+        # botanique assistée (RFC-0018, tranche 1/N, DEC-000030 :
+        # botanical_identification_request/result/decision).
         types = ResourceService.list_types()
-        assert len(types) == 86
+        assert len(types) == 89
         assert "assertion" in types
         assert "observation" in types
         assert "concept" in types
@@ -42,6 +44,9 @@ class TestResourceTypes:
         assert "provenance_material" in types
         assert "diagnostic_protocol" in types
         assert "health_risk" in types
+        assert "botanical_identification_request" in types
+        assert "botanical_identification_result" in types
+        assert "botanical_identification_decision" in types
 
     def test_should_return_sorted_types(self) -> None:
         types = ResourceService.list_types()
@@ -191,6 +196,63 @@ class TestValidators:
                 "aid_eligible": True,
                 "decree_version": "Arrêté du 6 mars 2026",
                 "source_id": uuid4(),
+            },
+        )
+        assert len(errors) == 1
+
+    def test_should_validate_botanical_identification_request_all_required(self) -> None:
+        errors = validate_resource_data(
+            "botanical_identification_request",
+            {
+                "requested_by_id": uuid4(),
+                "photos": [{"organ": "feuille", "content_hash": "abc123"}],
+                "captured_at": "2026-07-20T10:00:00Z",
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_botanical_identification_request_missing_fields(self) -> None:
+        errors = validate_resource_data("botanical_identification_request", {})
+        assert len(errors) == 3
+
+    def test_should_validate_botanical_identification_result_all_required(self) -> None:
+        errors = validate_resource_data(
+            "botanical_identification_result",
+            {
+                "request_id": uuid4(),
+                "provider": "plantnet",
+                "provider_engine_version": "2026.1",
+                "candidates": [{"scientific_name": "Quercus robur", "score": 0.82}],
+                "received_at": "2026-07-20T10:05:00Z",
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_botanical_identification_result_missing_fields(self) -> None:
+        errors = validate_resource_data("botanical_identification_result", {})
+        assert len(errors) == 5
+
+    def test_should_validate_botanical_identification_decision_default_status(self) -> None:
+        """Porte de validation RFC-0018 §4 : même via l'API générique de
+
+        resources, une décision d'identification exige un statut explicite
+        (jamais implicitement validée par défaut).
+        """
+        errors = validate_resource_data(
+            "botanical_identification_decision",
+            {
+                "result_id": uuid4(),
+                "status": "suggestion_ia",
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_botanical_identification_decision_invalid_status(self) -> None:
+        errors = validate_resource_data(
+            "botanical_identification_decision",
+            {
+                "result_id": uuid4(),
+                "status": "auto_confirmee",  # invalide — n'existe pas dans l'enum
             },
         )
         assert len(errors) == 1

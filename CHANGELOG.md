@@ -4,6 +4,34 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DEC-000030 — RFC-0018 ADOPTÉ, TRANCHE 1/N COMPLÈTE] - 2026-07-20
+
+### RFC-0018 adopté (volet en ligne), schéma de données implémenté
+
+- `DEC-000030` valide RFC-0018 et autorise uniquement le volet en
+  ligne (§5) par tranches verticales, sur le modèle éprouvé de
+  RFC-0016. Le volet modèle embarqué (§6) reste hors périmètre.
+- Tranche 1/N (schéma de données) — 3 nouvelles tables :
+  `botanical_identification_request`, `botanical_identification_result`,
+  `botanical_identification_decision`
+  (`GSIE/API/src/gsie_api/infrastructure/models/identification.py`,
+  nouveau module). Contrainte SQL empêchant une décision
+  `validee_utilisateur`/`rejetee` sans validateur ni date de décision.
+- 2 nouveaux enums (`PlantOrgan`, `IdentificationDecisionStatus`,
+  `infrastructure/models/enums.py`). Extension de
+  `resources/validators.py` (champs obligatoires + enum par type,
+  cohérent avec le principe déjà appliqué en RFC-0016 : la validation
+  s'applique même via l'API générique de resources, pas seulement les
+  schémas Pydantic des engines).
+- Registre de types resources 86 → 89. Suite de tests étendue
+  (`tests/unit/test_resources.py`) : 339 tests unitaires passent (0
+  échec, 60 skipped). `check_governance_consistency.py` OK.
+- Note technique : les contraintes SQL `jsonb_array_length` (nombre de
+  photos, nombre de candidats) ont été écartées au profit d'une
+  validation applicative — cette fonction est spécifique PostgreSQL et
+  absente de SQLite, utilisé par la suite de tests unitaires.
+- `PROJECT_MEMORY.md` synchronisé.
+
 ## [RFC-0018 EN REVIEW — SPÉCIFICATION GEO-004] - 2026-07-20
 
 ### RFC-0018 priorisé, spécification fonctionnelle rédigée

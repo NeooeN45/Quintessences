@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (RFC-0018 — identification botanique Pl@ntNet — priorisé par le fondateur, passé en **Review**, spécification GEO-004 rédigée ; RFC-0019 — `gsie-ai-gateway` — reste en Draft ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
+| **Dernière mise à jour** | 2026-07-20 (DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N (schéma de données) **complète** — 3 tables, registre 86→89, 339 tests ; RFC-0019 — `gsie-ai-gateway` — reste en Draft ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
 
 ---
 
@@ -275,21 +275,24 @@ brainstorming v5 n'est adoptée.
   `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md`.
   Voir `02_RFC/RFC-0017-veille-plantnet-nvidia-nim.md`.
 - **RFC-0018** — Identification botanique assistée (Pl@ntNet) et
-  extension du Botanical Engine (**Review** — 2026-07-20, priorisé par
-  le fondateur) : cycle `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`,
-  jamais de valeur automatique déclenchante (GSIE-CON-001).
-  Architecture GeoSylva→serveur GSIE→Pl@ntNet→normalisation→validation
-  humaine, clé API jamais côté client, métadonnées GPS retirées avant
-  envoi. Extension satellite d'`AutecologyProfile` (RFC-0016) sur
-  validation uniquement. Volet modèle embarqué offline maintenu « à
-  l'étude » (non prioritaire). Préalable bloquant : confirmation
-  écrite de Pl@ntNet sur les conditions commerciales avant toute
-  production. Spécification fonctionnelle rédigée : `GEO-004`
-  (16 exigences GEO-ID-01 à GEO-ID-16, exigences non fonctionnelles,
-  cas d'usage terrain avec/sans réseau) — voir
+  extension du Botanical Engine (**ADOPTÉ** — 2026-07-20, DEC-000030,
+  volet en ligne §5 uniquement) : cycle `SUGGESTION_IA` →
+  `VALIDEE_UTILISATEUR`, jamais de valeur automatique déclenchante
+  (GSIE-CON-001). Architecture GeoSylva→serveur GSIE→Pl@ntNet→
+  normalisation→validation humaine, clé API jamais côté client,
+  métadonnées GPS retirées avant envoi. Extension satellite
+  d'`AutecologyProfile` (RFC-0016) sur validation uniquement. Volet
+  modèle embarqué offline maintenu « à l'étude » (hors périmètre de
+  DEC-000030). Préalable bloquant avant tranche 2 : confirmation
+  écrite de Pl@ntNet sur les conditions commerciales. Spécification
+  fonctionnelle : `GEO-004` (16 exigences GEO-ID-01 à GEO-ID-16) — voir
   `05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md`.
-  Issu de DEC-000029 (scission de RFC-0017). Reste avant adoption :
-  revue fondateur puis décision (`03_DECISIONS/`).
+  **Tranche 1/N (schéma de données) complète le 2026-07-20** : 3
+  nouvelles tables (`botanical_identification_request/result/decision`),
+  registre de types 86→89, 339 tests unitaires (0 échec). Reste à
+  faire : client Pl@ntNet serveur (tranche 2, bloqué par la
+  confirmation commerciale), routes serveur (tranche 3), intégration
+  app mobile (tranche 4).
   Voir `02_RFC/RFC-0018-identification-botanique-plantnet.md`.
 - **RFC-0019** — `gsie-ai-gateway` : couche IA serveur transverse
   (**Draft** — 2026-07-20) : périmètre P0 = RAG scientifique
@@ -340,6 +343,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
 - **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire.
 - **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
+- **DEC-000030** — Adoption de RFC-0018 (identification botanique Pl@ntNet), volet en ligne uniquement (§5), par tranches verticales. **Tranche 1/N (schéma de données) complète le 2026-07-20** : `BotanicalIdentificationRequest`/`Result`/`Decision`, registre de types 86→89, 339 tests (0 échec). Tranches 2-4 (client Pl@ntNet, routes serveur, app mobile) restent à faire, tranche 2 bloquée par la confirmation écrite Pl@ntNet sur les conditions commerciales.
 
 ## Documents structurants
 
