@@ -4,6 +4,23 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DEC-000029 — SCISSION RFC-0017 EN RFC-0018 / RFC-0019] - 2026-07-20
+
+### Veille technologique et scission en RFC d'exécution
+
+- `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md` —
+  veille externe (Pl@ntNet, NVIDIA NIM/Blueprints/Skills/Brev) versée
+  pour traçabilité.
+- `RFC-0017` ouvert puis adopté comme cadrage (DEC-000029), aussitôt
+  scindé en deux RFC d'exécution indépendants, tous deux en `Draft` —
+  aucun code métier autorisé avant leur propre décision :
+  - `RFC-0018` — identification botanique assistée Pl@ntNet (cycle
+    `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`, extension satellite
+    d'`AutecologyProfile`, volet modèle embarqué offline à l'étude).
+  - `RFC-0019` — `gsie-ai-gateway`, couche IA serveur transverse
+    (périmètre P0 : RAG scientifique, garde-fou, `GSIE-Eval-FR`).
+- `PROJECT_MEMORY.md` synchronisé (RFC ouverts, décisions actives).
+
 ## [PHASE 4 — RFC-0016 SCHÉMA FORESTIER SPÉCIALISÉ — PHASE B COMPLÈTE] - 2026-07-19
 
 ### RFC-0016 Phase B (intégration Botanical/Forest Dynamics Engine) — 3/3 points implémentés

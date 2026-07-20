@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0017 |
-| **Statut** | Draft |
+| **Statut** | Adopté (2026-07-20, DEC-000029) — scindé en RFC-0018 et RFC-0019 |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-20 |
 | **Auteur** | Camille Perraudeau (Fondateur) — proposition rédigée à partir de la veille externe versée en `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md` |
@@ -135,11 +135,17 @@ document de veille.
   mais élimine toute dépendance externe. À comparer explicitement lors
   du débat du RFC.
 
-## 6. Prochaine étape
+## 6. Suite donnée
 
-Ce RFC reste en **Draft**. Aucune implémentation ne doit démarrer avant
-qu'il passe en Review puis soit adopté (règle §5 de `CLAUDE.md`). Si le
-fondateur souhaite avancer, la suite logique est de scinder ce RFC en
-deux RFC d'exécution distincts (un pour Pl@ntNet/Botanical Engine, un
-pour `gsie-ai-gateway`/NVIDIA), chacun avec son propre passage en
-Review puis Décision.
+Le fondateur a validé ce RFC le 2026-07-20 (DEC-000029) en tant que
+**cadrage**, avec scission immédiate en deux RFC d'exécution
+autonomes, chacun repartant en `Draft` et devant suivre son propre
+cycle Review → Décision avant toute implémentation :
+
+- **RFC-0018** — Identification botanique assistée (Pl@ntNet) et
+  extension du Botanical Engine.
+- **RFC-0019** — `gsie-ai-gateway` et intégration NVIDIA NIM.
+
+Ce document (RFC-0017) reste la référence de veille et de priorisation
+(§2.2, §5) ; il n'autorise par lui-même aucun code métier — seuls
+RFC-0018 et RFC-0019, une fois adoptés à leur tour, le pourront.

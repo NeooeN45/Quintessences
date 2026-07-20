@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (RFC-0017 ouvert en Draft — veille Pl@ntNet/NVIDIA NIM, aucune décision ni implémentation ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
+| **Dernière mise à jour** | 2026-07-20 (DEC-000029 : RFC-0017 adopté comme cadrage puis scindé en RFC-0018 — identification botanique Pl@ntNet — et RFC-0019 — `gsie-ai-gateway` — tous deux ouverts en Draft, aucune implémentation autorisée ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
 
 ---
 
@@ -266,21 +266,40 @@ brainstorming v5 n'est adoptée.
   faire.
   Voir `02_RFC/RFC-0016-schema-forestier-specialise.md`.
 - **RFC-0017** — Veille technologique : Pl@ntNet (identification
-  botanique) et NVIDIA NIM (couche IA serveur) (**Draft** —
-  2026-07-20) : formalise deux pistes non adoptées issues d'une veille
-  externe. (1) Identification assistée Pl@ntNet pour GeoSylva/Botanical
-  Engine — statut `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`, jamais de
-  valeur automatique déclenchante, architecture
-  GeoSylva→gateway→Pl@ntNet→validation humaine, confirmation écrite
-  des conditions commerciales requise avant production. (2) Couche
-  `gsie-ai-gateway` optionnelle sur NVIDIA NIM/Blueprints (RAG
-  scientifique, Nemotron, AI-Q, Earth2Studio, cuOpt, Parakeet) —
-  PostgreSQL/PostGIS/AGE reste la vérité canonique, aucun LLM/VLM
-  n'est autoritaire, pas d'auto-hébergement NIM sur le matériel actuel.
-  Aucune implémentation autorisée avant passage en Review puis
-  décision. Issue de
+  botanique) et NVIDIA NIM (couche IA serveur) (**ADOPTÉ comme
+  cadrage** — 2026-07-20, DEC-000029, **scindé** en RFC-0018 et
+  RFC-0019) : formalisait deux pistes issues d'une veille externe.
+  Reste la référence de priorisation (§2.2/§5) mais n'autorise plus
+  d'implémentation directe — voir les deux RFC d'exécution ci-dessous.
+  Issue de
   `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md`.
   Voir `02_RFC/RFC-0017-veille-plantnet-nvidia-nim.md`.
+- **RFC-0018** — Identification botanique assistée (Pl@ntNet) et
+  extension du Botanical Engine (**Draft** — 2026-07-20) : cycle
+  `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`, jamais de valeur
+  automatique déclenchante (GSIE-CON-001). Architecture
+  GeoSylva→serveur GSIE→Pl@ntNet→normalisation→validation humaine, clé
+  API jamais côté client, métadonnées GPS retirées avant envoi.
+  Extension satellite d'`AutecologyProfile` (RFC-0016) sur validation
+  uniquement. Volet modèle embarqué offline maintenu « à l'étude »
+  (non prioritaire). Préalable bloquant : confirmation écrite de
+  Pl@ntNet sur les conditions commerciales avant toute production.
+  Issu de DEC-000029 (scission de RFC-0017). Aucune implémentation
+  avant Review puis décision propre.
+  Voir `02_RFC/RFC-0018-identification-botanique-plantnet.md`.
+- **RFC-0019** — `gsie-ai-gateway` : couche IA serveur transverse
+  (**Draft** — 2026-07-20) : périmètre P0 = RAG scientifique
+  (`/ai/embed`, `/ai/rerank`, `/ai/research`), garde-fou, banc d'essai
+  `GSIE-Eval-FR` (Recall@10 ≥ 85 %, précision citations ≥ 95 %,
+  abstention si preuve insuffisante). PostgreSQL/PostGIS/AGE reste la
+  vérité canonique, aucun LLM/VLM n'est autoritaire. Pas
+  d'auto-hébergement NIM en production sur le matériel actuel
+  (Windows, GPU insuffisant) — endpoints hébergés + Brev pour
+  prototyper, plafond d'heures GPU par expérience. P1/P2/P3 (AI-Q,
+  Earth2Studio, cuOpt, Parakeet, vision/vidéo, Hub UE5.8) explicitement
+  hors périmètre de ce RFC. Issu de DEC-000029 (scission de RFC-0017).
+  Aucune implémentation avant Review puis décision propre.
+  Voir `02_RFC/RFC-0019-gsie-ai-gateway-nvidia-nim.md`.
 
 ---
 
@@ -316,6 +335,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
 - **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire.
+- **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
 
 ## Documents structurants
 
