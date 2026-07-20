@@ -12,13 +12,10 @@ Usage :
 import json
 import sys
 import math
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def load_data(path: str) -> dict:
@@ -85,9 +82,9 @@ def plot_3d_trajectory(data: dict, output_path: str) -> None:
         ax1.plot(drone_x, drone_y, drone_z, "b-o", markersize=4,
                  label="Trajectoire drone", zorder=5)
         # Points colorés par distance au feu
-        scatter = ax1.scatter(drone_x, drone_y, drone_z, c=dists,
-                              cmap="RdYrGn_r", s=50, zorder=6,
-                              label="Captures (couleur = distance au feu)")
+        ax1.scatter(drone_x, drone_y, drone_z, c=dists,
+                    cmap="RdYrGn_r", s=50, zorder=6,
+                    label="Captures (couleur = distance au feu)")
 
     # Front de feu au sol (z=0)
     if fire_x:
@@ -112,7 +109,7 @@ def plot_3d_trajectory(data: dict, output_path: str) -> None:
                                cmap="RdYrGn_r", s=60, edgecolors="black",
                                linewidth=0.5, zorder=5)
         ax2.plot(drone_x, drone_y, "k--", alpha=0.3)
-        cbar = plt.colorbar(scatter2, ax=ax2, label="Distance au feu (m)")
+        plt.colorbar(scatter2, ax=ax2, label="Distance au feu (m)")
 
     ax2.set_xlabel("Est (m)")
     ax2.set_ylabel("Nord (m)")

@@ -114,7 +114,7 @@ async def fly_waypoints(drone: System) -> None:
             alt = pos.relative_altitude_m
             print(f"  [{elapsed:5.1f}s] alt={alt:.1f} m")
             if elapsed > 15:
-                print(f"  ✓ Waypoint atteint (timeout 15 s)")
+                print("  ✓ Waypoint atteint (timeout 15 s)")
                 break
             await asyncio.sleep(3)
 

@@ -22,7 +22,6 @@ import json
 import math
 import subprocess
 import os
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from mavsdk import System
@@ -203,7 +202,7 @@ async def fly_surveillance_pattern(drone: System, fire_points: list) -> list:
     captures = []
     line_duration = LINE_LENGTH / CRUISE_SPEED
 
-    print(f"\n=== Pattern surveillance grille ===")
+    print("\n=== Pattern surveillance grille ===")
     print(f"  {GRID_LINES} lignes x {LINE_LENGTH} m, espacement {GRID_SPACING} m")
     print(f"  Vitesse: {CRUISE_SPEED} m/s, altitude: {ALTITUDE} m")
     if fire_points:
@@ -300,7 +299,7 @@ async def run() -> None:
     print(f"Attente du front de feu ({geojson_path})...")
     for i in range(30):
         if os.path.exists(geojson_path):
-            print(f"✓ Front de feu disponible")
+            print("✓ Front de feu disponible")
             break
         await asyncio.sleep(1)
     else:
@@ -395,7 +394,7 @@ async def run() -> None:
     # Statistiques de distance au feu
     dists = [c["dist_to_fire_m"] for c in captures if c["dist_to_fire_m"] is not None]
     if dists:
-        print(f"\nStatistiques distance au feu:")
+        print("\nStatistiques distance au feu:")
         print(f"  Min: {min(dists):.1f} m")
         print(f"  Max: {max(dists):.1f} m")
         print(f"  Moy: {sum(dists) / len(dists):.1f} m")

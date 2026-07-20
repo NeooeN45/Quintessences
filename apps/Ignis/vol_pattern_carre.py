@@ -5,12 +5,10 @@ utilisant des setpoints de vélocité pour un vol plus fluide, puis atterrit.
 Simule un pattern de surveillance aérienne pour détecter des départs de feu.
 """
 import asyncio
-import math
 from mavsdk import System
 from mavsdk.offboard import (
     OffboardError,
     VelocityNedYaw,
-    PositionNedYaw,
 )
 
 

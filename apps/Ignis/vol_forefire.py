@@ -92,7 +92,6 @@ def ff_send(command: str) -> str:
     Utilise http.client pour éviter les problèmes d'encodage URL de urllib.
     Les commandes ne doivent pas contenir d'espaces (utiliser geojson pour startFire).
     """
-    import http.client
     conn = http.client.HTTPConnection(FF_HOST, FF_PORT, timeout=10)
     try:
         conn.request("GET", f"/ff:{command}")
@@ -341,7 +340,7 @@ async def fly_and_capture(drone: System) -> list:
     line_duration = LINE_LENGTH / CRUISE_SPEED
     ff_time = 0  # temps simulé ForeFire écoulé
 
-    print(f"\n  === Pattern surveillance grille ===")
+    print("\n  === Pattern surveillance grille ===")
     print(f"  {GRID_LINES} lignes x {LINE_LENGTH} m, espacement {GRID_SPACING} m")
     print(f"  Vitesse: {CRUISE_SPEED} m/s, altitude: {ALTITUDE} m")
     print(f"  ForeFire: +{FF_STEP_SECONDS}s par capture")
@@ -441,8 +440,6 @@ def plot_results(captures: list) -> None:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
     except ImportError:
         print("  ⚠ matplotlib non disponible — pas de visualisation")
         return
@@ -604,7 +601,7 @@ async def run() -> None:
     # Statistiques
     dists = [c["dist_to_fire_m"] for c in captures if c["dist_to_fire_m"] is not None]
     if dists:
-        print(f"\n  Statistiques distance au feu :")
+        print("\n  Statistiques distance au feu :")
         print(f"    Min : {min(dists):.1f} m")
         print(f"    Max : {max(dists):.1f} m")
         print(f"    Moy : {sum(dists) / len(dists):.1f} m")

@@ -9,7 +9,6 @@ Ce test valide le concept d'observation aérienne d'un front de feu.
 """
 import asyncio
 import json
-import time
 from datetime import datetime, timezone
 from mavsdk import System
 from mavsdk.offboard import OffboardError, VelocityNedYaw, PositionNedYaw
@@ -81,7 +80,7 @@ async def takeoff(drone: System) -> None:
         PositionNedYaw(0.0, 0.0, -ALTITUDE, 0.0)
     )
     await asyncio.sleep(3)
-    print(f"✓ Altitude stabilisee")
+    print("✓ Altitude stabilisee")
 
 
 async def fly_lawnmower_pattern(drone: System) -> list:
@@ -92,7 +91,7 @@ async def fly_lawnmower_pattern(drone: System) -> list:
     captures = []
     line_duration = LINE_LENGTH / CRUISE_SPEED  # ~33 s par ligne
 
-    print(f"\n=== Pattern surveillance grille ===")
+    print("\n=== Pattern surveillance grille ===")
     print(f"  {GRID_LINES} lignes x {LINE_LENGTH} m, espacement {GRID_SPACING} m")
     print(f"  Vitesse: {CRUISE_SPEED} m/s, altitude: {ALTITUDE} m")
     print(f"  Capture position toutes les {CAPTURE_INTERVAL} s")

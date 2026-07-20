@@ -6,7 +6,6 @@ les patterns de vol.
 """
 import json
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")  # Headless
@@ -49,7 +48,7 @@ def plot_trajectory(data: dict, output_path: str) -> None:
     ax1 = axes[0, 0]
     colors = plt.cm.viridis(np.linspace(0, 1, max(lines) + 1))
     for line_num in sorted(set(lines)):
-        idx = [i for i, l in enumerate(lines) if l == line_num]
+        idx = [i for i, line in enumerate(lines) if line == line_num]
         ax1.scatter(
             [x[i] for i in idx],
             [y[i] for i in idx],
