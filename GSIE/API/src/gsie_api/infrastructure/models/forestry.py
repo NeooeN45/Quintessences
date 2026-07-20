@@ -98,7 +98,7 @@ class AutecologyProfileModel(Base, TimestampMixin):
         Enum(EvidenceLevel, name="evidence_level"), nullable=False
     )
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -144,7 +144,7 @@ class SiteIndexModelModel(Base, TimestampMixin):
     valid_age_min_years: Mapped[int | None] = mapped_column(Integer, nullable=True)
     valid_age_max_years: Mapped[int | None] = mapped_column(Integer, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -192,7 +192,7 @@ class FertilityClassModel(Base, TimestampMixin):
     upper_bound_m: Mapped[float | None] = mapped_column(Float, nullable=True)
     calibration_region: Mapped[str] = mapped_column(String(200), nullable=False)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -237,7 +237,7 @@ class StationTypeModel(Base, TimestampMixin):
     hydromorphy_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     indicator_flora_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -280,7 +280,7 @@ class StationObservationModel(Base, TimestampMixin):
     determination_uncertainty: Mapped[str | None] = mapped_column(Text, nullable=True)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -319,7 +319,7 @@ class SilviculturalSystemModel(Base, TimestampMixin):
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -368,7 +368,7 @@ class SilviculturalRuleModel(Base, TimestampMixin):
         "obligatoire dès que status passe à accepted",
     )
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -407,7 +407,7 @@ class DiagnosticProtocolModel(Base, TimestampMixin):
     thresholds_description: Mapped[str] = mapped_column(Text, nullable=False)
     limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -451,7 +451,7 @@ class HealthRiskModel(Base, TimestampMixin):
     )
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
@@ -506,7 +506,7 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
     )
     valid_region_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),
