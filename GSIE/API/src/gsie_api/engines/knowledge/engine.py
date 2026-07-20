@@ -350,7 +350,6 @@ class KnowledgeEngine:
             justification=request.justification[:100],
         )
 
-        effective_evidence_level = new_evidence_level.value if new_evidence_level else None
         result = self._to_knowledge_object(
             connaissance_id=request.connaissance_id,
             metadata=metadata,
@@ -358,9 +357,9 @@ class KnowledgeEngine:
             version=new_version,
             date_integration=now,
             historique=None,
-            evidence_model=evidence if effective_evidence_level is None else None,
+            evidence_model=evidence if new_evidence_level is None else None,
         )
-        if effective_evidence_level is not None:
+        if new_evidence_level is not None:
             result.evidence_level = new_evidence_level
         result.historique = await self._load_historique(request.connaissance_id, new_version)
         return result
@@ -422,12 +421,20 @@ class KnowledgeEngine:
                 else PydanticEvidenceLevel.F
             )
 
+        for required_field in ("type", "domaine_scientifique"):
+            if metadata.get(required_field) is None:
+                raise KnowledgeEngineError(
+                    f"Connaissance {connaissance_id} : metadata_json ne contient pas "
+                    f"« {required_field} » (ou vaut null) — resource.metadata_json corrompu "
+                    f"ou incomplet, impossible de reconstruire ce KnowledgeObject"
+                )
+
         return KnowledgeObject(
             connaissance_id=connaissance_id,
-            type=KnowledgeType(metadata.get("type")),
+            type=KnowledgeType(metadata["type"]),
             titre=metadata.get("titre", ""),
             description=metadata.get("description", ""),
-            domaine_scientifique=DomaineScientifique(metadata.get("domaine_scientifique")),
+            domaine_scientifique=DomaineScientifique(metadata["domaine_scientifique"]),
             contenu=metadata.get("contenu", {}),
             evidence_level=evidence_level,
             source=SourceReference.model_validate(metadata.get("source", {})),
