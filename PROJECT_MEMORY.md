@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-19 (RFC-0016 Phase B **complète** — intégration Botanical/Forest Dynamics Engine et passeport de décision à 5 catégories, sur les acquis de la Phase A ; 387 tests dont 327 passed/60 skipped ; seule la Phase C — pilote Nouvelle-Aquitaine — reste à faire) |
+| **Dernière mise à jour** | 2026-07-20 (RFC-0017 ouvert en Draft — veille Pl@ntNet/NVIDIA NIM, aucune décision ni implémentation ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
 
 ---
 
@@ -265,6 +265,22 @@ brainstorming v5 n'est adoptée.
   `DEC-000027`. Seule la Phase C (pilote Nouvelle-Aquitaine) reste à
   faire.
   Voir `02_RFC/RFC-0016-schema-forestier-specialise.md`.
+- **RFC-0017** — Veille technologique : Pl@ntNet (identification
+  botanique) et NVIDIA NIM (couche IA serveur) (**Draft** —
+  2026-07-20) : formalise deux pistes non adoptées issues d'une veille
+  externe. (1) Identification assistée Pl@ntNet pour GeoSylva/Botanical
+  Engine — statut `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`, jamais de
+  valeur automatique déclenchante, architecture
+  GeoSylva→gateway→Pl@ntNet→validation humaine, confirmation écrite
+  des conditions commerciales requise avant production. (2) Couche
+  `gsie-ai-gateway` optionnelle sur NVIDIA NIM/Blueprints (RAG
+  scientifique, Nemotron, AI-Q, Earth2Studio, cuOpt, Parakeet) —
+  PostgreSQL/PostGIS/AGE reste la vérité canonique, aucun LLM/VLM
+  n'est autoritaire, pas d'auto-hébergement NIM sur le matériel actuel.
+  Aucune implémentation autorisée avant passage en Review puis
+  décision. Issue de
+  `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md`.
+  Voir `02_RFC/RFC-0017-veille-plantnet-nvidia-nim.md`.
 
 ---
 
