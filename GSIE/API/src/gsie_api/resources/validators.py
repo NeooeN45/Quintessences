@@ -4,6 +4,7 @@ Valide les champs obligatoires et les enums pour chaque type avant
 l'insertion en DB. Évite d'envoyer n'importe quoi dans `data`.
 """
 
+from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
@@ -294,6 +295,68 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
 }
 
 
+def _validate_autecology_profile_conditional(data: dict[str, Any]) -> list[str]:
+    """`value_numeric` ou `value_text` requis (au moins l'un des deux).
+
+    Reflète la contrainte SQL `ck_autecology_profile_value_present` et
+    `AutecologyProfileCreate.model_post_init` — même règle imposée ici
+    pour l'API générique de resources (RFC-0016 §4).
+    """
+    if data.get("value_numeric") is None and data.get("value_text") is None:
+        return ["value_numeric ou value_text requis (au moins l'un des deux)"]
+    return []
+
+
+def _validate_station_observation_conditional(data: dict[str, Any]) -> list[str]:
+    """`determination_uncertainty` obligatoire si `station_type_id` est absent.
+
+    Une observation qui ne résout aucun `StationType` avec certitude
+    doit le dire explicitement, jamais forcer un rattachement arbitraire
+    (RFC-0016 §4).
+    """
+    if data.get("station_type_id") is None and not data.get("determination_uncertainty"):
+        return [
+            "determination_uncertainty requis quand station_type_id est absent "
+            "(une observation non résolue doit expliciter son incertitude)"
+        ]
+    return []
+
+
+def _validate_silvicultural_rule_conditional(data: dict[str, Any]) -> list[str]:
+    """`human_validator` requis si `status` vaut `accepted`.
+
+    Reflète la contrainte SQL `ck_silvicultural_rule_human_validation_required`
+    — jamais d'auto-validation par le pipeline d'extraction (RFC-0016 §3.2).
+    """
+    if data.get("status") == "accepted" and not data.get("human_validator"):
+        return ["human_validator requis quand status='accepted'"]
+    return []
+
+
+def _validate_health_risk_conditional(data: dict[str, Any]) -> list[str]:
+    """`confirmation_method` requis si `confirmed_causal_agent` est renseigné.
+
+    Reflète la contrainte SQL `ck_health_risk_confirmation_requires_method`
+    — un agent « confirmé » sans méthode citée serait une invention
+    silencieuse (ADR-007).
+    """
+    if data.get("confirmed_causal_agent") and not data.get("confirmation_method"):
+        return ["confirmation_method requis quand confirmed_causal_agent est renseigné"]
+    return []
+
+
+# Règles métier conditionnelles (au-delà des champs simplement obligatoires ou
+# des enums) — chacune reflète une contrainte SQL déjà en place, appliquée ici
+# également à l'API générique de resources (même porte de validation que les
+# champs obligatoires de `fertility_class`, RFC-0016 §5 Phase A point 3).
+_CONDITIONAL_RULES: dict[str, Callable[[dict[str, Any]], list[str]]] = {
+    "autecology_profile": _validate_autecology_profile_conditional,
+    "station_observation": _validate_station_observation_conditional,
+    "silvicultural_rule": _validate_silvicultural_rule_conditional,
+    "health_risk": _validate_health_risk_conditional,
+}
+
+
 def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
     """Valide les données d'une resource selon son type.
 
@@ -334,5 +397,10 @@ def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
     max_fields = 50
     if len(data) > max_fields:
         errors.append(f"Trop de champs : {len(data)} (max {max_fields})")
+
+    # 5. Règles métier conditionnelles (reflètent les contraintes SQL)
+    conditional_rule = _CONDITIONAL_RULES.get(type_name)
+    if conditional_rule is not None:
+        errors.extend(conditional_rule(data))
 
     return errors

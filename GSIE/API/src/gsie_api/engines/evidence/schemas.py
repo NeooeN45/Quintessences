@@ -27,6 +27,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from gsie_api.infrastructure.models.enums import LifecycleStatus
+
 
 class SourceType(StrEnum):
     """Type de source scientifique (EVIDENCE_FRAMEWORK.md)."""
@@ -141,6 +143,4 @@ class EvidenceStatementRecord(EvidenceStatementCreate):
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
-    status: str = Field(
-        description="draft | proposed | accepted | superseded | rejected | deprecated"
-    )
+    status: LifecycleStatus

@@ -20,6 +20,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from gsie_api.engines.evidence.schemas import SourceReference
+from gsie_api.infrastructure.models.enums import EvidenceLevel
 
 
 class BotanicalQueryType(StrEnum):
@@ -204,9 +205,7 @@ class AutecologyProfileCreate(BaseModel):
     territory_description: str | None = Field(default=None, max_length=2000)
     method: str | None = None
     uncertainty: str | None = None
-    evidence_level: str = Field(
-        description="Grade A-F, voir gsie_api.infrastructure.models.enums.EvidenceLevel"
-    )
+    evidence_level: EvidenceLevel
     source: SourceReference
 
     def model_post_init(self, __context: object) -> None:

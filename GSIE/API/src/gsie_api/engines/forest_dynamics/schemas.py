@@ -31,6 +31,12 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from gsie_api.engines.evidence.schemas import SourceReference
+from gsie_api.infrastructure.models.enums import (
+    EvidenceLevel,
+    HealthRiskSeverity,
+    MaterielBaseCategory,
+    SilviculturalSystemCategory,
+)
 
 
 class StructurePeuplement(StrEnum):
@@ -316,10 +322,7 @@ class SilviculturalSystemCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=1, max_length=300)
-    category: str = Field(
-        description="futaie_reguliere | futaie_irreguliere | taillis | "
-        "taillis_sous_futaie | conversion | autre"
-    )
+    category: SilviculturalSystemCategory
     description: str | None = None
     source: SourceReference
 
@@ -360,7 +363,7 @@ class SilviculturalRuleCreate(BaseModel):
     intensity: str = Field(
         min_length=1, description="Intensité de l'action, qualitative ou chiffrée"
     )
-    evidence_level: str = Field(description="A | B | C | D | E | F")
+    evidence_level: EvidenceLevel
     source: SourceReference
 
 
@@ -420,7 +423,7 @@ class ProvenanceMaterialCreate(BaseModel):
         max_length=300,
         description="Identifiant du matériel de base (verger à graines, peuplement classé, etc.)",
     )
-    base_material_category: str = Field(description="identifie | selectionne | qualifie | teste")
+    base_material_category: MaterielBaseCategory
     aid_eligible: bool = Field(description="Admissibilité aux aides publiques, selon l'arrêté cité")
     decree_version: str = Field(
         min_length=1,
@@ -490,9 +493,7 @@ class HealthRiskCreate(BaseModel):
     suspected_causal_agent: str | None = Field(default=None, max_length=300)
     confirmed_causal_agent: str | None = Field(default=None, max_length=300)
     confirmation_method: str | None = None
-    severity: str | None = Field(
-        default=None, description="negligible | low | moderate | high | critical"
-    )
+    severity: HealthRiskSeverity | None = None
     observed_at: datetime
     source: SourceReference
 

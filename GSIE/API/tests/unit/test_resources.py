@@ -215,6 +215,138 @@ class TestValidators:
         errors = validate_resource_data("botanical_identification_request", {})
         assert len(errors) == 3
 
+    def test_should_fail_when_autecology_profile_missing_both_values(self) -> None:
+        """Règle conditionnelle : `value_numeric` ou `value_text` requis
+
+        (reflète la contrainte SQL `ck_autecology_profile_value_present`,
+        RFC-0016 §4), appliquée aussi via l'API générique de resources.
+        """
+        errors = validate_resource_data(
+            "autecology_profile",
+            {
+                "species_entity_id": uuid4(),
+                "variable": "ph_optimal",
+                "evidence_level": "B",
+                "source_id": uuid4(),
+                # ni value_numeric ni value_text
+            },
+        )
+        assert len(errors) == 1
+        assert "value_numeric ou value_text" in errors[0]
+
+    def test_should_pass_when_autecology_profile_has_value_text_only(self) -> None:
+        errors = validate_resource_data(
+            "autecology_profile",
+            {
+                "species_entity_id": uuid4(),
+                "variable": "ph_optimal",
+                "evidence_level": "B",
+                "source_id": uuid4(),
+                "value_text": "acide à neutre",
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_station_observation_missing_uncertainty(self) -> None:
+        """Règle conditionnelle : `determination_uncertainty` obligatoire si
+
+        `station_type_id` est absent (reflète RFC-0016 §4 — jamais de
+        rattachement arbitraire).
+        """
+        errors = validate_resource_data(
+            "station_observation",
+            {
+                "plot_reference": "P-42",
+                "observed_at": "2026-07-20T10:00:00Z",
+                "source_id": uuid4(),
+                # station_type_id absent, determination_uncertainty absent
+            },
+        )
+        assert len(errors) == 1
+        assert "determination_uncertainty" in errors[0]
+
+    def test_should_pass_when_station_observation_has_station_type(self) -> None:
+        errors = validate_resource_data(
+            "station_observation",
+            {
+                "plot_reference": "P-42",
+                "observed_at": "2026-07-20T10:00:00Z",
+                "source_id": uuid4(),
+                "station_type_id": uuid4(),
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_silvicultural_rule_accepted_without_validator(self) -> None:
+        """Règle conditionnelle : `human_validator` requis si `status='accepted'`
+
+        (reflète la contrainte SQL
+        `ck_silvicultural_rule_human_validation_required`, RFC-0016 §3.2).
+        """
+        errors = validate_resource_data(
+            "silvicultural_rule",
+            {
+                "required_context": "Peuplement régulier",
+                "trigger": "Densité > 800 tiges/ha",
+                "action": "Éclaircie",
+                "intensity": "25 %",
+                "evidence_level": "B",
+                "source_id": uuid4(),
+                "status": "accepted",
+                # human_validator absent
+            },
+        )
+        assert len(errors) == 1
+        assert "human_validator" in errors[0]
+
+    def test_should_pass_when_silvicultural_rule_draft_without_validator(self) -> None:
+        errors = validate_resource_data(
+            "silvicultural_rule",
+            {
+                "required_context": "Peuplement régulier",
+                "trigger": "Densité > 800 tiges/ha",
+                "action": "Éclaircie",
+                "intensity": "25 %",
+                "evidence_level": "B",
+                "source_id": uuid4(),
+                "status": "draft",
+            },
+        )
+        assert errors == []
+
+    def test_should_fail_when_health_risk_confirmed_without_method(self) -> None:
+        """Règle conditionnelle : `confirmation_method` requis si
+
+        `confirmed_causal_agent` est renseigné (reflète la contrainte SQL
+        `ck_health_risk_confirmation_requires_method`, ADR-007).
+        """
+        errors = validate_resource_data(
+            "health_risk",
+            {
+                "subject_id": uuid4(),
+                "symptom_observed": "Défoliation partielle",
+                "observed_at": "2026-07-20T10:00:00Z",
+                "source_id": uuid4(),
+                "confirmed_causal_agent": "Ips typographus",
+                # confirmation_method absent
+            },
+        )
+        assert len(errors) == 1
+        assert "confirmation_method" in errors[0]
+
+    def test_should_pass_when_health_risk_suspected_only(self) -> None:
+        errors = validate_resource_data(
+            "health_risk",
+            {
+                "subject_id": uuid4(),
+                "symptom_observed": "Défoliation partielle",
+                "observed_at": "2026-07-20T10:00:00Z",
+                "source_id": uuid4(),
+                "suspected_causal_agent": "Ips typographus (à confirmer)",
+            },
+        )
+        assert errors == []
+
     def test_should_validate_botanical_identification_result_all_required(self) -> None:
         errors = validate_resource_data(
             "botanical_identification_result",
