@@ -17,6 +17,12 @@ laricio, peupliers »). Les tranches 1-6 avaient déjà produit des
 (commit `36abef0`, source Parelle et al. 2007). Ce lot cible les
 essences restantes.
 
+**Bilan : 10/10 essences du corpus RFC-0016 §4 ont désormais au moins
+une source ouverte identifiée** (7 téléchargées ici, 1 source
+supplémentaire pour pin maritime + pin laricio identifiée et
+licence-vérifiée mais bloquée par une protection anti-bot, pas
+encore en main).
+
 ## Documents récupérés (accès libre confirmé)
 
 | Fichier | Essence(s) couverte(s) | Référence | Licence | Pertinence |
@@ -33,33 +39,39 @@ essences restantes.
 maritime, Douglas, pin sylvestre, peuplier noir), en plus des 2 déjà
 traitées (petraea, robur) — soit 9/10 essences citées par RFC-0016 §4.
 
+## Identifié mais non téléchargé (bloqué par protection anti-bot, pas par le droit)
+
+- **Pin laricio de Corse** (*Pinus nigra* subsp. *laricio*) — et
+  bonus, second document pour **pin maritime** (*Pinus pinaster*) :
+  Häusser M. et al. (2021), « The Dry and the Wet Case: Tree Growth
+  Response in Climatologically Contrasting Years on the Island of
+  Corsica », *Forests* 12(9):1175, DOI
+  [10.3390/f12091175](https://doi.org/10.3390/f12091175). Licence
+  **CC BY confirmée indépendamment via Unpaywall**
+  (`is_oa: true`, `journal_is_oa: true`) — pas seulement la page de
+  l'éditeur. URL PDF vérifiée :
+  `https://www.mdpi.com/1999-4907/12/9/1175/pdf?version=1630556837`.
+  **Non téléchargé ici** : MDPI bloque les requêtes automatisées
+  (403/« Access Denied », protection anti-bot) — pas un problème de
+  droit d'usage, juste d'automatisation. Téléchargement à faire
+  manuellement (navigateur) ou via le fetcher HTTP de Forge, qui n'a
+  pas cette restriction en pratique.
+
 ## Ce qui manque encore
 
-- **Pin laricio de Corse** (*Pinus nigra* subsp. *laricio*) : aucune
-  source en accès libre confirmée trouvée. Candidats identifiés mais
-  non retenus :
-  - `hautsdefrance-normandie.cnpf.fr/.../pins_noirs_et_laricio_de_corse.pdf`
-    — document CNPF, statut juridique `LEGAL_REVIEW_PENDING` (RFC-0016
-    §4, corpus source §12) — **non téléchargé**, nécessite ta
-    validation avant tout usage.
-  - Thèse Lebourgeois F. (1995), « Étude dendroécologique et
-    écophysiologique du pin laricio de Corse... », Paris 11
-    (theses.fr/1995PA112096) — manuscrit non accessible directement en
-    ligne (pas de PDF public trouvé sur theses.fr).
-  - Une version ResearchGate d'un article « Autécologie du pin laricio
-    de Corse dans le secteur ligérien » existe mais son statut de
-    licence n'a pas été vérifié (copie déposée par un auteur sur une
-    plateforme tierce n'est pas toujours équivalente à un accès
-    libre légal) —à vérifier avant usage si retenue.
 - **Peupliers cultivés** (cultivars/hybrides *Populus × canadensis*,
   utilisés en populiculture française réelle) : seule la source native
   *Populus nigra* a été retenue ici — les cultivars hybrides
   peupleraies (source d'usage réel en Nouvelle-Aquitaine) restent à
   rechercher séparément si le pilote les inclut.
-- Aucune tentative de contourner un paywall n'a été faite : toute
-  source dont le statut « accès libre » n'était pas confirmé par
-  Europe PMC ou la page de licence de l'éditeur a été écartée plutôt
-  que téléchargée par prudence.
+- Aucune tentative de contourner un paywall ou une protection
+  anti-bot n'a été faite : toute source dont le statut « accès
+  libre » n'était pas confirmé par Europe PMC/Unpaywall ou la page de
+  licence de l'éditeur a été écartée plutôt que téléchargée par
+  prudence. Le document CNPF « Pins noirs et laricio de Corse »
+  (`hautsdefrance-normandie.cnpf.fr`) reste par ailleurs
+  `LEGAL_REVIEW_PENDING` et n'a pas été téléchargé, indépendamment de
+  toute protection technique.
 
 ## Prochaine étape (après ta revue)
 
