@@ -4,6 +4,33 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [AUDIT QUALITÉ RFC-0016 — CORRECTIONS P1/P2] - 2026-07-20
+
+### Audit qualité (3 subagents backend) sur les tranches 1-5 déjà committées
+
+- Résultat : 0 P0 sur l'ensemble du code audité (committé et non
+  committé), ADR-007 respecté partout (aucune valeur scientifique non
+  sourcée détectée). 9 P1 + 7 P2 identifiés sur RFC-0016 Phase A, 1 P1
+  + 7 P2 sur Phase B/C, 0 P1 + 5 P2 sur l'extension Forest Dynamics.
+- Corrections P1 appliquées (`fix(forestry)`) : typage enum strict sur
+  6 DTO Pydantic (`AutecologyProfileCreate.evidence_level`,
+  `SilviculturalSystemCreate.category`,
+  `SilviculturalRuleCreate.evidence_level`,
+  `ProvenanceMaterialCreate.base_material_category`,
+  `HealthRiskCreate.severity`, `EvidenceStatementRecord.status`) ;
+  4 règles métier conditionnelles répliquées dans
+  `resources/validators.py` (reflètent des `CheckConstraint` SQL déjà
+  en place — `autecology_profile`, `station_observation`,
+  `silvicultural_rule`, `health_risk`). 10 nouveaux tests.
+- Correction P2 appliquée (`perf(forestry)`) : index manquants sur les
+  10 FK `source_id` des tables forestières RFC-0016 (aucune n'était
+  indexée alors que toutes les autres FK le sont) — migration
+  `0012_forestry_source_id_indexes.py`.
+- 347 tests unitaires passent (0 échec, 60 skipped). mypy --strict : 0
+  issue. ruff : clean sur tous les fichiers touchés.
+- Restent non traités (hors scope de cette passe) : 7+7+5 P2 restants
+  de l'audit (dette de cohérence mineure, aucun n'est bloquant).
+
 ## [DEC-000030 — RFC-0018 ADOPTÉ, TRANCHE 1/N COMPLÈTE] - 2026-07-20
 
 ### RFC-0018 adopté (volet en ligne), schéma de données implémenté

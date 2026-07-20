@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N (schéma de données) **complète** — 3 tables, registre 86→89, 339 tests ; RFC-0019 — `gsie-ai-gateway` — reste en Draft ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
+| **Dernière mise à jour** | 2026-07-20 (audit qualité RFC-0016 tranches 1-5 : 0 P0, corrections P1/P2 appliquées — typage enum strict, règles métier conditionnelles, index FK `source_id`, 347 tests ; DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N complète — 3 tables, registre 86→89 ; RFC-0019 — `gsie-ai-gateway` — reste en Draft) |
 
 ---
 
@@ -341,7 +341,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
-- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire.
+- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire. **Audit qualité du 2026-07-20** (0 P0, aucune valeur non sourcée détectée, ADR-007 respecté) a identifié des P1/P2 de cohérence — corrigés le même jour : typage enum strict sur 6 DTO Pydantic (str → StrEnum), 4 règles métier conditionnelles répliquées dans `resources/validators.py` (reflètent des CheckConstraint SQL déjà en place), index manquants sur les 10 FK `source_id` (migration `0012_forestry_source_id_indexes.py`). 347 tests unitaires (0 échec).
 - **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
 - **DEC-000030** — Adoption de RFC-0018 (identification botanique Pl@ntNet), volet en ligne uniquement (§5), par tranches verticales. **Tranche 1/N (schéma de données) complète le 2026-07-20** : `BotanicalIdentificationRequest`/`Result`/`Decision`, registre de types 86→89, 339 tests (0 échec). Tranches 2-4 (client Pl@ntNet, routes serveur, app mobile) restent à faire, tranche 2 bloquée par la confirmation écrite Pl@ntNet sur les conditions commerciales.
 
