@@ -361,6 +361,21 @@ brainstorming v5 n'est adoptée.
 
 ## Veille partenariat et planification
 
+- `GSIE/RESEARCH/VISION_LLM_SPECIALISES_GSIE_CORE_2026-07-20.md` —
+  Vision long terme (non actionnable) : famille de LLM spécialisés par
+  adaptateurs LoRA sur un modèle de base partagé, orchestrateur central
+  qui coordonne sans jamais calculer lui-même, futur `GSIE-Core`
+  (modèle natif transformant une demande en plan scientifique traçable,
+  jamais autorité finale — GSIE gouverne, le modèle coordonne).
+  Confirme et prolonge les principes déjà posés par RFC-0019 (aucun
+  LLM autoritaire, calculs dans des moteurs déterministes) sans en
+  changer le périmètre P0. Inclut une évaluation d'une instance GPU
+  L40S 48 Go pour du fine-tuning LoRA/QLoRA (bon jusqu'à 14B, faible
+  au-delà, irréaliste pour un préentraînement complet) et une
+  stratégie d'entraînement en 5 étapes (`GSIE-Eval-FR` d'abord, modèle
+  de base 8-14B, dataset propre 1000-5000 exemples, LoRA, évaluation
+  comparative). À rouvrir formellement (RFC dédié) seulement quand
+  RFC-0019 aura démontré son socle en usage réel.
 - `20_PARTNERSHIPS/JUNN_VEILLE.md` — Veille JUNN (Jumeau Numérique National, IGN/Cerema/Inria, France 2030, 25 M€). Alignement stratégique avec Quintessences. Pas un partenariat actif.
 - `05_SPECIFICATIONS/HUB_AND_APPS_PLAN.md` — Plan de production du Hub (Centre de Commandement) + specs apps. Ordre : Hub (P0) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora (P2) → Artemis/QGISIA (P3).
 - `05_SPECIFICATIONS/HUB/HUB_001_SPECIFICATION.md` — Spec fonctionnelle Hub (26 exigences, 3 cas d'usage, 13 couches).
