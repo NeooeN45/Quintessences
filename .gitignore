@@ -53,6 +53,9 @@ apps/Ignis/git_init.sh
 apps/Ignis/run_premier_vol.sh
 apps/Ignis/run_px4.sh
 
+# Données brutes Météo-France (scratch, non versionnées — 18MB+)
+GSIE/API/scratch_synop/
+
 # Repos externes (repos git indépendants dans la structure Quintessences)
 # GeoSylva — repo GitHub NeooeN45/GeoSylva
 apps/GeoSylva/
