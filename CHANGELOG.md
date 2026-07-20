@@ -4,6 +4,19 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RFC-0018 EN REVIEW — SPÉCIFICATION GEO-004] - 2026-07-20
+
+### RFC-0018 priorisé, spécification fonctionnelle rédigée
+
+- `05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md`
+  (nouveau) — 16 exigences fonctionnelles (GEO-ID-01 à GEO-ID-16),
+  6 exigences non fonctionnelles, 1 cas d'usage terrain (avec/sans
+  réseau), complète GEO-F-04 (GEO-001) sans le remplacer.
+- `RFC-0018` passe de `Draft` à `Review` — reste avant adoption : revue
+  fondateur puis décision (`03_DECISIONS/`). Aucune implémentation
+  autorisée.
+- `PROJECT_MEMORY.md` synchronisé.
+
 ## [DEC-000029 — SCISSION RFC-0017 EN RFC-0018 / RFC-0019] - 2026-07-20
 
 ### Veille technologique et scission en RFC d'exécution

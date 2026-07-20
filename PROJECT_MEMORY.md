@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (DEC-000029 : RFC-0017 adopté comme cadrage puis scindé en RFC-0018 — identification botanique Pl@ntNet — et RFC-0019 — `gsie-ai-gateway` — tous deux ouverts en Draft, aucune implémentation autorisée ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
+| **Dernière mise à jour** | 2026-07-20 (RFC-0018 — identification botanique Pl@ntNet — priorisé par le fondateur, passé en **Review**, spécification GEO-004 rédigée ; RFC-0019 — `gsie-ai-gateway` — reste en Draft ; RFC-0016 Phase B toujours **complète** — voir historique ci-dessous) |
 
 ---
 
@@ -275,17 +275,21 @@ brainstorming v5 n'est adoptée.
   `GSIE/RESEARCH/VEILLE_PLANTNET_NVIDIA_NIM_QUINTESSENCES_2026-07-20.md`.
   Voir `02_RFC/RFC-0017-veille-plantnet-nvidia-nim.md`.
 - **RFC-0018** — Identification botanique assistée (Pl@ntNet) et
-  extension du Botanical Engine (**Draft** — 2026-07-20) : cycle
-  `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`, jamais de valeur
-  automatique déclenchante (GSIE-CON-001). Architecture
-  GeoSylva→serveur GSIE→Pl@ntNet→normalisation→validation humaine, clé
-  API jamais côté client, métadonnées GPS retirées avant envoi.
-  Extension satellite d'`AutecologyProfile` (RFC-0016) sur validation
-  uniquement. Volet modèle embarqué offline maintenu « à l'étude »
-  (non prioritaire). Préalable bloquant : confirmation écrite de
-  Pl@ntNet sur les conditions commerciales avant toute production.
-  Issu de DEC-000029 (scission de RFC-0017). Aucune implémentation
-  avant Review puis décision propre.
+  extension du Botanical Engine (**Review** — 2026-07-20, priorisé par
+  le fondateur) : cycle `SUGGESTION_IA` → `VALIDEE_UTILISATEUR`,
+  jamais de valeur automatique déclenchante (GSIE-CON-001).
+  Architecture GeoSylva→serveur GSIE→Pl@ntNet→normalisation→validation
+  humaine, clé API jamais côté client, métadonnées GPS retirées avant
+  envoi. Extension satellite d'`AutecologyProfile` (RFC-0016) sur
+  validation uniquement. Volet modèle embarqué offline maintenu « à
+  l'étude » (non prioritaire). Préalable bloquant : confirmation
+  écrite de Pl@ntNet sur les conditions commerciales avant toute
+  production. Spécification fonctionnelle rédigée : `GEO-004`
+  (16 exigences GEO-ID-01 à GEO-ID-16, exigences non fonctionnelles,
+  cas d'usage terrain avec/sans réseau) — voir
+  `05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md`.
+  Issu de DEC-000029 (scission de RFC-0017). Reste avant adoption :
+  revue fondateur puis décision (`03_DECISIONS/`).
   Voir `02_RFC/RFC-0018-identification-botanique-plantnet.md`.
 - **RFC-0019** — `gsie-ai-gateway` : couche IA serveur transverse
   (**Draft** — 2026-07-20) : périmètre P0 = RAG scientifique

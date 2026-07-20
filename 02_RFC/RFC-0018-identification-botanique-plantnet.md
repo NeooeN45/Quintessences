@@ -3,13 +3,14 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0018 |
-| **Statut** | Draft |
+| **Statut** | Review |
 | **Phase** | 4 — Implémentation |
 | **Créé le** | 2026-07-20 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Impact** | Botanical Engine, GeoSylva (module identification, offline-first), métamodèle (extension satellite d'`AutecologyProfile`), `03_DECISIONS/`, `PROJECT_MEMORY.md`, `19_LEGAL/` (conditions Pl@ntNet) |
 | **Lois fondatrices** | GSIE-CON-000 (primauté), GSIE-CON-001 (l'IA assiste, ne décide jamais), GSIE-CON-002 (science sourcée), GSIE-CON-005 (traçabilité) |
 | **RFC liées** | RFC-0017 (veille, cadrage — scindé ici), RFC-0016 (schéma forestier — `AutecologyProfile`, TAXREF déjà résolu par `BotanicalEngine.resolve_taxref`), RFC-0015 (registre de modèles/licences, applicable à un modèle d'identification comme artefact) |
+| **Spécification** | `05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md` (Draft — exigences fonctionnelles GEO-ID-01 à GEO-ID-16) |
 | **Décision liée** | Issue de DEC-000029 (adoption du cadrage RFC-0017 et de sa scission) — ce RFC lui-même n'a pas encore de décision propre |
 
 ---
@@ -157,7 +158,11 @@ par ce RFC pour l'entraînement lui-même.
 
 ## 9. Prochaine étape
 
-RFC en `Draft`. Passage en `Review` à la demande du fondateur, puis
-décision. Une fois adopté, seul le §5 (volet en ligne) est autorisé en
-implémentation immédiate ; le §6 (modèle embarqué) reste à l'étude
-jusqu'à un jalon de faisabilité séparé.
+Le fondateur a priorisé ce RFC le 2026-07-20. Statut passé en
+`Review` : la spécification fonctionnelle détaillée
+(`05_SPECIFICATIONS/GEOSYLVA/GEO_004_IDENTIFICATION_BOTANIQUE_PLANTNET.md`)
+a été rédigée pour préparer la décision. Reste avant adoption : revue
+du fondateur sur ce RFC et sur GEO-004, puis décision explicite
+(`03_DECISIONS/`). Une fois adopté, seul le §5 (volet en ligne) est
+autorisé en implémentation immédiate ; le §6 (modèle embarqué) reste à
+l'étude jusqu'à un jalon de faisabilité séparé.
