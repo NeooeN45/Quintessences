@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+from gsie_api.engines.botanical.engine import BotanicalEngine
 from gsie_api.engines.botanical.indigenat_loader import (
     DEFAULT_DATASET_PATH,
     IndigenatLoader,
@@ -63,7 +63,10 @@ def test_find_returns_none_for_unknown_taxon(loader: IndigenatLoader):
 
 
 def test_raises_on_missing_dataset_file():
-    """Un chemin de dataset invalide doit lever IndigenatLoaderError, pas planter silencieusement."""
+    """Un chemin de dataset invalide doit lever IndigenatLoaderError.
+
+    Pas planter silencieusement.
+    """
     loader = IndigenatLoader(dataset_path=Path("/chemin/inexistant.tab"))
 
     with pytest.raises(IndigenatLoaderError):

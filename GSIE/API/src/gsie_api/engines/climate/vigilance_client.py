@@ -19,6 +19,8 @@ n'est donc pas réinterprétée (ADR-007), seulement transmise brute.
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import httpx
 
 from gsie_api.core.config import get_settings
@@ -38,7 +40,7 @@ class VigilanceClient:
         self._timeout = timeout
         self._api_key = get_settings().meteofrance_api_key
 
-    async def get_carte_vigilance(self) -> dict:
+    async def get_carte_vigilance(self) -> dict[str, Any]:
         """Récupère la carte de vigilance réelle en cours (JSON brut Météo-France).
 
         Raises:
@@ -54,6 +56,6 @@ class VigilanceClient:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.get(_URL, headers={"apikey": self._api_key})
                 response.raise_for_status()
-                return response.json()
+                return cast("dict[str, Any]", response.json())
         except httpx.HTTPError as exc:
             raise VigilanceClientError(f"Échec de l'appel à l'API Vigilance : {exc}") from exc

@@ -118,7 +118,7 @@ async def climate_danger_feux(
 
 @router.get(
     "/climatologie-stations",
-    response_model=list[dict],
+    response_model=list[dict[str, Any]],
     status_code=status.HTTP_200_OK,
     summary="Liste réelle des stations DPClim d'un département",
     description=(
@@ -132,7 +132,7 @@ async def climate_climatologie_stations(
     request: Request,
     id_departement: str,
     _user: Annotated[dict[str, Any], Depends(get_current_user)],
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Récupère la liste réelle des stations DPClim d'un département.
 
     Raises:

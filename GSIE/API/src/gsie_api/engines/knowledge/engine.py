@@ -40,9 +40,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.evidence.schemas import KnowledgeStatus, SourceReference
-from gsie_api.engines.knowledge.schemas import (
+from gsie_api.engines.evidence.schemas import (
     ConflitBibliographique,
+    KnowledgeStatus,
+    SourceReference,
+)
+from gsie_api.engines.knowledge.schemas import (
     DomaineScientifique,
     DomaineValidite,
     KnowledgeIngestRequest,

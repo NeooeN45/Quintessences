@@ -100,7 +100,10 @@ async def should_flag_strong_linear_correlation_as_robust_to_permutation(
     assert result.refutation is not None
     assert result.refutation.n_permutations == 200
     assert result.refutation.robuste is True
-    assert result.refutation.interpretation == "association observée, robuste au test de permutation"
+    assert (
+        result.refutation.interpretation
+        == "association observée, robuste au test de permutation"
+    )
     assert "cause" not in result.refutation.interpretation
 
 

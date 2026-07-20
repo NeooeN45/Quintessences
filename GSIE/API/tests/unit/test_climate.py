@@ -7,18 +7,17 @@ donnée inventée.
 """
 
 import gzip
+from datetime import datetime
 
 import httpx
 import pytest
 
-from datetime import datetime
-
 from gsie_api.engines.climate.dpclim_client import DPClimClient
 from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 from gsie_api.engines.climate.meteofrance_client import MeteoFranceClient
+from gsie_api.engines.climate.paquet_observation_client import PaquetObservationClient
 from gsie_api.engines.climate.schemas import ClimateQuery, ClimatologieQuotidienneQuery
 from gsie_api.engines.climate.synop_client import SynopClient, SynopClientError
-from gsie_api.engines.climate.paquet_observation_client import PaquetObservationClient
 from gsie_api.engines.climate.vigilance_client import VigilanceClient
 
 # Réponse réelle capturée le 2026-07-18 (API Package Observations,
@@ -262,7 +261,10 @@ async def test_get_danger_feux_raises_on_network_failure(monkeypatch: pytest.Mon
 def _patch_dpclim_transport(
     monkeypatch: pytest.MonkeyPatch, fichier_statuses: list[int], fichier_body: bytes
 ) -> None:
-    """Mock dispatchant selon le chemin appelé : commande (202) puis fichier (statuts en séquence)."""
+    """Mock dispatchant selon le chemin appelé.
+
+    Commande (202) puis fichier (statuts en séquence).
+    """
     calls = {"fichier": 0}
 
     def handler(request: httpx.Request) -> httpx.Response:

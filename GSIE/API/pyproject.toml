@@ -135,3 +135,9 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["cfgrib.*", "defusedxml.*"]
 ignore_missing_imports = true
+
+# scipy-stubs existe mais n'est pas encore ajouté aux dépendances dev —
+# Correlation Engine (tests statistiques)
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true

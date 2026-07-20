@@ -10,6 +10,7 @@ crée à côté (nom réel observé : `<chemin>.<hash>.idx`).
 
 from __future__ import annotations
 
+import contextlib
 import glob
 import os
 import tempfile
@@ -54,7 +55,5 @@ def extract_nearest_temperature_celsius(
         # après un échec de parsing (fichier invalide) — la suppression
         # ne doit jamais masquer l'erreur de décodage déjà levée ci-dessus.
         for path in [tmp_path, *glob.glob(tmp_path + "*.idx")]:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(path)
-            except OSError:
-                pass

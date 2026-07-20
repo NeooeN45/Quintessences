@@ -254,7 +254,10 @@ SCIENTIFIC_SOURCES: dict[str, ScientificSourceEntry] = {
             droit_derives=False,
             droit_redistribution_offline=False,
             territoire="France",
-            notes="Autorisation CNPF requise pour réutilisation/redistribution au-delà des usages permis.",
+            notes=(
+                "Autorisation CNPF requise pour réutilisation/redistribution "
+                "au-delà des usages permis."
+            ),
         ),
         ScientificSourceEntry(
             identifiant="hal-depot-auteur",

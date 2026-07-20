@@ -28,12 +28,15 @@ valide dans son propre message d'erreur).
 
 from __future__ import annotations
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as DefusedElementTree
 import httpx
 
 from gsie_api.core.config import get_settings
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 _BASE_URL = (
     "https://public-api.meteofrance.fr/public/arome/1.0/wcs/MF-NWP-HIGHRES-AROME-001-FRANCE-WCS"
@@ -44,7 +47,10 @@ _WCS_NS = {"wcs": "http://www.opengis.net/wcs/2.0"}
 
 
 class AromeClientError(Exception):
-    """Erreur lors d'un appel à l'API AROME (réseau, auth, run indisponible, subsetting invalide)."""
+    """Erreur lors d'un appel à l'API AROME.
+
+    Réseau, authentification, run indisponible, ou subsetting invalide.
+    """
 
 
 class AromeClient:
@@ -82,8 +88,8 @@ class AromeClient:
             raise AromeClientError(f"Échec de GetCapabilities AROME : {exc}") from exc
 
         try:
-            root = ET.fromstring(xml_text)
-        except ET.ParseError as exc:
+            root = DefusedElementTree.fromstring(xml_text)
+        except DefusedElementTree.ParseError as exc:
             raise AromeClientError(f"Réponse GetCapabilities AROME illisible : {exc}") from exc
 
         coverage_ids: list[str] = [

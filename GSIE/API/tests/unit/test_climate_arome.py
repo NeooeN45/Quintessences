@@ -10,7 +10,7 @@ manuellement : t2m = 30,25 °C).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -84,14 +84,17 @@ def _make_request() -> AromeTemperatureQuery:
         requete_id=uuid4(),
         latitude=44.8,
         longitude=-0.6,
-        echeance=datetime(2026, 7, 18, 12, 0, 0, tzinfo=timezone.utc),
+        echeance=datetime(2026, 7, 18, 12, 0, 0, tzinfo=UTC),
     )
 
 
 async def test_get_latest_run_picks_the_most_recent_coverage_id(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """Parmi plusieurs runs réels, le plus récent (tri lexicographique = chronologique) doit être choisi."""
+    """Parmi plusieurs runs réels, le plus récent doit être choisi.
+
+    Tri lexicographique = chronologique.
+    """
     _patch_arome_transport(monkeypatch)
     client = AromeClient()
 

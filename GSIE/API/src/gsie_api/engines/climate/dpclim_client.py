@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any, cast
 
 import httpx
 
@@ -61,7 +62,9 @@ class DPClimClient:
             )
         return self._api_key
 
-    async def list_stations(self, id_departement: str, pas_de_temps: str = "quotidienne") -> list[dict]:
+    async def list_stations(
+        self, id_departement: str, pas_de_temps: str = "quotidienne"
+    ) -> list[dict[str, Any]]:
         """Liste réelle des stations d'un département pour un pas de temps donné.
 
         Raises:
@@ -76,7 +79,7 @@ class DPClimClient:
                     headers={"apikey": api_key},
                 )
                 response.raise_for_status()
-                return response.json()
+                return cast("list[dict[str, Any]]", response.json())
         except httpx.HTTPError as exc:
             raise DPClimClientError(f"Échec de liste-stations DPClim : {exc}") from exc
 
@@ -124,7 +127,7 @@ class DPClimClient:
             raise DPClimClientError(f"Réponse commande-station DPClim illisible : {exc}") from exc
 
         try:
-            return body["elaboreProduitAvecDemandeResponse"]["return"]
+            return cast("str", body["elaboreProduitAvecDemandeResponse"]["return"])
         except KeyError as exc:
             raise DPClimClientError(
                 f"Réponse commande-station DPClim sans numéro de commande : {body}"

@@ -20,6 +20,7 @@ valeur par défaut (ADR-007).
 import csv
 import io
 from datetime import datetime
+from typing import Any
 from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
@@ -239,7 +240,7 @@ class ClimateEngine:
 
         return resultats
 
-    async def list_stations_climatologie(self, id_departement: str) -> list[dict]:
+    async def list_stations_climatologie(self, id_departement: str) -> list[dict[str, Any]]:
         """Liste réelle des stations DPClim d'un département (id_station 8 chiffres).
 
         Raises:
