@@ -1,0 +1,222 @@
+[
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Les sols ont été sélectionnés pour leur différence d'acidité avec des propriétés par ailleurs similaires.",
+    "citation_extrait": "The soils were selected for different acidity with otherwise similar properties (for details on soil physical and chemical properties see [\n\n]).",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Le sol calcaire Fluvisol a un pH de 6,9 et est un sandy loam.",
+    "citation_extrait": "calcareous Fluvisol (sandy loam, pH 6.9)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Le sol acide Haplic Alisol a un pH de 4,0 et est un loamy sand.",
+    "citation_extrait": "acidic Haplic Alisol (loamy sand, pH 4.0)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Les périodes de sécheresse ont été appliquées en arrêtant l'irrigation pendant plusieurs semaines consécutives.",
+    "citation_extrait": "Drought periods were artificially applied by stopping irrigation for several consecutive weeks during selected periods.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Pendant la troisième saison de croissance (2009), deux périodes de privation d'eau prolongées ont été appliquées, avec une courte période de réhumidification entre les deux.",
+    "citation_extrait": "The present study has been carried out during the drought treatments in the year 2009 with two prolonged water deprivation periods plus one short rewetting period in between for sapling recovery.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Les niveaux d'eau du sol sont tombés à moins de 0,05 m³/m³ dans tout le profil du sol calcaire à la fin de la première période de sécheresse et pendant la seconde en 2009.",
+    "citation_extrait": "This led to minimum soil water levels of less than 0.05 m\nm\n in the entire calcareous soil profiles at the end of the first and during the second drought period in 2009 [\n];",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "La première période prolongée sans irrigation a duré 113 jours (du 10 mars au 30 juin 2009).",
+    "citation_extrait": "The first prolonged period without irrigation (= 1\nD) took place from 10\n, March until 30\n, June 2009 (113 days)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "La seconde période de sécheresse a duré 45 jours (du 7 juillet au 20 août 2009).",
+    "citation_extrait": "the second drought period (= 2\nD) from 7\n, July to 20\n, August 2009 (45 days)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "La période de réhumidification intermédiaire a duré 6 jours (du 1er au 6 juillet 2009).",
+    "citation_extrait": "with a short rewetting period in between (= RW) from 1\n to 6\n, July (6 days)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "L'irrigation des chambres témoins était 30 % supérieure en 2009 par rapport à la moyenne locale des précipitations.",
+    "citation_extrait": "The irrigation of the control chambers remained 30% higher in 2009 compared to the long-term average of the local mean ambient precipitation (728 mm, from April to October, 1963 to 2009).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Les traitements de sécheresse ont reçu 43 % d'irrigation en moins que les précipitations locales moyennes.",
+    "citation_extrait": "Drought treatments had 43% lower irrigation than the mean local precipitation [\n].",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 2,
+    "fait": "Les potentiels hydriques foliaires avant l'aube des jeunes chênes exposés à la sécheresse ont diminué jusqu'à un niveau compris entre -1,9 et -2,6 MPa à la fin de la première période de sécheresse.",
+    "citation_extrait": "Mean predawn water potentials in the leaves of drought-exposed saplings decreased to a level between -1.9 and -2.6 MPa by the end of the 1\nD period",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "Les chênes poussant sur sol calcaire ont montré une capacité d'acclimatation foliaire en N plus forte que sur sol acide en réponse aux traitements D et AW.",
+    "citation_extrait": "oak saplings developing on calcareous soil in the present study exhibited a stronger foliar N acclimation capability in response to the D and AW treatments than on acidic soil by investing their internal structural N into the synthesis of N containing osmolytes only during the 2 D period.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "La première période de sécheresse n'a pas été assez intense pour induire des changements significatifs dans les métabolites azotés foliaires.",
+    "citation_extrait": "The first drought event was not intense enough to induce significant changes",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "La seconde période de sécheresse a induit une augmentation de la formation de protéines solubles et d'acides aminés pour l'ajustement osmotique aux dépens de l'azote structurel.",
+    "citation_extrait": "the second drought event of the drought-rewetting-drought course applied significantly induced the formation of more soluble protein and amino acids. Apparently, these compounds were increased for osmolytic adjustment in the leaves of all species at the expense of structural N by leaf-internal processes rather than changes in whole-plant distribution of N.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "L'augmentation des acides aminés solubles inclut un ensemble complet d'acides aminés protéinogènes majeurs (Gln, Gly, Glu, Asp, Ser) et non seulement Pro et GABA.",
+    "citation_extrait": "Surprisingly, the increase in soluble amino acids was not only attributed to compounds known to be drought responsive such as Pro and GABA, but to a whole set of major proteinogenic amino acids, including also Gln, Gly, Glu, Asp, and Ser.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "L'espèce Quercus pubescens (indiquée par le contexte de l'étude) a montré une réaction plus faible aux concentrations de composés N osmotiques lors de la sécheresse, mais s'est avérée résistante à la sécheresse par des acclimatations morphologiques et photosynthétiques.",
+    "citation_extrait": "showed a rather lower reaction to drought in the concentrations of osmotic N compounds, but was shown in another study of this experiment to be drought resistant by morphological and photosynthetic acclimation",
+    "confiance_llm": 0.8,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "L'intensité de la réaction du métabolisme foliaire de l'azote au cycle sécheresse-réhydratation-sécheresse dépend fortement du type de sol.",
+    "citation_extrait": "Reaction intensity of foliar N metabolism to the drought-rewetting-drought course was also highly dependent on soil substrate.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "La meilleure disponibilité en nutriments dans le sol calcaire a induit des changements plus forts dans les composés N solubles.",
+    "citation_extrait": "The better nutrient availability in the calcareous soil induced stronger changes in soluble N compounds.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "Le potassium (K) n'a pas été significativement modifié par les traitements D ou AW, indépendamment de l'apport en N des deux types de sol.",
+    "citation_extrait": "K, known for its function for osmotic adjustment was not significantly changed by the D or AW treatment, irrespective of the different N-supply of the two soil types studied.",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "L'espèce poussant naturellement dans des conditions plus sèches que les autres a montré des concentrations constitutivement plus élevées de K et de rapport C/N dans le contrôle.",
+    "citation_extrait": "the species growing naturally under dryer conditions than and , showed constitutively (in the control) higher K and C/N concentrations.",
+    "confiance_llm": 0.7,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Changes in the dynamics of foliar N metabolites in oak saplings by drought and air warming depend on species and soil type",
+    "document_reference": "Hu B. et al. (2015), PLOS ONE, DOI 10.1371/journal.pone.0126701",
+    "page_number": 11,
+    "fait": "Des interactions entre le sol et l'espèce ont été observées pour tous les paramètres biochimiques étudiés pendant le cycle sécheresse-réhydratation-sécheresse.",
+    "citation_extrait": "Thus, for all biochemical parameters studied, interactions between soil and species were shown during the drought-rewetting-drought course and the D ± AW treatment, which have to be taken into account in future studies on the significance of climate change for the performance of oak trees.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

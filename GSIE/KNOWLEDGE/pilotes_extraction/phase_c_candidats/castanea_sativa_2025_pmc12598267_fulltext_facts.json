@@ -1,0 +1,62 @@
+[
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "Le châtaignier européen (Castanea sativa Mill.) est la seule espèce de châtaignier originaire du bassin méditerranéen.",
+    "citation_extrait": "The European chestnut (Castanea sativa Mill., 2n = 2x = 24) is the only chestnut species native to the Mediterranean basin.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "Le châtaignier européen est très sensible à la sécheresse sévère.",
+    "citation_extrait": "it remains highly susceptible to severe drought",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "La vulnérabilité du châtaignier européen à la sécheresse est mise en évidence par des réductions du taux de croissance, de la conductance foliaire, de l'activité photosynthétique et de la vitalité des racines fines en conditions de sécheresse.",
+    "citation_extrait": "This vulnerability is evidenced by reductions in growth rate, leaf conductance, photosynthetic activity, and fine root vitality under drought conditions, underscoring its sensitivity to climate stress",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "Le bassin méditerranéen est reconnu comme l'un des principaux points chauds de biodiversité mondiale et est considéré comme une priorité de conservation.",
+    "citation_extrait": "This region, which includes southern Europe, North Africa, and parts of the Near East, is recognized as one of the world's major biodiversity hotspots and is considered a priority for conservation",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "Les populations de châtaignier européen présentent une diversité génétique élevée.",
+    "citation_extrait": "its populations exhibiting high genetic diversity",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Decoding drought tolerance from a genomic approach in Castanea sativa Mill.",
+    "document_reference": "Perez-Rial A. et al. (2025), The Plant Genome, DOI 10.1002/tpg2.70116",
+    "page_number": 1,
+    "fait": "Le changement climatique exerce une forte pression de sélection sur les forêts méditerranéennes, y compris sur les populations de châtaignier européen.",
+    "citation_extrait": "The Mediterranean region is particularly vulnerable to climate change, with ongoing environmental shifts imposing strong selective pressure on its forest, including on its populations of European chestnut",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

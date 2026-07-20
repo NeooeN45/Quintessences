@@ -1,0 +1,442 @@
+[
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Les provenances de pin maritime Tamjoute (TAMR) ont atteint T50 (50% de mortalité) après 60,7 jours, tandis que les provenances d'Espagne atlantique (CDVO, ARMY, PTOV, SCRI) ont présenté des valeurs de T50 supérieures à 100 jours.",
+    "citation_extrait": "Among all provenances TAMR was the first to reach T50, after 60.7 days of trial, followed by MIMI, COCA, ASPE and ORIA. On the other hand, CDVO, ARMY, PTOV and SCRI - all provenances from Atlantic Spain - presented values of T50 over 100 days.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "La survie à 100 jours (S100) la plus élevée est observée chez les provenances d'Espagne atlantique (ARMY, CDVO, PTOV, SCRI), suivies par les populations du centre et du sud de l'Espagne (ASPE, COCA, ORIA), la provenance marocaine (TAMR) ayant le taux de survie le plus faible.",
+    "citation_extrait": "A similar pattern can be observed for survival at 100th day, where the provenances from Atlantic Spain (ARMY, CDVO; PTOV, SCRI) presented the highest values, followed by Central and Southern Spanish populations (ASPE, COCA, ORIA). The provenance with the lowest survival rate was the Moroccan population (TAMR).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Des différences significatives (α<0,0001) ont été observées entre les taux de survie des différentes provenances dans l'expérience de stress osmotique induit par le PEG.",
+    "citation_extrait": "Applying both log-rank test, and the Wilcoxon test it was possible to establish the ranking of survival between populations, and significant differences (α<0.0001) were observed between the survival rates of the different provenances in the PEG-induced osmotic stress experiment.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "La sensibilité à la sécheresse varie entre les provenances.",
+    "citation_extrait": "demonstrated that sensitivity to drought varies between provenances",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Les populations d'origine mésique présentent une plasticité phénotypique plus élevée que les populations xériques pour les caractères liés à la sécheresse, et s'adaptent aux conditions xériques en présentant des performances similaires ou même meilleures que les populations xériques.",
+    "citation_extrait": "populations from mesic origins show higher phenotypic plasticity than the xeric ones for drought related traits. They adapt to the xeric conditions and show similar or even better performance than the xeric populations for drought related traits",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Le modèle de variation diffère entre les caractères liés à la sécheresse (ex. efficacité d'utilisation de l'eau et efficacité hydraulique, allocation de biomasse), présentant une sélection uniforme ou divergente.",
+    "citation_extrait": "The pattern of variation differs between drought related traits (e.g. water use and hydraulic efficiency and biomass allocation), presenting either uniform or divergent selection",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Le manque de technologies phénotypiques précises et standardisées à haut débit constitue la principale contrainte pour explorer un espace multidimensionnel de caractères (ex. WUE, potentiel osmotique, allocation racine/tige, phénologie de croissance) sous stress de sécheresse sévère et estimer l'ampleur de la différence entre les effets additifs et non additifs dans les caractères de tolérance à la sécheresse.",
+    "citation_extrait": "Until now, the main constraint to achieving this goal has been the lack of precise and standardized high-throughput phenotyping technologies, something that would require close collaboration between geneticists, breeders, physiologists and ecologists",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Les corrélations génétiques, la variance génétique et les corrélations génétiques entre environnements déterminent la réponse attendue à la sélection sur les arbres ou les familles au sein des populations.",
+    "citation_extrait": "Genetic correlations, genetic variance, and cross-environmental genetic correlations would determine the expected response to selection on trees or families within the populations.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Les études considérant différents niveaux hiérarchiques de variation (population, famille et génotypes au sein des familles) sont essentielles pour analyser les compromis entre traits pouvant déterminer les trajectoires évolutives des populations.",
+    "citation_extrait": "Studies that consider different hierarchical levels of variation such as population, family and genotypes within families, are essential to analyze tradeoffs among traits that can determine the evolutionary trajectories in populations",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "L'objectif principal de ce travail est d'évaluer la variabilité génétique dans une expérience de stress osmotique induit par PEG chez le pin maritime à trois niveaux hiérarchiques (population, famille et génotype) et de vérifier les corrélations de ces résultats avec des proxys de fitness dans des conditions de terrain contrastées.",
+    "citation_extrait": "The main objectives of this work are, firstly, to assess genetic variability in a PEG-induced osmotic stress experiment of Maritime pine at three hierarchical levels: population, family and genotype and, secondly, to check the correlations of these results with fitness proxies in contrasting field conditions.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 2,
+    "fait": "Les résultats obtenus permettent de déterminer l'efficacité du PEG comme test d'évaluation précoce de la tolérance à la sécheresse chez le pin maritime, et d'explorer les trajectoires évolutives des caractères soumis à un stress de sécheresse sévère.",
+    "citation_extrait": "The obtained results allows determining the efficiency of PEG as an early evaluation test for drought tolerance in Maritime pine, also this study allows the exploration of evolutionary trajectories of traits when submitted to severe drought stress.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Les corrélations génétiques additives et totales entre T50/S100 et les traits hydriques et de biomasse sous stress osmotique induit par PEG ne suivent pas le même schéma que les corrélations au niveau de la population.",
+    "citation_extrait": "the additive and total genetic correlations between T50/S100 and hydric and biomass traits measured in the PEG-induced osmotic stress experiment do not follow the same pattern as the correlations at the population level",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Des corrélations additives positives ont été détectées entre RWC et T50 et S100 (α<0.05).",
+    "citation_extrait": "Positive additive correlations were detected between RWC and T50 and S100 (α<0.05)",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Les corrélations génétiques totales entre T50 et RWC, et entre S100 et ROB, étaient les seules significatives (α<0.05).",
+    "citation_extrait": "Regarding total genetic correlations those between T50 and RWC, and S100 and ROB, were the only two significant (α<0.05)",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Cette étude est la première à analyser la variation génétique de la tolérance à la sécheresse incluant populations, familles et clones chez le pin maritime.",
+    "citation_extrait": "this is the first study to analyse the genetic variation in drought tolerance including populations, families and clones, that allow a more complete knowledge of the genetic basis of the traits under study",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "La comparaison des résultats en conditions contrôlées et sur le terrain permet d'évaluer l'efficacité d'une méthode de sélection précoce basée sur le stress osmotique induit par PEG pour la tolérance à la sécheresse chez le pin maritime.",
+    "citation_extrait": "the comparison of results in controlled and field conditions allows the evaluation of the efficiency of early selection method based on PEG-induced osmotic stress for drought tolerance in Maritime pine",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "L'expérience de stress osmotique induit par PEG a montré l'existence de niveaux élevés de variation génétique de la survie (T50, S100) aux trois niveaux de variation analysés : population, variation génétique additive et totale.",
+    "citation_extrait": "The results of the PEG-induced osmotic stress experiment showed the existence of high levels of genetic variation in survival (T50, S100) at the three levels of variation analyzed: population, additive and total genetic variation",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Les deux traits de survie (T50 et S100) sont hautement corrélés à chaque niveau hiérarchique analysé, donc S100 peut être considéré comme un estimateur approprié et facilement enregistrable de la performance des différentes entités.",
+    "citation_extrait": "these two survival traits are highly correlated at each hierarchical level analyzed, thus S100 can be considered a suitable and easily recorded, estimator of the performance of the different entities, which could be used in future experiments",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "La biomasse totale, l'allocation de la biomasse racinaire et de la tige, et la teneur en eau des feuilles sont des déterminants clés de la survie au niveau de la population sous stress hydrique en conditions contrôlées.",
+    "citation_extrait": "total biomass, root stem biomass allocation and leaf water content, are key determinants for survival at population level under hydric stress in controlled conditions",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Les taux de survie les plus élevés ont été observés pour les provenances espagnoles-Atlantique, contrairement aux origines françaises-Atlantique et à la population marocaine TAMR qui ont présenté les taux de survie les plus faibles.",
+    "citation_extrait": "The higher survival rates were observed for the Spanish-Atlantic provenances, in opposition with the Atlantic-French origins and the Moroccan TAMR, which presented the lowest survival rates",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Ces résultats divergent de ceux obtenus en conditions de terrain et à des âges plus matures, où les provenances espagnoles-Atlantique présentaient les taux de survie les plus faibles sous stress.",
+    "citation_extrait": "These results are divergent from the ones obtained in field conditions and at more mature ages, with the Spanish Atlantic origins presenting lowest survival rates under stressed environments, in comparison to the Mediterranean ones with clear differences among the Portuguese and French Atlantic provenances",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "La population marocaine TAMR présente les valeurs les plus faibles de T50 et de survie, bien qu'elle ait été signalée comme une population tolérante à la sécheresse.",
+    "citation_extrait": "The Moroccan population (TAMR) is the one with the lowest values of T50 and survival, although it has been reported as a drought tolerance population",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "Dans l'expérience, la population TAMR a présenté une grande inversion de biomasse racinaire (données non présentées) et des valeurs plus élevées de LWC et RWC.",
+    "citation_extrait": "In our experiment this population presented a large inversion of root biomass (data not presented) and higher values of LWC and RWC",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "La mortalité a augmenté rapidement dans la première phase de l'expérience et s'est maintenue dans la deuxième partie.",
+    "citation_extrait": "Effectively, mortality increased rapidly in the first stage of the experiment and maintained in the second part",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 4,
+    "fait": "La capacité d'osmorégulation pourrait être liée à l'origine géographique.",
+    "citation_extrait": "The ability to osmoregulate could be related to geographic origin",
+    "confiance_llm": 0.8,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Sous stress osmotique induit par PEG, la teneur relative en eau (RWC) présente une corrélation génétique additive positive avec les traits de survie, indiquant que l'ajustement osmotique peut avoir un rôle plus important dans la tolérance à la sécheresse que l'allocation de biomasse ou la vigueur.",
+    "citation_extrait": "relative water content presented a positive additive genetic correlation with survival traits (α<0.05), indicating that, under these controlled experimental conditions, osmotic adjustment may have a major role in drought tolerance than biomass allocation or vigor (measured by aerial biomass).",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "La teneur relative en eau (RWC) est considérée comme une mesure intégrée de l'état hydrique de la plante et un indicateur de l'activité métabolique dans les tissus foliaires.",
+    "citation_extrait": "RWC can be considered as an integrated measure of the plant water status and is an indicator for the metabolic activity in leaf tissues.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Les résultats clarifient le rôle de l'ajustement osmotique dans la tolérance à la sécheresse chez les familles et clones de pin maritime, suggérant qu'il s'agit d'un facteur plus important que les changements dans l'allocation de biomasse, comme observé chez d'autres pins.",
+    "citation_extrait": "These results clarify the role of osmotic adjustment in drought tolerance in maritime pine families and clones, suggesting it to be a more important factor than changes in biomass allocation, as has been found in other pines (e.g. Canary pine).",
+    "confiance_llm": 0.95,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "La survie dans l'essai de terrain xérique est clairement liée à T50 et S100, et ces deux traits sont liés à la croissance sur le site mésique.",
+    "citation_extrait": "the clear relationship between survival in the xeric field trial and T50 and S100, as well as between these two traits and growth at the mesic site.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "La croissance en hauteur est hautement corrélée entre les deux sites, tant au niveau de la population qu'au niveau additif, indiquant un niveau élevé de contrainte pour l'évolution de ce trait sous différents environnements.",
+    "citation_extrait": "height growth is highly correlated (p<0.001) between the two sites both at the population and additive level (cross-environmental correlations), indicating a high level of constraint for the evolution of this trait under different environments.",
+    "confiance_llm": 0.95,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Les populations à croissance plus élevée présentent de meilleurs taux de survie, particulièrement marqués chez les provenances atlantiques espagnoles.",
+    "citation_extrait": "populations with higher growth present better survival rates, particularly marked in the Spanish Atlantic provenances.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Chez le pin maritime, les populations d'origines plus mésiques présentent une plasticité pour la croissance et une hauteur accrue dans des conditions environnementales plus favorables, tandis qu'une population originaire d'un climat plus sec montre une faible plasticité pour la croissance dans les deux essais.",
+    "citation_extrait": "populations from more mesic origins displayed plasticity for growth and increased height in more favorable environmental conditions, but a population originated from a drier climate showed low plasticity for growth in both trials.",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "La provenance du Maroc a montré une activité physiologique réduite et une grande stabilité de croissance dans tous les sites testés, tandis que les populations atlantiques réagissaient rapidement à la variabilité climatique interannuelle et spatiale.",
+    "citation_extrait": "the Morocco provenance exhibited reduced physiological activity and high growth stability in all the locations tested while the Atlantic populations reacted quickly to interannual and special climatic variability.",
+    "confiance_llm": 0.95,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Les jeunes arbres (espèce non précisée mais contexte pin maritime) produisent de la biomasse malgré une faible disponibilité en eau, bien que la croissance racinaire semble s'arrêter pour améliorer les ressources destinées au système photosynthétique.",
+    "citation_extrait": "Young trees have also been shown to produce biomass despite low water availability, although root growth seems to stop in order to improve the resources to the photosynthetic system.",
+    "confiance_llm": 0.85,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Les populations xériques (de pin maritime) n'ont pas réduit leur surface racinaire en réponse à la sécheresse, contrairement aux autres populations.",
+    "citation_extrait": "the xeric populations did not reduce their root surface area in response to drought, while the others populations did.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 5,
+    "fait": "Tous les traits analysés dans cette étude présentent une héritabilité intermédiaire (la phrase est coupée, mais on peut inférer que l'héritabilité est intermédiaire).",
+    "citation_extrait": "All the analyzed traits in this study display an intermediate t",
+    "confiance_llm": 0.5,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "Les effets non additifs semblent avoir peu d'importance pour la survie et la croissance, que ce soit en conditions contrôlées ou au champ.",
+    "citation_extrait": "non-additive effects appear to be of little importance for survival and growth under either controlled or field conditions.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "La sélection naturelle peut avoir des intensités différentes dans différentes populations, conduisant à une adaptation locale, ou pourrait modeler le niveau de variance génétique pour divers traits.",
+    "citation_extrait": "Natural selection may have different intensities in different populations, leading to local adaptation, or might shape the level of genetic variance for various traits.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "Il n'existe pas de compromis (corrélations génétiques ou additives négatives) pour les traits liés à la survie et la croissance.",
+    "citation_extrait": "the lack of tradeoffs (no negative genetic or additive correlations)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "L'adaptation locale semble jouer un rôle mineur pour ces traits, contrairement aux résultats obtenus chez le chêne-liège.",
+    "citation_extrait": "local adaptation seems to play a minor role for those traits, contrary to the results obtained in cork oak, which has similar environmental constraints",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "La population est le facteur le plus déterminant dans l'adaptation du matériel génétique.",
+    "citation_extrait": "population is the more determinant factor in the adaptation of genetic materials",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "Les tests de sécheresse avec du PEG sont appropriés pour une sélection précoce des populations pour la résistance à la sécheresse.",
+    "citation_extrait": "drought testing with PEG is suitable for early selection of populations for drought resistance",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "Les principaux facteurs limitants dans la gestion des populations d'amélioration des arbres forestiers sont la durée nécessaire pour compléter un cycle entier d'amélioration, de test et de sélection, qui peut aller de plusieurs années à des décennies.",
+    "citation_extrait": "The main constraint on the management of breeding populations of forest trees is the length of time required to complete an entire cycle of breeding, testing and selection, which can range from several years to decades",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Genetic variation of drought tolerance in Pinus pinaster at three hierarchical levels: a comparison of induced osmotic stress and field testing",
+    "document_reference": "Gaspar M.J. et al. (2013), PLOS ONE, DOI 10.1371/journal.pone.0079094",
+    "page_number": 6,
+    "fait": "Les effets non additifs sont d'importance réduite pour la tolérance à la sécheresse.",
+    "citation_extrait": "non additive effects are of scarce importance for drought tolerance in",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

@@ -1,0 +1,142 @@
+[
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "La discrimination isotopique du carbone (Δ13C) tendait à diminuer le long du gradient latitudinal nord-sud, indiquant une efficacité d'utilisation de l'eau (WUE) plus élevée pour les génotypes des latitudes nord dans le jardin commun belge.",
+    "citation_extrait": "Δ13C tended to decrease along this north–south latitudinal gradient, although there were exceptions, such as for genotypes from west Loire (Figure g), but suggests that, under well-watered conditions, WUE was higher for genotypes from northern latitudes, when grown in the Belgian common garden.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "Le nombre de cellules par feuille et la surface foliaire ont une forte corrélation positive (rho = 0.927, p < 0.0001).",
+    "citation_extrait": "there was a strong positive correlation between cell number per leaf and leaf area (see , Figure Online , = 0.927, < 0.0001)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "La surface cellulaire et la surface foliaire ont une faible corrélation négative (rho = -0.235, p < 0.0001).",
+    "citation_extrait": "but a weak negative correlation between cell area and leaf area (see , Figure Online , = -0.235, < 0.0001)",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "La surface foliaire était corrélée avec la hauteur et la circonférence des arbres, qui sont des traits de biomasse ligneuse.",
+    "citation_extrait": "leaf area correlated with tree height and circumference, both of which are woody biomass traits (see , Figure Online)",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "Les précipitations à l'origine du site du génotype étaient corrélées avec les traits phénotypiques de la feuille et de la tige, des précipitations plus élevées étant corrélées à des surfaces foliaires accrues (avec un plus grand nombre de cellules plus petites par feuille, plus de stomates, une SLA plus élevée et une hauteur et une circonférence de tige accrues).",
+    "citation_extrait": "Precipitation at the genotype site of origin correlated with leaf and stem phenotypic traits with higher precipitation (mean annual, minimum and maximum) correlated with increased leaf areas, which are made up of a greater number of smaller cells per leaf with more stomata, higher SLA and increased stem height and circumference (see ).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "Des températures plus élevées étaient corrélées avec le rapport de forme des feuilles et la SLA.",
+    "citation_extrait": "Additionally, higher temperatures (mean annual, minimum and maximum) correlated with leaf shape ratio and SLA.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "La température du mois le plus froid était la plus importante pour la surface foliaire, le nombre de cellules par feuille, la hauteur de la tige et la circonférence de la tige.",
+    "citation_extrait": "The temperature of the coolest month seems most important with respect to leaf area and cell number per leaf, as well as stem height and circumference in 2005 and 2006, respectively.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "La température annuelle moyenne et la température du mois le plus chaud étaient également corrélées à une réduction de la taille des cellules foliaires et de la circonférence de la tige et à une augmentation de la densité stomatique abaxiale.",
+    "citation_extrait": "However, mean annual temperature and the temperature of the warmest month also correlated with reduced leaf cell size and stem circumference and increased abaxial stomatal density (see Online).",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 6,
+    "fait": "Une interaction entre le génotype et le traitement a été significative pour Δ13C dans l'expérience de sécheresse (ANOVA à deux facteurs).",
+    "citation_extrait": "Interaction between genotype and treatment was significant for Δ13C, from a two-way ANOVA",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 13,
+    "fait": "Des différences significatives dans la réponse à la sécheresse ont été identifiées pour des génotypes de peuplier noir provenant d'environnements secs et humides à travers l'Europe.",
+    "citation_extrait": "we have identified significant differences in response to drought for black poplar genotypes collected from dry and wet environments across Europe.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 13,
+    "fait": "Les arbres espagnols 'Southern' sont bien adaptés à une croissance lente en conditions de sécheresse, produisant de petites feuilles et des stomates partiellement fermés, avec une efficacité d'utilisation de l'eau intrinsèque plus élevée.",
+    "citation_extrait": "'Southern' Spanish trees are well adapted to slow growth in droughted conditions, producing small leaves and partially closed stomata, with a higher intrinsic WUE",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 13,
+    "fait": "Les arbres italiens et du 'nord-est' montrent une réponse dramatique à la sécheresse avec une croissance réduite et une formation accrue de stomates.",
+    "citation_extrait": "while Italian and 'north eastern' trees demonstrate a dramatic response to drought with reduced growth and increased stomatal formation.",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 13,
+    "fait": "Des gènes spécifiques ont été identifiés comme cibles pour de futures recherches sur les approches génétiques inverses et les tests sur le terrain dans des environnements de sécheresse contrastés.",
+    "citation_extrait": "we have identified a suite of genes that will be the focus of our future research using reverse genetic approaches and testing material in the field in contrasting drought environments.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Adaptive mechanisms and genomic plasticity for drought tolerance identified in European black poplar (Populus nigra L.)",
+    "document_reference": "Viger M. et al. (2016), Tree Physiology, DOI 10.1093/treephys/tpw017",
+    "page_number": 13,
+    "fait": "Le criblage de la variation génomique fonctionnelle et génétique chez des génotypes de diverses origines géographiques sous stress de sécheresse est une stratégie puissante pour éclairer la conservation et la gestion des ressources de germoplasme dans un climat changeant.",
+    "citation_extrait": "screening for functional genomic and genetic variation in genotypes from diverse geographic locations under drought stress is a powerful strategy to inform the conservation and management of germplasm resources in a future, changing climate",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

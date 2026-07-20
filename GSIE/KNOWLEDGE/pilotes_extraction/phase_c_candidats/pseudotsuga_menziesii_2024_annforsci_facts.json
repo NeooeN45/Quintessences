@@ -1,0 +1,802 @@
+[
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 1,
+    "fait": "Le Douglas taxifolié (Pseudotsuga menziesii) présente une tolérance élevée à la sécheresse dans les sols sableux, limoneux et la plupart des sols silteux, mais montre des limitations sur les sols argileux.",
+    "citation_extrait": "The results showed high drought tolerance in sandy, loamy, and most silty soils, with limitations on clayey soils.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 1,
+    "fait": "Les Douglas taxifoliés ayant des systèmes racinaires superficiels sont susceptibles à la sécheresse extrême, tandis qu'un enracinement profond est important pour une résilience élevée à la sécheresse.",
+    "citation_extrait": "This study indicates the susceptibility of Douglas-firs with shallow root systems to extreme drought and the importance of deep rooting for high drought resilience.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 1,
+    "fait": "Une profondeur d'enracinement effective plus élevée a augmenté la résilience du Douglas taxifolié lors de la sécheresse extrême de 2018.",
+    "citation_extrait": "A higher effective rooting depth increased the resilience of Douglas-fir during the extreme drought in 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 1,
+    "fait": "L'étude a analysé les effets des caractéristiques physiques du sol et de l'enracinement sur les indices de réponse de croissance (résistance, récupération, résilience) liés aux sécheresses sévères à extrêmes de 2003/04 et 2018.",
+    "citation_extrait": "Mixed-effects models were used to analyze the effects of soil physical and rooting characteristics on growth response indices (resistance, recovery, resilience) related to the severe to extreme droughts in 2003/04 and 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Les sols à dominance argileuse sont considérés comme moins productifs pour le Douglas.",
+    "citation_extrait": "clay-dominated soils are considered less productive (Eckhart et al. 2019)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Il est indiqué que les sols argileux pourraient réduire la tolérance à la sécheresse du Douglas.",
+    "citation_extrait": "There is an indication that clayey soils might also reduce drought tolerance.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Des dommages dus à la sécheresse ont été rapportés chez de jeunes Douglas sur sols argileux en Amérique du Nord.",
+    "citation_extrait": "An increased occurrence of drought damage to young Douglas-fir on clay soils has been reported in North America (Lavender and Hermann 2014)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "La capacité en eau disponible pour les plantes (PAWC) est définie comme la teneur en eau entre la capacité au champ et le point de flétrissement.",
+    "citation_extrait": "Plant-available water capacity (PAWC), the water content between field capacity and wilting point (Cousin et al. 2022; Silva et al. 2014; Veihmeyer and Hendrickson 1927), is an important site factor.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Une PAWC élevée pourrait avoir un effet positif sur la teneur en eau du sol pendant une sécheresse et donc sur l'eau du sol relativement extractible.",
+    "citation_extrait": "A high PAWC could have a positive effect on the soil water content during a drought and thus on the relatively extractable soil water (see Bréda et al. 2006), as a larger reservoir reduces the risk of fast water depletion.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Les études sur l'influence de la PAWC sur la tolérance à la sécheresse du Douglas n'ont pas montré de tendance claire.",
+    "citation_extrait": "The few studies conducted thus far on the influence of PAWC on the drought tolerance of Douglas-fir did not show a clear pattern.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Une profondeur d'enracinement réduite a été observée pour le Douglas dans les sols à forte teneur en argile.",
+    "citation_extrait": "A reduced rooting depth was found for Douglas-fir in soils with a high clay content (Köstler et al. 1968)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Des études sur plusieurs espèces d'arbres indiquent qu'un enracinement plus profond augmente la tolérance à la sécheresse.",
+    "citation_extrait": "Studies on several tree species have indicated that deeper rooting increases drought tolerance (Brinkmann et al. 2019; Kahmen et al. 2022; Nardini et al. 2016)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "Les indices de résistance (Rt), de récupération (Rc) et de résilience (Rs) sont dérivés des données de croissance radiale du tronc avant, pendant et après les événements de sécheresse sévère.",
+    "citation_extrait": "the indices resistance (Rt), recovery (Rc), and resilience (Rs) are derived from radial stem growth data before, during, and after severe drought events",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "La résistance (Rt) quantifie la capacité des arbres à maintenir la croissance du tronc pendant un stress comme la sécheresse.",
+    "citation_extrait": "They quantify the ability of trees to maintain stem growth during a stress event, such as drought (Rt)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "La récupération (Rc) quantifie la capacité de croissance du tronc à se rétablir après une sécheresse.",
+    "citation_extrait": "how well stem growth can recover after drought (Rc)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 3,
+    "fait": "La résilience (Rs) quantifie la mesure dans laquelle l'arbre peut revenir à une croissance antérieure à la perturbation après une sécheresse.",
+    "citation_extrait": "the extent to which the tree can return to pre-disturbance growth after drought (Rs)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site FS1 avec la texture principale de sable a une capacité en eau disponible pour les plantes (PAWC) de 50 mm.",
+    "citation_extrait": "PAWC (mm): 50",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Loam (FS4) a une capacité en eau disponible pour les plantes (PAWC) de 88 mm.",
+    "citation_extrait": "PAWC (mm): 88",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Silt1 (FS1) a une capacité en eau disponible pour les plantes (PAWC) de 67 mm.",
+    "citation_extrait": "PAWC (mm): 67",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Silt2 (FS1) a une capacité en eau disponible pour les plantes (PAWC) de 101 mm.",
+    "citation_extrait": "PAWC (mm): 101",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Silt3 (FS2) a une capacité en eau disponible pour les plantes (PAWC) de 85 mm.",
+    "citation_extrait": "PAWC (mm): 85",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Clay1 (FS1) a une capacité en eau disponible pour les plantes (PAWC) de 44 mm.",
+    "citation_extrait": "PAWC (mm): 44",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Le site Clay2 (FS3) a une capacité en eau disponible pour les plantes (PAWC) de 90 mm.",
+    "citation_extrait": "PAWC (mm): 90",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "La température moyenne annuelle à la station météorologique de Hechingen est de 9,3 °C.",
+    "citation_extrait": "was 9.3 °C, recorded at the nearest weather station of the German Meteorological Service (Hechingen, elevation 517.5 m a.s.l.)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "La précipitation moyenne annuelle à la station météorologique de Hechingen est de 806,4 mm.",
+    "citation_extrait": "with a mean annual precipitation of 806.4 mm (DWD 2021)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "Les racines fines sont définies par des diamètres inférieurs à 2 mm.",
+    "citation_extrait": "fine roots defined by diameters < 2 mm (Böhm 1979)",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 4,
+    "fait": "La profondeur d'enracinement effective est définie comme la profondeur où le seuil de trois racines fines par dm² est atteint.",
+    "citation_extrait": "The PAWC was calculated down to the effective rooting depth, where the threshold of three fine roots per dm2 was reached (Arbeitskreis Standortskartierung 2016)",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Le DMI (indice d'aridité de Martonne) ne considère que la sécheresse climatique.",
+    "citation_extrait": "The DMI only considers the drought, which refers to climate.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Les sols ont des capacités de rétention d'eau différentes (PAWC), ce qui peut entraîner des déficits hydriques différents sous les mêmes conditions météorologiques.",
+    "citation_extrait": "However, soils have different PAWC and thus different abilities to store plant-available water. This can result in different soil water deficits even under the same weather conditions.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Le SMI est un percentile de la valeur simulée d'humidité du sol (moyenne mobile des 30 jours précédents) par rapport à une reconstruction de 60 ans d'humidité du sol (1954-2013).",
+    "citation_extrait": "The SMI represents the percentile of the simulated soil moisture value (moving average of the preceding 30 days) compared to a 60-year soil moisture reconstruction (1954–2013) (Zink et al. 2016).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "La sécheresse du sol, mais aussi le réhumectation des sols après une sécheresse, sont plus rapidement perceptibles dans la couche arable.",
+    "citation_extrait": "Soil drought, but also rewetting of soils after drought, is more quickly noticeable in the topsoil.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Les couches de sol plus profondes sont cruciales pour la survie des arbres pendant les périodes de sécheresse sévère car les racines profondes absorbent alors une proportion significativement plus élevée de l'eau nécessaire.",
+    "citation_extrait": "However, deeper soil layers and thus the SMI for the total soil are crucial for the survival of trees during severe drought periods because deeper roots then take up a significantly higher proportion of the required water (Warren et al. 2005).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Les différences de croissance entre provenances de Douglas ont été documentées par des études en Amérique du Nord et par divers essais de provenances en Europe.",
+    "citation_extrait": "Significant growth differences among those with different origins have been documented by studies in North America, as well as by various Douglas-fir provenance trials in Europe (Klesse et al. 2020; Kownatzki et al. 2011; Lavender and Hermann 2014).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "La croissance des cernes en réponse à la sécheresse, la tolérance aux périodes de sécheresse et l'efficacité d'utilisation de l'eau sont influencées par la provenance.",
+    "citation_extrait": "Tree ring growth in response to drought, tolerance to drought periods, and water-use efficiency is influenced by provenance (Eilmann et al. 2013; Hintsteiner et al. 2018; Jansen et al. 2013; Lavender and Hermann 2014; Martinez Meier et al. 2008; Sergent et al. 2014a).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 5,
+    "fait": "Tous les arbres génotypés des quatre peuplements étudiés (sept sites) ont été clairement assignés à la variété côtière du Douglas (Pseudotsuga menziesii var. menziesii).",
+    "citation_extrait": "All genotyped trees of all four studied stands comprising the seven study sites could clearly be assigned to the coastal variety of Douglas-fir (Pseudotsuga menziesii (Mirb.) Franco var. menziesii).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 9,
+    "fait": "L'équation (5) modélise l'influence de la texture du sol sur la réponse de croissance du Douglas à la sécheresse.",
+    "citation_extrait": "The model for estimating the influence of soil texture (ST) on the growth response of Douglas-fir to drought (hypothesis 1) was (5) R = a0 + b1STs + αs + εst",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 9,
+    "fait": "L'équation (6) étudie l'influence de la PAWC, de la profondeur racinaire effective et de la densité moyenne de racines fines sur la réponse de croissance du Douglas à la sécheresse, avec des covariables au niveau de l'arbre.",
+    "citation_extrait": "To study the influence of PAWC and rooting characteristics (effective rooting depth (RDepth) and mean fine root density in 0–40 cm soil depth (Rdens)) on the growth response of Douglas-fir to drought (hypotheses 2 and 3) we used Eq. (6). In addition to these predictors at the site-level s, covariates at the tree level t (DBH, height, and crown length (CL)) were also included as predictors.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 9,
+    "fait": "L'équation (7) analyse l'influence de l'espèce d'arbre (Douglas ou épicéa commun) sur la réponse de croissance à la sécheresse en fonction de la texture du sol.",
+    "citation_extrait": "To analyze the influence of tree species (SP: categorical variable, Douglas-fir or Norway spruce) on the growth response to drought depending on soil texture (hypothesis 4) we used Eq. (7).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 9,
+    "fait": "Les R-values de 1 indiquent des largeurs de cernes inchangées pendant la période de sécheresse.",
+    "citation_extrait": "R-values of 1 (gray line) indicate unchanged tree ring widths during the drought period.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "L'épaisseur des arbres (DBH) a une influence significative sur les indices de réponse de croissance du Douglas face à la sécheresse de 2018 : les arbres plus épais ont une Rt significativement plus faible mais des Rc et Rs plus élevés.",
+    "citation_extrait": "Thicker trees had a significantly lower Rt but higher Rc and Rs values.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "La hauteur des arbres et la longueur de la cime n'ont une influence significative que sur Rs : une hauteur d'arbre plus faible et une longueur de cime plus élevée augmentent Rs.",
+    "citation_extrait": "Lower tree height and higher crown length increased Rs.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "Sur les sites à dominante argileuse, les indices Rt, Rc et Rs de l'épicéa commun étaient significativement plus faibles que ceux du Douglas lors de la sécheresse de 2003/04.",
+    "citation_extrait": "At the clay-dominated sites, Rt, Rc, and Rs for Norway spruce were significantly lower than for Douglas-fir during the drought in 2003/04",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "L'année de sécheresse extrême 2018 a entraîné une diminution de croissance plus forte pour l'épicéa commun par rapport au Douglas sur les sites argileux pour Rt, mais une Rc plus élevée.",
+    "citation_extrait": "The extreme drought year 2018 led to a significantly stronger growth decrease for Norway spruce compared to Douglas-fir at the clay sites for Rt, but a higher Rc.",
+    "confiance_llm": 0.8,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "Sur site limoneux, lors de la sécheresse 2003/04, l'épicéa commun a montré une Rt significativement plus faible par rapport au Douglas (estimate = -0.172, p=0.011).",
+    "citation_extrait": "Silt ... b5 (Norway spruce) ... Estimate: -0.172, P value: 0.011",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 11,
+    "fait": "Sur site limoneux, lors de la sécheresse 2018, l'épicéa commun a montré une Rs significativement plus élevée par rapport au Douglas (estimate = 0.162, p=0.041).",
+    "citation_extrait": "Silt ... b5 (Norway spruce) ... Estimate: 0.162, P value: 0.041",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "La croissance radiale annuelle du Douglas taxifolié (Douglas-fir) est influencée par deux caractéristiques stationnelles (texture du sol, PAWC) et deux caractéristiques racinaires (profondeur racinaire effective, densité de racines fines dans les 40 cm supérieurs du sol) lors d'événements de sécheresse sévère.",
+    "citation_extrait": "This study focused on the influence of two site characteristics (soil texture, PAWC) and two rooting characteristics (effective rooting depth, fine root density in the upper 40 cm of soil) on the annual radial stem growth of Douglas-fir exposed to severe drought events in 2003/04 and 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "L'hypothèse 1 (indices de croissance plus faibles du Douglas-fir sur sols argileux comparés aux sols sableux, limoneux et silteux) a été confirmée pour la récupération après la sécheresse extrême de 2018.",
+    "citation_extrait": "Hypothesis 1, namely lower growth response indices of Douglas-fir on clayey soils compared to sandy, loamy, and silty soils, was found for recovery after the extreme drought in 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Sur sols sableux et limoneux, Douglas-fir a montré une haute tolérance à la sécheresse, y compris lors de la sécheresse de 2018.",
+    "citation_extrait": "Douglas-fir showed high drought tolerance at the sandy and loamy sites and at two of the three silty sites.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Un site silteux avec une profondeur racinaire faible a montré une forte sensibilité à la sécheresse extrême de 2018.",
+    "citation_extrait": "One silty site with a comparably low rooting depth showed high drought susceptibility during the extreme drought in 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Une PAWC (capacité en eau disponible pour les plantes) plus élevée a réduit la résistance et la résilience du Douglas-fir lors de la sécheresse de 2018, contrairement à l'hypothèse 2.",
+    "citation_extrait": "In contrast to hypothesis 2, a higher PAWC reduced the resistance and resilience of Douglas-fir related to the drought in 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Une profondeur racinaire effective plus élevée a augmenté la résilience du Douglas-fir lors de la sécheresse de 2018 (hypothèse 3 confirmée pour cette caractéristique racinaire).",
+    "citation_extrait": "Hypothesis 3 was confirmed for one of the rooting characteristics; a higher effective rooting depth increased the resilience of Douglas-fir during the 2018 drought.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "L'hypothèse 4 (Douglas-fir montre une résistance, récupération et résilience plus élevées que l'épicéa commun) a été confirmée pour les sites argileux lors de la sécheresse sévère de 2003/04.",
+    "citation_extrait": "Hypothesis 4 was that Douglas-fir would show higher resistance, recovery, and resilience than Norway spruce. This hypothesis was confirmed for the clayey sites during the severe drought in 2003/04.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "L'avantage du Douglas-fir en matière de tolérance à la sécheresse par rapport à l'épicéa était moindre ou non prouvé sur le site silteux Silt3 pour les deux sécheresses et sur les sites argileux en 2018.",
+    "citation_extrait": "In contrast, the advantages of Douglas-fir in terms of drought tolerance were less or not provable at the silty site Silt3 for both droughts and for the clayey sites in 2018.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "La sécheresse de 2003/04 était moins intense que celle de 2018, et les réponses de croissance du Douglas-fir en 2003/04 ont montré une haute tolérance (résilience >1).",
+    "citation_extrait": "The drought intensity in 2003/04 was lower than in 2018 [...] During the severe drought in 2003/04, the growth responses of Douglas-fir showed a high drought tolerance for all sites (e.g., the resilience of all sites > 1, Fig. 3).",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "La sécheresse extrême de 2018 a provoqué des réductions de croissance plus sévères (réduction moyenne de 32.5 %), mais sur la plupart des sites, une récupération complète ou presque complète de la croissance radiale a été observée dans les 2 ans après 2018.",
+    "citation_extrait": "In contrast, the extreme drought of 2018 led to more severe growth reductions (mean reduction of 32.5%). At most sites, however, we observed a complete or almost complete recovery of radial growth within 2 years after 2018 and, as a result, a resilience close to 1 (Fig. 3).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "La texture du sol, la PAWC et la profondeur racinaire effective ont eu des impacts significatifs sur les indices de réponse de croissance du Douglas-fir lors de la sécheresse extrême de 2018, contrairement à la sécheresse sévère de 2003/04 où la texture du sol a joué un rôle mineur.",
+    "citation_extrait": "Soil texture, PAWC, and effective rooting depth had significant impacts on the growth response indices of Douglas-fir during the extreme drought in 2018. In contrast to this finding, soil texture played a minor role during the severe drought in 2003/04 (Table 3).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Sur sols sableux et limoneux, Douglas-fir a retrouvé ses niveaux de croissance d'avant sécheresse dans les 2 ans, même après la sécheresse de 2018, confirmant son adaptation à ces stations.",
+    "citation_extrait": "On the sandy and loamy soils, Douglas-fir returned to pre-drought growth levels within 2 years, even after the 2018 drought, and confirmed its suitability for these sites (Forstliche Versuchs- und Forschungsanstalt BW 2022; Huang et al. 2017).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Sur les sols argileux, la récupération après la sécheresse extrême de 2018 était significativement plus faible que sur les sols sableux et silteux.",
+    "citation_extrait": "In contrast, recovery on the clayey soils was significantly lower than on the sandy and silty soils after the extreme drought in 2018 (Table 3).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "La raison proposée pour la différence de réponse entre les années de sécheresse sur sols argileux est la compensation de la profondeur racinaire réduite par une expansion latérale accrue du système racinaire.",
+    "citation_extrait": "We presume that the reason for these different growth responses between the drought years is the compensation of the reduced rooting depth on clayey soils by an increased lateral expansion of the root system.",
+    "confiance_llm": 0.8,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Douglas-fir réduit sa profondeur racinaire dans les sols à forte teneur en argile.",
+    "citation_extrait": "In soils with a high clay content, Douglas-fir reduces rooting depth (Köstler et al. 1968).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "On a trouvé de grandes expansions racinaires latérales de Douglas-fir, en particulier sur les sols compactés, contrairement à l'hypothèse antérieure d'une faible expansion latérale.",
+    "citation_extrait": "In contrast to the previous assumption of low lateral root expansion of Douglas-fir, studies have found large lateral root expansions, especially for compacted soils (Kutschera and Lichtenegger 2013).",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 12,
+    "fait": "Les communautés végétales à racines superficielles (shallow-rooted) pourraient être plus vulnérables aux sécheresses sévères/extrêmes (comme 2018) mais moins sensibles aux périodes de sécheresse modérée prolongée (comme 2003/04) (hypothèse d'Anderegg et al. 2013). Ceci a été confirmé pour les sites argileux dans cette étude.",
+    "citation_extrait": "Anderegg et al. (2013) hypothesized that shallow-rooted plant communities are more vulnerable to severe or extreme drought events (such as 2018) but less susceptible to prolonged moderate drought periods (such as 2003/04). This presumption was confirmed for the clayey sites in our study.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Pour les conifères, un risque de mortalité plus élevé après une sécheresse est principalement lié à une capacité de récupération réduite.",
+    "citation_extrait": "For conifers, a subsequent higher mortality risk is mainly related to reduced recovery ability after drought (DeSoto et al. 2020).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Les sols argileux en terrain plat présentent un risque accru d'eau stagnante.",
+    "citation_extrait": "In the case of clayey soils in flat terrain, an increased risk of stagnant water should be expected.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Les sols à échange gazeux prolongé entravé (par exemple, les Stagnosols) sont considérés comme critiques pour le Douglas taxifolié en raison de la pénétration entravée des racines dans les horizons de sol mal aérés.",
+    "citation_extrait": "Soils with prolonged impeded gas exchange (e.g., Stagnosols) were not part of this study. They are considered critical for Douglas-fir because of the impeded penetration of roots into poorly aerated soil horizons (Köstler et al. 1968; Nicolescu 2019).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Les douglas sur les sites plus productifs forment des proportions plus faibles de biomasse racinaire fine par rapport à la biomasse totale.",
+    "citation_extrait": "This confirms other studies that have found that Douglas-fir trees on more productive sites form lower proportions of fine root biomass to total biomass (Keyes and Grier 1981; Olsthoorn 1991; Tingey et al. 2005; Vogt et al. 1983).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Un PAWC plus élevé a entraîné une résistance et une résilience plus faibles du Douglas taxifolié lors de la sécheresse extrême de 2018.",
+    "citation_extrait": "For the extreme drought in 2018, our LMM analyses showed the opposite; a higher PAWC resulted in lower resistance and resilience (Table 4).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Une profondeur d'enracinement effective plus élevée a augmenté la résilience du Douglas taxifolié lors de la sécheresse extrême de 2018.",
+    "citation_extrait": "a higher effective rooting depth increased the resilience of Douglas-fir during the extreme drought in 2018 (Table 4).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 13,
+    "fait": "Les systèmes racinaires profonds et denses permettent aux arbres d'accéder à de plus grandes réserves d'eau du sol et assurent une meilleure tolérance aux événements de sécheresse sévères.",
+    "citation_extrait": "Deep and dense root systems allow trees access to larger soil water reserves and ensure higher tolerance towards severe drought events (Bréda et al. 2006).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "La teneur élevée en argile du sol réduit la profondeur d'enracinement du Douglas.",
+    "citation_extrait": "The cultivation of Douglas-fir in soils with a high clay content should be considered with some caution because of the reduced rooting depth.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "L'argile sur pente est moins critique pour le Douglas que sur terrain plat.",
+    "citation_extrait": "In addition to clay content, relief is decisive; clay on slopes is less critical than in flat terrain (Nadezhdina et al. 2014).",
+    "confiance_llm": 0.95,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Les années de fructification (mast years) peuvent réduire l'accroissement radial des arbres.",
+    "citation_extrait": "Mast years can reduce the radial increment (Eis et al. 1965; Mencuccini and Piussi 1995).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Lors de la sécheresse sévère de 2003/04, le Douglas n'a montré que des réductions de croissance mineures et une résilience élevée sur tous les sites étudiés.",
+    "citation_extrait": "During the severe drought of 2003/04, Douglas-fir revealed only minor growth reductions and high resilience at all seven study sites.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "L'épicéa commun a montré des réductions de croissance plus sévères en 2003/04 que le Douglas.",
+    "citation_extrait": "Norway spruce showed more severe growth reductions in 2003/04 in our study and in other studies (Vitali et al. 2017; Zang et al. 2014).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "La tolérance à la sécheresse du Douglas provenant de l'aire d'origine augmente vers le sud.",
+    "citation_extrait": "the drought tolerance of Douglas-fir trees in the area of origin increases towards the south (Eilmann et al. 2013; Nicolescu 2019).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Les quatre peuplements étudiés proviennent de la zone centrale de la variété côtière, entre le centre de Washington et le nord de la Californie.",
+    "citation_extrait": "the assignment test to provenances from the natural distribution range showed that all four stands of our study originated from the central area of the range of the coastal variety, located between central Washington and the northern part of California (Neophytou 2019).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "L'approvisionnement en nutriments peut influencer la profondeur d'enracinement et la tolérance à la sécheresse.",
+    "citation_extrait": "Nutrient supply can influence rooting depth and drought tolerance (Köstler et al. 1968; Sergent et al. 2014b).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Des périodes de sécheresse fréquentes laissent peu de temps aux arbres pour récupérer et augmentent le risque de dommages.",
+    "citation_extrait": "Frequent drought periods give trees little time to recover and increase the risk of drought damage (Obladen et al. 2021).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Un stress de sécheresse modéré avant une année de sécheresse prononcée peut avoir une influence négative notable sur la vulnérabilité des arbres.",
+    "citation_extrait": "Even a moderate drought stress event before a pronounced drought year might have a noticeable negative influence on tree vulnerability (Schwarz et al. 2020).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Interannual radial growth response of Douglas-fir to severe droughts: an analysis along a gradient of soil properties and rooting characteristics",
+    "document_reference": "Annals of Forest Science (2024), DOI 10.1186/s13595-024-01240-z",
+    "page_number": 15,
+    "fait": "Les sols profonds avec une capacité en eau disponible élevée ne réduisent le risque de stress hydrique sévère que lorsque les arbres ont développé des systèmes racinaires capables d'accéder aux ressources en eau.",
+    "citation_extrait": "Deeply developed soils with a high plant-available water capacity only lower the risk of severe drought stress to trees when trees have developed root systems that can access available soil water resources.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

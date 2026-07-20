@@ -1,13 +1,15 @@
 # Manifeste — candidats documentaires Phase C (pilote Nouvelle-Aquitaine, RFC-0016)
 
-> Récupéré le 2026-07-19. **Aucun fait n'a été extrait de ces documents.**
-> Ce dossier ne contient que des sources candidates, téléchargées
-> uniquement depuis des dépôts confirmés en accès libre (licence
-> vérifiée via l'API Europe PMC ou la page de l'article), pour revue
-> humaine avant tout passage dans le pipeline d'extraction
-> (`KnowledgeExtractor`, RFC-0014 §3.2). Aucune donnée scientifique
-> n'a été inventée ni approximée — voir §"Ce qui manque encore"
-> ci-dessous pour ce qui n'a pas pu être trouvé en accès libre.
+> Sources récupérées le 2026-07-19. **Mise à jour 2026-07-20** :
+> extraction documentaire réelle effectuée (`KnowledgeExtractor`,
+> Forge, RFC-0014 §3.2) sur les 7 documents — voir §"Extraction
+> effectuée" plus bas. Les faits produits sont tous en statut
+> `quarantine` (citation vérifiée mot pour mot) ou `rejete` (citation
+> introuvable) — **aucun n'a encore été validé par un humain, et aucun
+> n'a été transformé en `AutecologyProfile`**. Aucune donnée
+> scientifique n'a été inventée ni approximée à aucune étape — voir
+> §"Ce qui manque encore" pour ce qui n'a pas pu être trouvé en accès
+> libre.
 
 Objectif RFC-0016 §4/§10 : 12-20 essences pour le pilote
 Nouvelle-Aquitaine (« chênes sessile/pédonculé/pubescent,
@@ -73,12 +75,50 @@ traitées (petraea, robur) — soit 9/10 essences citées par RFC-0016 §4.
   `LEGAL_REVIEW_PENDING` et n'a pas été téléchargé, indépendamment de
   toute protection technique.
 
+## Extraction effectuée (2026-07-20)
+
+`KnowledgeExtractor` (Forge, RFC-0014 §3.2) exécuté sur les 7
+documents via `Forge/outputs/pilote_phase_c/run_extraction.py`
+(modèle `deepseek-ai/deepseek-v4-flash`, NVIDIA NIM). Un fichier
+`<document>_facts.json` par source, même format que le pilote Quercus
+(Parelle et al. 2007) déjà ingéré.
+
+| Fichier de faits | Total | `quarantine` | `rejete` |
+|---|---:|---:|---:|
+| `fagus_sylvatica_jump_2012_plosone_facts.json` | 20 | 19 | 1 |
+| `pseudotsuga_menziesii_2024_annforsci_facts.json` | 80 | 68 | 12 |
+| `castanea_sativa_2025_pmc12598267_fulltext_facts.json` | 6 | 5 | 1 |
+| `pinus_pinaster_2013_pmc3815124_fulltext_facts.json` | 44 | 36 | 8 |
+| `quercus_pubescens_petraea_robur_2015_pmc4427272_fulltext_facts.json` | 22 | 21 | 1 |
+| `pinus_sylvestris_2023_pmc9835711_fulltext_facts.json` | 37 | 32 | 5 |
+| `populus_nigra_2016_viger_treephysiol_fulltext_facts.json` | 14 | 7 | 7 |
+| **Total** | **223** | **188** | **35** |
+
+**Aucun de ces 188 faits `quarantine` n'a été relu par un humain, et
+aucun n'a été transformé en `AutecologyProfile`** — c'est exactement
+l'étape suivante, et elle exige ta lecture (RFC-0014 §3.2 : jamais
+d'auto-validation). Note : le pilote `pinus_pinaster` contient
+plusieurs faits de nature génétique/expérimentale (mortalité par
+provenance en pépinière, ex. « T50 ») plutôt qu'autécologique au sens
+strict — attendu, le tri variable/valeur reste une décision de
+curateur (voir `extraction_bridge.py` côté GSIE), pas automatisé ici.
+
+Incident technique rencontré et corrigé pendant ce run : la première
+tentative a échoué à 100% (`Connection error` sur tous les appels)
+à cause d'un certificat auto-signé injecté par un logiciel de
+sécurité local, non reconnu par le bundle de certificats embarqué
+dans `httpx` (mais validé par `curl` et le magasin Windows) — corrigé
+en ajoutant `truststore.inject_into_ssl()` dans
+`extraction.py`.
+
 ## Prochaine étape (après ta revue)
 
-Ces documents ne sont PAS encore passés dans `KnowledgeExtractor`
-(RFC-0014 §3.2) — aucun fait n'en a été extrait, contrairement au
-pilote Quercus (Parelle et al. 2007) déjà ingéré. Après ta revue,
-étape suivante naturelle : lancer l'extraction documentaire (Forge)
-sur les documents retenus, puis reproduire le même pont
-(`build_autecology_profile_from_quarantined_fact`) pour produire de
-nouveaux `AutecologyProfile` réels pour ces 7 essences.
+Relire les 188 faits `quarantine` (par fichier, ci-dessus), puis
+reproduire le même pont que pour Quercus
+(`build_autecology_profile_from_quarantined_fact`,
+`gsie_api.engines.botanical.extraction_bridge`) pour produire de
+nouvelles `AutecologyProfile` réelles pour ces 7 essences —
+uniquement pour les faits que tu confirmes comme autécologiques et
+pertinents, avec `variable`/`evidence_level`/valeur fournis
+explicitement par toi (jamais dérivés automatiquement, voir docstring
+du pont).

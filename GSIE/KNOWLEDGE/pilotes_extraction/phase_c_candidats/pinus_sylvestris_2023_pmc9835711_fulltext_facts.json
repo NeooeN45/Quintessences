@@ -1,0 +1,372 @@
+[
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Le stress hydrique réduit le diamètre racinaire moyen et le diamètre des vaisseaux racinaires.",
+    "citation_extrait": "some studies have also found that drought stress reduced the average root diameter and the diameter of the root vessel",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Le stress hydrique à long terme réduit la longueur et le volume racinaires de [nom de variété].",
+    "citation_extrait": "long-term drought stress reduced the root length and root volume of [var.]",
+    "confiance_llm": 0.8,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "La sécheresse estivale limite l'établissement de la forêt de pin sylvestre en réduisant la croissance et en augmentant la mortalité des semis.",
+    "citation_extrait": "summer drought would limit the establishment of the Scot pine (L.) forest by reducing growth and increasing seedling mortality",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Pour s'adapter à la sécheresse, les aiguilles des plantes ont tendance à augmenter le tissu palissadique du mésophylle et le nombre de couches cellulaires, et à réduire le tissu spongieux, le volume cellulaire et l'espace cellulaire.",
+    "citation_extrait": "To adapt to drought, plant needles tend to increase mesophyll palisade tissue and the number of cell layers and reduce spongy tissue, cell volume, and cell space",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les plantes résistantes à la sécheresse peuvent réguler davantage les stomates pour réduire la perte d'eau.",
+    "citation_extrait": "Plants resistant to drought can regulate the stomata to a greater degree to reduce water loss",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Sous stress hydrique, la teneur relative en eau des plantes diminue, et l'ouverture stomatique diminue ou se ferme pour réduire la perte d'eau des aiguilles, ce qui facilite la récupération du potentiel hydrique foliaire.",
+    "citation_extrait": "Under drought stress, the relative water content of plants decreases, and the stomatal aperture decreases or even closes to reduce the water loss from needles, which facilitates the recovery of leaf water potential",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "La réduction de la conductance stomatique ou la fermeture des stomates dans un environnement aride affecte l'absorption de CO2 et réduit le taux photosynthétique.",
+    "citation_extrait": "the reduction of stomatal conductance or stomatal closure of plant needles in an arid environment affects the absorption of CO2 and reduces the photosynthetic rate",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Le stress hydrique provoque la décomposition de la chlorophylle et une diminution de la teneur en chlorophylle, entraînant des modifications de la fonction photosynthétique.",
+    "citation_extrait": "drought stress causes chlorophyll decomposition and chlorophyll content decreases, leading to changes in photosynthetic function",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les auteurs ont mené des expériences de contrôle de l'eau en pot sur des semis de [var.] pour clarifier les caractéristiques de croissance sous différents niveaux de stress hydrique.",
+    "citation_extrait": "In this study, the potted water control experiments of [var.] seedlings were conducted, and the growth characteristics of [var.] seedlings were clarified by measuring changes in growth indexes, photosynthetic pigment indexes, root indexes, and submicroscopic structure under different levels of drought stress.",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les graines de [var.] ont été collectées dans la forêt expérimentale de Zhanggutai, Fuxin, Liaoning.",
+    "citation_extrait": "The seeds of [var.] were collected from Zhanggutai Experimental Forest Farm, Fuxin City, Liaoning Province.",
+    "confiance_llm": 0.9,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les graines ont été désinfectées avec du permanganate de potassium à 0,5% pendant 30 minutes, puis lavées à l'eau distillée trois fois.",
+    "citation_extrait": "The seeds used in the experiment were disinfected and sterilized with potassium permanganate (0.5%, v/v) for 30 min, followed by washing with distilled water three times.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les graines ont été enveloppées dans une gaze stérile pour l'humidification et maintenues à 25°C pour la germination, pulvérisées avec de l'eau stérile tous les jours jusqu'à la croissance.",
+    "citation_extrait": "seeds were wrapped with sterile gauze for moisturizing and kept under 25 °C for germination, sprayed with sterile water every day until growth.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Les graines ont été transférées dans des pots en plastique remplis d'un mélange stérilisé de vermiculite: sol: sable (1:2:1) et maintenues dans des conditions de serre contrôlées.",
+    "citation_extrait": "Seeds were transferred to plastic pots filled with sterilized vermiculite: soil: sand mixture (1:2:1) and kept under the corresponding controlled greenhouse conditions",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 2,
+    "fait": "Trois traitements de sécheresse ont été adoptés : témoin (80% de la capacité au champ; CK), sécheresse modérée (40% de la capacité au champ; MD) et sécheresse sévère (20% de la capacité au champ; HD).",
+    "citation_extrait": "three different treatments of drought were adopted; control (80% of field water capacity; CK), moderate drought (40% of field water capacity; MD), and heavy drought (20% of field water capacity; HD)",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Le diamètre des trachéides et l'épaisseur de la paroi des trachéides des racines, des tiges et des aiguilles diminuent progressivement avec l'intensification de la sécheresse.",
+    "citation_extrait": "this study found that the tracheid diameter and tracheid wall thickness of roots, stems, and needles gradually decreased with the deepening of the drought.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Le diamètre des trachéides est positivement corrélé avec l'efficacité de transport de l'eau.",
+    "citation_extrait": "Previous studies have demonstrated that the tracheid diameter is positively correlated with water conveyance efficiency",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "L'épaisseur des trachéides des racines est étroitement liée à la résistance à l'embolie.",
+    "citation_extrait": "the thickness of the root tracheids was closely related to embolism resistance.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "L'épaississement de la paroi des trachéides des racines peut renforcer les tubes fragiles des racines et améliorer la résistance mécanique des racines, pour améliorer la résistance à l'embolie.",
+    "citation_extrait": "The thickening of the wall of the root tracheids can strengthen the fragile pipes of the roots and improve the mechanical strength of the roots, to improve the embolism resistance of roots",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Sous stress hydrique, la capacité de transport d'eau et la capacité anti-embolie des plantes sont inhibées.",
+    "citation_extrait": "When subjected to drought stress, the water-carrying capacity and anti-embolism capacity of plants are inhibited.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Avec l'augmentation du stress, les cellules du phloème deviennent plus denses et plus étroites, ce qui nuit au transport et à la distribution de l'eau et de la matière organique dans les plantes.",
+    "citation_extrait": "with increasing degree of stress, phloem cells become denser and narrower, which is not conducive to the transportation and distribution of water and organic matter in plants",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "La déshydratation et la déformation des cellules chez les semis entraînent une obstruction de l'échange de matière entre les tissus, ce qui nuit à la croissance et aux activités métaboliques stables des plantes.",
+    "citation_extrait": "dehydration and deformation of cells in seedlings will also lead to the obstruction of material exchange between the two parts of tissues, which is not conducive to stable growth and metabolic activities of plants",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Sous conditions de sécheresse, la taille de la lumière des trachéides des arbres est plus petite et la paroi cellulaire plus épaisse.",
+    "citation_extrait": "the tracheid lumen size of trees was smaller and the cell wall was thicker under drought conditions",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Le nombre de chloroplastes et de mitochondries dans les cellules des aiguilles de Picea var. diminue avec l'aggravation du stress hydrique, et leur structure morphologique change.",
+    "citation_extrait": "the number of chloroplasts and mitochondria in var. needle leaf cells not only decreased with the aggravation of drought stress, but their morphological structure also changed to varying degrees.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "La membrane bilipidique des chloroplastes et des mitochondries est détruite, le contenu s'écoule, la lumière est creusée, le nombre de globules osmophiles dans les chloroplastes augmente sous sécheresse modérée, et les crêtes des mitochondries changent.",
+    "citation_extrait": "The bilayer membrane of chloroplasts and mitochondria was destroyed, the content flowed out, the lumen was hollowed out, the number of osmiophilic globules in chloroplasts increased under moderate drought, and the cristae in mitochondria also changed.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Le stress hydrique peut entraîner un désordre et des dommages structurels des chloroplastes, un gonflement et un arrondissement des mitochondries, des dommages membranaires, une dissolution des crêtes internes, etc.",
+    "citation_extrait": "drought stress can lead to the disordered arrangement and structural damage to chloroplasts, expansion, and rounding of mitochondria, membrane damage, dissolution of internal cristae, etc.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Les chloroplastes sont détruits sous sécheresse, ce qui montre que la photosynthèse de la plante est inhibée, entraînant une diminution de la capacité photosynthétique.",
+    "citation_extrait": "as an important site for photosynthesis, chloroplasts are destroyed under drought, which shows that the photosynthesis of the plant itself has been inhibited, resulting in a decrease in photosynthetic capacity.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Les globules osmophiles sont des gouttelettes formées par l'agrégation de substances lipidiques, servant de stockage de substances lipidiques dans les chloroplastes des plantes.",
+    "citation_extrait": "The osmiophiles are droplets formed by aggregation of some lipid substances, which are used as storage of lipid substances in plant chloroplasts",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Les globules osmophiles sont censés agir comme un transporteur d'électrons protégeant la vésicule des dommages causés par les radicaux libres dus au stress environnemental.",
+    "citation_extrait": "These osmiophiles are supposed to act as an electron carrier protecting the vesicle from free radical damage caused by adversity stress",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Les globules osmophiles sont également considérés comme le produit de polymérisation après dégradation des lipides membranaires des thylakoïdes.",
+    "citation_extrait": "it is also considered to be the product of polymerization after thylakoid degrades the membrane lipid.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 9,
+    "fait": "Les mitochondries, en tant que site principal du cycle de l'acide tricarboxylique et de la phosphorylation oxydative, sont détruites sous stress hydrique, montrant que les cellules d'aiguilles peinent à maintenir des fonctions physiologiques normales.",
+    "citation_extrait": "As the main site of the tricarboxylic acid cycle and oxidative phosphorylation, mitochondria were destroyed under drought stress, showing that needle cells struggle to maintain normal physiological functions, resulting in changes in needle structure.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "La sécheresse stress a réduit les indices de diamètre, de biomasse et de pigments photosynthétiques des semis de Pinus sylvestris var. mongolica.",
+    "citation_extrait": "iameter, biomass, and photosynthetic pigment indexes of var. seedlings decreased with increasing degrees of drought stress.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "Le stress hydrique a inhibé la longueur totale des racines, la surface racinaire, le volume racinaire, la longueur totale des racines par unité de volume de sol, le nombre de bifurcations et le nombre de croisements des semis de Pinus sylvestris var. mongolica.",
+    "citation_extrait": "Drought stress inhibited total root length, root surface area, root volume, total root length per unit of soil volume, bifurcation number, and crossing number of var. seedlings.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "L'augmentation de la sécheresse a d'abord augmenté puis diminué la densité stomatique.",
+    "citation_extrait": "the deepening of the drought caused the stomatal density to increase first, followed by a decrease.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "Le stress hydrique a modifié la structure des racines, des tiges, des aiguilles, la structure cellulaire des aiguilles et la structure des organites des semis de Pinus sylvestris var. mongolica, perturbant ainsi la voie métabolique et la fonction physiologique normales des cellules.",
+    "citation_extrait": "The drought stress also led to changes in the structure of roots, stems, needles, needle cell structure, and organelle structure of var. seedlings, thus, destroying the normal metabolic pathway and physiological function of cells.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "Les changements morphologiques des organites fournissent des preuves cytologiques pour l'étude de la résistance à la sécheresse de Pinus sylvestris var. mongolica.",
+    "citation_extrait": "Morphological changes in organelles also provide cytological evidence for the study of drought resistance in var.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "Pinus sylvestris var. mongolica est affectée par la pression croissante de la sécheresse due au changement climatique, ce qui augmente son risque de dépérissement en conditions sèches.",
+    "citation_extrait": "var. is affected by the increasing drought pressure caused by current climate change, making its risk of recession under drought higher.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "The effects of soil drought stress on growth characteristics, root system, and tissue anatomy of Pinus sylvestris var. mongolica",
+    "document_reference": "Meng F. et al. (2023), PeerJ, DOI 10.7717/peerj.14578",
+    "page_number": 10,
+    "fait": "Une attention particulière doit être portée à l'effet de l'environnement sur le pin sylvestre de Mongolie lors de la reforestation dans les zones arides et semi-arides.",
+    "citation_extrait": "Therefore, special attention should be paid to the effect of environment on Mongolian pine when afforestation is carried out in arid and semi-arid areas.",
+    "confiance_llm": 0.9,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]

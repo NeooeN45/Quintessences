@@ -1,0 +1,202 @@
+[
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "La largeur de cerne (TRW), l'accroissement basal médian (BAI) et la sensibilité de croissance (SEN) sont des mesures de croissance utilisées dans cette étude.",
+    "citation_extrait": "width [1/100 mm]; BAI, median basal growth increment [cm2] and SEN, growth sensitivity measures, i.e. variation in growth between two consecutive years.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "L'écart de la largeur de cerne (TRWdev) par rapport à la valeur attendue par régression linéaire de la croissance individuelle sur les années 1930-2006 a été calculé.",
+    "citation_extrait": "Moreover, we calculated the deviation of TRW (hereafter called TRWdev) from the value expected given by a linear regression of individual growth across the years 1930 to 2006.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les TRWdev ont été moyennés sur les 20% d'années les plus sèches et les 20% d'années les plus humides de la période 1930-2006, basés sur les mesures de DRI (indice de sécheresse) de juin à août.",
+    "citation_extrait": "We then averaged these TRWdev across the 20% driest and 20% wettest years of the period 1930–2006 based on the DRIJune–Aug measures.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Le protocole d'extraction d'ADN a suivi le DNeasy 96 Plant Kit (Qiagen).",
+    "citation_extrait": "Total DNA was extracted from silica-dried leaf tissue following the protocol of the DNeasy 96 Plant Kit (Qiagen, Inc.).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "L'empreinte AFLP a été adaptée de Vos et al. en utilisant les enzymes de restriction EcoRI et MseI et dix paires d'amorces avec trois paires de bases sélectives par amorce.",
+    "citation_extrait": "The AFLP fingerprinting was adapted from Vos et al. [34] using the restriction enzymes EcoRI and MseI and ten primer-pairs with three selective base pairs per primer (EcoR1-Mse1: ACT-CTA, AAC-CTT, ATG-CTA, ATG-CAC, ACA-CAA, AAC-CAA, AGG-CAT, AAG-CTC, ACC-CAC, AGG-CTC; see Materials and Methods S1 for a detailed description of the protocol).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les fragments ont été séparés sur un analyseur d'ADN ABI 3730xl (Applied Biosystems), et les longueurs et hauteurs de pics ont été notées automatiquement avec Genemapper v.4.0 et révisées manuellement.",
+    "citation_extrait": "Fragments were separated on an ABI 3730xl DNA Analyser (Applied Biosystems), fragment lengths and peak heights were scored automatically with the Genemapper software v.4.0 TM (Applied Biosystems) and were extensively manually revised.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Le jeu de données final contenait les informations de présence/absence de 517 marqueurs présents chez plus de deux individus et avec une fréquence inférieure à 1-3/n.",
+    "citation_extrait": "The final dataset contained the presence/absence information of 517 markers which occurred in more than two individuals and had a frequency smaller than 1–3/n [36].",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Le déséquilibre de liaison (LD) entre toutes les paires de marqueurs a été testé avec le test exact de Fisher sur les tables de contingence, suivi d'une approche de taux de fausses découvertes (FDR) pour les tests multiples (FDR fixé à 5%).",
+    "citation_extrait": "Linkage disequilibrium (LD) among all pair-wise marker comparisons was tested with Fisher’s exact test on contingency tables and followed by the false discovery approach to account for multiple testing (FDR: [37]; FDR level set to 5%).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les sites ont été nichés dans la classe de disponibilité en humidité (sec, mésique) pour les ANOVAs hiérarchiques.",
+    "citation_extrait": "Sites were nested in the moisture availability class (i.e. dry, mesic).",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Le coefficient de consanguinité fAFLP global était faible (0,05, SE=0,016) et les valeurs par site ne différaient pas de zéro, donc les analyses ont été réalisées sous l'hypothèse de Hardy-Weinberg.",
+    "citation_extrait": "The overall fAFLP was low (fAFLP = 0.05, SE = 0.016) and values per site did not differ from zero (average values: 20.009–0.111, Bonferroni corrected 95%- confidence intervals of each value included zero). We therefore run all following analyses under the assumption of HWE.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les mesures de diversité génétique standard (pourcentage de loci polymorphes et hétérozygotie attendue He) ont été calculées avec Arlequin V.3.5.2.1.",
+    "citation_extrait": "Standard genetic diversity measures, i.e. percentage of poly- morphic loci (%poly) and expected heterozygosity (He) averaged across all markers were calculated using Arlequin V.3.5.2.1 [40].",
+    "confiance_llm": 1.0,
+    "statut": "rejete",
+    "rejet_raison": "citation introuvable dans le texte source de la page"
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "La structure génétique a été évaluée via la différenciation génétique globale (Fst), des AMOVA hiérarchiques, la différenciation par paire de sites, un test de Mantel, et des analyses de regroupement bayésien (BAPS 5.1).",
+    "citation_extrait": "Genetic structure was assessed via global genetic differentiation (Fst), hierarchical AMOVAs (among and within regions; among and within the moisture levels), site pair-wise differentiation (all three analyses done in Arlequin) followed by a Mantel test and finally, a Bayesian cluster analyses.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les marqueurs sous sélection ont été déterminés en utilisant la méthode bayésienne hiérarchique BayeScan.",
+    "citation_extrait": "Markers under selection were determined using the hierarchical Bayesian method BayeScan [10].",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "BayeScan décompose la valeur logit de Fst en un effet spécifique au locus (ai) partagé par toutes les populations et un effet spécifique à la population (bj) partagé par tous les loci.",
+    "citation_extrait": "The logit value of Fst is decomposed into a locus specific effect (ai) shared by all populations and a population specific effect (bj) shared by all loci [43].",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "La distribution a posteriori de ai indique si un locus est sous sélection directionnelle (valeurs positives) ou stabilisatrice (valeurs négatives).",
+    "citation_extrait": "The posteriori distribution of ai indicates whether a locus is under directional (positive values) or balancing (negative values) selection.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les résultats des marqueurs avec un taux de faux positifs inférieur à 5% (probabilité a posteriori >0,79 et facteur de Bayes >3) sont présentés, représentant une preuve 'substantielle' de sélection.",
+    "citation_extrait": "We present results of markers with a false-positive rate ,5% which translates into a posterior probability .0.79 and a Bayes Factor .3, representing a ‘substantial’ evidence for selection [44].",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Des modèles linéaires généralisés binomiaux ont été calculés pour déterminer les marqueurs AFLP avec des fréquences changeant le long du gradient d'humidité, en utilisant des valeurs centrées pour AWC, FC et DRI de septembre-août.",
+    "citation_extrait": "We calculated binomial generalized linear models to determine AFLP-markers with changing frequencies along the humidity gradient using centered values for AWC, FC and DRISept–Aug.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Des modèles linéaires mixtes binomiaux avec le niveau de groupement 'site' ont été utilisés pour déterminer si certains marqueurs AFLP sont liés à la sensibilité de croissance (SEN).",
+    "citation_extrait": "To determine if certain AFLP-markers are related to growth sensitivity (SEN) we used the binomial linear mixed models with the grouping level ‘site’.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Un modèle linéaire mixte binomial supplémentaire a été réalisé en utilisant le TRWdev et la classe année sèche/humide comme variables explicatives.",
+    "citation_extrait": "We run an additional binomial linear mixed model using the TRWdev and the dry/wet year class as explanatory variables.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  },
+  {
+    "document_title": "Drought-Adaptation Potential in Fagus sylvatica: Linking Moisture Availability with Genetic Diversity and Dendrochronology",
+    "document_reference": "Jump A.S. et al. (2012), PLOS ONE, DOI 10.1371/journal.pone.0033636",
+    "page_number": 7,
+    "fait": "Les trois mesures d'humidité estimée (AWC, FC, DRI de septembre à août) sont liées entre elles (facteur d'inflation de la variance >3), donc chaque variable a été testée indépendamment.",
+    "citation_extrait": "These three measures are related to each other (variance inflation factor .3, [45]), thus we tested each variable independently.",
+    "confiance_llm": 1.0,
+    "statut": "quarantine",
+    "rejet_raison": null
+  }
+]
