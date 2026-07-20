@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (audit qualité RFC-0016 tranches 1-5 : 0 P0, corrections P1/P2 appliquées — typage enum strict, règles métier conditionnelles, index FK `source_id`, 347 tests ; DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N complète — 3 tables, registre 86→89 ; RFC-0019 — `gsie-ai-gateway` — reste en Draft) |
+| **Dernière mise à jour** | 2026-07-20 (audit complet du code tracké — 195 fichiers, 0 P0, 1 bug réel corrigé (`KnowledgeEngine`), mypy --strict 0 issue sur les 104 fichiers `src/gsie_api`, ruff clean sur tout le périmètre, 351 tests ; DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N complète — 3 tables, registre 86→89 ; RFC-0019 — `gsie-ai-gateway` — reste en Draft) |
 
 ---
 

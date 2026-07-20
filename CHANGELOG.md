@@ -4,6 +4,38 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [AUDIT COMPLET DU CODE — 0 P0, 1 BUG CORRIGÉ, MYPY/RUFF CLEAN] - 2026-07-20
+
+### Audit de l'entièreté du code tracké (195 fichiers Python, hors GeoSylva/QGISIA — dépôts externes)
+
+- Périmètre : `GSIE/API` (160 fichiers), `apps/Ignis` (18),
+  `21_EXPERIMENTS` (11), `.devin/scripts` (4), `tools` (2). Vérifié via
+  `git ls-files` pour exclure les venvs non trackés (`Forge/.venv`,
+  repo externe indépendant).
+- Bug réel corrigé (`fix(knowledge)`, commit `ce877be`) :
+  `KnowledgeEngine._to_knowledge_object` levait une `ValueError`
+  Pydantic opaque si `metadata_json` était corrompu/incomplet (clé
+  `type`/`domaine_scientifique` absente) — lève désormais une
+  `KnowledgeEngineError` explicite. 4 nouveaux tests.
+- mypy --strict (`fix(climate,knowledge)`, commit `6575557`) : 13 → 0
+  erreur sur les 104 fichiers de `src/gsie_api` (types génériques
+  `dict`/`list` sans paramètres, retours `Any` non castés sur les
+  clients HTTP climat, réexport implicite `ConflitBibliographique`,
+  override mypy pour `scipy.*` ajouté à `pyproject.toml`).
+- ruff (même commit + `chore(ignis)` commit `8725184`) : 0 erreur sur
+  l'ensemble du périmètre tracké (imports inutilisés, f-strings sans
+  placeholder, variable ambiguë `l`, `try/except/pass` →
+  `contextlib.suppress`, lignes trop longues).
+- Vérifications complémentaires sans finding : aucun secret/clé en
+  dur, aucun `eval`/`exec`, aucun SQL formaté par chaîne, aucune
+  exception `except: pass`, chaîne de migrations Alembic cohérente
+  (une seule tête), les 60 tests « skipped » sont tous des tests
+  d'intégration `requires_docker` documentés (rien de caché).
+- 351 tests unitaires passent (0 échec, 60 skipped) après chaque
+  commit de cette passe.
+- GeoSylva et QGISIA (dépôts Git externes indépendants) non audités
+  ici — à faire séparément si demandé.
+
 ## [AUDIT QUALITÉ RFC-0016 — CORRECTIONS P1/P2] - 2026-07-20
 
 ### Audit qualité (3 subagents backend) sur les tranches 1-5 déjà committées
