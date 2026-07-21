@@ -5,7 +5,7 @@
 | **Type** | Veille concurrentielle / audit externe non vérifié par l'équipe |
 | **Date** | 2026-07-20 |
 | **Origine** | Échange conduit par le fondateur (Camille Perraudeau) via ChatGPT, versé tel quel pour traçabilité |
-| **Statut** | **Affirmations non vérifiées sur le code réel de `apps/GeoSylva`** (dépôt Git externe, non audité par l'agent à la date de cette veille). À confirmer avant toute correction. |
+| **Statut** | §3 vérifié directement dans le code de `apps/GeoSylva` le 2026-07-20 — voir §7 (addendum de vérification) pour le résultat réel par point. |
 | **Documents liés** | `apps/GeoSylva/` (dépôt externe, propre `.git`, ignoré par le repo parent) |
 
 ---
@@ -117,12 +117,28 @@ du code par l'agent GSIE. Chacun doit être vérifié dans le dépôt réel
 
 ## 6. Ce que ce document n'est pas
 
-- Ce n'est **pas** un audit du code réel de `apps/GeoSylva` — c'est une
-  lecture externe du README/changelog public par un tiers non-GSIE.
-  Chaque point du §3 doit être revérifié dans le dépôt avant action
-  (le point licence en particulier est à vérifier en priorité, vu son
-  implication légale).
+- Le §3 original (avant l'addendum §7) était une lecture externe du
+  README/changelog public par un tiers non-GSIE, pas un audit du code.
+  Voir §7 pour le résultat de la vérification réelle.
 - Aucun RFC ni décision n'est ouvert par ce document.
 - Les comparatifs concurrentiels (PLATEXFOR, QField, Open Foris, etc.)
   sont basés sur la documentation publique de ces outils, non sur un
   test direct par l'équipe GSIE.
+
+## 7. Addendum de vérification (2026-07-20, code réel `apps/GeoSylva`)
+
+Les 4 points du §3 les plus concrets ont été vérifiés directement dans
+le code source (pas seulement la documentation) :
+
+| Point du §3 | Résultat | Preuve |
+|---|---|---|
+| **Contradiction de licence** (point 4) | ✅ **Confirmé, et plus grave que décrit** | Le fichier `LICENSE` réel est une « Licence Propriétaire Restreinte » interdisant formellement forks, modification et redistribution. `CONTRIBUTING.md` confirme : *« NO FORKS ALLOWED »*, *« This is a proprietary restrictive license — not open source »*. Mais `README.md` affiche un badge **AGPL-3.0** et décrit une double licence où *« les forks et modifications sont autorisés »* (ligne 361). **Trois documents se contredisent** sur la nature légale réelle du projet — pas juste une ambiguïté forks/non-forks comme supposé initialement. Reste à trancher par le fondateur ; aucune correction appliquée (décision légale, pas technique). |
+| `GlobalScope` (point 1) | ❌ Faux aujourd'hui | Zéro occurrence dans le code source actuel (recherche complète). Le `CHANGELOG.md` confirme que c'était vrai en v1.3.0 (22/02/2026) — déjà corrigé depuis. |
+| Export GeoJSON en Lambert-93 (point 3) | ❌ Faux — le code est correct | `QgisExportHelper.kt` exporte la géométrie en **WGS84/CRS84**, avec un commentaire explicite « respecte la RFC 7946 ». Lambert-93 n'est ajouté qu'en propriétés supplémentaires (`lambert93_e/n`), jamais comme géométrie. Seule la phrase du README (« GeoJSON avec coordonnées Lambert 93 ») est ambiguë — pas un bug de code. |
+| IBP « en retard sur v3.2 » (point 2) | ❌ Probablement faux | L'export QGIS officiel labellise explicitement `"protocol": "IBP v3.2 CNPF/IDF"` (`IbpQgisExporter.kt`) et `IbpCriterionData.kt` référence des « Detailed field protocols (IBP v3.2) ». La conformité méthodologique fine (seuils exacts) n'a pas été vérifiée faute de source CNPF à comparer, mais l'affirmation « encore en v3 » est contredite par le code actuel. |
+
+**Conclusion de l'addendum** : sur 4 points vérifiables, 1 seul est
+confirmé et sérieux (licence), les 3 autres sont faux ou déjà corrigés
+dans le code réel. Les points non revérifiés du §3 (précision GPS,
+tarifs figés, UX monolithique, maturité des tests) restent à l'état
+d'hypothèses non confirmées.

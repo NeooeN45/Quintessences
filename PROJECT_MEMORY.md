@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (2 veilles tracées — 14 pistes d'innovation Quintessences et audit concurrentiel GeoSylva avec points à vérifier sur `apps/GeoSylva`, notamment une contradiction de licence AGPL — aucune n'est actionnable sans revue ; audit complet du code tracké précédent : 195 fichiers, 0 P0, 1 bug réel corrigé, mypy/ruff clean, 351 tests ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
+| **Dernière mise à jour** | 2026-07-20 (RFC-0020 ouvert en Draft — Carte de l'ignorance, première implémentation du Reasoning Engine, périmètre forestier, issue de la veille innovations ; vérification directe du code `apps/GeoSylva` : contradiction de licence AGPL/propriétaire **confirmée et plus grave que prévu** — `LICENSE` réel = propriétaire restrictif, `README.md` affiche pourtant AGPL-3.0, à trancher par le fondateur ; 3 autres points de l'audit externe (GlobalScope, GeoJSON CRS, version IBP) vérifiés **faux/déjà corrigés** dans le code réel ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
 
 ---
 
@@ -307,6 +307,24 @@ brainstorming v5 n'est adoptée.
   hors périmètre de ce RFC. Issu de DEC-000029 (scission de RFC-0017).
   Aucune implémentation avant Review puis décision propre.
   Voir `02_RFC/RFC-0019-gsie-ai-gateway-nvidia-nim.md`.
+- **RFC-0020** — Carte de l'ignorance : première implémentation du
+  Reasoning Engine, périmètre forestier (**Draft** — 2026-07-20) :
+  score d'incertitude explicable + recommandation de la prochaine
+  mesure la plus utile, par sujet (`StationObservation`/
+  `AutecologyProfile`). Barème de poids déterministe (pas de modèle
+  statistique/bayésien pour ce premier RFC), réutilise
+  `ModelModel`/`ModelVersionModel` (RFC-0015) — jamais présenté avec
+  une confiance uniforme, chaque poids sourcé ou marqué
+  `heuristique_non_sourcee`, `human_validator` requis pour passer
+  `accepted` (même pattern que `SilviculturalRule`, RFC-0016). Mix
+  serveur/local retenu après brainstorming : GSIE = source de vérité
+  du barème (packs offline signés, RFC-0015), GeoSylva = calcul local
+  sans réseau à partir du même barème. Plan en 3 tranches (schéma →
+  premier barème réel 2-3 variables → export pack offline). Issu de
+  `GSIE/RESEARCH/VEILLE_INNOVATIONS_QUINTESSENCES_2026-07-20.md` §2.1
+  (piste retenue comme prioritaire). Aucune implémentation avant
+  Review puis décision.
+  Voir `02_RFC/RFC-0020-carte-ignorance-reasoning-engine.md`.
 
 ---
 
