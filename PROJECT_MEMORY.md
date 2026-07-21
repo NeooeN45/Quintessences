@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (RFC-0020 ouvert en Draft — Carte de l'ignorance, première implémentation du Reasoning Engine, périmètre forestier, issue de la veille innovations ; vérification directe du code `apps/GeoSylva` : contradiction de licence AGPL/propriétaire **confirmée et plus grave que prévu** — `LICENSE` réel = propriétaire restrictif, `README.md` affiche pourtant AGPL-3.0, à trancher par le fondateur ; 3 autres points de l'audit externe (GlobalScope, GeoJSON CRS, version IBP) vérifiés **faux/déjà corrigés** dans le code réel ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
+| **Dernière mise à jour** | 2026-07-21 (Contradiction de licence `apps/GeoSylva` **tranchée par le fondateur** : le `LICENSE` réel — propriétaire restrictif, forks/redistribution/modification interdits — fait foi ; `README.md`, `INVESTORS.md` et `MASTER_PLAN.md` corrigés pour retirer la fausse mention AGPL-3.0 et refléter le modèle réel (licence par défaut propriétaire + licence commerciale séparée pour intégrations tierces, `COMMERCIAL_LICENSE.md`) — commit `d46b9b2` sur le dépôt externe GeoSylva. Session précédente (2026-07-20) : RFC-0020 ouvert en Draft — Carte de l'ignorance, première implémentation du Reasoning Engine, périmètre forestier, issue de la veille innovations ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
 
 ---
 
