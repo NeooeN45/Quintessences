@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-20 (audit complet du code tracké — 195 fichiers, 0 P0, 1 bug réel corrigé (`KnowledgeEngine`), mypy --strict 0 issue sur les 104 fichiers `src/gsie_api`, ruff clean sur tout le périmètre, 351 tests ; DEC-000030 : RFC-0018 — identification botanique Pl@ntNet — **adopté** (volet en ligne), Tranche 1/N complète — 3 tables, registre 86→89 ; RFC-0019 — `gsie-ai-gateway` — reste en Draft) |
+| **Dernière mise à jour** | 2026-07-20 (2 veilles tracées — 14 pistes d'innovation Quintessences et audit concurrentiel GeoSylva avec points à vérifier sur `apps/GeoSylva`, notamment une contradiction de licence AGPL — aucune n'est actionnable sans revue ; audit complet du code tracké précédent : 195 fichiers, 0 P0, 1 bug réel corrigé, mypy/ruff clean, 351 tests ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
 
 ---
 
@@ -380,6 +380,30 @@ brainstorming v5 n'est adoptée.
   de base 8-14B, dataset propre 1000-5000 exemples, LoRA, évaluation
   comparative). À rouvrir formellement (RFC dédié) seulement quand
   RFC-0019 aura démontré son socle en usage réel.
+- `GSIE/RESEARCH/VEILLE_INNOVATIONS_QUINTESSENCES_2026-07-20.md` —
+  14 pistes d'innovation (non actionnables) classées par rupture
+  potentielle : carte de l'ignorance + valeur de l'information, IA
+  auto-réfutante (`GSIE-Contradictor`) + connaissances à validité
+  conditionnelle, moteur de risques en cascade (`GSIE-Cascade`) —
+  retenues comme les 3 prioritaires par l'échange source. Concept
+  fédérateur proposé : « GSIE Scientific Autonomy Loop » (observer →
+  cartographier l'ignorance → choisir la prochaine mesure → formuler
+  → réfuter → simuler → proposer une expérience réversible → mesurer
+  → mettre à jour les preuves). Aucun RFC ouvert, aucune brevetabilité
+  établie (réserve explicite de la source).
+- `GSIE/RESEARCH/VEILLE_AUDIT_CONCURRENTIEL_GEOSYLVA_2026-07-20.md` —
+  Audit concurrentiel externe (Marteloscope ONF, PLATEXFOR, QField,
+  Open Foris Ground, Forest Metrix, TRESTIMA/KATAM/Arboreal) avec
+  pistes d'intégration priorisées (paquet de mission hors ligne,
+  adaptateurs matériel Bluetooth, mode martelage étendu, connecteurs
+  Pl@ntNet/Ignis/Hydro). **Signale aussi des points à vérifier sur le
+  code réel de `apps/GeoSylva`** (non confirmés par un audit GSIE :
+  usage de `GlobalScope`, IBP potentiellement en retard sur la v3.2
+  CNPF, export GeoJSON en Lambert-93 non conforme RFC 7946, **licence
+  AGPL-3.0 contradictoire avec « forks not allowed » — point le plus
+  prioritaire à vérifier vu l'implication légale**). Lecture externe
+  du README/changelog public, pas un audit du dépôt par l'agent —
+  chaque point reste à confirmer avant correction.
 - `20_PARTNERSHIPS/JUNN_VEILLE.md` — Veille JUNN (Jumeau Numérique National, IGN/Cerema/Inria, France 2030, 25 M€). Alignement stratégique avec Quintessences. Pas un partenariat actif.
 - `05_SPECIFICATIONS/HUB_AND_APPS_PLAN.md` — Plan de production du Hub (Centre de Commandement) + specs apps. Ordre : Hub (P0) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora (P2) → Artemis/QGISIA (P3).
 - `05_SPECIFICATIONS/HUB/HUB_001_SPECIFICATION.md` — Spec fonctionnelle Hub (26 exigences, 3 cas d'usage, 13 couches).
