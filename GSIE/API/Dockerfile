@@ -48,7 +48,7 @@ RUN . "$HOME/.cargo/env" && \
 WORKDIR /build/api
 
 # Dépendances Python
-RUN pip install --no-cache-dir --upgrade pip "uv==0.11.16"
+RUN pip install --no-cache-dir "uv==0.11.16"
 
 # Copie du projet API et installation des dépendances + wheel Rust
 COPY GSIE/API/pyproject.toml GSIE/API/uv.lock GSIE/API/README.md ./
