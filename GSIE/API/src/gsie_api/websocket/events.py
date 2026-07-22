@@ -6,9 +6,9 @@ sur des canaux. Redis Pub/Sub assure le fan-out vers les clients connectés.
 
 from enum import StrEnum
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EventType(StrEnum):
@@ -33,6 +33,7 @@ class WSEvent(BaseModel):
     """Event diffusé sur le WebSocket."""
 
     event_type: EventType
+    event_id: UUID = Field(default_factory=uuid4)
     resource_id: UUID | None = None
     resource_type: str | None = None
     data: dict[str, Any]

@@ -4,11 +4,13 @@ Utilise SQLite in-memory (aiosqlite) pour tester le service sans Docker.
 Les types UUID/JSONB/PostGIS sont adaptés pour SQLite via @compiles.
 """
 
+from datetime import UTC, datetime
 from typing import Any
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
@@ -20,6 +22,8 @@ except ImportError:
     _GeometryType = None  # type: ignore
 
 from gsie_api.infrastructure.models import Base, ResourceModel
+from gsie_api.infrastructure.models.outbox import OutboxEvent
+from gsie_api.outbox_worker import deliver_outbox_batch
 from gsie_api.resources.schemas import ResourceCreate, ResourceUpdate
 from gsie_api.resources.service import ResourceService
 
@@ -165,6 +169,85 @@ class TestMassAssignmentProtection:
         assert result.data.get("entity_subtype") == "modified"
         # created_at ne doit pas avoir changé
         assert result.created_at == created.created_at
+
+
+class TestTransactionalOutbox:
+    """Tests de la cohérence écriture métier + événement (ADR-005)."""
+
+    @pytest.mark.asyncio
+    async def test_should_create_pending_event_in_same_transaction(
+        self, session: AsyncSession
+    ) -> None:
+        service = ResourceService(session)
+        created = await service.create(
+            ResourceCreate(type="entity", data={"entity_subtype": "outbox"})
+        )
+
+        events = (await session.execute(select(OutboxEvent))).scalars().all()
+
+        assert len(events) == 1
+        assert events[0].aggregate_id == created.id
+        assert events[0].aggregate_type == "entity"
+        assert events[0].event_type == "resource.created"
+        assert events[0].status == "pending"
+        assert events[0].payload["data"] == {"gsie_id": created.gsie_id}
+
+    @pytest.mark.asyncio
+    async def test_should_redact_values_from_update_event(self, session: AsyncSession) -> None:
+        """Le temps réel expose les champs modifiés, jamais leurs valeurs."""
+        service = ResourceService(session)
+        created = await service.create(
+            ResourceCreate(type="entity", data={"entity_subtype": "avant"})
+        )
+        await service.update(
+            created.id,
+            ResourceUpdate(
+                data={"entity_subtype": "apres"},
+                justification="test de redaction",
+            ),
+        )
+
+        events = (await session.execute(select(OutboxEvent))).scalars().all()
+        updated = next(event for event in events if event.event_type == "resource.updated")
+
+        assert updated.payload["data"] == {
+            "version": 2,
+            "changed_fields": ["entity_subtype"],
+        }
+        assert "avant" not in str(updated.payload)
+        assert "apres" not in str(updated.payload)
+
+    @pytest.mark.asyncio
+    async def test_should_mark_event_published_after_success(self, session: AsyncSession) -> None:
+        service = ResourceService(session)
+        await service.create(ResourceCreate(type="entity", data={"entity_subtype": "deliver"}))
+        publisher = AsyncMock()
+
+        delivered = await deliver_outbox_batch(session, publisher=publisher)
+        event = (await session.execute(select(OutboxEvent))).scalar_one()
+
+        assert delivered == 1
+        assert event.status == "published"
+        assert event.published_at is not None
+        publisher.assert_awaited_once()
+        channel, payload = publisher.await_args.args
+        assert channel == "entity"
+        assert payload["event_id"] == str(event.id)
+
+    @pytest.mark.asyncio
+    async def test_should_keep_event_pending_after_publish_failure(
+        self, session: AsyncSession
+    ) -> None:
+        service = ResourceService(session)
+        await service.create(ResourceCreate(type="entity", data={"entity_subtype": "retry"}))
+        publisher = AsyncMock(side_effect=RuntimeError("redis indisponible"))
+
+        delivered = await deliver_outbox_batch(session, publisher=publisher)
+        event = (await session.execute(select(OutboxEvent))).scalar_one()
+
+        assert delivered == 0
+        assert event.status == "pending"
+        assert event.published_at is None
 
 
 class TestAppendOnlyRevisions:
@@ -390,6 +473,30 @@ class TestListPagination:
         result = await service.list_resources(type_filter="entity")
         assert result.total == 1
         assert result.type_filter == "entity"
+        assert result.items[0].type == "entity"
+
+    @pytest.mark.asyncio
+    async def test_should_exclude_sensitive_types_from_list(self, session: AsyncSession) -> None:
+        """La pagination doit exclure les types interdits avant le comptage."""
+        service = ResourceService(session)
+        await service.create(ResourceCreate(type="entity", data={}))
+        await service.create(
+            ResourceCreate(
+                type="consent",
+                data={
+                    "data_subject_id": uuid4(),
+                    "purpose": "test de confidentialite",
+                    "scope": "full",
+                    "granted_at": datetime.now(UTC),
+                    "legal_basis": "consent",
+                },
+            )
+        )
+
+        result = await service.list_resources(excluded_types={"consent"})
+
+        assert result.total == 1
+        assert len(result.items) == 1
         assert result.items[0].type == "entity"
 
 

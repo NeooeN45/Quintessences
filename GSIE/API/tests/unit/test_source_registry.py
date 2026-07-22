@@ -56,9 +56,7 @@ def test_climessences_and_bioclimsol_are_not_ingestible_by_design():
     assert SCIENTIFIC_SOURCES["climessences"].statut_juridique == (
         SourceLegalStatus.permission_required
     )
-    assert SCIENTIFIC_SOURCES["bioclimsol"].statut_juridique == (
-        SourceLegalStatus.licensed_partner
-    )
+    assert SCIENTIFIC_SOURCES["bioclimsol"].statut_juridique == (SourceLegalStatus.licensed_partner)
 
 
 def test_climessences_mode_is_metadata_link():

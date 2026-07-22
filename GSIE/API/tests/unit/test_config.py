@@ -23,6 +23,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "ws_allowed_origins": ["https://hub.example.com"],
         "redis_url": "redis://:secret@redis-host:6379/0",
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
+        "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "require_rust_backend": True,
     } | overrides

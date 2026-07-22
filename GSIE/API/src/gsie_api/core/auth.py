@@ -132,17 +132,18 @@ def create_access_token(subject: str, claims: dict[str, Any] | None = None) -> s
     return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
 
 
-def create_refresh_token(subject: str) -> str:
+def create_refresh_token(subject: str, claims: dict[str, Any] | None = None) -> str:
     """Crée un refresh token JWT (7 jours par défaut).
 
     Args:
         subject: Identifiant de l'utilisateur (sub claim).
+        claims: Claims de session a preserver pendant la rotation.
 
     Returns:
         Token JWT encodé (RS256).
     """
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "iss": _settings.jwt_issuer,
         "aud": _settings.jwt_audience,
@@ -151,6 +152,13 @@ def create_refresh_token(subject: str) -> str:
         "jti": str(uuid4()),
         "type": "refresh",
     }
+
+    if claims:
+        reserved_claims = payload.keys() & claims.keys()
+        if reserved_claims:
+            names = ", ".join(sorted(reserved_claims))
+            raise ValueError(f"Reserved JWT claims cannot be overridden: {names}")
+        payload.update(claims)
 
     return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
 

@@ -167,13 +167,17 @@ class BotanicalEngine:
         `external_id`, CON-010 — pas de doublon silencieux).
         """
         existing = (
-            await self._session.execute(
-                select(EntityAliasModel.entity_id).where(
-                    EntityAliasModel.namespace == "gbif",
-                    EntityAliasModel.external_id == str(gbif_taxon_key),
+            (
+                await self._session.execute(
+                    select(EntityAliasModel.entity_id).where(
+                        EntityAliasModel.namespace == "gbif",
+                        EntityAliasModel.external_id == str(gbif_taxon_key),
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if existing is not None:
             return existing
 

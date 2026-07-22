@@ -4,9 +4,9 @@ Importe tous les modèles pour qu'ils soient enregistrés dans RESOURCE_TYPES
 via le décorateur @register_type. L'import de ce module suffit à peupler
 le registry pour le CRUD générique.
 
-73 types noyau + 7 types métier (audit ONF/CNPF 2026-07-16) + types
-forestiers spécialisés (RFC-0016) + 3 types d'identification botanique
-assistée (RFC-0018, 2026-07-20 — tranche 1/N, DEC-000030).
+Le registre RESOURCE_TYPES est la source exécutable du nombre de types.
+Cette documentation ne recopie volontairement pas ce total, qui évolue avec
+les RFC métier.
 """
 
 # Import de tous les domaines — chaque import enregistre les types dans RESOURCE_TYPES

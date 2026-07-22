@@ -62,9 +62,7 @@ class AromeClient:
 
     def _require_api_key(self) -> str:
         if not self._api_key:
-            raise AromeClientError(
-                "METEOFRANCE_API_KEY absente — impossible d'appeler l'API AROME"
-            )
+            raise AromeClientError("METEOFRANCE_API_KEY absente — impossible d'appeler l'API AROME")
         return self._api_key
 
     async def get_latest_temperature_2m_run(self) -> str:
@@ -98,9 +96,7 @@ class AromeClient:
             if element.text and element.text.startswith(_TEMPERATURE_2M_PREFIX)
         ]
         if not coverage_ids:
-            raise AromeClientError(
-                f"Aucun run publié pour le paramètre {_TEMPERATURE_2M_PREFIX}"
-            )
+            raise AromeClientError(f"Aucun run publié pour le paramètre {_TEMPERATURE_2M_PREFIX}")
 
         return max(coverage_ids)
 

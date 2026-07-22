@@ -1,5 +1,8 @@
 """Tests unitaires — authentification JWT RS256 (auth/router.py + core/auth.py)."""
 
+from time import time
+
+import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
@@ -61,6 +64,67 @@ def should_return_200_and_new_tokens_when_refresh_valid():
     data = response.json()
     assert "access_token" in data
     assert "refresh_token" in data
+
+    # La rotation doit préserver l'identité et les rôles de la session.
+    from gsie_api.core.auth import verify_token
+
+    access_payload = verify_token(data["access_token"], expected_type="access")
+    refresh_payload = verify_token(data["refresh_token"], expected_type="refresh")
+    assert access_payload["roles"] == ["admin"]
+    assert access_payload["username"] == "admin"
+    assert refresh_payload["roles"] == ["admin"]
+    assert refresh_payload["username"] == "admin"
+
+
+def should_return_401_when_refresh_token_is_replayed():
+    """Un refresh token consommé ne doit jamais pouvoir être rejoué."""
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin", "password": "changeme"},
+    )
+    refresh_token = login_response.json()["refresh_token"]
+
+    first_response = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+    replay_response = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+
+    assert first_response.status_code == 200
+    assert replay_response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def should_rotate_memory_store_atomically():
+    """La rotation remplace exactement l'ancien JTI par le nouveau."""
+    from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore
+
+    store = MemoryRefreshTokenStore()
+    expires_at = time() + 60
+    await store.register("ancien", expires_at)
+
+    assert await store.rotate("ancien", "nouveau", expires_at) is True
+    assert await store.consume("ancien") is False
+    assert await store.consume("nouveau") is True
+
+
+@pytest.mark.asyncio
+async def should_preserve_current_token_when_rotation_collides():
+    """Une collision du successeur ne doit pas consommer la session courante."""
+    from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore
+
+    store = MemoryRefreshTokenStore()
+    expires_at = time() + 60
+    await store.register("courant", expires_at)
+    await store.register("collision", expires_at)
+
+    with pytest.raises(RuntimeError, match="collision"):
+        await store.rotate("courant", "collision", expires_at)
+
+    assert await store.consume("courant") is True
 
 
 def should_return_401_when_refresh_with_access_token():

@@ -10,13 +10,13 @@ Endpoints :
 - POST /climate/query     — dernière observation réelle d'une station
 """
 
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import EngineReadUser
 from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 from gsie_api.engines.climate.schemas import (
     AromeTemperatureQuery,
@@ -76,7 +76,7 @@ async def climate_version(request: Request) -> EngineVersionResponse:
 async def climate_query(
     request_body: ClimateQuery,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> ObservationClimatique | None:
     """Récupère la dernière observation d'une station SYNOP.
 
@@ -103,7 +103,7 @@ async def climate_query(
 @_climate_limiter.limit("20/minute")
 async def climate_danger_feux(
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> list[DangerFeuxDepartement]:
     """Récupère le niveau de danger de feux de forêt réel, tous départements.
 
@@ -131,7 +131,7 @@ async def climate_danger_feux(
 async def climate_climatologie_stations(
     request: Request,
     id_departement: str,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> list[dict[str, Any]]:
     """Récupère la liste réelle des stations DPClim d'un département.
 
@@ -162,7 +162,7 @@ async def climate_climatologie_stations(
 async def climate_climatologie_quotidienne(
     request_body: ClimatologieQuotidienneQuery,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> list[ObservationClimatologiqueQuotidienne]:
     """Récupère les données climatologiques quotidiennes réelles d'une station.
 
@@ -191,7 +191,7 @@ async def climate_climatologie_quotidienne(
 @_climate_limiter.limit("20/minute")
 async def climate_vigilance(
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> list[VigilanceBulletin]:
     """Récupère la carte de vigilance réelle en cours.
 
@@ -219,7 +219,7 @@ async def climate_vigilance(
 async def climate_observations_horaires(
     request: Request,
     id_departement: str,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> list[ObservationHoraireDepartement]:
     """Récupère les observations horaires réelles des 24h d'un département.
 
@@ -248,7 +248,7 @@ async def climate_observations_horaires(
 async def climate_arome_temperature(
     request_body: AromeTemperatureQuery,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> AromeTemperatureResult:
     """Récupère la température 2 m réelle du modèle AROME.
 

@@ -39,7 +39,7 @@ from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.pedology.router import router as pedology_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
-from gsie_api.shared.middleware import TraceIdMiddleware
+from gsie_api.shared.middleware import RequestBodyLimitMiddleware, TraceIdMiddleware
 from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
@@ -53,7 +53,7 @@ _OPENAPI_TAGS = [
     {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
-    {"name": "resources", "description": "CRUD générique — 73 types métamodèle v6.2"},
+    {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -124,6 +124,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "ws_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.auth.refresh_tokens import close_refresh_token_store
+
+        await close_refresh_token_store()
+    except Exception as exc:
+        logger.error(
+            "auth_store_shutdown_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )
@@ -214,11 +224,11 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
     app.add_middleware(SlowAPIASGIMiddleware)
 
-    # Middlewares (ordre important : outermost en premier)
+    # Middlewares : Starlette place le dernier ajouté à l'extérieur.
     # Gzip : compresse les réponses > 500 bytes (performance)
     app.add_middleware(GZipMiddleware, minimum_size=500)
-    # TraceId : traçabilité + headers de sécurité + limite taille
-    app.add_middleware(TraceIdMiddleware)
+    # Compte aussi les fragments sans Content-Length (Transfer-Encoding chunked).
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_size=_settings.max_request_body_size)
     # CORS : origines restrictives
     app.add_middleware(
         CORSMiddleware,
@@ -228,6 +238,8 @@ def create_app() -> FastAPI:
         allow_headers=_ALLOWED_HEADERS,
     )
 
+    # Outermost : ajoute trace_id et headers de sécurité aux réponses CORS et 413.
+    app.add_middleware(TraceIdMiddleware)
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)

@@ -1,4 +1,4 @@
-"""Router CRUD générique — 8 endpoints pour les 73 types (ADR-007).
+"""Router CRUD générique pour les types enregistrés (ADR-007).
 
 GET    /resources                 — liste paginée filtrée par type
 POST   /resources                 — créer une resource
@@ -18,7 +18,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
-from gsie_api.core.rbac import check_permission
+from gsie_api.core.rbac import (
+    RGPD_RESOURCE_TYPES,
+    can_access_resource,
+    check_permission,
+)
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.resources.schemas import (
     ResourceCreate,
@@ -62,6 +66,16 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
         return uuid5(_GSIE_AUTHOR_NAMESPACE, subject_claim)
 
 
+def _excluded_read_types(user: dict[str, Any]) -> frozenset[str]:
+    """Calcule les types à retirer avant toute requête paginée."""
+    check_permission(user, "resource", "read")
+    return frozenset(
+        resource_type
+        for resource_type in RGPD_RESOURCE_TYPES
+        if not can_access_resource(user, resource_type, "read")
+    )
+
+
 @router.get(
     "/types",
     response_model=ResourceTypesResponse,
@@ -69,10 +83,11 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
 )
 async def list_types(
     request: Request,
-    _user: CurrentUser,
+    user: CurrentUser,
 ) -> ResourceTypesResponse:
-    """Retourne la liste des 69 types de resources du métamodèle v6.2."""
-    types = ResourceService.list_types()
+    """Retourne la liste autorisée des types de ressources enregistrés."""
+    excluded = _excluded_read_types(user)
+    types = [item for item in ResourceService.list_types() if item not in excluded]
     return ResourceTypesResponse(types=types, count=len(types))
 
 
@@ -84,15 +99,26 @@ async def list_types(
 @_limiter.limit("60/minute")
 async def list_resources(
     request: Request,
-    _user: CurrentUser,
+    user: CurrentUser,
     session: DbSession,
     type: str | None = Query(None, description="Filtrer par type (ex. assertion, observation)"),
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(20, ge=1, le=100, description="Taille de page (max 100)"),
 ) -> ResourceListResponse:
     """Liste paginée de resources, optionnellement filtrée par type."""
+    if type is not None:
+        check_permission(user, type, "read")
+        excluded_types: frozenset[str] = frozenset()
+    else:
+        excluded_types = _excluded_read_types(user)
+
     service = ResourceService(session)
-    return await service.list_resources(type_filter=type, page=page, size=size)
+    return await service.list_resources(
+        type_filter=type,
+        page=page,
+        size=size,
+        excluded_types=excluded_types,
+    )
 
 
 @router.post(
@@ -126,11 +152,15 @@ async def create_resource(
 async def get_resource(
     resource_id: UUID,
     request: Request,
-    _user: CurrentUser,
+    user: CurrentUser,
     session: DbSession,
 ) -> ResourceRead:
     """Récupère une resource par son ID."""
     service = ResourceService(session)
+    resource_type = await service.get_type(resource_id)
+    if resource_type is None:
+        raise HTTPException(status_code=404, detail="Resource non trouvée")
+    check_permission(user, resource_type, "read")
     result = await service.get(resource_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Resource non trouvée")
@@ -153,10 +183,10 @@ async def update_resource(
     """Met à jour une resource — crée une Revision + ResourceDiff (CON-010)."""
     # Vérifier le type de la resource existante pour le RBAC
     service = ResourceService(session)
-    existing = await service.get(resource_id)
-    if existing is None:
+    resource_type = await service.get_type(resource_id)
+    if resource_type is None:
         raise HTTPException(status_code=404, detail="Resource non trouvée")
-    check_permission(user, existing.type, "write")
+    check_permission(user, resource_type, "write")
     try:
         result = await service.update(resource_id, body, author_id=_extract_author_id(user))
     except ValueError as exc:
@@ -181,10 +211,10 @@ async def delete_resource(
 ) -> None:
     """Soft delete — marque deleted_at + crée une Revision finale (CON-010)."""
     service = ResourceService(session)
-    existing = await service.get(resource_id)
-    if existing is None:
+    resource_type = await service.get_type(resource_id)
+    if resource_type is None:
         raise HTTPException(status_code=404, detail="Resource non trouvée")
-    check_permission(user, existing.type, "delete")
+    check_permission(user, resource_type, "delete")
     deleted = await service.delete(
         resource_id,
         justification=justification,
@@ -203,9 +233,13 @@ async def delete_resource(
 async def list_revisions(
     resource_id: UUID,
     request: Request,
-    _user: CurrentUser,
+    user: CurrentUser,
     session: DbSession,
 ) -> list[RevisionRead]:
     """Retourne l'historique des révisions d'une resource (Temporal Engine)."""
     service = ResourceService(session)
+    resource_type = await service.get_type(resource_id)
+    if resource_type is None:
+        raise HTTPException(status_code=404, detail="Resource non trouvée")
+    check_permission(user, resource_type, "read")
     return await service.list_revisions(resource_id)

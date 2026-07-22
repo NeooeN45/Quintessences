@@ -35,7 +35,7 @@ from tests.conftest import requires_docker
 
 pytestmark = requires_docker
 
-_ACCESS_TOKEN = create_access_token(subject="test-pipeline")
+_ACCESS_TOKEN = create_access_token(subject="test-pipeline", claims={"roles": ["writer"]})
 _AUTH_HEADERS = {"Authorization": f"Bearer {_ACCESS_TOKEN}"}
 
 

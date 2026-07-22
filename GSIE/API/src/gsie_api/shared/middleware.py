@@ -10,6 +10,7 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger, set_trace_id
@@ -33,6 +34,59 @@ _SECURITY_HEADERS = {
 
 # Taille max du corps de requête (bytes) — défaut 1 MiB
 _MAX_BODY_SIZE = _settings.max_request_body_size
+
+
+class _RequestBodyTooLargeError(Exception):
+    """Signal interne émis avant que l'application ne traite un corps excessif."""
+
+
+class RequestBodyLimitMiddleware:
+    """Limite réellement les octets reçus, y compris en transfert fragmenté.
+
+    Le contrôle du seul en-tête ``Content-Length`` est insuffisant : il peut être
+    absent avec ``Transfer-Encoding: chunked``. Ce middleware ASGI compte donc
+    chaque fragment avant de le transmettre à l'application.
+    """
+
+    def __init__(self, app: ASGIApp, max_body_size: int = _MAX_BODY_SIZE) -> None:
+        if max_body_size < 0:
+            raise ValueError("max_body_size doit être positif")
+        self.app = app
+        self.max_body_size = max_body_size
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        received_size = 0
+        response_started = False
+
+        async def receive_limited() -> Message:
+            nonlocal received_size
+            message = await receive()
+            if message["type"] == "http.request":
+                received_size += len(message.get("body", b""))
+                if received_size > self.max_body_size:
+                    raise _RequestBodyTooLargeError
+            return message
+
+        async def send_tracked(message: Message) -> None:
+            nonlocal response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            await self.app(scope, receive_limited, send_tracked)
+        except _RequestBodyTooLargeError:
+            if response_started:
+                raise
+            response = JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large", "error_code": "PAYLOAD_TOO_LARGE"},
+            )
+            await response(scope, receive, send)
 
 
 class TraceIdMiddleware(BaseHTTPMiddleware):

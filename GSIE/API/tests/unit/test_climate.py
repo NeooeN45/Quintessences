@@ -443,9 +443,7 @@ def _patch_paquet_observation_transport(
 
 async def test_get_observations_horaires_parses_real_csv(monkeypatch: pytest.MonkeyPatch):
     """Parse la réponse CSV réelle du Package Observations et convertit Kelvin -> Celsius."""
-    _patch_paquet_observation_transport(
-        monkeypatch, 200, _PAQUET_OBSERVATION_CSV.encode("utf-8")
-    )
+    _patch_paquet_observation_transport(monkeypatch, 200, _PAQUET_OBSERVATION_CSV.encode("utf-8"))
     engine = ClimateEngine(paquet_observation_client=PaquetObservationClient())
 
     resultats = await engine.get_observations_horaires("33")

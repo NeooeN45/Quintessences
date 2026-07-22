@@ -94,6 +94,7 @@ services:
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
+      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
       GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
       GSIE_RATE_LIMIT_ENABLED: ${GSIE_RATE_LIMIT_ENABLED:-true}
       # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
@@ -131,6 +132,40 @@ services:
         limits:
           cpus: "2.0"
           memory: 768M
+
+  # Worker outbox — livraison au moins une fois vers Redis/WebSocket.
+  outbox-worker:
+    build:
+      context: ../..
+      dockerfile: GSIE/API/Dockerfile
+    command: ["python", "-m", "gsie_api.outbox_worker"]
+    environment:
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:-development}
+      GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
+      GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
+      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
+      GSIE_OUTBOX_BATCH_SIZE: ${GSIE_OUTBOX_BATCH_SIZE:-100}
+      GSIE_OUTBOX_POLL_INTERVAL_SECONDS: ${GSIE_OUTBOX_POLL_INTERVAL_SECONDS:-1.0}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
 networks:
   default:

@@ -3,6 +3,15 @@
 Teste le router, le manager, le rate limiter, la validation des canaux.
 """
 
+from unittest.mock import AsyncMock
+
+import pytest
+from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
+
+from gsie_api.app import create_app
+from gsie_api.core.auth import create_access_token
+from gsie_api.websocket import router as websocket_router
 from gsie_api.websocket.manager import ConnectionManager
 from gsie_api.websocket.router import _RATE_LIMIT_MAX, _validate_channels
 
@@ -48,6 +57,43 @@ class TestRateLimiter:
         _rate_limiter.cleanup(ws_id)
 
 
+class TestWebSocketOrigins:
+    """Tests de la politique Origin du handshake WebSocket."""
+
+    def test_should_reject_untrusted_browser_origin(self, monkeypatch) -> None:
+        client = TestClient(create_app())
+        token = create_access_token("reader", claims={"roles": ["reader"]})
+        monkeypatch.setattr(
+            websocket_router._settings,
+            "ws_allowed_origins",
+            ["https://hub.geosylva.example"],
+        )
+
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect(
+                f"/api/v1/ws/hub?token={token}",
+                headers={"Origin": "https://evil.example"},
+            ),
+        ):
+            pass
+
+        assert exc.value.code == 1008
+
+    def test_should_reject_valid_token_without_role(self) -> None:
+        """Une signature valide sans autorisation ne suffit pas au handshake."""
+        client = TestClient(create_app())
+        token = create_access_token("sans-role")
+
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect(f"/api/v1/ws/hub?token={token}"),
+        ):
+            pass
+
+        assert exc.value.code == 1008
+
+
 class TestConnectionManager:
     """Tests du ConnectionManager (sans vraie WebSocket)."""
 
@@ -55,6 +101,25 @@ class TestConnectionManager:
         mgr = ConnectionManager()
         assert len(mgr._connections) == 0
         assert len(mgr._channels) == 0
+
+    @pytest.mark.asyncio
+    async def test_should_filter_rgpd_events_for_global_reader(self) -> None:
+        """Le canal all ne doit jamais contourner le RBAC des types RGPD."""
+        mgr = ConnectionManager()
+        reader = AsyncMock()
+        rgpd_manager = AsyncMock()
+
+        await mgr.connect(reader, ["all"], roles=["reader"])
+        await mgr.connect(rgpd_manager, ["all"], roles=["rgpd_manager"])
+        await mgr._local_broadcast("consent", {"event_type": "resource.created"})
+
+        reader.send_json.assert_not_awaited()
+        rgpd_manager.send_json.assert_awaited_once()
+
+        await mgr.disconnect(reader)
+        await mgr.disconnect(rgpd_manager)
+        assert reader not in mgr._roles
+        assert rgpd_manager not in mgr._roles
 
 
 class TestBroadcastTestEndpoint:
@@ -90,3 +155,47 @@ class TestBroadcastTestEndpoint:
         assert req.channel == "alert"
         assert req.event_type == EventType.alert_fire_risk
         assert req.message == "Test E2E"
+
+    def test_should_reject_forged_admin_body_without_jwt(self) -> None:
+        """Un role place dans le JSON ne doit jamais remplacer le JWT."""
+        client = TestClient(create_app())
+
+        response = client.post(
+            "/api/v1/ws/broadcast-test",
+            json={
+                "channel": "all",
+                "message": "attaque",
+                "user": {"sub": "attacker", "roles": ["admin"]},
+            },
+        )
+
+        assert response.status_code == 401
+
+    def test_should_reject_reader_jwt(self) -> None:
+        """Le role reader n'est pas autorise a publier un broadcast de test."""
+        client = TestClient(create_app())
+        token = create_access_token("reader", claims={"roles": ["reader"]})
+
+        response = client.post(
+            "/api/v1/ws/broadcast-test",
+            json={"channel": "all", "message": "interdit"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert response.status_code == 403
+
+    def test_should_allow_admin_jwt(self, monkeypatch) -> None:
+        """Un JWT admin valide autorise explicitement le broadcast."""
+        client = TestClient(create_app())
+        token = create_access_token("admin", claims={"roles": ["admin"]})
+        broadcast = AsyncMock()
+        monkeypatch.setattr(websocket_router.manager, "broadcast", broadcast)
+
+        response = client.post(
+            "/api/v1/ws/broadcast-test",
+            json={"channel": "all", "message": "autorise"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert response.status_code == 200
+        broadcast.assert_awaited_once()

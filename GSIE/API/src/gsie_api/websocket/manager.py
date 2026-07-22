@@ -16,6 +16,7 @@ Sécurité :
 import asyncio
 import json
 from collections import defaultdict
+from collections.abc import Collection
 from typing import Any
 
 from fastapi import WebSocket
@@ -23,6 +24,7 @@ from redis.asyncio import Redis
 
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
+from gsie_api.core.rbac import RGPD_RESOURCE_TYPES
 
 logger = get_logger("gsie_api.websocket.manager")
 _settings = get_settings()
@@ -38,6 +40,7 @@ class ConnectionManager:
     def __init__(self) -> None:
         self._connections: dict[WebSocket, set[str]] = {}
         self._channels: dict[str, set[WebSocket]] = defaultdict(set)
+        self._roles: dict[WebSocket, frozenset[str]] = {}
         self._redis: Redis | None = None
         self._pubsub_task: asyncio.Task[None] | None = None
         self._heartbeat_task: asyncio.Task[None] | None = None
@@ -129,7 +132,13 @@ class ConnectionManager:
         except asyncio.CancelledError:
             logger.info("ws_heartbeat_stopped")
 
-    async def connect(self, websocket: WebSocket, channels: list[str] | None = None) -> bool:
+    async def connect(
+        self,
+        websocket: WebSocket,
+        channels: list[str] | None = None,
+        *,
+        roles: Collection[str] = (),
+    ) -> bool:
         """Accepte une connexion WebSocket et l'abonne à des canaux.
 
         Returns:
@@ -147,6 +156,7 @@ class ConnectionManager:
         await websocket.accept()
         subs = set(channels) if channels else {"all"}
         self._connections[websocket] = subs
+        self._roles[websocket] = frozenset(roles)
         for channel in subs:
             self._channels[channel].add(websocket)
         logger.info(
@@ -159,6 +169,7 @@ class ConnectionManager:
     async def disconnect(self, websocket: WebSocket) -> None:
         """Déconnecte un client et le désabonne de tous ses canaux."""
         subs = self._connections.pop(websocket, set())
+        self._roles.pop(websocket, None)
         for channel in subs:
             self._channels[channel].discard(websocket)
         logger.info(
@@ -176,6 +187,13 @@ class ConnectionManager:
             self._channels[channel].add(websocket)
         self._connections[websocket] = new_subs
 
+    def _can_receive(self, websocket: WebSocket, channel: str) -> bool:
+        """Filtre les canaux RGPD même pour un abonnement global all."""
+        if channel not in RGPD_RESOURCE_TYPES:
+            return True
+        roles = self._roles.get(websocket, frozenset())
+        return bool(roles.intersection({"admin", "rgpd_manager"}))
+
     async def _local_broadcast(self, channel: str, message: dict[str, Any]) -> None:
         """Diffuse un message aux abonnés locaux uniquement (pas de Redis)."""
         subscribers = self._channels.get(channel, set())
@@ -183,13 +201,21 @@ class ConnectionManager:
         targets = subscribers | subscribers_all
 
         for ws in list(targets):
+            if not self._can_receive(ws, channel):
+                continue
             try:
                 await ws.send_json(message)
             except Exception:
                 logger.debug("ws_send_failed", exc_info=True)
                 await self.disconnect(ws)
 
-    async def broadcast(self, channel: str, message: dict[str, Any]) -> None:
+    async def broadcast(
+        self,
+        channel: str,
+        message: dict[str, Any],
+        *,
+        require_redis: bool = False,
+    ) -> None:
         """Diffuse un message à tous les abonnés d'un canal (local + Redis)."""
         # 1. Diffusion locale (workers sur cette instance)
         await self._local_broadcast(channel, message)
@@ -203,11 +229,21 @@ class ConnectionManager:
                     json.dumps(message),
                 )
             except Exception:
+                if require_redis:
+                    raise
                 logger.warning("redis_publish_failed", channel=channel, exc_info=True)
+        elif require_redis:
+            raise RuntimeError("Redis unavailable for required event delivery")
 
-    async def broadcast_event(self, channel: str, event: dict[str, Any]) -> None:
+    async def broadcast_event(
+        self,
+        channel: str,
+        event: dict[str, Any],
+        *,
+        require_redis: bool = False,
+    ) -> None:
         """Diffuse un event typé sur un canal."""
-        await self.broadcast(channel, event)
+        await self.broadcast(channel, event, require_redis=require_redis)
         logger.info(
             "ws_event_broadcast",
             channel=channel,

@@ -86,6 +86,7 @@ _VIGILANCE_SOURCE = SourceReference(
     ),
 )
 
+
 def _arome_source(run_modele: str) -> SourceReference:
     """Construit la SourceReference AROME — le run utilisé varie par requête."""
     return SourceReference(
@@ -153,9 +154,7 @@ class ClimateEngine:
         self._meteofrance_client = meteofrance_client or MeteoFranceClient()
         self._dpclim_client = dpclim_client or DPClimClient()
         self._vigilance_client = vigilance_client or VigilanceClient()
-        self._paquet_observation_client = (
-            paquet_observation_client or PaquetObservationClient()
-        )
+        self._paquet_observation_client = paquet_observation_client or PaquetObservationClient()
         self._arome_client = arome_client or AromeClient()
 
     @staticmethod
@@ -228,9 +227,7 @@ class ClimateEngine:
                 dep_nom=row["dep_nom"],
                 niveau_j1=int(row["niveau_j1"]),
                 niveau_j2=int(row["niveau_j2"]),
-                reference_time=datetime.fromisoformat(
-                    row["reference_time"].replace("Z", "+00:00")
-                ),
+                reference_time=datetime.fromisoformat(row["reference_time"].replace("Z", "+00:00")),
                 source=_METEO_FORETS_SOURCE,
             )
             for row in rows
@@ -310,9 +307,7 @@ class ClimateEngine:
         except VigilanceClientError as exc:
             raise ClimateEngineError(str(exc)) from exc
 
-        update_time = datetime.fromisoformat(
-            data["product"]["update_time"].replace("Z", "+00:00")
-        )
+        update_time = datetime.fromisoformat(data["product"]["update_time"].replace("Z", "+00:00"))
 
         bulletins = [
             VigilanceBulletin(
@@ -353,9 +348,7 @@ class ClimateEngine:
                 approximée (ADR-007).
         """
         try:
-            rows = await self._paquet_observation_client.get_observations_horaires(
-                id_departement
-            )
+            rows = await self._paquet_observation_client.get_observations_horaires(id_departement)
         except PaquetObservationClientError as exc:
             raise ClimateEngineError(str(exc)) from exc
 
@@ -372,9 +365,7 @@ class ClimateEngine:
                         row["validity_time"].replace("Z", "+00:00")
                     ),
                     temperature_c=(
-                        temperature_k - _KELVIN_TO_CELSIUS
-                        if temperature_k is not None
-                        else None
+                        temperature_k - _KELVIN_TO_CELSIUS if temperature_k is not None else None
                     ),
                     humidite_pct=_parse_float(row, "u"),
                     pression_hpa=pression_pa / 100.0 if pression_pa is not None else None,
@@ -393,9 +384,7 @@ class ClimateEngine:
 
         return resultats
 
-    async def get_temperature_arome(
-        self, request: AromeTemperatureQuery
-    ) -> AromeTemperatureResult:
+    async def get_temperature_arome(self, request: AromeTemperatureQuery) -> AromeTemperatureResult:
         """Récupère la température 2 m réelle du modèle AROME (décodage GRIB2 réel).
 
         Utilise le run de modèle le plus récent réellement publié pour

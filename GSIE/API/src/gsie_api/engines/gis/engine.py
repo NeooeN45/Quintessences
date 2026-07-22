@@ -43,9 +43,7 @@ logger = get_logger("gsie_api.gis.engine")
 
 # EPSG:4326 (WGS 84, sortie de l'API Carto) -> EPSG:2154 (Lambert-93,
 # convention du schéma v6.2 — voir PlaceModel.srid).
-_TO_LAMBERT93 = pyproj.Transformer.from_crs(
-    "EPSG:4326", "EPSG:2154", always_xy=True
-).transform
+_TO_LAMBERT93 = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:2154", always_xy=True).transform
 
 
 def _ign_source(reference: str) -> SourceReference:

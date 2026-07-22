@@ -10,6 +10,7 @@ CON-010 : jamais UPDATE ni DELETE physique.
 - delete  → soft delete (deleted_at + Revision finale)
 """
 
+from collections.abc import Collection
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -19,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure.models import RESOURCE_TYPES, ResourceModel
+from gsie_api.infrastructure.models.outbox import OutboxEvent
 from gsie_api.infrastructure.models.temporal_engine import (
     ResourceDiffModel,
     RevisionModel,
@@ -32,7 +34,6 @@ from gsie_api.resources.schemas import (
 )
 from gsie_api.resources.validators import validate_resource_data
 from gsie_api.websocket.events import EventType, WSEvent
-from gsie_api.websocket.manager import manager as ws_manager
 
 logger = get_logger("gsie_api.resources.service")
 
@@ -42,7 +43,7 @@ _MAX_STRING_LENGTH = 10000
 
 
 class ResourceService:
-    """Service CRUD générique pour les 73 types du métamodèle v6.2."""
+    """Service CRUD générique pour les types enregistrés du métamodèle."""
 
     # Champs système non modifiables par l'utilisateur (mass assignment protection)
     _FORBIDDEN_FIELDS: frozenset[str] = frozenset(
@@ -136,25 +137,32 @@ class ResourceService:
         self._session.add(resource_diff)
         revision.diff_id = resource_diff.id
 
-    async def _broadcast_event(
+    def _enqueue_event(
         self,
         event_type: EventType,
         resource_id: UUID,
         resource_type: str,
         data: dict[str, Any],
     ) -> None:
-        """Diffuse un event WebSocket (best-effort, non bloquant)."""
+        """Ajoute un événement à l'outbox dans la transaction métier courante."""
+        event_id = uuid4()
         event = WSEvent(
+            event_id=event_id,
             event_type=event_type,
             resource_id=resource_id,
             resource_type=resource_type,
             data=data,
             timestamp=datetime.now(UTC).isoformat(),
         )
-        try:
-            await ws_manager.broadcast_event(resource_type, event.model_dump(mode="json"))
-        except Exception:
-            logger.warning("ws_broadcast_failed", event_type=event_type, exc_info=True)
+        self._session.add(
+            OutboxEvent(
+                id=event_id,
+                aggregate_id=resource_id,
+                aggregate_type=resource_type,
+                event_type=event_type.value,
+                payload=event.model_dump(mode="json"),
+            )
+        )
 
     async def _build_resource_read(self, resource: ResourceModel) -> ResourceRead:
         """Construit un ResourceRead depuis un ResourceModel + sa ligne type."""
@@ -229,16 +237,16 @@ class ResourceService:
             justification="Création initiale",
             author_id=author_id,
         )
+        self._enqueue_event(
+            EventType.resource_created,
+            resource.id,
+            request.type,
+            {"gsie_id": gsie_id},
+        )
         await self._session.commit()
 
         logger.info(
             "resource_created", resource_id=str(resource.id), type=request.type, gsie_id=gsie_id
-        )
-        await self._broadcast_event(
-            EventType.resource_created,
-            resource.id,
-            request.type,
-            {"gsie_id": gsie_id, **safe_data},
         )
         return await self._build_resource_read(resource)
 
@@ -260,11 +268,20 @@ class ResourceService:
             return None
         return await self._build_resource_read(result)
 
+    async def get_type(self, resource_id: UUID) -> str | None:
+        """Retourne uniquement le type d'une resource active pour autoriser avant lecture."""
+        query = select(ResourceModel.type).where(
+            ResourceModel.id == resource_id,
+            ResourceModel.deleted_at.is_(None),
+        )
+        return (await self._session.execute(query)).scalar_one_or_none()
+
     async def list_resources(
         self,
         type_filter: str | None = None,
         page: int = 1,
         size: int = 20,
+        excluded_types: Collection[str] | None = None,
     ) -> ResourceListResponse:
         """Liste paginée de resources, optionnellement filtrée par type."""
         query = select(ResourceModel).where(ResourceModel.deleted_at.is_(None))
@@ -276,6 +293,11 @@ class ResourceService:
         if type_filter:
             query = query.where(ResourceModel.type == type_filter)
             count_query = count_query.where(ResourceModel.type == type_filter)
+
+        excluded = tuple(sorted(excluded_types or ()))
+        if excluded:
+            query = query.where(ResourceModel.type.not_in(excluded))
+            count_query = count_query.where(ResourceModel.type.not_in(excluded))
 
         total = (await self._session.execute(count_query)).scalar_one()
         offset = (page - 1) * size
@@ -318,6 +340,15 @@ class ResourceService:
             author_id=author_id,
             diff_data={"field_changes": field_changes},
         )
+        self._enqueue_event(
+            EventType.resource_updated,
+            resource_id,
+            resource.type,
+            {
+                "version": next_version,
+                "changed_fields": sorted(change["field"] for change in field_changes),
+            },
+        )
         await self._session.commit()
 
         logger.info(
@@ -328,13 +359,6 @@ class ResourceService:
             justification=request.justification,
         )
         result = await self.get(resource_id)
-        if result:
-            await self._broadcast_event(
-                EventType.resource_updated,
-                resource_id,
-                resource.type,
-                {"version": next_version, "changes": field_changes},
-            )
         return result
 
     async def delete(
@@ -357,15 +381,15 @@ class ResourceService:
             justification=f"[DELETED] {justification}",
             author_id=author_id,
         )
-        await self._session.commit()
-
-        logger.info("resource_soft_deleted", resource_id=str(resource_id), version=next_version)
-        await self._broadcast_event(
+        self._enqueue_event(
             EventType.resource_deleted,
             resource_id,
             resource.type,
             {"version": next_version},
         )
+        await self._session.commit()
+
+        logger.info("resource_soft_deleted", resource_id=str(resource_id), version=next_version)
         return True
 
     async def list_revisions(self, resource_id: UUID) -> list[RevisionRead]:

@@ -36,7 +36,7 @@ pytestmark = pytest.mark.skip(
 app = create_app()
 client = TestClient(app)
 
-_ACCESS_TOKEN = create_access_token(subject="test-knowledge")
+_ACCESS_TOKEN = create_access_token(subject="test-knowledge", claims={"roles": ["writer"]})
 _AUTH_HEADERS = {"Authorization": f"Bearer {_ACCESS_TOKEN}"}
 
 

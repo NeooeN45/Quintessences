@@ -1,10 +1,16 @@
 """Tests unitaires — middleware (shared/middleware.py)."""
 
-from fastapi import FastAPI
+from collections.abc import Iterator
+
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from gsie_api.shared.middleware import TraceIdMiddleware, _validate_trace_id
+from gsie_api.shared.middleware import (
+    RequestBodyLimitMiddleware,
+    TraceIdMiddleware,
+    _validate_trace_id,
+)
 
 
 def should_return_none_when_trace_id_is_none():
@@ -105,3 +111,27 @@ def should_return_413_when_content_length_negative():
     client = TestClient(app)
     response = client.get("/test", headers={"content-length": "-1"})
     assert response.status_code == 413
+
+
+def should_return_413_when_chunked_body_exceeds_limit():
+    """La limite doit compter les octets, même sans Content-Length."""
+    app = FastAPI()
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_size=8)
+    # Le TraceId est ajouté après le limiteur : il devient le middleware externe.
+    app.add_middleware(TraceIdMiddleware)
+
+    @app.post("/test")
+    async def test_endpoint(request: Request):
+        await request.body()
+        return {"ok": True}
+
+    def chunks() -> Iterator[bytes]:
+        yield b"12345"
+        yield b"67890"
+
+    response = TestClient(app).post("/test", content=chunks())
+
+    assert response.status_code == 413
+    assert response.json()["error_code"] == "PAYLOAD_TOO_LARGE"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers.get("x-trace-id")

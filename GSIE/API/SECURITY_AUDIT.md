@@ -1,5 +1,11 @@
 # Rapport d'Audit de Sécurité — API GSIE
 
+> **Statut : rapport historique du 13 juillet 2026.** Les constats ci-dessous
+> décrivent le snapshot audité à cette date et ne constituent plus l'état courant.
+> Les remédiations adoptées et leurs risques résiduels sont tracés dans
+> `02_RFC/RFC-0021-fiabilite-entreprise.md`, `03_DECISIONS/DEC-000031.md`
+> et le `CHANGELOG.md`.
+
 **Date :** 2026-07-13
 **Auditeur :** Expert sécurité API (agent IA)
 **Cible :** `A:\Quintessences\GSIE\API\` — FastAPI 0.115.6, PostgreSQL+PostGIS, Redis

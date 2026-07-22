@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Rust toolchain (requis pour Maturin / PyO3)
 # rustc 1.85+ requis : dépendances transitives Cargo.lock utilisent edition2024
-# maturin 1.9.6 = dernière version compatible rustc 1.80, mais on monte à 1.85+
+# Maturin est aligné avec le build-system du moteur Rust (contrôlé en CI).
 ENV RUST_VERSION=1.85.0
 ENV MATURIN_VERSION=1.9.6
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
@@ -48,16 +48,19 @@ RUN . "$HOME/.cargo/env" && \
 WORKDIR /build/api
 
 # Dépendances Python
-RUN pip install --no-cache-dir --upgrade pip uv
+RUN pip install --no-cache-dir --upgrade pip "uv==0.11.16"
 
 # Copie du projet API et installation des dépendances + wheel Rust
-COPY GSIE/API/pyproject.toml GSIE/API/README.md ./
+COPY GSIE/API/pyproject.toml GSIE/API/uv.lock GSIE/API/README.md ./
 COPY GSIE/API/gunicorn.conf.py ./
 COPY GSIE/API/src/ src/
 COPY GSIE/API/alembic/ alembic/
 COPY GSIE/API/alembic.ini ./
 COPY GSIE/API/docker/ docker/
-RUN uv pip install --system .
+RUN uv export --locked --no-dev --no-emit-project --output-file /tmp/requirements.txt \
+    && uv pip install --system --require-hashes -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+RUN uv pip install --system --no-deps .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
 # --- Stage final ---
@@ -77,10 +80,10 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=gsie:gsie --from=builder /build/api/src/ ./src/
 COPY --chown=gsie:gsie --from=builder /build/api/pyproject.toml /build/api/gunicorn.conf.py ./
-# Alembic — migrations du schéma (lancées au démarrage par entrypoint.sh)
+# Alembic — migrations du schéma (opération explicite, jamais automatique)
 COPY --chown=gsie:gsie --from=builder /build/api/alembic/ ./alembic/
 COPY --chown=gsie:gsie --from=builder /build/api/alembic.ini ./
-# Script d'entrée — migrations Alembic puis démarrage Gunicorn
+# Script d'entrée — garde de migration optionnelle puis démarrage Gunicorn
 COPY --chown=gsie:gsie GSIE/API/docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
@@ -90,7 +93,7 @@ EXPOSE 8000
 
 # Gunicorn + SecureUvicornWorker (sans header Server, OWASP A05)
 # Config dans gunicorn.conf.py (workers, keep-alive, max-requests, timeouts)
-# entrypoint.sh lance les migrations Alembic avant Gunicorn
+# entrypoint.sh ne migre que si les drapeaux opératoires sont explicitement fournis
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["gunicorn", "gsie_api.app:app", \
      "--config", "gunicorn.conf.py", \

@@ -15,6 +15,7 @@ from typing import Annotated, TypedDict
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
+from gsie_api.auth.refresh_tokens import RefreshTokenStore, get_refresh_token_store
 from gsie_api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, VerifyResponse
 from gsie_api.core.auth import (
     create_access_token,
@@ -95,7 +96,12 @@ def _authenticate_user(username: str, password: str) -> DevUser | None:
     ),
 )
 @_limiter.limit("20/minute")
-async def login(request: Request, response: Response, credentials: LoginRequest) -> TokenResponse:
+async def login(
+    request: Request,
+    response: Response,
+    credentials: LoginRequest,
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+) -> TokenResponse:
     """Authentifie un utilisateur de développement et retourne les tokens JWT."""
     if not _settings.auth_dev_login_enabled:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
@@ -118,11 +124,23 @@ async def login(request: Request, response: Response, credentials: LoginRequest)
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    session_claims: dict[str, object] = {
+        "roles": user["roles"],
+        "username": credentials.username,
+    }
     access_token = create_access_token(
         subject=DEV_USER_ID,
-        claims={"roles": user["roles"], "username": credentials.username},
+        claims=session_claims,
     )
-    refresh_token = create_refresh_token(subject=DEV_USER_ID)
+    refresh_token = create_refresh_token(
+        subject=DEV_USER_ID,
+        claims=session_claims,
+    )
+    refresh_payload = verify_token(refresh_token, expected_type="refresh")
+    await refresh_store.register(
+        str(refresh_payload["jti"]),
+        float(refresh_payload["exp"]),
+    )
 
     logger.info(
         "login_success",
@@ -148,15 +166,47 @@ async def login(request: Request, response: Response, credentials: LoginRequest)
         "et un nouveau refresh token (rotation)."
     ),
 )
-async def refresh_token(request: RefreshRequest) -> TokenResponse:
+async def refresh_token(
+    request: RefreshRequest,
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+) -> TokenResponse:
     """Échange un refresh token contre un nouveau access token."""
     payload = verify_token(request.refresh_token, expected_type="refresh")
-    username = payload["sub"]
+    subject = payload.get("sub")
+    jti = payload.get("jti")
+    if not isinstance(subject, str) or not isinstance(jti, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token claims",
+        )
 
-    access_token = create_access_token(subject=username)
-    new_refresh_token = create_refresh_token(subject=username)
+    roles_claim = payload.get("roles", [])
+    if isinstance(roles_claim, str):
+        roles = [roles_claim]
+    elif isinstance(roles_claim, list):
+        roles = [role for role in roles_claim if isinstance(role, str)]
+    else:
+        roles = []
+    session_claims: dict[str, object] = {"roles": roles}
+    username = payload.get("username")
+    if isinstance(username, str):
+        session_claims["username"] = username
 
-    logger.info("token_refreshed", username=username, jti=payload.get("jti"))
+    access_token = create_access_token(subject=subject, claims=session_claims)
+    new_refresh_token = create_refresh_token(subject=subject, claims=session_claims)
+    new_payload = verify_token(new_refresh_token, expected_type="refresh")
+    rotated = await refresh_store.rotate(
+        jti,
+        str(new_payload["jti"]),
+        float(new_payload["exp"]),
+    )
+    if not rotated:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token expired or already used",
+        )
+
+    logger.info("token_refreshed", username=username or subject, jti=jti)
 
     return TokenResponse(
         access_token=access_token,

@@ -156,8 +156,7 @@ class BotanicalIdentificationDecisionModel(Base, TimestampMixin):
             name="ck_bid_validation_requires_evidence",
         ),
         CheckConstraint(
-            "(status != 'rejetee') OR "
-            "(validated_by_id IS NOT NULL AND decided_at IS NOT NULL)",
+            "(status != 'rejetee') OR " "(validated_by_id IS NOT NULL AND decided_at IS NOT NULL)",
             name="ck_bid_rejection_requires_validator",
         ),
     )

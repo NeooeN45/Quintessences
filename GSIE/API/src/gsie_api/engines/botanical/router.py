@@ -11,14 +11,14 @@ Endpoints :
 - POST /botanical/query     — résout une essence vers son taxon GBIF
 """
 
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
@@ -79,7 +79,7 @@ async def botanical_query(
     request_body: BotanicalQuery,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineWriteUser,
 ) -> BotanicalData:
     """Résout une essence vers son taxon GBIF.
 
@@ -109,7 +109,7 @@ async def botanical_indigenat(
     request_body: IndigenatQuery,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> IndigenatResult | None:
     """Récupère le statut d'indigénat réel d'une essence.
 
@@ -139,7 +139,7 @@ async def botanical_taxref(
     request_body: TaxrefQuery,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> TaxrefResult | None:
     """Résout un nom scientifique vers son entrée TAXREF réelle.
 

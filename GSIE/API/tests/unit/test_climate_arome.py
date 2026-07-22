@@ -133,7 +133,9 @@ async def test_get_temperature_arome_raises_when_no_run_published(
     monkeypatch: pytest.MonkeyPatch,
 ):
     """Si GetCapabilities ne liste aucun run pour ce paramètre, doit lever ClimateEngineError."""
-    empty_xml = b'<?xml version="1.0"?><wcs:Capabilities xmlns:wcs="http://www.opengis.net/wcs/2.0"/>'
+    empty_xml = (
+        b'<?xml version="1.0"?><wcs:Capabilities xmlns:wcs="http://www.opengis.net/wcs/2.0"/>'
+    )
     _patch_arome_transport(monkeypatch, capabilities_body=empty_xml)
     engine = ClimateEngine(arome_client=AromeClient())
 
@@ -145,7 +147,9 @@ async def test_get_temperature_arome_raises_on_invalid_subsetting(
     monkeypatch: pytest.MonkeyPatch,
 ):
     """Une échéance hors du run (rejetée par l'API) doit lever ClimateEngineError, pas planter."""
-    error_body = b'<?xml version="1.0"?><ns0:ExceptionReport xmlns:ns0="http://www.opengis.net/ows/1.1"/>'
+    error_body = (
+        b'<?xml version="1.0"?><ns0:ExceptionReport xmlns:ns0="http://www.opengis.net/ows/1.1"/>'
+    )
     _patch_arome_transport(monkeypatch, coverage_status=404, coverage_body=error_body)
     engine = ClimateEngine(arome_client=AromeClient())
 

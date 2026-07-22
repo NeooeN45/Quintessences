@@ -101,8 +101,7 @@ async def should_flag_strong_linear_correlation_as_robust_to_permutation(
     assert result.refutation.n_permutations == 200
     assert result.refutation.robuste is True
     assert (
-        result.refutation.interpretation
-        == "association observée, robuste au test de permutation"
+        result.refutation.interpretation == "association observée, robuste au test de permutation"
     )
     assert "cause" not in result.refutation.interpretation
 
@@ -178,9 +177,7 @@ async def should_support_kendall_method(engine: CorrelationEngine):
 
 async def should_reject_unsupported_method(engine: CorrelationEngine):
     """Une méthode non calculable (ex. expert, literature) doit être rejetée."""
-    request = _make_request(
-        [1.0, 2.0, 3.0], [2.0, 4.0, 6.0], methode=CorrelationMethod.expert
-    )
+    request = _make_request([1.0, 2.0, 3.0], [2.0, 4.0, 6.0], methode=CorrelationMethod.expert)
     with pytest.raises(CorrelationEngineError, match="non calculable"):
         await engine.compute(request)
 

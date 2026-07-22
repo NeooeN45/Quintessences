@@ -26,12 +26,14 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, s
 from pydantic import BaseModel
 
 from gsie_api.core.auth import verify_ws_token
+from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
-from gsie_api.core.rbac import require_roles
+from gsie_api.core.rbac import can_access_resource, get_user_roles, require_roles
 from gsie_api.websocket.events import EventType, WSEvent
 from gsie_api.websocket.manager import manager
 
 router = APIRouter(prefix="/ws", tags=["websocket"])
+_settings = get_settings()
 logger = get_logger("gsie_api.websocket.router")
 
 # Canaux autorisés (sécurité — pas d'abonnement arbitraire)
@@ -93,8 +95,22 @@ def _validate_channels(channels: list[str] | None) -> list[str]:
     return valid if valid else ["all"]
 
 
+def _is_origin_allowed(websocket: WebSocket) -> bool:
+    """Applique une liste blanche Origin au handshake navigateur."""
+    origin = websocket.headers.get("origin")
+    allowed = _settings.ws_allowed_origins
+    if origin is None:
+        return _settings.environment == "development" and "*" in allowed
+    if "*" in allowed:
+        return _settings.environment == "development"
+    return origin in allowed
+
+
 async def _authenticate_ws(websocket: WebSocket) -> dict[str, Any] | None:
     """Authentifie une connexion WebSocket via token en query param."""
+    if not _is_origin_allowed(websocket):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Origine interdite")
+        return None
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token manquant")
@@ -102,6 +118,9 @@ async def _authenticate_ws(websocket: WebSocket) -> dict[str, Any] | None:
     user = await verify_ws_token(token)
     if user is None:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token invalide")
+        return None
+    if not can_access_resource(user, "engine", "read"):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Rôle insuffisant")
         return None
     return user
 
@@ -124,7 +143,7 @@ async def ws_hub(
     channel_list = channels.split(",") if channels else None
     validated = _validate_channels(channel_list)
 
-    accepted = await manager.connect(websocket, validated)
+    accepted = await manager.connect(websocket, validated, roles=get_user_roles(user))
     if not accepted:
         return
     ws_id = id(websocket)
@@ -174,7 +193,7 @@ async def ws_events(websocket: WebSocket) -> None:
     if user is None:
         return
 
-    accepted = await manager.connect(websocket, ["all"])
+    accepted = await manager.connect(websocket, ["all"], roles=get_user_roles(user))
     if not accepted:
         return
     ws_id = id(websocket)

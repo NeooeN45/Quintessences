@@ -16,14 +16,14 @@ Endpoints :
 - GET  /knowledge/stats     — statistiques du graphe
 """
 
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.knowledge.engine import (
     KnowledgeEngine,
     KnowledgeEngineError,
@@ -89,7 +89,7 @@ async def knowledge_ingest(
     request_body: KnowledgeIngestRequest,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineWriteUser,
 ) -> KnowledgeObject:
     """Ingère une connaissance dans le graphe.
 
@@ -120,7 +120,7 @@ async def knowledge_query(
     query: KnowledgeQuery,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> KnowledgeQueryResult:
     """Interroge le graphe de connaissances."""
     return await KnowledgeEngine(session).query(query)
@@ -142,7 +142,7 @@ async def knowledge_revise(
     revision: KnowledgeRevisionRequest,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineWriteUser,
 ) -> KnowledgeObject:
     """Révise une connaissance existante.
 
@@ -167,7 +167,7 @@ async def knowledge_revise(
 async def knowledge_stats(
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> dict[str, int]:
     """Retourne les statistiques du graphe (nombre d'objets par type)."""
     return await KnowledgeEngine(session).stats()

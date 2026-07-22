@@ -45,9 +45,7 @@ def postgres_url() -> AsyncGenerator[str, None]:
         password="gsie_test",
         dbname="gsie_test",
     ) as postgres:
-        yield postgres.get_connection_url().replace(
-            "postgresql+psycopg2", "postgresql+asyncpg"
-        )
+        yield postgres.get_connection_url().replace("postgresql+psycopg2", "postgresql+asyncpg")
 
 
 @pytest.fixture

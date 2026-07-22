@@ -11,13 +11,11 @@ Endpoints :
 - POST /forest-dynamics/dendrometrics — calcule la surface terrière
 """
 
-from typing import Annotated, Any
-
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import EngineReadUser
 from gsie_api.engines.forest_dynamics.engine import ForestDynamicsEngine
 from gsie_api.engines.forest_dynamics.schemas import DendrometricRequest, DendrometricResult
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
@@ -68,7 +66,7 @@ async def forest_dynamics_version(request: Request) -> EngineVersionResponse:
 async def forest_dynamics_dendrometrics(
     request_body: DendrometricRequest,
     request: Request,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> DendrometricResult:
     """Calcule les caractéristiques dendrométriques géométriques d'un peuplement."""
     return ForestDynamicsEngine().compute_dendrometrics(request_body)

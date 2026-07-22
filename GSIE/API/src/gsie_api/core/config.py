@@ -71,7 +71,13 @@ class Settings(BaseSettings):
     # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
     # En développement/test, "memory://" est utilisé (pas de Redis requis)
     rate_limit_storage_url: str = "memory://"
+    # Registre de rotation des refresh tokens. Redis est obligatoire en
+    # staging/production pour garantir l'usage unique entre workers.
+    refresh_token_storage_url: str = "memory://"
 
+    # Livraison transactionnelle des événements (ADR-005).
+    outbox_batch_size: int = Field(default=100, ge=1, le=1000)
+    outbox_poll_interval_seconds: float = Field(default=1.0, ge=0.1, le=60.0)
     # WebSocket (ADR-007)
     ws_max_connections: int = 1000
     ws_heartbeat_interval: int = 30  # secondes
@@ -124,6 +130,8 @@ class Settings(BaseSettings):
                 raise ValueError("Redis without password not allowed in production")
             if self.rate_limit_storage_url == "memory://":
                 raise ValueError("Distributed rate-limit storage required in production")
+            if self.refresh_token_storage_url == "memory://":
+                raise ValueError("Distributed refresh-token storage required in production")
             if self.auth_dev_login_enabled:
                 raise ValueError("Development login must be disabled in production")
             if not self.require_rust_backend:

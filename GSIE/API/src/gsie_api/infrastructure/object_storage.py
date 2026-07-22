@@ -46,13 +46,22 @@ class LocalStorage(ObjectStorage):
     """Stockage filesystem local — dev uniquement."""
 
     def __init__(self, base_path: str) -> None:
-        self._base = Path(base_path)
+        self._base = Path(base_path).resolve()
         self._base.mkdir(parents=True, exist_ok=True)
+
+    def _resolve_key(self, key: str) -> Path:
+        """Résout une clé sans autoriser une sortie du répertoire configuré."""
+        if not key or "\x00" in key:
+            raise ValueError("Invalid object key")
+        candidate = (self._base / key).resolve()
+        if candidate == self._base or not candidate.is_relative_to(self._base):
+            raise ValueError("Object key resolves outside configured storage")
+        return candidate
 
     async def put(
         self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
     ) -> str:
-        path = self._base / key
+        path = self._resolve_key(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
             f.write(data.read())
@@ -60,22 +69,22 @@ class LocalStorage(ObjectStorage):
         return f"file://{path}"
 
     async def get(self, key: str) -> BinaryIO:
-        path = self._base / key
+        path = self._resolve_key(key)
         return path.open("rb")
 
     async def delete(self, key: str) -> bool:
-        path = self._base / key
+        path = self._resolve_key(key)
         if path.exists():
             path.unlink()
             return True
         return False
 
     async def exists(self, key: str) -> bool:
-        return (self._base / key).exists()
+        return self._resolve_key(key).exists()
 
     async def get_presigned_url(self, key: str, expires_in: int = 3600) -> str:
         # En local, pas de présignature — on retourne un chemin direct
-        return f"file://{self._base / key}"
+        return f"file://{self._resolve_key(key)}"
 
 
 class S3Storage(ObjectStorage):
@@ -111,9 +120,6 @@ class S3Storage(ObjectStorage):
 
 def get_object_storage() -> ObjectStorage:
     """Factory — retourne le storage selon la config."""
-    if _settings.environment == "production":
-        # En prod : S3 (implémenté en Vague 2)
-        # return S3Storage(...)
-        logger.warning("s3_storage_not_implemented_using_local")
-        return LocalStorage(_settings.object_storage_local_path)
+    if _settings.environment in ("staging", "production"):
+        raise RuntimeError("S3 object storage is not implemented; refusing unsafe local fallback")
     return LocalStorage(_settings.object_storage_local_path)

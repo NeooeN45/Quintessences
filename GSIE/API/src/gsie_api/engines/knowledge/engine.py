@@ -285,12 +285,16 @@ class KnowledgeEngine:
             )
 
         evidence = (
-            await self._session.execute(
-                select(EvidenceAssessmentModel)
-                .where(EvidenceAssessmentModel.assertion_id == request.connaissance_id)
-                .order_by(EvidenceAssessmentModel.evaluated_at.desc())
+            (
+                await self._session.execute(
+                    select(EvidenceAssessmentModel)
+                    .where(EvidenceAssessmentModel.assertion_id == request.connaissance_id)
+                    .order_by(EvidenceAssessmentModel.evaluated_at.desc())
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
 
         metadata = dict(resource.metadata_json or {})
         if request.nouveau_contenu is not None:
@@ -370,8 +374,9 @@ class KnowledgeEngine:
     async def stats(self) -> dict[str, int]:
         """Retourne les statistiques du graphe."""
         result = await self._session.execute(
-            select(AssertionModel.claim_kind, ResourceModel.metadata_json)
-            .join(ResourceModel, ResourceModel.id == AssertionModel.id)
+            select(AssertionModel.claim_kind, ResourceModel.metadata_json).join(
+                ResourceModel, ResourceModel.id == AssertionModel.id
+            )
         )
         type_counts: dict[str, int] = {}
         total = 0
@@ -477,15 +482,19 @@ class KnowledgeEngine:
         if current_version <= 1:
             return []
         rows = (
-            await self._session.execute(
-                select(RevisionModel)
-                .where(
-                    RevisionModel.target_id == connaissance_id,
-                    RevisionModel.version <= current_version,
+            (
+                await self._session.execute(
+                    select(RevisionModel)
+                    .where(
+                        RevisionModel.target_id == connaissance_id,
+                        RevisionModel.version <= current_version,
+                    )
+                    .order_by(RevisionModel.version)
                 )
-                .order_by(RevisionModel.version)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         by_version = {row.version: row for row in rows}
         return [
             VersionEntry(

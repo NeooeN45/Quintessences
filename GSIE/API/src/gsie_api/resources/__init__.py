@@ -1,4 +1,4 @@
-"""Resources package — CRUD générique pour les 73 types du métamodèle v6.2."""
+"""Resources package — CRUD générique pour les types enregistrés du métamodèle."""
 
 from gsie_api.resources.router import router as resources_router
 from gsie_api.resources.schemas import (

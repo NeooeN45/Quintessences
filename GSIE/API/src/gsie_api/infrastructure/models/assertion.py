@@ -137,7 +137,7 @@ class EvidenceAssessmentModel(Base, TimestampMixin):
     level: Mapped[EvidenceLevel] = mapped_column(
         Enum(EvidenceLevel, name="evidence_level", values_callable=lambda e: [m.value for m in e]),
         nullable=False,
-        index=True
+        index=True,
     )
     evaluator_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True

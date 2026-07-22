@@ -12,14 +12,14 @@ Endpoints :
 - POST /gis/altitude              — récupère l'altitude d'un point
 """
 
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.core.auth import get_current_user
+from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.gis.engine import GISEngine, GISEngineError
 from gsie_api.engines.gis.ign_client import IGNClientError
 from gsie_api.engines.gis.schemas import (
@@ -80,7 +80,7 @@ async def gis_cadastre_parcelle(
     request_body: ParcelleCadastraleRequest,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineWriteUser,
 ) -> GeoData | None:
     """Récupère et persiste une parcelle cadastrale.
 
@@ -108,7 +108,7 @@ async def gis_altitude(
     request_body: AltitudeRequest,
     request: Request,
     session: DbSession,
-    _user: Annotated[dict[str, Any], Depends(get_current_user)],
+    _user: EngineReadUser,
 ) -> StationCharacteristics:
     """Récupère l'altitude d'un point.
 

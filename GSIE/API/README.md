@@ -1,7 +1,7 @@
 # GSIE API — General System Intelligence Engine
 
 API REST/WebSocket du moteur GSIE. Phase 4 — Implémentation.
-Métamodèle v6.2 — 73 types, table racine `resource`, CRUD générique.
+Métamodèle v6.2 — 73 types noyau et extensions métier, table racine `resource`, CRUD générique.
 
 ## Stack technique (DEC-000019, DEC-000023)
 
@@ -41,7 +41,7 @@ une ligne dans sa table spécifique (class-table inheritance).
 
 | Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/resources/types` | Liste des 69 types disponibles |
+| GET | `/api/v1/resources/types` | Liste autorisée des types enregistrés |
 | GET | `/api/v1/resources` | Liste paginée (filtre par type) |
 | POST | `/api/v1/resources` | Créer une resource (Revision v1) |
 | GET | `/api/v1/resources/{id}` | Détail d'une resource |
@@ -74,15 +74,27 @@ cp .env.example .env
 # 2. (Optionnel) Générer les clés JWT RS256 pour la production
 ./docker/generate-jwt-keys.sh
 
-# 3. Lancer les services (PostgreSQL+PostGIS, Redis, API)
-#    Les migrations Alembic sont lancées automatiquement au démarrage (entrypoint.sh)
-docker compose up -d
+# 3. Démarrer les dépendances, sans muter implicitement le schéma
+docker compose up -d db redis
 
-# 4. Vérifier l'API
+# 4. Exécuter la migration comme une opération unique et contrôlée.
+#    Pour une base neuve, la "sauvegarde confirmée" signifie qu'aucune donnée
+#    n'existe encore. Pour une base existante, réaliser et vérifier le backup.
+docker compose run --rm \
+  -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true \
+  -e GSIE_DATABASE_BACKUP_CONFIRMED=true \
+  -e GSIE_ALLOW_DESTRUCTIVE_MIGRATIONS=true \
+  api true
+
+# 5. Démarrer l'API et le worker outbox
+docker compose up -d api outbox-worker
+
+# 6. Vérifier l'API
 curl http://localhost:8000/health
+curl http://localhost:8000/ready
 curl http://localhost:8000/docs
 
-# 5. Authentification (dev)
+# 7. Authentification (dev)
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "your-dev-password"}'
@@ -97,10 +109,13 @@ pip install -e ".[dev]"
 # 2. Lancer PostgreSQL + Redis via Docker
 docker compose up -d db redis
 
-# 3. Lancer l'API en mode dev
+# 3. Appliquer explicitement les migrations
+alembic upgrade head
+
+# 4. Lancer l'API en mode dev
 uvicorn gsie_api.app:app --reload --port 8000
 
-# 4. Tests
+# 5. Tests
 pytest
 ```
 
@@ -114,7 +129,7 @@ src/gsie_api/
 │   ├── evidence/           # Rust + pyo3 (semaine 2)
 │   ├── knowledge/          # Rust + pyo3 (semaine 3 — migration Vague 2)
 │   └── gis/                # Python natif (semaine 5)
-├── resources/              # CRUD générique (73 types, ADR-007)
+├── resources/              # CRUD générique des types enregistrés (ADR-007)
 │   ├── router.py           # 8 endpoints REST
 │   ├── service.py          # Logique CRUD + Revision + broadcast WS
 │   ├── schemas.py          # DTOs Pydantic
@@ -125,7 +140,7 @@ src/gsie_api/
 │   └── events.py           # Event types (resource.created, alert, etc.)
 ├── shared/                 # Middleware (TraceId, CORS, Gzip)
 └── infrastructure/         # DB, Redis, models
-    ├── models/             # 73 types SQLAlchemy (12 fichiers par domaine)
+    ├── models/             # Types noyau + extensions SQLAlchemy par domaine
     │   ├── base.py         # Table racine resource + registry @register_type
     │   ├── enums.py        # 52 enums PostgreSQL
     │   ├── junctions.py    # 17 tables de jonction n:m

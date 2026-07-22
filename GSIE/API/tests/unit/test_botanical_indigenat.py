@@ -81,9 +81,7 @@ def test_engine_get_indigenat_returns_real_status(loader: IndigenatLoader):
     """BotanicalEngine.get_indigenat() doit renvoyer le vrai statut Abies alba / A11."""
     engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
 
-    result = engine.get_indigenat(
-        IndigenatQuery(requete_id=uuid4(), cd_nom=79319, code_ser="A11")
-    )
+    result = engine.get_indigenat(IndigenatQuery(requete_id=uuid4(), cd_nom=79319, code_ser="A11"))
 
     assert result is not None
     assert result.nom_scientifique == "Abies alba Mill., 1768"
@@ -110,9 +108,7 @@ def test_engine_get_indigenat_returns_none_for_unknown_code_ser(loader: Indigena
     """Un code SER absent des colonnes doit retourner None, pas lever d'exception."""
     engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
 
-    result = engine.get_indigenat(
-        IndigenatQuery(requete_id=uuid4(), cd_nom=79319, code_ser="Z99")
-    )
+    result = engine.get_indigenat(IndigenatQuery(requete_id=uuid4(), cd_nom=79319, code_ser="Z99"))
 
     assert result is None
 

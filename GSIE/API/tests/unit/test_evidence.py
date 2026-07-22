@@ -25,7 +25,7 @@ from gsie_api.engines.evidence.wrapper import engine_version, evaluate, is_rust_
 app = create_app()
 client = TestClient(app)
 
-_ACCESS_TOKEN = create_access_token(subject="test-evidence")
+_ACCESS_TOKEN = create_access_token(subject="test-evidence", claims={"roles": ["writer"]})
 _AUTH_HEADERS = {"Authorization": f"Bearer {_ACCESS_TOKEN}"}
 
 
@@ -158,6 +158,30 @@ def should_return_200_when_evidence_version_requested():
     data = response.json()
     assert "version" in data
     assert "backend" in data
+
+
+def should_return_403_when_evaluate_token_has_no_role():
+    """Un JWT signé sans rôle ne doit accorder aucun droit implicite."""
+    token = create_access_token(subject="sans-role")
+    response = client.post(
+        "/api/v1/evidence/evaluate",
+        json=_make_submission().model_dump(mode="json"),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def should_return_403_when_reader_evaluates_knowledge():
+    """Un lecteur ne peut pas produire une qualification scientifique."""
+    token = create_access_token(subject="reader", claims={"roles": ["reader"]})
+    response = client.post(
+        "/api/v1/evidence/evaluate",
+        json=_make_submission().model_dump(mode="json"),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
 
 
 def should_return_200_when_valid_submission_evaluated():

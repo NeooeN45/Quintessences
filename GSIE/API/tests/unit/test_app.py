@@ -62,6 +62,7 @@ def should_disable_docs_when_production():
         mock_settings.rate_limit_enabled = False
         mock_settings.rate_limit_default = "60/minute"
 
+        mock_settings.max_request_body_size = 1_048_576
         app = create_app()
         client = TestClient(app)
 
@@ -121,7 +122,7 @@ def should_return_500_with_error_code_when_unhandled_exception():
             date_soumission=datetime.now(UTC),
             soumetteur="test",
         )
-        token = create_access_token(subject="test")
+        token = create_access_token(subject="test", claims={"roles": ["writer"]})
 
         # Provoquer une exception non gérée en mockant le router evidence
         with patch(

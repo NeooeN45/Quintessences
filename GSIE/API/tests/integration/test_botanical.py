@@ -88,9 +88,7 @@ async def test_query_accepted_taxon_persists_entity(
 
     alias = (
         await db_session.execute(
-            EntityAliasModel.__table__.select().where(
-                EntityAliasModel.entity_id == espece.taxon_id
-            )
+            EntityAliasModel.__table__.select().where(EntityAliasModel.entity_id == espece.taxon_id)
         )
     ).first()
     assert alias is not None

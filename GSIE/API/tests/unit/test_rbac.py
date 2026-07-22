@@ -68,9 +68,10 @@ class TestCheckPermission:
 
     def test_should_deny_user_without_roles(self) -> None:
         user = {"sub": "norole1", "roles": []}
-        with pytest.raises(HTTPException) as exc:
-            check_permission(user, "assertion", "write")
-        assert exc.value.status_code == 403
+        for action in ("read", "write"):
+            with pytest.raises(HTTPException) as exc:
+                check_permission(user, "assertion", action)
+            assert exc.value.status_code == 403
 
     def test_should_handle_string_roles_claim(self) -> None:
         """Le claim roles peut être une string unique (compat)."""
@@ -80,9 +81,10 @@ class TestCheckPermission:
     def test_should_handle_missing_roles_claim(self) -> None:
         """Si le claim roles est absent, accès refusé."""
         user = {"sub": "norole1"}
-        with pytest.raises(HTTPException) as exc:
-            check_permission(user, "assertion", "write")
-        assert exc.value.status_code == 403
+        for action in ("read", "write"):
+            with pytest.raises(HTTPException) as exc:
+                check_permission(user, "assertion", action)
+            assert exc.value.status_code == 403
 
 
 class TestRequireRoles:
