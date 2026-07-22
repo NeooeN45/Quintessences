@@ -20,6 +20,18 @@ Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, 
 4. **Traçabilité** — toute décision structurante → `DEC-xxxxxx` dans `03_DECISIONS/`.
 5. **Mémoire à jour** — après tout changement d'état → synchroniser `PROJECT_MEMORY.md`, `ROADMAP.md`, `CHANGELOG.md`.
 
+## Orchestration des agents IA
+
+- Le Fondateur conserve l'autorité finale ; Codex orchestre le travail
+  technique et contrôle les preuves avant acceptation.
+- Toute mission Claude ou GLM 5.2 via Devin utilise un prompt versionné
+  `GSIE-PROMPT-xxxx` enregistré dans `GSIE/PROMPTS/REGISTER.md`.
+- Une production d'agent n'est jamais acceptée sur son seul résumé : le diff
+  et les validations sont reproduits selon
+  `23_QUALITY_MANAGEMENT/PROCESSES/AI_AGENT_ORCHESTRATION.md`.
+- Deux agents ne modifient pas simultanément les mêmes fichiers.
+- Aucun agent ne pousse, fusionne ou déploie sans autorisation explicite.
+
 ---
 
 ## Skills à invoquer selon le contexte
@@ -71,7 +83,7 @@ Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, 
 |---|---|---|
 | `apps/GeoSylva/` | GitHub: NeooeN45/GeoSylva | `cd apps/GeoSylva/` pour travailler |
 | `apps/QGISIA/` | GitHub: NeooeN45/QGISIAPRO | `cd apps/QGISIA/` |
-| `Forge/` | Local, pas de remote | Usine de données Python/uv |
+| `Forge/` | GitHub: NeooeN45/Forge | Usine de données Python/uv |
 
 ---
 

@@ -1,0 +1,13 @@
+# Propriétaire par défaut et zones critiques.
+* @NeooeN45
+
+/00_CONSTITUTION/ @NeooeN45
+/01_DIRECTIVES/ @NeooeN45
+/02_RFC/ @NeooeN45
+/03_DECISIONS/ @NeooeN45
+/19_LEGAL/ @NeooeN45
+/23_QUALITY_MANAGEMENT/ @NeooeN45
+/.github/ @NeooeN45
+/GSIE/API/src/gsie_api/auth/ @NeooeN45
+/GSIE/API/src/gsie_api/core/ @NeooeN45
+/GSIE/API/docker/ @NeooeN45

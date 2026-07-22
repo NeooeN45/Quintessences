@@ -4,6 +4,10 @@
 |---|---|
 | **Créé le** | 2026-07-01 |
 
+> Ce fichier est une chronologie de contexte non exhaustive. La source
+> canonique des décisions exécutoires est `03_DECISIONS/DEC-*.md`.
+
+
 ---
 
 ## 2026-07-01
@@ -53,6 +57,12 @@
 | AI-CON | Constitution IA (AI_CONSTITUTION.md) — livrable 009 | Fondateur | DRAFT |
 | ARCH-D1 | Evidence Engine repositionné en amont de Knowledge Engine (filtre amont) — résolution de la contradiction | Fondateur | ACTIVE |
 | ARCH-D2 | 14/14 moteurs officiels documentés dans GSIE/ENGINES/ | Fondateur | ACTIVE |
+
+## 2026-07-22
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000032 | Orchestration contrôlée des agents IA ; Codex orchestre, Claude contre-audite, GLM 5.2 exécute les tâches bornées via Devin | RFC-0022 | VALIDATED |
 
 ---
 

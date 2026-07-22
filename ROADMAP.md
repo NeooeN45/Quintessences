@@ -263,7 +263,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 5 — Validation | 21-24 | Validation + Learning | Rust |
 | 6 — Go (optionnel) | 25-26 | Benchmark WebSocket + décision Go | Go si activé |
 
-### État d'exécution vérifié — 2026-07-16
+### État d'exécution vérifié — 2026-07-22
 
 | Étape | État | Critère restant avant clôture |
 |---|---|---|
@@ -274,6 +274,8 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Migration v6.2** — **RFC-0012 + DEC-000023 + ADR-007** | ✅ **Implémenté (2026-07-16)** | 76 types SQLAlchemy, table racine resource, CRUD générique 8 endpoints, WebSocket auth JWT + Redis Pub/Sub, 17 tables de jonction n:m, Outbox/Inbox (ADR-005), Object Storage (ADR-006), validation dynamique, soft delete (CON-010), 194 tests passent |
 | **RFC-0016 Phase A** — Schéma forestier spécialisé (DEC-000027) | ✅ **Complète (2026-07-19)** | 10/10 entités du §3.1 implémentées en 6 tranches (10 tables satellite + 3 entités réutilisées : Intervention, EvidenceStatement, ConflictRecord), registre de types 76→86, 364 tests (304 passed/60 skipped) |
 | **RFC-0016 Phase B** — Intégration Botanical/Forest Dynamics Engine (DEC-000027) | ✅ **Complète (2026-07-19)** | Fermeture du validateur générique pour les 10 types forestiers, passeport de décision à 5 catégories (`DecisionPassportCategory`/`Item`/`Passport`), extension Forest Dynamics Engine (`station_observation_id`, `to_decision_passport_items()`), pont extraction documentaire → `AutecologyProfile` (`extraction_bridge`), testé sur 29 faits réels du 3e pilote RFC-0014 §3.6. 387 tests (327 passed/60 skipped). Reste : Phase C (pilote Nouvelle-Aquitaine) |
+| **Socle de fiabilité d'entreprise** — RFC-0021 / DEC-000031 | ✅ **Tranche critique contre-auditée (2026-07-22)** | Auth/RBAC moteurs/refresh/WebSocket RGPD, outbox transactionnel expurgé, migrations gardées, stockage et requêtes bornés ; build Linux reproductible non-root avec dépendances natives verrouillées ; CI bloquante (Python, Rust, intégration, Docker, sources de vérité, nouveaux Markdown stricts, documents Locked/RFC). Restent planifiés : migration mobile en clair, sauvegarde complète, egress réseau, stratégie LanceDB multi-hôtes, 63 exclusions historiques, réactivation progressive des règles Markdown en baseline, dette Kotlin et décision de licence GSIE. |
+| **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,

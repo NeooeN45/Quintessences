@@ -4,8 +4,8 @@
 |---|---|
 | **Document** | QUALITY_MANUAL.md |
 | **Dossier** | 23_QUALITY_MANAGEMENT |
-| **Version** | 1.0.0 |
-| **Date** | 2 juillet 2026 |
+| **Version** | 1.2.0 |
+| **Date** | 22 juillet 2026 |
 | **Statut** | Adopté |
 | **Référence** | QUALITY_POLICY.md, ISO 9001:2015 (inspiration) |
 
@@ -23,12 +23,14 @@ Ce manuel décrit le **système de management de la qualité (QMS)** de GSIE. Il
 23_QUALITY_MANAGEMENT/
 ├── QUALITY_POLICY.md          ← Politique (intentions)
 ├── QUALITY_MANUAL.md          ← Manuel (ce document — système)
+├── SOURCE_OF_TRUTH_REGISTRY.json
 ├── PROCESSES/                 ← Processus documentés
 │   ├── CODE_REVIEW.md
 │   ├── CI_CD.md
 │   ├── KNOWLEDGE_VALIDATION.md
+│   ├── DOCUMENT_CONTROL.md
+│   ├── AI_AGENT_ORCHESTRATION.md
 │   ├── INCIDENT_MANAGEMENT.md
-│   ├── DOCUMENT_REVIEW.md
 │   └── RELEASE_MANAGEMENT.md
 ├── AUDITS/                    ← Rapports d'audit interne
 │   └── TEMPLATE_AUDIT_REPORT.md
@@ -76,6 +78,7 @@ Ce manuel décrit le **système de management de la qualité (QMS)** de GSIE. Il
 | **Gestion des incidents** | Traiter les non-conformités | Incident | Correction + leçon | Responsable qualité |
 | **Revue documentaire** | Maintenir la doc à jour | Documents | Doc mise à jour | Responsable qualité |
 | **Gestion des changements** | Évaluer l'impact d'un changement | RFC | Décision + ADR | Comité technique |
+| **Orchestration des agents IA** | Borner, attribuer et vérifier les tâches IA | Besoin qualifié | Contribution vérifiée ou rejetée | Codex + Direction |
 
 ---
 
@@ -172,6 +175,18 @@ Push → Lint (ruff/ktlint) → Typecheck (mypy/tsc) → Tests unitaires → Tes
 6. Communication (clients, communauté, site web)
 7. Archivage (version taggée, reproductible)
 ```
+
+### 4.6 Orchestration des agents IA (AI_AGENT_ORCHESTRATION.md)
+
+**Processus.**
+
+```
+Besoin → prompt versionné → attribution → exécution bornée
+→ revue indépendante → validation → intégration autorisée
+```
+
+Le Fondateur conserve l'autorité finale. Codex orchestre et reproduit les
+preuves ; aucun agent ne valide seul sa propre production.
 
 ---
 
@@ -335,6 +350,11 @@ Création → Revue par les pairs → Validation → Publication → Maintenance
 
 ### 8.2 Règles de contrôle
 
+La hiérarchie d'autorité, les états `canonique` / `reference` /
+`archive`, les fréquences de revue et le traitement des contradictions
+sont définis dans `PROCESSES/DOCUMENT_CONTROL.md` et contrôlés par le
+registre machine-lisible `SOURCE_OF_TRUTH_REGISTRY.json`.
+
 | Règle | Description |
 |---|---|
 | **Versionnage** | Tout document a une version (SemVer) et un changelog |
@@ -411,7 +431,8 @@ Tout nouveau contributeur (humain ou agent IA) DOIT :
 | Version | Date | Changement |
 |---|---|---|
 | 1.0.0 | 2 juillet 2026 | Création initiale — manuel qualité complet (catalogue des processus, processus détaillés, KPIs, audit interne, revue de direction, contrôle documentaire, gestion des changements, formation) |
-
+| 1.1.0 | 21 juillet 2026 | Registre des sources de vérité, contrôle automatique de fraîcheur et processus documentaire exécutable. |
+| 1.2.0 | 22 juillet 2026 | Orchestration contrôlée des agents IA, rôles séparés, prompts versionnés et preuves reproductibles (RFC-0022 / DEC-000032). |
 ---
 
 > *Le manuel qualité n'est pas un document figé : il évolue avec le projet, s'enrichit des retours d'expérience et s'adapte aux nouvelles réalités. Il est le reflet vivant de la culture qualité de GSIE.*

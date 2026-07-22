@@ -3,6 +3,103 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+## [GSIE — CONTRE-AUDIT DE FIABILITÉ ET BUILD LINUX] - 2026-07-22
+
+- RBAC explicite sur toutes les opérations des moteurs ; les routes de statut
+  et de version restent publiques, les lectures exigent un rôle lecteur et les
+  mutations un rôle writer.
+- WebSocket fermé aux jetons sans rôle et filtrage des événements RGPD, y
+  compris sur le canal global ; payloads outbox réduits aux identifiants,
+  versions et noms de champs modifiés.
+- Rotation des refresh tokens entièrement atomique (mémoire et Redis/Lua),
+  fermeture propre du store et réponses 413 tracées avec en-têtes de sécurité.
+- Build Linux réparé : eccodeslib 2.47.3.23 est désormais verrouillé hors
+  Windows avec empreintes ; Maturin est aligné à 1.9.6 dans Docker et le
+  manifeste Rust. Image non-root vérifiée avec imports API/Rust/ecCodes.
+- CI renforcée : lint Markdown réellement bloquant avec baseline de migration,
+  profil strict pour tout nouveau document, contrôle automatique des versions
+  de build et refus effectif des modifications Locked sans RFC.
+- Preuves : **441 tests Python réussis, 63 ignorés, couverture globale 88 %** ;
+  barrière unitaire **368/63 et 81,87 %** ; intégration **73/73** ; Rust
+  **41/41** ; Ruff, formatage, mypy strict, Compose et image Docker verts.
+- Dette visible : 63 exclusions historiques (données v6.1 et cas Rust Windows)
+  et règles Markdown de l'ancien corpus placées sous baseline avant
+  réactivation progressive.
+
+## [FORGE — UNICITÉ LANCEDB INTER-PROCESSUS] - 2026-07-22
+
+- Le test précédent avec deux stores était séquentiel et ne démontrait pas
+  l'absence de course entre l'API et les workers RQ.
+- Un test de non-régression lance désormais quatre vrais processus synchronisés
+  sur le même fait et le même volume LanceDB.
+- Toutes les mutations du corpus sont sérialisées par un verrou de fichier
+  interprocessus ; `merge_insert` est exécuté sur l'état le plus récent et son
+  `num_inserted_rows` fournit le compteur fiable.
+- Preuves : **328 tests réussis**, couverture globale **81 %**, Ruff propre et
+  mypy strict propre sur **140 fichiers**.
+- Portée : garantie locale sur volume partagé ; le multi-hôtes reste soumis à
+  une barrière d'architecture explicite.
+
+## [DEC-000032 — ORCHESTRATION CONTRÔLÉE DES AGENTS IA] - 2026-07-22
+
+- RFC-0022 et DEC-000032 adoptées : le Fondateur conserve l'autorité finale
+  et Codex devient l'orchestrateur technique et le contrôleur des preuves.
+- Nouveau processus QMS `AI_AGENT_ORCHESTRATION.md` : cycle des tâches,
+  RACI, séparation auteur/relecteur, conditions d'arrêt et rapport obligatoire.
+- Nouveau registre `GSIE/PROMPTS/`, modèle de tâche et deux premières
+  missions préparées pour Claude et GLM 5.2 via Devin.
+- Les missions restent `BLOQUÉE` tant que les trois snapshots contenant les
+  changements locaux ne sont pas accessibles par des SHA identifiables.
+- `CLAUDE.md` corrigé : Phase 4 active, état des moteurs renvoyé vers la
+  mémoire canonique et remote Forge actualisé.
+- Les instructions opérationnelles des agents sont désormais enregistrées
+  dans le registre des sources de vérité et revues trimestriellement.
+- Le garde-fou `tools/check_ai_prompts.py`, ses tests et la CI bloquent les
+  prompts non enregistrés, incomplets, dupliqués ou dans un état inconnu.
+- Manuel qualité porté en version 1.2.0.
+
+
+## [DEC-000031 — SOCLE DE FIABILITÉ D'ENTREPRISE] - 2026-07-21
+
+### Sécurité, intégrité et exploitation
+
+- **API GSIE** : refresh tokens à usage unique avec rotation atomique Redis/Lua,
+  RBAC fermé avant chargement et étendu aux opérations des moteurs,
+  authentification WebSocket avec filtrage RGPD du canal global, événements
+  outbox sans valeurs métier, filtrage SQL avant pagination, limite ASGI du
+  corps avec réponses 413 tracées, stockage local protégé contre la traversée,
+  absence de repli local en production et worker outbox au moins une fois.
+- Les migrations au démarrage sont désactivées par défaut. Une migration
+  destructive exige trois confirmations distinctes, dont la preuve de
+  sauvegarde.
+- **GeoSylva** : les workers réutilisent la base SQLCipher de l'application ;
+  sauvegarde atomique avec portée honnête, synchronisation tarifaire HTTPS
+  bornée et validée, résolution DNS publique uniquement, configuration réseau
+  claire en production et exceptions locales limitées au build debug.
+- Le barème IBP est aligné sur **IBP FR v3.2 du 2 février 2026**, publié par
+  le CNPF :
+  <https://www.cnpf.fr/sites/socle/files/2026-02/IBP%20FR%20v3.2%20260202.pdf>.
+- **Forge** : authentification et rôles cumulatifs, chemins locaux interdits
+  via l'API, SSRF contrôlé sur chaque redirection, téléchargements PDF/HTML
+  bornés et atomiques, identifiants de faits complets, ingestion idempotente,
+  readiness Redis, exécution conteneur non-root et exposition locale.
+- **Qualité** : RFC-0021 et DEC-000031, CODEOWNERS, modèle de PR, registre des
+  sources de vérité, dates de revue et contrôle CI bloquant. La CI Forge
+  impose lockfile, compilation, typage strict et couverture globale de 80 %.
+
+### Vérifications
+
+- API GSIE : **441 tests réussis, 63 ignorés**, couverture globale **88 %**, Ruff et mypy strict verts.
+- Forge : **326 tests réussis**, couverture globale **81 %**, Ruff et mypy
+  strict verts.
+- GeoSylva : **494 tests réussis** sur 30 suites, dont les tests IBP, SSRF et
+  validation tarifaire ; Android Lint : **0 erreur** (564 avertissements
+  préexistants inventoriés).
+- Risques résiduels explicités dans RFC-0021 : migration des anciennes bases
+  mobiles en clair, sauvegarde mobile complète, egress réseau, unicité
+  LanceDB inter-processus, dette d'avertissements Kotlin et arbitrage de la
+  licence GSIE.
+
 
 ## [AUDIT COMPLET DU CODE — 0 P0, 1 BUG CORRIGÉ, MYPY/RUFF CLEAN] - 2026-07-20
 

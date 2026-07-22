@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-07-22",
+  "precedence": [
+    "constitution",
+    "directives_actives",
+    "decisions",
+    "rfc",
+    "specifications",
+    "etat_projet",
+    "qms",
+    "agent_operations",
+    "archives_sessions"
+  ],
+  "sources": [
+    {
+      "id": "constitution",
+      "scope": "Principes permanents et règles constitutionnelles",
+      "paths": ["00_CONSTITUTION/GSIE-CON-0*.md"],
+      "authority": 100,
+      "owner": "Fondateur",
+      "status": "canonique",
+      "last_reviewed": "2026-07-21",
+      "next_review": "2027-07-21",
+      "superseded_by": null
+    },
+    {
+      "id": "directives_actives",
+      "scope": "Instructions opérationnelles actuellement applicables",
+      "paths": ["01_DIRECTIVES/ACTIVE/*.md"],
+      "authority": 90,
+      "owner": "Fondateur",
+      "status": "canonique",
+      "last_reviewed": "2026-07-21",
+      "next_review": "2026-10-21",
+      "superseded_by": null
+    },
+    {
+      "id": "decisions",
+      "scope": "Arbitrages structurants adoptés",
+      "paths": ["03_DECISIONS/DEC-*.md"],
+      "authority": 80,
+      "owner": "Fondateur",
+      "status": "canonique",
+      "last_reviewed": "2026-07-22",
+      "next_review": "2027-01-22",
+      "superseded_by": null
+    },
+    {
+      "id": "rfc",
+      "scope": "Conception et justification des changements structurants",
+      "paths": ["02_RFC/RFC-*.md"],
+      "authority": 70,
+      "owner": "Architecture",
+      "status": "reference",
+      "last_reviewed": "2026-07-22",
+      "next_review": "2026-10-22",
+      "superseded_by": null
+    },
+    {
+      "id": "specifications",
+      "scope": "Contrats fonctionnels et techniques détaillés",
+      "paths": ["05_SPECIFICATIONS/**/*.md"],
+      "authority": 60,
+      "owner": "Responsables de composants",
+      "status": "reference",
+      "last_reviewed": "2026-07-21",
+      "next_review": "2026-10-21",
+      "superseded_by": null
+    },
+    {
+      "id": "agent_operations",
+      "scope": "Instructions et contrats opérationnels des agents IA",
+      "paths": ["AGENTS.md", "CLAUDE.md", "GSIE/PROMPTS/*.md"],
+      "authority": 30,
+      "owner": "Direction technique",
+      "status": "reference",
+      "last_reviewed": "2026-07-22",
+      "next_review": "2026-10-22",
+      "superseded_by": null
+    },
+    {
+      "id": "etat_projet",
+      "scope": "État courant, feuille de route et historique consolidé",
+      "paths": ["PROJECT_MEMORY.md", "ROADMAP.md", "CHANGELOG.md"],
+      "authority": 50,
+      "owner": "Direction technique",
+      "status": "canonique",
+      "last_reviewed": "2026-07-22",
+      "next_review": "2026-08-22",
+      "superseded_by": null
+    },
+    {
+      "id": "qms",
+      "scope": "Politique, manuel, processus et indicateurs qualité",
+      "paths": ["23_QUALITY_MANAGEMENT/*.md", "23_QUALITY_MANAGEMENT/PROCESSES/*.md"],
+      "authority": 40,
+      "owner": "Responsable qualité",
+      "status": "canonique",
+      "last_reviewed": "2026-07-22",
+      "next_review": "2026-10-22",
+      "superseded_by": null
+    },
+    {
+      "id": "archives_sessions",
+      "scope": "Notes de sessions et conversations conservées pour contexte",
+      "paths": ["22_PROJECT_MEMORY/sessions/*.md"],
+      "authority": 0,
+      "owner": "Direction technique",
+      "status": "archive",
+      "last_reviewed": "2026-07-21",
+      "next_review": null,
+      "superseded_by": "etat_projet"
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-21 (Contradiction de licence `apps/GeoSylva` **tranchée par le fondateur** : le `LICENSE` réel — propriétaire restrictif, forks/redistribution/modification interdits — fait foi ; `README.md`, `INVESTORS.md` et `MASTER_PLAN.md` corrigés pour retirer la fausse mention AGPL-3.0 et refléter le modèle réel (licence par défaut propriétaire + licence commerciale séparée pour intégrations tierces, `COMMERCIAL_LICENSE.md`) — commit `d46b9b2` sur le dépôt externe GeoSylva. Session précédente (2026-07-20) : RFC-0020 ouvert en Draft — Carte de l'ignorance, première implémentation du Reasoning Engine, périmètre forestier, issue de la veille innovations ; DEC-000030 : RFC-0018 adopté, Tranche 1/N complète ; RFC-0019 reste en Draft) |
+| **Dernière mise à jour** | 2026-07-22 — **DEC-000031 / DEC-000032** : socle GSIE contre-audité (RBAC moteurs, WebSocket RGPD, outbox expurgé, rotation atomique), build Linux non-root vérifié et CI rendue réellement bloquante ; 441 tests Python réussis, 63 ignorés, couverture 88 %. Codex organise et vérifie les travaux IA sans acceptation automatique. L'unicité LanceDB est garantie sur volume local partagé ; le multi-hôtes reste une barrière d'architecture. |
 
 ---
 
@@ -20,8 +20,8 @@ Commandement GSIE (Unreal Engine 5.8) — poste de pilotage immersif où
 toutes les données convergent.
 
 Repos externes intégrés : `apps/GeoSylva/` (GitHub: NeooeN45/GeoSylva),
-`apps/QGISIA/` (GitHub: NeooeN45/QGISIAPRO), `Forge/` (usine de données,
-pas de remote). Ces repos ont leur propre `.git` et sont ignorés par le
+`apps/QGISIA/` (GitHub: NeooeN45/QGISIAPRO), `Forge/`
+(GitHub: NeooeN45/Forge). Ces repos ont leur propre `.git` et sont ignorés par le
 repo parent.
 
 Le projet est en **Phase 4 : Implémentation**, lancée officiellement par
@@ -447,8 +447,9 @@ umbrella). **GSIE** = General System Intelligence Engine, le moteur
 spécialisable par domaine. **GeoSylva** = app forestière (première
 spécialisation). La connaissance est le véritable produit.
 
-**Durant la Phase 1**, la documentation est le produit principal. Le
-code viendra en son temps, subordonné aux fondations.
+**Durant la Phase 4**, le code métier et la documentation évoluent ensemble,
+toujours subordonnés aux fondations, aux sources scientifiques et aux portes
+qualité.
 
 ## Prochaine étape
 
