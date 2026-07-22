@@ -26,3 +26,4 @@ Décrire l'architecture logicielle, modulaire et scientifique de GSIE.
 - **09_ENGINES** : implémente l'architecture
 - **05_SPECIFICATIONS** : précise ce que l'architecture doit réaliser
 - **02_RFC** : toute décision architecturale passe par un RFC
+- **AZURE_POC_STRATEGY.md** : proposition de POC cloud frugal et réversible
