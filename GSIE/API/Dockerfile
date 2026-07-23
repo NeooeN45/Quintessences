@@ -6,7 +6,9 @@
 # dédié, puis installé dans l'image Python. Le fallback Python est
 # conservé uniquement pour les builds de développement sans Rust.
 
-FROM python:3.12-slim-bookworm AS builder
+FROM rust:1.85.0-slim-bookworm@sha256:1829c432be4a592f3021501334d3fcca24f238432b13306a4e62669dec538e52 AS rust-toolchain
+
+FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS builder
 
 LABEL org.opencontainers.image.title="GSIE API"
 LABEL org.opencontainers.image.description="General System Intelligence Engine REST/WebSocket API"
@@ -19,21 +21,20 @@ WORKDIR /build
 # Dépendances système — minimales pour semaine 1 (asyncpg, shapely, pyproj)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    curl \
     libgeos-dev \
     libproj-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Rust toolchain (requis pour Maturin / PyO3)
-# rustc 1.85+ requis : dépendances transitives Cargo.lock utilisent edition2024
-# Maturin est aligné avec le build-system du moteur Rust (contrôlé en CI).
-ENV RUST_VERSION=1.85.0
+# Rust 1.85.0 provient d'une image officielle verrouillée par digest.
+# Aucun script d'installation distant n'est exécuté pendant le build.
+ENV CARGO_HOME="/usr/local/cargo" \
+    RUSTUP_HOME="/usr/local/rustup" \
+    PATH="/usr/local/cargo/bin:$PATH"
 ENV MATURIN_VERSION=1.9.6
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --default-toolchain $RUST_VERSION && \
-    . "$HOME/.cargo/env" && \
-    rustup component add clippy && \
+COPY --from=rust-toolchain /usr/local/cargo /usr/local/cargo
+COPY --from=rust-toolchain /usr/local/rustup /usr/local/rustup
+RUN rustup component add clippy && \
     cargo install --locked maturin --version $MATURIN_VERSION
 
 # Build du moteur Rust (Evidence Engine)
@@ -41,8 +42,7 @@ WORKDIR /build/gsie_evidence
 COPY GSIE/ENGINES/EVIDENCE_ENGINE/rust/pyproject.toml GSIE/ENGINES/EVIDENCE_ENGINE/rust/Cargo.toml ./
 COPY GSIE/ENGINES/EVIDENCE_ENGINE/rust/Cargo.lock ./
 COPY GSIE/ENGINES/EVIDENCE_ENGINE/rust/src ./src
-RUN . "$HOME/.cargo/env" && \
-    maturin build --release && \
+RUN maturin build --release && \
     ls -la target/wheels
 
 WORKDIR /build/api
@@ -64,7 +64,7 @@ RUN uv pip install --system --no-deps .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
 # --- Stage final ---
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS runtime
 
 WORKDIR /app
 

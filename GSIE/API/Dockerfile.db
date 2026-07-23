@@ -2,30 +2,34 @@
 # Construit Apache AGE par-dessus l'image postgis/postgis officielle.
 # AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
 
-FROM postgis/postgis:16-3.4
+FROM postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
 
 # Arguments de build pour la version d'Apache AGE
 ARG AGE_VERSION=1.5.0
 ARG AGE_PACKAGE=apache-age-1.5.0
+ARG AGE_SHA256=b41abaf5fc89d6a5bcb62a63a6b2fc4b7d0d1530869879b6cc85df931b333b5d
 
 # Installation des dépendances de compilation
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    bison \
     curl \
     ca-certificates \
+    flex \
     postgresql-server-dev-16 \
     && rm -rf /var/lib/apt/lists/*
 
 # Téléchargement et compilation d'Apache AGE
-RUN curl -LJO "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
+RUN curl --fail --location --output "${AGE_PACKAGE}-src.tar.gz" "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
+    && echo "${AGE_SHA256}  ${AGE_PACKAGE}-src.tar.gz" | sha256sum -c - \
     && tar -xvzf "${AGE_PACKAGE}-src.tar.gz" \
     && cd "${AGE_PACKAGE}" \
-    && make PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config install \
+    && make PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config with_llvm=no install \
     && cd .. \
     && rm -rf "${AGE_PACKAGE}" "${AGE_PACKAGE}-src.tar.gz"
 
 # Nettoyage des dépendances de compilation (image plus légère)
-RUN apt-get purge -y build-essential postgresql-server-dev-16 curl \
+RUN apt-get purge -y bison build-essential flex postgresql-server-dev-16 curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
