@@ -4,7 +4,7 @@
 |---|---|---|---|---|---|
 | GSIE-PROMPT-0001 | Claude via Devin | Contre-audit du jalon de fiabilité | BLOQUÉE | Snapshot local à rendre accessible | Codex |
 | GSIE-PROMPT-0002 | GLM 5.2 via Devin | Matrice de validation des trois dépôts | BLOQUÉE | Snapshot local à rendre accessible | Codex |
-| GSIE-PROMPT-0003 | Claude via Devin | Contre-audit de la refondation constitutionnelle | PRÊTE | Snapshot `3616b78` | Codex puis Fondateur |
+| GSIE-PROMPT-0003 | Claude via Devin | Contre-audit de la refondation constitutionnelle | VALIDÉE | Rapport `694d81d`, snapshot `3616b78` | Codex — RFC en revue |
 
 ## Règle de mise à jour
 

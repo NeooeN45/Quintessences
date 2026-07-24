@@ -2,12 +2,14 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | PRÊTE — contre-audit en lecture seule |
+| Statut | VALIDÉE — preuves reproduites par Codex |
+| Verdict sur les RFC | EN_REVUE — 3 P0, 10 P1, 6 P2 et 3 observations |
 | Agent cible | Claude |
 | Environnement | Claude Code ou Cowork via Devin |
 | Dépôt | Quintessences |
 | Branche | `fix/enterprise-reliability-2026-07-21` |
 | Commit de départ | `3616b78` |
+| Rapport validé | `23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md` (`694d81d`) |
 | Orchestrateur | Codex |
 | Relecteur | Codex puis Fondateur |
 | Priorité | P0 |
