@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-24 — **DEC-000033 validée** : orientation de la refondation constitutionnelle. La Vision canonique et la Constitution appartiennent au même **bloc fondateur d'autorité 100** ; en cas de contradiction, **la Constitution prévaut** jusqu'à révision formelle et cohérente du bloc. **RFC-0023 et RFC-0024 restent `Proposé — EN_REVUE`** après le contre-audit `GSIE-PROMPT-0003` (rapport `694d81d`, 3 P0 et 10 P1). **Aucune Constitution `Locked` n'a été modifiée** et aucune adoption n'est prononcée. Les jalons de fiabilité du 2026-07-22 (**DEC-000031 / DEC-000032**) restent acquis et tracés dans `CHANGELOG.md`. |
+| **Dernière mise à jour** | 2026-07-24 — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
 
 ---
 
@@ -465,19 +465,21 @@ l'orientation et un texte en vigueur se résout en faveur du texte en vigueur.
 
 ## Prochaine étape
 
-### P0 — Refondation constitutionnelle (EN_REVUE)
+### P0 — Refondation constitutionnelle (corrections appliquées, EN_REVUE)
 
-1. Corriger `RFC-0023` et `RFC-0024` conformément au rapport de contre-audit
-   archivé au commit `694d81d`
-   (`23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md`).
-2. Traiter les **3 constats P0** et les **10 constats P1**, et justifier tout
-   constat écarté.
-3. Refaire un **contre-audit indépendant** ; aucun P0 résiduel n'est
+1. Les corrections des **3 P0** sont appliquées dans `RFC-0023` et
+   `RFC-0024`. Leur clôture formelle reste soumise au nouveau contre-audit.
+2. `RFC-0025` et `RFC-0026` portent la future procédure des textes cibles.
+   Elles restent `Brouillon`, sans texte constitutionnel cible et avec
+   adoption interdite.
+3. Traiter les **7 P1 encore ouverts** : C-05, C-08, C-09, C-10, C-11, C-12
+   et C-13. C-04, C-06 et C-07 sont traités avec le lot P0.
+4. Refaire un **contre-audit indépendant** ; aucun P0 résiduel n'est
    acceptable avant présentation au Fondateur.
-4. **Ne modifier aucun document `Locked`** avant adoption formelle : ni
+5. **Ne modifier aucun document `Locked`** avant adoption formelle : ni
    `GSIE-FND-001`, ni `GSIE-FND-002`, ni `GSIE-CON-000`.
 
-Ce jalon n'autorise aucune autonomie critique, aucune licence finale de
+Ce jalon n'autorise aucune autonomie R3-R5, aucune licence finale de
 composant et aucune création de `VISION.md` canonique.
 
 **Phase 4 — Implémentation (active — DEC-000017 / GSIE-DIR-0011,

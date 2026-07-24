@@ -2,10 +2,10 @@
 
 | Champ | Valeur |
 |---|---|
-| **Statut** | Proposé — programme de recherche, aucune autonomie critique autorisée |
+| **Statut** | Proposé — EN_REVUE, aucune autonomie critique autorisée |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |
-| **Décision liée** | Aucune — décision à créer après revue |
+| **Décision liée** | `DEC-000033` — orientation uniquement, aucune adoption |
 | **Périmètre** | GSIE, applications, Hub, Ignis, IA et systèmes physiques |
 | **Nature** | Révision constitutionnelle et cadre de recherche préparatoire |
 | **Snapshot de rédaction** | `77639a07beb2b5445134920b6f89ad3db5805630` |
@@ -373,14 +373,41 @@ abstention explicite, jamais à une action par défaut.
 
 ## 16. Révisions constitutionnelles envisagées
 
-Après recherche et contre-audit, une nouvelle édition pourrait concerner :
+La présente RFC ne porte aucun texte constitutionnel cible et ne peut
+autoriser la modification ou la publication d'un document `Locked`.
 
-- `GSIE-CON-001` — remplacer « l'IA ne décide jamais » par une autorité
-  humaine, une délégation bornée et des interdictions selon le risque ;
+Son adoption éventuelle ne peut autoriser que les recherches et usages
+compatibles avec les Constitutions en vigueur. Toute évolution
+constitutionnelle liée à l'autonomie doit être portée par
+`RFC-0026 — Éditions constitutionnelles de l'autonomie graduée`, rédigée
+uniquement après obtention de preuves suffisantes et contenant le texte
+complet ainsi que le diff vérifiable de chaque édition cible.
+
+Le périmètre minimal de `RFC-0026` comprend :
+
+- `GSIE-CON-001` — remplacer l'interdiction absolue par une autorité humaine,
+  une délégation bornée et des interdictions graduées selon le risque ;
+- `GSIE-CON-004` — remplacer « la chaîne de raisonnement, étape par étape »
+  par une justification externe reproductible conforme au §11, sans
+  affaiblir les cinq questions fondamentales, les sources, les règles, les
+  calculs, les hypothèses, les incertitudes ni les limites ;
 - `AI_CONSTITUTION.md` — réviser le préambule, IA-1, IA-2, IA-3, IA-4,
   IA-5, IA-8, les anti-lois et la déclaration finale ;
 - `GSIE-FND-001` — clarifier que l'IA n'est jamais une autorité
   scientifique autonome, même lorsqu'une exécution bornée est autorisée.
+
+La séquence constitutionnelle obligatoire est :
+
+1. démontrer les critères de preuve et de sécurité du programme de recherche ;
+2. rédiger dans `RFC-0026` les textes cibles complets et leurs différences ;
+3. réaliser un contre-audit indépendant de `RFC-0026` ;
+4. reproduire les preuves puis obtenir une décision explicite du Fondateur
+   nommant les versions et empreintes adoptées ;
+5. conserver les éditions antérieures ;
+6. publier atomiquement les nouvelles éditions et leurs dépendances.
+
+`DEC-000033` autorise la correction de la présente RFC. Elle n'autorise ni
+révision constitutionnelle, ni autonomie R3, R4 ou R5.
 
 Cette RFC ne propose pas d'affaiblir :
 
@@ -430,7 +457,8 @@ antérieure et peut être supersédée uniquement par une nouvelle RFC.
 
 ## 20. Arbitrage du Fondateur déjà recueilli
 
-Le 24 juillet 2026, le Fondateur a validé :
+Le 24 juillet 2026, le Fondateur a validé dans `DEC-000033` l'orientation
+suivante :
 
 - la séparation entre refondation multi-domaines et autonomie ;
 - le maintien de l'autonomie décisionnelle comme programme de recherche
@@ -438,6 +466,6 @@ Le 24 juillet 2026, le Fondateur a validé :
 - l'absence d'autonomie critique tant que la qualité et la sécurité ne sont
   pas démontrées.
 
-Cet arbitrage autorise la rédaction et le contre-audit de la RFC. Il ne vaut
-ni adoption finale, ni modification constitutionnelle, ni autorisation
-d'exécution autonome.
+Cet arbitrage autorise la correction et le contre-audit de la présente RFC.
+Il ne vaut ni adoption finale, ni modification constitutionnelle, ni
+autorisation d'exécution autonome.

@@ -5,11 +5,13 @@
 | Élément | État |
 |---|---|
 | `DEC-000033` | **Validated** — décision d'**orientation** uniquement, aucune adoption |
-| `RFC-0023` — identité, périmètre, propriété intellectuelle | `Proposé — EN_REVUE` |
-| `RFC-0024` — autonomie graduée selon le risque | `Proposé — EN_REVUE` |
-| Contre-audit validé | `GSIE-PROMPT-0003` |
-| Rapport | commit `694d81d` — `23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md` |
-| À corriger | **3 constats P0** et **10 constats P1** |
+| `RFC-0023` — identité, périmètre, propriété intellectuelle | `Proposé — EN_REVUE` ; corrections P0 appliquées |
+| `RFC-0024` — autonomie graduée selon le risque | `Proposé — EN_REVUE` ; corrections P0 appliquées |
+| `RFC-0025` — éditions fondatrices identité/PI | `Brouillon` — textes cibles absents, adoption interdite |
+| `RFC-0026` — éditions constitutionnelles autonomie | `Brouillon dormant` — preuves et textes cibles absents |
+| Contre-audit validé | `GSIE-PROMPT-0003`, rapport au commit `694d81d` |
+| État des constats | P0 corrigés mais non clôturés avant contre-audit ; C-04/C-06/C-07 traités ; **7 P1 ouverts** |
+| P1 encore ouverts | C-05, C-08, C-09, C-10, C-11, C-12 et C-13 |
 | Condition de sortie | **nouveau contre-audit indépendant obligatoire** avant toute adoption |
 
 Ce jalon n'autorise **ni** la modification d'un texte `Locked`, **ni** une

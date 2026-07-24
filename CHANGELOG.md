@@ -3,6 +3,28 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+## [RFC-0023 / RFC-0024 — CORRECTIONS P0 DU CONTRE-AUDIT] - 2026-07-24
+
+- Les corrections des **3 constats P0** du rapport `694d81d` sont appliquées
+  aux RFC de cadrage, sans valoir clôture avant nouveau contre-audit.
+- **C-01** : `RFC-0025` et `RFC-0026` deviennent les véhicules exclusifs des
+  futurs textes constitutionnels complets, de leurs diffs et empreintes.
+  Elles sont créées comme enveloppes non adoptables ; aucun texte `Locked`
+  n'est modifié.
+- **C-02** : Vision et Constitution appartiennent au même bloc fondateur
+  d'autorité `100` ; la Constitution prévaut en cas de conflit et la revue
+  annuelle de la Vision reste non normative.
+- **C-03** : `GSIE-CON-004` est explicitement inclus dans le futur périmètre
+  de `RFC-0026`, avec une justification externe reproductible qui préserve
+  les cinq questions fondamentales et les métadonnées d'explicabilité.
+- Les constats liés **C-04, C-06 et C-07** sont également traités. **7 P1
+  restent ouverts** : C-05, C-08, C-09, C-10, C-11, C-12 et C-13.
+- Les RFC restent `EN_REVUE`. Cette étape n'autorise ni adoption, ni création
+  d'une `VISION.md` canonique, ni licence finale, ni autonomie R3-R5.
+- Contrôles réussis : cohérence de gouvernance, registre des sources de
+  vérité et vérification du diff. Un nouveau contre-audit indépendant reste
+  obligatoire.
+
 ## [DEC-000033 — ORIENTATION DE LA REFONDATION CONSTITUTIONNELLE] - 2026-07-24
 
 - Orientation **multi-domaines** confirmée : Quintessences regroupe le

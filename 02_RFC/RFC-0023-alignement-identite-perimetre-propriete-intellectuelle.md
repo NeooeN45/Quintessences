@@ -2,10 +2,10 @@
 
 | Champ | Valeur |
 |---|---|
-| **Statut** | Proposé — contre-audit et décision requis |
+| **Statut** | Proposé — EN_REVUE, nouveau contre-audit requis |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |
-| **Décision liée** | Aucune — décision à créer après revue |
+| **Décision liée** | `DEC-000033` — orientation uniquement, aucune adoption |
 | **Périmètre** | Quintessences, GSIE, Forge, Hub et applications |
 | **Nature** | Révision constitutionnelle préparatoire |
 | **Snapshot de rédaction** | `77639a07beb2b5445134920b6f89ad3db5805630` |
@@ -31,9 +31,11 @@ une politique de propriété intellectuelle décidée par composant, sans
 affaiblir la transparence scientifique, la traçabilité, la sécurité ni les
 droits des utilisateurs.
 
-Cette RFC ne modifie aucun texte constitutionnel à elle seule. Une décision
-formelle du Fondateur et une nouvelle édition des documents concernés sont
-obligatoires.
+Cette RFC ne modifie aucun texte constitutionnel à elle seule et ne porte pas
+le texte cible des nouvelles éditions. Les éditions complètes, leurs
+différences et leur séquence de publication doivent être portées par
+`RFC-0025`. Aucune décision ni publication d'un document `Locked` ne peut être
+fondée sur la seule présente RFC.
 
 ## 2. Problème
 
@@ -124,9 +126,32 @@ La Vision conserve les engagements suivants :
 - incertitudes et limites toujours visibles ;
 - pérennité et indépendance de la direction scientifique.
 
-Le registre des sources de vérité attribue à `VISION.md` une autorité
-supérieure à la Constitution, un propriétaire `Fondateur`, un état
-`canonique` et une revue au minimum annuelle ou après toute refondation.
+La Vision canonique et la Constitution appartiennent au même **bloc
+fondateur**, avec une autorité de registre égale à `100`.
+
+La Vision exprime la mission, l'ambition et le périmètre durable. La
+Constitution définit les lois et garde-fous applicables. En cas de
+contradiction, la Constitution prévaut jusqu'à révision formelle et cohérente
+du bloc fondateur.
+
+Le registre attribue à `VISION.md` un propriétaire `Fondateur`, un état
+`canonique` et l'autorité `100`. Sa liste de précédence place la Constitution
+avant la Vision uniquement pour résoudre les contradictions au sein du bloc
+fondateur.
+
+La revue annuelle de la Vision est un contrôle de fraîcheur sans pouvoir de
+modification normative. Toute modification de son sens exige cumulativement :
+
+1. une RFC portant le texte cible complet ;
+2. un contre-audit indépendant ;
+3. une décision explicite du Fondateur ;
+4. une nouvelle édition versionnée ;
+5. la conservation de l'édition antérieure ;
+6. la mise à jour des sources dépendantes.
+
+Cette règle applique l'arbitrage de `DEC-000033` et résout explicitement la
+contradiction interne de `GSIE-CON-000` entre la Vision au niveau documentaire
+0 et la Constitution comme plus haute autorité applicable.
 
 ## 6. Architecture d'identité proposée
 
@@ -254,25 +279,33 @@ Les services cloud ou modèles propriétaires sont autorisés si :
 
 ## 8. Révisions constitutionnelles proposées
 
-Après adoption, une nouvelle édition cohérente doit être préparée pour :
+La présente RFC ne porte aucune édition constitutionnelle cible.
+`RFC-0025 — Éditions fondatrices d'identité, de périmètre et de propriété
+intellectuelle` doit contenir le texte complet et le diff vérifiable des
+nouvelles éditions. Son périmètre minimal comprend :
 
 - `GSIE-FND-001` — identité, ambition, champ environnemental et
   déclaration fondatrice ;
 - `GSIE-FND-002` — définition officielle et champ d'application ;
 - `GSIE-CON-008` — vision multi-domaines et propriété intellectuelle ;
+- `GSIE-CON-009` — articulation entre ouverture, reproductibilité
+  scientifique et licence par composant ;
 - `SCIENTIFIC_CONSTITUTION.md` — domaines de connaissance et distinction
   entre ouverture scientifique et licence logicielle ;
-- `GSIE-CON-000` — uniquement les anciennes mentions d'identité, sans
-  affaiblir sa primauté.
+- `GSIE-CON-000` — anciennes mentions d'identité et formalisation du bloc
+  fondateur, sans affaiblir la primauté de la Constitution en cas de conflit.
 
-Les anciennes éditions sont conservées pour audit. Aucun historique n'est
-supprimé.
+`RFC-0025` doit être contre-auditée indépendamment avant toute décision
+d'adoption. Les anciennes éditions sont conservées pour audit. Aucun
+historique n'est supprimé.
 
 ## 9. Registre et documents impactés
 
-Après adoption :
+Après adoption de `RFC-0025` et publication atomique du bloc fondateur :
 
-1. ajouter `VISION.md` au registre avec l'autorité la plus élevée ;
+1. ajouter `VISION.md` au registre avec l'autorité `100`, dans le même bloc
+   que la Constitution, et conserver la Constitution avant la Vision dans la
+   précédence de résolution des conflits ;
 2. inclure tous les documents constitutionnels, pas uniquement
    `GSIE-CON-0*.md`, dans le corpus constitutionnel ;
 3. mettre à jour `VISION_HISTORY.md` avec la nouvelle vision adoptée ;
@@ -283,21 +316,35 @@ Après adoption :
 
 ## 10. Séquence d'adoption
 
-1. contre-audit constitutionnel, juridique, scientifique et technique ;
-2. correction de la présente RFC ;
-3. validation explicite du Fondateur ;
-4. création de la décision d'adoption ;
-5. conservation des éditions antérieures ;
-6. publication de la nouvelle Vision et des nouvelles éditions
-   constitutionnelles dans un même changement cohérent ;
-7. mise à jour descendante de toutes les sources dépendantes ;
-8. exécution des contrôles documentaires et de la CI ;
-9. revue indépendante du diff final.
+1. correction des constats P0 et P1 de la présente RFC ;
+2. contre-audit constitutionnel, juridique, scientifique et technique de la
+   RFC corrigée ;
+3. rédaction de `RFC-0025` avec le texte complet et le diff de chaque édition
+   cible, sans modifier les documents `Locked` en vigueur ;
+4. contre-audit indépendant de `RFC-0025` et reproduction des preuves par
+   Codex ;
+5. validation explicite du Fondateur par une décision d'adoption nommant les
+   RFC, versions et empreintes des textes cibles ;
+6. conservation des éditions antérieures ;
+7. publication atomique de la nouvelle Vision et des nouvelles éditions
+   constitutionnelles ;
+8. mise à jour descendante de toutes les sources dépendantes ;
+9. exécution des contrôles documentaires et de la CI ;
+10. revue indépendante du diff final publié.
+
+`DEC-000033` autorise la correction de la présente RFC et exige un nouveau
+contre-audit avant toute présentation au Fondateur. La préparation de
+`RFC-0025` reste sans effet normatif. Elle n'autorise ni adoption, ni
+publication, ni modification d'un document `Locked`.
 
 ## 11. Critères d'acceptation
 
 - une seule identité actuelle de GSIE existe dans les sources canoniques ;
-- la Vision de niveau 0 est enregistrée et possède un propriétaire ;
+- la Vision est enregistrée avec l'autorité `100`, dans le même bloc que la
+  Constitution, avec primauté de la Constitution en cas de conflit ;
+- sa revue annuelle ne permet aucune modification de sens hors RFC ;
+- `RFC-0025` contient les textes cibles complets et leurs différences
+  vérifiables ;
 - les rôles de Quintessences, GSIE, Forge, GeoSylva, Hub et Ignis sont
   non ambigus ;
 - aucune application future n'est créée sans validation métier ;
@@ -329,13 +376,14 @@ comprendre et, si nécessaire, reconstruire l'état précédent.
 
 ## 14. Arbitrage du Fondateur déjà recueilli
 
-Le 24 juillet 2026, le Fondateur a validé la stratégie suivante :
+Le 24 juillet 2026, le Fondateur a validé dans `DEC-000033` la stratégie
+suivante :
 
 - procéder à la refondation multi-domaines ;
 - traiter séparément l'autonomie décisionnelle ;
 - conserver cette autonomie comme programme de recherche encadré tant que
   sa sécurité et sa qualité ne sont pas démontrées.
 
-Cet arbitrage autorise la rédaction et le contre-audit de la RFC. Il ne vaut
-pas encore adoption du texte final ni autorisation de modifier les documents
-constitutionnels.
+Cet arbitrage autorise la correction et le contre-audit de la présente RFC,
+ainsi que la préparation de `RFC-0025`. Il ne vaut ni adoption du texte final,
+ni autorisation de modifier les documents constitutionnels.
