@@ -1,5 +1,22 @@
 # ROADMAP — Quintessences / GSIE
 
+## Jalon P0 — Refondation constitutionnelle (EN_REVUE)
+
+| Élément | État |
+|---|---|
+| `DEC-000033` | **Validated** — décision d'**orientation** uniquement, aucune adoption |
+| `RFC-0023` — identité, périmètre, propriété intellectuelle | `Proposé — EN_REVUE` |
+| `RFC-0024` — autonomie graduée selon le risque | `Proposé — EN_REVUE` |
+| Contre-audit validé | `GSIE-PROMPT-0003` |
+| Rapport | commit `694d81d` — `23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md` |
+| À corriger | **3 constats P0** et **10 constats P1** |
+| Condition de sortie | **nouveau contre-audit indépendant obligatoire** avant toute adoption |
+
+Ce jalon n'autorise **ni** la modification d'un texte `Locked`, **ni** une
+autonomie critique (R3, R4, R5), **ni** la licence finale d'un composant.
+Les textes constitutionnels en vigueur restent applicables jusqu'à
+publication d'une nouvelle édition.
+
 ## Phase 1 — Foundation (clôturée ✅)
 
 > Lancée officiellement par **GSIE-DIR-0003**.

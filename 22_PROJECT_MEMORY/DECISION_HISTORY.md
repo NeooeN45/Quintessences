@@ -64,6 +64,12 @@
 |---|---|---|---|
 | DEC-000032 | Orchestration contrôlée des agents IA ; Codex orchestre, Claude contre-audite, GLM 5.2 exécute les tâches bornées via Devin | RFC-0022 | VALIDATED |
 
+## 2026-07-24
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000033 | Orientation de la refondation constitutionnelle : Quintessences multi-domaines, autonomie maintenue comme recherche encadrée, Vision et Constitution dans le même bloc fondateur d'autorité 100 avec primauté de la Constitution | Fondateur / RFC-0023 et RFC-0024 EN_REVUE | VALIDATED |
+
 ---
 
 > Chaque nouvelle décision ajoute une ligne datée ci-dessus.

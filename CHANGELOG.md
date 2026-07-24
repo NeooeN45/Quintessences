@@ -3,6 +3,37 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+## [DEC-000033 — ORIENTATION DE LA REFONDATION CONSTITUTIONNELLE] - 2026-07-24
+
+- Orientation **multi-domaines** confirmée : Quintessences regroupe le
+  programme, la marque, la plateforme et les verticales environnementales ;
+  GSIE (*General System Intelligence Engine*) est le socle commun ; GeoSylva
+  et Ignis restent les verticales prioritaires ; Forge est la fabrique de
+  données et le Hub l'interface de simulation et de coordination.
+- **Autonomie décisionnelle traitée séparément** et conservée comme
+  **programme de recherche encadré**, tant que sa qualité, sa sécurité, sa
+  responsabilité et son domaine de validité ne sont pas démontrés. Aucune
+  autonomie R3, R4 ou R5 n'est autorisée.
+- **Vision et Constitution placées dans le même bloc fondateur**, autorité de
+  registre `100`. La Vision exprime la mission et le périmètre durable, la
+  Constitution définit les lois et garde-fous.
+- **La Constitution prévaut en cas de contradiction**, jusqu'à révision
+  formelle et cohérente du bloc fondateur. La revue annuelle de la Vision est
+  un contrôle de fraîcheur, sans pouvoir de modification normative. Cette
+  règle lève l'ambiguïté entre la hiérarchie documentaire, qui nomme la Vision
+  au niveau 0, et `GSIE-CON-000`, qui déclare la Constitution plus haute
+  autorité applicable.
+- **RFC-0023 et RFC-0024 maintenues `Proposé — EN_REVUE`** après contre-audit
+  indépendant (`GSIE-PROMPT-0003`) : 3 constats P0 bloquants, 10 P1, 6 P2 et
+  3 observations. Un nouveau contre-audit est obligatoire avant adoption.
+- Rapport de contre-audit archivé dans
+  `23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md`,
+  commit `694d81d`.
+- Cette décision **n'autorise pas** : l'adoption des RFC-0023/0024, la
+  création d'une `VISION.md` canonique, la modification d'un document
+  constitutionnel ou `Locked`, une autonomie critique en production, une
+  licence finale de composant, ni l'ouverture de Forge aux partenaires.
+
 ## [GSIE — CONTRE-AUDIT DE FIABILITÉ ET BUILD LINUX] - 2026-07-22
 
 - RBAC explicite sur toutes les opérations des moteurs ; les routes de statut

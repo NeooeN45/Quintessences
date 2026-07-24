@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-22 — **DEC-000031 / DEC-000032** : socle GSIE contre-audité (RBAC moteurs, WebSocket RGPD, outbox expurgé, rotation atomique), build Linux non-root vérifié et CI rendue réellement bloquante ; 441 tests Python réussis, 63 ignorés, couverture 88 %. Codex organise et vérifie les travaux IA sans acceptation automatique. L'unicité LanceDB est garantie sur volume local partagé ; le multi-hôtes reste une barrière d'architecture. |
+| **Dernière mise à jour** | 2026-07-24 — **DEC-000033 validée** : orientation de la refondation constitutionnelle. La Vision canonique et la Constitution appartiennent au même **bloc fondateur d'autorité 100** ; en cas de contradiction, **la Constitution prévaut** jusqu'à révision formelle et cohérente du bloc. **RFC-0023 et RFC-0024 restent `Proposé — EN_REVUE`** après le contre-audit `GSIE-PROMPT-0003` (rapport `694d81d`, 3 P0 et 10 P1). **Aucune Constitution `Locked` n'a été modifiée** et aucune adoption n'est prononcée. Les jalons de fiabilité du 2026-07-22 (**DEC-000031 / DEC-000032**) restent acquis et tracés dans `CHANGELOG.md`. |
 
 ---
 
@@ -362,6 +362,9 @@ brainstorming v5 n'est adoptée.
 - **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire. **Audit qualité du 2026-07-20** (0 P0, aucune valeur non sourcée détectée, ADR-007 respecté) a identifié des P1/P2 de cohérence — corrigés le même jour : typage enum strict sur 6 DTO Pydantic (str → StrEnum), 4 règles métier conditionnelles répliquées dans `resources/validators.py` (reflètent des CheckConstraint SQL déjà en place), index manquants sur les 10 FK `source_id` (migration `0012_forestry_source_id_indexes.py`). 347 tests unitaires (0 échec).
 - **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
 - **DEC-000030** — Adoption de RFC-0018 (identification botanique Pl@ntNet), volet en ligne uniquement (§5), par tranches verticales. **Tranche 1/N (schéma de données) complète le 2026-07-20** : `BotanicalIdentificationRequest`/`Result`/`Decision`, registre de types 86→89, 339 tests (0 échec). Tranches 2-4 (client Pl@ntNet, routes serveur, app mobile) restent à faire, tranche 2 bloquée par la confirmation écrite Pl@ntNet sur les conditions commerciales.
+- **DEC-000031** — Socle de fiabilité d'entreprise
+- **DEC-000032** — Orchestration contrôlée des agents IA
+- **DEC-000033** — Orientation de la refondation constitutionnelle (décision d'orientation, **non** décision d'adoption)
 
 ## Documents structurants
 
@@ -451,7 +454,31 @@ spécialisation). La connaissance est le véritable produit.
 toujours subordonnés aux fondations, aux sources scientifiques et aux portes
 qualité.
 
+**DEC-000033 (2026-07-24)** trace l'orientation multi-domaines de
+Quintessences et le rang de la future Vision. Il s'agit d'une décision
+d'**orientation**, pas d'adoption : les textes constitutionnels actuels —
+`GSIE-FND-001`, `GSIE-FND-002`, `GSIE-CON-000` à `GSIE-CON-010`,
+`AI_CONSTITUTION.md`, `SCIENTIFIC_CONSTITUTION.md` et
+`TECHNICAL_CONSTITUTION.md` — **restent intégralement applicables** jusqu'à
+l'adoption puis la publication de nouvelles éditions. Toute divergence entre
+l'orientation et un texte en vigueur se résout en faveur du texte en vigueur.
+
 ## Prochaine étape
+
+### P0 — Refondation constitutionnelle (EN_REVUE)
+
+1. Corriger `RFC-0023` et `RFC-0024` conformément au rapport de contre-audit
+   archivé au commit `694d81d`
+   (`23_QUALITY_MANAGEMENT/AUDITS/2026-07-24_CONTRE_AUDIT_RFC_0023_0024.md`).
+2. Traiter les **3 constats P0** et les **10 constats P1**, et justifier tout
+   constat écarté.
+3. Refaire un **contre-audit indépendant** ; aucun P0 résiduel n'est
+   acceptable avant présentation au Fondateur.
+4. **Ne modifier aucun document `Locked`** avant adoption formelle : ni
+   `GSIE-FND-001`, ni `GSIE-FND-002`, ni `GSIE-CON-000`.
+
+Ce jalon n'autorise aucune autonomie critique, aucune licence finale de
+composant et aucune création de `VISION.md` canonique.
 
 **Phase 4 — Implémentation (active — DEC-000017 / GSIE-DIR-0011,
 2026-07-13).** La Phase 3 est clôturée (10/10 livrables Validated). Le
