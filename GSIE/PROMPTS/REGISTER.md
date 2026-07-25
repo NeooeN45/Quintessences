@@ -18,7 +18,7 @@
 | GSIE-PROMPT-0014 | GLM 5.2 via Devin | Reasoning tranche 1 — R1 tests d'invariants des schémas | VALIDÉE | 36 tests verts | Architecte — accepté |
 | GSIE-PROMPT-0015 | SWE 1.7 via Devin | Reasoning tranche 1 — R2 cœur d'inférence | REJETÉE | Aucun fichier produit, deux tentatives | Architecte — repris en interne |
 | GSIE-PROMPT-0016 | SWE 1.7 via Devin | Reasoning tranche 1 — R3 tests adversariaux du moteur | VALIDÉE | 18 tests, 8 défauts trouvés | Architecte — accepté |
-| GSIE-PROMPT-0017 | GLM 5.2 via Devin | Reasoning tranche 1 — R4 routeur et intégration | VALIDÉE | Intégration non exécutée | Architecte — accepté sous réserve |
+| GSIE-PROMPT-0017 | GLM 5.2 via Devin | Reasoning tranche 1 — R4 routeur et intégration | VALIDÉE | 9 tests d'intégration verts (PostgreSQL/PostGIS via testcontainers) | Architecte — accepté |
 
 ## Règle de mise à jour
 
