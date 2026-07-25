@@ -122,7 +122,9 @@ La Vision conserve les engagements suivants :
 - qualité avant vitesse ;
 - science et terrain avant affirmation ;
 - accessibilité des outils ;
-- données utilisateurs jamais revendues ;
+- données utilisateurs et dérivés identifiants ou ré-identifiables jamais
+  cédés ni exploités par un tiers pour ses finalités propres, conformément
+  au §7.2.1 ;
 - incertitudes et limites toujours visibles ;
 - pérennité et indépendance de la direction scientifique.
 
@@ -254,13 +256,149 @@ Les catégories possibles comprennent :
 
 ### 7.2 Éléments non négociables
 
-Quel que soit le régime de licence :
+Ces obligations s'appliquent quel que soit le régime de licence, le montage
+contractuel, la contrepartie, le financeur ou le fournisseur technique.
 
-- les données utilisateurs ne sont pas revendues ;
+#### 7.2.1 Protection des données utilisateurs
+
+Les données utilisateurs comprennent les données fournies, observées,
+créées ou corrigées par un utilisateur ou pour son compte, notamment les
+identifiants, géolocalisations, relevés métier, traces d'usage, annotations
+et exports.
+
+La même protection couvre tout dérivé permettant raisonnablement
+d'identifier, de distinguer, de profiler ou de ré-identifier une personne,
+une organisation, une propriété, une parcelle ou une opération. Sont
+notamment concernés les données pseudonymisées, petits agrégats, profils,
+inférences, représentations vectorielles, extraits, jeux dérivés et modèles
+susceptibles de mémoriser ces informations.
+
+Il est interdit :
+
+- de vendre, céder, concéder sous licence, louer, échanger, partager,
+  transférer ou mettre ces données ou dérivés à disposition d'un tiers pour
+  ses finalités propres ;
+- de contourner cette interdiction par une prestation gratuite, un échange
+  de services, un financement, un produit dérivé, une anonymisation
+  insuffisante ou une contrepartie indirecte ;
+- de permettre à un fournisseur, partenaire ou financeur de les réutiliser
+  pour entraîner ses modèles, constituer son propre corpus, profiler les
+  utilisateurs, faire de la publicité ou développer une offre concurrente ;
+- de traiter les données utilisateurs comme un actif librement transférable
+  lors d'une cession d'activité, d'actifs ou de contrôle.
+
+Un traitement par un tiers n'est pas une cession uniquement si toutes les
+conditions suivantes sont satisfaites :
+
+1. il est strictement nécessaire à une finalité demandée par l'utilisateur
+   ou au fonctionnement documenté du service ;
+2. le tiers agit exclusivement sur instruction de Quintessences ou de
+   l'utilisateur concerné, sans finalité propre ni droit de réutilisation ;
+3. les données sont minimisées et l'accès est limité dans le temps ;
+4. un contrat impose confidentialité, sécurité, suppression ou restitution,
+   absence d'entraînement et droit d'audit ;
+5. le flux, sa finalité, ses catégories de données, son destinataire et sa
+   durée de conservation sont inscrits dans un registre auditable ;
+6. les droits applicables d'accès, d'export, de correction et de suppression
+   restent effectifs.
+
+Restent possibles, sans créer de droit général d'exploitation pour un tiers :
+
+- un export ou partage déclenché par l'utilisateur vers un destinataire et
+  une finalité qu'il choisit explicitement ;
+- une communication strictement imposée par la loi, documentée et limitée
+  au minimum requis ;
+- la publication de statistiques réellement anonymes après une analyse
+  documentée du risque de ré-identification et une approbation indépendante.
+
+La pseudonymisation seule n'est jamais considérée comme une anonymisation.
+Les données dont les droits ne sont pas formellement vérifiés restent en
+quarantaine privée et ne sont ni publiées, ni partagées, ni utilisées pour
+entraîner un modèle.
+
+Une opération de cession d'activité, d'actifs ou de contrôle ne transfère
+aucun droit d'exploitation propre sur les données utilisateurs. Toute
+continuité de service exige le maintien des mêmes finalités et garanties,
+ainsi que le renouvellement ou transfert valable de la relation avec
+l'utilisateur ; à défaut, les données restent isolées ou sont supprimées
+selon les obligations applicables.
+
+#### 7.2.2 Absence d'exclusivité
+
+Aucun organisme, client, partenaire ou financeur ne reçoit une exclusivité,
+totale ou partielle, sur :
+
+- Quintessences, GSIE ou Forge ;
+- une application, une verticale métier ou un domaine environnemental ;
+- une capacité scientifique, un moteur, un modèle, une API ou un standard
+  d'interopérabilité essentiel ;
+- un territoire, une catégorie d'utilisateurs ou un type d'usage ;
+- un corpus commun, un résultat de recherche ou une évolution financée dans
+  le cadre de l'écosystème.
+
+Est interdite toute clause qui empêche ou limite Quintessences dans sa
+capacité à rechercher, développer, exploiter, publier ou proposer une
+fonction identique ou équivalente avec d'autres acteurs.
+
+Ne constituent pas une exclusivité :
+
+- la confidentialité des données propres d'un client ;
+- une intégration ou une configuration spécifique à son système ;
+- une licence non exclusive ;
+- une priorité de planification ou un pilote limité dans le temps, à
+  condition qu'aucun tiers ne soit juridiquement ou techniquement empêché de
+  mener une recherche ou un projet équivalent.
+
+Toute clause ambiguë ou produisant un effet équivalent à une exclusivité est
+présumée interdite jusqu'à une revue juridique indépendante et une décision
+motivée du Fondateur. Cette décision ne peut déroger aux interdictions
+ci-dessus ; elle peut seulement confirmer que la clause n'est pas exclusive.
+
+#### 7.2.3 Vérifiabilité externe des composants scientifiques
+
+Tout composant dont la sortie conditionne une affirmation scientifique
+publiée, un niveau de preuve, un diagnostic validé, une recommandation ou
+une connaissance canonique doit pouvoir être vérifié et contesté par un
+tiers qualifié indépendant.
+
+Cette exigence s'applique également aux composants propriétaires,
+confidentiels ou fournis comme service. La vérification peut être organisée
+par l'une des modalités suivantes :
+
+- code, règles et jeux de conformité ouverts ;
+- audit contrôlé du code, des règles, des données autorisées et des
+  configurations sous accord de confidentialité ;
+- implémentation de référence indépendante accompagnée de vecteurs de test
+  et de critères de conformité publics.
+
+Le tiers doit pouvoir au minimum :
+
+- identifier la version exacte du composant et de ses dépendances ;
+- examiner les sources, licences, règles, seuils et transformations qui
+  déterminent la sortie ;
+- reproduire un échantillon représentatif de résultats ;
+- tester les cas limites, contradictions, biais et modes de défaillance ;
+- contester un résultat et obtenir une réponse versionnée ;
+- vérifier que les corrections approuvées sont effectivement appliquées.
+
+La vérification est renouvelée après toute modification susceptible
+d'affecter les résultats. Son périmètre, l'identité et l'indépendance du
+vérificateur, les preuves examinées, les réserves et leur traitement sont
+conservés dans un rapport auditable.
+
+Un composant qui ne satisfait pas cette exigence peut rester un prototype
+interne, mais il ne peut être l'autorité unique d'une sortie présentée comme
+scientifiquement validée ou canonique. Son résultat reste explicitement non
+validé jusqu'à l'intervention d'un mécanisme vérifiable et d'une validation
+humaine compétente.
+
+#### 7.2.4 Autres invariants
+
+Quel que soit le composant :
+
 - les sources scientifiques et licences des données restent traçables ;
 - les résultats affichent provenance, incertitude et domaine de validité ;
 - la qualité scientifique n'est pas diminuée pour accélérer une livraison ;
-- aucun organisme ne reçoit une exclusivité totale sur l'écosystème ;
 - aucun financeur ne contrôle seul la direction scientifique ;
 - aucune publicité n'est intégrée aux outils métier ;
 - les utilisateurs conservent les droits prévus sur leurs données et
@@ -268,7 +406,10 @@ Quel que soit le régime de licence :
 
 ### 7.3 Services propriétaires temporaires
 
-Les services cloud ou modèles propriétaires sont autorisés si :
+La présente RFC n'autorise immédiatement aucun service cloud ou modèle
+propriétaire. Après adoption du cadre final par `RFC-0025`, leur usage
+temporaire pourra faire l'objet d'une décision documentée par composant si
+les conditions cumulatives suivantes sont satisfaites :
 
 - leur usage est documenté et budgété ;
 - aucun secret n'est exposé ;
@@ -350,9 +491,30 @@ publication, ni modification d'un document `Locked`.
 - aucune application future n'est créée sans validation métier ;
 - la politique de licence par composant est compatible avec les
   non-négociables du Fondateur ;
+- aucun flux tiers de données utilisateurs ou de dérivés identifiants ou
+  ré-identifiables ne poursuit une finalité propre au tiers ;
+- chaque traitement tiers autorisé est minimisé, contractuellement borné et
+  inscrit dans un registre auditable, sans droit d'entraînement ou de
+  réutilisation ;
+- aucune clause contractuelle n'accorde directement ou indirectement une
+  exclusivité totale ou partielle interdite par le §7.2.2 ;
+- chaque composant qui conditionne une sortie scientifique validée possède
+  une modalité de vérification externe, un vérificateur indépendant et un
+  rapport à jour ;
+- une sortie issue d'un composant non vérifiable ne peut recevoir un statut
+  scientifique validé ou canonique ;
+- chaque ancienne édition constitutionnelle est copiée octet pour octet
+  sous `00_CONSTITUTION/ARCHIVED/` et possède une entrée complète dans
+  `ARCHIVE_MANIFEST.json` ;
+- `ACTIVE_IDENTITY_PATHS.json` classe tous les documents portant l'identité
+  comme actifs, historiques ou explicitement étrangers à l'identité ;
+- `python3 tools/check_active_identity.py` réussit ;
+- les tests démontrent qu'une ancienne définition échoue dans un chemin
+  actif, réussit dans une archive manifestée et échoue dans un chemin non
+  classé ;
 - toutes les éditions antérieures restent auditables ;
-- `python tools/check_source_of_truth.py` réussit ;
-- les tests automatiques interdisent le retour des anciennes définitions.
+- `python3 tools/check_source_of_truth.py` réussit ;
+- `python3 tools/check_governance_consistency.py` réussit.
 
 ## 12. Risques et mesures
 
@@ -360,8 +522,11 @@ publication, ni modification d'un document `Locked`.
 |---|---|
 | Refondation trop large | Deux RFC séparées ; autonomie exclue de celle-ci |
 | Réécriture de l'histoire | Conservation des éditions et décisions antérieures |
-| Fermeture excessive | Décision par composant et critères publics |
+| Exploitation indirecte des données utilisateurs | Interdiction étendue aux cessions, licences, partages et dérivés ré-identifiables ; traitements tiers strictement bornés |
+| Exclusivité partielle déguisée | Interdiction par composant, verticale, territoire, usage et effet contractuel équivalent |
+| Fermeture scientifique excessive | Vérification indépendante obligatoire ou impossibilité de publier la sortie comme validée ou canonique |
 | Dispersion vers trop d'applications | Règle domaine d'abord, application après preuve métier |
+| Contrôle anti-régression incompatible avec les archives | Manifeste actif/historique exhaustif, archives octet pour octet, empreintes et tests positifs et négatifs |
 | Dépendance cloud | Contrats neutres, budgets, modes local et dégradé |
 | Communication trompeuse | Statuts, preuves et limites obligatoires |
 
