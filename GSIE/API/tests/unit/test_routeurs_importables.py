@@ -1,4 +1,4 @@
-"""Test de fumée — importabilité de tous les routeurs de moteurs.
+"""Test de fumée — importabilité de tous les routeurs de moteurs présents.
 
 Les routeurs ne sont chargés que par les tests d'intégration, qui exigent
 Docker (testcontainers + PostgreSQL/PostGIS). Sans ce test, un routeur dont
@@ -7,9 +7,14 @@ erronée — survit à ruff, mypy --strict et à toute la suite unitaire : il es
 mort à l'arrivée sans qu'aucune porte ne le voie.
 
 Ce test importe explicitement le sous-module ``router`` de chaque paquet
-moteur. Il ne valide aucune route, aucun contrat, aucune réponse — uniquement
-que le module se charge. C'est la porte la plus basique possible, et celle
-qui manquait.
+moteur qui en possède un. Il ne valide aucune route, aucun contrat, aucune
+réponse — uniquement que le module se charge. C'est la porte la plus basique
+possible, et celle qui manquait.
+
+La propriété vérifiée est « tout routeur présent s'importe », et non « tout
+moteur a un routeur » : un moteur en cours de construction (Diagnostic avant
+R4) n'a pas encore de routeur, et ce n'est pas un défaut. Le test saute
+silencieusement les paquets sans ``router.py``.
 
 Contexte : ``router.py`` du Reasoning Engine référençait
 ``status.HTTP_422_UNPROCESSABLE_CONTENT`` (introduit dans une version de
@@ -22,18 +27,25 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
+from pathlib import Path
 
 import gsie_api.engines as engines
 
 
 def test_tous_les_routeurs_sont_importables() -> None:
-    """Un routeur non importable est un module mort que les portes ne voient pas.
+    """Un routeur présent non importable est un module mort que les portes ne voient pas.
 
     Les routeurs ne sont charges que par les tests d'integration, qui exigent
     Docker. Sans ce test, un nom de constante errone ou un import casse survit
     a ruff, mypy et a toute la suite unitaire.
+
+    Un moteur sans ``router.py`` n'est pas un défaut : il est en cours de
+    construction. Le test saute silencieusement les paquets sans routeur.
     """
     for module in pkgutil.iter_modules(engines.__path__):
         if not module.ispkg:
             continue
+        chemin = Path(engines.__path__[0]) / module.name / "router.py"
+        if not chemin.exists():
+            continue  # moteur en cours de construction, pas un défaut
         importlib.import_module(f"gsie_api.engines.{module.name}.router")
