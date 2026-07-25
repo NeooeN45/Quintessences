@@ -62,6 +62,7 @@ jobs:
       - name: Validate source-of-truth registry
         run: |
           python tools/check_source_of_truth.py
+          python tools/check_governance_consistency.py
           python -m unittest discover -s tools/tests -p "test_*.py"
           python tools/check_ai_prompts.py
           python tools/check_build_consistency.py

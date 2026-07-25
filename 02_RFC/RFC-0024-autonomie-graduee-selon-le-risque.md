@@ -176,7 +176,7 @@ Action susceptible d'affecter :
 | **R2** | Diagnostic ou recommandation brouillon | Génération automatique, statut visible, correction humaine |
 | **R3** | Exécution numérique bornée, faible risque et réversible | Recherche seulement, délégation explicite et retour arrière requis |
 | **R4** | Décision matérielle, financière, juridique ou opérationnelle critique | Validation humaine préalable obligatoire |
-| **R5** | Sécurité humaine, incendie opérationnel, drone ou système physique | Aucune autorisation actuelle ; habilitation nominative §6.4, arrêt borné §12.1 et journal indépendant §15 obligatoires avant toute future expérimentation |
+| **R5** | Sécurité humaine, incendie opérationnel, drone ou système physique | Aucune autorisation actuelle ; les exigences opérationnelles applicables — habilitation nominative, arrêt borné, journal indépendant — sont portées par `RFC-0027`, dormante |
 
 Une fonction est classée selon son impact maximal raisonnablement
 prévisible, pas selon son fonctionnement nominal.
@@ -267,9 +267,16 @@ Le propriétaire du composant propose la classe et produit le dossier
 d'impact. Il ne peut ni assurer seul la contre-revue ni approuver seul son
 propre classement.
 
-Pour un même dossier, une personne ne peut cumuler aucun de ces rôles :
-proposant, contre-relecteur ou autorité de classification. L'indépendance est
-évaluée sur les responsabilités réelles, pas uniquement sur les intitulés de poste.
+Pour un même dossier, et **à partir de la classe R2**, une personne ne peut
+cumuler aucun de ces rôles : proposant, contre-relecteur ou autorité de
+classification. Le seuil applicable en R0 et R1 est défini au §6.3.1 bis.
+
+L'indépendance n'est pas déclarative. Elle est établie par au moins deux
+critères vérifiables parmi : absence de lien hiérarchique direct avec le
+proposant, absence de responsabilité sur le délai de livraison de la capacité,
+mandat ou budget distinct, déclaration d'absence de conflit d'intérêts datée et
+versionnée au registre. Un intitulé de poste ne suffit jamais, et une
+affirmation d'indépendance sans critère cité est réputée absente.
 
 | Classe proposée | Contre-revue indépendante minimale | Autorité de classification |
 |---|---|---|
@@ -287,10 +294,36 @@ livraison ne peuvent constituer à eux seuls cette contre-revue.
 Un agent IA peut préparer le dossier, rechercher des preuves ou signaler un
 risque. Il n'est jamais l'autorité humaine de classification.
 
-Si la séparation des rôles ou une compétence obligatoire n'est pas
-disponible, le classement reste provisoire et la capacité ne peut pas être
-activée. En cas de désaccord, la classe la plus élevée raisonnablement
-soutenue s'applique jusqu'à arbitrage.
+À partir de la classe R2, si la séparation des rôles ou une compétence
+obligatoire n'est pas disponible, le classement reste provisoire et la
+capacité ne peut pas être activée. En R0 et R1, le §6.3.1 bis s'applique.
+En cas de désaccord, la classe la plus élevée raisonnablement soutenue
+s'applique jusqu'à arbitrage.
+
+#### 6.3.1 bis Seuil applicable à un effectif réduit
+
+Lorsqu'aucun relecteur indépendant n'est disponible, une capacité **R0 ou R1**
+peut être classée par son propriétaire seul, à quatre conditions cumulatives :
+
+1. le classement est inscrit au registre avec la mention explicite
+   `contre_revue: absente` ;
+2. le dossier d'impact justifie pourquoi l'impact maximal raisonnablement
+   prévisible ne dépasse pas R1 ;
+3. le classement est réexaminé dès qu'un relecteur indépendant devient
+   disponible, et au plus tard à l'échéance périodique du §6.3.3 ;
+4. la capacité n'est ni rattachée à Ignis, ni liée à un système physique, ni
+   connectée à une publication, une décision, un actionneur ou un usage en
+   temps réel.
+
+Cette dérogation ne s'applique jamais à partir de R2 et ne dispense d'aucune
+autre exigence de la présente RFC. Elle est levée de plein droit dès qu'un
+relecteur indépendant est disponible.
+
+**Justification.** Une règle de séparation qu'aucune personne présente ne peut
+exécuter n'est pas une protection : elle est contournée, puis ignorée, et son
+existence donne l'illusion d'un contrôle. Le seuil place la contrainte là où le
+risque la justifie, et laisse un calcul sans effet métier être automatisé par
+l'équipe qui en répond.
 
 #### 6.3.2 Procédure
 
@@ -360,71 +393,6 @@ Pendant le recours :
 Le Fondateur constitue l'autorité de recours finale. Son arbitrage est écrit,
 motivé, lié aux avis divergents et versionné dans le registre. Il détermine
 la classe, pas l'autorisation d'usage, qui reste une décision séparée.
-
-### 6.4 Habilitation humaine R5
-
-La présente RFC ne crée aucune habilitation R5 et n'autorise aucun test,
-usage ou déploiement R5.
-
-Avant toute future expérimentation R5, une décision distincte du Fondateur
-désigne une **autorité d'habilitation R5** humaine, nommée et compétente pour
-le domaine concerné. Cette autorité est indépendante de l'implémentation de
-la capacité et de son objectif de livraison.
-
-La même décision désigne une **autorité de sécurité R5** responsable de
-l'analyse des dangers et de l'approbation des paramètres de sécurité. Elle
-peut être la même personne que l'autorité d'habilitation uniquement si ses
-compétences et son indépendance sont démontrées. Elle ne peut être ni
-l'implémenteur de la capacité, ni son opérateur, ni la personne responsable
-de son délai de livraison.
-
-Dans un contexte soumis à une chaîne de commandement, une autorisation
-réglementaire ou une compétence légale particulière, l'autorité compétente
-de l'organisme concerné demeure souveraine. Une décision interne de
-Quintessences ou du Fondateur ne s'y substitue jamais.
-
-L'autorité d'habilitation vérifie les compétences et délivre une
-habilitation individuelle. Le registre conserve au minimum :
-
-- l'identité de la personne et son moyen d'authentification individuel ;
-- le rôle, les formations, qualifications, expériences et évaluations
-  pratiques vérifiées ;
-- le système, la capacité, les actions, le territoire et le contexte
-  couverts ;
-- les limites, interdictions, conditions de supervision et modes dégradés ;
-- la réussite d'un exercice d'arrêt d'urgence, d'échec sûr et de reprise
-  manuelle sur la version concernée ;
-- l'autorité émettrice, les preuves examinées et les éventuelles réserves ;
-- un début et une fin de validité, pour une durée maximale de douze mois et
-  jamais au-delà de la validité des qualifications requises ;
-- les conditions de suspension, de retrait et de renouvellement.
-
-Une habilitation de groupe, un compte partagé ou une autorisation implicite
-liée au poste occupé sont interdits. Une expérimentation impliquant un effet
-physique comporte au minimum un opérateur habilité et un superviseur de
-sécurité distinct, tous deux capables de déclencher l'arrêt d'urgence.
-
-L'habilitation est immédiatement suspendue lorsque :
-
-- sa date de fin ou une qualification requise expire ;
-- la personne change de rôle, de capacité, de version ou de contexte
-  au-delà du périmètre autorisé ;
-- un exercice obligatoire échoue ou n'est pas réalisé à l'échéance ;
-- un incident, presque-incident ou écart de procédure met en doute la
-  compétence ou les limites de l'habilitation ;
-- le moyen d'authentification est perdu, partagé ou compromis ;
-- l'autorité d'habilitation, l'autorité opérationnelle compétente ou le
-  Fondateur ordonne la suspension.
-
-La suspension révoque immédiatement les droits techniques correspondants,
-préserve les journaux et interdit toute nouvelle action R5. La réactivation
-des droits n'est jamais automatique : elle exige l'analyse de la cause, les
-actions correctives, une nouvelle vérification des compétences et une décision
-versionnée de l'autorité d'habilitation.
-
-L'autorité d'habilitation tient un registre des habilitations actives,
-expirées, suspendues et révoquées. Chaque action R5 référence l'habilitation
-exacte qui l'a autorisée.
 
 ## 7. Régime expérimental proposé après adoption
 
@@ -589,6 +557,10 @@ L'interface doit toujours rendre visible :
 - les actions disponibles : accepter, refuser, corriger, comparer,
   demander une explication, reprendre la main.
 
+Le contrat d'arrêt d'urgence propre aux capacités R5 — délai maximal chiffré,
+canal indépendant du chemin de commande, moyen matériel lorsqu'un effet
+physique existe — est porté par `RFC-0027`, dormante.
+
 Pour R3 et au-delà :
 
 - la délégation est explicite, limitée et révocable ;
@@ -596,60 +568,6 @@ Pour R3 et au-delà :
 - l'historique des actions est consultable ;
 - l'arrêt d'urgence est accessible et testé ;
 - l'interface ne dissimule jamais une automatisation active.
-
-### 12.1 Contrat d'arrêt d'urgence R5
-
-Chaque capacité R5 possède, avant tout test, un contrat d'interface
-versionné définissant :
-
-- l'état sûr attendu et les dangers qu'un arrêt brutal pourrait lui-même
-  créer ;
-- la commande d'arrêt, ses canaux et les personnes autorisées à l'actionner ;
-- une valeur numérique et une unité pour le délai maximal
-  **T_stop_max** ;
-- le point de départ de la mesure, au déclenchement physique ou électronique
-  de la commande, et son point de fin, lors de la confirmation indépendante
-  de l'état sûr ;
-- les étapes et délais intermédiaires si l'état sûr exige un arrêt
-  contrôlé ;
-- les scénarios d'essai, responsabilités, instruments de mesure et preuves
-  à conserver.
-
-L'autorité de sécurité R5 désignée au §6.4 approuve T_stop_max à partir de
-l'analyse des dangers. Une moyenne, un percentile ou un objectif non contraignant ne
-remplace pas ce maximum. L'absence de valeur exacte bloque le test et
-l'activation.
-
-Le mécanisme d'arrêt :
-
-- est indépendant du modèle, de l'application principale et du chemin
-  normal de commande ;
-- dispose d'un canal local et, lorsqu'un effet physique existe, d'un moyen
-  matériel indépendant adapté au danger ;
-- reste opérant en cas de panne du processus principal, de perte du réseau,
-  de saturation, d'indisponibilité du journal ou de défaillance partielle de
-  l'alimentation ;
-- a priorité sur toute commande d'action et n'exige aucune confirmation
-  secondaire après son déclenchement ;
-- fournit une confirmation d'état sûr observée indépendamment du composant
-  commandé ;
-- adopte un arrêt contrôlé plutôt qu'une coupure brutale lorsque l'analyse
-  démontre qu'une coupure immédiate augmenterait le danger.
-
-L'arrêt est testé :
-
-1. avant chaque session ou campagne d'expérimentation R5 ;
-2. après toute modification matérielle, logicielle, réseau ou de
-   configuration ;
-3. au moins tous les trente jours pour un service R5 maintenu en
-   disponibilité continue ;
-4. sous charge maximale et avec panne du processus principal, perte réseau,
-   saturation du stockage, perte d'un capteur et défaillance d'alimentation
-   prévues par l'analyse de danger.
-
-Chaque essai mesure le pire délai observé et démontre qu'il reste inférieur
-ou égal à T_stop_max. Un échec, une mesure absente ou une confirmation
-d'état sûr ambiguë suspend immédiatement la capacité.
 
 ## 13. Connaissances et apprentissage
 
@@ -775,86 +693,11 @@ Une capacité autonome ou semi-autonome est suspendue lorsque :
 L'échec doit être sûr : le système revient à un mode manuel ou à une
 abstention explicite, jamais à une action par défaut.
 
-### 15.1 Journal R5 indépendant et inaltérable en exploitation
-
-Le journal R5 est produit par un enregistreur distinct du composant qu'il
-surveille. Le contrôleur ne doit pouvoir ni modifier ni supprimer ses
-preuves.
-
-L'enregistreur possède une identité de sécurité, un processus, un stockage
-et un domaine de défaillance séparés du chemin principal de commande. Il
-peut être local pour garantir le fonctionnement hors ligne, mais il reste
-indépendant du composant et synchronise ultérieurement ses preuves sans
-réécrire l'historique.
-
-Le journal est :
-
-- en écriture seule par ajout pendant l'exploitation ;
-- chaîné cryptographiquement ou protégé par un mécanisme équivalent rendant
-  toute altération détectable ;
-- horodaté en UTC et par une horloge monotone, avec numéros de séquence ;
-- attribué à des identités individuelles ou techniques authentifiées ;
-- répliqué ou ancré dans un second domaine de défaillance ;
-- chiffré et soumis à des droits d'accès limités.
-
-Il enregistre au minimum :
-
-- l'identifiant et la version de la capacité, du modèle, des règles, des
-  données et de la configuration ;
-- les entrées déterminantes, sorties, incertitudes et contrôles appliqués ;
-- l'identité, l'habilitation et l'autorisation humaines ;
-- chaque commande, accusé de réception, changement d'état et effet observé ;
-- les délégations, refus, corrections et reprises manuelles ;
-- les déclenchements d'arrêt, délais mesurés et confirmations d'état sûr ;
-- les erreurs, pertes de communication, modes dégradés et changements de
-  santé du journal lui-même.
-
-Un journal interne au composant peut compléter ces preuves, mais ne les
-remplace jamais.
-
-### 15.2 Disponibilité et échec sûr de la journalisation
-
-Un observateur indépendant contrôle la santé de l'enregistreur et du flux de
-preuves. Le contrat d'interface fixe une valeur numérique
-**T_log_detect_max** pour le délai maximal de détection d'une perte de
-journalisation.
-
-Tant que le journal indépendant n'a pas confirmé sa disponibilité :
-
-- aucune nouvelle commande R5 produisant un effet ne peut être acceptée ;
-- la capacité rejoint l'état sûr dans les limites de T_stop_max ;
-- l'arrêt d'urgence et les commandes qui réduisent le danger restent
-  prioritaires et ne sont jamais bloqués par l'absence de journal ;
-- la défaillance est inscrite dans un journal de santé secondaire dès que
-  celui-ci est disponible.
-
-L'absence de T_log_detect_max, l'incapacité de l'observateur à provoquer
-l'échec sûr ou une dépendance commune non maîtrisée entre contrôleur et
-enregistreur bloque toute expérimentation R5.
-
-### 15.3 Rétention et restauration
-
-Le contrat de chaque capacité R5 fixe une durée exacte **D_retention**, avec
-une unité, un événement de départ, la destination des archives, les
-responsables d'accès et la procédure de destruction. Une formulation comme
-« selon les besoins » ou l'absence de durée bloque l'autorisation.
-
-D_retention est approuvée par les responsables sécurité et juridique selon
-les risques, les obligations applicables et la minimisation des données.
-Toute enquête, contestation, procédure ou conservation légale suspend la
-destruction des preuves concernées.
-
-Une restauration complète est testée :
-
-- avant la première expérimentation ;
-- au moins une fois par trimestre tant que la capacité est active ;
-- après toute migration de stockage, modification du format, perte de
-  journal ou incident R5.
-
-Le test doit reconstruire la chronologie, vérifier les séquences, empreintes,
-signatures ou ancrages, retrouver les décisions et habilitations, et rejouer
-les preuves nécessaires à l'analyse. Son résultat est lui-même conservé dans
-un domaine indépendant.
+Les exigences de journalisation propres aux capacités R5 — enregistreur
+indépendant du composant surveillé, inaltérabilité, détection bornée d'une
+perte de journalisation, rétention et restauration testée — sont portées par
+`RFC-0027`, dormante. Aucune capacité R5 ne peut être expérimentée avant son
+réveil et son adoption.
 
 ## 16. Révisions constitutionnelles envisagées
 
@@ -878,6 +721,9 @@ Le périmètre minimal de `RFC-0026` comprend :
   calculs, les hypothèses, les incertitudes ni les limites ;
 - `AI_CONSTITUTION.md` — réviser le préambule, IA-1, IA-2, IA-3, IA-4,
   IA-5, IA-8, les anti-lois et la déclaration finale ;
+- `PACT_FOR_AI_AGENTS.md` — remplacer l'exigence de « chaîne de raisonnement »
+  du § *Cas concrets d'application* par la justification externe reproductible
+  définie au §11, sans affaiblir le rejet d'une sortie non justifiée ;
 - `GSIE-FND-001` — clarifier que l'IA n'est jamais une autorité
   scientifique autonome, même lorsqu'une exécution bornée est autorisée.
 
@@ -1003,21 +849,10 @@ dépendante oubliée bloque la porte concernée.
 - Ignis, GeoSylva, Forge et GSIE possèdent des exemples de classement ;
 - une contre-revue scientifique, métier, sécurité et juridique est
   réalisée ;
-- aucune expérimentation R5 ne commence sans une décision distincte nommant
-  l'autorité d'habilitation, les opérateurs, les superviseurs, leur
-  périmètre, leurs preuves de compétence et leurs dates de validité ;
-- chaque habilitation R5 est individuelle, révocable, techniquement
-  désactivable et valable au maximum douze mois ;
-- chaque contrat R5 définit l'état sûr, T_stop_max et T_log_detect_max par
-  des valeurs numériques avec unités et points de mesure non ambigus ;
-- les essais de panne démontrent le respect de T_stop_max dans le pire cas,
-  y compris lorsque le processus principal, le réseau ou la journalisation
-  sont indisponibles ;
-- le journal R5 est externe au composant, ajouté sans réécriture, protégé
-  contre l'altération, horodaté, attribuable et placé dans un domaine de
-  défaillance indépendant ;
-- chaque capacité R5 possède une D_retention exacte et une restauration
-  complète réussie selon la fréquence du §15.3 ;
+- aucune expérimentation R5 ne commence avant le réveil, le contre-audit et
+  l'adoption de `RFC-0027`, qui porte l'habilitation nominative, le contrat
+  d'arrêt d'urgence et le journal indépendant ; l'adoption de la présente RFC
+  n'ouvre aucun droit d'expérimentation R5 ;
 - une perte de journalisation bloque les nouvelles actions R5 sans jamais
   bloquer l'arrêt d'urgence ou une action qui réduit le danger ;
 - toute modification constitutionnelle finale reçoit une décision propre ;

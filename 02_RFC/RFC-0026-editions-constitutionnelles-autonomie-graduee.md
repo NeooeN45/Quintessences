@@ -44,6 +44,7 @@ complet et le diff vérifiable des éditions suivantes :
 | `GSIE-CON-004` | Justification externe reproductible sans affaiblissement de l'explicabilité | Dormant |
 | `AI_CONSTITUTION.md` | Préambule, IA-1 à IA-5, IA-8, anti-lois et déclaration finale | Dormant |
 | `GSIE-FND-001` | Absence d'autorité scientifique autonome de l'IA | Dormant |
+| `PACT_FOR_AI_AGENTS.md` | Justification externe reproductible au lieu de la « chaîne de raisonnement » | Dormant |
 
 Un balayage complet du corpus constitutionnel doit confirmer ou étendre cette
 liste avant contre-audit.
