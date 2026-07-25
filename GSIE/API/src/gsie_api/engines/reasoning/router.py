@@ -183,7 +183,7 @@ async def reasoning_version(request: Request) -> EngineVersionResponse:
                 },
             },
         },
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "description": (
                 "La requête est invalide : champ manquant, type incorrect, "
                 "ou contexte stationnel vide (au moins un bloc requis)."
