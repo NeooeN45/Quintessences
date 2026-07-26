@@ -24,9 +24,19 @@ def should_have_updated_at_when_timestamp_mixin_used():
 
 
 def should_create_model_with_timestamps_when_mixin_applied():
-    """Un modèle utilisant TimestampMixin doit avoir created_at et updated_at."""
+    """Un modèle utilisant TimestampMixin doit avoir created_at et updated_at.
 
-    class TestModel(TimestampMixin, Base):
+    Note : on utilise une DeclarativeBase locale (pas le Base partagé du
+    projet) pour ne pas enregistrer `test_model` dans Base.metadata — sinon
+    alembic command.check() dans test_migration_baseline.py détecte une
+    table non migrée et échoue (pollution de metadata entre tests).
+    """
+    from sqlalchemy.orm import DeclarativeBase
+
+    class LocalBase(DeclarativeBase):
+        """Base déclarative jetable, isolée du Base du projet."""
+
+    class TestModel(TimestampMixin, LocalBase):
         __tablename__ = "test_model"
         id: Mapped[int] = mapped_column(primary_key=True)
         name: Mapped[str] = mapped_column(String(100))
