@@ -3,6 +3,57 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+## [REASONING + DIAGNOSTIC — EXPOSITION SUR L'API] - 2026-07-26
+
+### Moteurs atteignables depuis l'API
+
+- **Reasoning Engine monté sur `app.py`.** Le moteur (655 lignes), son
+  routeur (240 lignes) et ~1 500 lignes de tests verts existaient depuis la
+  tranche R4 (`GSIE-PROMPT-0017`), mais `app.py` n'incluait jamais le
+  routeur : l'ensemble était inatteignable depuis l'API.
+- **Diagnostic Engine — tranche R4 (routeur et intégration)**, reprise en
+  interne faute de prompt dédié. Endpoints `/diagnostic/status`,
+  `/version` et `/diagnostiquer`, calqués sur le routeur Reasoning validé :
+  horloge injectée par la couche API (reproductibilité,
+  `CODE_QUALITY_STANDARD` §3.3), `DiagnosticEngineError` converti en 400
+  sans divulguer chemin, trace ni structure interne.
+- Six routes exposées au total sous `/api/v1`.
+
+### Classe de bug fermée
+
+- `test_tous_les_routeurs_sont_importables` vérifiait qu'un routeur présent
+  **se charge**, explicitement pas qu'il soit **monté**. Un routeur pouvait
+  donc passer ruff, mypy `--strict` et toute la suite unitaire sans exposer
+  aucune route.
+- Nouveau test `test_tous_les_routeurs_presents_sont_montes_sur_l_application` :
+  chaque routeur présent doit être atteignable sur l'application construite.
+  Vérifié comme régression réelle — le montage retiré, le test échoue en
+  indiquant le correctif exact. Un moteur sans routeur (tranche R4 non faite)
+  reste ignoré : ce n'est pas un défaut.
+
+### Traçabilité scientifique
+
+- L'exemple OpenAPI du Diagnostic prolonge celui du Reasoning (même station,
+  même source Rameau et al. 2008) pour illustrer la chaîne Reasoning →
+  Diagnostic **sans introduire d'affirmation scientifique nouvelle**
+  (`GSIE-CON-002`, `ADR-007`). Sa validité est vérifiée contre
+  `DiagnosticRequest` : un exemple faux dans la documentation publique est
+  pire qu'un exemple absent.
+
+### Vérifications
+
+- **509 tests unitaires verts**, 63 ignorés, 83 % de couverture.
+- ruff, ruff format et mypy `--strict` propres ; vérificateur de gouvernance
+  sans incohérence sur les deux commits.
+
+### Écart connu, non corrigé
+
+- Le plan `DEC-000019` prévoit la vague 3 (Correlation, Reasoning,
+  Diagnostic) **en Rust** ; les trois moteurs sont implémentés en Python.
+  L'écart est signalé plutôt que masqué : le trancher relève d'une décision,
+  pas d'une correction de documentation.
+
+---
 ## [RFC-0023 / RFC-0024 — CORRECTIONS P0 DU CONTRE-AUDIT] - 2026-07-24
 
 - Les corrections des **3 constats P0** du rapport `694d81d` sont appliquées
