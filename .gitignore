@@ -38,6 +38,10 @@ tmp/
 *.tmp
 *.log
 
+# Scripts temporaires à la racine
+/_tmp_*.py
+/_tmp_*.sh
+
 # Rust — build artifacts et venv maturin
 **/target/
 **/.venv/
