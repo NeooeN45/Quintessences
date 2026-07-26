@@ -7,7 +7,7 @@ Pas de DB requise : ``infer`` ne touche jamais ``self._session`` en v1
 (moteur pur, sans effet de bord sur la base) — un ``Mock`` suffit pour
 instancier ``ReasoningEngine``.
 
-Valeurs métier utilisées dans les règles de test (ADR-007) :
+Valeurs métier utilisées dans les règles de test (ADR-009) :
 - pH 4,5–6,0 pour sol acide à modérément acide — source : Rameau et al.,
   2018, cité dans REASONING_ENGINE.md §7 cas 1.
 - Niveau de confiance 0,82 — source : REASONING_ENGINE.md §7 cas 1.

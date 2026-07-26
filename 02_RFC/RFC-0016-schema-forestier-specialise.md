@@ -11,7 +11,7 @@
 | **Lois fondatrices** | GSIE-CON-000 (primauté), GSIE-CON-001 (l'IA assiste, ne décide jamais), GSIE-CON-002 (science), GSIE-CON-005 (traçabilité) |
 | **Décision liée** | DEC-000027 (Validated) |
 | **RFC liées** | RFC-0013 (ingestion données structurées ONF/CNPF), RFC-0014 (garde-fou anti-invention + pipeline documentaire), RFC-0015 (Environmental Model Fabric — registre de modèles, dont cette RFC est un cas d'application forestier spécifique) |
-| **ADR liés** | ADR-007 (garde-fou transverse anti-invention) — cette RFC en est une application directe au domaine sylvicole |
+| **ADR liés** | ADR-009 (garde-fou transverse anti-invention) — cette RFC en est une application directe au domaine sylvicole |
 
 ---
 
@@ -102,7 +102,7 @@ pattern déjà en place : `resource` racine + satellite typée) :
 | `DiagnosticProtocol` / `HealthRisk` | Protocoles sanitaires (ARCHI, DEPERIS, IBP) | critères, seuils, version, limites — distingue symptôme observé / agent causal suspecté / agent confirmé |
 | `EvidenceStatement` / `ConflictRecord` | Assertion atomique sourcée + désaccords explicites entre sources | source, page/table, territoire, grade de preuve, statut `DRAFT`→`APPROVED` |
 
-Règle transverse (reprise et spécialisée d'ADR-007) :
+Règle transverse (reprise et spécialisée d'ADR-009) :
 
 > **Une `FertilityClass` sans `species_id`, `model_id`, âge de
 > référence, convention d'âge et région de calibration est un bug de

@@ -57,7 +57,7 @@ async def pedology_version(request: Request) -> EngineVersionResponse:
     description=(
         "Interroge SoilGrids (ISRIC) pour le pH et la texture (argile, "
         "sable, limon) à un point et une profondeur donnés. Les propriétés "
-        "sans donnée disponible sont omises, jamais approximées (ADR-007)."
+        "sans donnée disponible sont omises, jamais approximées (ADR-009)."
     ),
 )
 @_pedology_limiter.limit("30/minute")

@@ -1,7 +1,7 @@
 """Client HTTP réel vers l'API Météo des forêts (portail-api.meteofrance.fr).
 
 Endpoint vérifié manuellement le 2026-07-18 (pas de données simulées —
-ADR-007), clé de compte requise (souscription gratuite à l'API
+ADR-009), clé de compte requise (souscription gratuite à l'API
 `DonneesPubliquesMeteoForets`, quota 100 req/min) :
 
   GET https://public-api.meteofrance.fr/public/DPMeteoForets/v1/carte/encours
@@ -46,7 +46,7 @@ class MeteoFranceClient:
         Raises:
             MeteoFranceClientError: si la clé est absente, l'appel réseau
                 échoue, ou la réponse HTTP est en échec — jamais de
-                niveau de danger approximé (ADR-007).
+                niveau de danger approximé (ADR-009).
         """
         if not self._api_key:
             raise MeteoFranceClientError(

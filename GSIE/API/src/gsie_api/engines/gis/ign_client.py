@@ -1,7 +1,7 @@
 """Client HTTP réel vers les API Géoplateforme IGN (aucune clé requise).
 
 Deux endpoints, documentés dans GIS_ENGINE.md §8.2 et vérifiés
-manuellement (réponses réelles, pas de données simulées — ADR-007) :
+manuellement (réponses réelles, pas de données simulées — ADR-009) :
 
 - API Carto — module Cadastre : https://apicarto.ign.fr/api/doc/cadastre
   GET /api/cadastre/parcelle?code_insee=...&section=...&numero=...

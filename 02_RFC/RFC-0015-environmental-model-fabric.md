@@ -11,7 +11,7 @@
 | **Lois fondatrices** | GSIE-CON-000 (primauté), GSIE-CON-001 (l'IA assiste, ne décide jamais), GSIE-CON-002 (science), GSIE-CON-005 (traçabilité) |
 | **Décision liée** | DEC-000026 (Validated) |
 | **RFC liées** | RFC-0013 (ingestion données structurées ONF/CNPF/IGN), RFC-0014 (garde-fou anti-invention + pipeline d'extraction documentaire — **cette RFC en est une extension directe**, pas un remplacement) |
-| **ADR liés** | ADR-007 (garde-fou transverse anti-invention) — cette RFC généralise ADR-007 des *valeurs* aux *modèles* eux-mêmes |
+| **ADR liés** | ADR-009 (garde-fou transverse anti-invention) — cette RFC généralise ADR-009 des *valeurs* aux *modèles* eux-mêmes |
 
 ---
 
@@ -145,7 +145,7 @@ de vie documentaire déjà en place au §5 de `CLAUDE.md`) :
 `Experimental` → `Qualified` → `Approved` → `Restricted` /
 `Deprecated` / `Revoked` / `Superseded`.
 
-### 3.4 Portes automatiques (extension du garde-fou ADR-007)
+### 3.4 Portes automatiques (extension du garde-fou ADR-009)
 
 Un modèle ne peut pas passer en statut `Approved` si :
 
@@ -278,7 +278,7 @@ scientifique le plus grave identifié par l'étude (§11).
 
 - Cadre unique et réutilisable pour évaluer tout modèle ouvert avant
   intégration (dendrométrie, hydrologie, feux, biodiversité, climat...)
-- Extension cohérente d'ADR-007/RFC-0014 : la même discipline
+- Extension cohérente d'ADR-009/RFC-0014 : la même discipline
   anti-invention s'applique maintenant aux modèles, pas seulement aux
   données
 - Empêche la dérive vers un « LLM oracle » qui inventerait des
@@ -307,7 +307,7 @@ séparées, instruites via ce cadre.
 - `02_RFC/RFC-0014-gouvernance-scientifique-anti-invention.md` — garde-fou anti-invention des données, étendu ici aux modèles
 - `02_RFC/RFC-0013-ingestion-donnees-onf-cnpf.md` — pipeline de données structurées, non affecté par cette RFC
 - `02_RFC/RFC-0003.md` — GSIE-Net, packs offline signés (§3.6)
-- `GSIE/ARCHITECTURE/ADR-007-garde-fou-anti-invention.md` — généralisé ici des valeurs aux modèles
+- `GSIE/ARCHITECTURE/ADR-009-garde-fou-anti-invention.md` — généralisé ici des valeurs aux modèles
 - `00_CONSTITUTION/GSIE-CON-001.md` — l'IA assiste, ne décide jamais
 - `00_CONSTITUTION/GSIE-CON-002.md` — science
 - `GSIE/ENGINES/CORRELATION_ENGINE/CORRELATION_ENGINE.md` — moteur concerné par §3.5

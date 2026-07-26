@@ -92,7 +92,7 @@ def test_result_preserves_requete_and_peuplement_id():
 
 
 def test_no_volume_or_trajectory_in_v1_result():
-    """Garde-fou ADR-007 : v1 ne doit produire ni volume ni trajectoire de croissance inventés."""
+    """Garde-fou ADR-009 : v1 ne doit produire ni volume ni trajectoire de croissance inventés."""
     engine = ForestDynamicsEngine()
     result = engine.compute_dendrometrics(_request())
 

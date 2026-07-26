@@ -323,7 +323,7 @@ class TestValidators:
         """Règle conditionnelle : `confirmation_method` requis si
 
         `confirmed_causal_agent` est renseigné (reflète la contrainte SQL
-        `ck_health_risk_confirmation_requires_method`, ADR-007).
+        `ck_health_risk_confirmation_requires_method`, ADR-009).
         """
         errors = validate_resource_data(
             "health_risk",

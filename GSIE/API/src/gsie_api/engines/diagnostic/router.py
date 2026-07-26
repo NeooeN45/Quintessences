@@ -39,7 +39,7 @@ DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 # même source) afin que les deux illustrent la chaîne Reasoning → Diagnostic.
 # La source est celle déjà retenue dans l'exemple Reasoning validé
 # (GSIE-PROMPT-0017) : aucune affirmation scientifique nouvelle n'est
-# introduite ici, conformément à GSIE-CON-002 et ADR-007.
+# introduite ici, conformément à GSIE-CON-002 et ADR-009.
 _SOURCE_RAMEAU: dict[str, object] = {
     "type_source": "peer_reviewed",
     "auteur": "Rameau et al. (2008)",

@@ -69,7 +69,7 @@ async def climate_version(request: Request) -> EngineVersionResponse:
         "Interroge les données d'observation SYNOP Météo-France (aucune "
         "clé requise) pour la dernière observation d'une station donnée. "
         "Retourne null si la station est introuvable — jamais une "
-        "observation approximée (ADR-007)."
+        "observation approximée (ADR-009)."
     ),
 )
 @_climate_limiter.limit("20/minute")
@@ -155,7 +155,7 @@ async def climate_climatologie_stations(
         "asynchrone côté Météo-France (commande + polling) — la réponse "
         "peut prendre plusieurs secondes. Retourne une liste vide si la "
         "station n'a aucune donnée sur la période — jamais une valeur "
-        "approximée (ADR-007)."
+        "approximée (ADR-009)."
     ),
 )
 @_climate_limiter.limit("5/minute")

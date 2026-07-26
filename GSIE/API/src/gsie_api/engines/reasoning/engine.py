@@ -176,7 +176,7 @@ def _evaluer_condition(condition: str, faits: dict[str, Any]) -> bool:
 def _aplatir_contexte(contexte: StationContexte) -> dict[str, tuple[Any, BlocContexte]]:
     """Aplati le contexte en {nom_variable: (valeur, bloc_provenance)}.
 
-    ADR-007 : aucun fait sans provenance. Chaque variable provient d'un
+    ADR-009 : aucun fait sans provenance. Chaque variable provient d'un
     `BlocContexte` dont elle hérite la source et l'evidence_level.
 
     Les noms de variables sont préfixés par le nom du bloc pour éviter
@@ -235,7 +235,7 @@ class ReasoningEngine:
                 profondeur maximale de la chaîne.
             regles: Les règles d'inférence fournies par l'appelant
                 (Knowledge Engine en cible). Chacune porte sa source et
-                son niveau de preuve (ADR-007).
+                son niveau de preuve (ADR-009).
 
         Returns:
             Un `InferenceResult` contenant les conclusions inférées et
@@ -334,7 +334,7 @@ class ReasoningEngine:
                     else:
                         # Variable présente mais sans provenance traçable —
                         # ne devrait pas arriver car tous les faits ont une
-                        # provenance (ADR-007). On l'inclut quand même pour
+                        # provenance (ADR-009). On l'inclut quand même pour
                         # ne pas perdre l'information.
                         premisses_effectives.append(f"{var} = {faits[var]}")
 
@@ -603,7 +603,7 @@ def _detecter_contradictions(
     Une contradiction est déclarée lorsqu'une règle R porte
     ``contredit_regle_id = "R'"`` et que **both** R et R' ont produit
     une conclusion. Le moteur ne fait AUCUNE analyse sémantique — une
-    contradiction non déclarée n'existe pas (`GSIE-CON-002`, `ADR-007`).
+    contradiction non déclarée n'existe pas (`GSIE-CON-002`, `ADR-009`).
 
     Les deux conclusions restent présentes dans le résultat. Le moteur
     ne tranche jamais (`GSIE-CON-002`, S-3).

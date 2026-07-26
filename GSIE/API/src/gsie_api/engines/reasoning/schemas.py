@@ -33,7 +33,7 @@ identifiant, ce qui est une propriété utile et non un défaut.
 **Sur `niveau_confiance`.** Le contrat impose un décimal entre 0,0 et 1,0.
 Ce module ne contient aucune table de conversion entre niveau de preuve et
 confiance numérique : une telle table serait un coefficient inventé, interdit
-par `GSIE-CON-002` et par `ADR-007`. La valeur est donc **fournie par la règle
+par `GSIE-CON-002` et par `ADR-009`. La valeur est donc **fournie par la règle
 d'inférence issue du Knowledge Engine**, avec sa propre source. Le moteur
 expose en complément `evidence_level_plancher`, dérivé par simple ordonnancement
 de l'échelle A–F déjà définie par l'Evidence Engine.
@@ -97,7 +97,7 @@ class SourceMoteurContexte(StrEnum):
 class BlocContexte(BaseModel):
     """Un bloc de contexte stationnel, avec sa provenance obligatoire.
 
-    `ADR-007` : aucune valeur ne circule sans provenance résolvable. Le bloc
+    `ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc
     est donc inconstructible sans `source_moteur`, `source` et
     `evidence_level`.
     """
@@ -191,7 +191,7 @@ class RegleInference(BaseModel):
     )
     enonce_conclusion: str = Field(min_length=1, max_length=500)
     source: SourceReference = Field(
-        description="Source scientifique de la règle (`GSIE-CON-002`, `ADR-007`)"
+        description="Source scientifique de la règle (`GSIE-CON-002`, `ADR-009`)"
     )
     evidence_level: EvidenceLevel
     niveau_confiance: float = Field(

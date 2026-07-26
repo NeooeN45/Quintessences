@@ -34,7 +34,7 @@ tenu.
 2. `23_QUALITY_MANAGEMENT/PROCESSES/CODE_QUALITY_STANDARD.md`
 3. `GSIE/ENGINES/REASONING_ENGINE/REASONING_ENGINE.md` (§5 contrat, §6 garanties)
 4. `GSIE/API/src/gsie_api/engines/reasoning/schemas.py`
-5. `GSIE/ARCHITECTURE/ADR-007-garde-fou-anti-invention.md`
+5. `GSIE/ARCHITECTURE/ADR-009-garde-fou-anti-invention.md`
 6. `00_CONSTITUTION/GSIE-CON-002.md` et `GSIE-CON-004.md`
 
 ## Périmètre v1
@@ -50,7 +50,7 @@ de contrat.
   travaillent en parallèle sur des fichiers disjoints ;
 - aucune modification de `schemas.py`, propriété de l'Architecte : un invariant
   de type est une décision d'architecture ;
-- aucune valeur numérique métier sans source citée (`ADR-007`) ;
+- aucune valeur numérique métier sans source citée (`ADR-009`) ;
 - aucun test désactivé, marqué `skip` ou `xfail` pour faire passer la suite ;
 - aucune assertion affaiblie pour accommoder une implémentation ;
 - aucun commit, push, fusion ou déploiement ;

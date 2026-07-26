@@ -22,7 +22,7 @@ fixe), jamais par `uuid4`.
 
 Sur `confiance` : le moteur n'invente aucune table de conversion. Il
 sélectionne le minimum des `niveau_confiance` des conclusions — une valeur
-qui existe déjà, pas un nombre nouveau (`ADR-007`). Un diagnostic n'est pas
+qui existe déjà, pas un nombre nouveau (`ADR-009`). Un diagnostic n'est pas
 plus assuré que sa conclusion la moins assurée.
 """
 
@@ -190,7 +190,7 @@ class DiagnosticEngine:
 
         # 4. Confiance : minimum des niveau_confiance des conclusions.
         # Sélection d'une valeur existante, pas fabrication d'un nombre
-        # nouveau (ADR-007). Un diagnostic n'est pas plus assuré que sa
+        # nouveau (ADR-009). Un diagnostic n'est pas plus assuré que sa
         # conclusion la moins assurée.
         confiance = min(c.niveau_confiance for c in request.conclusions)
 

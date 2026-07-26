@@ -1,7 +1,7 @@
 """Client HTTP réel vers l'API GBIF (aucune clé requise pour la lecture).
 
 Deux endpoints, vérifiés manuellement le 2026-07-17 (pas de données
-simulées — ADR-007) :
+simulées — ADR-009) :
 
 - GBIF Species Match : https://www.gbif.org/developer/species
   GET /v1/species/match?name=...

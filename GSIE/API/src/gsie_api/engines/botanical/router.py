@@ -71,7 +71,7 @@ async def botanical_version(request: Request) -> EngineVersionResponse:
         "Résout un nom scientifique vers son taxon accepté (GBIF Backbone "
         "Taxonomy), en résolvant les synonymes. Persiste le taxon comme "
         "resource `entity` (dédupliqué par clé GBIF). Retourne une liste "
-        "vide si aucune correspondance — jamais de taxon inventé (ADR-007)."
+        "vide si aucune correspondance — jamais de taxon inventé (ADR-009)."
     ),
 )
 @_botanical_limiter.limit("30/minute")
@@ -101,7 +101,7 @@ async def botanical_query(
         "Interroge le dataset réel Bellifa et al. (2026, DOI "
         "10.57745/DHJHGS) pour le statut d'indigénat d'une essence "
         "(France + sylvoécorégion). Retourne null si le taxon ou le "
-        "code SER est introuvable — jamais un statut approximé (ADR-007)."
+        "code SER est introuvable — jamais un statut approximé (ADR-009)."
     ),
 )
 @_botanical_limiter.limit("30/minute")
@@ -131,7 +131,7 @@ async def botanical_indigenat(
     description=(
         "Interroge le référentiel taxonomique TAXREF (miroir GBIF, "
         "infrastructure MNHN directe dégradée). Retourne null si aucune "
-        "entrée ne correspond — jamais un cd_nom inventé (ADR-007)."
+        "entrée ne correspond — jamais un cd_nom inventé (ADR-009)."
     ),
 )
 @_botanical_limiter.limit("30/minute")

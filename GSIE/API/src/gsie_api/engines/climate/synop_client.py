@@ -1,7 +1,7 @@
 """Client HTTP réel vers les données SYNOP Météo-France (data.gouv.fr).
 
 Endpoint vérifié manuellement le 2026-07-17 (pas de données simulées —
-ADR-007), aucune clé requise :
+ADR-009), aucune clé requise :
 
   GET https://meteofrance.s3.sbg.io.cloud.ovh.net/data/synchro_ftp/OBS/SYNOP/synop_{year}.csv.gz
 

@@ -8,11 +8,11 @@ Périmètre v1 (voir docstring schemas.py) : deux couches réelles
 implémentées sans clé API — cadastre (API Carto IGN) et altitude
 (API de calcul altimétrique IGN). Les autres couches du contrat
 (mnt, pente, exposition, hydrographie, orthophoto, sol) ne sont PAS
-simulées — ADR-007 interdit toute donnée géospatiale inventée en
+simulées — ADR-009 interdit toute donnée géospatiale inventée en
 attendant leur implémentation réelle (ingestion BD Forêt/LiDAR HD,
 RFC-0013).
 
-Garantie (GIS_ENGINE.md §6, ADR-007) : toute donnée retournée porte sa
+Garantie (GIS_ENGINE.md §6, ADR-009) : toute donnée retournée porte sa
 source (SourceReference IGN) et sa date. Aucune valeur par défaut ne
 remplace une donnée manquante — une parcelle introuvable retourne
 `None`, jamais une géométrie ou une altitude approximée.
@@ -80,7 +80,7 @@ class GISEngine:
 
         Returns:
             None si aucune parcelle ne correspond aux critères — jamais de
-            géométrie approximée en remplacement (ADR-007).
+            géométrie approximée en remplacement (ADR-009).
         """
         feature = await self._ign_client.get_parcelle(
             request.code_insee, request.section, request.numero
@@ -149,7 +149,7 @@ class GISEngine:
         Raises:
             GISEngineError: si l'API IGN est indisponible ou renvoie une
                 réponse inexploitable — jamais de valeur par défaut en
-                remplacement (ADR-007).
+                remplacement (ADR-009).
         """
         try:
             altitude_m = await self._ign_client.get_altitude(request.latitude, request.longitude)

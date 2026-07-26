@@ -3,7 +3,7 @@
 Responsabilité : calculer les caractéristiques dendrométriques d'un
 peuplement à partir de son état mesuré (FOREST_DYNAMICS_ENGINE.md).
 Périmètre v1 : surface terrière uniquement (identité géométrique) —
-pas de projection de croissance (voir docstring engine.py, ADR-007).
+pas de projection de croissance (voir docstring engine.py, ADR-009).
 
 Endpoints :
 - GET  /forest-dynamics/status   — statut du moteur
@@ -59,7 +59,7 @@ async def forest_dynamics_version(request: Request) -> EngineVersionResponse:
         "de peuplement mesuré. Aucune projection de croissance ni volume "
         "approché en v1 — ces calculs exigent des coefficients empiriques "
         "sourcés (modèle ONF-FFN/CAPSIS ou calibration IFN) non encore "
-        "disponibles de façon vérifiée (ADR-007)."
+        "disponibles de façon vérifiée (ADR-009)."
     ),
 )
 @_forest_dynamics_limiter.limit("60/minute")

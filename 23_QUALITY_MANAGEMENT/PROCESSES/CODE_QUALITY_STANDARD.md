@@ -7,7 +7,7 @@
 | Version | 1.0.0 |
 | Date | 25 juillet 2026 |
 | Statut | Proposé — validation du Fondateur requise |
-| Références | `GSIE-CON-002`, `CON-004`, `CON-005`, `TECHNICAL_CONSTITUTION`, `ADR-007` |
+| Références | `GSIE-CON-002`, `CON-004`, `CON-005`, `TECHNICAL_CONSTITUTION`, `ADR-009` |
 
 ## 1. Objet
 
@@ -34,7 +34,7 @@ l'identique, et remontée jusqu'à sa source.
 
 ### 3.1 Rien n'existe sans source
 
-`GSIE-CON-002` : ce qui n'est pas sourcé n'existe pas. `ADR-007` : aucune
+`GSIE-CON-002` : ce qui n'est pas sourcé n'existe pas. `ADR-009` : aucune
 valeur numérique, corrélation ou conclusion ne circule sans `SourceReference`
 résolvable et `evidence_level` hérité d'une donnée réelle.
 

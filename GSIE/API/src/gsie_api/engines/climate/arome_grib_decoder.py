@@ -30,7 +30,7 @@ def extract_nearest_temperature_celsius(
     Raises:
         AromeGribDecodeError: si le fichier n'est pas un GRIB2
             exploitable ou ne contient pas la variable attendue —
-            jamais une température approximée (ADR-007).
+            jamais une température approximée (ADR-009).
     """
     with tempfile.NamedTemporaryFile(suffix=".grib2", delete=False) as tmp_file:
         tmp_file.write(grib_bytes)

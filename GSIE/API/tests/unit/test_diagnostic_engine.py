@@ -7,7 +7,7 @@ Pas de DB requise : ``diagnostiquer`` écrit désormais son résultat, mais un
 ``AsyncMock`` de session suffit pour observer ces écritures. La vérification
 du schéma réel relève des tests d'intégration.
 
-Valeurs métier utilisées (ADR-007) :
+Valeurs métier utilisées (ADR-009) :
 - pH 4,5–6,0 pour sol acide — source : Rameau et al., 2018.
 - Précipitations ≥ 700 mm/an — source : ONF, 2020.
 - Profondeur de sol ≥ 40 cm — source : Référentiel Pédologique Français, 2008.
@@ -591,7 +591,7 @@ class TestConfiance:
         """0.9 et 0.1 donnent 0.1, pas 0.5.
 
         Rend impossible : le calcul d'une moyenne — une moyenne fabriquerait
-        un nombre nouveau, non sourcé, interdit par ADR-007. Le minimum
+        un nombre nouveau, non sourcé, interdit par ADR-009. Le minimum
         sélectionne une valeur existante.
         """
         c1 = _conclusion(

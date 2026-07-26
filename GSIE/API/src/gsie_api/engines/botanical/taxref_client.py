@@ -42,7 +42,7 @@ class TaxrefClient:
         Returns:
             Le meilleur résultat TAXREF (statut ACCEPTED priorisé), ou
             None si aucune entrée ne correspond — jamais un cd_nom
-            inventé (ADR-007).
+            inventé (ADR-009).
 
         Raises:
             TaxrefClientError: en cas d'erreur réseau ou de réponse HTTP en échec.

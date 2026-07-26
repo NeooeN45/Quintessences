@@ -10,7 +10,7 @@ GBIF Backbone Taxonomy uniquement — pas d'autécologie (optimum pH,
 tolérance gel, etc.), qui nécessite des connaissances sourcées
 (Rameau et al.) pas encore ingérées dans le Knowledge Engine. Un
 `EspeceData` v1 a `autecologie=None`, jamais une valeur approximée
-(ADR-007).
+(ADR-009).
 
 Garantie : un nom introuvable dans GBIF (`matchType: NONE`) retourne
 une liste d'espèces vide, jamais un taxon inventé.
@@ -104,7 +104,7 @@ class BotanicalEngine:
 
         Aucune espèce n'est retournée si GBIF ne trouve aucune
         correspondance (`matchType: NONE`) — jamais de taxon inventé
-        en remplacement (ADR-007).
+        en remplacement (ADR-009).
 
         Raises:
             BotanicalEngineError: si l'API GBIF est indisponible.
@@ -221,7 +221,7 @@ class BotanicalEngine:
         Returns:
             None si le taxon est absent du dataset ou si `code_ser` ne
             correspond à aucune colonne réelle — jamais un statut
-            approximé (ADR-007).
+            approximé (ADR-009).
 
         Raises:
             BotanicalEngineError: si le dataset local est introuvable.
@@ -272,7 +272,7 @@ class BotanicalEngine:
 
         Returns:
             None si aucune entrée TAXREF ne correspond — jamais un
-            cd_nom inventé (ADR-007).
+            cd_nom inventé (ADR-009).
 
         Raises:
             BotanicalEngineError: si le miroir GBIF de TAXREF est indisponible.

@@ -426,7 +426,7 @@ class HealthRiskModel(Base, TimestampMixin):
     confirmée) et `confirmed_causal_agent` (nécessite une
     `confirmation_method` explicite — un agent « confirmé » sans
     méthode de confirmation citée serait une invention silencieuse,
-    exactement le risque nommé par ADR-007).
+    exactement le risque nommé par ADR-009).
     """
 
     __tablename__ = "health_risk"

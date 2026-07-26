@@ -32,7 +32,7 @@ tests : elle doit rester vraie après toute évolution du schéma.
 **Sur `confiance`.** Comme pour le Reasoning Engine, ce module n'invente
 aucune table de conversion entre niveau de preuve et confiance numérique :
 elle serait un coefficient non sourcé, interdit par `GSIE-CON-002` et
-`ADR-007`. La valeur est reprise des conclusions d'origine. Le champ
+`ADR-009`. La valeur est reprise des conclusions d'origine. Le champ
 `evidence_level_plancher`, lui, est dérivé par simple ordonnancement de
 l'échelle A–F.
 """
@@ -172,7 +172,7 @@ class ValidationHumaine(BaseModel):
 class ElementDiagnostic(BaseModel):
     """Une contrainte ou un atout de la station (§5).
 
-    `ADR-007` : inconstructible sans source ni niveau de preuve.
+    `ADR-009` : inconstructible sans source ni niveau de preuve.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)

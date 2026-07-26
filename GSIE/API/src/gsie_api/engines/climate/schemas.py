@@ -8,7 +8,7 @@ suite (nécessitera la clé du portail API Météo-France, AROME/DRIAS).
 
 Une valeur SYNOP absente (champ vide dans le CSV, capteur manquant ou
 paramètre non mesuré à cette station) est omise du résultat, jamais
-remplacée par une valeur par défaut (ADR-007).
+remplacée par une valeur par défaut (ADR-009).
 """
 
 from datetime import date, datetime
@@ -91,7 +91,7 @@ class ObservationClimatologiqueQuotidienne(BaseModel):
     de quelques champs pratiques typés pour les variables les plus
     utilisées. Les codes qualité (Q*) sont conservés bruts dans
     `valeurs_brutes` — leur interprétation nécessite la documentation
-    officielle Météo-France, non vérifiée ici (ADR-007 : pas de sens
+    officielle Météo-France, non vérifiée ici (ADR-009 : pas de sens
     inventé).
     """
 
@@ -109,7 +109,7 @@ class ObservationClimatologiqueQuotidienne(BaseModel):
 
 
 class VigilancePhenomene(BaseModel):
-    """Un phénomène de vigilance sur un domaine (code brut Météo-France, ADR-007)."""
+    """Un phénomène de vigilance sur un domaine (code brut Météo-France, ADR-009)."""
 
     model_config = ConfigDict(extra="forbid")
 

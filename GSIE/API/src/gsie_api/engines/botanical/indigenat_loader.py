@@ -10,7 +10,7 @@ Recherche Data Gouv (DOI 10.57745/DHJHGS, licence Etalab Open License
 Fichier utilisé : `Synthese_indigenat_SER.tab` (293 taxons × statut
 France + 86 sylvoécorégions) — TSV réel, guillemets doubles, en-tête
 BOM UTF-8. Aucune valeur n'est réinterprétée au-delà de ce que
-`Documentation.txt` (même dataset) définit explicitement (ADR-007).
+`Documentation.txt` (même dataset) définit explicitement (ADR-009).
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ class IndigenatLoader:
 
         Returns:
             None si le taxon n'est présent dans aucune des clés —
-            jamais une ligne approximée (ADR-007).
+            jamais une ligne approximée (ADR-009).
         """
         self._ensure_loaded()
         assert (

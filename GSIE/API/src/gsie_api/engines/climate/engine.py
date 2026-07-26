@@ -14,7 +14,7 @@ pmer=101690 Pa -> 1016.9 hPa) :
 
 Garantie : un champ vide dans le CSV SYNOP (paramètre non mesuré à
 cette station) reste `None` dans le résultat, jamais remplacé par une
-valeur par défaut (ADR-007).
+valeur par défaut (ADR-009).
 """
 
 import csv
@@ -168,7 +168,7 @@ class ClimateEngine:
         Returns:
             None si la station est introuvable dans les données de
             l'année courante — jamais une observation approximée
-            (ADR-007).
+            (ADR-009).
 
         Raises:
             ClimateEngineError: si les données SYNOP sont indisponibles.
@@ -214,7 +214,7 @@ class ClimateEngine:
 
         Raises:
             ClimateEngineError: si l'API Météo des forêts est indisponible
-                ou la clé absente — jamais un niveau approximé (ADR-007).
+                ou la clé absente — jamais un niveau approximé (ADR-009).
         """
         try:
             rows = await self._meteofrance_client.get_danger_feux_departements()
@@ -260,7 +260,7 @@ class ClimateEngine:
         Raises:
             ClimateEngineError: clé absente, échec réseau, ou commande
                 jamais prête (station sans donnée sur la période, ou
-                délai dépassé) — jamais une donnée approximée (ADR-007).
+                délai dépassé) — jamais une donnée approximée (ADR-009).
         """
         try:
             csv_text = await self._dpclim_client.get_donnees_quotidiennes(
@@ -300,7 +300,7 @@ class ClimateEngine:
 
         Raises:
             ClimateEngineError: si l'API Vigilance est indisponible ou
-                la clé absente — jamais un niveau approximé (ADR-007).
+                la clé absente — jamais un niveau approximé (ADR-009).
         """
         try:
             data = await self._vigilance_client.get_carte_vigilance()
@@ -345,7 +345,7 @@ class ClimateEngine:
         Raises:
             ClimateEngineError: si l'API Package Observations est
                 indisponible ou la clé absente — jamais une observation
-                approximée (ADR-007).
+                approximée (ADR-009).
         """
         try:
             rows = await self._paquet_observation_client.get_observations_horaires(id_departement)
@@ -395,7 +395,7 @@ class ClimateEngine:
         Raises:
             ClimateEngineError: clé absente, échec réseau, échéance
                 hors du run disponible, ou GRIB2 non décodable —
-                jamais une température approximée (ADR-007).
+                jamais une température approximée (ADR-009).
         """
         try:
             run_modele = await self._arome_client.get_latest_temperature_2m_run()

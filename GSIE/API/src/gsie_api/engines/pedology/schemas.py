@@ -6,7 +6,7 @@ périmètre v1 restreint aux propriétés de sol modélisées par SoilGrids
 sable, limon (0-5cm). Pas de `ProfilSol` (horizons détaillés) ni de
 `ClassificationSol` (RPF/WRB) en v1 — ces données exigent le
 Référentiel Pédologique Forestier (RFC-0013, sous accord ONF/INRAE non
-encore formalisé), pas une valeur approximée (ADR-007).
+encore formalisé), pas une valeur approximée (ADR-009).
 
 Niveau de preuve (EVIDENCE_FRAMEWORK.md §4.2, cas Pédologie) : SoilGrids
 est un produit peer-reviewed unique (Poggio et al., 2021, SOIL

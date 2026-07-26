@@ -8,7 +8,7 @@ Périmètre v1 : **seule la surface terrière** est calculée, via la
 formule géométrique exacte G = (π/4) × D² × N (aire d'un cercle de
 diamètre D, multipliée par la densité de tiges à l'hectare) — une
 identité géométrique, pas un coefficient empirique, donc conforme à
-ADR-007 sans nécessiter de source scientifique externe au-delà de la
+ADR-009 sans nécessiter de source scientifique externe au-delà de la
 géométrie elle-même.
 
 Ce qui n'est PAS implémenté en v1, et pourquoi :

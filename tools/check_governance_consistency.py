@@ -15,7 +15,7 @@ Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
    comme base déjà actée (CON-003 : « la connaissance avant le code » ;
    hiérarchie Décision avant Implémentation).
 
-3. Valeurs non sourcées (ADR-007) : dans les moteurs de raisonnement
+3. Valeurs non sourcées (ADR-009) : dans les moteurs de raisonnement
    (`engines/*/engine.py`), toute constante module-level contenant un
    littéral décimal (seuil, coefficient) doit avoir une citation détectable
    (« Nom (Année) », « Nom et al. (Année) », ou référence RFC-/ADR-/DEC-/
@@ -66,7 +66,7 @@ IMPLEMENTATION_GLOBS = [
     "GSIE/API/src/gsie_api/infrastructure/knowledge_models.py",
 ]
 
-# Règle 3 (ADR-007) — moteurs de raisonnement à auditer pour valeurs non sourcées
+# Règle 3 (ADR-009) — moteurs de raisonnement à auditer pour valeurs non sourcées
 REASONING_ENGINE_GLOBS = ["GSIE/API/src/gsie_api/engines/*/engine.py"]
 # Citation détectable : « Nom (Année) », « Nom et al. (Année) », ou référence
 # de gouvernance (RFC-/ADR-/DEC-/CON-).
@@ -109,7 +109,7 @@ def find_superseded_ids(text: str) -> set[str]:
 def find_unsourced_numeric_constants(text: str) -> list[str]:
     """Détecte les constantes module-level à littéral décimal sans citation proche.
 
-    Best-effort (ADR-007) : repère les blocs `_NOM = ...` (éventuellement
+    Best-effort (ADR-009) : repère les blocs `_NOM = ...` (éventuellement
     multi-lignes, listes/dicts inclus) contenant un nombre décimal, et
     vérifie qu'une citation (« Nom (Année) » ou référence de gouvernance)
     apparaît dans les quelques lignes qui précèdent — typiquement un
@@ -206,7 +206,7 @@ def main() -> int:
                     f"la décision (CON-003)."
                 )
 
-    # --- Règle 3 (ADR-007) : valeurs numériques potentiellement non sourcées ---
+    # --- Règle 3 (ADR-009) : valeurs numériques potentiellement non sourcées ---
     reasoning_files: list[Path] = []
     for pattern in REASONING_ENGINE_GLOBS:
         reasoning_files.extend(ROOT.glob(pattern))
@@ -217,7 +217,7 @@ def main() -> int:
             violations.append(
                 f"[valeur non sourcée] {path.relative_to(ROOT)} : la constante {name} "
                 f"contient un littéral décimal sans citation détectée dans les "
-                f"{_CITATION_LOOKBACK_LINES} lignes précédentes (ADR-007) — vérifier "
+                f"{_CITATION_LOOKBACK_LINES} lignes précédentes (ADR-009) — vérifier "
                 f"qu'elle est bien sourcée."
             )
 

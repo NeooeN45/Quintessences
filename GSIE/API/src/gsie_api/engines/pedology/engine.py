@@ -7,7 +7,7 @@ Périmètre v1 (voir docstring schemas.py) : pH (H2O), argile, sable,
 limon via SoilGrids (ISRIC), pour un point et une profondeur donnés.
 Pas de `ProfilSol` (horizons détaillés) ni de `ClassificationSol`
 (RPF/WRB) en v1 — nécessitent le Référentiel Pédologique Forestier
-(RFC-0013), pas une valeur approximée (ADR-007).
+(RFC-0013), pas une valeur approximée (ADR-009).
 
 Garantie : une propriété sans donnée disponible au point demandé
 (zone sans couverture SoilGrids) est omise du résultat, jamais

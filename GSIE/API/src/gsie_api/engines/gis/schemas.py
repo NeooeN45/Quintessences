@@ -7,7 +7,7 @@ v1 restreint à deux couches réelles et vérifiables sans clé API :
 
 Les autres couches du contrat (mnt, pente, exposition, hydrographie,
 orthophoto, sol) restent hors périmètre v1 — pas de données simulées
-pour les couches non implémentées (ADR-007).
+pour les couches non implémentées (ADR-009).
 """
 
 from datetime import UTC, datetime

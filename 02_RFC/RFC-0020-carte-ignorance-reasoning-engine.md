@@ -9,7 +9,7 @@
 | **Auteur** | Camille Perraudeau (Fondateur), design co-construit avec l'agent GSIE (brainstorming) |
 | **Impact** | Reasoning Engine (première implémentation de code — jusqu'ici documenté seulement, Phase 2, ordre 10 dans `ENGINE_DEVELOPMENT_ORDER.md`), Botanical/Forest Dynamics Engines (consommés), registre de modèles (RFC-0015, réutilisé pour le barème), packs offline signés GeoSylva (RFC-0015), GeoSylva (consommateur, hors périmètre technique de ce RFC) |
 | **Lois fondatrices** | GSIE-CON-000 (primauté), GSIE-CON-001 (l'IA assiste, ne décide jamais), GSIE-CON-002 (science sourcée), GSIE-CON-003 (connaissance avant code), GSIE-CON-005 (traçabilité) |
-| **RFC liées** | RFC-0015 (Environmental Model Fabric — `ModelModel`/`ModelVersionModel` réutilisés pour le barème, packs offline signés), RFC-0016 (schéma forestier — `AutecologyProfile`, `StationObservation.determination_uncertainty`, `EvidenceLevel`, pattern `human_validator`/`SilviculturalRule`), RFC-0014 (garde-fou anti-invention ADR-007, directement applicable au barème de poids) |
+| **RFC liées** | RFC-0015 (Environmental Model Fabric — `ModelModel`/`ModelVersionModel` réutilisés pour le barème, packs offline signés), RFC-0016 (schéma forestier — `AutecologyProfile`, `StationObservation.determination_uncertainty`, `EvidenceLevel`, pattern `human_validator`/`SilviculturalRule`), RFC-0014 (garde-fou anti-invention ADR-009, directement applicable au barème de poids) |
 | **Veille d'origine** | `GSIE/RESEARCH/VEILLE_INNOVATIONS_QUINTESSENCES_2026-07-20.md` §2.1 (piste 1 — retenue comme prioritaire) |
 | **Décision liée** | Aucune — RFC en Draft, aucune implémentation autorisée |
 
@@ -34,7 +34,7 @@ concluant.
 
 - Un modèle statistique/bayésien de valeur de l'information — rejeté
   au profit d'un barème déterministe et explicable (voir §5), cohérent
-  avec l'exigence ADR-007 (rien d'inventé, tout sourcé ou marqué
+  avec l'exigence ADR-009 (rien d'inventé, tout sourcé ou marqué
   comme heuristique).
 - La création d'un 15ᵉ moteur — cette capacité reste dans le
   Reasoning Engine déjà acté (14 moteurs, architecture non modifiée).
@@ -70,7 +70,7 @@ du **Reasoning Engine**, jamais calculées « de mémoire » par un LLM
 gateway IA). Le barème de poids utilisé n'est jamais présenté avec une
 confiance uniforme : un poids sourcé et un poids heuristique non
 sourcé doivent être visuellement et structurellement distincts dans
-toute sortie (GSIE-CON-002, ADR-007).
+toute sortie (GSIE-CON-002, ADR-009).
 
 ## 5. Conception
 

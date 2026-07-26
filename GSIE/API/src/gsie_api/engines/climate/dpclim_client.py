@@ -99,7 +99,7 @@ class DPClimClient:
         Raises:
             DPClimClientError: clé absente, échec réseau, ou commande
                 jamais prête après `max_poll_attempts` tentatives —
-                jamais de donnée climatologique approximée (ADR-007).
+                jamais de donnée climatologique approximée (ADR-009).
         """
         api_key = self._require_api_key()
         id_cmde = await self._commander(id_station, date_deb_periode, date_fin_periode, api_key)

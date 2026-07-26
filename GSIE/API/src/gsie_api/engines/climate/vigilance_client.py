@@ -14,7 +14,7 @@ département/zone) avec `max_color_id` et `phenomenon_items[]`
 phénomène et de couleur sont des codes numériques Météo-France — leur
 table de correspondance officielle (ex. 1=vert, 2=jaune, 3=orange,
 4=rouge ; phénomènes vent/pluie/orage/etc.) n'est pas vérifiée ici et
-n'est donc pas réinterprétée (ADR-007), seulement transmise brute.
+n'est donc pas réinterprétée (ADR-009), seulement transmise brute.
 """
 
 from __future__ import annotations

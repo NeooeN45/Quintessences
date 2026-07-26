@@ -9,7 +9,7 @@ géométrique réel (surface terrière, volume approché) à partir d'un
 CAPSIS) exige des coefficients publiés que nous n'avons pas encore
 sourcés et vérifiés, ou une calibration IFN réelle (RFC-0013, données
 bulk non encore ingérées) — les inventer violerait la garantie du
-moteur (§6 : « aucun coefficient n'est inventé ») et ADR-007.
+moteur (§6 : « aucun coefficient n'est inventé ») et ADR-009.
 
 RFC-0016 §5 Phase B, point 5 : `DendrometricRequest`/`Result` portent
 désormais un `station_observation_id` optionnel — la référence à la
@@ -482,7 +482,7 @@ class HealthRiskCreate(BaseModel):
     RFC-0016 §3.1 : `symptom_observed` est toujours obligatoire (ce qui a
     réellement été vu). `confirmed_causal_agent` exige
     `confirmation_method` — un agent « confirmé » sans méthode de
-    confirmation citée serait une invention silencieuse (ADR-007).
+    confirmation citée serait une invention silencieuse (ADR-009).
     """
 
     model_config = ConfigDict(extra="forbid")

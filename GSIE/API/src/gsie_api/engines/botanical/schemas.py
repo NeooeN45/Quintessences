@@ -3,7 +3,7 @@
 Conforme à BOTANICAL_ENGINE.md §5 (contrat d'interface), avec un
 périmètre v1 restreint à la taxonomie et à la nomenclature (GBIF
 Backbone Taxonomy, aucune clé requise). Un `EspeceData` v1 a donc
-`autecologie=None` plutôt qu'une valeur inventée (ADR-007).
+`autecologie=None` plutôt qu'une valeur inventée (ADR-009).
 
 Depuis RFC-0016 (tranche 1/10), le schéma `AutecologyProfileCreate` ci-
 dessous permet de modéliser une observation autécologique réelle et
@@ -171,7 +171,7 @@ class TaxrefResult(BaseModel):
 # RFC-0016 — Schéma forestier spécialisé, tranche 1/10 (AutecologyProfile).
 # Lève partiellement la restriction documentée en tête de ce module :
 # l'autécologie devient modélisable (une variable sourcée à la fois),
-# mais reste vide tant qu'aucune valeur réelle n'est ingérée (ADR-007 —
+# mais reste vide tant qu'aucune valeur réelle n'est ingérée (ADR-009 —
 # ce schéma ne fournit aucune valeur par défaut inventée).
 # ─────────────────────────────────────────────────────────────────────────
 

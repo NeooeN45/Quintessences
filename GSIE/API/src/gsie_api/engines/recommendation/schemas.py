@@ -28,7 +28,7 @@ prétend pas l'assurer.
 
 Ce module ne contient aucun seuil, densité, essence ni période codés en
 dur : ces valeurs proviennent du diagnostic et des connaissances qualifiées
-(`GSIE-CON-002`, `ADR-007`).
+(`GSIE-CON-002`, `ADR-009`).
 """
 
 from datetime import datetime

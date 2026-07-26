@@ -72,7 +72,7 @@ async def gis_version(request: Request) -> EngineVersionResponse:
         "unique (code INSEE + section + numéro), persiste sa géométrie "
         "(Lambert-93) comme resource `place`, et retourne les données "
         "sourcées. Retourne null si aucune parcelle ne correspond — jamais "
-        "de géométrie approximée (ADR-007)."
+        "de géométrie approximée (ADR-009)."
     ),
 )
 @_gis_limiter.limit("30/minute")
@@ -100,7 +100,7 @@ async def gis_cadastre_parcelle(
     summary="Récupérer l'altitude réelle d'un point (API IGN)",
     description=(
         "Interroge l'API de calcul altimétrique de l'IGN (RGE ALTI) pour "
-        "un point WGS 84. Aucune valeur par défaut en cas d'échec (ADR-007)."
+        "un point WGS 84. Aucune valeur par défaut en cas d'échec (ADR-009)."
     ),
 )
 @_gis_limiter.limit("60/minute")

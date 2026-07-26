@@ -1,7 +1,7 @@
 """Client HTTP réel vers l'API SoilGrids (ISRIC, aucune clé requise).
 
 Endpoint vérifié manuellement le 2026-07-17 (pas de données simulées —
-ADR-007) : GET https://rest.isric.org/soilgrids/v2.0/properties/query
+ADR-009) : GET https://rest.isric.org/soilgrids/v2.0/properties/query
 
 Les valeurs brutes retournées sont mises à l'échelle par un
 `d_factor` propre à chaque propriété (ex. pH*10, g/kg → %) — vérifié
@@ -54,7 +54,7 @@ class SoilGridsClient:
             Un dict {nom_propriété: valeur_réelle} — les propriétés sans
             donnée disponible à ce point (mean=null, zones sans
             couverture) sont omises, jamais remplacées par une valeur
-            par défaut (ADR-007).
+            par défaut (ADR-009).
 
         Raises:
             SoilGridsClientError: en cas d'erreur réseau ou de réponse HTTP en échec.

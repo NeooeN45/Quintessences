@@ -374,7 +374,7 @@ def _validate_health_risk_conditional(data: dict[str, Any]) -> list[str]:
 
     Reflète la contrainte SQL `ck_health_risk_confirmation_requires_method`
     — un agent « confirmé » sans méthode citée serait une invention
-    silencieuse (ADR-007).
+    silencieuse (ADR-009).
     """
     if data.get("confirmed_causal_agent") and not data.get("confirmation_method"):
         return ["confirmation_method requis quand confirmed_causal_agent est renseigné"]

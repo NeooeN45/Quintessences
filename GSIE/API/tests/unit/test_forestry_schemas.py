@@ -485,7 +485,7 @@ def test_health_risk_confirmed_agent_without_method_raises() -> None:
     """Reproduit littéralement RFC-0016 §3.1 : un agent causal « confirmé »
 
     sans méthode de confirmation citée serait une invention silencieuse
-    (ADR-007), pas une simplification acceptable.
+    (ADR-009), pas une simplification acceptable.
     """
     with pytest.raises(ValidationError, match="confirmation_method"):
         HealthRiskCreate(

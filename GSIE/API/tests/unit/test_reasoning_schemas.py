@@ -9,7 +9,7 @@ bornes de confiance), `EtapeInference`, `StationContexte`, `BlocContexte`,
 `ContradictionDetectee`, `InferenceResult`, et la fonction `niveau_plancher`.
 
 Références constitutionnelles : GSIE-CON-002 (« ce qui n'est pas sourcé
-n'existe pas »), GSIE-CON-004 (explicabilité), ADR-007 (anti-invention).
+n'existe pas »), GSIE-CON-004 (explicabilité), ADR-009 (anti-invention).
 """
 
 from __future__ import annotations
@@ -430,15 +430,15 @@ class TestStationContexte:
 
 
 class TestBlocContexte:
-    """ADR-007 : aucun bloc sans donnée, sans source ni niveau de preuve."""
+    """ADR-009 : aucun bloc sans donnée, sans source ni niveau de preuve."""
 
     def test_should_reject_empty_valeurs(self) -> None:
-        """valeurs vide : un bloc sans donnée est un bloc inventé (ADR-007)."""
+        """valeurs vide : un bloc sans donnée est un bloc inventé (ADR-009)."""
         with pytest.raises(ValidationError, match="valeurs"):
             _bloc(valeurs={})
 
     def test_should_reject_missing_source_and_evidence_level(self) -> None:
-        """Sans source ni evidence_level : inconstructible (ADR-007)."""
+        """Sans source ni evidence_level : inconstructible (ADR-009)."""
         data: dict[str, object] = {
             "source_moteur": SourceMoteurContexte.climate,
             "valeurs": {"temperature": 12.5},
