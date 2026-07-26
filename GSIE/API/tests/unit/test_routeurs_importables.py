@@ -30,6 +30,18 @@ import pkgutil
 from pathlib import Path
 
 import gsie_api.engines as engines
+from gsie_api.app import create_app
+
+
+def _paquets_moteurs_avec_routeur() -> list[str]:
+    """Noms des paquets moteurs qui possèdent effectivement un ``router.py``."""
+    noms: list[str] = []
+    for module in pkgutil.iter_modules(engines.__path__):
+        if not module.ispkg:
+            continue
+        if (Path(engines.__path__[0]) / module.name / "router.py").exists():
+            noms.append(module.name)
+    return noms
 
 
 def test_tous_les_routeurs_sont_importables() -> None:
@@ -42,10 +54,34 @@ def test_tous_les_routeurs_sont_importables() -> None:
     Un moteur sans ``router.py`` n'est pas un défaut : il est en cours de
     construction. Le test saute silencieusement les paquets sans routeur.
     """
-    for module in pkgutil.iter_modules(engines.__path__):
-        if not module.ispkg:
-            continue
-        chemin = Path(engines.__path__[0]) / module.name / "router.py"
-        if not chemin.exists():
-            continue  # moteur en cours de construction, pas un défaut
-        importlib.import_module(f"gsie_api.engines.{module.name}.router")
+    for nom in _paquets_moteurs_avec_routeur():
+        importlib.import_module(f"gsie_api.engines.{nom}.router")
+
+
+def test_tous_les_routeurs_presents_sont_montes_sur_l_application() -> None:
+    """Un routeur importable mais non monté est inatteignable, donc inutile.
+
+    Le test d'importabilité ci-dessus ne voit pas ce défaut : un routeur peut
+    se charger parfaitement, passer ruff, mypy et toute la suite unitaire, et
+    n'être exposé par aucune route parce que ``app.py`` ne l'inclut jamais.
+
+    Cas réel (2026-07-22) : le Reasoning Engine avait un ``engine.py`` de 655
+    lignes, un ``router.py`` de 240 lignes et ~1 500 lignes de tests verts —
+    et n'était monté nulle part. Le travail était intégralement inatteignable
+    depuis l'API sans qu'aucune porte ne le signale.
+
+    La propriété vérifiée est « tout routeur présent est monté », pas « tout
+    moteur a un routeur » : un moteur en cours de construction n'a pas encore
+    de ``router.py``, et ce n'est pas un défaut.
+    """
+    prefixes_montes = {route.path for route in create_app().routes}
+
+    for nom in _paquets_moteurs_avec_routeur():
+        module = importlib.import_module(f"gsie_api.engines.{nom}.router")
+        prefixe = module.router.prefix
+        assert any(chemin.startswith(f"/api/v1{prefixe}") for chemin in prefixes_montes), (
+            f"Le routeur du moteur '{nom}' (préfixe '{prefixe}') s'importe mais "
+            f"n'est monté sur aucune route de l'application — ajouter "
+            f"`app.include_router({nom}_router, prefix=_settings.api_v1_prefix)` "
+            f"dans app.py."
+        )
