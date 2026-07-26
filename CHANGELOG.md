@@ -47,7 +47,7 @@ Format : `## [version] - YYYY-MM-DD`
 
 ### Portes
 
-- 538 tests unitaires verts (référence : 530), 63 ignorés ; ruff, `ruff
+- 544 tests unitaires verts (référence : 530), 63 ignorés ; ruff, `ruff
   format --check`, mypy `--strict` et
   `tools/check_governance_consistency.py` verts.
 - 8 tests de persistance ajoutés. Réversibilité de `0013` **exécutée** :
@@ -55,6 +55,24 @@ Format : `## [version] - YYYY-MM-DD`
   `upgrade → downgrade → upgrade` sur un conteneur jetable et vérifie que
   le retour arrière ne laisse ni table, ni enums orphelins, ni `resource`
   sans corps.
+
+### Dérivation de `diagnostic_id` corrigée
+
+- Elle ne couvrait que `requete_id` et les `conclusion_id` : requalifier une
+  contrainte en atout produisait un diagnostic différent **sous le même
+  identifiant**. Une citation pouvait résoudre vers une analyse que son
+  auteur n'avait jamais lue.
+- Elle couvre désormais `requete_id`, `station_id`, `type_diagnostic`, les
+  `conclusion_id`, les qualifications et l'état global déclaré
+  (justification et source comprises).
+- **Sérialisation JSON canonique** plutôt que concaténation par séparateur :
+  une clé assemblée par séparateur peut être imitée en glissant ce
+  séparateur dans une justification. La structure JSON ne se laisse pas
+  imiter par son propre contenu.
+- 6 tests ajoutés, vérifiés comme régression réelle : avec l'ancienne
+  formule, 5 des 6 échouent.
+- Reste hors dérivation : les contradictions déclarées. La garde
+  `DiagnosticConflitError` continue de couvrir ce cas.
 
 ### Deux défauts préexistants de la chaîne de migrations (signalés, non corrigés)
 

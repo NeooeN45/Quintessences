@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-26 — **Persistance des diagnostics** : nouveau type de resource `diagnostic` (registre 89 → 90), migration `0013`, et écriture du résultat dans `DiagnosticEngine.diagnostiquer` — le moteur n'est plus sans effet de bord, changement de contrat documenté. `diagnostic_id` est résolvable : la tranche R2 du Recommendation Engine est débloquée. 538 tests unitaires verts, 63 ignorés ; ruff, mypy `--strict` et le contrôle de gouvernance verts. Réversibilité de la migration `0013` **exécutée et verte**. **Alerte de déploiement** : deux défauts préexistants de la chaîne de migrations ont été découverts en l'exécutant — un `upgrade` sautant plusieurs révisions avance `alembic_version` sans appliquer le DDL, et `0012` échoue sur une base vierge. Détails dans la section P0 ci-dessous. **Risque résiduel** : `diagnostic_id` est dérivé de `requete_id` et des seuls `conclusion_id`, donc deux contenus distincts peuvent dériver le même identifiant ; le moteur refuse et nomme le conflit au lieu d'écraser. État antérieur (même jour) — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
+| **Dernière mise à jour** | 2026-07-26 — **Persistance des diagnostics** : nouveau type de resource `diagnostic` (registre 89 → 90), migration `0013`, et écriture du résultat dans `DiagnosticEngine.diagnostiquer` — le moteur n'est plus sans effet de bord, changement de contrat documenté. `diagnostic_id` est résolvable : la tranche R2 du Recommendation Engine est débloquée. 544 tests unitaires verts, 63 ignorés ; ruff, mypy `--strict` et le contrôle de gouvernance verts. Réversibilité de la migration `0013` **exécutée et verte**. **Alerte de déploiement** : deux défauts préexistants de la chaîne de migrations ont été découverts en l'exécutant — un `upgrade` sautant plusieurs révisions avance `alembic_version` sans appliquer le DDL, et `0012` échoue sur une base vierge. Détails dans la section P0 ci-dessous. **Dérivation de `diagnostic_id` corrigée** : elle couvre désormais les qualifications et l'état global déclaré, en JSON canonique. Reste hors dérivation : les contradictions déclarées, pour lesquelles la garde de conflit continue de servir. État antérieur (même jour) — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
 
 ---
 
@@ -532,15 +532,27 @@ d'une base vierge :
    sur `source_id` ; `0012` tente ensuite de recréer ces index et lève
    `DuplicateTable`. Un `upgrade head` depuis zéro est donc impossible.
 
-**Risque résiduel identifié (non corrigé).** `diagnostic_id` est dérivé par
-`uuid5` de `requete_id` et des seuls `conclusion_id`. Deux requêtes
-partageant ces éléments mais différant par leurs qualifications, leur état
-global ou leurs contradictions dérivent donc le même identifiant pour deux
-contenus distincts. Le moteur refuse et nomme le conflit
-(`DiagnosticConflitError`) plutôt que d'écraser un diagnostic déjà émis,
-mais la dérivation elle-même reste incomplète : elle devrait couvrir tout
-ce qui influence la sortie. Correction à arbitrer — elle changerait les
-identifiants déjà émis.
+**Dérivation de `diagnostic_id` corrigée (2026-07-26).** Elle couvre
+désormais `requete_id`, `station_id`, `type_diagnostic`, les
+`conclusion_id`, **les qualifications** et **l'état global déclaré**
+(justification et source comprises), sous forme de sérialisation JSON
+canonique — non de concaténation par séparateur, qu'un champ de texte libre
+pourrait imiter. Requalifier une contrainte en atout, ou passer de
+« vigueur réduite » à « critique », produit bien un identifiant différent.
+Vérifié comme régression réelle : avec l'ancienne formule, 5 des 6
+nouveaux tests échouent.
+
+⚠️ **Les identifiants émis avant cette correction ne sont plus
+reproductibles.** Aucun diagnostic n'ayant été persisté avant elle
+(la persistance et la correction sont du même jour), l'impact est nul en
+base ; il ne le serait plus à l'avenir.
+
+**Risque résiduel restant.** Les **contradictions déclarées** n'entrent pas
+dans la dérivation : deux requêtes identiques par ailleurs mais déclarant
+des contradictions différentes dérivent encore le même identifiant. Le
+moteur refuse et nomme le conflit (`DiagnosticConflitError`) plutôt que
+d'écraser. Les inclure est une ligne à ajouter dans `_cle_derivation` —
+non fait faute de demande, et cela changerait à nouveau les identifiants.
 
 ### P0 — Refondation constitutionnelle (corrections appliquées, EN_REVUE)
 

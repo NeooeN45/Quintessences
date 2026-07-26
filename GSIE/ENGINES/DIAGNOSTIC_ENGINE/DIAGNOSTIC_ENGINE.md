@@ -130,11 +130,26 @@ dans `inference` rendrait indistinguables en base une conclusion tracée
 par règles explicites et une prédiction opaque : le lecteur ne saurait
 plus laquelle il conteste, ce que `GSIE-CON-004` interdit.
 
-`diagnostic_id` reste dérivé par `uuid5` de `requete_id` et des
-`conclusion_id`. Rejouer une requête identique est donc idempotent. Si le
-même identifiant est dérivé pour un contenu différent — mêmes conclusions,
-qualifications divergentes — le moteur lève `DiagnosticConflitError`
-plutôt que d'écraser un diagnostic déjà émis et potentiellement déjà cité.
+`diagnostic_id` est dérivé par `uuid5` de tout ce qui détermine la sortie :
+`requete_id`, `station_id`, `type_diagnostic`, les `conclusion_id`, **les
+qualifications** et **l'état global déclaré** (justification et source
+comprises). Rejouer une requête identique est donc idempotent, et
+requalifier une contrainte en atout produit bien un identifiant différent.
+
+La clé est une sérialisation JSON canonique, non une concaténation par
+séparateur : une clé assemblée par séparateur pourrait être imitée depuis
+un champ de texte libre — il suffirait de glisser le séparateur dans une
+justification d'état global.
+
+N'entrent volontairement pas dans la dérivation : `date_diagnostic` (deux
+exécutions de la même analyse à des heures différentes restent le même
+diagnostic) et `contexte` (il ne produit que des constats d'absence).
+
+**Reste hors de la dérivation** : les contradictions déclarées. Deux
+requêtes identiques par ailleurs mais déclarant des contradictions
+différentes dérivent encore le même identifiant. Le moteur lève alors
+`DiagnosticConflitError` plutôt que d'écraser un diagnostic déjà émis et
+potentiellement déjà cité.
 
 ## 6. Garanties
 

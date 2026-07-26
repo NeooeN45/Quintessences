@@ -1337,3 +1337,101 @@ class TestPersistance:
         parce qu'il échapperait au `except` du routeur.
         """
         assert issubclass(DiagnosticConflitError, DiagnosticEngineError)
+
+
+class TestIdentifiantCouvreLaQualification:
+    """La dérivation couvre tout ce qui détermine la sortie.
+
+    Une version antérieure ne retenait que `requete_id` et les
+    `conclusion_id` : requalifier une contrainte en atout produisait un
+    diagnostic différent sous le même identifiant. Une citation aurait alors
+    pu résoudre vers une analyse que son auteur n'a jamais lue.
+    """
+
+    _CID = UUID("55555555-5555-4555-8555-555555555555")
+
+    def _requete_qualifiee(
+        self,
+        *,
+        role: RoleDiagnostic = RoleDiagnostic.contrainte,
+        domaine_element: DomaineElement = DomaineElement.pedologique,
+        etat: EtatGlobal = EtatGlobal.vigueur_reduite,
+        justification: str = "Vigueur réduite constatée",
+    ) -> DiagnosticRequest:
+        conclusion = _conclusion(conclusion_id=self._CID)
+        return DiagnosticRequest(
+            requete_id=_REQUETE_ID,
+            station_id=_STATION_ID,
+            conclusions=[conclusion],
+            qualifications=[
+                _qualification(conclusion_id=self._CID, role=role, domaine_element=domaine_element)
+            ],
+            etat_global=EtatGlobalDeclare(
+                etat=etat,
+                justification=justification,
+                source=_source(),
+                evidence_level=EvidenceLevel.B,
+            ),
+            contradictions=[],
+            contexte=_contexte_climat_seul(),
+            type_diagnostic=TypeDiagnostic.stationnel,
+        )
+
+    async def _identifiant(self, requete: DiagnosticRequest) -> UUID:
+        diag = await _engine().diagnostiquer(requete, _DATE_DIAGNOSTIC)
+        return diag.diagnostic_id
+
+    async def test_role_different_identifiant_different(self) -> None:
+        """Rend impossible : une contrainte et un atout partageant un ID."""
+        contrainte = await self._identifiant(self._requete_qualifiee())
+        atout = await self._identifiant(self._requete_qualifiee(role=RoleDiagnostic.atout))
+        assert contrainte != atout
+
+    async def test_domaine_different_identifiant_different(self) -> None:
+        """Rend impossible : deux domaines scientifiques sous un même ID."""
+        pedologique = await self._identifiant(self._requete_qualifiee())
+        climatique = await self._identifiant(
+            self._requete_qualifiee(domaine_element=DomaineElement.climatique)
+        )
+        assert pedologique != climatique
+
+    async def test_etat_global_different_identifiant_different(self) -> None:
+        """Rend impossible : « sain » et « critique » sous le même ID.
+
+        C'est le cas le plus coûteux : deux diagnostics opposés sur l'état
+        d'une station, indistinguables par leur identifiant.
+        """
+        vigueur_reduite = await self._identifiant(self._requete_qualifiee())
+        critique = await self._identifiant(self._requete_qualifiee(etat=EtatGlobal.critique))
+        assert vigueur_reduite != critique
+
+    async def test_justification_differente_identifiant_different(self) -> None:
+        """La justification de l'état global fait partie de ce qui est dit."""
+        initiale = await self._identifiant(self._requete_qualifiee())
+        autre = await self._identifiant(
+            self._requete_qualifiee(justification="Dépérissement observé sur 30 % des tiges")
+        )
+        assert initiale != autre
+
+    async def test_cle_non_forgeable_depuis_un_texte_libre(self) -> None:
+        """Rend impossible : une clé imitée par le contenu d'un champ libre.
+
+        Une clé assemblée par séparateur pourrait être reproduite en
+        glissant ce séparateur dans une justification. La sérialisation
+        JSON canonique ne se laisse pas imiter par son propre contenu.
+        """
+        normale = await self._identifiant(self._requete_qualifiee())
+        forgee = await self._identifiant(
+            self._requete_qualifiee(justification=f'|{_REQUETE_ID}|{self._CID}","etat":"critique')
+        )
+        assert normale != forgee
+
+    async def test_identifiant_stable_sur_dix_executions(self) -> None:
+        """Rend impossible : une dérivation dépendant d'un ordre de dict.
+
+        Dix exécutions de la même requête produisent le même identifiant :
+        aucun parcours non ordonné n'entre dans la clé.
+        """
+        requete = self._requete_qualifiee()
+        identifiants = {await self._identifiant(requete) for _ in range(10)}
+        assert len(identifiants) == 1

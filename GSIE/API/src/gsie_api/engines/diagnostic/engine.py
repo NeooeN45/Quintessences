@@ -26,6 +26,7 @@ qui existe déjà, pas un nombre nouveau (`ADR-007`). Un diagnostic n'est pas
 plus assuré que sa conclusion la moins assurée.
 """
 
+import json
 from datetime import datetime
 from uuid import UUID, uuid5
 
@@ -82,13 +83,17 @@ class DiagnosticEngineError(Exception):
 class DiagnosticConflitError(DiagnosticEngineError):
     """Un diagnostic différent porte déjà cet identifiant.
 
-    `diagnostic_id` est dérivé de `requete_id` et des `conclusion_id` par
-    `uuid5`. Deux requêtes qui partagent ces éléments mais diffèrent par
-    leurs qualifications, leur état global ou leurs contradictions dérivent
-    donc le même identifiant pour deux contenus distincts. Écraser
-    silencieusement le premier réécrirait un diagnostic déjà cité ; l'ignorer
-    ferait pointer l'identifiant sur un contenu que l'appelant n'a pas
-    produit. Le moteur refuse et nomme le conflit.
+    `diagnostic_id` est dérivé par `uuid5` de la requête, des conclusions,
+    de leurs qualifications et de l'état global déclaré (voir
+    `_cle_derivation`). Reste hors de la dérivation un seul élément qui
+    influence la sortie : **les contradictions déclarées**. Deux requêtes
+    identiques par ailleurs, mais déclarant des contradictions différentes,
+    dérivent donc encore le même identifiant pour deux contenus distincts.
+
+    Cette garde existe pour ce cas résiduel. Écraser silencieusement le
+    premier diagnostic réécrirait un contenu déjà cité ; l'ignorer ferait
+    pointer l'identifiant sur un contenu que l'appelant n'a pas produit. Le
+    moteur refuse et nomme le conflit.
     """
 
 
@@ -195,18 +200,12 @@ class DiagnosticEngine:
         # 6. Incertitudes : un constat factuel par bloc de contexte absent.
         incertitudes = _incertitudes_contexte(request.contexte)
 
-        # 7. diagnostic_id : uuid5 dérivé de requete_id et conclusions_source triés.
+        # 7. diagnostic_id : uuid5 dérivé de tout ce qui détermine la sortie.
         conclusions_source_triees = sorted(c.conclusion_id for c in request.conclusions)
-        # Séparateur explicite plutôt que la représentation Python d'une liste :
-        # `repr()` est un détail d'implémentation de CPython, et le faire entrer
-        # dans la dérivation d'un identifiant persistant reviendrait à faire
-        # dépendre la citabilité d'un diagnostic d'un choix de la bibliothèque
-        # standard. Une évolution de `UUID.__repr__` changerait silencieusement
-        # tous les identifiants déjà émis.
-        cle_derivation = "|".join(
-            [str(request.requete_id), *(str(c) for c in conclusions_source_triees)]
+        diagnostic_id = uuid5(
+            _NAMESPACE_DETERMINISME,
+            _cle_derivation(request, conclusions_source_triees),
         )
-        diagnostic_id = uuid5(_NAMESPACE_DETERMINISME, cle_derivation)
 
         # 9. Construire le Diagnostic. statut_validation reste à brouillon
         # (valeur par défaut) — un moteur ne produit pas de diagnostic
@@ -252,9 +251,9 @@ class DiagnosticEngine:
             if existant.contenu != contenu:
                 raise DiagnosticConflitError(
                     f"diagnostic {diagnostic.diagnostic_id} déjà persisté avec un "
-                    f"contenu différent : même requete_origine et mêmes conclusions "
-                    f"source, mais qualifications, état global ou contradictions "
-                    f"divergents"
+                    f"contenu différent : requête, conclusions, qualifications et "
+                    f"état global identiques, mais contradictions déclarées "
+                    f"divergentes — seul élément hors de la dérivation de l'identifiant"
                 )
             logger.info(
                 "diagnostic_deja_persiste",
@@ -298,6 +297,50 @@ class DiagnosticEngine:
             etat_global=diagnostic.etat_global.value,
             statut_validation=diagnostic.statut_validation.value,
         )
+
+
+def _cle_derivation(request: DiagnosticRequest, conclusions_triees: list[UUID]) -> str:
+    """Construit la clé dont `diagnostic_id` est dérivé.
+
+    La clé couvre tout ce qui détermine la sortie du moteur : la requête
+    d'origine, les conclusions, **leurs qualifications** et **l'état global
+    déclaré**. Une version antérieure ne retenait que `requete_id` et les
+    `conclusion_id` : deux requêtes portant les mêmes conclusions mais des
+    qualifications ou un état global différents dérivaient alors le même
+    identifiant pour deux diagnostics distincts. Requalifier une contrainte
+    en atout produit un autre diagnostic ; il doit porter un autre
+    identifiant.
+
+    Sérialisation JSON canonique (`sort_keys`) plutôt que concaténation :
+    une clé assemblée par séparateur peut être forgée depuis un champ de
+    texte libre — une justification d'état global contenant le séparateur
+    suffirait à imiter la clé d'un autre diagnostic. La structure JSON ne
+    peut pas être imitée par son propre contenu.
+
+    Ni `repr()`, ni `hash()`, ni l'ordre d'itération d'un dictionnaire
+    n'entrent dans cette dérivation : ce sont des détails d'implémentation
+    de CPython, et faire dépendre d'eux la citabilité d'un diagnostic
+    reviendrait à accepter qu'une montée de version change silencieusement
+    tous les identifiants déjà émis.
+
+    Ce qui n'y entre volontairement pas : `date_diagnostic` (deux exécutions
+    de la même analyse à des heures différentes restent le même diagnostic)
+    et `contexte` (il ne produit que des constats d'absence). Ce qui n'y
+    entre pas encore : les contradictions déclarées — voir la docstring de
+    `DiagnosticConflitError`.
+    """
+    charge_utile = {
+        "requete_id": str(request.requete_id),
+        "station_id": str(request.station_id),
+        "type_diagnostic": request.type_diagnostic.value,
+        "conclusions": [str(identifiant) for identifiant in conclusions_triees],
+        "qualifications": [
+            qualification.model_dump(mode="json")
+            for qualification in sorted(request.qualifications, key=lambda q: q.conclusion_id)
+        ],
+        "etat_global": request.etat_global.model_dump(mode="json"),
+    }
+    return json.dumps(charge_utile, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
 # --- Fonctions pures (testables isolément, sans session) --------------------
