@@ -1,8 +1,12 @@
-"""Modèles SQLAlchemy — Knowledge Engine + taxonomie botanique + écosystèmes.
+"""Modèles SQLAlchemy archivés du schéma Knowledge v6.1.
 
-Schéma relationnel PostgreSQL pour la persistance du Knowledge Engine.
-Le graphe de connaissances (Apache AGE) est une projection de ces tables
-pour les requêtes de traversée Cypher.
+Ces modèles sont conservés pour la future migration de leurs seeds vers le
+métamodèle v6.2. Ils ne font plus partie du schéma courant depuis
+`DEC-000023`.
+
+Ils utilisent une ``LegacyBase`` distincte. Les rattacher à la ``Base`` v6.2
+recréerait silencieusement les douze tables supprimées dès qu'un test ou un
+outil importe ce module.
 
 Tables :
 - knowledge_objects : KnowledgeObject (nœud central, versionné CON-010)
@@ -38,12 +42,16 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from gsie_api.infrastructure.models import Base, TimestampMixin
+from gsie_api.infrastructure.models import TimestampMixin
 
 
-class KnowledgeObjectModel(Base, TimestampMixin):
+class LegacyBase(DeclarativeBase):
+    """Base isolée du schéma v6.1, exclue des migrations Alembic courantes."""
+
+
+class KnowledgeObjectModel(LegacyBase, TimestampMixin):
     """KnowledgeObject — nœud de connaissance versionné (CON-010).
 
     Source unique de vérité pour tous les moteurs de raisonnement.
@@ -123,7 +131,7 @@ class KnowledgeObjectModel(Base, TimestampMixin):
     )
 
 
-class KnowledgeHistoryModel(Base):
+class KnowledgeHistoryModel(LegacyBase):
     """Historique de version (CON-010 — aucune connaissance supprimée silencieusement).
 
     Chaque entrée archive une version antérieure avec sa justification.
@@ -151,7 +159,7 @@ class KnowledgeHistoryModel(Base):
     )
 
 
-class KnowledgeDomaineValiditeModel(Base):
+class KnowledgeDomaineValiditeModel(LegacyBase):
     """Domaine de validité — conditions d'application d'une connaissance."""
 
     __tablename__ = "knowledge_domaines_validite"
@@ -173,7 +181,7 @@ class KnowledgeDomaineValiditeModel(Base):
     )
 
 
-class KnowledgeRelationModel(Base):
+class KnowledgeRelationModel(LegacyBase):
     """Référence vers une autre connaissance (graphe)."""
 
     __tablename__ = "knowledge_relations"
@@ -200,7 +208,7 @@ class KnowledgeRelationModel(Base):
     )
 
 
-class KnowledgeMotCleModel(Base):
+class KnowledgeMotCleModel(LegacyBase):
     """Mot-clé pour la recherche (many-to-many)."""
 
     __tablename__ = "knowledge_mots_cles"
@@ -221,7 +229,7 @@ class KnowledgeMotCleModel(Base):
     )
 
 
-class KnowledgeConflitModel(Base):
+class KnowledgeConflitModel(LegacyBase):
     """Conflit bibliographique (S-3 — documentés, jamais résolus arbitrairement)."""
 
     __tablename__ = "knowledge_conflits"
@@ -243,7 +251,7 @@ class KnowledgeConflitModel(Base):
 # --- Taxonomie botanique (Phase 2) ---
 
 
-class BotanicalFamilleModel(Base, TimestampMixin):
+class BotanicalFamilleModel(LegacyBase, TimestampMixin):
     """Famille botanique (ex. Fagaceae, Pinaceae)."""
 
     __tablename__ = "botanical_familles"
@@ -256,7 +264,7 @@ class BotanicalFamilleModel(Base, TimestampMixin):
     genres: Mapped[list["BotanicalGenreModel"]] = relationship(back_populates="famille")
 
 
-class BotanicalGenreModel(Base, TimestampMixin):
+class BotanicalGenreModel(LegacyBase, TimestampMixin):
     """Genre botanique (ex. Quercus, Fagus, Pinus)."""
 
     __tablename__ = "botanical_genres"
@@ -274,7 +282,7 @@ class BotanicalGenreModel(Base, TimestampMixin):
     essences: Mapped[list["BotanicalEssenceModel"]] = relationship(back_populates="genre")
 
 
-class BotanicalEssenceModel(Base, TimestampMixin):
+class BotanicalEssenceModel(LegacyBase, TimestampMixin):
     """Essence forestière — espèce botanique (ex. Quercus petraea, chêne sessile).
 
     Source : BD Forêt IGN, GBIF, BDNFF (Base de Données Nomenclaturale de la Flore de France).
@@ -323,7 +331,7 @@ class BotanicalEssenceModel(Base, TimestampMixin):
 # --- Écosystèmes (Phase 4) ---
 
 
-class EcosystemHabitatModel(Base, TimestampMixin):
+class EcosystemHabitatModel(LegacyBase, TimestampMixin):
     """Habitat écologique — Natura 2000 (EUR28) / Cahiers d'habitats.
 
     Source : EUR28 (European Union Interpretation Manual),
@@ -354,7 +362,7 @@ class EcosystemHabitatModel(Base, TimestampMixin):
     )
 
 
-class EcosystemStationModel(Base, TimestampMixin):
+class EcosystemStationModel(LegacyBase, TimestampMixin):
     """Type de station forestière — INRAE/ONF.
 
     Source : Catalogues des types de stations (INRAE, ONF, par région forestière).
@@ -400,7 +408,7 @@ class EcosystemStationModel(Base, TimestampMixin):
     )
 
 
-class EcosystemGroupeEcologiqueModel(Base, TimestampMixin):
+class EcosystemGroupeEcologiqueModel(LegacyBase, TimestampMixin):
     """Groupe écologique — bio-indicateurs (ECOPHYTO, INRAE).
 
     Source : ECOPHYTO (base de bio-indication floristique, INRAE),

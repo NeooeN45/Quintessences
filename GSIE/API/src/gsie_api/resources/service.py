@@ -32,14 +32,18 @@ from gsie_api.resources.schemas import (
     ResourceUpdate,
     RevisionRead,
 )
-from gsie_api.resources.validators import validate_resource_data
+from gsie_api.resources.validators import (
+    ResourceValidationError,
+    validate_resource_data,
+    validate_resource_payload,
+    validate_resource_state,
+)
 from gsie_api.websocket.events import EventType, WSEvent
 
 logger = get_logger("gsie_api.resources.service")
 
 # Constantes
 _GSIE_ID_SUFFIX_LENGTH = 8
-_MAX_STRING_LENGTH = 10000
 
 
 class ResourceService:
@@ -198,6 +202,15 @@ class ResourceService:
             data=data,
         )
 
+    @staticmethod
+    def _current_state(type_instance: Any) -> dict[str, Any]:
+        """Relit l'état courant complet de la ligne du type (hors `id`)."""
+        return {
+            col.name: getattr(type_instance, col.name)
+            for col in type_instance.__table__.columns
+            if col.name != "id"
+        }
+
     def _compute_field_changes(
         self, type_instance: Any, safe_data: dict[str, Any]
     ) -> list[dict[str, Any]]:
@@ -225,7 +238,7 @@ class ResourceService:
         model_cls = self._get_model_cls(request.type)
         errors = validate_resource_data(request.type, request.data)
         if errors:
-            raise ValueError(f"Validation échouée : {'; '.join(errors)}")
+            raise ResourceValidationError(request.type, errors)
 
         safe_data = self._filter_data(model_cls, request.data)
         gsie_id = request.gsie_id or self._generate_gsie_id(request.type)
@@ -330,6 +343,11 @@ class ResourceService:
             return None
 
         safe_data = self._filter_data(model_cls, request.data)
+        # La validation porte sur l'état final, avant toute mutation : un
+        # patch partiel ne peut pas rendre la resource invalide en silence,
+        # et un patch refusé ne laisse ni Revision ni événement d'outbox.
+        await self._reject_invalid_update(resource.type, type_instance, request.data, safe_data)
+
         field_changes = self._compute_field_changes(type_instance, safe_data)
         next_version = await self._get_next_version(resource_id)
 
@@ -360,6 +378,35 @@ class ResourceService:
         )
         result = await self.get(resource_id)
         return result
+
+    async def _reject_invalid_update(
+        self,
+        type_name: str,
+        type_instance: Any,
+        raw_data: dict[str, Any],
+        safe_data: dict[str, Any],
+    ) -> None:
+        """Refuse une mise à jour dont l'état final violerait les invariants.
+
+        Les bornes de transport sont jugées sur le corps reçu, les invariants
+        sur l'état courant fusionné avec le patch filtré — c'est exactement ce
+        qui serait écrit. La session est remise à plat avant de lever, pour
+        qu'aucune mutation partielle ni aucun événement ne survive à l'échec.
+        """
+        errors = validate_resource_payload(raw_data)
+        final_state = {**self._current_state(type_instance), **safe_data}
+        errors.extend(validate_resource_state(type_name, final_state))
+        if not errors:
+            return
+
+        await self._session.rollback()
+        logger.warning(
+            "resource_update_rejected",
+            type=type_name,
+            error_count=len(errors),
+            fields=sorted(safe_data),
+        )
+        raise ResourceValidationError(type_name, errors)
 
     async def delete(
         self,

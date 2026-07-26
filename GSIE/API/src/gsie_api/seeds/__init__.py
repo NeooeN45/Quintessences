@@ -1,15 +1,8 @@
-"""Module de seeding — alimentation de la base de connaissances.
+"""Seeds historiques du schéma Knowledge v6.1 — archivés.
 
-Responsabilité : insérer les données de référence (taxonomie botanique,
-écosystèmes, connaissances) dans PostgreSQL.
-
-Utilisation :
-    python -m gsie_api.seeds.run_seeds  # tous les seeds
-    python -m gsie_api.seeds.run_seeds --botanical  # seulement botanique
-    python -m gsie_api.seeds.run_seeds --ecosystem  # seulement écosystèmes
-
-Les seeds sont idempotents : ils utilisent INSERT ... ON CONFLICT DO NOTHING.
-Aucune donnée n'est écrasée si elle existe déjà.
+Les tables ciblées ont été retirées du schéma courant par `DEC-000023`.
+Leur contenu est conservé comme matière de migration vers les resources
+v6.2 ; aucune commande de ce package ne doit initialiser une nouvelle base.
 """
 
 from __future__ import annotations

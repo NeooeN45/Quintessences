@@ -14,7 +14,7 @@ Sécurité : auth JWT obligatoire sur tous les endpoints (OWASP A01).
 from typing import Annotated, Any
 from uuid import UUID, uuid5
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
@@ -33,8 +33,29 @@ from gsie_api.resources.schemas import (
     RevisionRead,
 )
 from gsie_api.resources.service import ResourceService
+from gsie_api.resources.validators import ResourceValidationError
 
 router = APIRouter(prefix="/resources", tags=["resources"])
+
+# Code stable de la réponse 422 — contrat pour les clients (Hub UE5, GeoSylva).
+VALIDATION_ERROR_CODE = "resource_validation_failed"
+
+
+def _erreur_validation(exc: ResourceValidationError) -> HTTPException:
+    """Traduit une erreur métier en 422 au corps stable.
+
+    422 et non 400 : le corps est syntaxiquement correct, ce sont les
+    invariants du métamodèle qui refusent l'état demandé.
+    """
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={
+            "code": VALIDATION_ERROR_CODE,
+            "resource_type": exc.type_name,
+            "errors": exc.errors,
+        },
+    )
+
 
 # Réutiliser le limiter global (storage_uri Redis configuré)
 # — ne pas instancier un Limiter local (serait memory://, non distribué)
@@ -43,6 +64,11 @@ from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 # Type aliases pour lisibilité
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
+# Note : tout endpoint décoré par `@_limiter.limit` doit déclarer
+# `response: Response`. Le limiter est configuré avec `headers_enabled=True`
+# et y injecte les en-têtes de quota ; sans ce paramètre, slowapi lève sur le
+# chemin nominal — la réponse en succès, pas l'erreur (cf. auth/router.py).
 
 # Namespace UUID fixe pour générer des author_id déterministes depuis les usernames
 # (login dev émet "admin" pas un UUID — uuid5 garantit la traçabilité CON-010)
@@ -99,6 +125,7 @@ async def list_types(
 @_limiter.limit("60/minute")
 async def list_resources(
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
     type: str | None = Query(None, description="Filtrer par type (ex. assertion, observation)"),
@@ -131,6 +158,7 @@ async def list_resources(
 async def create_resource(
     body: ResourceCreate,
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
 ) -> ResourceRead:
@@ -139,7 +167,10 @@ async def create_resource(
     service = ResourceService(session)
     try:
         return await service.create(body, author_id=_extract_author_id(user))
+    except ResourceValidationError as exc:
+        raise _erreur_validation(exc) from exc
     except ValueError as exc:
+        # Type inconnu du registre — la requête ne désigne aucune ressource.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -152,6 +183,7 @@ async def create_resource(
 async def get_resource(
     resource_id: UUID,
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
 ) -> ResourceRead:
@@ -177,6 +209,7 @@ async def update_resource(
     resource_id: UUID,
     body: ResourceUpdate,
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
 ) -> ResourceRead:
@@ -189,7 +222,10 @@ async def update_resource(
     check_permission(user, resource_type, "write")
     try:
         result = await service.update(resource_id, body, author_id=_extract_author_id(user))
+    except ResourceValidationError as exc:
+        raise _erreur_validation(exc) from exc
     except ValueError as exc:
+        # Type inconnu du registre — la requête ne désigne aucune ressource.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if result is None:
         raise HTTPException(status_code=404, detail="Resource non trouvée")
@@ -205,6 +241,7 @@ async def update_resource(
 async def delete_resource(
     resource_id: UUID,
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
     justification: str = Query("Suppression", description="Justification (CON-010)"),
@@ -233,6 +270,7 @@ async def delete_resource(
 async def list_revisions(
     resource_id: UUID,
     request: Request,
+    response: Response,
     user: CurrentUser,
     session: DbSession,
 ) -> list[RevisionRead]:

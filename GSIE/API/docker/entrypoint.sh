@@ -1,27 +1,23 @@
 #!/bin/sh
 # entrypoint.sh — démarrage sans mutation implicite du schéma.
 #
-# Les migrations sont une opération explicite. Toute traversée de la révision
-# irréversible 0005 exige une confirmation de backup et une autorisation
-# destructive distinctes.
+# Les migrations restent une opération explicite. La baseline 20260726_0001
+# ne prend en charge que les bases neuves ou déjà rattachées à cette lignée.
 set -eu
 
 if [ "${GSIE_RUN_MIGRATIONS_ON_STARTUP:-false}" = "true" ]; then
-    current_revision="$(alembic current 2>/dev/null || true)"
-    destructive_pending=true
-    case "$current_revision" in
-        *0005*|*0006*|*0007*|*0008*|*0009*|*0010*|*0011*|*0012*)
-            destructive_pending=false
-            ;;
-    esac
+    echo "[entrypoint] Vérification de la lignée Alembic..."
+    if ! current_revision="$(alembic current 2>&1)"; then
+        echo "[entrypoint] REFUS: historique Alembic absent ou incompatible." >&2
+        printf '%s\n' "$current_revision" >&2
+        echo "[entrypoint] Recréer la base locale ou exécuter une procédure de reprise validée." >&2
+        exit 78
+    fi
 
-    if [ "$destructive_pending" = "true" ]; then
-        if [ "${GSIE_DATABASE_BACKUP_CONFIRMED:-false}" != "true" ] || \
-           [ "${GSIE_ALLOW_DESTRUCTIVE_MIGRATIONS:-false}" != "true" ]; then
-            echo "[entrypoint] REFUS: la migration 0005 peut supprimer les tables legacy." >&2
-            echo "[entrypoint] Confirmer le backup ET l'autorisation destructive explicitement." >&2
-            exit 78
-        fi
+    if [ -n "$current_revision" ]; then
+        echo "[entrypoint] Révision actuelle: $current_revision"
+    else
+        echo "[entrypoint] Base non versionnée: application de la baseline contrôlée."
     fi
 
     echo "[entrypoint] Lancement explicite des migrations Alembic..."

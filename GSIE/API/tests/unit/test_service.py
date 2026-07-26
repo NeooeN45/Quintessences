@@ -21,11 +21,12 @@ try:
 except ImportError:
     _GeometryType = None  # type: ignore
 
-from gsie_api.infrastructure.models import Base, ResourceModel
+from gsie_api.infrastructure.models import RESOURCE_TYPES, Base, ResourceModel
 from gsie_api.infrastructure.models.outbox import OutboxEvent
 from gsie_api.outbox_worker import deliver_outbox_batch
 from gsie_api.resources.schemas import ResourceCreate, ResourceUpdate
 from gsie_api.resources.service import ResourceService
+from gsie_api.resources.validators import MAX_STRING_LENGTH, ResourceValidationError
 
 # --- Adaptateurs de types pour SQLite ----------------------------------------
 
@@ -67,8 +68,9 @@ async def session():
             if col.server_default is not None:
                 sd = col.server_default
                 sd_arg = getattr(sd, "arg", sd)
-                # "now()" string → DefaultClause(func.now()) (compatible SQLite)
-                if isinstance(sd_arg, str) and sd_arg == "now()":
+                # "now()" (chaîne ou text()) → DefaultClause(func.now()),
+                # seule forme que SQLite sait compiler.
+                if str(sd_arg) == "now()":
                     replaced.append((col, "server_default", col.server_default))
                     col.server_default = DefaultClause(func.now())
                 # func.text('...::jsonb') → DefaultClause("'{}'") (cast PG non supporté)
@@ -533,3 +535,212 @@ class TestUpdateBehavior:
         assert result is not None
         # entity_subtype ne doit pas changer
         assert result.data.get("entity_subtype") == "original"
+
+
+class TestUpdateValidationGate:
+    """La mise à jour est validée sur l'état final, pas sur le patch seul.
+
+    Avant ce garde-fou, `update()` ne passait jamais par
+    `validate_resource_data` : un enum inconnu ou une règle métier violée
+    entrait en base par la porte de derrière, avec Revision et événement
+    d'outbox à l'appui — donc traçable et faux à la fois.
+    """
+
+    @staticmethod
+    async def _assertion_valide(service: ResourceService) -> Any:
+        return await service.create(
+            ResourceCreate(
+                type="assertion",
+                data={"claim_kind": "relation", "lifecycle_status": "draft"},
+            )
+        )
+
+    @staticmethod
+    async def _etat_persiste(session: AsyncSession, resource_id: Any) -> dict[str, Any]:
+        """Relit l'état réellement écrit, hors cache d'identité de la session."""
+        session.expire_all()
+        model_cls = RESOURCE_TYPES["assertion"]
+        instance = await session.get(model_cls, resource_id)
+        assert instance is not None
+        return {
+            col.name: getattr(instance, col.name)
+            for col in instance.__table__.columns
+            if col.name != "id"
+        }
+
+    @pytest.mark.asyncio
+    async def test_should_reject_invalid_enum_on_update(self, session: AsyncSession) -> None:
+        """Un enum invalide est refusé — mêmes règles qu'à la création."""
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+
+        with pytest.raises(ResourceValidationError) as exc_info:
+            await service.update(
+                created.id,
+                ResourceUpdate(data={"claim_kind": "toto"}, justification="enum invalide"),
+            )
+
+        assert exc_info.value.type_name == "assertion"
+        assert any("claim_kind" in erreur for erreur in exc_info.value.errors)
+
+    @pytest.mark.asyncio
+    async def test_should_leave_state_revision_and_outbox_untouched_on_reject(
+        self, session: AsyncSession
+    ) -> None:
+        """Un refus ne laisse ni mutation, ni Revision, ni événement fantôme."""
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+        revisions_avant = len(await service.list_revisions(created.id))
+        evenements_avant = len((await session.execute(select(OutboxEvent))).scalars().all())
+
+        with pytest.raises(ResourceValidationError):
+            await service.update(
+                created.id,
+                ResourceUpdate(data={"claim_kind": "toto"}, justification="enum invalide"),
+            )
+
+        etat = await self._etat_persiste(session, created.id)
+        assert etat["claim_kind"] == "relation"
+        assert len(await service.list_revisions(created.id)) == revisions_avant
+        evenements = (await session.execute(select(OutboxEvent))).scalars().all()
+        assert len(evenements) == evenements_avant
+
+    @pytest.mark.asyncio
+    async def test_should_reject_update_emptying_required_field(
+        self, session: AsyncSession
+    ) -> None:
+        """Vider un champ obligatoire est refusé, même en patch partiel."""
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+
+        with pytest.raises(ResourceValidationError) as exc_info:
+            await service.update(
+                created.id,
+                ResourceUpdate(
+                    data={"lifecycle_status": None},
+                    justification="tentative de vidage",
+                ),
+            )
+
+        assert any("lifecycle_status" in erreur for erreur in exc_info.value.errors)
+        etat = await self._etat_persiste(session, created.id)
+        assert etat["lifecycle_status"] == "draft"
+
+    @pytest.mark.asyncio
+    async def test_should_reject_conditional_rule_violation_on_update(
+        self, session: AsyncSession
+    ) -> None:
+        """Les règles conditionnelles valent aussi à la mise à jour.
+
+        `silvicultural_rule` interdit `status='accepted'` sans validateur
+        humain : jamais d'auto-validation par le pipeline (RFC-0016 §3.2).
+        """
+        service = ResourceService(session)
+        created = await service.create(
+            ResourceCreate(
+                type="silvicultural_rule",
+                data={
+                    "required_context": "futaie reguliere",
+                    "trigger": "surface terriere > 30",
+                    "action": "eclaircie",
+                    "intensity": "moderee",
+                    "evidence_level": "B",
+                    "source_id": uuid4(),
+                },
+            )
+        )
+
+        with pytest.raises(ResourceValidationError) as exc_info:
+            await service.update(
+                created.id,
+                ResourceUpdate(
+                    data={"status": "accepted"},
+                    justification="auto-validation interdite",
+                ),
+            )
+
+        assert any("human_validator" in erreur for erreur in exc_info.value.errors)
+
+    @pytest.mark.asyncio
+    async def test_should_accept_valid_partial_patch_and_keep_other_fields(
+        self, session: AsyncSession
+    ) -> None:
+        """Un patch partiel valide passe et préserve les champs non fournis."""
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+
+        result = await service.update(
+            created.id,
+            ResourceUpdate(
+                data={"lifecycle_status": "accepted"},
+                justification="passage en accepted",
+            ),
+        )
+
+        assert result is not None
+        etat = await self._etat_persiste(session, created.id)
+        assert etat["lifecycle_status"] == "accepted"
+        # claim_kind n'était pas dans le patch : il doit survivre intact.
+        assert etat["claim_kind"] == "relation"
+
+    @pytest.mark.asyncio
+    async def test_should_reject_oversized_string_on_update(self, session: AsyncSession) -> None:
+        """Les bornes de transport s'appliquent au corps reçu."""
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+
+        with pytest.raises(ResourceValidationError) as exc_info:
+            await service.update(
+                created.id,
+                ResourceUpdate(
+                    data={"rule_subtype": "x" * (MAX_STRING_LENGTH + 1)},
+                    justification="corps abusif",
+                ),
+            )
+
+        assert any("trop long" in erreur for erreur in exc_info.value.errors)
+
+    @pytest.mark.asyncio
+    async def test_should_not_reject_wide_resource_on_field_count(
+        self, session: AsyncSession
+    ) -> None:
+        """La limite de nombre de champs ne s'applique pas à l'état fusionné.
+
+        Sinon un type large deviendrait immodifiable dès que son état complet
+        dépasse la borne prévue pour le corps de requête.
+        """
+        service = ResourceService(session)
+        created = await self._assertion_valide(service)
+        colonnes = len(RESOURCE_TYPES["assertion"].__table__.columns)
+
+        result = await service.update(
+            created.id,
+            ResourceUpdate(data={"lifecycle_status": "proposed"}, justification="patch etroit"),
+        )
+
+        assert result is not None
+        assert colonnes > 1  # l'état fusionné compte bien plus d'un champ
+
+    @pytest.mark.asyncio
+    async def test_should_apply_same_rules_on_create_and_update(
+        self, session: AsyncSession
+    ) -> None:
+        """Création et mise à jour refusent exactement la même faute."""
+        service = ResourceService(session)
+
+        with pytest.raises(ResourceValidationError) as creation:
+            await service.create(
+                ResourceCreate(
+                    type="assertion",
+                    data={"claim_kind": "toto", "lifecycle_status": "draft"},
+                )
+            )
+
+        created = await self._assertion_valide(service)
+        with pytest.raises(ResourceValidationError) as mise_a_jour:
+            await service.update(
+                created.id,
+                ResourceUpdate(data={"claim_kind": "toto"}, justification="meme faute"),
+            )
+
+        assert creation.value.errors == mise_a_jour.value.errors

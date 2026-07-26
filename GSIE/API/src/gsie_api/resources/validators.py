@@ -2,6 +2,19 @@
 
 Valide les champs obligatoires et les enums pour chaque type avant
 l'insertion en DB. Évite d'envoyer n'importe quoi dans `data`.
+
+Deux portes distinctes, volontairement séparées (P0 2026-07-26) :
+
+- `validate_resource_payload` — bornes du **message reçu** (longueur des
+  chaînes, nombre de champs). Elles protègent l'API contre un corps abusif
+  et ne s'appliquent donc qu'à ce que l'appelant envoie.
+- `validate_resource_state` — invariants de l'**état complet** de la
+  resource (champs obligatoires, enums, règles métier conditionnelles).
+  Ils décrivent ce qu'une resource a le droit d'être une fois écrite, et
+  doivent donc être vérifiés sur l'état final, création comme mise à jour.
+
+`validate_resource_data` reste la composition des deux, pour le chemin de
+création et pour les appelants historiques.
 """
 
 from collections.abc import Callable
@@ -380,12 +393,57 @@ _CONDITIONAL_RULES: dict[str, Callable[[dict[str, Any]], list[str]]] = {
 }
 
 
-def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
-    """Valide les données d'une resource selon son type.
+MAX_STRING_LENGTH = 10000
+MAX_FIELDS = 50
+
+
+class ResourceValidationError(ValueError):
+    """Erreur métier de validation d'une resource.
+
+    Distincte d'un `ValueError` nu : elle transporte la liste complète des
+    erreurs et le type concerné, pour que la couche HTTP produise une
+    réponse 422 stable sans reformater un message libre.
+    """
+
+    def __init__(self, type_name: str, errors: list[str]) -> None:
+        self.type_name = type_name
+        self.errors = list(errors)
+        super().__init__(f"Validation échouée : {'; '.join(self.errors)}")
+
+
+def _normalise_valeur_enum(value: Any) -> Any:
+    """Ramène un membre d'Enum à sa valeur brute.
+
+    L'état relu depuis la base expose des membres d'Enum Python, alors qu'un
+    corps JSON expose des chaînes. Les deux doivent être jugés à l'identique.
+    """
+    return value.value if isinstance(value, Enum) else value
+
+
+def validate_resource_payload(data: dict[str, Any]) -> list[str]:
+    """Valide les bornes du message reçu (protection DoS, OWASP A04).
+
+    Ne s'applique qu'aux champs effectivement envoyés par l'appelant : ce
+    sont des limites de transport, jamais des invariants de la resource.
+    """
+    errors: list[str] = []
+
+    for field, value in data.items():
+        if isinstance(value, str) and len(value) > MAX_STRING_LENGTH:
+            errors.append(f"Champ {field} trop long : {len(value)} chars (max {MAX_STRING_LENGTH})")
+
+    if len(data) > MAX_FIELDS:
+        errors.append(f"Trop de champs : {len(data)} (max {MAX_FIELDS})")
+
+    return errors
+
+
+def validate_resource_state(type_name: str, state: dict[str, Any]) -> list[str]:
+    """Valide les invariants de l'état complet d'une resource.
 
     Args:
         type_name: Type de resource (ex. "assertion", "observation").
-        data: Champs spécifiques au type.
+        state: État complet du type — pas un patch partiel.
 
     Returns:
         Liste des erreurs de validation (vide si OK).
@@ -395,14 +453,14 @@ def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
     # 1. Champs obligatoires
     required = _REQUIRED_FIELDS.get(type_name, [])
     for field in required:
-        if field not in data or data[field] is None:
+        if field not in state or state[field] is None:
             errors.append(f"Champ obligatoire manquant : {field}")
 
     # 2. Validation des enums
     enum_fields = _ENUM_FIELDS.get(type_name, {})
     for field, enum_cls in enum_fields.items():
-        if field in data and data[field] is not None:
-            value = data[field]
+        if field in state and state[field] is not None:
+            value = _normalise_valeur_enum(state[field])
             valid_values = {e.value for e in enum_cls}
             if value not in valid_values:
                 errors.append(
@@ -410,20 +468,34 @@ def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
                     f"Valeurs acceptées : {sorted(valid_values)}"
                 )
 
-    # 3. Validation de longueur des chaînes (protection DoS, OWASP A04)
-    max_string_length = 10000
-    for field, value in data.items():
-        if isinstance(value, str) and len(value) > max_string_length:
-            errors.append(f"Champ {field} trop long : {len(value)} chars (max {max_string_length})")
-
-    # 4. Validation du nombre de champs (payload limit)
-    max_fields = 50
-    if len(data) > max_fields:
-        errors.append(f"Trop de champs : {len(data)} (max {max_fields})")
-
-    # 5. Règles métier conditionnelles (reflètent les contraintes SQL)
+    # 3. Règles métier conditionnelles (reflètent les contraintes SQL)
     conditional_rule = _CONDITIONAL_RULES.get(type_name)
     if conditional_rule is not None:
-        errors.extend(conditional_rule(data))
+        errors.extend(conditional_rule(_normalise_etat(state)))
 
     return errors
+
+
+def _normalise_etat(state: dict[str, Any]) -> dict[str, Any]:
+    """Normalise les membres d'Enum d'un état avant les règles conditionnelles.
+
+    `_validate_silvicultural_rule_conditional` compare `status` à la chaîne
+    `"accepted"` : relu depuis la base, ce champ est un membre d'Enum.
+    """
+    return {key: _normalise_valeur_enum(value) for key, value in state.items()}
+
+
+def validate_resource_data(type_name: str, data: dict[str, Any]) -> list[str]:
+    """Valide les données d'une resource selon son type.
+
+    Composition des deux portes — utilisée à la création, où le message reçu
+    est aussi l'état final.
+
+    Args:
+        type_name: Type de resource (ex. "assertion", "observation").
+        data: Champs spécifiques au type.
+
+    Returns:
+        Liste des erreurs de validation (vide si OK).
+    """
+    return validate_resource_state(type_name, data) + validate_resource_payload(data)

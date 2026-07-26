@@ -78,6 +78,17 @@ class Settings(BaseSettings):
     # Livraison transactionnelle des événements (ADR-005).
     outbox_batch_size: int = Field(default=100, ge=1, le=1000)
     outbox_poll_interval_seconds: float = Field(default=1.0, ge=0.1, le=60.0)
+    # Reprise sur échec — backoff exponentiel borné puis lettre morte.
+    # Tentatives avant mise en lettre morte (la 1re publication comprise).
+    outbox_max_attempts: int = Field(default=8, ge=1, le=100)
+    # Délai de base du backoff : délai après le 1er échec.
+    outbox_retry_base_seconds: float = Field(default=2.0, ge=0.1, le=3600.0)
+    # Plafond du backoff — borne l'attente, un incident long ne repousse pas
+    # la reprise à l'infini.
+    outbox_retry_max_seconds: float = Field(default=300.0, ge=1.0, le=86400.0)
+    # Amplitude du bruit aléatoire, en fraction du délai calculé (0 = aucun).
+    # Évite que N workers rejouent le même lot à la même milliseconde.
+    outbox_retry_jitter_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
     # WebSocket (ADR-007)
     ws_max_connections: int = 1000
     ws_heartbeat_interval: int = 30  # secondes
