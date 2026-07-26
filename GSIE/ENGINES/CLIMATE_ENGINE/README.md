@@ -23,4 +23,4 @@ sont affichées avec leur scénario (RCP/SSP) et leur incertitude.
 - Mode hors-ligne : cache local des données historiques (article T-8)
 - Mode dégradé documenté pour les projections temps réel
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir CLIMATE_ENGINE.md et PROJECT_MEMORY.md

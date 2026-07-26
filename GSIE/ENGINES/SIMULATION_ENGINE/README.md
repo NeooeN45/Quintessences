@@ -18,4 +18,4 @@ Moteur de **simulation de scénarios**.
 - Les résultats sont des **scénarios**, pas des décisions (CON-001)
 - Chaque scénario est explicable (CON-004)
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir

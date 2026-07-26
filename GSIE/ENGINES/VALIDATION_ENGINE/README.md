@@ -32,4 +32,4 @@ validation est le dernier rempart avant présentation.
 Recommendation Engine → Validation Engine → Utilisateur
 ```
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir

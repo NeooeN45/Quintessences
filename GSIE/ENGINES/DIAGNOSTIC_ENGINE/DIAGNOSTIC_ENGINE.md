@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Diagnostic Engine |
 | **Catégorie** | Chaîne d'intelligence (analyse stationnelle) |
-| **Phase** | Phase 2 — Architecture |
+| **Phase** | Phase 4 — Implémentation |
 | **Statut** | Draft |
+| **Statut implémentation** | Livré (persistance, DEC-000036, 2026-07-26) |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004 |
 | **Ordre de développement** | 11 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 
@@ -103,6 +104,9 @@ RisqueDiagnostic = {
 
 ### Persistance — type de resource `diagnostic`
 
+> **Niveau : Implémentation** — cette section documente une
+> implémentation livrée, pas une architecture cible.
+
 Depuis le chantier « Persistance des diagnostics » (2026-07-26),
 `DiagnosticEngine.diagnostiquer` **écrit son résultat**. Le moteur n'est
 plus sans effet de bord : c'est un changement de contrat, énoncé ici pour
@@ -120,7 +124,7 @@ du Recommendation Engine était inapplicable.
 | Source de relecture | la colonne `contenu` (diagnostic sérialisé intégral) |
 | Colonnes scalaires | projections d'index, jamais relues pour reconstruire |
 | Transaction | `flush` seulement ; le `commit` appartient à la requête HTTP |
-| Migration | `0013_diagnostic_persistence` |
+| Migration | baseline v6.2 `20260726_0001` (DEC-000036) |
 
 Aucun type existant n'a été réutilisé. `inference` désigne la prédiction
 d'un modèle statistique, `recommendation` une recommandation générique
@@ -261,5 +265,6 @@ chaque variable — donc compatible avec l'exigence de sourçage
 
 ---
 
-> Statut : *Draft — Phase 2 (Architecture). Documentation uniquement,
-> aucune implémentation (Phase 4).*
+> Statut : *Draft — Phase 4 (Implémentation). Implémentation :
+> persistance des diagnostics livrée le 2026-07-26 (DEC-000036). Voir
+> §5 pour le contrat de persistance.*

@@ -25,4 +25,4 @@ l'historique est conservé (CON-010).
 - Ne produit pas de diagnostic — fournit des données taxonomiques et
   autécologiques
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir BOTANICAL_ENGINE.md et PROJECT_MEMORY.md

@@ -29,4 +29,4 @@ exécutoire (CON-001).
 Diagnostic Engine → Recommendation Engine → Validation Engine → Utilisateur
 ```
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation partielle (Phase 4)* — stub/skeleton, voir RECOMMENDATION_ENGINE.md

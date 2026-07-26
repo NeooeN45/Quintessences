@@ -22,4 +22,4 @@ Objets de connaissance normalisés.
 - Ne contient pas de logique d'inférence
 - Ne valide pas lui-même les connaissances (rôle de `EVIDENCE_ENGINE`)
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir KNOWLEDGE_ENGINE.md et PROJECT_MEMORY.md

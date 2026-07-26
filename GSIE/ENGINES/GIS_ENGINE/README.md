@@ -24,4 +24,4 @@ cartographiques portent leur origine et leur date de mise à jour.
 - Mode hors-ligne : cache local des données de référence (article T-8)
 - Ne produit pas de diagnostic — fournit des données
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir GIS_ENGINE.md et PROJECT_MEMORY.md

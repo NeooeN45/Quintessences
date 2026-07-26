@@ -26,4 +26,4 @@ cité (CON-002).
 - Ne produit pas de diagnostic — fournit des données et des
   classifications
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir PEDOLOGY_ENGINE.md et PROJECT_MEMORY.md

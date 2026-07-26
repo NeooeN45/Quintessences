@@ -18,4 +18,4 @@ Moteur d'**apprentissage**.
 - Toute sortie doit être explicable et traçable
 - L'IA assiste, elle ne décide pas (CON-001)
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir

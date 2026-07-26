@@ -29,4 +29,4 @@ documentée.**
 Knowledge Engine → Correlation Engine → Reasoning Engine → Diagnostic Engine
 ```
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir REASONING_ENGINE.md et PROJECT_MEMORY.md

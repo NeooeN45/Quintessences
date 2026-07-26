@@ -26,4 +26,4 @@ Moteur d'**évaluation de la preuve scientifique**.
 Sources → Import → Validation → Evidence Engine → Knowledge Engine
 ```
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir EVIDENCE_ENGINE.md et PROJECT_MEMORY.md

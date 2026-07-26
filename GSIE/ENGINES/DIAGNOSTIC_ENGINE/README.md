@@ -29,4 +29,4 @@ et les risques, il ne prescrit pas l'action.
 Reasoning Engine → Diagnostic Engine → Recommendation Engine
 ```
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir DIAGNOSTIC_ENGINE.md et PROJECT_MEMORY.md

@@ -16,4 +16,4 @@ Moteur de **dynamique des peuplements forestiers**.
   `RECOMMENDATION_ENGINE`
 - Ne produit pas de recommandation directe
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir FOREST_DYNAMICS_ENGINE.md et PROJECT_MEMORY.md

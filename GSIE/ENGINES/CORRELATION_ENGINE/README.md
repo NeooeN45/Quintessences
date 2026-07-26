@@ -25,4 +25,4 @@ Matrice de corrélations justifiées et sourcées.
 - Alimente les moteurs de raisonnement (`REASONING_ENGINE`,
   `DIAGNOSTIC_ENGINE`)
 
-> Statut : *fondation — documentation uniquement (Phase 1)*
+> Statut : *implémentation en cours (Phase 4)* — code livré, voir CORRELATION_ENGINE.md et PROJECT_MEMORY.md
