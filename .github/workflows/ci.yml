@@ -161,7 +161,7 @@ jobs:
     name: Python integration tests (PostGIS + Redis)
     runs-on: ubuntu-latest
     needs: [python-quality]
-    timeout-minutes: 25
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: GSIE/API
@@ -176,11 +176,15 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked --extra dev
 
+      - name: Build PostgreSQL 16 + PostGIS + AGE test image
+        run: docker build --file Dockerfile.db --tag gsie-db:supply-chain-hardened .
+
       - name: Run integration tests (testcontainers — Docker requis)
         run: uv run pytest tests/integration -q --tb=short -v
         env:
           # testcontainers utilise le socket Docker de l'hôte (déjà disponible sur ubuntu-latest)
           TESTCONTAINERS_RYUK_DISABLED: "true"
+          GSIE_REQUIRE_MIGRATION_IMAGE: "true"
 
   rust-quality:
     name: Rust clippy + test

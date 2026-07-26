@@ -625,6 +625,12 @@
       "skillPath": "skills/earth2studio-install/SKILL.md",
       "computedHash": "c2084b0b48da8a7c2db76c4fe4b41386ea06b6515a0709b1f3d616e76f9c8675"
     },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
     "holoscan-install-conda": {
       "source": "NVIDIA/skills",
       "sourceType": "github",

@@ -6,12 +6,30 @@ la même base de test sans relancer un conteneur Docker par fichier.
 """
 
 from collections.abc import AsyncGenerator
+from collections.abc import Sequence
+from typing import Any
 
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from gsie_api.infrastructure.models import Base
+
+# Fichiers dont les tests dépendent d'un état de concurrence réel (verrous
+# PostgreSQL `FOR UPDATE SKIP LOCKED`) et ne doivent jamais tourner en
+# parallèle avec un autre test du même fichier. On ne modifie pas le fichier
+# de test lui-même : le marquage se fait ici, à la collecte.
+_FICHIERS_SERIAL = ("test_outbox_concurrence.py",)
+
+
+def pytest_collection_modifyitems(items: Sequence[Any]) -> None:
+    """Marque `serial` et regroupe sur un seul worker xdist les tests listés
+    dans `_FICHIERS_SERIAL`, afin qu'ils ne soient jamais répartis sur des
+    workers différents ni exécutés concurremment entre eux."""
+    for item in items:
+        if item.fspath.basename in _FICHIERS_SERIAL:
+            item.add_marker(pytest.mark.serial)
+            item.add_marker(pytest.mark.xdist_group(name="outbox_concurrence"))
 
 
 def _docker_available() -> bool:

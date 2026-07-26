@@ -66,6 +66,9 @@ dev = [
     "pytest==8.3.4",
     "pytest-asyncio==0.25.0",
     "pytest-cov==6.0.0",
+    # Parallélisation de la suite pytest (P2-1) — version stable, publiée
+    # depuis plusieurs mois, compatible pytest 8.3.x
+    "pytest-xdist==3.6.1",
     "testcontainers[postgres]==4.10.0",
     "ruff==0.8.4",
     "mypy==1.14.0",
@@ -89,7 +92,16 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_functions = ["should_*", "test_*"]
+# pytest-xdist (P2-1) est installé mais NON activé par défaut : `-n auto`
+# change l'ordre d'exécution des fichiers entre workers, ce qui a révélé
+# une fuite d'état partagé (registre déclaratif SQLAlchemy) entre
+# tests/integration/test_migration_baseline.py et un autre module de test
+# exécuté avant lui dans le même worker (voir docs/TESTING_XDIST.md).
+# Activable manuellement en développement : `pytest -n auto --dist=loadfile`.
 addopts = "-v --tb=short --cov=gsie_api --cov-report=term-missing"
+markers = [
+    "serial: tests à exécuter en série (pas de parallélisation) — concurrence DB réelle",
+]
 
 [tool.ruff]
 target-version = "py312"
