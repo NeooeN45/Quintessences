@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Botanical Engine |
 | **Catégorie** | Moteur domaine (botanique) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Livré |
+| **Statut implémentation** | Livré |
 | **Articles constitutionnels** | GSIE-CON-005, GSIE-CON-010 |
 | **Ordre de développement** | 9 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

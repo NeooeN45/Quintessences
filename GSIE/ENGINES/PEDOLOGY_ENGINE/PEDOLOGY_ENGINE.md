@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Pedology Engine |
 | **Catégorie** | Moteur domaine (pédologie) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Livré |
+| **Statut implémentation** | Livré |
 | **Articles constitutionnels** | GSIE-CON-002, GSIE-CON-005 |
 | **Ordre de développement** | 8 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

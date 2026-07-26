@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Validation Engine |
 | **Catégorie** | Chaîne d'intelligence (contrôle final) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Architecture seule |
+| **Statut implémentation** | Architecture seule |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004, GSIE-CON-005 |
 | **Ordre de développement** | 13 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

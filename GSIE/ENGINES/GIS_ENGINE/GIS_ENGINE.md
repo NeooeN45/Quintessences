@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | GIS Engine |
 | **Catégorie** | Moteur domaine (géospatial) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Livré |
+| **Statut implémentation** | Livré |
 | **Articles constitutionnels** | GSIE-CON-005, GSIE-CON-007 |
 | **Ordre de développement** | 6 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

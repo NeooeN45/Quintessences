@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Recommendation Engine |
 | **Catégorie** | Chaîne d'intelligence (proposition d'action) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Stub |
+| **Statut implémentation** | Stub/skeleton |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004 |
 | **Ordre de développement** | 12 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

@@ -4,8 +4,9 @@
 |---|---|
 | **Moteur** | Knowledge Engine |
 | **Catégorie** | Chaîne d'intelligence (base de connaissances) |
-| **Phase** | Phase 2 — Architecture |
-| **Statut** | Draft |
+| **Phase** | Phase 4 — Implémentation |
+| **Statut** | Livré |
+| **Statut implémentation** | Livré |
 | **Articles constitutionnels** | GSIE-CON-003, GSIE-CON-005, GSIE-CON-010 |
 | **Ordre de développement** | 1 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 
