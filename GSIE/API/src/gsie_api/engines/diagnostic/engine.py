@@ -46,6 +46,9 @@ from gsie_api.engines.diagnostic.schemas import (
     domaine_commun,
 )
 from gsie_api.engines.reasoning.schemas import Conclusion, StationContexte, niveau_plancher
+from gsie_api.infrastructure.models import ResourceModel
+from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
+from gsie_api.infrastructure.models.enums import EvidenceLevel as EvidenceLevelDB
 
 logger = get_logger("gsie_api.diagnostic.engine")
 
@@ -76,12 +79,35 @@ class DiagnosticEngineError(Exception):
     """
 
 
+class DiagnosticConflitError(DiagnosticEngineError):
+    """Un diagnostic différent porte déjà cet identifiant.
+
+    `diagnostic_id` est dérivé de `requete_id` et des `conclusion_id` par
+    `uuid5`. Deux requêtes qui partagent ces éléments mais diffèrent par
+    leurs qualifications, leur état global ou leurs contradictions dérivent
+    donc le même identifiant pour deux contenus distincts. Écraser
+    silencieusement le premier réécrirait un diagnostic déjà cité ; l'ignorer
+    ferait pointer l'identifiant sur un contenu que l'appelant n'a pas
+    produit. Le moteur refuse et nomme le conflit.
+    """
+
+
 class DiagnosticEngine:
     """Moteur d'assemblage de diagnostics stationnels.
 
     Une instance est créée par requête HTTP avec la session DB de la
-    requête (même schéma que `ReasoningEngine`). En v1, aucune persistance
-    n'est effectuée — le moteur est pur et sans effet de bord sur la base.
+    requête (même schéma que `ReasoningEngine`).
+
+    Depuis le chantier « Persistance des diagnostics », `diagnostiquer`
+    écrit son résultat : `resource(type=diagnostic)` + `DiagnosticModel`,
+    sur le précédent du Correlation Engine. Ce n'est plus un moteur pur.
+    La raison est portée par `RECOMMENDATION_ENGINE.md` §5, qui prend un
+    `diagnostic_id` en entrée : sans écriture, cet identifiant ne résout
+    rien et le contrat est inapplicable.
+
+    Le moteur `flush` mais ne `commit` jamais : la transaction appartient à
+    la requête HTTP (`get_db`), qui la valide ou l'annule en bloc. Un
+    diagnostic ne doit pas survivre à l'échec de la réponse qui le porte.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -108,13 +134,16 @@ class DiagnosticEngine:
 
         Returns:
             Un `Diagnostic` à l'état `brouillon` — un moteur ne produit
-            jamais de diagnostic validé (`GSIE-CON-001`).
+            jamais de diagnostic validé (`GSIE-CON-001`) — persisté dans la
+            transaction en cours et donc résolvable par `diagnostic_id`.
 
         Raises:
             DiagnosticEngineError: Si une chaîne d'inférence est vide,
                 si une contradiction est inconstructible (domaines
                 identiques ou non comparables entre un risque et une
                 contrainte), ou si zéro élément a été produit.
+            DiagnosticConflitError: Si un diagnostic de contenu différent
+                porte déjà le même `diagnostic_id`.
         """
         # 1. Indexer les conclusions par conclusion_id.
         # La bijection conclusions/qualifications est garantie par le
@@ -182,7 +211,7 @@ class DiagnosticEngine:
         # 9. Construire le Diagnostic. statut_validation reste à brouillon
         # (valeur par défaut) — un moteur ne produit pas de diagnostic
         # validé (GSIE-CON-001). Ne pas le renseigner explicitement.
-        return Diagnostic(
+        diagnostic = Diagnostic(
             diagnostic_id=diagnostic_id,
             requete_origine=request.requete_id,
             station_id=request.station_id,
@@ -197,6 +226,77 @@ class DiagnosticEngine:
             incertitudes=incertitudes,
             conclusions_source=conclusions_source_triees,
             date_diagnostic=date_diagnostic,
+        )
+
+        # 10. Persister — c'est ce qui rend `diagnostic_id` résolvable.
+        await self._persister(diagnostic)
+        return diagnostic
+
+    async def _persister(self, diagnostic: Diagnostic) -> None:
+        """Écrit `resource(type=diagnostic)` puis la ligne `diagnostic`.
+
+        Idempotence : `diagnostic_id` étant déterministe, rejouer la même
+        requête retomberait sur la même clé primaire. Une réécriture est
+        donc un cas normal, pas une erreur — à condition que le contenu
+        soit identique. S'il diffère, le moteur refuse plutôt que d'écraser
+        un diagnostic déjà émis (`DiagnosticConflitError`).
+
+        Raises:
+            DiagnosticConflitError: Si un diagnostic de contenu différent
+                porte déjà cet identifiant.
+        """
+        contenu = diagnostic.model_dump(mode="json")
+
+        existant = await self._session.get(DiagnosticModel, diagnostic.diagnostic_id)
+        if existant is not None:
+            if existant.contenu != contenu:
+                raise DiagnosticConflitError(
+                    f"diagnostic {diagnostic.diagnostic_id} déjà persisté avec un "
+                    f"contenu différent : même requete_origine et mêmes conclusions "
+                    f"source, mais qualifications, état global ou contradictions "
+                    f"divergents"
+                )
+            logger.info(
+                "diagnostic_deja_persiste",
+                diagnostic_id=str(diagnostic.diagnostic_id),
+            )
+            return
+
+        self._session.add(
+            ResourceModel(
+                id=diagnostic.diagnostic_id,
+                type="diagnostic",
+                gsie_id=f"gsie:diagnostic:{diagnostic.diagnostic_id}",
+                metadata_json={},
+            )
+        )
+        # Flush avant la table satellite, dont la PK est une FK vers
+        # resource.id — même contrainte que le Correlation Engine.
+        await self._session.flush()
+
+        self._session.add(
+            DiagnosticModel(
+                id=diagnostic.diagnostic_id,
+                requete_origine=diagnostic.requete_origine,
+                station_id=diagnostic.station_id,
+                type_diagnostic=diagnostic.type_diagnostic,
+                etat_global=diagnostic.etat_global,
+                statut_validation=diagnostic.statut_validation,
+                confiance=diagnostic.confiance,
+                evidence_level_plancher=EvidenceLevelDB(diagnostic.evidence_level_plancher.value),
+                date_diagnostic=diagnostic.date_diagnostic,
+                contenu=contenu,
+            )
+        )
+        await self._session.flush()
+
+        logger.info(
+            "diagnostic_persiste",
+            diagnostic_id=str(diagnostic.diagnostic_id),
+            station_id=str(diagnostic.station_id),
+            type_diagnostic=diagnostic.type_diagnostic.value,
+            etat_global=diagnostic.etat_global.value,
+            statut_validation=diagnostic.statut_validation.value,
         )
 
 

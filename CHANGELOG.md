@@ -3,6 +3,57 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+## [PERSISTANCE DES DIAGNOSTICS] - 2026-07-26
+
+### Un `diagnostic_id` résolvable
+
+- **Nouveau type de resource `diagnostic`** — le registre passe de 89 à 90
+  types. Modèle `infrastructure/models/diagnostic.py`, entrée de validateur,
+  migration `0013_diagnostic_persistence`.
+- **Aucun type existant n'a été réutilisé.** `inference` désigne la
+  prédiction d'un modèle statistique, `recommendation` une recommandation
+  générique portée par un acteur, `diagnostic_protocol` un protocole
+  sanitaire (RFC-0016), donc une méthode et non un résultat. Les confondre
+  rendrait indistinguables en base une conclusion tracée par règles
+  explicites et une prédiction opaque — interdit par `GSIE-CON-004`.
+- **`DiagnosticEngine.diagnostiquer` écrit désormais son résultat.** Le
+  moteur n'est plus pur : c'est un changement de contrat, documenté dans
+  `DIAGNOSTIC_ENGINE.md` et dans la docstring du moteur. Sans écriture, le
+  `diagnostic_id` attendu par `RecommendationRequest`
+  (`RECOMMENDATION_ENGINE.md` §5) ne résolvait rien et le contrat du
+  Recommendation Engine restait inapplicable. Débloque la tranche R2.
+
+### Ce que la persistance rend impossible
+
+- Le contenu stocké est le `Diagnostic` sérialisé intégral et constitue la
+  seule source de relecture ; les colonnes scalaires ne sont que des
+  projections d'index. Un `diagnostic_id` ne peut donc pas résoudre vers un
+  contenu différent de celui rendu à l'appelant.
+- Le statut `brouillon` est persisté avec le corps : la garantie
+  `GSIE-CON-001` tient dans la base, pas seulement dans la réponse HTTP.
+- Le moteur `flush` sans jamais `commit` : un diagnostic ne survit pas à
+  l'échec de la réponse qui le porte.
+- `diagnostic_id` étant dérivé par `uuid5`, rejouer une requête est
+  idempotent ; un même identifiant dérivé pour un contenu différent lève
+  `DiagnosticConflitError` au lieu d'écraser un diagnostic déjà émis.
+
+### Énumérations — source unique
+
+- `TypeDiagnostic`, `EtatGlobal` et `StatutValidation` deviennent aussi des
+  types PostgreSQL et vivent désormais dans `infrastructure/models/enums.py`
+  (réexportées sous leurs noms d'origine). Deux définitions parallèles
+  auraient fini par diverger, et un diagnostic relu autrement qu'il n'a été
+  écrit est précisément l'erreur que ces schémas existent pour empêcher.
+
+### Portes
+
+- 538 tests unitaires verts (référence : 530), 63 ignorés ; ruff, `ruff
+  format --check`, mypy `--strict` et
+  `tools/check_governance_consistency.py` verts.
+- 8 tests de persistance ajoutés ; test d'intégration de réversibilité de
+  la migration écrit (`tests/integration/test_migration_diagnostic.py`).
+
+---
 ## [REASONING + DIAGNOSTIC — EXPOSITION SUR L'API] - 2026-07-26
 
 ### Moteurs atteignables depuis l'API

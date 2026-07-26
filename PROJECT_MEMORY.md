@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-26 — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
+| **Dernière mise à jour** | 2026-07-26 — **Persistance des diagnostics** : nouveau type de resource `diagnostic` (registre 89 → 90), migration `0013`, et écriture du résultat dans `DiagnosticEngine.diagnostiquer` — le moteur n'est plus sans effet de bord, changement de contrat documenté. `diagnostic_id` est résolvable : la tranche R2 du Recommendation Engine est débloquée. 538 tests unitaires verts, 63 ignorés ; ruff, mypy `--strict` et le contrôle de gouvernance verts. **Réserve** : la réversibilité de la migration est couverte par un test d'intégration **non exécuté** (Docker Desktop n'a pas démarré sur le poste) — à lancer avant tout déploiement. **Risque résiduel** : `diagnostic_id` est dérivé de `requete_id` et des seuls `conclusion_id`, donc deux contenus distincts peuvent dériver le même identifiant ; le moteur refuse et nomme le conflit au lieu d'écraser. État antérieur (même jour) — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
 
 ---
 
@@ -498,18 +498,35 @@ et une prédiction statistique opaque — ce que `GSIE-CON-004` interdit.
 
 **Périmètre, dans l'ordre.**
 
-1. Nouveau type de ressource `diagnostic` : modèle SQLAlchemy,
-   `register_type`, entrée de validateur. Le registre passe de 89 à 90.
-2. Migration Alembic, **réversibilité testée**. Zone durcie par `DEC-000031`
-   (migrations gardées, `0005` irréversible) : ne pas contourner les
-   garde-fous.
-3. Écriture du diagnostic dans `DiagnosticEngine.diagnostiquer`, aujourd'hui
-   volontairement pur — cela change son contrat, à documenter.
-4. Chargement par `diagnostic_id` côté Recommendation, avec le cas
-   « diagnostic introuvable ».
+1. ✅ **Fait (2026-07-26)** — type de ressource `diagnostic` :
+   `GSIE/API/src/gsie_api/infrastructure/models/diagnostic.py`,
+   `register_type("diagnostic")`, entrée de validateur. Registre à
+   **90 types**. Aucun faux ami réutilisé.
+2. ✅ **Écrite** — migration `0013_diagnostic_persistence` (crée la table
+   `diagnostic` et 3 enums ; le `downgrade` supprime la table, les enums
+   créés et les lignes `resource` de type `diagnostic`, sans toucher à
+   `evidence_level` qui préexiste). Test d'intégration de réversibilité
+   écrit : `tests/integration/test_migration_diagnostic.py`.
+   ⚠️ **Non exécuté** — Docker Desktop n'a pas démarré sur le poste de
+   travail : la réversibilité reste **vérifiée par lecture, pas par
+   exécution**. À lancer avant tout déploiement.
+3. ✅ **Fait** — `DiagnosticEngine.diagnostiquer` écrit son résultat. Le
+   moteur n'est plus pur ; le changement de contrat est documenté dans
+   `GSIE/ENGINES/DIAGNOSTIC_ENGINE/DIAGNOSTIC_ENGINE.md` (§5, sous-section
+   « Persistance ») et dans la docstring du moteur.
+4. **Reste à faire** — chargement par `diagnostic_id` côté Recommendation,
+   avec le cas « diagnostic introuvable ». La tranche R2 est débloquée.
+   R1 est livrée (`ebf6d84`).
 
-Une fois (1) à (3) faits, la tranche R2 du Recommendation Engine devient
-directe. R1 est déjà livrée (`ebf6d84`).
+**Risque résiduel identifié (non corrigé).** `diagnostic_id` est dérivé par
+`uuid5` de `requete_id` et des seuls `conclusion_id`. Deux requêtes
+partageant ces éléments mais différant par leurs qualifications, leur état
+global ou leurs contradictions dérivent donc le même identifiant pour deux
+contenus distincts. Le moteur refuse et nomme le conflit
+(`DiagnosticConflitError`) plutôt que d'écraser un diagnostic déjà émis,
+mais la dérivation elle-même reste incomplète : elle devrait couvrir tout
+ce qui influence la sortie. Correction à arbitrer — elle changerait les
+identifiants déjà émis.
 
 ### P0 — Refondation constitutionnelle (corrections appliquées, EN_REVUE)
 

@@ -3,9 +3,9 @@
 Mission R3 : essayer de faire mentir le moteur. On cherche où il produit
 une sortie fausse, non traçable, non reproductible — ou validée.
 
-Pas de DB requise : ``diagnostiquer`` ne touche jamais ``self._session`` en
-v1 (moteur pur, sans effet de bord sur la base) — un ``Mock`` suffit pour
-instancier ``DiagnosticEngine``.
+Pas de DB requise : ``diagnostiquer`` écrit désormais son résultat, mais un
+``AsyncMock`` de session suffit pour observer ces écritures. La vérification
+du schéma réel relève des tests d'intégration.
 
 Valeurs métier utilisées (ADR-007) :
 - pH 4,5–6,0 pour sol acide — source : Rameau et al., 2018.
@@ -16,17 +16,19 @@ Valeurs métier utilisées (ADR-007) :
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
 
 from gsie_api.engines.diagnostic.engine import (
+    DiagnosticConflitError,
     DiagnosticEngine,
     DiagnosticEngineError,
 )
 from gsie_api.engines.diagnostic.schemas import (
     ContradictionDeclaree,
+    Diagnostic,
     DiagnosticRequest,
     DomaineElement,
     DomaineRisque,
@@ -51,6 +53,8 @@ from gsie_api.engines.reasoning.schemas import (
     SourceMoteurContexte,
     StationContexte,
 )
+from gsie_api.infrastructure.models import ResourceModel
+from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
 
 # Identifiants et horloge fixes pour les tests de déterminisme.
 _REQUETE_ID = UUID("22222222-2222-4222-8222-222222222222")
@@ -217,9 +221,18 @@ def _requete(
     )
 
 
-def _engine() -> DiagnosticEngine:
-    """Crée un moteur avec une session mockée (pas de DB en v1)."""
-    return DiagnosticEngine(session=Mock())
+def _engine(session: AsyncMock | None = None) -> DiagnosticEngine:
+    """Crée un moteur avec une session mockée.
+
+    Depuis la persistance des diagnostics, ``diagnostiquer`` écrit : la
+    session doit être un ``AsyncMock`` (``get`` et ``flush`` sont attendus).
+    ``get`` retourne ``None`` par défaut — aucun diagnostic préexistant.
+    """
+    if session is None:
+        session = AsyncMock()
+        session.get.return_value = None
+        session.add = Mock()
+    return DiagnosticEngine(session=session)
 
 
 async def _diagnostiquer(
@@ -1151,3 +1164,176 @@ class TestGarantieConstitutionnelle:
             ],
         )
         assert diag_complexe.validation is None  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Persistance — ce qui rend `diagnostic_id` résolvable
+# ---------------------------------------------------------------------------
+
+
+class TestPersistance:
+    """Le diagnostic rendu est exactement le diagnostic écrit.
+
+    Un `diagnostic_id` que le Recommendation Engine résoudrait vers un
+    contenu différent de celui rendu à l'appelant serait pire qu'un
+    identifiant non résolvable : le forestier contesterait un diagnostic
+    qu'il n'a jamais lu.
+    """
+
+    @staticmethod
+    def _session() -> AsyncMock:
+        session = AsyncMock()
+        session.get.return_value = None
+        session.add = Mock()
+        return session
+
+    @staticmethod
+    def _requete_fixe() -> DiagnosticRequest:
+        """Requête à identifiants figés — `diagnostic_id` reproductible.
+
+        Les fabriques par défaut tirent un `conclusion_id` aléatoire : deux
+        appels dériveraient deux identifiants, et les tests d'idempotence
+        comme de conflit porteraient sur des diagnostics distincts.
+        """
+        conclusion = _conclusion(conclusion_id=UUID("44444444-4444-4444-8444-444444444444"))
+        return _requete(conclusions=[conclusion])
+
+    async def _diagnostiquer_avec(self, session: AsyncMock) -> object:
+        return await _engine(session).diagnostiquer(self._requete_fixe(), _DATE_DIAGNOSTIC)
+
+    @staticmethod
+    def _lignes(session: AsyncMock) -> tuple[ResourceModel, DiagnosticModel]:
+        ajouts = [appel.args[0] for appel in session.add.call_args_list]
+        ressources = [ligne for ligne in ajouts if isinstance(ligne, ResourceModel)]
+        diagnostics = [ligne for ligne in ajouts if isinstance(ligne, DiagnosticModel)]
+        assert (
+            len(ressources) == 1
+        ), f"une seule ligne resource attendue, {len(ressources)} ajoutée(s)"
+        assert (
+            len(diagnostics) == 1
+        ), f"une seule ligne diagnostic attendue, {len(diagnostics)} ajoutée(s)"
+        return ressources[0], diagnostics[0]
+
+    async def test_ecrit_resource_et_satellite_sous_le_meme_id(self) -> None:
+        """Rend impossible : un diagnostic rendu mais non résolvable.
+
+        Les deux lignes portent l'identifiant rendu à l'appelant — sans
+        quoi le `diagnostic_id` d'une réponse HTTP ne désignerait rien.
+        """
+        session = self._session()
+        diag = await self._diagnostiquer_avec(session)
+        resource, satellite = self._lignes(session)
+
+        assert resource.type == "diagnostic"
+        assert resource.id == diag.diagnostic_id  # type: ignore[attr-defined]
+        assert satellite.id == diag.diagnostic_id  # type: ignore[attr-defined]
+
+    async def test_contenu_persiste_relit_le_diagnostic_rendu(self) -> None:
+        """Rend impossible : une relecture divergente de la sortie rendue.
+
+        Le contenu stocké se revalide en un `Diagnostic` égal à celui
+        retourné, champ pour champ — troncation ou reformulation comprises.
+        """
+        session = self._session()
+        diag = await self._diagnostiquer_avec(session)
+        _, satellite = self._lignes(session)
+
+        assert Diagnostic.model_validate(satellite.contenu) == diag
+
+    async def test_colonnes_projettent_le_contenu_sans_diverger(self) -> None:
+        """Rend impossible : des colonnes d'index mentant sur le corps.
+
+        Les colonnes scalaires servent aux requêtes ; si elles s'écartaient
+        du contenu, une recherche par état global ramènerait des
+        diagnostics disant autre chose.
+        """
+        session = self._session()
+        diag = await self._diagnostiquer_avec(session)
+        _, satellite = self._lignes(session)
+
+        assert satellite.requete_origine == diag.requete_origine  # type: ignore[attr-defined]
+        assert satellite.station_id == diag.station_id  # type: ignore[attr-defined]
+        assert satellite.type_diagnostic == diag.type_diagnostic  # type: ignore[attr-defined]
+        assert satellite.etat_global == diag.etat_global  # type: ignore[attr-defined]
+        assert satellite.confiance == diag.confiance  # type: ignore[attr-defined]
+        assert satellite.date_diagnostic == diag.date_diagnostic  # type: ignore[attr-defined]
+        # La valeur stockée est celle du type PostgreSQL `evidence_level`
+        # (majuscules), pas le nom du membre Python.
+        assert satellite.evidence_level_plancher.value == (
+            diag.evidence_level_plancher.value  # type: ignore[attr-defined]
+        )
+
+    async def test_statut_persiste_toujours_brouillon(self) -> None:
+        """Rend impossible : un diagnostic validé écrit par la machine.
+
+        La garantie `GSIE-CON-001` doit tenir dans la base, pas seulement
+        dans la réponse HTTP — c'est la base que relira le Recommendation
+        Engine.
+        """
+        session = self._session()
+        await self._diagnostiquer_avec(session)
+        _, satellite = self._lignes(session)
+
+        assert satellite.statut_validation is StatutValidation.brouillon
+        assert satellite.contenu["statut_validation"] == "brouillon"
+        assert satellite.contenu["validation"] is None
+
+    async def test_le_moteur_ne_commit_jamais(self) -> None:
+        """Rend impossible : un diagnostic survivant à une réponse en échec.
+
+        La transaction appartient à la requête HTTP (`get_db`). Un commit
+        dans le moteur laisserait en base un diagnostic dont l'appelant
+        n'a jamais reçu l'identifiant.
+        """
+        session = self._session()
+        await self._diagnostiquer_avec(session)
+
+        session.commit.assert_not_called()
+
+    async def test_rejouer_la_meme_requete_n_ecrit_pas_deux_fois(self) -> None:
+        """Rend impossible : un doublon sur un identifiant déterministe.
+
+        `diagnostic_id` étant dérivé du contenu, rejouer une requête est
+        un cas normal : le moteur constate l'identité et n'écrit rien.
+        """
+        session = self._session()
+        diag = await self._diagnostiquer_avec(session)
+        _, satellite = self._lignes(session)
+
+        rejeu = self._session()
+        rejeu.get.return_value = satellite
+        diag_rejeu = await self._diagnostiquer_avec(rejeu)
+
+        assert diag_rejeu == diag
+        rejeu.add.assert_not_called()
+
+    async def test_meme_id_contenu_different_leve_et_n_ecrit_rien(self) -> None:
+        """Rend impossible : l'écrasement silencieux d'un diagnostic émis.
+
+        Deux requêtes partageant `requete_id` et les mêmes conclusions
+        dérivent le même identifiant, même si leurs qualifications
+        diffèrent. Le moteur nomme le conflit au lieu de réécrire un
+        diagnostic déjà cité (`CODE_QUALITY_STANDARD` §3.5).
+        """
+        session = self._session()
+        await self._diagnostiquer_avec(session)
+        _, satellite = self._lignes(session)
+
+        divergent = self._session()
+        autre = Mock()
+        autre.contenu = dict(satellite.contenu) | {"etat_global": "critique"}
+        divergent.get.return_value = autre
+
+        with pytest.raises(DiagnosticConflitError) as exc:
+            await self._diagnostiquer_avec(divergent)
+
+        assert str(satellite.id) in str(exc.value)
+        divergent.add.assert_not_called()
+
+    async def test_le_conflit_reste_une_erreur_du_moteur(self) -> None:
+        """Le routeur traite `DiagnosticEngineError` : le conflit en hérite.
+
+        Rend impossible : un conflit remontant en erreur 500 non qualifiée
+        parce qu'il échapperait au `except` du routeur.
+        """
+        assert issubclass(DiagnosticConflitError, DiagnosticEngineError)

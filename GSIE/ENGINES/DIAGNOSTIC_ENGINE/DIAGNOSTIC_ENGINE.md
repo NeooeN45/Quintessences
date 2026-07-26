@@ -101,6 +101,41 @@ RisqueDiagnostic = {
 }
 ```
 
+### Persistance — type de resource `diagnostic`
+
+Depuis le chantier « Persistance des diagnostics » (2026-07-26),
+`DiagnosticEngine.diagnostiquer` **écrit son résultat**. Le moteur n'est
+plus sans effet de bord : c'est un changement de contrat, énoncé ici pour
+qu'il ne se découvre pas à la lecture du code.
+
+La raison est le §5 de `RECOMMENDATION_ENGINE.md`, dont l'entrée
+`RecommendationRequest` est un simple `diagnostic_id`. Tant qu'aucun
+diagnostic n'était écrit, cet identifiant ne résolvait rien et le contrat
+du Recommendation Engine était inapplicable.
+
+| Point | Choix retenu |
+|---|---|
+| Type de resource | `diagnostic` (nouveau — porte le registre à 90 types) |
+| Tables | `resource` + table satellite `diagnostic` |
+| Source de relecture | la colonne `contenu` (diagnostic sérialisé intégral) |
+| Colonnes scalaires | projections d'index, jamais relues pour reconstruire |
+| Transaction | `flush` seulement ; le `commit` appartient à la requête HTTP |
+| Migration | `0013_diagnostic_persistence` |
+
+Aucun type existant n'a été réutilisé. `inference` désigne la prédiction
+d'un modèle statistique, `recommendation` une recommandation générique
+portée par un acteur, et `diagnostic_protocol` un protocole sanitaire
+(`RFC-0016`), donc une méthode et non un résultat. Ranger un diagnostic
+dans `inference` rendrait indistinguables en base une conclusion tracée
+par règles explicites et une prédiction opaque : le lecteur ne saurait
+plus laquelle il conteste, ce que `GSIE-CON-004` interdit.
+
+`diagnostic_id` reste dérivé par `uuid5` de `requete_id` et des
+`conclusion_id`. Rejouer une requête identique est donc idempotent. Si le
+même identifiant est dérivé pour un contenu différent — mêmes conclusions,
+qualifications divergentes — le moteur lève `DiagnosticConflitError`
+plutôt que d'écraser un diagnostic déjà émis et potentiellement déjà cité.
+
 ## 6. Garanties
 
 - **Un diagnostic est une analyse, pas une décision** — il décrit l'état
