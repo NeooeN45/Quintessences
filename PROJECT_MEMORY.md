@@ -465,6 +465,52 @@ l'orientation et un texte en vigueur se résout en faveur du texte en vigueur.
 
 ## Prochaine étape
 
+### P0 technique — Persistance des diagnostics (chantier cadré le 2026-07-26)
+
+Bloque la tranche R2 du Recommendation Engine. Analyse déjà faite, à ne pas
+refaire.
+
+**Le problème.** `RECOMMENDATION_ENGINE.md` §5 définit
+`RecommendationRequest` avec un simple `diagnostic_id : UUID`, tandis que le
+§2 déclare que l'entrée est le `Diagnostic` lui-même. Or le Diagnostic
+Engine est sans persistance en v1 (« aucun effet de bord sur la base ») :
+aucun `diagnostic_id` n'est résolvable contre quoi que ce soit. Un moteur
+écrit sur ce contrat échouerait systématiquement.
+
+**Arbitrage du Fondateur (2026-07-26).** Implémenter la persistance plutôt
+que de faire porter le `Diagnostic` par la requête. L'option écartée aurait
+suivi le précédent de Correlation, Reasoning et Diagnostic, au prix d'un
+écart supplémentaire au contrat écrit.
+
+**Faux amis identifiés — ne pas réutiliser.** Le métamodèle contient déjà
+`inference`, `recommendation` et `diagnostic_protocol`, qui ne sont pas les
+objets de nos moteurs :
+
+| Type existant | Ce qu'il représente | Champs requis |
+|---|---|---|
+| `inference` | Prédiction d'un **modèle IA** | `model_version_id`, `feature_set_id`, `confidence` |
+| `recommendation` | Recommandation générique d'un acteur | `recommended_by`, `recommendation_text` |
+| `diagnostic_protocol` | Un **protocole**, pas un résultat | — |
+
+Confondre l'`InferenceResult` du Reasoning Engine avec le type `inference`
+rendrait indistinguables en base une conclusion tracée par règles explicites
+et une prédiction statistique opaque — ce que `GSIE-CON-004` interdit.
+
+**Périmètre, dans l'ordre.**
+
+1. Nouveau type de ressource `diagnostic` : modèle SQLAlchemy,
+   `register_type`, entrée de validateur. Le registre passe de 89 à 90.
+2. Migration Alembic, **réversibilité testée**. Zone durcie par `DEC-000031`
+   (migrations gardées, `0005` irréversible) : ne pas contourner les
+   garde-fous.
+3. Écriture du diagnostic dans `DiagnosticEngine.diagnostiquer`, aujourd'hui
+   volontairement pur — cela change son contrat, à documenter.
+4. Chargement par `diagnostic_id` côté Recommendation, avec le cas
+   « diagnostic introuvable ».
+
+Une fois (1) à (3) faits, la tranche R2 du Recommendation Engine devient
+directe. R1 est déjà livrée (`ebf6d84`).
+
 ### P0 — Refondation constitutionnelle (corrections appliquées, EN_REVUE)
 
 1. Les corrections des **3 P0** sont appliquées dans `RFC-0023` et
