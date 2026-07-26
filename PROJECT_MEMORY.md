@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-26 — **Persistance des diagnostics** : nouveau type de resource `diagnostic` (registre 89 → 90), migration `0013`, et écriture du résultat dans `DiagnosticEngine.diagnostiquer` — le moteur n'est plus sans effet de bord, changement de contrat documenté. `diagnostic_id` est résolvable : la tranche R2 du Recommendation Engine est débloquée. 538 tests unitaires verts, 63 ignorés ; ruff, mypy `--strict` et le contrôle de gouvernance verts. **Réserve** : la réversibilité de la migration est couverte par un test d'intégration **non exécuté** (Docker Desktop n'a pas démarré sur le poste) — à lancer avant tout déploiement. **Risque résiduel** : `diagnostic_id` est dérivé de `requete_id` et des seuls `conclusion_id`, donc deux contenus distincts peuvent dériver le même identifiant ; le moteur refuse et nomme le conflit au lieu d'écraser. État antérieur (même jour) — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
+| **Dernière mise à jour** | 2026-07-26 — **Persistance des diagnostics** : nouveau type de resource `diagnostic` (registre 89 → 90), migration `0013`, et écriture du résultat dans `DiagnosticEngine.diagnostiquer` — le moteur n'est plus sans effet de bord, changement de contrat documenté. `diagnostic_id` est résolvable : la tranche R2 du Recommendation Engine est débloquée. 538 tests unitaires verts, 63 ignorés ; ruff, mypy `--strict` et le contrôle de gouvernance verts. Réversibilité de la migration `0013` **exécutée et verte**. **Alerte de déploiement** : deux défauts préexistants de la chaîne de migrations ont été découverts en l'exécutant — un `upgrade` sautant plusieurs révisions avance `alembic_version` sans appliquer le DDL, et `0012` échoue sur une base vierge. Détails dans la section P0 ci-dessous. **Risque résiduel** : `diagnostic_id` est dérivé de `requete_id` et des seuls `conclusion_id`, donc deux contenus distincts peuvent dériver le même identifiant ; le moteur refuse et nomme le conflit au lieu d'écraser. État antérieur (même jour) — **Reasoning et Diagnostic Engines exposés sur l'API** : le Reasoning avait un routeur terminé et testé mais jamais monté dans `app.py` (travail inatteignable) ; le Diagnostic a reçu sa tranche R4 (routeur + intégration), reprise en interne. Six routes sous `/api/v1`. La classe de bug est fermée par un test vérifiant que tout routeur présent est réellement monté — l'ancien test ne contrôlait que l'importabilité. 509 tests unitaires verts, 83 % de couverture. **Écart signalé, non tranché** : `DEC-000019` prévoit la vague 3 en Rust, les trois moteurs sont en Python. État antérieur (2026-07-24) — **Refondation toujours `EN_REVUE`** : les corrections des **3 P0** ont été appliquées à `RFC-0023` et `RFC-0024`, sans valoir clôture avant nouveau contre-audit. `RFC-0025` et `RFC-0026` existent comme enveloppes constitutionnelles **non adoptables**, leurs textes cibles restant à rédiger. Les constats C-04, C-06 et C-07 sont également traités ; **7 P1 restent ouverts**. La Vision et la Constitution demeurent dans le même bloc d'autorité `100`, avec primauté de la Constitution. **Aucun document `Locked` n'a été modifié**, aucune adoption et aucune autonomie R3-R5 ne sont autorisées. |
 
 ---
 
@@ -505,11 +505,10 @@ et une prédiction statistique opaque — ce que `GSIE-CON-004` interdit.
 2. ✅ **Écrite** — migration `0013_diagnostic_persistence` (crée la table
    `diagnostic` et 3 enums ; le `downgrade` supprime la table, les enums
    créés et les lignes `resource` de type `diagnostic`, sans toucher à
-   `evidence_level` qui préexiste). Test d'intégration de réversibilité
-   écrit : `tests/integration/test_migration_diagnostic.py`.
-   ⚠️ **Non exécuté** — Docker Desktop n'a pas démarré sur le poste de
-   travail : la réversibilité reste **vérifiée par lecture, pas par
-   exécution**. À lancer avant tout déploiement.
+   `evidence_level` qui préexiste). **Réversibilité exécutée et verte** :
+   `tests/integration/test_migration_diagnostic.py` joue
+   `upgrade → downgrade → upgrade` sur un conteneur jetable
+   (`gsie-db:supply-chain-hardened`, Apache AGE requis par `0001`).
 3. ✅ **Fait** — `DiagnosticEngine.diagnostiquer` écrit son résultat. Le
    moteur n'est plus pur ; le changement de contrat est documenté dans
    `GSIE/ENGINES/DIAGNOSTIC_ENGINE/DIAGNOSTIC_ENGINE.md` (§5, sous-section
@@ -517,6 +516,21 @@ et une prédiction statistique opaque — ce que `GSIE-CON-004` interdit.
 4. **Reste à faire** — chargement par `diagnostic_id` côté Recommendation,
    avec le cas « diagnostic introuvable ». La tranche R2 est débloquée.
    R1 est livrée (`ebf6d84`).
+
+**Deux défauts préexistants de la chaîne de migrations, découverts en
+exécutant ce test — signalés, non corrigés (`CODE_QUALITY_STANDARD` §6).**
+Ils sont indépendants de `0013` et concernent tout déploiement partant
+d'une base vierge :
+
+1. **`alembic upgrade <cible>` sautant plusieurs révisions n'applique pas
+   le DDL traversé** mais avance quand même `alembic_version` : une base
+   restée à l'état `0001` se déclare en `0011`. Une base ainsi « migrée »
+   serait vide en se croyant à jour. Contournement observé : appliquer les
+   révisions une par une.
+2. **`0012` échoue sur une base vierge** : `0006` crée les tables
+   forestières depuis les modèles courants, qui portent déjà `index=True`
+   sur `source_id` ; `0012` tente ensuite de recréer ces index et lève
+   `DuplicateTable`. Un `upgrade head` depuis zéro est donc impossible.
 
 **Risque résiduel identifié (non corrigé).** `diagnostic_id` est dérivé par
 `uuid5` de `requete_id` et des seuls `conclusion_id`. Deux requêtes

@@ -50,8 +50,25 @@ Format : `## [version] - YYYY-MM-DD`
 - 538 tests unitaires verts (référence : 530), 63 ignorés ; ruff, `ruff
   format --check`, mypy `--strict` et
   `tools/check_governance_consistency.py` verts.
-- 8 tests de persistance ajoutés ; test d'intégration de réversibilité de
-  la migration écrit (`tests/integration/test_migration_diagnostic.py`).
+- 8 tests de persistance ajoutés. Réversibilité de `0013` **exécutée** :
+  `tests/integration/test_migration_diagnostic.py` joue
+  `upgrade → downgrade → upgrade` sur un conteneur jetable et vérifie que
+  le retour arrière ne laisse ni table, ni enums orphelins, ni `resource`
+  sans corps.
+
+### Deux défauts préexistants de la chaîne de migrations (signalés, non corrigés)
+
+Découverts en exécutant ce cycle ; indépendants de `0013`, ils affectent
+tout déploiement partant d'une base vierge (`CODE_QUALITY_STANDARD` §6 :
+qui trouve un défaut ne le corrige pas).
+
+1. Un `alembic upgrade` sautant plusieurs révisions avance
+   `alembic_version` **sans appliquer le DDL traversé** : la base reste à
+   l'état `0001` tout en se déclarant en `0011`. Une base vide se croirait
+   à jour.
+2. `0012` échoue sur une base vierge : `0006` crée les tables forestières
+   depuis les modèles courants, qui portent déjà `index=True` sur
+   `source_id` ; `0012` recrée ces index et lève `DuplicateTable`.
 
 ---
 ## [REASONING + DIAGNOSTIC — EXPOSITION SUR L'API] - 2026-07-26
