@@ -242,7 +242,7 @@ brainstorming v5 n'est adoptée.
   livrables Jalon 0 dans `apps/Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
 - **RFC-0015** — Environmental Model Fabric (**ADOPTÉ** — 2026-07-18,
-  DEC-000026) : étend ADR-007/RFC-0014 (garde-fou anti-invention des
+  DEC-000026) : étend ADR-009/RFC-0014 (garde-fou anti-invention des
   données) aux modèles scientifiques. Registre de modèles
   (`ModelRegistry`/`ModelArtifact`/`LicenseRecord`/
   `ApplicabilityDomain`/`ValidationRun`), LLM orchestrateur non
@@ -367,7 +367,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
-- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire. **Audit qualité du 2026-07-20** (0 P0, aucune valeur non sourcée détectée, ADR-007 respecté) a identifié des P1/P2 de cohérence — corrigés le même jour : typage enum strict sur 6 DTO Pydantic (str → StrEnum), 4 règles métier conditionnelles répliquées dans `resources/validators.py` (reflètent des CheckConstraint SQL déjà en place), index sur les 10 FK `source_id` (désormais intégrés à la baseline `20260726_0001`). 347 tests unitaires (0 échec).
+- **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire. **Audit qualité du 2026-07-20** (0 P0, aucune valeur non sourcée détectée, ADR-009 respecté) a identifié des P1/P2 de cohérence — corrigés le même jour : typage enum strict sur 6 DTO Pydantic (str → StrEnum), 4 règles métier conditionnelles répliquées dans `resources/validators.py` (reflètent des CheckConstraint SQL déjà en place), index sur les 10 FK `source_id` (désormais intégrés à la baseline `20260726_0001`). 347 tests unitaires (0 échec).
 - **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
 - **DEC-000030** — Adoption de RFC-0018 (identification botanique Pl@ntNet), volet en ligne uniquement (§5), par tranches verticales. **Tranche 1/N (schéma de données) complète le 2026-07-20** : `BotanicalIdentificationRequest`/`Result`/`Decision`, registre de types 86→89, 339 tests (0 échec). Tranches 2-4 (client Pl@ntNet, routes serveur, app mobile) restent à faire, tranche 2 bloquée par la confirmation écrite Pl@ntNet sur les conditions commerciales.
 - **DEC-000031** — Socle de fiabilité d'entreprise
@@ -581,6 +581,10 @@ d'exécution :
 - **Vague 1 — Fondations (semaines 1-4, Python + Rust)** : **clôturée**
   (DEC-000021). Knowledge Engine reconnecté sur PostgreSQL v6.2
   (2026-07-17, remplace le stockage en mémoire de la Vague 1).
+  - **Outbox worker opérationnel** (persistance asynchrone des
+    événements, voir ADR-005 et `docs/OUTBOX_EXPLOITATION.md`).
+  - **API Resources exposée** (endpoints CRUD sur les ressources
+    scientifiques, voir ADR-001).
 - **Hub (Centre de Commandement GSIE, UE 5.8)** : environnement
   configuré (voir ci-dessus, livrable 211). Le projet Unreal réel vit
   hors dépôt (`E:\GSIE-Centre-Commandement`, dépôt GitHub
@@ -602,7 +606,7 @@ d'exécution :
   - **Pedology Engine** — codé : pH + texture via SoilGrids ISRIC
     (aucune clé), evidence_level=B (source unique peer-reviewed,
     plafond selon EVIDENCE_FRAMEWORK.md). Pas de persistance v1. 6 tests.
-  - **RFC-0014** (Adopté) + **ADR-007** (Accepté) : garde-fou
+  - **RFC-0014** (Adopté) + **ADR-009** (Accepté) : garde-fou
     transverse anti-invention de données, applicable à tous les
     moteurs de raisonnement (Correlation, GIS, Botanical, Pedology, et
     futurs Reasoning/Diagnostic/Recommendation).
@@ -615,9 +619,11 @@ d'exécution :
     (data.gouv.fr, aucune clé), conversions Kelvin→Celsius et Pa→hPa
     vérifiées. Pas de projection climatique (DRIAS/RCP) — nécessite la
     clé API portail Météo-France (en attente). 8 tests.
-  - **8/14 moteurs GSIE codés** (Evidence, Knowledge, Correlation, GIS,
-    Botanical, Pedology, Forest Dynamics, Climate). Reste : la chaîne
-    Reasoning/Diagnostic/Recommendation/Validation (bloquée par le
+  - **10/14 moteurs GSIE implémentés** (Evidence, Knowledge, Correlation,
+    GIS, Botanical, Pedology, Forest Dynamics, Climate, Reasoning,
+    Diagnostic), **1/14 partiel** (Recommendation — stub/skeleton), **3/14
+    architecture seule** (Validation, Learning, Simulation). Reste : la
+    chaîne Reasoning/Diagnostic/Recommendation/Validation (bloquée par le
     manque d'autécologie réelle — voir ci-dessous), puis Learning/
     Simulation.
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones

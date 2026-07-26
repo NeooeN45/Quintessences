@@ -58,6 +58,48 @@
 | ARCH-D1 | Evidence Engine repositionné en amont de Knowledge Engine (filtre amont) — résolution de la contradiction | Fondateur | ACTIVE |
 | ARCH-D2 | 14/14 moteurs officiels documentés dans GSIE/ENGINES/ | Fondateur | ACTIVE |
 
+## 2026-07-13
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000019 | Validation de l'architecture Phase 4 (multi-langage Python+Rust+Go différé + API FastAPI/PostGIS/Redis) et plan révisé de 24 semaines en 6 vagues respectant le graphe de dépendances | GSIE-DIR-0011 | VALIDATED |
+
+## 2026-07-15
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000020 | Knowledge Engine Semaine 3 — implémentation Python (stockage en mémoire, 5 types de requête, versionnement CON-010) | Fondateur | VALIDATED |
+| DEC-000021 | Semaine 4 — pipeline intégré Evidence → Knowledge (tranche verticale prioritaire, 166 tests E2E) | Fondateur | VALIDATED |
+| DEC-000022 | Métamodèle v6.2 de l'Encyclopédie de l'Écosystème (73 types noyau, superseding 302/304/309/310, 6 ADR, Vague 0 ajoutée) | RFC-0011 | VALIDATED |
+
+## 2026-07-16
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000023 | Migration API GSIE vers le métamodèle v6.2 (73 modèles SQLAlchemy, migration Alembic 0002, CRUD générique, WebSocket) | RFC-0012 | VALIDATED |
+| DEC-000024 | Ingestion des données forestières ONF/CNPF/IGN (module gsie_api.ingestion, datasets P0/P1, traçabilité CON-010) | RFC-0013 | PROPOSÉ |
+
+## 2026-07-17
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000025 | Garde-fou anti-invention de données + ingestion littérature scientifique (SourceReference obligatoire, extraction LLM sous contrôle humain) | RFC-0014 | VALIDATED |
+
+## 2026-07-18
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000026 | Environmental Model Fabric — registre de modèles scientifiques (ModelRegistry, portes automatiques licence/hash/test, LLM orchestrateur non autoritaire) | RFC-0015 | VALIDATED |
+| DEC-000027 | Schéma forestier spécialisé et chaîne de décision professionnelle (10 entités satellite, passeport 5 catégories, pilote Nouvelle-Aquitaine) | RFC-0016 | VALIDATED |
+| DEC-000028 | Incrément démontrable « territoire + capsule + Golden Bench » (EXP-0001, capsule signée Ed25519, hors-ligne) | Fondateur | PROPOSÉ |
+
+## 2026-07-20
+
+| ID | Décision | Directive | Statut |
+|---|---|---|---|
+| DEC-000029 | Adoption du cadrage RFC-0017 et scission en RFC-0018 (Pl@ntNet) / RFC-0019 (gsie-ai-gateway) | RFC-0017 | VALIDATED |
+| DEC-000030 | Adoption de RFC-0018 — identification botanique assistée Pl@ntNet (volet en ligne uniquement, Tranche 1 schéma de données) | RFC-0018 | VALIDATED |
+
 ## 2026-07-22
 
 | ID | Décision | Directive | Statut |

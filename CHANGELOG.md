@@ -41,6 +41,28 @@ Format : `## [version] - YYYY-MM-DD`
   une nouvelle révision autonome pour chaque évolution du schéma.
 
 ---
+
+## [DEC-000035 — RUST COMME CRITÈRE DE PERTINENCE] - 2026-07-26
+
+### Décision
+
+- **DEC-000035 validée** — le langage d'implémentation d'un moteur n'est plus
+  fixé par avance au niveau de la vague. Rust est employé là où il est
+  pertinent, sur justification explicite ; Python reste le défaut.
+- Les trois moteurs de la vague 3 (Correlation, Reasoning, Diagnostic) restent
+  en Python. Aucune réécriture n'est engagée au seul motif du plan initial de
+  `DEC-000019`.
+- Le critère d'application exige, avant toute réécriture Rust : un besoin
+  constaté (pas supposé), une mesure de référence Python, et une frontière
+  d'interface stable.
+- `DEC-000019` demeure valide pour son découpage en vagues et son calendrier ;
+  seule l'attribution *a priori* des langages cesse de s'appliquer.
+- L'écart signalé le 2026-07-26 (commit `83e420b`) dans la section
+  « Écart connu, non corrigé » de la section REASONING + DIAGNOSTIC est
+  désormais tranché par la présente décision.
+
+---
+
 ## [VEILLE SOURCE GÉOSPATIALE — GEORCHESTRA] - 2026-07-26
 
 ### Source potentielle future, sans adoption
@@ -176,7 +198,7 @@ utilisable et aucune base partenaire n'en dépend.
 - L'exemple OpenAPI du Diagnostic prolonge celui du Reasoning (même station,
   même source Rameau et al. 2008) pour illustrer la chaîne Reasoning →
   Diagnostic **sans introduire d'affirmation scientifique nouvelle**
-  (`GSIE-CON-002`, `ADR-007`). Sa validité est vérifiée contre
+  (`GSIE-CON-002`, `ADR-009`). Sa validité est vérifiée contre
   `DiagnosticRequest` : un exemple faux dans la documentation publique est
   pire qu'un exemple absent.
 
@@ -382,7 +404,7 @@ utilisable et aucune base partenaire n'en dépend.
 ### Audit qualité (3 subagents backend) sur les tranches 1-5 déjà committées
 
 - Résultat : 0 P0 sur l'ensemble du code audité (committé et non
-  committé), ADR-007 respecté partout (aucune valeur scientifique non
+  committé), ADR-009 respecté partout (aucune valeur scientifique non
   sourcée détectée). 9 P1 + 7 P2 identifiés sur RFC-0016 Phase A, 1 P1
   + 7 P2 sur Phase B/C, 0 P1 + 5 P2 sur l'extension Forest Dynamics.
 - Corrections P1 appliquées (`fix(forestry)`) : typage enum strict sur
@@ -570,7 +592,7 @@ utilisable et aucune base partenaire n'en dépend.
 
 ### RFC-0015 adoptée (DEC-000026)
 
-- Étend ADR-007/RFC-0014 (garde-fou anti-invention des données) aux
+- Étend ADR-009/RFC-0014 (garde-fou anti-invention des données) aux
   modèles scientifiques : registre de modèles (`ModelRegistry`/
   `ModelArtifact`/`LicenseRecord`/`ApplicabilityDomain`/
   `ValidationRun`), LLM strictement orchestrateur non autoritaire,
@@ -624,7 +646,7 @@ utilisable et aucune base partenaire n'en dépend.
   2021), jamais A sans convergence multi-sources
   (EVIDENCE_FRAMEWORK.md). Pas de persistance en v1 (estimation
   ponctuelle sans identité stable). 6 tests.
-- **Fix checker de gouvernance** : la règle 3 (ADR-007) signalait à
+- **Fix checker de gouvernance** : la règle 3 (ADR-009) signalait à
   tort une `SourceReference(...)` contenant "v2.0" dans une URL comme
   valeur non sourcée — une SourceReference EST déjà la citation
   structurée, désormais exclue explicitement.
@@ -639,13 +661,13 @@ utilisable et aucune base partenaire n'en dépend.
 
 ## [PHASE 4 — GARDE-FOU ANTI-INVENTION + GIS ENGINE] - 2026-07-17
 
-### Gouvernance — RFC-0014, ADR-007
+### Gouvernance — RFC-0014, ADR-009
 
 - **RFC-0014** (Adopté) : garde-fou anti-invention de données + pipeline
   d'ingestion de littérature scientifique non structurée, en réponse à
   une exigence explicite du Fondateur (aucune fausse donnée, corrélations
   basées uniquement sur des sources scientifiques réelles).
-- **ADR-007** (Accepté) : formalise le garde-fou en décision opposable —
+- **ADR-009** (Accepté) : formalise le garde-fou en décision opposable —
   tout moteur de raisonnement doit justifier source, evidence_level et
   chaîne de provenance pour chaque valeur produite.
 - **Checker de gouvernance** : règle 3 ajoutée — détection best-effort de
