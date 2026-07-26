@@ -48,14 +48,16 @@ Le métamodèle v6.1 remplace cette structure par :
   → repository sur schéma v6.1 (Vague 0/1)
 - `GSIE/API/src/gsie_api/infrastructure/knowledge_models.py` — tables
   `knowledge_objects` → `resource` + `assertion` + tables associées
-- `GSIE/API/alembic/versions/0001_initial_knowledge_botanical_ecosystem.py`
-  — migration de schéma (ADR-004)
+- La migration historique `0001_initial_knowledge_botanical_ecosystem.py`
+  est remplacée par une migration créant directement le schéma v6.1
+  cible, selon le mécanisme de migration progressive défini par ADR-004.
 
 ## Migration
 
-Voir ADR-004 (migration schéma). Les 25 connaissances seed (livrable
-308) sont migrées vers le schéma v6.1 par script de migration. Tests
-avant/après pour vérifier la préservation des données.
+Le plan de préservation de données d'ADR-004 s'applique : les données
+existantes du schéma `knowledge_objects` v6.1 sont migrées vers
+`resource` + `assertion` v6.2 sans perte. Les 25 connaissances seed
+restent archivées jusqu'à leur portage explicite vers les resources v6.2.
 
 ## Statut du document 302
 

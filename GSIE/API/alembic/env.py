@@ -1,7 +1,9 @@
 """Alembic env — configuration async pour PostgreSQL.
 
 Utilise asyncpg (SQLAlchemy 2.0 async) pour les migrations.
-Importe tous les modèles pour que autogenerate les détecte.
+Importe le registre v6.2 pour que l'autogénération détecte uniquement le
+schéma courant. Les modèles v6.1 archivés utilisent une base distincte et
+ne doivent jamais réapparaître dans une migration.
 """
 
 import asyncio
@@ -13,37 +15,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from gsie_api.core.config import get_settings
-from gsie_api.infrastructure.knowledge_models import (
-    BotanicalEssenceModel,
-    BotanicalFamilleModel,
-    BotanicalGenreModel,
-    EcosystemGroupeEcologiqueModel,
-    EcosystemHabitatModel,
-    EcosystemStationModel,
-    KnowledgeConflitModel,
-    KnowledgeDomaineValiditeModel,
-    KnowledgeHistoryModel,
-    KnowledgeMotCleModel,
-    KnowledgeObjectModel,
-    KnowledgeRelationModel,
-)
 from gsie_api.infrastructure.models import Base
-
-# S'assurer que tous les modèles sont chargés pour autogenerate
-_models = [
-    KnowledgeObjectModel,
-    KnowledgeHistoryModel,
-    KnowledgeDomaineValiditeModel,
-    KnowledgeRelationModel,
-    KnowledgeMotCleModel,
-    KnowledgeConflitModel,
-    BotanicalFamilleModel,
-    BotanicalGenreModel,
-    BotanicalEssenceModel,
-    EcosystemHabitatModel,
-    EcosystemStationModel,
-    EcosystemGroupeEcologiqueModel,
-]
 
 config = context.config
 if config.config_file_name is not None:
@@ -53,6 +25,19 @@ target_metadata = Base.metadata
 
 _settings = get_settings()
 config.set_main_option("sqlalchemy.url", _settings.database_url)
+_EXTENSION_TABLES = frozenset({"spatial_ref_sys"})
+
+
+def include_object(
+    object_: object,
+    name: str | None,
+    type_: str,
+    reflected: bool,
+    compare_to: object,
+) -> bool:
+    """Ignore les objets possédés par PostGIS lors du contrôle de dérive."""
+    del object_, reflected, compare_to
+    return not (type_ == "table" and name in _EXTENSION_TABLES)
 
 
 def run_migrations_offline() -> None:
@@ -62,6 +47,7 @@ def run_migrations_offline() -> None:
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
+        include_object=include_object,
         dialect_opts={"paramstyle": "named"},
     )
     with context.begin_transaction():
@@ -69,7 +55,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
     with context.begin_transaction():
         context.run_migrations()
 

@@ -3,10 +3,19 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | ADR-004 |
-| **Statut** | Validated |
+| **Statut** | Superseded opérationnellement par DEC-000036 |
 | **Date** | 2026-07-15 |
 | **Auteur** | Camille Perraudeau (Fondateur) |
 | **Décision liée** | DEC-000022, RFC-0011 |
+
+## Supersession opérationnelle (2026-07-26)
+
+`DEC-000036` remplace le mécanisme de migration progressive décrit ci-dessous.
+Aucune base v6.1 ne contient de données à préserver : la lignée locale
+`0001`-`0013` est remplacée par la baseline v6.2 `20260726_0001` et les
+anciennes bases de développement doivent être recréées. La cible fonctionnelle
+v6.2 reste inchangée ; le présent ADR est conservé comme historique de la
+stratégie initiale.
 
 ## Contexte
 
