@@ -103,3 +103,9 @@ ADR-005 accepté par le Fondateur, conformément à DEC-000022 (§ « Adopte
 les 6 ADR-001 à ADR-006 »), déjà Validated depuis le 2026-07-16. Le
 schéma outbox/inbox est déjà implémenté (migration 0002) ; le worker de
 relais reste différé à Vague 1+ selon besoin réel (inchangé).
+
+## Documentation d'exploitation
+
+> Pour le guide d'exploitation opérationnel (cycle de vie, métriques,
+> ré-enfilement), voir
+> [OUTBOX_EXPLOITATION.md](../API/docs/OUTBOX_EXPLOITATION.md).

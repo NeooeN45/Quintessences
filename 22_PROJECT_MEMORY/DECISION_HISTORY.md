@@ -70,6 +70,13 @@
 |---|---|---|---|
 | DEC-000033 | Orientation de la refondation constitutionnelle : Quintessences multi-domaines, autonomie maintenue comme recherche encadrée, Vision et Constitution dans le même bloc fondateur d'autorité 100 avec primauté de la Constitution | Fondateur / RFC-0023 et RFC-0024 EN_REVUE | VALIDATED |
 
+## 2026-07-26
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000035 | Rust devient un critère de pertinence mesuré, non un langage imposé par vague | Arbitrage du Fondateur | VALIDATED |
+| DEC-000036 | Remplacement de la lignée Alembic locale 0001-0013 par la baseline immuable GSIE v6.2 `20260726_0001` | Audit technique + arbitrage du Fondateur | VALIDATED |
+
 ---
 
 > Chaque nouvelle décision ajoute une ligne datée ci-dessus.

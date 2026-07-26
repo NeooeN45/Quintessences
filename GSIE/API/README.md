@@ -77,13 +77,10 @@ cp .env.example .env
 # 3. Démarrer les dépendances, sans muter implicitement le schéma
 docker compose up -d db redis
 
-# 4. Exécuter la migration comme une opération unique et contrôlée.
-#    Pour une base neuve, la "sauvegarde confirmée" signifie qu'aucune donnée
-#    n'existe encore. Pour une base existante, réaliser et vérifier le backup.
+# 4. Appliquer explicitement la baseline sur une base neuve.
+#    Une ancienne base locale Alembic 0001-0013 doit être recréée.
 docker compose run --rm \
   -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true \
-  -e GSIE_DATABASE_BACKUP_CONFIRMED=true \
-  -e GSIE_ALLOW_DESTRUCTIVE_MIGRATIONS=true \
   api true
 
 # 5. Démarrer l'API et le worker outbox
@@ -118,6 +115,17 @@ uvicorn gsie_api.app:app --reload --port 8000
 # 5. Tests
 pytest
 ```
+
+## Contrat de migration
+
+- La lignée officielle commence à `20260726_0001`, baseline immuable du schéma
+  GSIE v6.2 (116 tables applicatives).
+- Une ancienne base locale marquée `0001` à `0013` n'est pas compatible : elle
+  doit être recréée, aucune donnée historique n'étant à conserver.
+- Toute évolution future crée une nouvelle révision Alembic autonome ; la
+  baseline ne doit jamais être réécrite ni importer les modèles applicatifs.
+- La CI exécute réellement `upgrade head`, `downgrade base`, puis un second
+  `upgrade head` sur PostgreSQL 16 avec PostGIS et Apache AGE.
 
 ## Architecture (clean architecture par modules moteurs)
 
@@ -167,3 +175,12 @@ src/gsie_api/
 - **Tests** : pytest-asyncio, 80% coverage sur domain
 - **Linting** : ruff + mypy strict
 - **Sécurité** : aucun secret en clair, JWT RS256, paramétré via .env
+
+## Documentation
+
+- [Guide d'exploitation Outbox](docs/OUTBOX_EXPLOITATION.md) — cycle de
+  vie, métriques Prometheus, procédure de ré-enfilement
+- [Rotation des clés JWT](docs/JWT_KEY_ROTATION.md) — procédure de
+  rotation RSA et contrainte multi-clés (pas de `kid`/JWKS natif)
+- [Parallélisation pytest (xdist)](docs/TESTING_XDIST.md) — état,
+  contraintes (scipy DLL, fuite SQLAlchemy) et usage manuel

@@ -19,6 +19,19 @@
 | GSIE-PROMPT-0015 | SWE 1.7 via Devin | Reasoning tranche 1 — R2 cœur d'inférence | REJETÉE | Aucun fichier produit, deux tentatives | Architecte — repris en interne |
 | GSIE-PROMPT-0016 | SWE 1.7 via Devin | Reasoning tranche 1 — R3 tests adversariaux du moteur | VALIDÉE | 18 tests, 8 défauts trouvés | Architecte — accepté |
 | GSIE-PROMPT-0017 | GLM 5.2 via Devin | Reasoning tranche 1 — R4 routeur et intégration | VALIDÉE | 9 tests d'intégration verts (PostgreSQL/PostGIS via testcontainers) | Architecte — accepté |
+| GSIE-PROMPT-0018 (interne) | Aucun — Codex | Diagnostic Engine tranche R4 — routeur et intégration (montage sur `app.py`) | VALIDÉE | 6 routes exposées sous `/api/v1`, test de montage ajouté | Architecte — repris en interne, non délégué |
+| GSIE-PROMPT-0019 (interne) | Aucun — Codex | Persistance des diagnostics — nouveau type `diagnostic`, dérivation `uuid5`, migration | VALIDÉE | 544 tests unitaires verts, 8 tests de persistance ajoutés | Architecte — repris en interne, non délégué |
+| GSIE-PROMPT-0020 (interne) | Aucun — Codex | Rebaselining Alembic — baseline autonome `20260726_0001` (DEC-000036) | VALIDÉE | Cycle réel vert (base vierge → `upgrade head` → contrôle de dérive → `downgrade base` → `upgrade head`) sur PostgreSQL 16/PostGIS/AGE | Architecte — repris en interne, non délégué |
+| GSIE-PROMPT-0021 (interne) | Aucun — Codex | Outbox worker — retry et dead letter (ADR-005) | VALIDÉE | Worker outbox au moins une fois, événements filtrés RGPD | Architecte — repris en interne, non délégué |
+| GSIE-PROMPT-0022 (interne) | Aucun — Codex | API Resources — CRUD générique sur les types de resources enregistrés | VALIDÉE | 8 endpoints `/api/v1/resources`, RBAC fermé avant chargement | Architecte — repris en interne, non délégué |
+
+> **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
+> correspondent à du travail structurant réalisé directement par
+> l'Architecte/Codex sans délégation à un agent Devin (Claude ou GLM 5.2).
+> Aucun prompt versionné dédié n'a été rédigé au préalable. Elles sont
+> tracées ici pour exhaustivité, conformément à
+> `23_QUALITY_MANAGEMENT/PROCESSES/AI_AGENT_ORCHESTRATION.md`, et documentées
+> en détail dans `CHANGELOG.md` (entrées du 2026-07-26).
 
 ## Règle de mise à jour
 

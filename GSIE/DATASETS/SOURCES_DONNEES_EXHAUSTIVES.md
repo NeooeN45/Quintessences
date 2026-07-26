@@ -1106,6 +1106,7 @@ def fetch_firms_fire_detections(
 | Projet | Stars | Langue | Licence | Pertinence GSIE |
 |---|---|---|---|---|
 | **[rupestre-campos/geofastmapAPI](https://github.com/rupestre-campos/geofastmapAPI)** | 4 | Python | — | **Très haute** — FastAPI + PostGIS async. OGC API Features compliant. Vector tiles (MVT/MBTiles/PMTiles). Streaming GeoJSONL. Redis workers. **Architecture très proche de GSIE API**. |
+| **[georchestra/georchestra](https://github.com/georchestra/georchestra)** | 145 (2026-07-26) | Java | GPL-3.0 | **Haute — source externe potentielle future**. Infrastructure de données spatiales fédérant notamment GeoNetwork, GeoServer, GeoWebCache et une Data API. À consommer par un connecteur d'ingestion via OGC API Features, WFS, WMS/WMTS ou catalogue de métadonnées, sans dépendance directe des applications et sans en faire la source de vérité GSIE. La licence et la provenance restent à qualifier pour chaque jeu publié par chaque instance. |
 | **[notarious2/geolocations](https://github.com/notarious2/geolocations)** | 9 | Python | MIT | **Haute** — FastAPI + SQLAlchemy 2 + GeoAlchemy2 + asyncpg. Pydantic v2. Alembic. Docker. **Stack exacte GSIE API**. |
 | **[matthew-lottly/spatial-data-api](https://github.com/matthew-lottly/spatial-data-api)** | — | Python | — | **Haute** — FastAPI + PostGIS backend pour monitoring stations environnementales. Threshold alerts, dashboard, tests. **Pattern direct pour GSIE**. |
 | **[ChrisMcCarthyDev/geoalchemy-alembic-pydantic-fastapi-demo](https://github.com/ChrisMcCarthyDev/geoalchemy-alembic-pydantic-fastapi-demo)** | — | Python | — | **Moyenne** — Reference implémentation FastAPI + GeoAlchemy2 + Alembic + Pydantic. Dual DB (PostGIS prod / SpatiaLite dev). |
@@ -1235,6 +1236,8 @@ def fetch_firms_fire_detections(
 28. `California-Wildfire-Ignition-ML` → Diagnostic — XGBoost + SHAP ignition risk
 29. `pyforestry` → Forest Dynamics — growth & yield models européens
 30. `graph-xai` → Validation Engine — XAI spatio-temporel
+31. `geoOrchestra` → GIS Engine — source externe potentielle multi-services
+    OGC/OGC API ; connecteur d'ingestion futur, licences des jeux à qualifier
 
 ---
 
@@ -2330,6 +2333,7 @@ Les résultats distants sont enregistrés localement avec leur date, leur versio
 
 | Date | Événement |
 |---|---|
+| 2026-07-26 | Ajout de geoOrchestra à la liste des sources externes potentielles futures, en priorité 3 (veille) : accès uniquement par connecteur OGC/API, aucune dépendance directe, aucune promotion comme source de vérité et qualification séparée de la licence de chaque jeu publié |
 | 2026-07-17 | Validation et intégration de l'architecture GeoSylva Android offline-first : hiérarchie algorithmes → ML → LLM, outbox Room/WorkManager, dégradation T0-T5 et connexions optionnelles GSIE Serveur / GSIE PC |
 | 2026-07-17 | Ajout de la refonte de la page Âge / Martelage : moteur dendrométrique, scénarios de martelage, économie, assistance IA, traçabilité et fonctionnement hors connexion |
 | 2026-07-17 | Création de la note — compilation exhaustive depuis DATASET_CATALOG, IGNIS_DATA_PIPELINE, ENGINE_DATA_SOCLE, SOURCING_PLAN, GIS_ENGINE + recherche web (30 nouvelles sources) |

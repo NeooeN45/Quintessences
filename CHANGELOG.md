@@ -3,13 +3,76 @@
 Format : `## [version] - YYYY-MM-DD`
 
 ---
+
+## [BASELINE ALEMBIC GSIE V6.2] - 2026-07-26
+
+### Historique propre et immuable
+
+- **DEC-000036 validée** — la lignée locale non publiée `0001` à `0013` est
+  remplacée par `20260726_0001`, baseline autonome du schéma GSIE v6.2.
+- La baseline contient exactement 116 tables applicatives, sans importer les
+  modèles au moment de l'exécution. Les 12 tables legacy v6.1 restent exclues
+  grâce à une base déclarative séparée.
+- Aucune donnée historique n'étant à préserver, une ancienne base locale
+  marquée `0001` à `0013` doit être recréée ; aucune conversion trompeuse
+  n'est maintenue.
+
+### Preuves et garde-fous
+
+- Cycle réel vert sur PostgreSQL 16 + PostGIS + Apache AGE : base vierge,
+  `upgrade head`, contrôle de dérive Alembic, `downgrade base`, puis second
+  `upgrade head`.
+- Le test vérifie les tables, les enums, le graphe AGE, les index `source_id`,
+  l'absence des tables legacy et la réversibilité globale.
+- Validation locale complète : 548 tests unitaires réussis, 63 exclusions
+  historiques, 87 % de couverture ; 83 tests d'intégration réussis ; Ruff et
+  mypy strict conformes.
+- La CI construit désormais l'image de base spécialisée et échoue si le test
+  de migration ne peut pas s'exécuter ; il ne peut plus être ignoré faute
+  d'image locale.
+- Le point d'entrée refuse une lignée Alembic absente ou incompatible avant
+  mutation et conserve les migrations automatiques désactivées par défaut.
+
+### Documentation
+
+- `ADR-004` est marqué supersédé sur le plan opérationnel, sans effacer
+  l'historique de la stratégie progressive initiale.
+- Le contrat de migration future interdit de réécrire la baseline et impose
+  une nouvelle révision autonome pour chaque évolution du schéma.
+
+---
+## [VEILLE SOURCE GÉOSPATIALE — GEORCHESTRA] - 2026-07-26
+
+### Source potentielle future, sans adoption
+
+- **geoOrchestra ajouté au catalogue exhaustif des sources GSIE**, dans la
+  catégorie backend géospatial/API et en priorité 3 (veille).
+- Rôle borné à une source externe fédérée pour le GIS Engine, consommable
+  ultérieurement par connecteur OGC API Features, WFS, WMS/WMTS ou catalogue
+  de métadonnées.
+- Les applications ne devront pas dépendre directement d'une instance
+  geoOrchestra et GSIE conservera ses données normalisées dans son propre
+  stockage.
+- geoOrchestra n'est pas un producteur de datasets : disponibilité,
+  provenance, fraîcheur et licence devront être qualifiées séparément pour
+  chaque jeu et chaque instance avant ingestion.
+- Aucun composant n'est adopté, aucune intégration n'est planifiée et aucune
+  décision structurante n'est créée à ce stade.
+
+### Documentation
+
+- Note de veille :
+  `GSIE/RESEARCH/VEILLE_GEORCHESTRA_2026-07-26.md`.
+- Mémoire et roadmap synchronisées.
+
+---
 ## [PERSISTANCE DES DIAGNOSTICS] - 2026-07-26
 
 ### Un `diagnostic_id` résolvable
 
 - **Nouveau type de resource `diagnostic`** — le registre passe de 89 à 90
   types. Modèle `infrastructure/models/diagnostic.py`, entrée de validateur,
-  migration `0013_diagnostic_persistence`.
+  désormais intégré à la baseline v6.2 `20260726_0001`.
 - **Aucun type existant n'a été réutilisé.** `inference` désigne la
   prédiction d'un modèle statistique, `recommendation` une recommandation
   générique portée par un acteur, `diagnostic_protocol` un protocole
@@ -50,11 +113,9 @@ Format : `## [version] - YYYY-MM-DD`
 - 544 tests unitaires verts (référence : 530), 63 ignorés ; ruff, `ruff
   format --check`, mypy `--strict` et
   `tools/check_governance_consistency.py` verts.
-- 8 tests de persistance ajoutés. Réversibilité de `0013` **exécutée** :
-  `tests/integration/test_migration_diagnostic.py` joue
-  `upgrade → downgrade → upgrade` sur un conteneur jetable et vérifie que
-  le retour arrière ne laisse ni table, ni enums orphelins, ni `resource`
-  sans corps.
+- 8 tests de persistance ajoutés. La réversibilité est désormais couverte au
+  niveau de la baseline complète par
+  `tests/integration/test_migration_baseline.py`.
 
 ### Dérivation de `diagnostic_id` corrigée
 
@@ -74,19 +135,12 @@ Format : `## [version] - YYYY-MM-DD`
 - Reste hors dérivation : les contradictions déclarées. La garde
   `DiagnosticConflitError` continue de couvrir ce cas.
 
-### Deux défauts préexistants de la chaîne de migrations (signalés, non corrigés)
+### Défauts de la chaîne de migrations résolus par DEC-000036
 
-Découverts en exécutant ce cycle ; indépendants de `0013`, ils affectent
-tout déploiement partant d'une base vierge (`CODE_QUALITY_STANDARD` §6 :
-qui trouve un défaut ne le corrige pas).
-
-1. Un `alembic upgrade` sautant plusieurs révisions avance
-   `alembic_version` **sans appliquer le DDL traversé** : la base reste à
-   l'état `0001` tout en se déclarant en `0011`. Une base vide se croirait
-   à jour.
-2. `0012` échoue sur une base vierge : `0006` crée les tables forestières
-   depuis les modèles courants, qui portent déjà `index=True` sur
-   `source_id` ; `0012` recrée ces index et lève `DuplicateTable`.
+Les deux défauts découverts pendant la persistance des diagnostics — DDL sauté
+entre révisions et duplication des index `source_id` — ont motivé le
+rebaselining documenté en tête de ce changelog. L'ancienne lignée n'est plus
+utilisable et aucune base partenaire n'en dépend.
 
 ---
 ## [REASONING + DIAGNOSTIC — EXPOSITION SUR L'API] - 2026-07-26
