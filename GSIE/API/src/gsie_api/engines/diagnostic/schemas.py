@@ -46,24 +46,21 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 
 from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference
 from gsie_api.engines.reasoning.schemas import Conclusion, StationContexte, niveau_plancher
+from gsie_api.infrastructure.models.enums import (
+    DiagnosticGlobalState,
+    DiagnosticType,
+    DiagnosticValidationStatus,
+)
 
-
-class TypeDiagnostic(StrEnum):
-    """Nature du diagnostic demandé (`DIAGNOSTIC_ENGINE.md` §5)."""
-
-    stationnel = "stationnel"
-    sylvicole = "sylvicole"
-    sanitaire = "sanitaire"
-    global_ = "global"
-
-
-class EtatGlobal(StrEnum):
-    """État de santé synthétique de la station ou du peuplement (§5)."""
-
-    sain = "sain"
-    vigueur_reduite = "vigueur_reduite"
-    deperissement = "deperissement"
-    critique = "critique"
+# Depuis la persistance des diagnostics, ces trois énumérations sont aussi
+# des types PostgreSQL et vivent dans `infrastructure.models.enums`. Elles
+# sont réexportées ici sous leurs noms d'origine : une seconde définition
+# finirait par diverger du type stocké, et un diagnostic relu autrement
+# qu'il n'a été écrit est exactement l'erreur que ce module existe pour
+# rendre impossible.
+TypeDiagnostic = DiagnosticType
+EtatGlobal = DiagnosticGlobalState
+StatutValidation = DiagnosticValidationStatus
 
 
 class DomaineElement(StrEnum):
@@ -136,27 +133,6 @@ class Probabilite(StrEnum):
     modere = "modere"
     eleve = "eleve"
     tres_eleve = "tres_eleve"
-
-
-class StatutValidation(StrEnum):
-    """Statut de validation humaine d'un diagnostic.
-
-    Absent du contrat §5, ajouté ici : `RFC-0024` §5.3 classe un diagnostic
-    non validé comme brouillon, et `GSIE-CON-001` réserve la décision au
-    forestier. Un diagnostic sans statut serait indistinguable d'un
-    diagnostic établi.
-    """
-
-    brouillon = "brouillon"
-    """Produit par le système, non relu. État par défaut et seul état
-    qu'un moteur peut produire."""
-
-    valide = "valide"
-    """Relu et accepté par une personne nommée. Exige `ValidationHumaine`."""
-
-    refuse = "refuse"
-    """Relu et rejeté. Conservé : un refus est une information
-    (`AI_CONSTITUTION.md` IA-5, « le désaccord est une donnée »)."""
 
 
 class ValidationHumaine(BaseModel):

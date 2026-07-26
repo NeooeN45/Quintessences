@@ -13,7 +13,7 @@ from gsie_api.resources.validators import validate_resource_data
 class TestResourceTypes:
     """Tests du registry des types."""
 
-    def test_should_list_89_types_when_called(self) -> None:
+    def test_should_list_90_types_when_called(self) -> None:
         # 76 types + 3 types forestiers spécialisés (RFC-0016, tranche 1/10 :
         # autecology_profile, site_index_model, fertility_class) + 2 types
         # de diagnostic stationnel (RFC-0016, tranche 2/10 : station_type,
@@ -24,9 +24,14 @@ class TestResourceTypes:
         # provenance_material) + 2 types sanitaires (RFC-0016, tranche
         # 5/10 : diagnostic_protocol, health_risk) + 3 types d'identification
         # botanique assistée (RFC-0018, tranche 1/N, DEC-000030 :
-        # botanical_identification_request/result/decision).
+        # botanical_identification_request/result/decision) + 1 type
+        # `diagnostic` (persistance des diagnostics, 2026-07-26 — rend
+        # `diagnostic_id` résolvable pour le Recommendation Engine ; ni
+        # `inference`, ni `recommendation`, ni `diagnostic_protocol` ne
+        # désignent cet objet).
         types = ResourceService.list_types()
-        assert len(types) == 89
+        assert len(types) == 90
+        assert "diagnostic" in types
         assert "assertion" in types
         assert "observation" in types
         assert "concept" in types

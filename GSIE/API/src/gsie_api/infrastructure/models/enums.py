@@ -720,3 +720,51 @@ class IdentificationDecisionStatus(StrEnum):
     suggestion_ia = "suggestion_ia"
     validee_utilisateur = "validee_utilisateur"
     rejetee = "rejetee"
+
+
+# Diagnostic Engine — persistance des diagnostics (P0 technique 2026-07-26).
+# Ces trois énumérations vivent ici, et non dans les schémas Pydantic du
+# moteur, parce qu'elles sont désormais des types PostgreSQL : deux
+# définitions parallèles finiraient par diverger, et une divergence entre le
+# type stocké et le type exposé rendrait un diagnostic relu autrement qu'il
+# n'a été écrit. `gsie_api.engines.diagnostic.schemas` les réexporte sous
+# leurs noms français d'origine.
+class DiagnosticType(StrEnum):
+    """Nature du diagnostic demandé (`DIAGNOSTIC_ENGINE.md` §5)."""
+
+    stationnel = "stationnel"
+    sylvicole = "sylvicole"
+    sanitaire = "sanitaire"
+    global_ = "global"
+
+
+class DiagnosticGlobalState(StrEnum):
+    """État de santé synthétique de la station ou du peuplement (§5)."""
+
+    sain = "sain"
+    vigueur_reduite = "vigueur_reduite"
+    deperissement = "deperissement"
+    critique = "critique"
+
+
+class DiagnosticValidationStatus(StrEnum):
+    """Statut de validation humaine d'un diagnostic.
+
+    Absent du contrat §5, ajouté par le moteur : `GSIE-CON-001` réserve la
+    décision au forestier, donc un diagnostic non relu doit se déclarer
+    brouillon. Sans statut, il serait indistinguable d'un diagnostic établi.
+    La justification complète est portée par
+    `gsie_api.engines.diagnostic.schemas` — ce module ne fait qu'en tenir le
+    type.
+    """
+
+    brouillon = "brouillon"
+    """Produit par le système, non relu. État par défaut et seul état
+    qu'un moteur peut produire."""
+
+    valide = "valide"
+    """Relu et accepté par une personne nommée. Exige `ValidationHumaine`."""
+
+    refuse = "refuse"
+    """Relu et rejeté. Conservé : un refus est une information
+    (`AI_CONSTITUTION.md` IA-5, « le désaccord est une donnée »)."""

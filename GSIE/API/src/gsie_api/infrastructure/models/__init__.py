@@ -13,6 +13,7 @@ les RFC métier.
 from gsie_api.infrastructure.models import (
     assertion,  # noqa: F401
     business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
+    diagnostic,  # noqa: F401 — diagnostic stationnel persisté (Diagnostic Engine)
     dynamics,  # noqa: F401
     ecology,  # noqa: F401
     fair_rgpd,  # noqa: F401

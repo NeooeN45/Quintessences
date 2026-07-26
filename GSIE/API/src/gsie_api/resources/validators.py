@@ -19,6 +19,9 @@ from gsie_api.infrastructure.models.enums import (
     CorrelationMethod,
     CorrelationStrength,
     DatasetPurpose,
+    DiagnosticGlobalState,
+    DiagnosticType,
+    DiagnosticValidationStatus,
     EcologicalProcessType,
     EvidenceLevel,
     FeatureSourceType,
@@ -87,6 +90,13 @@ _ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "capability": {
         "capability_type": CapabilityType,
         "provider_type": ProviderType,
+    },
+    # Diagnostic Engine — persistance des diagnostics (P0 technique 2026-07-26).
+    "diagnostic": {
+        "type_diagnostic": DiagnosticType,
+        "etat_global": DiagnosticGlobalState,
+        "statut_validation": DiagnosticValidationStatus,
+        "evidence_level_plancher": EvidenceLevel,
     },
     "scenario": {
         "scenario_type": ScenarioType,
@@ -181,6 +191,19 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     ],
     "scenario": ["name", "scenario_type", "description"],
     "correlation": ["method", "strength", "confidence"],
+    # `contenu` est obligatoire : un diagnostic dont le corps manque serait
+    # une ligne citable mais illisible, donc incontestable (GSIE-CON-004).
+    "diagnostic": [
+        "requete_origine",
+        "station_id",
+        "type_diagnostic",
+        "etat_global",
+        "statut_validation",
+        "confiance",
+        "evidence_level_plancher",
+        "date_diagnostic",
+        "contenu",
+    ],
     "ecosystem_service": ["name", "description"],
     "capability": [
         "name",
