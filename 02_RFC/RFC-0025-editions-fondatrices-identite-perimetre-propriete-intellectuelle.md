@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0025 |
 | **Statut** | Brouillon — textes cibles absents, adoption interdite |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |

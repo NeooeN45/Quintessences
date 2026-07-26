@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0026 |
 | **Statut** | Brouillon dormant — preuves et textes cibles absents |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |

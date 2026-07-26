@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0023 |
 | **Statut** | Proposé — EN_REVUE, nouveau contre-audit requis |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |

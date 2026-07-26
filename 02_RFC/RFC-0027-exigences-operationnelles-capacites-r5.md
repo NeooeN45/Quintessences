@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0027 |
 | **Statut** | Brouillon dormant — aucune capacité R5 n'existe |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-25 |

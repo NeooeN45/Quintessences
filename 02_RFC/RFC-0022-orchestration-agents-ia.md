@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0022 |
 | **Statut** | Adopté (2026-07-22, DEC-000032) |
 | **Auteur** | Direction technique |
 | **Date** | 2026-07-22 |

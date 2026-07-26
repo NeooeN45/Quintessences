@@ -2,6 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
+| **ID** | RFC-0024 |
 | **Statut** | Proposé — EN_REVUE, aucune autonomie critique autorisée |
 | **Auteur** | Direction technique, sous autorité du Fondateur |
 | **Date** | 2026-07-24 |
