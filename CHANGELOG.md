@@ -4,6 +4,48 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RELIABILITY API GSIE] - 2026-07-27
+
+### Fiabilité enterprise — API GSIE
+
+- **Coverage 88% -> 98%** (+10 points) sur la base de code `gsie_api`
+  (6605 statements, 119 manquants).
+- **1002 tests passent** (60 skipped, 3 xfailed, 0 échec) en 569s.
+- **+303 tests ajoutés** sur 3 commits :
+  - `test_routers_coverage.py` (87 tests) : routers FastAPI (resources,
+    climate, botanical, gis, pedology, forest_dynamics, diagnostic,
+    knowledge) — couverture routers 54-87% -> 90-100%.
+  - `test_infra_coverage.py` (112 tests) : infrastructure (websocket,
+    object_storage, auth/refresh, dpclim, seeds, outbox_worker) —
+    couverture infra 50-85% -> 93-100%.
+  - `test_e2e_cross_engines.py` (26 tests) : chaîne cross-moteurs
+    Evidence -> Knowledge (ADR-009, Docker requis) + edge cases API
+    (rate limiting, CORS, gzip, Prometheus, health, RBAC, JWT expiré,
+    validation stricte, OpenAPI, versions moteurs, trace ID CON-005).
+- **Fix `test_migration_baseline.py`** : `test_models.py` polluait
+  `Base.metadata` avec un `TestModel(Base)` — remplacé par un
+  `LocalBase` dédié.
+- **Fix pyproject.toml** : enregistrement du mark `xdist_group`
+  (suppression warning pytest).
+
+### Modules à 98-100% de coverage
+
+- `engines/pipeline.py` : 100%
+- `engines/correlation/engine.py` : 99%
+- `engines/diagnostic/engine.py` : 99%
+- `engines/knowledge/engine.py` : 94%
+- `engines/reasoning/engine.py` : 91%
+- `infrastructure/object_storage.py` : 93%
+- `infrastructure/outbox_worker.py` : 99%
+- `resources/router.py` : 99%
+- `resources/service.py` : 99%
+- `websocket/manager.py` : 100%
+- `websocket/router.py` : 98%
+- `auth/refresh_tokens.py` : 100%
+- `seeds/run_seeds.py` : 94%
+
+---
+
 ## [BASELINE ALEMBIC GSIE V6.2] - 2026-07-26
 
 ### Historique propre et immuable
