@@ -4,6 +4,110 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [AUDIT + FIABILISATION DB GSIE] - 2026-07-27
+
+### Audit complet base de données (score 43% -> campagne de fiabilisation)
+
+- **Audit DB complet** : schéma, sécurité, PostGIS, sauvegarde, intégrité
+  référentielle. Score global ~43%, 5 P0, 10 P1, 15 P2. Rapport dans
+  `GSIE/API/docs/AUDIT_BASE_DONNEES_2026-07-27.md`.
+- **DEC-000037 (Draft)** : stratégie de fiabilisation et sécurisation DB.
+- **Runbook DR** : `23_QUALITY_MANAGEMENT/PROCESSES/DISASTER_RECOVERY_DB.md`.
+
+### Quick wins (vague 1)
+
+- **Script `pg_dump`** : `scripts/backup_pgdump.sh` (backup + rotation 7).
+- **Script test restore** : `scripts/test_restore.sh` (vérifie tables,
+  PostGIS, AGE).
+- **Doc backup/restore** : `docs/BACKUP_RESTORE.md` (pg_dump + pgBackRest +
+  PITR + streaming replication).
+- **`wal_level=replica`** explicite dans `docker-compose.yml`.
+- **Durcissement `db`** : `cap_drop: ALL` + `cap_add` minimal (CHOWN,
+  DAC_OVERRIDE, FOWNER, SETGID, SETUID).
+
+### Index FK + CHECK + compare_type (vague 2, migration 20260727_0003)
+
+- **110 index sur FK non indexées** (P0-3) — fin des seq scans sur
+  `recommendation`, `correlation`, `assertion`, `flow`.
+- **13 CHECK constraints métier** (P1-6) : confidence ∈ [0,1], p_value ∈
+  [0,1], dates cohérentes, surfaces/volumes ≥ 0.
+- **`compare_type=True` + `compare_server_default=True`** dans
+  `alembic/env.py` — détecte la dérive modèles ↔ schéma.
+- **`index=True`** ajouté sur les FK dans 11 fichiers de modèles
+  SQLAlchemy (cohérence modèles <-> migration).
+
+### Rôles PostgreSQL + RLS + TLS + pgAudit (vague 2, migration 20260727_0004)
+
+- **3 rôles dédiés** (P0-4) : `gsie_migrator` (DDL/Alembic), `gsie_app`
+  (DML restreint), `gsie_readonly` (SELECT). Script `docker/init-roles.sql`.
+- **RLS sur 6 tables sensibles** (P0-5) : `consent`, `data_subject`,
+  `sensitivity_classification`, `access_policy`, `sample`, `observation`.
+  Policies basées sur `current_setting('app.current_user_id')` + bypass
+  admin/dpo/governance. `FORCE ROW LEVEL SECURITY`.
+- **TLS PostgreSQL** : `db_ssl_mode` setting (asyncpg), `require`+
+  obligatoire en staging/production (garde-fou dans
+  `validate_production_security`).
+- **pgAudit** : `postgresql-16-pgaudit` dans `Dockerfile.db`,
+  `shared_preload_libraries=age,pg_stat_statements,pgaudit`,
+  `pgaudit.log=ddl,write,role` (traçabilité constitutionnelle).
+
+### Pool sizing + PgBouncer + monitoring (vague 2)
+
+- **Pool sizing corrigé** (P0-2) : `db_pool_size=4`, `db_max_overflow=10`,
+  `gunicorn_workers=5` (5×14+6=76 ≤ 100). Validation dans
+  `validate_production_security`.
+- **Gunicorn workers borné** : `GSIE_GUNICORN_WORKERS` env var, fini le
+  `cpu_count()*2+1` non borné.
+- **`pool_recycle=1800`** dans `database.py` (évite connexions mortes).
+- **PgBouncer config** : `docker/pgbouncer.ini` + `pgbouncer-userlist.txt`
+  (config orpheline documentée, activation conditionnée au passage en
+  staging).
+- **Monitoring** : `pg_stat_statements` dans `shared_preload_libraries`,
+  `docker/init/01-pg-stat-statements.sql`, `docker/postgres-queries.yaml`
+  pour `postgres_exporter`.
+
+### PostGIS validation + geom_4326 (vague 2, migration 20260727_0005)
+
+- **Contrainte `CHECK ST_IsValid`** sur `place.geometry`.
+- **Trigger `ST_MakeValid`** (auto-réparation avant persistance) + rejet
+  des géométries vides.
+- **Colonne `geom_4326`** générée (`ST_Transform(geometry, 4326)` STORED)
+  + index GIST pour l'interop GeoJSON/APIs externes. Stockage reste en
+  2154 pour les calculs métriques.
+- **Validation GeoJSON** dans `engines/gis/engine.py` : `_validate_geometry`
+  répare via `buffer(0)` les géométries invalides IGN entrantes.
+
+### pgBackRest + PITR (vague 3)
+
+- **Config pgBackRest** : `docker/pgbackrest.conf` (chiffrement AES-256,
+  compression zstd, block incremental, multi-repo local+S3).
+- **Doc PITR** : procédure restore par timestamp / restore point nommé.
+- **Streaming replication** : doc primary/standby + promotion manuelle
+  (principe constitutionnel : failover manuel).
+
+### Validation
+
+- **913 tests unitaires passent**, 60 skipped, 0 échec (97% couverture).
+- **5/5 tests de contrat migration** passent (1 tête Alembic
+  `20260727_0005`).
+- **mypy --strict** : 0 erreur sur config.py, database.py,
+  spatial_temporal.py.
+- **ruff** : 0 erreur sur tous les fichiers modifiés.
+- **4 fixes de Claude approuvés** par audit QA (non-régression
+  confirmée, 908 tests OK).
+
+### Chaîne Alembic finale
+
+```
+20260726_0001 (baseline, Locked)
+  → 20260726_0002 (outbox retry)
+  → 20260727_0003 (110 index FK + 13 CHECK)
+  → 20260727_0004 (RLS 6 tables sensibles)
+  → 20260727_0005 (PostGIS validation + geom_4326) [head]
+```
+
+---
+
 ## [RELIABILITY API GSIE] - 2026-07-27
 
 ### Fiabilité enterprise — API GSIE

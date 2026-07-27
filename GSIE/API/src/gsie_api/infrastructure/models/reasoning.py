@@ -39,17 +39,17 @@ class QuestionModel(Base, TimestampMixin):
         Enum(QuestionType, name="question_type"), nullable=False, index=True
     )
     asked_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     asked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -88,7 +88,7 @@ class DecisionModel(Base, TimestampMixin):
         primary_key=True,
     )
     question_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     decided_by: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
@@ -97,7 +97,7 @@ class DecisionModel(Base, TimestampMixin):
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
     decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -113,21 +113,21 @@ class RecommendationModel(Base, TimestampMixin):
         primary_key=True,
     )
     question_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     recommended_by: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     recommendation_text: Mapped[str] = mapped_column(Text, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -152,10 +152,10 @@ class ScenarioModel(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     parameters: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -180,16 +180,16 @@ class CorrelationModel(Base, TimestampMixin):
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     p_value: Mapped[float | None] = mapped_column(Float, nullable=True)
     evidence_assessment_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     lifecycle_status: Mapped[LifecycleStatus] = mapped_column(
         Enum(LifecycleStatus, name="lifecycle_status"),

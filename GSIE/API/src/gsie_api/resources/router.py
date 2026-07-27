@@ -133,15 +133,20 @@ async def list_resources(
     size: int = Query(20, ge=1, le=100, description="Taille de page (max 100)"),
 ) -> ResourceListResponse:
     """Liste paginée de resources, optionnellement filtrée par type."""
-    if type is not None:
-        check_permission(user, type, "read")
+    # Un `?type=` vide n'est pas un filtre : le service l'ignore (chaîne
+    # falsy), et le traiter comme un filtre désactivait l'exclusion RGPD,
+    # exposant consent / data_subject / access_policy / sensitivity_classification
+    # à tout porteur du rôle `reader`. Absent et vide doivent suivre le même chemin.
+    type_filter = type.strip() if type else None
+    if type_filter:
+        check_permission(user, type_filter, "read")
         excluded_types: frozenset[str] = frozenset()
     else:
         excluded_types = _excluded_read_types(user)
 
     service = ResourceService(session)
     return await service.list_resources(
-        type_filter=type,
+        type_filter=type_filter,
         page=page,
         size=size,
         excluded_types=excluded_types,

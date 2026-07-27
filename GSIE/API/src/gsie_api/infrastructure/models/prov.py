@@ -37,7 +37,7 @@ class ActivityModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     method_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -55,7 +55,7 @@ class ProvEntityModel(Base, TimestampMixin):
     checksum: Mapped[str | None] = mapped_column(String(200), nullable=True)
     checksum_algorithm: Mapped[str | None] = mapped_column(String(50), nullable=True)
     was_derived_from: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     was_generated_by: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True

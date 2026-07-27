@@ -3,10 +3,15 @@
 Référence : https://docs.gunicorn.org/en/stable/configure.html
 """
 
-import multiprocessing
+import os
 
-# Workers : 2×CPU + 1 (formule Gunicorn)
-workers = multiprocessing.cpu_count() * 2 + 1
+# Workers : nombre fixe, cohérent avec config.py Settings.gunicorn_workers
+# (le pool sizing PostgreSQL/PgBouncer est calculé pour ce nombre exact de
+# workers — voir validate_production_security dans core/config.py).
+# Surchargeable via GSIE_GUNICORN_WORKERS pour les déploiements à capacité
+# différente, mais db_pool_size/db_max_overflow doivent être réajustés en
+# conséquence pour respecter max_connections.
+workers = int(os.environ.get("GSIE_GUNICORN_WORKERS", "5"))
 
 # Worker class : SecureUvicornWorker (supprime header Server — OWASP A05)
 worker_class = "gsie_api.worker.SecureUvicornWorker"

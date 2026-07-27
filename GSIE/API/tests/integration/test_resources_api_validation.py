@@ -78,39 +78,16 @@ async def _creer(client: AsyncClient, type_name: str, data: dict[str, Any]) -> s
     return identifiant
 
 
-# Défaut préexistant, hors périmètre de cette intervention : `_add_resource_diff`
-# forge un `ResourceDiff` avec un UUID neuf, alors que `resource_diff.id`
-# référence `resource(id)` (héritage par table, ADR-001). Toute mise à jour
-# acceptée viole donc cette clé étrangère sur PostgreSQL. Les tests unitaires ne
-# le voyaient pas : SQLite n'applique pas les clés étrangères par défaut.
-# La correction exige un arbitrage de métamodèle (le diff est-il une resource ?)
-# et n'est donc pas décidée ici. `strict=True` : ces tests repasseront au vert
-# le jour où le défaut sera corrigé, ce qui imposera de retirer le marqueur.
-_DIFF_FK_CASSEE = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Défaut préexistant : resource_diff.id référence resource(id) mais "
-        "ResourceService._add_resource_diff génère un UUID orphelin — toute "
-        "mise à jour acceptée échoue en ForeignKeyViolationError sur PostgreSQL"
-    ),
-)
+# Le défaut de clé étrangère sur `resource_diff` est corrigé : aucun arbitrage
+# de métamodèle n'était en fait requis, ADR-002 tranche déjà (ResourceDiff est le
+# type 61, donc une resource, et il figure au registre des 90 types).
+# `_add_resource_diff` crée désormais la ligne racine, comme tout autre type.
+# Non-régression sur base réelle : tests/integration/test_resources_fiabilite.py.
 
-# Second défaut préexistant, hors périmètre : les membres de `EvidenceLevel`
-# sont nommés en minuscules (`a`) pour des valeurs en majuscules (`A`), et la
-# colonne ne définit pas `values_callable`. SQLAlchemy persiste donc le *nom*
-# du membre (« b ») alors que le type PostgreSQL `evidence_level` contient
-# 'A'..'F' : toute écriture d'un `evidence_level` échoue en
-# InvalidTextRepresentationError. Les quatre types portant une règle métier
-# conditionnelle exigent un `evidence_level` ou un champ datetime — aucun
-# n'est donc créable via l'API générique aujourd'hui.
-_ENUM_EVIDENCE_LEVEL_CASSE = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Défaut préexistant : EvidenceLevel persiste le nom du membre "
-        "(minuscule) alors que le type PostgreSQL attend la valeur "
-        "(majuscule) — création impossible via l'API générique"
-    ),
-)
+# Le défaut `EvidenceLevel` est corrigé lui aussi : les colonnes de
+# `forestry.py` déclarent désormais `values_callable`, comme le faisaient déjà
+# `assertion.py` et `diagnostic.py`. SQLAlchemy persiste la valeur ('B') que le
+# type PostgreSQL attend, et non plus le nom du membre ('b').
 
 
 class TestValidation422:
@@ -134,7 +111,6 @@ class TestValidation422:
         assert detail["resource_type"] == "assertion"
         assert any("claim_kind" in erreur for erreur in detail["errors"])
 
-    @_ENUM_EVIDENCE_LEVEL_CASSE
     @pytest.mark.asyncio
     async def test_should_return_422_on_conditional_rule_violation(
         self, client: AsyncClient, db_session: AsyncSession
@@ -225,7 +201,6 @@ class TestValidation422:
 class TestPatchPartiel:
     """Un patch partiel valide passe et ne détruit rien autour de lui."""
 
-    @_DIFF_FK_CASSEE
     @pytest.mark.asyncio
     async def test_should_accept_valid_partial_patch(
         self, client: AsyncClient, db_session: AsyncSession
@@ -247,7 +222,6 @@ class TestPatchPartiel:
         # Champ absent du patch : inchangé.
         assert donnees["claim_kind"] == "relation"
 
-    @_DIFF_FK_CASSEE
     @pytest.mark.asyncio
     async def test_should_still_create_revision_on_accepted_update(
         self, client: AsyncClient, db_session: AsyncSession

@@ -137,13 +137,13 @@ class BotanicalIdentificationDecisionModel(Base, TimestampMixin):
     l'espèce a été identifiée manuellement hors des candidats proposés."""
 
     manual_species_entity_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     """Renseigné uniquement si le technicien a choisi « Identifier
     manuellement » (GEO-ID-08) plutôt qu'une hypothèse proposée."""
 
     validated_by_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)

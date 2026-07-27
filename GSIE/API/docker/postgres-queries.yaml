@@ -1,0 +1,63 @@
+# Requêtes custom pour postgres_exporter (monitoring PostgreSQL — P0-2)
+# Usage : monter en volume dans le conteneur postgres_exporter avec
+#   --extend.query-path=/etc/postgres_exporter/postgres-queries.yaml
+# Nécessite l'extension pg_stat_statements activée (shared_preload_libraries).
+
+pg_postgres_version:
+  query: "SELECT version()"
+  metrics:
+    - version:
+        usage: "LABEL"
+        description: "PostgreSQL version"
+
+pg_db_size:
+  query: "SELECT pg_database.datname, pg_database_size(pg_database.datname) AS size FROM pg_database"
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Database name"
+    - size:
+        usage: "GAUGE"
+        description: "Database size in bytes"
+
+pg_stat_statements_top:
+  query: >
+    SELECT
+      queryid::text AS queryid,
+      calls,
+      total_exec_time AS total_exec_time_ms,
+      mean_exec_time AS mean_exec_time_ms,
+      rows
+    FROM pg_stat_statements
+    ORDER BY total_exec_time DESC
+    LIMIT 20
+  metrics:
+    - queryid:
+        usage: "LABEL"
+        description: "Query identifier"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - total_exec_time_ms:
+        usage: "COUNTER"
+        description: "Total execution time (ms)"
+    - mean_exec_time_ms:
+        usage: "GAUGE"
+        description: "Mean execution time (ms)"
+    - rows:
+        usage: "COUNTER"
+        description: "Total rows returned/affected"
+
+pg_connections:
+  query: >
+    SELECT count(*) AS connections, state
+    FROM pg_stat_activity
+    WHERE datname IS NOT NULL
+    GROUP BY state
+  metrics:
+    - state:
+        usage: "LABEL"
+        description: "Connection state"
+    - connections:
+        usage: "GAUGE"
+        description: "Number of connections in this state"

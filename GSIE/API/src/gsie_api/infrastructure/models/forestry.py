@@ -94,8 +94,16 @@ class AutecologyProfileModel(Base, TimestampMixin):
     territory_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     method: Mapped[str | None] = mapped_column(Text, nullable=True)
     uncertainty: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # `values_callable` obligatoire : les membres d'EvidenceLevel ont un nom en
+    # minuscule pour une valeur en majuscule. Sans lui, SQLAlchemy persiste le
+    # nom ('a') alors que le type PostgreSQL n'accepte que la valeur ('A').
     evidence_level: Mapped[EvidenceLevel] = mapped_column(
-        Enum(EvidenceLevel, name="evidence_level"), nullable=False
+        Enum(
+            EvidenceLevel,
+            name="evidence_level",
+            values_callable=lambda e: [m.value for m in e],
+        ),
+        nullable=False,
     )
     source_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
@@ -358,8 +366,16 @@ class SilviculturalRuleModel(Base, TimestampMixin):
     trigger: Mapped[str] = mapped_column(Text, nullable=False)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     intensity: Mapped[str] = mapped_column(Text, nullable=False)
+    # `values_callable` obligatoire : les membres d'EvidenceLevel ont un nom en
+    # minuscule pour une valeur en majuscule. Sans lui, SQLAlchemy persiste le
+    # nom ('a') alors que le type PostgreSQL n'accepte que la valeur ('A').
     evidence_level: Mapped[EvidenceLevel] = mapped_column(
-        Enum(EvidenceLevel, name="evidence_level"), nullable=False
+        Enum(
+            EvidenceLevel,
+            name="evidence_level",
+            values_callable=lambda e: [m.value for m in e],
+        ),
+        nullable=False,
     )
     human_validator: Mapped[str | None] = mapped_column(
         String(300),

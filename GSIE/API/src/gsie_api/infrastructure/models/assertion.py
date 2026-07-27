@@ -44,13 +44,13 @@ class AssertionModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
@@ -90,7 +90,7 @@ class AssertionQualifierModel(Base):
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
     unit_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -108,7 +108,7 @@ class PredicateModel(Base, TimestampMixin):
     label: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     inverse_label: Mapped[str | None] = mapped_column(String(200), nullable=True)
     controlled_term_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     relation_type_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
@@ -140,7 +140,7 @@ class EvidenceAssessmentModel(Base, TimestampMixin):
         index=True,
     )
     evaluator_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     method: Mapped[str] = mapped_column(String(200), nullable=False)
     evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

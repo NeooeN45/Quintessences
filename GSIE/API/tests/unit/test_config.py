@@ -26,6 +26,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "require_rust_backend": True,
+        "db_ssl_mode": "require",
     } | overrides
 
 
@@ -73,3 +74,15 @@ def should_reject_wildcard_ws_origins_in_production():
     """Settings doit refuser les origines WebSocket wildcard en production."""
     with pytest.raises(ValidationError, match="Wildcard WebSocket"):
         Settings(**_production_kwargs(ws_allowed_origins=["*"]))
+
+
+def should_reject_disabled_tls_in_production():
+    """Settings doit refuser db_ssl_mode faible (audit sécurité P0-4)."""
+    with pytest.raises(ValidationError, match="TLS PostgreSQL requis"):
+        Settings(**_production_kwargs(db_ssl_mode="prefer"))
+
+
+def should_accept_verify_full_tls_in_production():
+    """Settings doit accepter verify-full comme mode TLS strict."""
+    settings = Settings(**_production_kwargs(db_ssl_mode="verify-full"))
+    assert settings.db_ssl_mode == "verify-full"

@@ -22,6 +22,7 @@ from uuid import uuid4
 
 import pyproj
 from shapely.geometry import shape
+from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,6 +45,18 @@ logger = get_logger("gsie_api.gis.engine")
 # EPSG:4326 (WGS 84, sortie de l'API Carto) -> EPSG:2154 (Lambert-93,
 # convention du schéma v6.2 — voir PlaceModel.srid).
 _TO_LAMBERT93 = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:2154", always_xy=True).transform
+
+
+def _validate_geometry(geom: BaseGeometry) -> BaseGeometry:
+    """Valide et repare une geometrie GeoJSON entrante (source externe IGN).
+
+    Une geometrie invalide (auto-intersection, anneau mal ferme) ne doit
+    jamais atteindre PostGIS : ``geom.buffer(0)`` est la reparation
+    standard shapely/PostGIS pour ce type de defaut topologique.
+    """
+    if not geom.is_valid:
+        geom = geom.buffer(0)
+    return geom
 
 
 def _ign_source(reference: str) -> SourceReference:
@@ -88,7 +101,7 @@ class GISEngine:
         if feature is None:
             return None
 
-        geom_wgs84 = shape(feature["geometry"])
+        geom_wgs84 = _validate_geometry(shape(feature["geometry"]))
         geom_lambert93 = transform(_TO_LAMBERT93, geom_wgs84)
         properties = feature.get("properties", {})
         area_m2 = properties.get("contenance")

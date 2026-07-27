@@ -49,7 +49,7 @@ class FlowModel(Base, TimestampMixin):
     )
     magnitude: Mapped[float] = mapped_column(Float, nullable=False)
     magnitude_unit_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     direction: Mapped[FlowDirection] = mapped_column(
         Enum(FlowDirection, name="flow_direction"),
@@ -57,16 +57,16 @@ class FlowModel(Base, TimestampMixin):
         default=FlowDirection.source_to_sink,
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     driver_process_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     uncertainty_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -92,10 +92,10 @@ class ConfidenceGraphModel(Base, TimestampMixin):
     propagation_tree: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     computed_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     valid_for_revision_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("revision.id"), nullable=True
+        Integer, ForeignKey("revision.id"), nullable=True, index=True
     )
 
 
@@ -122,16 +122,16 @@ class GoalModel(Base, TimestampMixin):
     )
     target_value: Mapped[float | None] = mapped_column(Float, nullable=True)
     parent_goal_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     success_criteria: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -158,16 +158,16 @@ class ConstraintModel(Base, TimestampMixin):
         default=ConstraintSeverity.limiting,
     )
     source_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     affected_recommendation_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     mitigation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -187,11 +187,11 @@ class KnowledgeLineageModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     produced_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     production_method: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     confidence_graph_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     lineage_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -210,21 +210,21 @@ class ExperimentModel(Base, TimestampMixin):
     )
     name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
     hypothesis_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     comparison_metrics: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     conclusion: Mapped[str | None] = mapped_column(Text, nullable=True)
     resulting_assertion_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     resulting_source_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     conducted_by: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -248,19 +248,19 @@ class TerrainSessionModel(Base, TimestampMixin):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     operator_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     weather: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     gps_precision_m: Mapped[float | None] = mapped_column(Float, nullable=True)
     equipment: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     protocol_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     sync_status: Mapped[SyncStatus] = mapped_column(
         Enum(SyncStatus, name="sync_status"),
@@ -285,10 +285,10 @@ class EcologicalStateModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     scale_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     state_type: Mapped[StateType] = mapped_column(
         Enum(StateType, name="state_type"), nullable=False, index=True
@@ -299,7 +299,7 @@ class EcologicalStateModel(Base, TimestampMixin):
         Enum(EcologicalGrade, name="ecological_grade"), nullable=True
     )
     computed_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     trend: Mapped[Trend | None] = mapped_column(Enum(Trend, name="trend"), nullable=True)
 
@@ -323,5 +323,5 @@ class EcosystemServiceModel(Base, TimestampMixin):
     )
     description: Mapped[str] = mapped_column(Text, nullable=False)
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )

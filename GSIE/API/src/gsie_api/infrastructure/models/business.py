@@ -111,7 +111,7 @@ class InterventionModel(Base, TimestampMixin):
     volume_m3: Mapped[float | None] = mapped_column(Float, nullable=True)
     target_species: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     operator_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -202,7 +202,7 @@ class ComplianceCheckModel(Base, TimestampMixin):
         default=ComplianceStatus.pending_check,
     )
     checked_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     details: Mapped[str | None] = mapped_column(Text, nullable=True)

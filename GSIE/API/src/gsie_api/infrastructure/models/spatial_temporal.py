@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import Computed, DateTime, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -42,6 +42,16 @@ class PlaceModel(Base, TimestampMixin):
     )
     geometry: Mapped[Any] = mapped_column(
         Geometry("GEOMETRY", srid=2154, spatial_index=True),
+        nullable=True,
+    )
+    # Colonne generee par PostgreSQL (GENERATED ALWAYS ... STORED, voir
+    # migration 20260727_0005) -- reprojection WGS84 automatique de
+    # `geometry` pour l'interop GeoJSON/API externes. `Computed()` indique
+    # a SQLAlchemy de l'exclure des INSERT/UPDATE : elle n'est jamais
+    # ecrite depuis l'applicatif, uniquement calculee par la base.
+    geom_4326: Mapped[Any] = mapped_column(
+        Geometry("GEOMETRY", srid=4326, spatial_index=True),
+        Computed("ST_Transform(geometry, 4326)", persisted=True),
         nullable=True,
     )
     srid: Mapped[int] = mapped_column(Integer, nullable=False, default=2154)

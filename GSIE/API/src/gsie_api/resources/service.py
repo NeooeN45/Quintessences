@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -115,6 +115,7 @@ class ResourceService:
     ) -> RevisionModel:
         """Crée une Revision (append-only, CON-010)."""
         now = datetime.now(UTC)
+        await self._ensure_author_resource(author_id)
         revision = RevisionModel(
             target_id=resource_id,
             version=version,
@@ -126,13 +127,50 @@ class ResourceService:
         self._session.add(revision)
         await self._session.flush()
         if diff_data:
-            self._add_resource_diff(revision, diff_data)
+            await self._add_resource_diff(revision, diff_data)
         return revision
 
-    def _add_resource_diff(self, revision: RevisionModel, diff_data: dict[str, Any]) -> None:
-        """Ajoute un ResourceDiff à une Revision."""
+    async def _ensure_author_resource(self, author_id: UUID | None) -> None:
+        """Garantit que l'auteur existe comme Agent avant de le citer.
+
+        `revision.author_id` est une clé étrangère vers `resource(id)` : le
+        métamodèle veut un Agent (type 9), pas un identifiant flottant. Le
+        router dérive un UUID déterministe du sujet JWT ; sans cette ligne
+        parente, PostgreSQL refuse la Revision et toute écriture authentifiée
+        échoue. On matérialise donc l'Agent une seule fois, sans rien inventer
+        d'autre que son identité technique (CON-010 : l'auteur reste traçable).
+        """
+        if author_id is None:
+            return
+        if await self._session.get(ResourceModel, author_id) is not None:
+            return
+        agent_cls = self._get_model_cls("agent")
+        self._session.add(
+            ResourceModel(
+                id=author_id,
+                type="agent",
+                gsie_id=f"agent:{author_id}",
+            )
+        )
+        self._session.add(agent_cls(id=author_id, name=str(author_id), type="person"))
+        await self._session.flush()
+
+    async def _add_resource_diff(self, revision: RevisionModel, diff_data: dict[str, Any]) -> None:
+        """Ajoute un ResourceDiff à une Revision.
+
+        `resource_diff` suit l'héritage par table (ADR-001) : c'est le type 61
+        du métamodèle, donc sa clé primaire est une clé étrangère vers
+        `resource(id)`. Forger un UUID sans créer la ligne racine produisait une
+        violation de clé étrangère à chaque mise à jour (ADR-002).
+        """
+        diff_resource = ResourceModel(
+            type="resource_diff",
+            gsie_id=self._generate_gsie_id("resource_diff"),
+        )
+        self._session.add(diff_resource)
+        await self._session.flush()
         resource_diff = ResourceDiffModel(
-            id=uuid4(),
+            id=diff_resource.id,
             to_revision_id=revision.id,
             field_changes=diff_data.get("field_changes", []),
             added_relations=diff_data.get("added_relations", []),
@@ -168,10 +206,29 @@ class ResourceService:
             )
         )
 
+    async def _recharger_si_expire(self, instance: Any) -> None:
+        """Recharge explicitement une instance expirée avant de lire ses champs.
+
+        Après un commit, les colonnes portant `onupdate=func.now()` sont
+        expirées par SQLAlchemy pour forcer la relecture. En asynchrone, y
+        toucher déclencherait un chargement paresseux hors greenlet
+        (`MissingGreenlet`) : la lecture qui suit une écriture doit donc
+        demander son entrée/sortie explicitement.
+        """
+        if instance is None:
+            return
+        etat = inspect(instance)
+        # `expired` ne vaut que pour un objet entièrement expiré ; après un
+        # UPDATE, seules les colonnes `onupdate` le sont, d'où `expired_attributes`.
+        if etat.expired or etat.expired_attributes:
+            await self._session.refresh(instance)
+
     async def _build_resource_read(self, resource: ResourceModel) -> ResourceRead:
         """Construit un ResourceRead depuis un ResourceModel + sa ligne type."""
         model_cls = self._get_model_cls(resource.type)
         type_result = await self._session.get(model_cls, resource.id)
+        await self._recharger_si_expire(resource)
+        await self._recharger_si_expire(type_result)
         type_data: dict[str, Any] = {}
         if type_result is not None:
             type_data = {

@@ -51,14 +51,26 @@ class Settings(BaseSettings):
     # PostgreSQL + PostGIS
     # Format : postgresql+asyncpg://user:pass@host:5432/dbname
     database_url: str = "postgresql+asyncpg://gsie:gsie_dev@localhost:5432/gsie"
-    # Pool sizing : pool_size par worker Gunicorn (5 workers × 5 = 25 connexions max)
-    db_pool_size: int = 5
+    # Pool sizing par worker Gunicorn :
+    # workers × (pool_size + max_overflow) = connexions max applicatives.
+    # Doit rester <= db_max_connections - 6 (reserve outbox-worker + admin).
+    db_pool_size: int = 4
     db_max_overflow: int = 10
     db_echo: bool = False
     db_pool_timeout: int = 30  # secondes
+    # Nombre de workers Gunicorn (doit correspondre à gunicorn.conf.py)
+    gunicorn_workers: int = 5
+    # max_connections configuré côté PostgreSQL (postgresql.conf / docker-compose)
+    db_max_connections: int = 100
 
     # PgBouncer — statement_cache_size=0 requis (DEC-000019 ajustement P0)
     db_pgbouncer_mode: bool = False
+    # TLS PostgreSQL (audit sécurité 2026-07-27 P0-4). Valeurs asyncpg :
+    # "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full".
+    # "prefer" par défaut en développement ; require+ obligatoire en staging/prod.
+    db_ssl_mode: Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"] = (
+        "prefer"
+    )
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
@@ -127,6 +139,15 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Valide que la configuration est sûre en production et staging."""
+        # Cohérence pool vs max_connections (toujours vérifié, pas seulement en prod)
+        max_app_connections = self.gunicorn_workers * (self.db_pool_size + self.db_max_overflow)
+        # +1 pour outbox-worker, +5 reserve admin
+        if max_app_connections + 6 > self.db_max_connections:
+            raise ValueError(
+                f"Pool sizing incoherent: {self.gunicorn_workers} workers × "
+                f"{self.db_pool_size + self.db_max_overflow} connexions = "
+                f"{max_app_connections} + 6 reserve > max_connections={self.db_max_connections}"
+            )
         if self.environment in ("production", "staging"):
             if self.debug:
                 raise ValueError("debug must be False in production")
@@ -149,6 +170,11 @@ class Settings(BaseSettings):
                 raise ValueError("Rust Evidence backend must be required in production")
             if "*" in self.ws_allowed_origins:
                 raise ValueError("Wildcard WebSocket origins not allowed in production")
+            if self.db_ssl_mode not in ("require", "verify-ca", "verify-full"):
+                raise ValueError(
+                    "TLS PostgreSQL requis en production/staging "
+                    "(db_ssl_mode doit être 'require', 'verify-ca' ou 'verify-full')"
+                )
         return self
 
 

@@ -1,0 +1,10 @@
+# Template userlist PgBouncer — NE PAS COMMITTER de vrais hashs.
+#
+# Format : "username" "SCRAM-SHA-256$<iterations>:<salt>$<StoredKey>:<ServerKey>"
+#
+# Génération du hash SCRAM (à exécuter côté serveur PostgreSQL, ne jamais
+# committer le résultat réel — remplacer via un secret manager / .env) :
+#   psql -c "SELECT rolpassword FROM pg_authid WHERE rolname = 'gsie';"
+#
+# Copier la valeur retournée (déjà au format SCRAM-SHA-256$...) ici :
+"gsie" "SCRAM-SHA-256$<iterations>:<salt>$<StoredKey>:<ServerKey>"

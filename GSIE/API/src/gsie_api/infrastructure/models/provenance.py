@@ -135,7 +135,7 @@ class ControlledTermModel(Base, TimestampMixin):
     code: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(300), nullable=False)
     parent_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -157,5 +157,5 @@ class InstanceModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_scope_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )

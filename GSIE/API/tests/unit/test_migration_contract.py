@@ -11,7 +11,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260726_0002"
+_HEAD = "20260727_0005"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -47,8 +47,13 @@ def test_lignee_lineaire_depuis_la_baseline() -> None:
 
     assert list(script.get_heads()) == [_HEAD]
     revisions = [revision.revision for revision in script.walk_revisions()]
-    assert revisions == [_HEAD, _BASELINE]
-    assert script.get_revision(_HEAD).down_revision == _BASELINE
+    # La lignée s'est allongée depuis l'introduction de ce garde-fou (RFC
+    # audit sécurité/PostGIS du 2026-07-27) : on vérifie l'absence de
+    # branche (une seule tête, un seul chemin jusqu'à la baseline) plutôt
+    # qu'un nombre de révisions fige.
+    assert revisions[0] == _HEAD
+    assert revisions[-1] == _BASELINE
+    assert len(revisions) == len(set(revisions))
 
 
 def test_baseline_ne_depend_pas_des_modeles_applicatifs() -> None:

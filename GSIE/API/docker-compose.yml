@@ -24,13 +24,19 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     command: >
       postgres
-      -c shared_preload_libraries=age
+      -c shared_preload_libraries=age,pg_stat_statements,pgaudit
       -c search_path=ag_catalog,public,tiger
       -c max_connections=100
+      -c wal_level=replica
+      -c pg_stat_statements.track=all
+      -c pg_stat_statements.max=5000
+      -c pgaudit.log=ddl,write,role
+      -c pgaudit.log_parameter=on
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - gsie_pgdata:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gsie -d gsie"]
       interval: 10s
@@ -39,6 +45,14 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     # Limites ressources (recommandation stress test)
     deploy:
       resources:

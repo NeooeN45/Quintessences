@@ -51,17 +51,17 @@ class ModelRunModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     scenario_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
     parameters: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     activity_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     output_assertion_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -79,7 +79,7 @@ class DatasetModel(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     publisher_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     spatial_resolution: Mapped[str | None] = mapped_column(String(100), nullable=True)
     temporal_resolution: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -113,7 +113,7 @@ class ModelVersionModel(Base, TimestampMixin):
     trained_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     metrics: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     feature_set_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -155,7 +155,7 @@ class DataAssetModel(Base, TimestampMixin):
     size_bytes: Mapped[int] = mapped_column(nullable=False)
     checksum: Mapped[str] = mapped_column(String(200), nullable=False)
     archived_from: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     original_uri: Mapped[str | None] = mapped_column(String(500), nullable=True)
     archived_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -181,7 +181,7 @@ class DistributionModel(Base, TimestampMixin):
     access_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     licence: Mapped[str] = mapped_column(String(100), nullable=False)
     rights_statement_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
