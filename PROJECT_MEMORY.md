@@ -657,6 +657,16 @@ d'exécution :
     (infrastructure.models.enums vs evidence.schemas). mypy + ruff
     passent. **1191 tests au total passent** (1039 unitaires + 152
     intégration PostgreSQL/PostGIS via testcontainers), 0 échec.
+  - **Tests E2E larges GeoSylva** (2026-07-27, commit c2de4d1) :
+    `tests/unit/test_e2e_large.py` ajoute 34 tests couvrant 9
+    catégories de scénarios réalistes : multi-essences, contradictions
+    Parelle/Rameau, risques climatiques, chemins d'erreur (6 tests),
+    stress test (26 règles < 2s), simulation comparative 4 essences,
+    calibration Learning (seuil 5), parcours API HTTP (12 endpoints
+    + sécurité + 404 RFC 7807), parcours complet récapitulatif. 3 bugs
+    découverts et corrigés (RisqueDiagnostic.domaine, plafonnement
+    Quercus ilex, endpoints /status nouveaux moteurs). **1225 tests au
+    total passent** (1073 unitaires + 152 intégration), 0 échec.
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
     françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
     (Pedology) → Correlation Engine (spearman) → persisté en base.
