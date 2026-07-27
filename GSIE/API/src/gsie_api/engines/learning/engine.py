@@ -61,9 +61,13 @@ class LearningEngine:
     # future utilisera une table dédiée pour accumuler les signaux
     # across-restarts.
     _signaux_accumules: dict[UUID, list[RetourForestier]]
+    _blocages_accumules: dict[str, int]
+    _propositions_emises: set[str]
 
     def __init__(self) -> None:
         self._signaux_accumules = {}
+        self._blocages_accumules = {}
+        self._propositions_emises = set()
 
     @staticmethod
     def version() -> str:
@@ -85,10 +89,12 @@ class LearningEngine:
             return await self._traiter_retour_forestier(signal)
         if signal.type == LearningSignalType.pattern_emergent:
             return await self._traiter_pattern_emergent(signal)
-        if signal.type in (LearningSignalType.sortie_bloquee, LearningSignalType.observation_terrain):
+        if signal.type == LearningSignalType.sortie_bloquee:
+            return await self._traiter_sortie_bloquee(signal)
+        if signal.type == LearningSignalType.observation_terrain:
             raise LearningEngineError(
                 f"Type de signal '{signal.type.value}' non géré en v1 — "
-                "nécessite l'intégration avec Validation/Observations Engine."
+                "nécessite l'intégration avec le pipeline d'observations terrain."
             )
         raise LearningEngineError(f"Type de signal inconnu : {signal.type}")
 
@@ -190,3 +196,65 @@ class LearningEngine:
             date_output=datetime.now(UTC),
             statut=LearningStatut.propose,
         )
+
+    async def _traiter_sortie_bloquee(
+        self, signal: LearningSignal
+    ) -> LearningOutput | None:
+        """Traite un signal de sortie bloquée par le Validation Engine.
+
+        Accumule les blocages par type de cause. Quand un même type de
+        cause de blocage se répète au-delà du seuil, produit une
+        proposition de calibration : le moteur amont devrait être
+        ajusté pour ne plus produire ce type d'erreur.
+
+        En v1, le seuil est le même que pour les refus forestiers
+        (`_SEUIL_PATTERN_REFUS`). Une future version pourra le
+        paramétrer par type de cause.
+        """
+        contenu = signal.contenu
+        causes = contenu.get("causes_blocage", [])
+        if not causes:
+            logger.info("learning_sortie_bloquee_sans_cause_ignore")
+            return None
+
+        # Accumulation par type de cause
+        for cause in causes:
+            type_cause = cause.get("type_cause", "inconnu")
+            self._blocages_accumules.setdefault(type_cause, 0)
+            self._blocages_accumules[type_cause] += 1
+
+        # Vérification du seuil pour chaque type de cause
+        propositions: list[LearningOutput] = []
+        for type_cause, count in self._blocages_accumules.items():
+            if count >= _SEUIL_PATTERN_REFUS and type_cause not in self._propositions_emises:
+                self._propositions_emises.add(type_cause)
+                confidence = min(0.5 + 0.1 * (count - _SEUIL_PATTERN_REFUS), 0.95)
+                justification = [
+                    f"{count} blocages de type '{type_cause}' accumulés",
+                    f"Seuil de détection : {_SEUIL_PATTERN_REFUS} blocages minimum",
+                    "Proposition de calibration du moteur amont — à valider "
+                    "par le Knowledge Engine.",
+                ]
+                propositions.append(
+                    LearningOutput(
+                        output_id=uuid4(),
+                        type=LearningOutputType.calibration_modele,
+                        description=(
+                            f"Calibration proposée : le moteur amont produit "
+                            f"récidivement des sorties bloquées ({type_cause})."
+                        ),
+                        justification=justification,
+                        confidence=confidence,
+                        date_output=datetime.now(UTC),
+                        statut=LearningStatut.propose,
+                    )
+                )
+                logger.info(
+                    "learning_blocage_recidivant_detecte",
+                    type_cause=type_cause,
+                    count=count,
+                    confidence=confidence,
+                )
+
+        # Retourne la première proposition (une par appel pour simplicité)
+        return propositions[0] if propositions else None

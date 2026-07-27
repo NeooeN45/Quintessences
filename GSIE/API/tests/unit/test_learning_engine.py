@@ -109,19 +109,71 @@ async def should_return_none_when_low_confidence_pattern(engine: LearningEngine)
     assert result is None
 
 
-# --- Tests types non gérés ---
+# --- Tests sortie bloquée (Validation Engine → Learning) ---
 
 @pytest.mark.asyncio
-async def should_raise_for_sortie_bloquee_in_v1(engine: LearningEngine) -> None:
-    """Le type sortie_bloquee n'est pas géré en v1."""
+async def should_accumulate_sortie_bloquee_and_propose_calibration(engine: LearningEngine) -> None:
+    """5 blocages du même type déclenchent une calibration proposée."""
+    contenu = {
+        "validation_id": str(uuid4()),
+        "statut": "bloque",
+        "causes_blocage": [
+            {"type_cause": "sans_source", "description": "Aucune source"},
+        ],
+        "controles_non_conformes": [
+            {"nom_controle": "presence_source", "details": "ko"},
+        ],
+    }
+    for _ in range(5):
+        signal = LearningSignal(
+            signal_id=uuid4(),
+            type=LearningSignalType.sortie_bloquee,
+            contenu=contenu,
+            date_signal=datetime.now(UTC),
+        )
+        result = await engine.process(signal)
+    # Le 5e blocage déclenche la proposition
+    assert result is not None
+    assert result.type == LearningOutputType.calibration_modele
+    assert result.statut == LearningStatut.propose
+
+
+@pytest.mark.asyncio
+async def should_return_none_when_sortie_bloquee_without_causes(engine: LearningEngine) -> None:
+    """Un signal sortie_bloquee sans cause est ignoré."""
     signal = LearningSignal(
         signal_id=uuid4(),
         type=LearningSignalType.sortie_bloquee,
-        contenu={},
+        contenu={"causes_blocage": []},
         date_signal=datetime.now(UTC),
     )
-    with pytest.raises(Exception, match="non géré en v1"):
+    result = await engine.process(signal)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def should_not_reissue_proposition_for_same_cause(engine: LearningEngine) -> None:
+    """Une proposition n'est émise qu'une fois par type de cause."""
+    contenu = {
+        "validation_id": str(uuid4()),
+        "statut": "bloque",
+        "causes_blocage": [
+            {"type_cause": "sans_source", "description": "Aucune source"},
+        ],
+        "controles_non_conformes": [],
+    }
+    signal = LearningSignal(
+        signal_id=uuid4(),
+        type=LearningSignalType.sortie_bloquee,
+        contenu=contenu,
+        date_signal=datetime.now(UTC),
+    )
+    # 5 blocages → proposition
+    for _ in range(5):
         await engine.process(signal)
+    # 5 blocages supplémentaires → pas de nouvelle proposition
+    result = await engine.process(signal)
+    assert result is None
 
 
 @pytest.mark.asyncio
