@@ -37,8 +37,8 @@ Limites v1 :
 from __future__ import annotations
 
 from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
-from gsie_api.engines.evidence.schemas import EvidenceLevel
 from gsie_api.engines.reasoning.schemas import RegleInference
+from gsie_api.infrastructure.models.enums import EvidenceLevel
 
 # Mapping statique GBIF usageKey → nom scientifique.
 # En production, cette résolution sera déléguée au Botanical Engine
@@ -59,12 +59,12 @@ _SPECIES_NAMES: dict[int, str] = {
 # minimale). Les valeurs numériques sont des ancres arbitraires mais
 # ordonnées — documentées ici pour traçabilité (ADR-009).
 _GRADE_TO_CONFIANCE: dict[EvidenceLevel, float] = {
-    EvidenceLevel.A: 0.95,
-    EvidenceLevel.B: 0.80,
-    EvidenceLevel.C: 0.60,
-    EvidenceLevel.D: 0.40,
-    EvidenceLevel.E: 0.20,
-    EvidenceLevel.F: 0.10,
+    EvidenceLevel.a: 0.95,
+    EvidenceLevel.b: 0.80,
+    EvidenceLevel.c: 0.60,
+    EvidenceLevel.d: 0.40,
+    EvidenceLevel.e: 0.20,
+    EvidenceLevel.f: 0.10,
 }
 
 # Variables autécologiques mappées vers des libellés lisibles.
@@ -106,14 +106,14 @@ def profile_to_rule(profile: AutecologyProfileCreate) -> RegleInference:
     value = profile.value_text or str(profile.value_numeric)
     if not value:
         raise AutecologyAdapterError(
-            f"profil sans valeur (value_text et value_numeric both None)"
+            "profil sans valeur (value_text et value_numeric both None)"
         )
 
     confidence = _GRADE_TO_CONFIANCE[profile.evidence_level]
 
     return RegleInference(
         identifiant=f"autecology_{species_name.lower().replace(' ', '_')}_{profile.variable}",
-        condition=f"essence == '{species_name}'",
+        condition=f"peuplement_essence_cible == '{species_name}'",
         enonce_conclusion=f"{species_name} — {variable_label} : {value}",
         source=profile.source,
         evidence_level=profile.evidence_level,

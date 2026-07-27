@@ -36,7 +36,7 @@ def should_convert_rameau_profile_to_rule() -> None:
     )
     rule = profile_to_rule(fagus_edaphique)
     assert "fagus_sylvatica" in rule.identifiant
-    assert rule.condition == "essence == 'Fagus sylvatica'"
+    assert rule.condition == "peuplement_essence_cible == 'Fagus sylvatica'"
     assert "Fagus sylvatica" in rule.enonce_conclusion
     assert "sols" in rule.enonce_conclusion.lower()
     assert rule.evidence_level == EvidenceLevel.C
@@ -53,7 +53,7 @@ def should_convert_parelle_profile_to_rule() -> None:
     )
     rule = profile_to_rule(quercus_waterlogging)
     assert "quercus_robur" in rule.identifiant
-    assert rule.condition == "essence == 'Quercus robur'"
+    assert rule.condition == "peuplement_essence_cible == 'Quercus robur'"
     assert rule.evidence_level == EvidenceLevel.B
     assert rule.niveau_confiance == 0.80
 
