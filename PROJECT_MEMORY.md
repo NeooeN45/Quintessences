@@ -647,6 +647,16 @@ d'exécution :
       LinearGrowthBackend v1, CalibratedGrowthBackend v1 calibré
       confidence=medium, CapsisBackend futur NotImplementedError).
     * 43 nouveaux tests. Total : 1035 tests unitaires passent.
+  - **Test E2E parcours GeoSylva + fiabilisation** (2026-07-27, commit
+    bb96dca) : `tests/unit/test_e2e_geosylva.py` simule le parcours
+    complet d'un forestier (Evidence → Reasoning → Diagnostic →
+    Recommendation → Validation → Learning → Simulation) sur données
+    réelles Rameau + IGN. 2 bugs corrigés : (1) `autecology_adapter.py`
+    générait `essence == '...'` au lieu de `peuplement_essence_cible ==
+    '...'` (KeyError Reasoning) ; (2) conflit de type `EvidenceLevel`
+    (infrastructure.models.enums vs evidence.schemas). mypy + ruff
+    passent. **1191 tests au total passent** (1039 unitaires + 152
+    intégration PostgreSQL/PostGIS via testcontainers), 0 échec.
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
     françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
     (Pedology) → Correlation Engine (spearman) → persisté en base.
