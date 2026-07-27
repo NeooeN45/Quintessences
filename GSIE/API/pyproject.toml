@@ -101,6 +101,7 @@ python_functions = ["should_*", "test_*"]
 addopts = "-v --tb=short --cov=gsie_api --cov-report=term-missing"
 markers = [
     "serial: tests à exécuter en série (pas de parallélisation) — concurrence DB réelle",
+    "xdist_group(name): groupe de tests à exécuter sur le même worker xdist",
 ]
 
 [tool.ruff]
