@@ -627,10 +627,26 @@ d'exécution :
     2026-07-27 (commit 4c64bcd) — modèles v1 simplifiés, explicitement
     marqués `confidence=low` ou `propose` (jamais validés automatiquement,
     GSIE-CON-001). 44 nouveaux tests unitaires + 31 tests du meta-test de
-    conformité. Total : 992 tests unitaires passent. Reste : enrichir les
-    moteurs v1 avec les données réelles (autécologie Rameau, CAPSIS/iLand
-    pour Simulation, intégration Validation/Learning avec les autres
-    moteurs).
+    conformité. Total : 992 tests unitaires passent.
+  - **Enrichissement v1 sur données réelles** (2026-07-27, commit 4930aa1) :
+    * **Pipeline cross-moteurs Validation + Learning** :
+      `engines/validation_pipeline.py` câble le Validation Engine sur de
+      vrais `Diagnostic` + `RecommendationSet` + `Conclusion` (pas des
+      dicts abstraits). Le Learning Engine gère maintenant `sortie_bloquee`
+      (accumulation par type de cause, proposition de calibration au-delà
+      du seuil). `run_validation_pipeline()` orchestre la chaîne complète.
+    * **Autécologie Rameau (2008)** : `seeds/autecology_rameau_data.py`
+      ajoute 20 profils autécologiques sourcés (Flore forestière française,
+      IDF) pour 4 essences (Fagus sylvatica, Pinus sylvestris, Quercus
+      ilex, Abies alba), 5 variables par essence. Corpus combiné : 26
+      profils (6 Parelle + 20 Rameau). `engines/autecology_adapter.py`
+      transforme les profils en `RegleInference` pour le Reasoning Engine.
+    * **Simulation calibrée IGN** : `engines/growth_models.py` (modèles de
+      croissance calibrés sur données publiques IGN, 6 essences) +
+      `engines/simulation_backend.py` (architecture strategy pattern :
+      LinearGrowthBackend v1, CalibratedGrowthBackend v1 calibré
+      confidence=medium, CapsisBackend futur NotImplementedError).
+    * 43 nouveaux tests. Total : 1035 tests unitaires passent.
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
     françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
     (Pedology) → Correlation Engine (spearman) → persisté en base.

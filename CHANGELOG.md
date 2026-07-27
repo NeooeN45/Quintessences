@@ -4,6 +4,55 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [ENRICHISSEMENT V1 — DONNÉES RÉELLES] - 2026-07-27
+
+### Phase 1 — Pipeline cross-moteurs Validation + Learning (commit 4930aa1)
+
+- **`engines/validation_pipeline.py`** : orchestrateur qui câble le
+  Validation Engine sur de vrais objets typés (Diagnostic,
+  RecommendationSet, Conclusion) au lieu des dicts abstraits v1.
+  Trois adaptateurs (diagnostic, recommandation, ensemble complet) +
+  branche Learning (ValidationResult bloqué → LearningSignal
+  sortie_bloquee). `run_validation_pipeline()` orchestre la chaîne
+  complète Validation → Learning.
+- **`engines/learning/engine.py`** : gestion du type `sortie_bloquee`
+  (non géré en v1) — accumulation par type de cause, proposition de
+  calibration au-delà du seuil (5 blocages), une proposition par type
+  de cause (pas de re-émission).
+
+### Phase 2 — Autécologie Rameau (2008)
+
+- **`seeds/autecology_rameau_data.py`** : 20 profils autécologiques
+  sourcés Rameau (Flore forestière française, IDF) pour 4 essences
+  (Fagus sylvatica, Pinus sylvestris, Quercus ilex, Abies alba), 5
+  variables par essence. Niveau C (synthèse reconnue). Valeurs
+  textuelles uniquement (ADR-009).
+- **`engines/autecology_adapter.py`** : adaptateur
+  AutecologyProfile → RegleInference pour le Reasoning Engine.
+  Mapping grade → confiance explicite et ordonné (A=0.95, B=0.80,
+  C=0.60...).
+- Corpus combiné : 26 profils (6 Parelle 2007 + 20 Rameau 2008).
+
+### Phase 3 — Simulation calibrée IGN (alternative Python à CAPSIS)
+
+- **`engines/growth_models.py`** : modèles de croissance calibrés sur
+  données publiques IGN (Inventaire Forestier National 2023). 6
+  essences calibrées avec AMA volume, AMA circonférence, production
+  maximale. Projection linéaire plafonnée, facteur de densité.
+- **`engines/simulation_backend.py`** : architecture strategy pattern
+  avec 3 backends : LinearGrowthBackend (v1, low), CalibratedGrowthBackend
+  (v1 calibré IGN, medium), CapsisBackend (futur Java, high —
+  NotImplementedError en v1, architecture en place pour v2).
+
+### Tests
+
+- **43 nouveaux tests** : 7 pipeline cross-engine + 3 learning
+  sortie_bloquee + 8 rameau + 8 adaptateur + 9 growth_models + 8
+  simulation_backend.
+- **Total : 1035 tests unitaires passent** (contre 992 avant), 0 échec.
+
+---
+
 ## [14/14 MOTEURS GSIE IMPLÉMENTÉS] - 2026-07-27
 
 ### Implémentation des 5 moteurs manquants (commit 4c64bcd)
