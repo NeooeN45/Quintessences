@@ -4,6 +4,47 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [14/14 MOTEURS GSIE IMPLÉMENTÉS] - 2026-07-27
+
+### Implémentation des 5 moteurs manquants (commit 4c64bcd)
+
+- **Recommendation Engine** (`engines/recommendation/engine.py` +
+  `router.py`) : génération de recommandations contournables avec
+  alternatives systématiques, mapping objectif forestier → type d'action
+  (v1 déclaratif), enregistrement des décisions du forestier
+  (accepte/refuse/modifie). Garanties : contournable (GSIE-CON-001),
+  justifié (CON-004), alternatives (principe fondateur).
+- **Validation Engine** (`engines/validation/`) : contrôle final avant
+  présentation à l'utilisateur. 5 contrôles (niveau preuve, source,
+  chaîne inference, contournable, explicabilité), 3 statuts (valide,
+  bloque, partiellement_valide), 8 causes de blocage tracées
+  (CON-001, CON-002, CON-004, CON-005).
+- **Learning Engine** (`engines/learning/`) : détection de patterns de
+  refus répétés (seuil = 5), traitement des patterns émergents
+  (confiance ≥ 0.7). Subordination aux règles expertes : propositions
+  jamais validées automatiquement (GSIE-CON-001).
+- **Simulation Engine** (`engines/simulation/`) : projection
+  déterministe linéaire (v1, `confidence=low`), parsing d'horizon
+  (5y/10y/30y), sources et hypothèses explicites (CON-004, CON-005).
+  Pistes v2 documentées : CAPSIS, iLand, LANDIS-II, ForeFire, SALib.
+- **Evidence Engine** : `wrapper.py` préexistant (Rust+PyO3) reconnu par
+  le meta-test de conformité (correction du test).
+
+### Meta-test de conformité des 14 moteurs
+
+- **`tests/unit/test_engines_conformity.py`** : 31 tests vérifient que
+  les 14 moteurs documentés sont implémentés, importables, ont un
+  endpoint `/status` et un README. `should_have_all_14_engines_implemented`
+  PASSE — les 14 moteurs GSIE sont maintenant implémentés (14/14).
+
+### Tests
+
+- **44 nouveaux tests unitaires** : validation (10), learning (9),
+  simulation (13), recommendation (12).
+- **Total : 992 tests unitaires passent** (contre 917 avant), 0 échec.
+
+---
+
 ## [AUDIT + FIABILISATION DB GSIE] - 2026-07-27
 
 ### Audit complet base de données (score 43% -> campagne de fiabilisation)

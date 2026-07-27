@@ -619,13 +619,18 @@ d'exécution :
     (data.gouv.fr, aucune clé), conversions Kelvin→Celsius et Pa→hPa
     vérifiées. Pas de projection climatique (DRIAS/RCP) — nécessite la
     clé API portail Météo-France (en attente). 8 tests.
-  - **10/14 moteurs GSIE implémentés** (Evidence, Knowledge, Correlation,
+  - **14/14 moteurs GSIE implémentés** (Evidence, Knowledge, Correlation,
     GIS, Botanical, Pedology, Forest Dynamics, Climate, Reasoning,
-    Diagnostic), **1/14 partiel** (Recommendation — stub/skeleton), **3/14
-    architecture seule** (Validation, Learning, Simulation). Reste : la
-    chaîne Reasoning/Diagnostic/Recommendation/Validation (bloquée par le
-    manque d'autécologie réelle — voir ci-dessous), puis Learning/
-    Simulation.
+    Diagnostic, Recommendation, Validation, Learning, Simulation). Les 4
+    moteurs manquants (Recommendation engine.py+router.py, Validation,
+    Learning, Simulation) ont été implémentés en v1 déclarative le
+    2026-07-27 (commit 4c64bcd) — modèles v1 simplifiés, explicitement
+    marqués `confidence=low` ou `propose` (jamais validés automatiquement,
+    GSIE-CON-001). 44 nouveaux tests unitaires + 31 tests du meta-test de
+    conformité. Total : 992 tests unitaires passent. Reste : enrichir les
+    moteurs v1 avec les données réelles (autécologie Rameau, CAPSIS/iLand
+    pour Simulation, intégration Validation/Learning avec les autres
+    moteurs).
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
     françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
     (Pedology) → Correlation Engine (spearman) → persisté en base.
