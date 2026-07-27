@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from geoalchemy2 import Geometry
-from sqlalchemy import Computed, DateTime, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import Computed, DateTime, Enum, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -49,14 +49,21 @@ class PlaceModel(Base, TimestampMixin):
     # `geometry` pour l'interop GeoJSON/API externes. `Computed()` indique
     # a SQLAlchemy de l'exclure des INSERT/UPDATE : elle n'est jamais
     # ecrite depuis l'applicatif, uniquement calculee par la base.
+    # Index GIST declare explicitement dans __table_args__ pour aligner
+    # le nom entre modele et migration (GeoAlchemy2 ne supporte pas
+    # index_name sur les colonnes Computed).
     geom_4326: Mapped[Any] = mapped_column(
-        Geometry("GEOMETRY", srid=4326, spatial_index=True),
+        Geometry("GEOMETRY", srid=4326, spatial_index=False),
         Computed("ST_Transform(geometry, 4326)", persisted=True),
         nullable=True,
     )
     srid: Mapped[int] = mapped_column(Integer, nullable=False, default=2154)
     label: Mapped[str | None] = mapped_column(String(300), nullable=True, index=True)
     area_m2: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    __table_args__ = (
+        Index("idx_place_geom_4326", "geom_4326", postgresql_using="gist"),
+    )
 
 
 @register_type("temporal_context")

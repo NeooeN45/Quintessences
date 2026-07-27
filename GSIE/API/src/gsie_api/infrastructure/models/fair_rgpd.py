@@ -33,7 +33,7 @@ class SampleModel(Base, TimestampMixin):
         Enum(SampleType, name="sample_type"), nullable=False, index=True
     )
     sampling_event_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     subject_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
@@ -42,7 +42,7 @@ class SampleModel(Base, TimestampMixin):
     storage_location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     storage_conditions: Mapped[str | None] = mapped_column(String(200), nullable=True)
     collected_at: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     mass_g: Mapped[float | None] = mapped_column(Float, nullable=True)
     volume_ml: Mapped[float | None] = mapped_column(Float, nullable=True)

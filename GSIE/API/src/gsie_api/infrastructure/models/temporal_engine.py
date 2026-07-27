@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -34,21 +34,23 @@ class RevisionModel(Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     author_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     justification: Mapped[str] = mapped_column(Text, nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("revision.id"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("revision.id"), nullable=True, index=True
+    )
     valid_time_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_time_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     transaction_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     activity_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     diff_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default="now()", nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     __table_args__ = (Index("ix_revision_target_version", "target_id", "version"),)
@@ -67,7 +69,7 @@ class SnapshotModel(Base):
         index=True,
     )
     revision_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("revision.id"), nullable=True
+        Integer, ForeignKey("revision.id"), nullable=True, index=True
     )
     captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     serialized_state: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
@@ -91,7 +93,7 @@ class ResourceDiffModel(Base, TimestampMixin):
         primary_key=True,
     )
     from_revision_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("revision.id"), nullable=True
+        Integer, ForeignKey("revision.id"), nullable=True, index=True
     )
     to_revision_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("revision.id"), nullable=True, index=True

@@ -203,7 +203,7 @@ class FeatureModel(Base, TimestampMixin):
     )
     computation_method: Mapped[str | None] = mapped_column(Text, nullable=True)
     unit_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -221,7 +221,7 @@ class FeatureSetModel(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     model_version_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 
@@ -240,13 +240,13 @@ class InferenceModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     feature_set_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     input_snapshot_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     output_assertion_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     inferred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

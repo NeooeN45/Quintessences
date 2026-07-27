@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Index, Integer, String, text
+from sqlalchemy import DateTime, Index, Integer, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -40,7 +40,7 @@ class OutboxEvent(Base):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default="now()"
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Statut : pending, published, dead_letter
@@ -57,7 +57,7 @@ class OutboxEvent(Base):
     # C'est ce qui interdit la boucle de retry serrée et empêche un événement
     # empoisonné d'occuper indéfiniment la fenêtre de lot.
     next_attempt_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     # Code d'erreur normalisé — jamais un message, jamais une traceback :
     # le payload d'un échec peut contenir une URL Redis ou un secret.
@@ -85,7 +85,7 @@ class InboxEvent(Base):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     received_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default="now()"
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Statut : received, processed, failed

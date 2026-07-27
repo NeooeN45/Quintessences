@@ -32,16 +32,16 @@ class ObservationModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     feature_of_interest_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     method_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     instrument_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     temporal_context_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     sampling_effort: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     detection_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -66,14 +66,14 @@ class ResultModel(Base, TimestampMixin):
     )
     value_numeric: Mapped[float | None] = mapped_column(Float, nullable=True)
     value_term_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     value_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     unit_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     uncertainty_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     detection_limit: Mapped[float | None] = mapped_column(Float, nullable=True)
 

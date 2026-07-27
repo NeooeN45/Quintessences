@@ -29,7 +29,7 @@ _CHECK_CONSTRAINT = "chk_place_geometry_valid"
 _TRIGGER_FUNCTION = "fn_validate_place_geometry"
 _TRIGGER = "trg_validate_place_geometry"
 _GEOM_4326_COLUMN = "geom_4326"
-_GEOM_4326_INDEX = "idx_place_geom_4326"
+_GEOM_4326_INDEX = "ix_place_geom_4326"
 
 
 def upgrade() -> None:

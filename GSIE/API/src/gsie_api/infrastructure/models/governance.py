@@ -74,7 +74,7 @@ class SensitivityClassificationModel(Base, TimestampMixin):
     )
     reason: Mapped[str] = mapped_column(String(300), nullable=False)
     classified_by: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
 

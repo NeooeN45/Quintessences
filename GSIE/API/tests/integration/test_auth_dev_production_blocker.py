@@ -36,6 +36,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "require_rust_backend": True,
+        "db_ssl_mode": "require",
     } | overrides
 
 
