@@ -46,12 +46,18 @@ client = TestClient(app)
 
 
 def _engines_implémentés() -> set[str]:
-    """Liste les moteurs implémentés (dossiers sous gsie_api.engines)."""
+    """Liste les moteurs implémentés (dossiers sous gsie_api.engines).
+
+    Accepte `engine.py` (pattern standard) ou `wrapper.py` (pattern
+    Evidence Engine : cœur Rust + wrapper PyO3 + fallback Python).
+    """
     engines_dir = Path(__import__("gsie_api.engines", fromlist=["__path__"]).__path__[0])
     return {
         d.name
         for d in engines_dir.iterdir()
-        if d.is_dir() and not d.name.startswith("__") and (d / "engine.py").exists()
+        if d.is_dir()
+        and not d.name.startswith("__")
+        and ((d / "engine.py").exists() or (d / "wrapper.py").exists())
     }
 
 
@@ -93,11 +99,12 @@ def should_have_no_undeclared_engine() -> None:
 
 
 def should_have_engine_py_and_schemas_py_for_each_engine() -> None:
-    """Chaque moteur implémenté doit avoir engine.py + schemas.py."""
+    """Chaque moteur implémenté doit avoir engine.py (ou wrapper.py) + schemas.py."""
     implémentés = _engines_implémentés()
     for name in implémentés:
         module_path = Path(__import__("gsie_api.engines", fromlist=["__path__"]).__path__[0]) / name
-        assert (module_path / "engine.py").exists(), f"{name}/engine.py manquant"
+        has_engine = (module_path / "engine.py").exists() or (module_path / "wrapper.py").exists()
+        assert has_engine, f"{name}/engine.py (ou wrapper.py) manquant"
         assert (module_path / "schemas.py").exists(), f"{name}/schemas.py manquant"
 
 
@@ -105,17 +112,27 @@ def should_have_engine_py_and_schemas_py_for_each_engine() -> None:
 
 @pytest.mark.parametrize("engine_name", sorted(_ENGINES_ATTENDUS))
 def should_return_200_when_engine_status_requested(engine_name: str) -> None:
-    """Chaque moteur doit exposer GET /api/v1/{engine}/status (200)."""
+    """Chaque moteur doit exposer GET /api/v1/{engine}/status (200).
+
+    Accepte les deux conventions de nommage d'URL : underscore
+    (`forest_dynamics`) et tiret (`forest-dynamics`). Le meta-test
+    essaie l'underscore en premier, puis le tiret.
+    """
     implémentés = _engines_implémentés()
     if engine_name not in implémentés:
         pytest.skip(f"Moteur {engine_name} non implémenté")
-    response = client.get(f"/api/v1/{engine_name}/status")
-    assert response.status_code == 200, (
-        f"GET /api/v1/{engine_name}/status -> {response.status_code}: {response.text}"
+    # Essai underscore puis tiret (convention variable selon les moteurs)
+    for path_variant in (engine_name, engine_name.replace("_", "-")):
+        response = client.get(f"/api/v1/{path_variant}/status")
+        if response.status_code == 200:
+            data = response.json()
+            assert data["engine"] == engine_name or data["engine"] == path_variant
+            assert data["status"] in ("active", "degraded", "placeholder")
+            return
+    pytest.fail(
+        f"GET /api/v1/{engine_name}/status (et variantes) -> "
+        f"{response.status_code}: {response.text}"
     )
-    data = response.json()
-    assert data["engine"] == engine_name
-    assert data["status"] in ("active", "degraded", "placeholder")
 
 
 # --- Tests de conformité documentation ---

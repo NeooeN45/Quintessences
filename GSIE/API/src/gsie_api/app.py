@@ -39,6 +39,10 @@ from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.pedology.router import router as pedology_router
 from gsie_api.engines.reasoning.router import router as reasoning_router
+from gsie_api.engines.recommendation.router import router as recommendation_router
+from gsie_api.engines.simulation.router import router as simulation_router
+from gsie_api.engines.validation.router import router as validation_router
+from gsie_api.engines.learning.router import router as learning_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import RequestBodyLimitMiddleware, TraceIdMiddleware
@@ -256,6 +260,10 @@ def create_app() -> FastAPI:
     app.include_router(climate_router, prefix=_settings.api_v1_prefix)
     app.include_router(reasoning_router, prefix=_settings.api_v1_prefix)
     app.include_router(diagnostic_router, prefix=_settings.api_v1_prefix)
+    app.include_router(recommendation_router, prefix=_settings.api_v1_prefix)
+    app.include_router(validation_router, prefix=_settings.api_v1_prefix)
+    app.include_router(simulation_router, prefix=_settings.api_v1_prefix)
+    app.include_router(learning_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
     # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
