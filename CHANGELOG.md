@@ -8,10 +8,10 @@ Format : `## [version] - YYYY-MM-DD`
 
 ### Fiabilité enterprise — API GSIE
 
-- **Coverage 88% -> 98%** (+10 points) sur la base de code `gsie_api`
-  (6605 statements, 119 manquants).
-- **1002 tests passent** (60 skipped, 3 xfailed, 0 échec) en 569s.
-- **+303 tests ajoutés** sur 3 commits :
+- **Coverage 88% -> 99%** (+11 points) sur la base de code `gsie_api`
+  (6605 statements, 72 manquants).
+- **1053 tests passent** (60 skipped, 3 xfailed, 0 échec) en 506s.
+- **+354 tests ajoutés** sur 4 commits :
   - `test_routers_coverage.py` (87 tests) : routers FastAPI (resources,
     climate, botanical, gis, pedology, forest_dynamics, diagnostic,
     knowledge) — couverture routers 54-87% -> 90-100%.
@@ -22,27 +22,35 @@ Format : `## [version] - YYYY-MM-DD`
     Evidence -> Knowledge (ADR-009, Docker requis) + edge cases API
     (rate limiting, CORS, gzip, Prometheus, health, RBAC, JWT expiré,
     validation stricte, OpenAPI, versions moteurs, trace ID CON-005).
+  - 5 fichiers edge cases moteurs (51 tests) : opérateurs AST interdits,
+    conditions non parsables, blocs correlation, dépendances transitives,
+    contradictions (reasoning) ; revise/evidence/filter (knowledge) ;
+    repli doubtful, erreurs loader (botanical) ; pannes réseau AROME
+    (climate) ; fallback _classify_strength NaN, erreur défensive
+    diagnostic vide (correlation+diagnostic).
 - **Fix `test_migration_baseline.py`** : `test_models.py` polluait
   `Base.metadata` avec un `TestModel(Base)` — remplacé par un
   `LocalBase` dédié.
 - **Fix pyproject.toml** : enregistrement du mark `xdist_group`
   (suppression warning pytest).
 
-### Modules à 98-100% de coverage
+### Moteurs à 100% de coverage
 
-- `engines/pipeline.py` : 100%
-- `engines/correlation/engine.py` : 99%
-- `engines/diagnostic/engine.py` : 99%
-- `engines/knowledge/engine.py` : 94%
-- `engines/reasoning/engine.py` : 91%
-- `infrastructure/object_storage.py` : 93%
-- `infrastructure/outbox_worker.py` : 99%
-- `resources/router.py` : 99%
-- `resources/service.py` : 99%
-- `websocket/manager.py` : 100%
-- `websocket/router.py` : 98%
-- `auth/refresh_tokens.py` : 100%
-- `seeds/run_seeds.py` : 94%
+- `engines/botanical/engine.py` : **100%** (était 88%)
+- `engines/climate/arome_client.py` : **100%** (était 88%)
+- `engines/correlation/engine.py` : **100%** (était 99%)
+- `engines/diagnostic/engine.py` : **100%** (était 99%)
+- `engines/knowledge/engine.py` : **100%** (était 94%)
+- `engines/reasoning/engine.py` : **99%** (était 91%)
+- `engines/pipeline.py` : **100%**
+- `engines/forest_dynamics/engine.py` : **100%**
+- `engines/gis/engine.py` : **100%**
+- `engines/pedology/engine.py` : **100%**
+- `websocket/manager.py` : **100%**
+- `auth/refresh_tokens.py` : **100%**
+- `infrastructure/outbox_worker.py` : **99%**
+- `resources/router.py` : **99%**
+- `resources/service.py` : **99%**
 
 ---
 
