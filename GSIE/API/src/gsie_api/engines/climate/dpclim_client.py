@@ -30,6 +30,7 @@ from typing import Any, cast
 import httpx
 
 from gsie_api.core.config import get_settings
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _BASE_URL = "https://public-api.meteofrance.fr/public/DPClim/v1"
 _DEFAULT_TIMEOUT = 30.0
@@ -41,7 +42,7 @@ class DPClimClientError(Exception):
     """Erreur lors d'un appel à l'API DPClim (réseau, auth, réponse inattendue)."""
 
 
-class DPClimClient:
+class DPClimClient(ResilientHttpClient):
     """Client pour l'API Données Climatologiques — nécessite METEOFRANCE_API_KEY (.env)."""
 
     def __init__(
@@ -50,10 +51,18 @@ class DPClimClient:
         poll_interval_s: float = _DEFAULT_POLL_INTERVAL_S,
         max_poll_attempts: int = _DEFAULT_MAX_POLL_ATTEMPTS,
     ) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
         self._poll_interval_s = poll_interval_s
         self._max_poll_attempts = max_poll_attempts
         self._api_key = get_settings().meteofrance_api_key
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return DPClimClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://public-api.meteofrance.fr"
 
     def _require_api_key(self) -> str:
         if not self._api_key:
@@ -61,6 +70,9 @@ class DPClimClient:
                 "METEOFRANCE_API_KEY absente — impossible d'appeler l'API DPClim"
             )
         return self._api_key
+
+    def auth_headers(self) -> dict[str, str]:
+        return {"apikey": self._require_api_key()}
 
     async def list_stations(
         self, id_departement: str, pas_de_temps: str = "quotidienne"
@@ -70,18 +82,12 @@ class DPClimClient:
         Raises:
             DPClimClientError: si la clé est absente ou l'appel échoue.
         """
-        api_key = self._require_api_key()
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(
-                    f"{_BASE_URL}/liste-stations/{pas_de_temps}",
-                    params={"id-departement": id_departement},
-                    headers={"apikey": api_key},
-                )
-                response.raise_for_status()
-                return cast("list[dict[str, Any]]", response.json())
-        except httpx.HTTPError as exc:
-            raise DPClimClientError(f"Échec de liste-stations DPClim : {exc}") from exc
+        data = await self._get_json(
+            f"/public/DPClim/v1/liste-stations/{pas_de_temps}",
+            params={"id-departement": id_departement},
+            error_label="de liste-stations DPClim",
+        )
+        return cast("list[dict[str, Any]]", data)
 
     async def get_donnees_quotidiennes(
         self, id_station: str, date_deb_periode: str, date_fin_periode: str
@@ -101,30 +107,28 @@ class DPClimClient:
                 jamais prête après `max_poll_attempts` tentatives —
                 jamais de donnée climatologique approximée (ADR-009).
         """
-        api_key = self._require_api_key()
-        id_cmde = await self._commander(id_station, date_deb_periode, date_fin_periode, api_key)
-        return await self._recuperer_fichier(id_cmde, api_key)
+        id_cmde = await self._commander(id_station, date_deb_periode, date_fin_periode)
+        return await self._recuperer_fichier(id_cmde)
 
     async def _commander(
-        self, id_station: str, date_deb_periode: str, date_fin_periode: str, api_key: str
+        self, id_station: str, date_deb_periode: str, date_fin_periode: str
     ) -> str:
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(
-                    f"{_BASE_URL}/commande-station/quotidienne",
-                    params={
-                        "id-station": id_station,
-                        "date-deb-periode": date_deb_periode,
-                        "date-fin-periode": date_fin_periode,
-                    },
-                    headers={"apikey": api_key},
-                )
-                response.raise_for_status()
-                body = json.loads(response.text)
-        except httpx.HTTPError as exc:
-            raise DPClimClientError(f"Échec de commande-station DPClim : {exc}") from exc
-        except (json.JSONDecodeError, KeyError) as exc:
-            raise DPClimClientError(f"Réponse commande-station DPClim illisible : {exc}") from exc
+            body = await self._get_json(
+                "/public/DPClim/v1/commande-station/quotidienne",
+                params={
+                    "id-station": id_station,
+                    "date-deb-periode": date_deb_periode,
+                    "date-fin-periode": date_fin_periode,
+                },
+                error_label="de commande-station DPClim",
+            )
+        except DPClimClientError as exc:
+            if not isinstance(exc.__cause__, json.JSONDecodeError):
+                raise
+            raise DPClimClientError(
+                f"Réponse commande-station DPClim illisible : {exc.__cause__}"
+            ) from exc.__cause__
 
         try:
             return cast("str", body["elaboreProduitAvecDemandeResponse"]["return"])
@@ -133,7 +137,7 @@ class DPClimClient:
                 f"Réponse commande-station DPClim sans numéro de commande : {body}"
             ) from exc
 
-    async def _recuperer_fichier(self, id_cmde: str, api_key: str) -> str:
+    async def _recuperer_fichier(self, id_cmde: str) -> str:
         last_error: httpx.HTTPStatusError | None = None
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             for _attempt in range(self._max_poll_attempts):
@@ -141,7 +145,7 @@ class DPClimClient:
                     response = await client.get(
                         f"{_BASE_URL}/commande/fichier",
                         params={"id-cmde": id_cmde},
-                        headers={"apikey": api_key},
+                        headers=self.auth_headers(),
                     )
                     response.raise_for_status()
                     return response.text

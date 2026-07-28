@@ -26,7 +26,7 @@ import gzip
 import io
 from datetime import UTC, datetime
 
-import httpx
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _SYNOP_URL_TEMPLATE = (
     "https://meteofrance.s3.sbg.io.cloud.ovh.net/data/synchro_ftp/OBS/SYNOP/synop_{year}.csv.gz"
@@ -38,11 +38,19 @@ class SynopClientError(Exception):
     """Erreur lors d'un appel aux données SYNOP (réseau, réponse inattendue)."""
 
 
-class SynopClient:
+class SynopClient(ResilientHttpClient):
     """Client pour les archives SYNOP Météo-France — aucune authentification requise."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return SynopClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://meteofrance.s3.sbg.io.cloud.ovh.net"
 
     async def get_latest_observation(
         self, station_id: str, year: int | None = None
@@ -59,13 +67,10 @@ class SynopClient:
         """
         year = year or datetime.now(UTC).year
         url = _SYNOP_URL_TEMPLATE.format(year=year)
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(url)
-                response.raise_for_status()
-                raw_bytes = response.content
-        except httpx.HTTPError as exc:
-            raise SynopClientError(f"Échec du téléchargement SYNOP {year} : {exc}") from exc
+        raw_bytes = await self._get_bytes(
+            url,
+            error_label=f"du téléchargement SYNOP {year}",  # noqa: E501
+        )
 
         try:
             csv_text = gzip.decompress(raw_bytes).decode("utf-8")

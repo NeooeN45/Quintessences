@@ -19,6 +19,7 @@ valeur par défaut (ADR-009).
 
 import csv
 import io
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
@@ -118,17 +119,34 @@ _DPCLIM_SOURCE = SourceReference(
 )
 
 
-def _parse_float(raw: dict[str, str], key: str) -> float | None:
+def _champ_obligatoire(raw: Mapping[str, str | None], key: str, contexte: str) -> str:
+    """Retourne un champ CSV obligatoire, ou refuse la réponse amont.
+
+    `csv.DictReader` rend `None` sur une ligne plus courte que l'en-tête.
+    Convertir ce `None` faisait échouer le moteur en `TypeError`, donc en 500
+    opaque. Une ligne amont incomplète est une défaillance du fournisseur : on
+    la nomme (`ClimateEngineError` -> 502) plutôt que d'inventer une valeur
+    (ADR-009).
+    """
+    value = raw.get(key)
+    if value is None or not value.strip():
+        raise ClimateEngineError(
+            f"Réponse {contexte} incomplète : champ obligatoire « {key} » absent"
+        )
+    return value
+
+
+def _parse_float(raw: Mapping[str, str | None], key: str) -> float | None:
     """Parse un champ CSV optionnel — chaîne vide ou absente -> None (jamais 0.0 par défaut)."""
-    value = raw.get(key, "").strip()
+    value = (raw.get(key) or "").strip()
     if not value:
         return None
     return float(value)
 
 
-def _parse_french_float(raw: dict[str, str], key: str) -> float | None:
+def _parse_french_float(raw: Mapping[str, str | None], key: str) -> float | None:
     """Parse un nombre décimal DPClim (virgule française) — vide/absent -> None."""
-    value = raw.get(key, "").strip()
+    value = (raw.get(key) or "").strip()
     if not value:
         return None
     return float(value.replace(",", "."))
@@ -223,11 +241,15 @@ class ClimateEngine:
 
         resultats = [
             DangerFeuxDepartement(
-                dep_code=row["dep_code"],
-                dep_nom=row["dep_nom"],
-                niveau_j1=int(row["niveau_j1"]),
-                niveau_j2=int(row["niveau_j2"]),
-                reference_time=datetime.fromisoformat(row["reference_time"].replace("Z", "+00:00")),
+                dep_code=_champ_obligatoire(row, "dep_code", "Météo des forêts"),
+                dep_nom=_champ_obligatoire(row, "dep_nom", "Météo des forêts"),
+                niveau_j1=int(_champ_obligatoire(row, "niveau_j1", "Météo des forêts")),
+                niveau_j2=int(_champ_obligatoire(row, "niveau_j2", "Météo des forêts")),
+                reference_time=datetime.fromisoformat(
+                    _champ_obligatoire(row, "reference_time", "Météo des forêts").replace(
+                        "Z", "+00:00"
+                    )
+                ),
                 source=_METEO_FORETS_SOURCE,
             )
             for row in rows
@@ -358,11 +380,13 @@ class ClimateEngine:
             pression_pa = _parse_float(row, "pmer")
             resultats.append(
                 ObservationHoraireDepartement(
-                    geo_id_insee=row["geo_id_insee"],
-                    latitude=float(row["lat"]),
-                    longitude=float(row["lon"]),
+                    geo_id_insee=_champ_obligatoire(row, "geo_id_insee", "paquet observation"),
+                    latitude=float(_champ_obligatoire(row, "lat", "paquet observation")),
+                    longitude=float(_champ_obligatoire(row, "lon", "paquet observation")),
                     date_observation=datetime.fromisoformat(
-                        row["validity_time"].replace("Z", "+00:00")
+                        _champ_obligatoire(row, "validity_time", "paquet observation").replace(
+                            "Z", "+00:00"
+                        )
                     ),
                     temperature_c=(
                         temperature_k - _KELVIN_TO_CELSIUS if temperature_k is not None else None

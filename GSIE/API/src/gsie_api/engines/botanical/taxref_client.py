@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _SPECIES_SEARCH_URL = "https://api.gbif.org/v1/species/search"
 _TAXREF_DATASET_KEY = "0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6"
@@ -30,11 +30,19 @@ class TaxrefClientError(Exception):
     """Erreur lors d'un appel au miroir TAXREF (réseau, réponse inattendue)."""
 
 
-class TaxrefClient:
+class TaxrefClient(ResilientHttpClient):
     """Client TAXREF via le miroir GBIF — aucune authentification requise."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return TaxrefClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://api.gbif.org/v1"
 
     async def search(self, nom_scientifique: str) -> dict[str, Any] | None:
         """Résout un nom scientifique vers son entrée TAXREF réelle.
@@ -47,21 +55,15 @@ class TaxrefClient:
         Raises:
             TaxrefClientError: en cas d'erreur réseau ou de réponse HTTP en échec.
         """
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(
-                    _SPECIES_SEARCH_URL,
-                    params={
-                        "q": nom_scientifique,
-                        "datasetKey": _TAXREF_DATASET_KEY,
-                        "limit": 20,
-                    },
-                )
-                response.raise_for_status()
-                data: dict[str, Any] = response.json()
-        except httpx.HTTPError as exc:
-            raise TaxrefClientError(f"Échec de l'appel au miroir GBIF de TAXREF : {exc}") from exc
-
+        data: dict[str, Any] = await self._get_json(
+            "/species/search",
+            params={
+                "q": nom_scientifique,
+                "datasetKey": _TAXREF_DATASET_KEY,
+                "limit": 20,
+            },
+            error_label="de l'appel au miroir GBIF de TAXREF",
+        )
         results: list[dict[str, Any]] = data.get("results", [])
         if not results:
             return None

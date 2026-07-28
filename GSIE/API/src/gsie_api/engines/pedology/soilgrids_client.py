@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _SOILGRIDS_URL = "https://rest.isric.org/soilgrids/v2.0/properties/query"
 _DEFAULT_TIMEOUT = 30.0
@@ -39,11 +39,19 @@ class SoilGridsClientError(Exception):
     """Erreur lors d'un appel à l'API SoilGrids (réseau, réponse inattendue)."""
 
 
-class SoilGridsClient:
+class SoilGridsClient(ResilientHttpClient):
     """Client HTTP pour l'API SoilGrids — aucune authentification requise."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return SoilGridsClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://rest.isric.org/soilgrids/v2.0"
 
     async def get_properties(
         self, latitude: float, longitude: float, properties: list[str], depth: str = "0-5cm"
@@ -67,14 +75,11 @@ class SoilGridsClient:
         ]
         params.extend(("property", prop) for prop in properties)
 
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(_SOILGRIDS_URL, params=params)
-                response.raise_for_status()
-                data: dict[str, Any] = response.json()
-        except httpx.HTTPError as exc:
-            raise SoilGridsClientError(f"Échec de l'appel SoilGrids : {exc}") from exc
-
+        data: dict[str, Any] = await self._get_json(
+            "/properties/query",
+            params=params,
+            error_label="de l'appel SoilGrids",
+        )
         layers: list[dict[str, Any]] = data.get("properties", {}).get("layers", [])
         results: dict[str, float] = {}
         for layer in layers:

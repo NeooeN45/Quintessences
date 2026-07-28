@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _SPECIES_MATCH_URL = "https://api.gbif.org/v1/species/match"
 _VERNACULAR_NAMES_URL_TEMPLATE = "https://api.gbif.org/v1/species/{key}/vernacularNames"
@@ -28,11 +28,19 @@ class GBIFClientError(Exception):
     """Erreur lors d'un appel à l'API GBIF (réseau, réponse inattendue)."""
 
 
-class GBIFClient:
+class GBIFClient(ResilientHttpClient):
     """Client HTTP pour l'API GBIF — aucune authentification requise en lecture."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return GBIFClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://api.gbif.org/v1"
 
     async def match_species(self, name: str) -> dict[str, Any] | None:
         """Résout un nom scientifique vers son meilleur taxon GBIF.
@@ -44,14 +52,11 @@ class GBIFClient:
         Raises:
             GBIFClientError: en cas d'erreur réseau ou de réponse HTTP en échec.
         """
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(_SPECIES_MATCH_URL, params={"name": name})
-                response.raise_for_status()
-                data: dict[str, Any] = response.json()
-        except httpx.HTTPError as exc:
-            raise GBIFClientError(f"Échec de l'appel GBIF Species Match : {exc}") from exc
-
+        data: dict[str, Any] = await self._get_json(
+            "/species/match",
+            params={"name": name},
+            error_label="de l'appel GBIF Species Match",
+        )
         if data.get("matchType") == "NONE" or "usageKey" not in data:
             return None
         return data
@@ -62,15 +67,12 @@ class GBIFClient:
         Raises:
             GBIFClientError: en cas d'erreur réseau ou de réponse HTTP en échec.
         """
-        url = _VERNACULAR_NAMES_URL_TEMPLATE.format(key=taxon_key)
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(url, params={"language": language})
-                response.raise_for_status()
-                data: dict[str, Any] = response.json()
-        except httpx.HTTPError as exc:
-            raise GBIFClientError(f"Échec de l'appel GBIF Vernacular Names : {exc}") from exc
-
+        path = _VERNACULAR_NAMES_URL_TEMPLATE.format(key=taxon_key)
+        data: dict[str, Any] = await self._get_json(
+            path,
+            params={"language": language},
+            error_label="l'appel GBIF Vernacular Names",
+        )
         results: list[dict[str, Any]] = data.get("results", [])
         if not results:
             return None

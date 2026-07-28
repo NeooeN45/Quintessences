@@ -115,3 +115,85 @@ async def test_engine_resolve_taxref_raises_on_client_error(monkeypatch: pytest.
         await engine.resolve_taxref(
             TaxrefQuery(requete_id=uuid4(), nom_scientifique="Quercus petraea")
         )
+
+
+# =====================================================================
+# Résilience TaxrefClient — 5 modes de panne (GSIE-PROMPT-0023)
+# =====================================================================
+
+import respx  # noqa: E402
+from httpx import Response  # noqa: E402
+
+_SPECIES_SEARCH_URL = "https://api.gbif.org/v1/species/search"
+
+
+@respx.mock
+async def test_taxref_should_raise_when_connect_error() -> None:
+    """Mode #1 — une panne réseau (ConnectError) doit lever TaxrefClientError."""
+    respx.get(_SPECIES_SEARCH_URL).mock(side_effect=httpx.ConnectError("connexion refusée"))
+    client = TaxrefClient()
+    with pytest.raises(TaxrefClientError, match="Échec de l'appel au miroir"):
+        await client.search("Quercus petraea")
+
+
+@respx.mock
+async def test_taxref_should_raise_when_http_4xx_then_5xx() -> None:
+    """Mode #2 — un statut HTTP 4xx puis 5xx doit lever TaxrefClientError."""
+    client = TaxrefClient()
+    respx.get(_SPECIES_SEARCH_URL).mock(return_value=Response(404))
+    with pytest.raises(TaxrefClientError):
+        await client.search("Quercus petraea")
+
+    respx.get(_SPECIES_SEARCH_URL).mock(return_value=Response(500))
+    with pytest.raises(TaxrefClientError):
+        await client.search("Quercus petraea")
+
+
+@respx.mock
+async def test_taxref_should_raise_when_json_invalid() -> None:
+    """Mode #3 — un corps JSON malformé doit lever TaxrefClientError, pas planter."""
+    respx.get(_SPECIES_SEARCH_URL).mock(return_value=Response(200, content=b"<<< pas du JSON >>>"))
+    client = TaxrefClient()
+    with pytest.raises(TaxrefClientError):
+        await client.search("Quercus petraea")
+
+
+@respx.mock
+async def test_taxref_should_return_first_result_when_no_accepted_status() -> None:
+    """Mode #4 — des résultats sans taxonomicStatus=ACCEPTED doivent retourner le premier.
+
+    Le cas le plus subtil : une réponse JSON valide avec des résultats,
+    mais aucun n'a taxonomicStatus == "ACCEPTED". La garde du client
+    retourne le premier résultat (fallback), jamais None — c'est le
+    comportement attendu (le premier résultat est le plus pertinent
+    par construction de la recherche GBIF).
+    """
+    respx.get(_SPECIES_SEARCH_URL).mock(
+        return_value=Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "taxonID": "123",
+                        "canonicalName": "Quercus sp.",
+                        "taxonomicStatus": "DOUBTFUL",
+                    },
+                    {
+                        "taxonID": "456",
+                        "canonicalName": "Quercus robur",
+                        "taxonomicStatus": "SYNONYM",
+                    },
+                ]
+            },
+        )
+    )
+    client = TaxrefClient()
+    result = await client.search("Quercus")
+    assert result is not None
+    assert result["taxonID"] == "123"
+    assert result["taxonomicStatus"] == "DOUBTFUL"
+
+
+async def test_taxref_mode5_quota_auth_not_applicable() -> None:
+    """Mode #5 — N/A : le miroir GBIF de TAXREF ne requiert aucune authentification."""
+    pass

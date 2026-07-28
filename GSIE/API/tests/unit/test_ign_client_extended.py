@@ -165,3 +165,69 @@ class TestGetAltitude:
         assert request.url.params["lon"] == "-0.54"
         assert request.url.params["resource"] == "ign_rge_alti_wld"
         assert request.url.params["zonly"] == "true"
+
+
+# =====================================================================
+# Résilience IGNClient — modes de panne supplémentaires (GSIE-PROMPT-0023)
+# =====================================================================
+
+
+class TestGetParcelleResilience:
+    """get_parcelle() — modes de panne non couverts par les tests ci-dessus."""
+
+    @respx.mock
+    async def test_should_raise_ign_client_error_when_json_invalid(self) -> None:
+        """Mode #3 — un corps JSON malformé doit lever IGNClientError, pas planter."""
+        respx.get(_CADASTRE_BASE_URL).mock(
+            return_value=Response(200, content=b"<<< pas du JSON >>>")
+        )
+        client = IGNClient()
+        with pytest.raises(IGNClientError, match="Échec de l'appel API Carto Cadastre"):
+            await client.get_parcelle("33063", "AM", "0001")
+
+    @respx.mock
+    async def test_should_return_none_when_features_not_a_list(self) -> None:
+        """Mode #4 — une réponse JSON valide mais 'features' absent doit retourner None.
+
+        Le client utilise data.get("features", []) qui retourne [] si la clé
+        est absente — le résultat doit être None, jamais une erreur.
+        """
+        respx.get(_CADASTRE_BASE_URL).mock(
+            return_value=Response(200, json={"type": "FeatureCollection"})
+        )
+        client = IGNClient()
+        result = await client.get_parcelle("33063", "AM", "0001")
+        assert result is None
+
+
+class TestGetAltitudeResilience:
+    """get_altitude() — modes de panne non couverts par les tests ci-dessus."""
+
+    @respx.mock
+    async def test_should_raise_ign_client_error_when_json_invalid(self) -> None:
+        """Mode #3 — un corps JSON malformé doit lever IGNClientError, pas planter."""
+        respx.get(_ALTIMETRIE_BASE_URL).mock(
+            return_value=Response(200, content=b"<<< pas du JSON >>>")
+        )
+        client = IGNClient()
+        with pytest.raises(IGNClientError, match="Échec de l'appel API de calcul altimétrique"):
+            await client.get_altitude(44.0, -0.5)
+
+    @respx.mock
+    async def test_should_raise_ign_client_error_when_elevation_not_numeric(self) -> None:
+        """Mode #4 — une élévation non-numérique doit lever IGNClientError.
+
+        Le client fait float(elevations[0]) — une chaîne non-numérique doit
+        lever IGNClientError, pas planter avec un ValueError non wrappé.
+        """
+        respx.get(_ALTIMETRIE_BASE_URL).mock(
+            return_value=Response(200, json={"elevations": ["not a number"]})
+        )
+        client = IGNClient()
+        with pytest.raises(IGNClientError):
+            await client.get_altitude(44.0, -0.5)
+
+
+async def test_ign_mode5_quota_auth_not_applicable() -> None:
+    """Mode #5 — N/A : les API IGN Géoplateforme ne requièrent aucune authentification."""
+    pass

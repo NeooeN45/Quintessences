@@ -34,6 +34,7 @@ import defusedxml.ElementTree as DefusedElementTree
 import httpx
 
 from gsie_api.core.config import get_settings
+from gsie_api.shared.http_client import ResilientHttpClient
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -53,17 +54,25 @@ class AromeClientError(Exception):
     """
 
 
-class AromeClient:
+class AromeClient(ResilientHttpClient):
     """Client pour le modèle AROME (WCS) — nécessite METEOFRANCE_API_KEY (.env)."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
-        self._api_key = get_settings().meteofrance_api_key
+        super().__init__(timeout)
 
-    def _require_api_key(self) -> str:
-        if not self._api_key:
+    @property
+    def exception_class(self) -> type[Exception]:
+        return AromeClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://public-api.meteofrance.fr"
+
+    def auth_headers(self) -> dict[str, str]:
+        api_key = get_settings().meteofrance_api_key
+        if not api_key:
             raise AromeClientError("METEOFRANCE_API_KEY absente — impossible d'appeler l'API AROME")
-        return self._api_key
+        return {"apikey": api_key}
 
     async def get_latest_temperature_2m_run(self) -> str:
         """Identifie le run le plus récent réellement publié pour la température 2 m.
@@ -72,18 +81,11 @@ class AromeClient:
             AromeClientError: si l'appel réseau échoue ou qu'aucun run
                 n'est publié pour ce paramètre.
         """
-        api_key = self._require_api_key()
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(
-                    f"{_BASE_URL}/GetCapabilities",
-                    params={"service": "WCS", "version": "2.0.1"},
-                    headers={"apikey": api_key},
-                )
-                response.raise_for_status()
-                xml_text = response.text
-        except httpx.HTTPError as exc:
-            raise AromeClientError(f"Échec de GetCapabilities AROME : {exc}") from exc
+        xml_text = await self._get_text(
+            "/public/arome/1.0/wcs/MF-NWP-HIGHRES-AROME-001-FRANCE-WCS/GetCapabilities",
+            params={"service": "WCS", "version": "2.0.1"},
+            error_label="de GetCapabilities AROME",
+        )
 
         try:
             root = DefusedElementTree.fromstring(xml_text)
@@ -116,7 +118,6 @@ class AromeClient:
                 domaine AROME France, ou échec réseau — jamais un
                 GRIB2 substitué.
         """
-        api_key = self._require_api_key()
         echeance_str = echeance.strftime("%Y-%m-%dT%H:%M:%SZ")
         params: list[tuple[str, str | int | float | bool | None]] = [
             ("service", "WCS"),
@@ -134,7 +135,7 @@ class AromeClient:
                 response = await client.get(
                     f"{_BASE_URL}/GetCoverage",
                     params=params,
-                    headers={"apikey": api_key},
+                    headers=self.auth_headers(),
                 )
                 response.raise_for_status()
                 return response.content

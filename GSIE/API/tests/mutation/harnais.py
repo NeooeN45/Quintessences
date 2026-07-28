@@ -134,6 +134,110 @@ MUTATIONS: tuple[Mutation, ...] = (
         defaut_reproduit="une variable constante fait rendre 500 au lieu d'une erreur métier",
         tests=("tests/integration/test_moteurs_fiabilite.py",),
     ),
+    # =================================================================
+    # GSIE-PROMPT-0023/0024 — résilience des clients d'API externes
+    # GSIE-PROMPT-0023 a ajouté les gardes dans chaque client individuel.
+    # GSIE-PROMPT-0024 les a déplacées vers ResilientHttpClient._get_json
+    # (http_client.py) — les mutations ciblent maintenant la base class.
+    # Chaque mutation vérifie qu'un test de client spécifique mord quand
+    # la garde JSON est supprimée de la base class partagée.
+    # =================================================================
+    Mutation(
+        cle="gbif_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé de l'API GBIF Species Match fait planter le "
+            "client en JSONDecodeError non wrappé au lieu de lever GBIFClientError"
+        ),
+        tests=("tests/unit/test_gbif_client.py",),
+    ),
+    Mutation(
+        cle="taxref_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé du miroir GBIF de TAXREF fait planter le "
+            "client en JSONDecodeError non wrappé au lieu de lever TaxrefClientError"
+        ),
+        tests=("tests/unit/test_botanical_taxref.py",),
+    ),
+    Mutation(
+        cle="soilgrids_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé de l'API SoilGrids fait planter le client en "
+            "JSONDecodeError non wrappé au lieu de lever SoilGridsClientError"
+        ),
+        tests=("tests/unit/test_soilgrids_client.py",),
+    ),
+    Mutation(
+        cle="ign_cadastre_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé de l'API Carto Cadastre IGN fait planter le "
+            "client en JSONDecodeError non wrappé au lieu de lever IGNClientError"
+        ),
+        tests=("tests/unit/test_ign_client_extended.py",),
+    ),
+    Mutation(
+        cle="ign_altitude_non_numerique_non_garde",
+        fichier="gsie_api/engines/gis/ign_client.py",
+        ancien=(
+            "        try:\n"
+            "            return float(elevations[0])\n"
+            "        except (TypeError, ValueError) as exc:\n"
+            "            raise IGNClientError(\n"
+            '                f"Réponse altimétrique sans élévation exploitable : {data}"\n'
+            "            ) from exc"
+        ),
+        nouveau="        return float(elevations[0])",
+        defaut_reproduit=(
+            "une élévation non-numérique (string) de l'API altimétrique IGN "
+            "fait planter le client en ValueError non wrappé au lieu de lever IGNClientError"
+        ),
+        tests=("tests/unit/test_ign_client_extended.py",),
+    ),
+    Mutation(
+        cle="vigilance_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé de l'API Vigilance Météo-France fait planter "
+            "le client en JSONDecodeError non wrappé au lieu de lever VigilanceClientError"
+        ),
+        tests=("tests/unit/test_vigilance_client.py",),
+    ),
+    Mutation(
+        cle="dpclim_liste_stations_json_invalide_non_garde",
+        fichier="gsie_api/shared/http_client.py",
+        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        defaut_reproduit=(
+            "un JSON malformé de l'API DPClim liste-stations fait planter "
+            "le client en JSONDecodeError non wrappé au lieu de lever DPClimClientError"
+        ),
+        tests=("tests/unit/test_resilience_factory.py", "tests/unit/test_dpclim_client.py"),
+    ),
+    Mutation(
+        cle="champ_csv_obligatoire_non_garde",
+        fichier="gsie_api/engines/climate/engine.py",
+        # Motif sur une seule ligne : la garde qui refuse une cellule absente.
+        ancien="    if value is None or not value.strip():",
+        nouveau="    if False:",
+        defaut_reproduit=(
+            "une ligne CSV amont tronquée passe en valeur vide au lieu d'être "
+            "refusée — le moteur invente une donnée manquante (ADR-009)"
+        ),
+        tests=("tests/unit/test_climate_arome_edge_cases.py",),
+    ),
 )
 
 

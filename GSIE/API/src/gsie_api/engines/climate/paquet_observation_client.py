@@ -16,12 +16,8 @@ les conversions.
 
 from __future__ import annotations
 
-import csv
-import io
-
-import httpx
-
 from gsie_api.core.config import get_settings
+from gsie_api.shared.http_client import ResilientCsvClient
 
 _URL = "https://public-api.meteofrance.fr/public/DPPaquetObs/v2/paquet/horaire"
 _DEFAULT_TIMEOUT = 30.0
@@ -31,38 +27,37 @@ class PaquetObservationClientError(Exception):
     """Erreur lors d'un appel à l'API Package Observations (réseau, auth, réponse inattendue)."""
 
 
-class PaquetObservationClient:
+class PaquetObservationClient(ResilientCsvClient):
     """Client pour l'API Package Observations — nécessite METEOFRANCE_API_KEY (.env)."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
-        self._api_key = get_settings().meteofrance_api_key
+        super().__init__(timeout)
 
-    async def get_observations_horaires(self, id_departement: str) -> list[dict[str, str]]:
+    @property
+    def exception_class(self) -> type[Exception]:
+        return PaquetObservationClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://public-api.meteofrance.fr"
+
+    def auth_headers(self) -> dict[str, str]:
+        api_key = get_settings().meteofrance_api_key
+        if not api_key:
+            raise PaquetObservationClientError(
+                "METEOFRANCE_API_KEY absente — impossible d'appeler l'API Package Observations"
+            )
+        return {"apikey": api_key}
+
+    async def get_observations_horaires(self, id_departement: str) -> list[dict[str, str | None]]:
         """Récupère les observations horaires réelles des 24h, toutes stations d'un département.
 
         Raises:
             PaquetObservationClientError: si la clé est absente, l'appel
                 réseau échoue, ou la réponse HTTP est en échec.
         """
-        if not self._api_key:
-            raise PaquetObservationClientError(
-                "METEOFRANCE_API_KEY absente — impossible d'appeler l'API Package Observations"
-            )
-
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(
-                    _URL,
-                    params={"id-departement": id_departement, "format": "csv"},
-                    headers={"apikey": self._api_key},
-                )
-                response.raise_for_status()
-                csv_text = response.text
-        except httpx.HTTPError as exc:
-            raise PaquetObservationClientError(
-                f"Échec de l'appel à l'API Package Observations : {exc}"
-            ) from exc
-
-        reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
-        return list(reader)
+        return await self._get_csv(
+            "/public/DPPaquetObs/v2/paquet/horaire",
+            params={"id-departement": id_departement, "format": "csv"},
+            error_label="de l'appel à l'API Package Observations",
+        )

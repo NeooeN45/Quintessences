@@ -21,9 +21,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-import httpx
-
 from gsie_api.core.config import get_settings
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _URL = "https://public-api.meteofrance.fr/public/DPVigilance/v1/cartevigilance/encours"
 _DEFAULT_TIMEOUT = 30.0
@@ -33,12 +32,27 @@ class VigilanceClientError(Exception):
     """Erreur lors d'un appel à l'API Vigilance (réseau, auth, réponse inattendue)."""
 
 
-class VigilanceClient:
+class VigilanceClient(ResilientHttpClient):
     """Client pour l'API Bulletin Vigilance — nécessite METEOFRANCE_API_KEY (.env)."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
-        self._api_key = get_settings().meteofrance_api_key
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return VigilanceClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://public-api.meteofrance.fr"
+
+    def auth_headers(self) -> dict[str, str]:
+        api_key = get_settings().meteofrance_api_key
+        if not api_key:
+            raise VigilanceClientError(
+                "METEOFRANCE_API_KEY absente — impossible d'appeler l'API Vigilance"
+            )
+        return {"apikey": api_key}
 
     async def get_carte_vigilance(self) -> dict[str, Any]:
         """Récupère la carte de vigilance réelle en cours (JSON brut Météo-France).
@@ -47,15 +61,8 @@ class VigilanceClient:
             VigilanceClientError: si la clé est absente, l'appel réseau
                 échoue, ou la réponse HTTP est en échec.
         """
-        if not self._api_key:
-            raise VigilanceClientError(
-                "METEOFRANCE_API_KEY absente — impossible d'appeler l'API Vigilance"
-            )
-
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(_URL, headers={"apikey": self._api_key})
-                response.raise_for_status()
-                return cast("dict[str, Any]", response.json())
-        except httpx.HTTPError as exc:
-            raise VigilanceClientError(f"Échec de l'appel à l'API Vigilance : {exc}") from exc
+        data = await self._get_json(
+            "/public/DPVigilance/v1/cartevigilance/encours",
+            error_label="de l'appel à l'API Vigilance",
+        )
+        return cast("dict[str, Any]", data)

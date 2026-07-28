@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
+from gsie_api.shared.http_client import ResilientHttpClient
 
 _CADASTRE_BASE_URL = "https://apicarto.ign.fr/api/cadastre/parcelle"
 _ALTIMETRIE_BASE_URL = "https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json"
@@ -28,11 +28,19 @@ class IGNClientError(Exception):
     """Erreur lors d'un appel aux API IGN (réseau, réponse inattendue)."""
 
 
-class IGNClient:
+class IGNClient(ResilientHttpClient):
     """Client HTTP pour les API Géoplateforme IGN — aucune authentification requise."""
 
     def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
+        super().__init__(timeout)
+
+    @property
+    def exception_class(self) -> type[Exception]:
+        return IGNClientError
+
+    @property
+    def base_url(self) -> str:
+        return "https://apicarto.ign.fr"
 
     async def get_parcelle(
         self, code_insee: str, section: str, numero: str
@@ -46,14 +54,11 @@ class IGNClient:
             IGNClientError: en cas d'erreur réseau ou de réponse HTTP en échec.
         """
         params = {"code_insee": code_insee, "section": section, "numero": numero}
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(_CADASTRE_BASE_URL, params=params)
-                response.raise_for_status()
-                data = response.json()
-        except httpx.HTTPError as exc:
-            raise IGNClientError(f"Échec de l'appel API Carto Cadastre : {exc}") from exc
-
+        data: dict[str, Any] = await self._get_json(
+            "/api/cadastre/parcelle",
+            params=params,
+            error_label="de l'appel API Carto Cadastre",
+        )
         features: list[dict[str, Any]] = data.get("features", [])
         if not features:
             return None
@@ -72,15 +77,17 @@ class IGNClient:
             "resource": "ign_rge_alti_wld",
             "zonly": "true",
         }
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(_ALTIMETRIE_BASE_URL, params=params)
-                response.raise_for_status()
-                data = response.json()
-        except httpx.HTTPError as exc:
-            raise IGNClientError(f"Échec de l'appel API de calcul altimétrique : {exc}") from exc
-
+        data: dict[str, Any] = await self._get_json(
+            _ALTIMETRIE_BASE_URL,
+            params=params,
+            error_label="de l'appel API de calcul altimétrique",
+        )
         elevations = data.get("elevations", [])
         if not elevations:
             raise IGNClientError(f"Réponse altimétrique sans élévation exploitable : {data}")
-        return float(elevations[0])
+        try:
+            return float(elevations[0])
+        except (TypeError, ValueError) as exc:
+            raise IGNClientError(
+                f"Réponse altimétrique sans élévation exploitable : {data}"
+            ) from exc
