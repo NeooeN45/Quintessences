@@ -4,6 +4,76 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [FIABILITÉ API — AUDIT PAR RÉFUTATION] - 2026-07-28
+
+Audit de fiabilité de l'API GSIE : chaque constat prouvé par exécution réelle
+sur PostgreSQL/PostGIS, chaque correctif vérifié de la même façon. Les défauts
+ci-dessous traversaient une suite de plus de 1000 tests sans en faire tomber un
+seul — la couverture mesurait les lignes exécutées, pas les comportements
+vérifiés.
+
+### Défauts P0 corrigés
+
+- **`resources/service.py`** : `revision.author_id` et `resource_diff.id`
+  référencent `resource(id)` mais citaient des identifiants sans ligne parente.
+  Toute écriture authentifiée échouait en `ForeignKeyViolationError`. L'Agent
+  auteur est désormais matérialisé, et le ResourceDiff crée sa ligne racine
+  (type 61 du métamodèle, ADR-002).
+- **`resources/router.py`** : `GET /resources?type=` (vide) était traité comme
+  un filtre et désactivait l'exclusion RGPD — un simple `reader` listait
+  `consent`, `data_subject`, `access_policy`, `sensitivity_classification`.
+- **`resources/coercion.py`** (nouveau) : aucune coercition JSON → Python.
+  Une date ISO partait telle quelle vers un `timestamptz`, rendant 19 des 90
+  types incréables (500 opaque). Les conversions impossibles rendent 422.
+- **`resources/service.py`** : une géométrie relue (`WKBElement`) n'était pas
+  sérialisable — la ressource était écrite puis devenait illisible.
+
+### Défauts P1/P2 corrigés
+
+- **`alembic/versions/20260728_0006`** : `DEFAULT 'now()'` (chaîne) est figé par
+  PostgreSQL à la création de la table. `revision.created_at` portait la date de
+  migration pour toutes les lignes — l'horodatage d'audit du Temporal Engine
+  était faux (CON-010).
+- **`websocket/manager.py`** : le subscriber Redis mourait après 5 s de silence
+  (`socket_timeout` sur `pubsub.listen()`), tuant le fan-out inter-workers en
+  permanence. Passage à `get_message` + reprises bornées.
+- **`websocket/router.py`** : nettoyage déplacé dans `finally` — une trame
+  binaire faisait fuir le compteur de quota.
+- **`core/limiter.py`** : `key_style="endpoint"`. Le quota était compté par URL
+  concrète, donc `DELETE 10/minute` ne bornait rien.
+- **14 routers moteurs** : bascule sur le limiter partagé (les limiters locaux
+  ignoraient `rate_limit_enabled` et n'étaient pas distribués entre workers).
+- **`engines/diagnostic/engine.py`** : rejeu idempotent — `date_diagnostic` est
+  hors comparaison, un retry après expiration réseau ne rend plus 409.
+- **`engines/knowledge/engine.py`** : jointure 1-N sans agrégation — chaque
+  révision dupliquait la connaissance et exposait le niveau de preuve périmé.
+- **`engines/botanical/engine.py`** : course sur `_get_or_create_taxon`
+  rattrapée par SAVEPOINT.
+- **`engines/correlation/engine.py`** : une variable constante rendait 500
+  (NaN non gardé) au lieu d'une erreur métier.
+- **`resources/service.py`** : une référence pendante rend 422 en nommant le
+  champ, au lieu d'un 500 opaque.
+
+### Tests — harnais de mutation
+
+- **`tests/mutation/harnais.py`** (nouveau) : casse volontairement chaque garde
+  ajoutée et vérifie que la suite proteste. Une mutation qui survit désigne un
+  comportement que rien ne surveille. Score actuel : 6/6.
+  Le harnais a immédiatement démasqué deux tests qui ne mordaient pas, dont un
+  écrit dans cette même session.
+- **`tests/integration/test_resources_fiabilite.py`**,
+  **`test_moteurs_fiabilite.py`**, **`tests/unit/test_limiter_contrat.py`**,
+  **`test_auth_type_jeton.py`** : non-régression sur base réelle.
+
+### Qualité
+
+- `mypy --strict` : vert sur les 137 modules (4 erreurs corrigées dans
+  `recommendation/engine.py` — annotation `str` là où le schéma dit `str | None`).
+- `ruff check` : 135 erreurs → 6 (les 6 restantes sont dans des fichiers en
+  cours de modification par un autre agent, laissés intacts).
+
+---
+
 ## [ENRICHISSEMENT V1 — DONNÉES RÉELLES] - 2026-07-27
 
 ### Phase 1 — Pipeline cross-moteurs Validation + Learning (commit 4930aa1)

@@ -10,12 +10,15 @@ CON-010 : jamais UPDATE ni DELETE physique.
 - delete  → soft delete (deleted_at + Revision finale)
 """
 
-from collections.abc import Collection
+import re
+from collections.abc import AsyncIterator, Collection
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, inspect, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -25,6 +28,7 @@ from gsie_api.infrastructure.models.temporal_engine import (
     ResourceDiffModel,
     RevisionModel,
 )
+from gsie_api.resources.coercion import coercer_donnees, serialiser_valeur
 from gsie_api.resources.schemas import (
     ResourceCreate,
     ResourceListResponse,
@@ -41,6 +45,52 @@ from gsie_api.resources.validators import (
 from gsie_api.websocket.events import EventType, WSEvent
 
 logger = get_logger("gsie_api.resources.service")
+
+
+def _champ_de_reference_fautif(exc: IntegrityError) -> str | None:
+    """Extrait la colonne d'une violation de clé étrangère, si c'en est une.
+
+    SQLAlchemy n'expose pas directement l'erreur asyncpg : `exc.orig` est le
+    wrapper `AsyncAdapt_asyncpg_dbapi.IntegrityError`, et la véritable
+    `ForeignKeyViolationError` — seule à porter le `detail` exploitable — se
+    trouve plus loin dans la chaîne des causes. On la cherche donc au lieu de
+    ne regarder que le premier maillon.
+
+    asyncpg décrit la violation ainsi :
+    ``Key (source_id)=(...) is not present in table "resource".``
+    """
+    violation = None
+    courante: BaseException | None = getattr(exc, "orig", None) or exc
+    vues: set[int] = set()
+    while courante is not None and id(courante) not in vues:
+        vues.add(id(courante))
+        if type(courante).__name__ == "ForeignKeyViolationError":
+            violation = courante
+            break
+        courante = courante.__cause__ or courante.__context__
+
+    if violation is None:
+        return None
+    detail = str(getattr(violation, "detail", "") or "")
+    correspondance = re.search(r"Key \(([^)]+)\)=", detail)
+    if correspondance is None:
+        return None
+    colonnes = [c.strip() for c in correspondance.group(1).split(",")]
+    return colonnes[0] if len(colonnes) == 1 else None
+
+
+# Champs que la protection mass-assignment interdit par leur nom, mais qui sont
+# de vrais champs métier pour certains types : `version` est le numéro de
+# version sémantique d'un modèle ou d'un jeu de données, pas le compteur
+# système d'`assertion`. Sans cette levée ciblée, ces types sont NOT NULL sur
+# une colonne systématiquement filtrée, donc impossibles à créer (500).
+_CHAMPS_METIER_AUTORISES: dict[str, frozenset[str]] = {
+    "model_version": frozenset({"version"}),
+    "dataset_version": frozenset({"version"}),
+    "vocabulary_release": frozenset({"version"}),
+    "diagnostic_protocol": frozenset({"version"}),
+    "temporal_context": frozenset({"valid_time_start", "valid_time_end"}),
+}
 
 # Constantes
 _GSIE_ID_SUFFIX_LENGTH = 8
@@ -78,14 +128,63 @@ class ResourceService:
             )
         return RESOURCE_TYPES[type_name]
 
-    def _filter_data(self, model_cls: type[Any], data: dict[str, Any]) -> dict[str, Any]:
+    def _filter_data(
+        self, model_cls: type[Any], data: dict[str, Any], type_name: str | None = None
+    ) -> dict[str, Any]:
         """Filtre les champs interdits (mass assignment protection, OWASP A01)."""
         allowed_columns = {col.name for col in model_cls.__table__.columns if col.name != "id"}
-        return {
-            k: v
-            for k, v in data.items()
-            if k in allowed_columns and k not in self._FORBIDDEN_FIELDS
-        }
+        interdits = self._FORBIDDEN_FIELDS - _CHAMPS_METIER_AUTORISES.get(
+            type_name or "", frozenset()
+        )
+        return {k: v for k, v in data.items() if k in allowed_columns and k not in interdits}
+
+    @asynccontextmanager
+    async def _references_nommees(
+        self, type_name: str, safe_data: dict[str, Any]
+    ) -> AsyncIterator[None]:
+        """Traduit une référence pendante en 422, où qu'elle soit détectée.
+
+        Les champs de référence (`source_id`, `target_id`, `station_id`…) sont
+        des clés étrangères vers `resource(id)`. Pointer une resource qui
+        n'existe pas est une faute de l'appelant, pas une panne du serveur :
+        la laisser remonter produisait un 500 opaque.
+
+        Le bloc couvre toute l'opération, pas seulement le `commit` : la
+        violation est le plus souvent levée bien avant, lors de l'`autoflush`
+        déclenché par la première requête qui suit l'insertion.
+
+        On ne traduit que si la colonne fautive vient de la charge utile. Une
+        violation portant sur une colonne que le service gère lui-même reste
+        une anomalie interne et doit continuer à remonter en 500, plutôt que
+        d'être maquillée en erreur client.
+        """
+        try:
+            yield
+        except IntegrityError as exc:
+            await self._session.rollback()
+            champ = _champ_de_reference_fautif(exc)
+            if champ is None or champ not in safe_data:
+                raise
+            raise ResourceValidationError(
+                type_name,
+                [f"Référence inexistante pour {champ} : aucune resource ne porte cet identifiant"],
+            ) from exc
+
+    def _filtrer_et_coercer(
+        self, type_name: str, model_cls: type[Any], data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Filtre les champs interdits puis convertit les valeurs vers leurs types SQL.
+
+        Sans cette conversion, une chaîne ISO destinée à un `timestamptz`
+        traversait la porte de validation et n'échouait qu'au niveau du pilote
+        asyncpg : le client recevait un 500 opaque. Toute conversion impossible
+        devient ici une erreur de validation, donc un 422 explicable.
+        """
+        safe_data = self._filter_data(model_cls, data, type_name)
+        converti, erreurs = coercer_donnees(model_cls, safe_data)
+        if erreurs:
+            raise ResourceValidationError(type_name, erreurs)
+        return converti
 
     @staticmethod
     def _generate_gsie_id(type_name: str) -> str:
@@ -232,7 +331,7 @@ class ResourceService:
         type_data: dict[str, Any] = {}
         if type_result is not None:
             type_data = {
-                col.name: getattr(type_result, col.name)
+                col.name: serialiser_valeur(getattr(type_result, col.name))
                 for col in type_result.__table__.columns
                 if col.name != "id"
             }
@@ -263,7 +362,7 @@ class ResourceService:
     def _current_state(type_instance: Any) -> dict[str, Any]:
         """Relit l'état courant complet de la ligne du type (hors `id`)."""
         return {
-            col.name: getattr(type_instance, col.name)
+            col.name: serialiser_valeur(getattr(type_instance, col.name))
             for col in type_instance.__table__.columns
             if col.name != "id"
         }
@@ -297,23 +396,24 @@ class ResourceService:
         if errors:
             raise ResourceValidationError(request.type, errors)
 
-        safe_data = self._filter_data(model_cls, request.data)
+        safe_data = self._filtrer_et_coercer(request.type, model_cls, request.data)
         gsie_id = request.gsie_id or self._generate_gsie_id(request.type)
-        resource = await self._insert_resource(request.type, gsie_id, model_cls, safe_data)
 
-        await self._create_revision(
-            resource_id=resource.id,
-            version=1,
-            justification="Création initiale",
-            author_id=author_id,
-        )
-        self._enqueue_event(
-            EventType.resource_created,
-            resource.id,
-            request.type,
-            {"gsie_id": gsie_id},
-        )
-        await self._session.commit()
+        async with self._references_nommees(request.type, safe_data):
+            resource = await self._insert_resource(request.type, gsie_id, model_cls, safe_data)
+            await self._create_revision(
+                resource_id=resource.id,
+                version=1,
+                justification="Création initiale",
+                author_id=author_id,
+            )
+            self._enqueue_event(
+                EventType.resource_created,
+                resource.id,
+                request.type,
+                {"gsie_id": gsie_id},
+            )
+            await self._session.commit()
 
         logger.info(
             "resource_created", resource_id=str(resource.id), type=request.type, gsie_id=gsie_id
@@ -399,32 +499,33 @@ class ResourceService:
         if type_instance is None:
             return None
 
-        safe_data = self._filter_data(model_cls, request.data)
+        safe_data = self._filtrer_et_coercer(resource.type, model_cls, request.data)
         # La validation porte sur l'état final, avant toute mutation : un
         # patch partiel ne peut pas rendre la resource invalide en silence,
         # et un patch refusé ne laisse ni Revision ni événement d'outbox.
         await self._reject_invalid_update(resource.type, type_instance, request.data, safe_data)
 
-        field_changes = self._compute_field_changes(type_instance, safe_data)
-        next_version = await self._get_next_version(resource_id)
+        async with self._references_nommees(resource.type, safe_data):
+            field_changes = self._compute_field_changes(type_instance, safe_data)
+            next_version = await self._get_next_version(resource_id)
 
-        await self._create_revision(
-            resource_id=resource_id,
-            version=next_version,
-            justification=request.justification,
-            author_id=author_id,
-            diff_data={"field_changes": field_changes},
-        )
-        self._enqueue_event(
-            EventType.resource_updated,
-            resource_id,
-            resource.type,
-            {
-                "version": next_version,
-                "changed_fields": sorted(change["field"] for change in field_changes),
-            },
-        )
-        await self._session.commit()
+            await self._create_revision(
+                resource_id=resource_id,
+                version=next_version,
+                justification=request.justification,
+                author_id=author_id,
+                diff_data={"field_changes": field_changes},
+            )
+            self._enqueue_event(
+                EventType.resource_updated,
+                resource_id,
+                resource.type,
+                {
+                    "version": next_version,
+                    "changed_fields": sorted(change["field"] for change in field_changes),
+                },
+            )
+            await self._session.commit()
 
         logger.info(
             "resource_updated",

@@ -18,11 +18,10 @@ Endpoints :
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.knowledge.engine import (
     KnowledgeEngine,
@@ -42,9 +41,6 @@ from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 # Rate limiter pour les endpoints POST
-_ingest_limiter = Limiter(key_func=get_remote_address)
-_query_limiter = Limiter(key_func=get_remote_address)
-
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
 
@@ -84,10 +80,11 @@ async def knowledge_version(request: Request) -> EngineVersionResponse:
         "Les connaissances en quarantaine ou refusées sont rejetées (CON-001)."
     ),
 )
-@_ingest_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def knowledge_ingest(
     request_body: KnowledgeIngestRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> KnowledgeObject:
@@ -115,10 +112,11 @@ async def knowledge_ingest(
         "filtre par niveau de preuve minimum. Les résultats sont paginés."
     ),
 )
-@_query_limiter.limit("60/minute")
+@_limiter.limit("60/minute")
 async def knowledge_query(
     query: KnowledgeQuery,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineReadUser,
 ) -> KnowledgeQueryResult:
@@ -137,10 +135,11 @@ async def knowledge_query(
         "silencieusement (CON-010). Au moins un champ modifié est requis."
     ),
 )
-@_ingest_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def knowledge_revise(
     revision: KnowledgeRevisionRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> KnowledgeObject:

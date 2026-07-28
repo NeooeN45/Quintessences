@@ -14,11 +14,10 @@ Endpoints :
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.correlation.engine import CorrelationEngine, CorrelationEngineError
 from gsie_api.engines.correlation.schemas import CorrelationComputeRequest, CorrelationResult
@@ -26,8 +25,6 @@ from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/correlation", tags=["correlation"])
-
-_compute_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -68,10 +65,11 @@ async def correlation_version(request: Request) -> EngineVersionResponse:
         "du graphe v6.2 (CON-002 — toute corrélation est sourcée et justifiée)."
     ),
 )
-@_compute_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def correlation_compute(
     request_body: CorrelationComputeRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> CorrelationResult:

@@ -103,6 +103,125 @@ class TestEcritureAuthentifiee:
         assert parent.type == "resource_diff"
 
 
+class TestCoercitionDesTypes:
+    """`data` est un dict libre : le service doit convertir, pas faire confiance."""
+
+    @pytest.mark.parametrize(
+        ("type_name", "data"),
+        [
+            ("activity", {"type": "extraction", "started_at": "2026-01-15T10:00:00Z"}),
+            (
+                "temporal_context",
+                {
+                    "valid_time_start": "2026-01-15T10:00:00Z",
+                    "transaction_time_start": "2026-01-15T10:00:00Z",
+                    "granularity": "day",
+                },
+            ),
+            (
+                "question",
+                {"text": "q", "question_type": "scientific", "asked_at": "2026-01-15T10:00:00Z"},
+            ),
+        ],
+    )
+    async def test_une_date_iso_est_convertie(
+        self, client: AsyncClient, type_name: str, data: dict[str, object]
+    ) -> None:
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={"type": type_name, "data": data},
+            headers=_ENTETES_ECRITURE,
+        )
+
+        assert reponse.status_code == 201, reponse.text
+
+    async def test_une_geometrie_reste_lisible_apres_ecriture(self, client: AsyncClient) -> None:
+        """La ligne était écrite puis la resource devenait illisible (500 permanent)."""
+        cree = await client.post(
+            "/api/v1/resources",
+            json={
+                "type": "place",
+                "data": {"geometry": "SRID=2154;POINT(650000 6860000)", "srid": 2154},
+            },
+            headers=_ENTETES_ECRITURE,
+        )
+        assert cree.status_code == 201, cree.text
+
+        relecture = await client.get(
+            f"/api/v1/resources/{cree.json()['id']}", headers=_ENTETES_ECRITURE
+        )
+
+        assert relecture.status_code == 200, relecture.text
+        assert "650000" in str(relecture.json()["data"]["geometry"])
+
+    @pytest.mark.parametrize(
+        ("type_name", "data"),
+        [
+            ("observation", {"subject_id": "pas-un-uuid"}),
+            ("place", {"geometry": "PAS DU WKT", "srid": 2154}),
+            # Un instant sans fuseau serait réinterprété dans celui du serveur.
+            ("activity", {"type": "extraction", "started_at": "2026-01-15T10:00:00"}),
+        ],
+    )
+    async def test_une_valeur_mal_typee_donne_422_et_non_500(
+        self, client: AsyncClient, type_name: str, data: dict[str, object]
+    ) -> None:
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={"type": type_name, "data": data},
+            headers=_ENTETES_ECRITURE,
+        )
+
+        assert reponse.status_code == 422, reponse.text
+
+
+class TestChampsMetierHomonymes:
+    """`version` est un champ métier ici, pas le compteur système d'`assertion`."""
+
+    @pytest.mark.parametrize(
+        ("parent_type", "parent_data", "type_name", "cle_parent"),
+        [
+            (
+                "vocabulary",
+                {"name": "v", "namespace": "n", "description": "d"},
+                "vocabulary_release",
+                "vocabulary_id",
+            ),
+            (
+                "model",
+                {"name": "m", "type": "growth", "description": "d"},
+                "model_version",
+                "model_id",
+            ),
+        ],
+    )
+    async def test_un_type_versionne_est_creable(
+        self,
+        client: AsyncClient,
+        parent_type: str,
+        parent_data: dict[str, object],
+        type_name: str,
+        cle_parent: str,
+    ) -> None:
+        parent = await client.post(
+            "/api/v1/resources",
+            json={"type": parent_type, "data": parent_data},
+            headers=_ENTETES_ECRITURE,
+        )
+        assert parent.status_code == 201, parent.text
+
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={
+                "type": type_name,
+                "data": {cle_parent: parent.json()["id"], "version": "1.0.0"},
+            },
+            headers=_ENTETES_ECRITURE,
+        )
+
+        assert reponse.status_code == 201, reponse.text
+
+
 class TestExclusionRGPD:
     """Un `?type=` vide n'est pas un filtre et ne lève aucune protection."""
 

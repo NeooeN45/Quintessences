@@ -36,8 +36,9 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.evidence.schemas import (
@@ -211,12 +212,38 @@ class KnowledgeEngine:
         )
 
     async def query(self, query: KnowledgeQuery) -> KnowledgeQueryResult:
-        """Interroge le graphe de connaissances."""
+        """Interroge le graphe de connaissances.
+
+        `evidence_assessment` est une relation 1-N append-only : réviser le
+        niveau de preuve d'une connaissance ajoute une ligne sans effacer la
+        précédente (CON-010). Une jointure directe dupliquait donc la
+        connaissance autant de fois qu'elle avait été révisée, gonflait
+        `total`, faussait la pagination, et surtout présentait le niveau de
+        preuve **périmé** comme une connaissance à part entière. On ne retient
+        que la dernière évaluation de chaque assertion.
+        """
+        derniere_evaluation = select(
+            EvidenceAssessmentModel,
+            func.row_number()
+            .over(
+                partition_by=EvidenceAssessmentModel.assertion_id,
+                order_by=(
+                    EvidenceAssessmentModel.evaluated_at.desc(),
+                    EvidenceAssessmentModel.id.desc(),
+                ),
+            )
+            .label("rang"),
+        ).subquery()
+        evaluation_courante = aliased(EvidenceAssessmentModel, derniere_evaluation)
+
         result = await self._session.execute(
-            select(ResourceModel, AssertionModel, EvidenceAssessmentModel)
+            select(ResourceModel, AssertionModel, evaluation_courante)
             .join(AssertionModel, AssertionModel.id == ResourceModel.id)
-            .join(EvidenceAssessmentModel, EvidenceAssessmentModel.assertion_id == ResourceModel.id)
-            .where(ResourceModel.type == "assertion")
+            .join(
+                derniere_evaluation,
+                derniere_evaluation.c.assertion_id == ResourceModel.id,
+            )
+            .where(ResourceModel.type == "assertion", derniere_evaluation.c.rang == 1)
         )
 
         objects = [

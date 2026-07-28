@@ -28,6 +28,7 @@ plus assuré que sa conclusion la moins assurée.
 
 import json
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -228,17 +229,28 @@ class DiagnosticEngine:
         )
 
         # 10. Persister — c'est ce qui rend `diagnostic_id` résolvable.
-        await self._persister(diagnostic)
-        return diagnostic
+        # Un rejeu retourne le diagnostic déjà enregistré, horloge comprise :
+        # deux appels identiques doivent rendre exactement la même réponse.
+        return await self._persister(diagnostic)
 
-    async def _persister(self, diagnostic: Diagnostic) -> None:
+    async def _persister(self, diagnostic: Diagnostic) -> Diagnostic:
         """Écrit `resource(type=diagnostic)` puis la ligne `diagnostic`.
 
         Idempotence : `diagnostic_id` étant déterministe, rejouer la même
-        requête retomberait sur la même clé primaire. Une réécriture est
-        donc un cas normal, pas une erreur — à condition que le contenu
-        soit identique. S'il diffère, le moteur refuse plutôt que d'écraser
-        un diagnostic déjà émis (`DiagnosticConflitError`).
+        requête retombe sur la même clé primaire. Une réécriture est donc un
+        cas normal, pas une erreur — à condition que le contenu soit
+        identique. S'il diffère, le moteur refuse plutôt que d'écraser un
+        diagnostic déjà émis (`DiagnosticConflitError`).
+
+        `date_diagnostic` est exclue de cette comparaison : c'est l'horloge de
+        l'appelant, injectée à chaque appel, et elle est déjà volontairement
+        hors de la dérivation de l'identifiant (cf. `_cle_derivation`). La
+        comparer revenait à faire échouer *tout* rejeu — un simple retry après
+        expiration réseau rendait un 409 dont le motif était faux.
+
+        Returns:
+            Le diagnostic effectivement enregistré : celui déjà en base sur un
+            rejeu, sinon celui qui vient d'être écrit.
 
         Raises:
             DiagnosticConflitError: Si un diagnostic de contenu différent
@@ -248,18 +260,17 @@ class DiagnosticEngine:
 
         existant = await self._session.get(DiagnosticModel, diagnostic.diagnostic_id)
         if existant is not None:
-            if existant.contenu != contenu:
+            divergences = _divergences_hors_horloge(existant.contenu, contenu)
+            if divergences:
                 raise DiagnosticConflitError(
                     f"diagnostic {diagnostic.diagnostic_id} déjà persisté avec un "
-                    f"contenu différent : requête, conclusions, qualifications et "
-                    f"état global identiques, mais contradictions déclarées "
-                    f"divergentes — seul élément hors de la dérivation de l'identifiant"
+                    f"contenu différent — champs divergents : {', '.join(divergences)}"
                 )
             logger.info(
                 "diagnostic_deja_persiste",
                 diagnostic_id=str(diagnostic.diagnostic_id),
             )
-            return
+            return Diagnostic.model_validate(existant.contenu)
 
         self._session.add(
             ResourceModel(
@@ -297,6 +308,15 @@ class DiagnosticEngine:
             etat_global=diagnostic.etat_global.value,
             statut_validation=diagnostic.statut_validation.value,
         )
+        return diagnostic
+
+
+def _divergences_hors_horloge(existant: dict[str, Any], nouveau: dict[str, Any]) -> list[str]:
+    """Nomme les champs qui diffèrent réellement, horloge de l'appelant exclue."""
+    champs = set(existant) | set(nouveau)
+    return sorted(
+        champ for champ in champs - {"date_diagnostic"} if existant.get(champ) != nouveau.get(champ)
+    )
 
 
 def _cle_derivation(request: DiagnosticRequest, conclusions_triees: list[UUID]) -> str:

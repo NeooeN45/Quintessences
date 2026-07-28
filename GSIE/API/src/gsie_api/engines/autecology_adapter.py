@@ -36,9 +36,13 @@ Limites v1 :
 
 from __future__ import annotations
 
-from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
+from typing import TYPE_CHECKING
+
 from gsie_api.engines.reasoning.schemas import RegleInference
 from gsie_api.infrastructure.models.enums import EvidenceLevel
+
+if TYPE_CHECKING:
+    from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
 
 # Mapping statique GBIF usageKey → nom scientifique.
 # En production, cette résolution sera déléguée au Botanical Engine
@@ -105,9 +109,7 @@ def profile_to_rule(profile: AutecologyProfileCreate) -> RegleInference:
     variable_label = _VARIABLE_LABELS.get(profile.variable, profile.variable)
     value = profile.value_text or str(profile.value_numeric)
     if not value:
-        raise AutecologyAdapterError(
-            "profil sans valeur (value_text et value_numeric both None)"
-        )
+        raise AutecologyAdapterError("profil sans valeur (value_text et value_numeric both None)")
 
     confidence = _GRADE_TO_CONFIANCE[profile.evidence_level]
 

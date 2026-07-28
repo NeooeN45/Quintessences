@@ -14,20 +14,17 @@ Endpoints :
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
+from gsie_api.core.limiter import limiter as _limiter
+from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.validation.engine import ValidationEngine, ValidationEngineError
 from gsie_api.engines.validation.schemas import ValidationRequest, ValidationResult
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/validation", tags=["validation"])
-
-_validate_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -68,10 +65,11 @@ async def validation_version(request: Request) -> EngineVersionResponse:
         "traçable (GSIE-CON-001, CON-002, CON-004, CON-005)."
     ),
 )
-@_validate_limiter.limit("60/minute")
+@_limiter.limit("60/minute")
 async def validation_validate(
     request_body: ValidationRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> ValidationResult:

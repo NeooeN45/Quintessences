@@ -33,12 +33,11 @@ Périmètre v1 :
 
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference, SourceType
+from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 from gsie_api.engines.recommendation.schemas import (
-    DecisionForestier,
     ForestierDecision,
     JustificationRecommandation,
     ObjectifForestier,
@@ -146,16 +145,18 @@ class RecommendationEngine:
 
     # --- Génération des recommandations ---
 
-    def _generer_recommandation_principale(
-        self, request: RecommendationRequest
-    ) -> Recommendation:
+    def _generer_recommandation_principale(self, request: RecommendationRequest) -> Recommendation:
         """Génère la recommandation principale selon l'objectif forestier.
 
         Logique v1 : mapping déclaratif objectif → type d'action.
         Une future version utilisera le diagnostic réel et les règles
         du Knowledge Engine.
         """
-        mapping_objectif: dict[ObjectifForestier, tuple[TypeAction, str, str]] = {
+        # L'essence est facultative : seul le reboisement en désigne une. Le
+        # type le dit explicitement — `essence_concernee` est `str | None` dans
+        # le schéma de sortie, et proposer une essence par défaut ailleurs
+        # serait une invention (GSIE-CON-002).
+        mapping_objectif: dict[ObjectifForestier, tuple[TypeAction, str, str | None]] = {
             ObjectifForestier.REBOISEMENT: (
                 TypeAction.PLANTATION,
                 "Planter une essence adaptée à la station, densité 1100 t/ha.",
@@ -205,7 +206,9 @@ class RecommendationEngine:
             type_action=type_action,
             description=description,
             essence_concernee=essence,
-            parametres={"densite": "1100", "unite": "t/ha"} if type_action == TypeAction.PLANTATION else {},
+            parametres=(
+                {"densite": "1100", "unite": "t/ha"} if type_action == TypeAction.PLANTATION else {}
+            ),
             justification=justification,
             niveau_confiance=0.70,  # Confiance modérée — modèle v1
         )
@@ -266,9 +269,7 @@ class RecommendationEngine:
 
         return alternatives
 
-    def _generer_attente_surveillance(
-        self, request: RecommendationRequest
-    ) -> Recommendation:
+    def _generer_attente_surveillance(self, request: RecommendationRequest) -> Recommendation:
         """Génère une recommandation d'attente/surveillance (fallback).
 
         Le contrat §5 interdit un ensemble vide : si aucune action

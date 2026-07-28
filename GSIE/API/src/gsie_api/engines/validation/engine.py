@@ -31,7 +31,7 @@ Contrôles implémentés en v1 (VALIDATION_ENGINE.md §5-§6) :
 
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.validation.schemas import (
@@ -107,7 +107,9 @@ class ValidationEngine:
         non_conformes = [c for c in controles if c.resultat == ResultatControle.non_conforme]
         if not non_conformes:
             statut = ValidationStatut.valide
-        elif request.type_sortie == TypeSortie.ensemble_complet and self._tous_non_critiques(non_conformes):
+        elif request.type_sortie == TypeSortie.ensemble_complet and self._tous_non_critiques(
+            non_conformes
+        ):
             statut = ValidationStatut.partiellement_valide
         else:
             statut = ValidationStatut.bloque
@@ -135,8 +137,7 @@ class ValidationEngine:
         """Vérifie la présence d'un niveau de preuve (GSIE-CON-002)."""
         contenu = request.contenu
         if "evidence_level" in contenu or any(
-            "evidence_level" in r for r in contenu.get("recommandations", [])
-            if isinstance(r, dict)
+            "evidence_level" in r for r in contenu.get("recommandations", []) if isinstance(r, dict)
         ):
             return ControleResultat(
                 nom_controle="presence_niveau_preuve",
@@ -205,14 +206,16 @@ class ValidationEngine:
                 details="Champ 'recommandations' invalide — pas une liste.",
             )
         non_contournables = [
-            r for r in recommandations
-            if isinstance(r, dict) and r.get("contournable") is False
+            r for r in recommandations if isinstance(r, dict) and r.get("contournable") is False
         ]
         if non_contournables:
             return ControleResultat(
                 nom_controle="recommandation_contournable",
                 resultat=ResultatControle.non_conforme,
-                details=f"{len(non_contournables)} recommandation(s) non contournable(s) — violation GSIE-CON-001.",
+                details=(
+                    f"{len(non_contournables)} recommandation(s) non contournable(s) "
+                    "— violation GSIE-CON-001."
+                ),
             )
         return ControleResultat(
             nom_controle="recommandation_contournable",

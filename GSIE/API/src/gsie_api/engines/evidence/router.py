@@ -10,10 +10,9 @@ Fallback Python si le module Rust n'est pas compilé.
 GRADE-CERQual, ASReview, Rayyan, claim verification (SciFact/FEVER).
 """
 
-from fastapi import APIRouter, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Request, Response, status
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.evidence.schemas import (
     QualifiedKnowledge,
@@ -24,10 +23,8 @@ from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
+
 # Rate limiter spécifique pour les endpoints POST coûteux (flood protection)
-_evaluate_limiter = Limiter(key_func=get_remote_address)
-
-
 @router.get("/status", response_model=EngineStatusResponse)
 async def evidence_status(request: Request) -> EngineStatusResponse:
     """Statut du moteur Evidence."""
@@ -52,10 +49,11 @@ async def evidence_status(request: Request) -> EngineStatusResponse:
         "via PyO3 (ADR-0002)."
     ),
 )
-@_evaluate_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def evidence_evaluate(
     submission: RawKnowledgeSubmission,
     request: Request,
+    response: Response,
     _user: EngineWriteUser,
 ) -> QualifiedKnowledge:
     """Évalue une soumission de connaissance brute.

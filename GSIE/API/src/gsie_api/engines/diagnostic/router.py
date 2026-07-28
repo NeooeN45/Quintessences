@@ -18,11 +18,10 @@ Endpoints :
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.diagnostic.engine import DiagnosticEngine, DiagnosticEngineError
 from gsie_api.engines.diagnostic.schemas import Diagnostic, DiagnosticRequest
@@ -30,8 +29,6 @@ from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/diagnostic", tags=["diagnostic"])
-
-_diagnostiquer_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -195,7 +192,7 @@ async def diagnostic_version(request: Request) -> EngineVersionResponse:
         },
     },
 )
-@_diagnostiquer_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def diagnostic_diagnostiquer(
     request_body: Annotated[
         DiagnosticRequest,
@@ -214,6 +211,7 @@ async def diagnostic_diagnostiquer(
         ),
     ],
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> Diagnostic:

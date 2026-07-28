@@ -12,10 +12,9 @@ Endpoints :
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser
 from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 from gsie_api.engines.climate.schemas import (
@@ -32,8 +31,6 @@ from gsie_api.engines.climate.schemas import (
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/climate", tags=["climate"])
-
-_climate_limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/status", response_model=EngineStatusResponse)
@@ -72,10 +69,11 @@ async def climate_version(request: Request) -> EngineVersionResponse:
         "observation approximée (ADR-009)."
     ),
 )
-@_climate_limiter.limit("20/minute")
+@_limiter.limit("20/minute")
 async def climate_query(
     request_body: ClimateQuery,
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> ObservationClimatique | None:
     """Récupère la dernière observation d'une station SYNOP.
@@ -100,9 +98,10 @@ async def climate_query(
         "réel de chaque département français, aujourd'hui+1 et +2."
     ),
 )
-@_climate_limiter.limit("20/minute")
+@_limiter.limit("20/minute")
 async def climate_danger_feux(
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> list[DangerFeuxDepartement]:
     """Récupère le niveau de danger de feux de forêt réel, tous départements.
@@ -127,9 +126,10 @@ async def climate_danger_feux(
         "l'id_station à 8 chiffres requis par /climatologie-quotidienne."
     ),
 )
-@_climate_limiter.limit("20/minute")
+@_limiter.limit("20/minute")
 async def climate_climatologie_stations(
     request: Request,
+    response: Response,
     id_departement: str,
     _user: EngineReadUser,
 ) -> list[dict[str, Any]]:
@@ -158,10 +158,11 @@ async def climate_climatologie_stations(
         "approximée (ADR-009)."
     ),
 )
-@_climate_limiter.limit("5/minute")
+@_limiter.limit("5/minute")
 async def climate_climatologie_quotidienne(
     request_body: ClimatologieQuotidienneQuery,
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> list[ObservationClimatologiqueQuotidienne]:
     """Récupère les données climatologiques quotidiennes réelles d'une station.
@@ -188,9 +189,10 @@ async def climate_climatologie_quotidienne(
         "chaque domaine (département/zone), aujourd'hui et J+1."
     ),
 )
-@_climate_limiter.limit("20/minute")
+@_limiter.limit("20/minute")
 async def climate_vigilance(
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> list[VigilanceBulletin]:
     """Récupère la carte de vigilance réelle en cours.
@@ -215,9 +217,10 @@ async def climate_vigilance(
         "des 24 dernières heures, toutes stations d'un département."
     ),
 )
-@_climate_limiter.limit("20/minute")
+@_limiter.limit("20/minute")
 async def climate_observations_horaires(
     request: Request,
+    response: Response,
     id_departement: str,
     _user: EngineReadUser,
 ) -> list[ObservationHoraireDepartement]:
@@ -244,10 +247,11 @@ async def climate_observations_horaires(
         "par ce run (typiquement les prochaines ~17h)."
     ),
 )
-@_climate_limiter.limit("10/minute")
+@_limiter.limit("10/minute")
 async def climate_arome_temperature(
     request_body: AromeTemperatureQuery,
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> AromeTemperatureResult:
     """Récupère la température 2 m réelle du modèle AROME.

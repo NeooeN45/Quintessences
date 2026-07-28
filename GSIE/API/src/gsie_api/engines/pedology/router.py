@@ -11,18 +11,15 @@ Endpoints :
 - POST /pedology/query     — propriétés de sol réelles pour un point
 """
 
-from fastapi import APIRouter, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser
 from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
 from gsie_api.engines.pedology.schemas import PedologyData, PedologyQuery
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/pedology", tags=["pedology"])
-
-_pedology_limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/status", response_model=EngineStatusResponse)
@@ -60,10 +57,11 @@ async def pedology_version(request: Request) -> EngineVersionResponse:
         "sans donnée disponible sont omises, jamais approximées (ADR-009)."
     ),
 )
-@_pedology_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def pedology_query(
     request_body: PedologyQuery,
     request: Request,
+    response: Response,
     _user: EngineReadUser,
 ) -> PedologyData:
     """Récupère les propriétés de sol d'un point.

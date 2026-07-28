@@ -19,6 +19,7 @@ une liste d'espèces vide, jamais un taxon inventé.
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -166,21 +167,42 @@ class BotanicalEngine:
         (déduplication par `entity_alias.namespace='gbif'` +
         `external_id`, CON-010 — pas de doublon silencieux).
         """
-        existing = (
-            (
-                await self._session.execute(
-                    select(EntityAliasModel.entity_id).where(
-                        EntityAliasModel.namespace == "gbif",
-                        EntityAliasModel.external_id == str(gbif_taxon_key),
-                    )
-                )
-            )
-            .scalars()
-            .first()
-        )
+        existing = await self._lire_alias_taxon(gbif_taxon_key)
         if existing is not None:
             return existing
 
+        # `gsie_id` est déterministe (dérivé du taxon GBIF) : deux requêtes
+        # concurrentes sur la même essence encore inconnue lisent toutes deux
+        # « absent », puis insèrent — la seconde violait l'unicité de
+        # `resource.gsie_id` et remontait en 500. Le SAVEPOINT permet de
+        # rattraper cette course sans perdre la transaction de la requête.
+        try:
+            async with self._session.begin_nested():
+                entity_id = await self._inserer_taxon(gbif_taxon_key)
+        except IntegrityError:
+            concurrent = await self._lire_alias_taxon(gbif_taxon_key)
+            if concurrent is None:
+                raise
+            logger.info(
+                "taxon_cree_par_requete_concurrente",
+                gbif_taxon_key=gbif_taxon_key,
+                entity_id=str(concurrent),
+            )
+            return concurrent
+        return entity_id
+
+    async def _lire_alias_taxon(self, gbif_taxon_key: int) -> UUID | None:
+        """Retourne l'`entity_id` déjà associé à ce taxon GBIF, s'il existe."""
+        resultat = await self._session.execute(
+            select(EntityAliasModel.entity_id).where(
+                EntityAliasModel.namespace == "gbif",
+                EntityAliasModel.external_id == str(gbif_taxon_key),
+            )
+        )
+        return resultat.scalars().first()
+
+    async def _inserer_taxon(self, gbif_taxon_key: int) -> UUID:
+        """Insère la resource `entity`, sa ligne type et son alias GBIF."""
         entity_id = uuid4()
         self._session.add(
             ResourceModel(

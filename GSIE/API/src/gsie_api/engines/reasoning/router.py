@@ -20,11 +20,10 @@ ci-dessous suit le même pattern que le Correlation Engine
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.reasoning.engine import ReasoningEngine, ReasoningEngineError
 from gsie_api.engines.reasoning.schemas import InferenceResult, ReasoningRequest
@@ -32,8 +31,6 @@ from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/reasoning", tags=["reasoning"])
-
-_infer_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -204,7 +201,7 @@ async def reasoning_version(request: Request) -> EngineVersionResponse:
         },
     },
 )
-@_infer_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def reasoning_infer(
     request_body: Annotated[
         ReasoningRequest,
@@ -223,6 +220,7 @@ async def reasoning_infer(
         ),
     ],
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> InferenceResult:

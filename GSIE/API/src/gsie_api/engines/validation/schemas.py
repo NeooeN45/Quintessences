@@ -122,12 +122,13 @@ class ValidationRequest(BaseModel):
 
     @model_validator(mode="after")
     def _ensemble_complet_exige_diagnostic_et_recommandation(self) -> "ValidationRequest":
-        if self.type_sortie == TypeSortie.ensemble_complet:
-            if "diagnostic" not in self.contenu or "recommandations" not in self.contenu:
-                raise ValueError(
-                    "type_sortie='ensemble_complet' exige 'diagnostic' et "
-                    "'recommandations' dans contenu"
-                )
+        if self.type_sortie == TypeSortie.ensemble_complet and (
+            "diagnostic" not in self.contenu or "recommandations" not in self.contenu
+        ):
+            raise ValueError(
+                "type_sortie='ensemble_complet' exige 'diagnostic' et "
+                "'recommandations' dans contenu"
+            )
         return self
 
 

@@ -14,11 +14,10 @@ Endpoints :
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.gis.engine import GISEngine, GISEngineError
 from gsie_api.engines.gis.ign_client import IGNClientError
@@ -32,8 +31,6 @@ from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/gis", tags=["gis"])
-
-_gis_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -75,10 +72,11 @@ async def gis_version(request: Request) -> EngineVersionResponse:
         "de géométrie approximée (ADR-009)."
     ),
 )
-@_gis_limiter.limit("30/minute")
+@_limiter.limit("30/minute")
 async def gis_cadastre_parcelle(
     request_body: ParcelleCadastraleRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> GeoData | None:
@@ -103,10 +101,11 @@ async def gis_cadastre_parcelle(
         "un point WGS 84. Aucune valeur par défaut en cas d'échec (ADR-009)."
     ),
 )
-@_gis_limiter.limit("60/minute")
+@_limiter.limit("60/minute")
 async def gis_altitude(
     request_body: AltitudeRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineReadUser,
 ) -> StationCharacteristics:

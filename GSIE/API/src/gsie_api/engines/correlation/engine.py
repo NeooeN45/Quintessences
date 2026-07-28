@@ -27,6 +27,7 @@ sont conservés dans `resource.metadata_json`, même convention que
 Knowledge Engine.
 """
 
+import math
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -108,6 +109,18 @@ class CorrelationEngine:
         stat_result = method_func(request.variable_a.valeurs, request.variable_b.valeurs)
         coefficient = float(stat_result.statistic)
         p_valeur = float(stat_result.pvalue)
+
+        # Une série de variance nulle (même altitude, même exposition sur tous
+        # les relevés) rend un coefficient indéfini : scipy renvoie NaN. Le
+        # laisser passer journalisait une corrélation « nan » puis échouait à la
+        # validation du schéma, donc en 500 opaque. Une variable constante n'est
+        # pas une panne, c'est une entrée dégénérée : on la nomme.
+        if math.isnan(coefficient) or math.isnan(p_valeur):
+            raise CorrelationEngineError(
+                "Coefficient de corrélation non défini : au moins une des deux "
+                "variables est constante (variance nulle) — aucune relation ne "
+                "peut être établie sur une série sans variation"
+            )
 
         if p_valeur >= request.seuil_significativite:
             type_relation = TypeRelation.non_significative

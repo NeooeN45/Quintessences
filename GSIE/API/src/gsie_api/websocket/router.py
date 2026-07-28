@@ -182,6 +182,12 @@ async def ws_hub(
                 )
 
     except WebSocketDisconnect:
+        pass
+    finally:
+        # Le nettoyage doit valoir pour TOUTE sortie, pas seulement pour une
+        # déconnexion propre : une trame binaire — parfaitement légale — fait
+        # lever KeyError à `receive_text()`, et le compteur de quota restait
+        # alors indéfiniment attaché à une connexion morte.
         await manager.disconnect(websocket)
         _rate_limiter.cleanup(ws_id)
 
@@ -213,6 +219,10 @@ async def ws_events(websocket: WebSocket) -> None:
                 await websocket.send_json({"event_type": "pong"})
 
     except WebSocketDisconnect:
+        pass
+    finally:
+        # Même raison que pour /ws/hub : toute sortie doit libérer la
+        # connexion et son compteur de quota.
         await manager.disconnect(websocket)
         _rate_limiter.cleanup(ws_id)
 

@@ -14,6 +14,7 @@ Sécurité :
 """
 
 import asyncio
+import contextlib
 import json
 from collections import defaultdict
 from collections.abc import Collection
@@ -28,6 +29,16 @@ from gsie_api.core.rbac import RGPD_RESOURCE_TYPES
 
 logger = get_logger("gsie_api.websocket.manager")
 _settings = get_settings()
+
+# Doit rester strictement inférieur au `socket_timeout` de la connexion Redis,
+# sinon c'est la lecture réseau qui expire la première et l'abonnement meurt.
+_DELAI_LECTURE_PUBSUB = 1.0
+# Pause avant de rétablir l'abonnement après une panne (évite la boucle serrée).
+_DELAI_REPRISE_PUBSUB = 2.0
+# Reprises bornées : un Redis durablement injoignable ne doit pas laisser une
+# tâche tourner indéfiniment en arrière-plan. Le compteur repart à zéro dès
+# qu'un abonnement aboutit, donc une coupure passagère reste absorbée.
+_REPRISES_PUBSUB_MAX = 5
 
 
 class ConnectionManager:
@@ -72,35 +83,67 @@ class ConnectionManager:
         logger.info("ws_redis_subscriber_started")
 
     async def _redis_subscriber_loop(self) -> None:
-        """Boucle d'écoute Redis Pub/Sub — redistribue les events inter-workers."""
-        redis = await self._get_redis()
-        if redis is None:
-            return
+        """Boucle d'écoute Redis Pub/Sub — redistribue les events inter-workers.
+
+        Deux pièges ici, tous deux silencieux :
+
+        * `pubsub.listen()` bloque en lecture sans borne, mais la connexion
+          porte un `socket_timeout` (5 s par défaut). Passé ce délai sans
+          message — le cas nominal — la lecture expirait et la boucle mourait,
+          emportant définitivement le fan-out entre workers. `get_message`
+          avec un délai explicite plus court rend simplement `None`.
+        * rien ne relançait la tâche une fois morte. La boucle extérieure
+          rétablit donc l'abonnement après une pause.
+        """
+        echecs = 0
+        while echecs <= _REPRISES_PUBSUB_MAX:
+            pubsub = None
+            try:
+                redis = await self._get_redis()
+                if redis is None:
+                    return
+                pubsub = redis.pubsub()
+                await pubsub.psubscribe("gsie:ws:*")
+                echecs = 0
+                while True:
+                    message = await pubsub.get_message(timeout=_DELAI_LECTURE_PUBSUB)
+                    if message is None or message["type"] != "pmessage":
+                        continue
+                    self._traiter_message_pubsub(message)
+                    await self._rediffuser_localement(message)
+            except asyncio.CancelledError:
+                logger.info("ws_redis_subscriber_stopped")
+                raise
+            except Exception:
+                echecs += 1
+                logger.warning("ws_redis_subscriber_error", tentative=echecs, exc_info=True)
+                if echecs > _REPRISES_PUBSUB_MAX:
+                    break
+                await asyncio.sleep(_DELAI_REPRISE_PUBSUB)
+            finally:
+                if pubsub is not None:
+                    with contextlib.suppress(Exception):
+                        await pubsub.aclose()  # type: ignore[no-untyped-call]
+        logger.error("ws_redis_subscriber_abandon", tentatives=echecs)
+
+    @staticmethod
+    def _traiter_message_pubsub(message: dict[str, Any]) -> None:
+        """Normalise les champs bytes d'un message Pub/Sub, sur place."""
+        for cle in ("channel", "data"):
+            valeur = message.get(cle)
+            if isinstance(valeur, bytes):
+                message[cle] = valeur.decode()
+
+    async def _rediffuser_localement(self, message: dict[str, Any]) -> None:
+        """Rediffuse un event reçu de Redis aux clients de ce worker."""
+        canal_name = str(message["channel"]).replace("gsie:ws:", "")
         try:
-            pubsub = redis.pubsub()
-            # S'abonner à tous les canaux gsie:ws:*
-            await pubsub.psubscribe("gsie:ws:*")
-            async for message in pubsub.listen():
-                if message["type"] != "pmessage":
-                    continue
-                channel = message["channel"]
-                if isinstance(channel, bytes):
-                    channel = channel.decode()
-                # Extraire le nom du canal (gsie:ws:phenomenon → phenomenon)
-                canal_name = channel.replace("gsie:ws:", "")
-                data = message["data"]
-                if isinstance(data, bytes):
-                    data = data.decode()
-                try:
-                    event = json.loads(data)
-                    # Diffusion locale uniquement (pas de re-publish pour éviter la boucle)
-                    await self._local_broadcast(canal_name, event)
-                except (json.JSONDecodeError, TypeError):
-                    logger.debug("ws_redis_invalid_message", channel=canal_name)
-        except asyncio.CancelledError:
-            logger.info("ws_redis_subscriber_stopped")
-        except Exception:
-            logger.warning("ws_redis_subscriber_error", exc_info=True)
+            event = json.loads(message["data"])
+        except (json.JSONDecodeError, TypeError):
+            logger.debug("ws_redis_invalid_message", channel=canal_name)
+            return
+        # Diffusion locale uniquement (pas de re-publish pour éviter la boucle)
+        await self._local_broadcast(canal_name, event)
 
     async def start_heartbeat(self) -> None:
         """Démarre le heartbeat serveur pour détecter les connexions mortes.

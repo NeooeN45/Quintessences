@@ -1,0 +1,211 @@
+"""Harnais de mutation — mesure si la suite de tests *mord* vraiment.
+
+Une couverture de 99 % dit quelles lignes ont été exécutées, jamais si un
+comportement faux aurait été détecté. L'audit de fiabilité l'a montré : dix-huit
+défauts réels, dont plusieurs cassaient toute écriture authentifiée, ont
+traversé une suite de plus de mille tests sans en faire tomber un seul.
+
+Le principe est simple et impitoyable : on casse volontairement le code, on
+relance la suite, et on regarde si elle proteste. Une mutation qui **survit**
+— aucun test ne tombe — désigne un comportement que rien ne surveille.
+
+Chaque mutation ci-dessous reproduit une classe de défaut réellement rencontrée
+dans ce dépôt, pas une faute imaginaire :
+
+* la garde qui matérialise l'Agent auteur (défaut P0 : toute écriture
+  authentifiée échouait en violation de clé étrangère) ;
+* la ligne racine du ResourceDiff (défaut P0 : toute mise à jour échouait) ;
+* la normalisation du filtre de type vide (défaut P0 : fuite RGPD) ;
+* le contrôle de type des jetons JWT (garde présente mais non testée) ;
+* la coercition des dates ISO (défaut P0 : 19 types incréables) ;
+* la garde NaN du moteur de corrélation (défaut P2 : 500 sur variable constante).
+
+Usage :
+
+    ./.venv/Scripts/python.exe tests/mutation/harnais.py            # rapide
+    ./.venv/Scripts/python.exe tests/mutation/harnais.py --complet  # + intégration
+
+Sortie : une mutation TUEE est une bonne nouvelle, une mutation SURVIVANTE est
+une zone aveugle à couvrir.
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import subprocess
+import sys
+import tempfile
+from dataclasses import dataclass, field
+from pathlib import Path
+
+RACINE = Path(__file__).resolve().parents[2]
+SOURCE = RACINE / "src"
+PYTHON = RACINE / ".venv" / "Scripts" / "python.exe"
+
+
+@dataclass(frozen=True)
+class Mutation:
+    """Une altération ciblée du code source, et le test censé la détecter."""
+
+    cle: str
+    fichier: str
+    ancien: str
+    nouveau: str
+    defaut_reproduit: str
+    tests: tuple[str, ...] = field(default=())
+
+
+# Chaque mutation cible une garde ajoutée en réponse à un défaut constaté.
+MUTATIONS: tuple[Mutation, ...] = (
+    Mutation(
+        cle="auteur_non_materialise",
+        fichier="gsie_api/resources/service.py",
+        ancien="        if author_id is None:\n            return",
+        nouveau="        if author_id is not None:\n            return",
+        defaut_reproduit=(
+            "revision.author_id référence une resource inexistante — "
+            "toute écriture authentifiée échoue en 500"
+        ),
+        tests=("tests/integration/test_resources_fiabilite.py",),
+    ),
+    Mutation(
+        cle="diff_sans_ligne_racine",
+        fichier="gsie_api/resources/service.py",
+        ancien='        diff_resource = ResourceModel(\n            type="resource_diff",',
+        nouveau='        diff_resource = ResourceModel(\n            type="entity",',
+        defaut_reproduit="le ResourceDiff n'est plus rattaché au type 61 du métamodèle",
+        tests=("tests/integration/test_resources_fiabilite.py",),
+    ),
+    Mutation(
+        cle="filtre_type_vide",
+        fichier="gsie_api/resources/router.py",
+        # Le défaut d'origine portait sur la *condition*, pas sur l'affectation :
+        # `if type is not None` traitait la chaîne vide comme un filtre explicite
+        # et sautait donc l'exclusion RGPD.
+        ancien="    type_filter = type.strip() if type else None\n    if type_filter:",
+        nouveau="    type_filter = type\n    if type_filter is not None:",
+        defaut_reproduit=(
+            "GET /resources?type= désactive l'exclusion RGPD — "
+            "un simple lecteur liste consent et data_subject"
+        ),
+        tests=("tests/integration/test_resources_fiabilite.py",),
+    ),
+    Mutation(
+        cle="type_de_jeton_non_verifie",
+        fichier="gsie_api/core/auth.py",
+        ancien='    if payload.get("type") != expected_type:',
+        nouveau="    if False:",
+        defaut_reproduit="un jeton de rafraîchissement est accepté comme jeton d'accès",
+        tests=("tests/unit/test_auth_type_jeton.py",),
+    ),
+    Mutation(
+        cle="coercition_desactivee",
+        fichier="gsie_api/resources/coercion.py",
+        ancien="        try:\n            converti[champ] = _coercer_valeur(valeur, colonne)",
+        nouveau="        try:\n            converti[champ] = valeur",
+        defaut_reproduit="une date ISO part telle quelle vers un timestamptz — 500",
+        tests=("tests/integration/test_resources_fiabilite.py",),
+    ),
+    Mutation(
+        cle="nan_correlation_non_garde",
+        fichier="gsie_api/engines/correlation/engine.py",
+        ancien="        if math.isnan(coefficient) or math.isnan(p_valeur):",
+        nouveau="        if False:",
+        defaut_reproduit="une variable constante fait rendre 500 au lieu d'une erreur métier",
+        tests=("tests/integration/test_moteurs_fiabilite.py",),
+    ),
+)
+
+
+def _cibles(mutation: Mutation, complet: bool) -> list[str]:
+    """Tests à jouer : ceux déclarés, ou la suite unitaire en mode rapide."""
+    if not mutation.tests:
+        return ["tests/unit"]
+    if complet:
+        return list(mutation.tests)
+    return [chemin for chemin in mutation.tests if chemin.startswith("tests/unit")] or [
+        "tests/unit"
+    ]
+
+
+def _jouer(cibles: list[str], racine_source: Path) -> bool:
+    """Retourne True si la suite passe (donc si la mutation a survécu)."""
+    environnement = {
+        "PYTHONPATH": str(racine_source),
+        "TESTCONTAINERS_RYUK_DISABLED": "true",
+    }
+    resultat = subprocess.run(  # noqa: S603
+        [str(PYTHON), "-m", "pytest", *cibles, "-q", "--no-cov", "-x"],
+        cwd=RACINE,
+        capture_output=True,
+        env={**_environnement_de_base(), **environnement},
+        check=False,
+    )
+    return resultat.returncode == 0
+
+
+def _environnement_de_base() -> dict[str, str]:
+    import os
+
+    return dict(os.environ)
+
+
+def _appliquer(mutation: Mutation, racine_source: Path) -> None:
+    chemin = racine_source / mutation.fichier
+    source = chemin.read_text(encoding="utf-8")
+    if mutation.ancien not in source:
+        raise SystemExit(
+            f"[{mutation.cle}] motif introuvable dans {mutation.fichier} — "
+            "le harnais est périmé, mettre à jour la mutation"
+        )
+    chemin.write_text(source.replace(mutation.ancien, mutation.nouveau, 1), encoding="utf-8")
+
+
+def executer(complet: bool) -> int:
+    survivantes: list[Mutation] = []
+
+    print(
+        f"Harnais de mutation — {len(MUTATIONS)} mutations, mode "
+        f"{'complet' if complet else 'rapide'}\n"
+    )
+
+    for mutation in MUTATIONS:
+        with tempfile.TemporaryDirectory(prefix="gsie-mutation-") as travail:
+            racine_source = Path(travail) / "src"
+            shutil.copytree(SOURCE, racine_source)
+            _appliquer(mutation, racine_source)
+            cibles = _cibles(mutation, complet)
+            survit = _jouer(cibles, racine_source)
+
+        if survit:
+            survivantes.append(mutation)
+            print(f"  SURVIVANTE  {mutation.cle}")
+            print(f"              {mutation.defaut_reproduit}")
+            print(f"              tests joués : {' '.join(cibles)}")
+        else:
+            print(f"  tuée        {mutation.cle}")
+
+    total = len(MUTATIONS)
+    tuees = total - len(survivantes)
+    print(f"\nScore : {tuees}/{total} mutations détectées")
+    if survivantes:
+        print("\nZones aveugles — un comportement que rien ne surveille :")
+        for mutation in survivantes:
+            print(f"  - {mutation.cle} : {mutation.defaut_reproduit}")
+        return 1
+    return 0
+
+
+def main() -> int:
+    analyseur = argparse.ArgumentParser(description=__doc__)
+    analyseur.add_argument(
+        "--complet",
+        action="store_true",
+        help="joue aussi les tests d'intégration (nécessite Docker, bien plus lent)",
+    )
+    return executer(analyseur.parse_args().complet)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

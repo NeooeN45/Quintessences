@@ -14,20 +14,17 @@ Endpoints :
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
+from gsie_api.core.limiter import limiter as _limiter
+from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.simulation.engine import SimulationEngine, SimulationEngineError
 from gsie_api.engines.simulation.schemas import ScenarioSimulation, SimulationResult
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
-
-_run_limiter = Limiter(key_func=get_remote_address)
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
@@ -68,10 +65,11 @@ async def simulation_version(request: Request) -> EngineVersionResponse:
         "La simulation ne décide pas — elle projette, le forestier/COS choisit."
     ),
 )
-@_run_limiter.limit("10/minute")
+@_limiter.limit("10/minute")
 async def simulation_run(
     request_body: ScenarioSimulation,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> SimulationResult:

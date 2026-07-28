@@ -13,10 +13,11 @@ Comble les lignes manquantes des modules d'infrastructure pour atteindre 90%+ :
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
-from datetime import UTC, datetime, timedelta
+import sys
+from datetime import UTC, datetime
 from io import BytesIO
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -30,6 +31,11 @@ from gsie_api.app import create_app
 from gsie_api.core.auth import create_access_token
 from gsie_api.websocket import router as websocket_router
 from gsie_api.websocket.manager import ConnectionManager
+
+# `gsie_api.websocket.manager` désigne aussi le singleton exporté par le
+# paquet, qui masque le module : on passe donc par sys.modules pour obtenir
+# bien le module et pouvoir en ajuster les constantes.
+manager_module = sys.modules[ConnectionManager.__module__]
 
 
 # =====================================================================
@@ -103,14 +109,21 @@ class TestConnectionManagerRedis:
         mgr = ConnectionManager()
         processed = asyncio.Event()
 
-        async def fake_listen():
-            yield {"type": "pmessage", "channel": b"gsie:ws:phenomenon", "data": b'{"event_type":"test"}'}
+        messages = [
+            {"type": "pmessage", "channel": b"gsie:ws:phenomenon", "data": b'{"event_type":"test"}'}
+        ]
+
+        async def fake_get_message(timeout=None):
+            if messages:
+                return messages.pop(0)
             processed.set()
             await asyncio.sleep(10)
+            return None
 
         fake_pubsub = MagicMock()
         fake_pubsub.psubscribe = AsyncMock()
-        fake_pubsub.listen = fake_listen
+        fake_pubsub.aclose = AsyncMock()
+        fake_pubsub.get_message = fake_get_message
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
@@ -121,7 +134,9 @@ class TestConnectionManagerRedis:
             task = asyncio.create_task(mgr._redis_subscriber_loop())
             await asyncio.wait_for(processed.wait(), timeout=1.0)
             task.cancel()
-            await task
+            # La boucle propage desormais l'annulation, comme le veut asyncio.
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
         broadcast.assert_awaited_with("phenomenon", {"event_type": "test"})
 
@@ -130,15 +145,22 @@ class TestConnectionManagerRedis:
         mgr = ConnectionManager()
         processed = asyncio.Event()
 
-        async def fake_listen():
-            yield {"type": "subscribe", "channel": b"gsie:ws:phenomenon", "data": b"1"}
-            yield {"type": "pmessage", "channel": "gsie:ws:alert", "data": '{"event_type":"alert"}'}
+        messages = [
+            {"type": "subscribe", "channel": b"gsie:ws:phenomenon", "data": b"1"},
+            {"type": "pmessage", "channel": "gsie:ws:alert", "data": '{"event_type":"alert"}'},
+        ]
+
+        async def fake_get_message(timeout=None):
+            if messages:
+                return messages.pop(0)
             processed.set()
             await asyncio.sleep(10)
+            return None
 
         fake_pubsub = MagicMock()
         fake_pubsub.psubscribe = AsyncMock()
-        fake_pubsub.listen = fake_listen
+        fake_pubsub.aclose = AsyncMock()
+        fake_pubsub.get_message = fake_get_message
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
@@ -149,7 +171,9 @@ class TestConnectionManagerRedis:
             task = asyncio.create_task(mgr._redis_subscriber_loop())
             await asyncio.wait_for(processed.wait(), timeout=1.0)
             task.cancel()
-            await task
+            # La boucle propage desormais l'annulation, comme le veut asyncio.
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
         broadcast.assert_awaited_once_with("alert", {"event_type": "alert"})
 
@@ -158,14 +182,19 @@ class TestConnectionManagerRedis:
         mgr = ConnectionManager()
         processed = asyncio.Event()
 
-        async def fake_listen():
-            yield {"type": "pmessage", "channel": b"gsie:ws:bad", "data": b"not-json"}
+        messages = [{"type": "pmessage", "channel": b"gsie:ws:bad", "data": b"not-json"}]
+
+        async def fake_get_message(timeout=None):
+            if messages:
+                return messages.pop(0)
             processed.set()
             await asyncio.sleep(10)
+            return None
 
         fake_pubsub = MagicMock()
         fake_pubsub.psubscribe = AsyncMock()
-        fake_pubsub.listen = fake_listen
+        fake_pubsub.aclose = AsyncMock()
+        fake_pubsub.get_message = fake_get_message
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
@@ -176,27 +205,31 @@ class TestConnectionManagerRedis:
             task = asyncio.create_task(mgr._redis_subscriber_loop())
             await asyncio.wait_for(processed.wait(), timeout=1.0)
             task.cancel()
-            await task
+            # La boucle propage desormais l'annulation, comme le veut asyncio.
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
         broadcast.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def should_log_warning_on_subscriber_error(self) -> None:
+    async def should_log_warning_on_subscriber_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Un Redis durablement injoignable fait abandonner, sans boucle infinie."""
         mgr = ConnectionManager()
 
-        async def fake_listen():
-            if False:  # pragma: no cover
-                yield
-            raise RuntimeError("pubsub broken")
-
         fake_pubsub = MagicMock()
-        fake_pubsub.psubscribe = AsyncMock()
-        fake_pubsub.listen = fake_listen
+        fake_pubsub.psubscribe = AsyncMock(side_effect=RuntimeError("pubsub broken"))
+        fake_pubsub.aclose = AsyncMock()
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
+        # Les reprises sont bornées : on annule seulement l'attente entre elles
+        # pour que le test reste instantané.
+        monkeypatch.setattr(manager_module, "_DELAI_REPRISE_PUBSUB", 0)
+
         with patch.object(mgr, "_get_redis", new_callable=AsyncMock, return_value=fake_redis):
-            await mgr._redis_subscriber_loop()
+            await asyncio.wait_for(mgr._redis_subscriber_loop(), timeout=5.0)
+
+        assert fake_pubsub.psubscribe.await_count == manager_module._REPRISES_PUBSUB_MAX + 1
 
 
 class TestConnectionManagerHeartbeat:
@@ -232,10 +265,8 @@ class TestConnectionManagerHeartbeat:
             task = asyncio.create_task(mgr._heartbeat_loop())
             await asyncio.sleep(0.15)
             task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await task
-            except asyncio.CancelledError:
-                pass
 
         assert dead_ws not in mgr._connections
 
@@ -502,9 +533,7 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(
-            f"/api/v1/ws/hub?token={token}&channels=observation"
-        ) as ws:
+        with client.websocket_connect(f"/api/v1/ws/hub?token={token}&channels=observation") as ws:
             ws.send_text(json.dumps({"command": "subscribe", "channels": ["alert", "phenomenon"]}))
             data = ws.receive_json()
         assert data["event_type"] == "subscribed"
@@ -524,17 +553,18 @@ class TestWebSocketRouterHub:
     def should_reject_connection_without_token(self) -> None:
         client = TestClient(create_app())
 
-        with pytest.raises(WebSocketDisconnect) as exc:
-            with client.websocket_connect("/api/v1/ws/hub"):
-                pass
+        with pytest.raises(WebSocketDisconnect) as exc, client.websocket_connect("/api/v1/ws/hub"):
+            pass
         assert exc.value.code == 1008
 
     def should_reject_connection_with_invalid_token(self) -> None:
         client = TestClient(create_app())
 
-        with pytest.raises(WebSocketDisconnect) as exc:
-            with client.websocket_connect("/api/v1/ws/hub?token=invalid.jwt.token"):
-                pass
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect("/api/v1/ws/hub?token=invalid.jwt.token"),
+        ):
+            pass
         assert exc.value.code == 1008
 
     def should_rate_limit_after_max_messages(self) -> None:
@@ -565,9 +595,11 @@ class TestWebSocketRouterEvents:
     def should_reject_events_without_token(self) -> None:
         client = TestClient(create_app())
 
-        with pytest.raises(WebSocketDisconnect) as exc:
-            with client.websocket_connect("/api/v1/ws/events"):
-                pass
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect("/api/v1/ws/events"),
+        ):
+            pass
         assert exc.value.code == 1008
 
     def should_rate_limit_events_endpoint(self) -> None:
@@ -609,12 +641,14 @@ class TestWebSocketRouterOrigin:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with pytest.raises(WebSocketDisconnect) as exc:
-            with client.websocket_connect(
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect(
                 f"/api/v1/ws/hub?token={token}",
                 headers={"Origin": "https://hub.example"},
-            ):
-                pass
+            ),
+        ):
+            pass
         assert exc.value.code == 1008
 
     def should_allow_trusted_origin(self, monkeypatch) -> None:
@@ -1144,7 +1178,9 @@ class TestDPClimClientGetDonnees:
         with patch("gsie_api.engines.climate.dpclim_client.get_settings") as mock:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient(poll_interval_s=0.01, max_poll_attempts=3)
-        result = await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+        result = await client.get_donnees_quotidiennes(
+            "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+        )
 
         assert "Paris" in result
         assert commande_route.called
@@ -1158,7 +1194,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = None
             client = DPClimClient()
         with pytest.raises(DPClimClientError, match="METEOFRANCE_API_KEY"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
     @pytest.mark.asyncio
     @respx.mock
@@ -1181,7 +1219,9 @@ class TestDPClimClientGetDonnees:
         with patch("gsie_api.engines.climate.dpclim_client.get_settings") as mock:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient(poll_interval_s=0.01, max_poll_attempts=5)
-        result = await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+        result = await client.get_donnees_quotidiennes(
+            "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+        )
 
         assert "Orly" in result
         assert fichier_route.call_count == 3
@@ -1203,7 +1243,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient(poll_interval_s=0.01, max_poll_attempts=2)
         with pytest.raises(DPClimClientError, match="DPClim"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
     @pytest.mark.asyncio
     @respx.mock
@@ -1222,7 +1264,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient(poll_interval_s=0.01, max_poll_attempts=3)
         with pytest.raises(DPClimClientError, match="commande/fichier"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
     @pytest.mark.asyncio
     @respx.mock
@@ -1237,7 +1281,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient()
         with pytest.raises(DPClimClientError, match="commande-station"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
     @pytest.mark.asyncio
     @respx.mock
@@ -1252,7 +1298,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient()
         with pytest.raises(DPClimClientError, match="illisible"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
     @pytest.mark.asyncio
     @respx.mock
@@ -1267,7 +1315,9 @@ class TestDPClimClientGetDonnees:
             mock.return_value.meteofrance_api_key = "test-key"
             client = DPClimClient()
         with pytest.raises(DPClimClientError, match="commande-station"):
-            await client.get_donnees_quotidiennes("75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z")
+            await client.get_donnees_quotidiennes(
+                "75056", "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"
+            )
 
 
 # =====================================================================
@@ -1339,9 +1389,7 @@ class TestOutboxWorkerPublishToRedis:
             new_callable=AsyncMock,
         ) as mock_broadcast:
             await _publish_to_redis("entity", {"event_id": "test"})
-        mock_broadcast.assert_awaited_once_with(
-            "entity", {"event_id": "test"}, require_redis=True
-        )
+        mock_broadcast.assert_awaited_once_with("entity", {"event_id": "test"}, require_redis=True)
 
 
 class TestOutboxWorkerRetryPolicy:
@@ -1371,16 +1419,14 @@ class TestOutboxWorkerRequeueEdgeCases:
         from gsie_api.outbox_worker import requeue_dead_letters
 
         session = AsyncMock()
-        result = await requeue_dead_letters(
-            session, event_ids=[], reason="test"
-        )
+        result = await requeue_dead_letters(session, event_ids=[], reason="test")
         assert result == 0
         session.execute.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def should_requeue_with_limit_only(self) -> None:
-        from gsie_api.outbox_worker import requeue_dead_letters
         from gsie_api.infrastructure.models.outbox import OutboxEvent
+        from gsie_api.outbox_worker import requeue_dead_letters
 
         event_id = uuid4()
         fake_event = OutboxEvent(
