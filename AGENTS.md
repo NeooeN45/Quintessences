@@ -60,6 +60,7 @@ Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, 
 | Déploiement (Docker, CI/CD) | `/deploiement` |
 | Refactoring sécurisé d'un moteur | `/refactor-moteur` |
 | Créer / gérer une RFC | `/rfc-gsie` |
+| Consortium d'agents (boucle poussée 9 phases, 4 rôles) | `/consortium-agents` |
 
 ---
 
@@ -74,6 +75,18 @@ Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, 
 | `android` | Application GeoSylva (Kotlin/Compose) |
 | `qa` | Audit qualité, couverture tests, conformité |
 | `documentation` | Rédaction de documents GSIE |
+
+## Règles `.devin/rules/`
+
+| Règle | Objet |
+|---|---|
+| `consortium-gating.md` | Gating adaptatif du consortium (léger / standard / lourd) |
+
+## Playbooks `.devin/playbooks/`
+
+| Playbook | Objet |
+|---|---|
+| `feature.devin.md` | Prompt maître du consortium (9 phases, niveau LOURD) |
 
 ---
 

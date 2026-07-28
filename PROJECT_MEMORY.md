@@ -667,6 +667,21 @@ d'exécution :
     découverts et corrigés (RisqueDiagnostic.domaine, plafonnement
     Quercus ilex, endpoints /status nouveaux moteurs). **1225 tests au
     total passent** (1073 unitaires + 152 intégration), 0 échec.
+  - **Consortium d'agents GSIE** (2026-07-28) : mise en place du
+    système de boucle poussée adaptative pour GLM 5.2 High. 3 fichiers
+    créés : (1) `.devin/skills/consortium-agents/SKILL.md` — skill
+    formel avec déclenchement adaptatif 3 niveaux (léger <5 fichiers /
+    standard 5-15 / lourd >15 ou migration ou breaking ou sécurité), 9
+    phases (qualification → reconnaissance → plan avec confiance 80%
+    → implémentation incrémentale → diagnostic cause racine → tests
+    pyramide → revue adversariale → PR dossier de preuve →
+    capitalisation), 4 rôles séparés (architecte read-only /
+    implémenteur / testeur adversarial / reviewer) mappés sur les
+    profils subagent existants ; (2) `.devin/playbooks/feature.devin.md`
+    — prompt maître complet activable manuellement ; (3)
+    `.devin/rules/consortium-gating.md` — règle always-on avec arbre de
+    décision. Intègre AI_AGENT_ORCHESTRATION.md (RACI, états, portes)
+    sans le dupliquer. AGENTS.md mis à jour avec références.
   - **Pipeline cross-moteurs démontré réel** (2026-07-17) : 8 zones
     françaises réelles → occurrences GBIF (Botanical) + pH SoilGrids
     (Pedology) → Correlation Engine (spearman) → persisté en base.
