@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0028 |
-| **Statut** | Brouillon — soumis au Fondateur |
+| **Statut** | Brouillon — arbitrages tranchés, soumis à validation |
 | **Auteur** | Architecte, sous autorité du Fondateur |
 | **Date** | 2026-07-28 |
 | **Périmètre** | Knowledge Engine, Reasoning Engine, moteurs consommateurs |
@@ -110,11 +110,56 @@ La sélection retient une règle si :
 
 - son `claim_kind` est `rule` ou `threshold` ;
 - son `lifecycle_status` est `accepted` ;
-- son domaine de validité contient le contexte, ou n'est pas renseigné ;
-- son niveau de preuve atteint le plancher demandé par l'appelant.
+- son domaine de validité est **renseigné** et **contient** le contexte ;
+- son niveau de preuve atteint le plancher demandé par l'appelant, s'il en a
+  déclaré un (§9.2 — aucun plancher par défaut).
 
 Une règle dont le domaine de validité **ne contient pas** le contexte n'est pas
 retournée. L'extrapolation hors domaine est une invention (`ADR-009`).
+
+**Un domaine non renseigné vaut « nulle part », jamais « partout ».**
+
+Le silence ne peut pas valoir universalité. Une règle extraite du catalogue de
+stations de Haute-Normandie ne porte pas la mention « ceci vaut en
+Haute-Normandie » : c'est le titre du document, pas une phrase du texte. Si le
+silence valait « partout », cette règle serait appliquée à une chênaie verte
+de l'Hérault, et la conclusion citerait le catalogue normand — source réelle,
+chaîne complète, niveau de preuve B. Personne ne verrait l'erreur.
+
+Les deux échecs possibles ne se valent pas :
+
+| | Conséquence pour le forestier |
+|---|---|
+| Silence = « partout » | une réponse **fausse portant une citation vérifiable** — il a toutes les raisons de la croire |
+| Silence = « nulle part » | **aucune réponse** — il consulte son catalogue papier, comme aujourd'hui |
+
+Une décision sylvicole engage des décennies. Une absence de réponse est
+récupérable ; un conseil faux et sourcé ne l'est pas.
+
+Le coût de ce choix est plus faible qu'il n'y paraît : **la règle hérite du
+domaine de sa source à l'ingestion**. Un catalogue de stations est régional par
+construction, un guide CNPF couvre une région, une publication déclare sa zone
+d'étude. `source_id` étant déjà obligatoire partout, le territoire est toujours
+connaissable — il n'a pas à être saisi à la main.
+
+Reste possible le cas d'une connaissance véritablement universelle : elle
+déclare un domaine explicite (« national », « toutes zones »), jamais un champ
+vide. **Déclarer l'universalité est un acte ; laisser le champ vide est un
+oubli.** Le moteur ne doit pas confondre les deux.
+
+### 4.3 bis Le territoire devient obligatoire sur les deux types porteurs
+
+Le schéma exige déjà un territoire là où il définit l'objet :
+`station_type.validity_zone_description`, `fertility_class.calibration_region`,
+`provenance_material.provenance_region`.
+
+Il ne l'exige pas sur `silvicultural_rule` ni `autecology_profile` — c'est-à-dire
+précisément sur les deux types dont dérivent les règles appliquées à une
+station. Cette asymétrie ressemble à un oubli plutôt qu'à une décision.
+
+La présente RFC l'aligne : le territoire devient un champ obligatoire de ces
+deux types. C'est une modification de contrat, elle relève donc de cette RFC et
+non d'un correctif.
 
 ### 4.4 Le vocabulaire contrôlé fait le lien
 
@@ -178,9 +223,16 @@ qu'aucune règle hors domaine n'est jamais retournée.
    qu'une requête les portant explicitement — vérifié sur un cas réel.
 3. Une règle hors domaine de validité n'est jamais retournée — test
    d'invariant, vérifié en le débranchant.
-4. Une variable hors vocabulaire est refusée à l'ingestion, jamais devinée.
-5. Une unité non convertible écarte la règle avec un motif, sans comparaison.
-6. Le harnais de mutation couvre chacune de ces gardes, et chaque mutation
+4. Une règle **sans domaine déclaré** n'est jamais retournée non plus, et
+   l'ingestion refuse de créer une règle sans territoire (§4.3, §4.3 bis).
+5. Une variable hors vocabulaire est refusée à l'ingestion, jamais devinée.
+6. Une unité non convertible écarte la règle avec un motif, sans comparaison.
+7. Toute réponse porte son `evidence_level_plancher` — une réponse qui
+   l'omettrait est un défaut, pas une commodité (§9.2).
+8. Invalider une source permet d'**énumérer les conclusions passées** qui
+   citaient ses règles, et la règle cesse d'être sélectionnée dans le même
+   geste (§9.3).
+9. Le harnais de mutation couvre chacune de ces gardes, et chaque mutation
    est vue survivre avant correctif puis mourir après.
 
 ## 8. Périmètre du premier lot
@@ -193,13 +245,75 @@ observation GeoSylva → conclusion tracée.
 
 Élargir ensuite relève de la répétition, non de la conception.
 
-## 9. Questions ouvertes
+## 9. Trois arbitrages, tranchés sur la qualité pour l'utilisateur
 
-1. **Le domaine de validité non renseigné vaut-il « partout » ou « nulle
-   part » ?** La proposition retient « partout » pour ne pas bloquer
-   l'amorçage, mais l'inverse est plus sûr. Arbitrage du Fondateur.
-2. **Faut-il un niveau de preuve plancher par défaut**, ou l'appelant doit-il
-   toujours le déclarer ?
-3. **Que faire d'une règle `accepted` dont la source est invalidée
-   ultérieurement ?** `CON-010` impose de réviser sans supprimer — le
-   comportement de sélection pendant la révision reste à définir.
+Ces trois points étaient ouverts. Le Fondateur a fixé le critère de
+décision : **ce qui sert le mieux le forestier**. Ils sont tranchés ci-dessous
+selon ce seul critère.
+
+### 9.1 Domaine non renseigné → « nulle part »
+
+Tranché au §4.3. Une absence de réponse est récupérable ; un conseil faux
+portant une citation vérifiable ne l'est pas.
+
+### 9.2 Pas de plancher de preuve par défaut, mais un niveau toujours affiché
+
+Deux erreurs possibles, et une seule est grave.
+
+Refuser par défaut tout ce qui est sous un certain niveau priverait le
+forestier d'une information qu'il sait pondérer lui-même. S'il n'existe qu'un
+avis d'expert non publié (niveau E) sur une station, **le lui dire est plus
+utile que se taire** — à condition qu'il voie que c'est du E.
+
+Le danger n'a jamais été la connaissance faible : c'est la connaissance faible
+**présentée comme forte**. `Conclusion.evidence_level_plancher` traite déjà ce
+risque, à condition d'être exposé.
+
+Décision :
+
+- aucun plancher par défaut — tout ce qui est applicable est retourné ;
+- `evidence_level_plancher` est **obligatoire dans la réponse**, jamais
+  facultatif ni omissible ;
+- l'appelant peut relever le plancher explicitement, jamais l'inverse ;
+- deux règles applicables de niveaux différents sont **toutes deux**
+  retournées : c'est ainsi qu'une contradiction devient visible plutôt
+  qu'arbitrée (`SCIENTIFIC_CONSTITUTION` S-3).
+
+### 9.3 Source invalidée : la règle sort du service, et le forestier est prévenu
+
+`CON-010` impose de réviser sans supprimer. Reste à définir l'effet sur la
+sélection, et surtout sur les conclusions déjà rendues.
+
+Décision, en deux temps :
+
+**1. La règle cesse immédiatement d'être sélectionnée.** Son
+`lifecycle_status` passe à `deprecated`. Aucune conclusion nouvelle ne peut
+s'appuyer sur une règle dont la source est invalidée.
+
+**2. Les conclusions passées qui la citaient restent retrouvables, et sont
+signalées.** C'est le point décisif pour l'utilisateur, et le plus facile à
+négliger.
+
+Un forestier a martelé une parcelle en mars sur la foi d'une recommandation.
+En septembre, la source de la règle est invalidée. Un outil qui se corrige
+silencieusement le laisse dans l'erreur ; un outil honnête lui dit : *« le
+conseil du 12 mars reposait sur une source depuis invalidée ».*
+
+`chaine_inference` cite les règles utilisées et les révisions sont
+append-only : la recherche inverse — quelles conclusions citaient cette
+règle — est donc possible sans structure nouvelle. Cette RFC la rend
+**obligatoire** : invalider une source impose de pouvoir énumérer les
+conclusions affectées.
+
+C'est ce qui distingue un outil d'aide à la décision d'un moteur qui donne des
+réponses. Le forestier reste le décideur (`GSIE-CON-001`) — encore faut-il
+qu'il apprenne quand le sol se dérobe sous une décision passée.
+
+## 10. Ce que cette RFC ne tranche pas
+
+- la représentation des règles non dérivables (conjonctions, conditions non
+  numériques) — reportée jusqu'à ce que des cas réels la justifient ;
+- le format d'extraction documentaire vers `autecology_profile` — relève du
+  chantier d'ingestion, pas de l'architecture du raisonnement ;
+- l'ordre de présentation de deux règles contradictoires — question
+  d'interface, à trancher avec un forestier devant l'écran.
