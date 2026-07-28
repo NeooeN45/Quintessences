@@ -1,10 +1,15 @@
 name: CI
 
 on:
+  # Toute branche, pas seulement main/master : le travail se fait sur des
+  # branches de correction, et n'avoir aucun retour avant l'ouverture d'une
+  # pull request laisse les portes qualité rouges pendant des jours.
+  # `concurrency` ci-dessous annule les exécutions obsolètes, le coût reste
+  # celui d'une exécution par poussée utile.
   push:
-    branches: [main, master]
+    branches: ["**"]
   pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -156,6 +161,14 @@ jobs:
 
       - name: Test with pytest
         run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=80
+
+      # La couverture dit quelles lignes ont tourné, jamais si un comportement
+      # faux aurait été détecté. Le harnais casse volontairement chaque garde
+      # issue d'un défaut constaté et exige que la suite proteste. En mode
+      # rapide il ne joue que les mutations couvertes par des tests unitaires ;
+      # les autres sont vérifiées par le job d'intégration.
+      - name: Mutation harness (les tests mordent-ils ?)
+        run: uv run python tests/mutation/harnais.py
 
   python-integration:
     name: Python integration tests (PostGIS + Redis)

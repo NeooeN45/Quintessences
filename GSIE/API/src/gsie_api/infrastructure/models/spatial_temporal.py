@@ -61,7 +61,11 @@ class PlaceModel(Base, TimestampMixin):
     label: Mapped[str | None] = mapped_column(String(300), nullable=True, index=True)
     area_m2: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    __table_args__ = (Index("idx_place_geom_4326", "geom_4326", postgresql_using="gist"),)
+    # Le nom doit être celui que crée la migration 20260727_0005
+    # (`ix_place_geom_4326`). Le modèle déclarait `idx_…` : la base et le
+    # registre divergeaient donc en permanence, et le contrôle de dérive
+    # excusait l'écart comme une bizarrerie de GeoAlchemy2.
+    __table_args__ = (Index("ix_place_geom_4326", "geom_4326", postgresql_using="gist"),)
 
 
 @register_type("temporal_context")

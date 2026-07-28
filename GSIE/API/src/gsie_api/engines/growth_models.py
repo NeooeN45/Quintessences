@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference, SourceType
+from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
 
 @dataclass(frozen=True)
@@ -62,7 +62,10 @@ _IGN_SOURCE = SourceReference(
     type_source=SourceType.referentiel_officiel,
     auteur="IGN — Inventaire Forestier National",
     date_publication="2023",
-    reference="Résultats d'inventaire forestier — Production et accroissements, inventaire-forestier.ign.fr",
+    reference=(
+        "Résultats d'inventaire forestier — Production et accroissements, "
+        "inventaire-forestier.ign.fr"
+    ),
 )
 
 
@@ -209,7 +212,10 @@ def project_volume(
         "annual_increment": annual_increment,
         "capped": capped,
         "species": species_name,
-        "source": f"IGN — Inventaire Forestier National, résultats d'inventaire ({params.source.date_publication})",
+        "source": (
+            "IGN — Inventaire Forestier National, résultats d'inventaire "
+            f"({params.source.date_publication})"
+        ),
     }
 
 
@@ -247,7 +253,10 @@ def project_circumference(
         "final_circumference": projected,
         "increment": annual * horizon_years,
         "species": species_name,
-        "source": f"IGN — Inventaire Forestier National, résultats d'inventaire ({params.source.date_publication})",
+        "source": (
+            "IGN — Inventaire Forestier National, résultats d'inventaire "
+            f"({params.source.date_publication})"
+        ),
     }
 
 

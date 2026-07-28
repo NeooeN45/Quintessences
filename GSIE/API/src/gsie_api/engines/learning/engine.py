@@ -21,7 +21,6 @@ Périmètre v1 :
 """
 
 from datetime import UTC, datetime
-from typing import Any
 from uuid import UUID, uuid4
 
 from gsie_api.core.logging import get_logger
@@ -98,9 +97,7 @@ class LearningEngine:
             )
         raise LearningEngineError(f"Type de signal inconnu : {signal.type}")
 
-    async def _traiter_retour_forestier(
-        self, signal: LearningSignal
-    ) -> LearningOutput | None:
+    async def _traiter_retour_forestier(self, signal: LearningSignal) -> LearningOutput | None:
         """Traite un retour forestier et détecte les patterns de refus.
 
         Accumule les retours par contexte station. Quand le nombre de
@@ -154,9 +151,7 @@ class LearningEngine:
             statut=LearningStatut.propose,
         )
 
-    async def _traiter_pattern_emergent(
-        self, signal: LearningSignal
-    ) -> LearningOutput | None:
+    async def _traiter_pattern_emergent(self, signal: LearningSignal) -> LearningOutput | None:
         """Traite un pattern émergent détecté par le Correlation Engine.
 
         Produit une proposition de `pattern_confirme` si la confiance
@@ -197,9 +192,7 @@ class LearningEngine:
             statut=LearningStatut.propose,
         )
 
-    async def _traiter_sortie_bloquee(
-        self, signal: LearningSignal
-    ) -> LearningOutput | None:
+    async def _traiter_sortie_bloquee(self, signal: LearningSignal) -> LearningOutput | None:
         """Traite un signal de sortie bloquée par le Validation Engine.
 
         Accumule les blocages par type de cause. Quand un même type de

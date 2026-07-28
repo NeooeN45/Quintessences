@@ -108,6 +108,25 @@ MUTATIONS: tuple[Mutation, ...] = (
         tests=("tests/integration/test_resources_fiabilite.py",),
     ),
     Mutation(
+        cle="constante_ign_derivee",
+        fichier="gsie_api/engines/growth_models.py",
+        ancien="        accroissement_moyen_annuel_volume=7.0,",
+        nouveau="        accroissement_moyen_annuel_volume=0.7,",
+        defaut_reproduit=(
+            "un accroissement moyen annuel sourcé IGN glisse d'un facteur 10 "
+            "sans que rien ne le signale"
+        ),
+        tests=("tests/unit/test_constantes_scientifiques.py",),
+    ),
+    Mutation(
+        cle="niveau_de_confiance_derive",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien="            niveau_confiance=0.70,",
+        nouveau="            niveau_confiance=0.01,",
+        defaut_reproduit=("la confiance annoncée au forestier passe de 0,70 à 0,01 en silence"),
+        tests=("tests/unit/test_constantes_scientifiques.py",),
+    ),
+    Mutation(
         cle="nan_correlation_non_garde",
         fichier="gsie_api/engines/correlation/engine.py",
         ancien="        if math.isnan(coefficient) or math.isnan(p_valeur):",

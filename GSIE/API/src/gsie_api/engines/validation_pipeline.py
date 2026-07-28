@@ -23,19 +23,16 @@ Voir `VALIDATION_ENGINE.md` §3 (entrées) et `LEARNING_ENGINE.md` §3
 
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID, uuid4
+from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.diagnostic.schemas import Diagnostic
 from gsie_api.engines.learning.engine import LearningEngine, LearningEngineError
 from gsie_api.engines.learning.schemas import (
     LearningOutput,
     LearningSignal,
     LearningSignalType,
 )
-from gsie_api.engines.reasoning.schemas import Conclusion
-from gsie_api.engines.recommendation.schemas import RecommendationSet
 from gsie_api.engines.validation.engine import ValidationEngine
 from gsie_api.engines.validation.schemas import (
     TypeSortie,
@@ -43,6 +40,11 @@ from gsie_api.engines.validation.schemas import (
     ValidationResult,
     ValidationStatut,
 )
+
+if TYPE_CHECKING:
+    from gsie_api.engines.diagnostic.schemas import Diagnostic
+    from gsie_api.engines.reasoning.schemas import Conclusion
+    from gsie_api.engines.recommendation.schemas import RecommendationSet
 
 logger = get_logger("gsie_api.validation_pipeline")
 
@@ -77,7 +79,8 @@ def diagnostic_to_validation_request(
         "etat_global": diagnostic.etat_global.value,
         "sources": [
             element.source.model_dump() for element in diagnostic.contraintes + diagnostic.atouts
-        ] + [risque.source.model_dump() for risque in diagnostic.risques],
+        ]
+        + [risque.source.model_dump() for risque in diagnostic.risques],
         "justification": (
             f"Diagnostic {diagnostic.type_diagnostic.value} — "
             f"{len(diagnostic.contraintes)} contrainte(s), "
@@ -234,9 +237,7 @@ def validation_failure_to_learning_signal(
             résultat valide ne doit pas alimenter l'apprentissage).
     """
     if validation_result.statut == ValidationStatut.valide:
-        raise PipelineError(
-            "un ValidationResult valide ne doit pas alimenter le Learning Engine"
-        )
+        raise PipelineError("un ValidationResult valide ne doit pas alimenter le Learning Engine")
 
     return LearningSignal(
         signal_id=uuid4(),
