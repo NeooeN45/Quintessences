@@ -300,6 +300,10 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "silvicultural_system": ["name", "category", "source_id"],
     "silvicultural_rule": [
         "required_context",
+        # Domaine de validite geographique obligatoire (DEC-000038). Distinct
+        # de `required_context`, qui decrit un contexte sylvicole et non une
+        # zone : les deux ne sont pas interchangeables.
+        "validity_zone_description",
         "trigger",
         "action",
         "intensity",

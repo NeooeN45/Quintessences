@@ -181,6 +181,7 @@ class TestValidators:
             "silvicultural_rule",
             {
                 "required_context": "Peuplement régulier",
+                "validity_zone_description": "Haute-Normandie",
                 "trigger": "Densité > 800 tiges/ha",
                 "action": "Éclaircie",
                 "intensity": "25 %",
@@ -294,6 +295,7 @@ class TestValidators:
             "silvicultural_rule",
             {
                 "required_context": "Peuplement régulier",
+                "validity_zone_description": "Haute-Normandie",
                 "trigger": "Densité > 800 tiges/ha",
                 "action": "Éclaircie",
                 "intensity": "25 %",
@@ -311,6 +313,7 @@ class TestValidators:
             "silvicultural_rule",
             {
                 "required_context": "Peuplement régulier",
+                "validity_zone_description": "Haute-Normandie",
                 "trigger": "Densité > 800 tiges/ha",
                 "action": "Éclaircie",
                 "intensity": "25 %",

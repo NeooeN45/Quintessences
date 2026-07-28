@@ -641,6 +641,7 @@ class TestUpdateValidationGate:
                 type="silvicultural_rule",
                 data={
                     "required_context": "futaie reguliere",
+                    "validity_zone_description": "Haute-Normandie",
                     "trigger": "surface terriere > 30",
                     "action": "eclaircie",
                     "intensity": "moderee",

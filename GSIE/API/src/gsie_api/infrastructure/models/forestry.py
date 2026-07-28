@@ -363,6 +363,18 @@ class SilviculturalRuleModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     required_context: Mapped[str] = mapped_column(Text, nullable=False)
+    # Domaine de validite geographique (DEC-000038). Distinct de
+    # `required_context`, qui decrit un contexte SYLVICOLE (« futaie reguliere
+    # de hetre ») et non une zone. Une regle tiree d'un catalogue regional,
+    # appliquee hors de sa zone, rendrait une conclusion fausse citant une
+    # source reelle. Nullable en base pour les lignes anterieures a la
+    # decision ; exige a l'ecriture par la porte de validation.
+    validity_zone_description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        doc="Zone geographique de validite declaree par la source "
+        "(ex. « Haute-Normandie », « France metropolitaine »)",
+    )
     trigger: Mapped[str] = mapped_column(Text, nullable=False)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     intensity: Mapped[str] = mapped_column(Text, nullable=False)
