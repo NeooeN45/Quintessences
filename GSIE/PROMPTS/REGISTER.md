@@ -24,6 +24,7 @@
 | GSIE-PROMPT-0020 (interne) | Aucun — Codex | Rebaselining Alembic — baseline autonome `20260726_0001` (DEC-000036) | VALIDÉE | Cycle réel vert (base vierge → `upgrade head` → contrôle de dérive → `downgrade base` → `upgrade head`) sur PostgreSQL 16/PostGIS/AGE | Architecte — repris en interne, non délégué |
 | GSIE-PROMPT-0021 (interne) | Aucun — Codex | Outbox worker — retry et dead letter (ADR-005) | VALIDÉE | Worker outbox au moins une fois, événements filtrés RGPD | Architecte — repris en interne, non délégué |
 | GSIE-PROMPT-0022 (interne) | Aucun — Codex | API Resources — CRUD générique sur les types de resources enregistrés | VALIDÉE | 8 endpoints `/api/v1/resources`, RBAC fermé avant chargement | Architecte — repris en interne, non délégué |
+| GSIE-PROMPT-0023 | GLM 5.2 via Devin | Résilience des dix clients d'API externes (chemins de panne amont) | À LANCER | Audit fiabilité 2026-07-28, harnais de mutation 8/8 | Architecte |
 
 > **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
 > correspondent à du travail structurant réalisé directement par
