@@ -7,7 +7,7 @@
 | Environnement | Devin |
 | Dépôt | Quintessences |
 | Branche | `fix/enterprise-reliability-2026-07-21` |
-| Fichiers possédés | `GSIE/API/src/gsie_api/engines/*/[a-z]*client*.py` + leurs tests dédiés |
+| Commit de référence | `bf18d84` |
 | Orchestrateur | Architecte |
 | Relecteur | Architecte puis Fondateur |
 | Standard applicable | `23_QUALITY_MANAGEMENT/PROCESSES/CODE_QUALITY_STANDARD.md` |
@@ -19,113 +19,180 @@ qui suit : **la couverture était à 99 % et dix-huit défauts réels sont pass�
 travers**, dont plusieurs cassaient toute écriture authentifiée. La couverture
 mesure les lignes exécutées, jamais les comportements vérifiés.
 
-La mesure en couverture de **branches** (et non de lignes) désigne une zone
-précise : les clients d'API externes sont à 32 %. Or c'est exactement là que
-vivent les modes de panne — réseau coupé, réponse tronquée, schéma amont
-modifié, quota dépassé. Ces chemins existent dans le code mais ne sont
-exercés par aucun test.
+La mesure en couverture de **branches** désigne une zone précise : les clients
+d'API externes sont à 32 %. C'est là que vivent les pannes amont — réseau
+coupé, réponse tronquée, schéma fournisseur modifié, quota dépassé. Ces
+chemins existent dans le code et ne sont exercés par aucun test.
 
-Mesures relevées le 2026-07-28 (`pytest tests/unit --cov-branch`) :
+Mesures du 2026-07-28, `pytest tests/unit --cov-branch` :
 
-| Module | Couverture de branches |
+| Module | Branches |
 |---|---|
 | `engines/botanical/gbif_client.py` | 32 % |
 | `engines/pedology/soilgrids_client.py` | 32 % |
-| `engines/gis/engine.py` | 46 % |
-| `engines/evidence/wrapper.py` | 62 % |
 
-Point déjà vérifié, à ne pas réinstruire : les dix clients déclarent tous un
-timeout. L'hypothèse « appel réseau sans borne » est écartée.
+Deux hypothèses déjà instruites, **à ne pas réinstruire** :
+
+- les dix clients déclarent tous un timeout — « appel réseau sans borne » est
+  écarté ;
+- la clé Météo-France transite par un en-tête (`headers={"apikey": …}`), pas
+  par l'URL — elle ne peut pas fuiter dans un message d'erreur contenant
+  l'URL.
+
+## Périmètre possédé
+
+Les dix clients :
+
+```
+engines/botanical/gbif_client.py          engines/climate/synop_client.py
+engines/botanical/taxref_client.py        engines/climate/vigilance_client.py
+engines/climate/arome_client.py           engines/climate/paquet_observation_client.py
+engines/climate/dpclim_client.py          engines/gis/ign_client.py
+engines/climate/meteofrance_client.py     engines/pedology/soilgrids_client.py
+```
+
+Tests : **étendre les fichiers existants**, ne pas en créer de doublons.
+
+```
+tests/unit/test_botanical_taxref.py       tests/unit/test_climate_arome.py
+tests/unit/test_climate.py                tests/unit/test_climate_arome_edge_cases.py
+tests/unit/test_ign_client_extended.py    tests/unit/test_botanical_engine_edge_cases.py
+```
+
+Un fichier neuf n'est justifié que pour un client aujourd'hui sans test dédié
+(`soilgrids_client`, `gbif_client`, `dpclim_client`, `synop_client`,
+`vigilance_client`, `paquet_observation_client`, `meteofrance_client`).
 
 ## Mission
 
-Pour chacun des dix clients de `src/gsie_api/engines/*/[a-z]*client*.py`,
-établir puis garantir le comportement en cas de défaillance amont.
+Établir puis garantir le comportement de chaque client en cas de défaillance
+amont. Un service externe indisponible **n'est pas une panne de GSIE** : il
+doit produire une erreur métier nommée, et **jamais une donnée inventée**
+(`ADR-009`, `GSIE-CON-002`). Une réponse partielle doit être refusée ou
+déclarée incomplète, jamais complétée par une valeur par défaut.
 
-Un service externe indisponible **n'est pas une panne de GSIE**. Il doit
-produire une erreur métier nommée, jamais un 500 opaque, et **jamais une donnée
-inventée** — c'est le sens d'`ADR-009` et de `GSIE-CON-002`. Une réponse
-partielle doit être refusée ou déclarée incomplète, pas complétée par défaut.
+Cinq modes de panne, pour chacun des dix clients :
 
-Modes de panne à couvrir, pour chaque client :
-
-1. panne réseau (`httpx.ConnectError`, `httpx.ReadTimeout`) ;
-2. réponse HTTP 4xx et 5xx du fournisseur ;
-3. corps de réponse malformé (JSON invalide, XML tronqué, GRIB corrompu) ;
-4. réponse bien formée mais **champ attendu absent** — le cas le plus
-   dangereux, car c'est celui qui produit silencieusement une valeur nulle ou
-   une donnée inventée ;
-5. quota ou authentification refusée (401, 403, 429) quand le fournisseur
+1. panne réseau — `httpx.ConnectError`, `httpx.ReadTimeout` ;
+2. statut HTTP 4xx puis 5xx du fournisseur ;
+3. corps malformé — JSON invalide, XML tronqué, GRIB corrompu ;
+4. **réponse bien formée mais champ attendu absent** — le cas le plus
+   dangereux : c'est celui qui produit silencieusement un `None`, un zéro, ou
+   une valeur inventée qui restera citable ;
+5. quota ou authentification refusée (401, 403, 429) là où le fournisseur
    l'expose.
+
+## Conventions à préserver
+
+Elles existent déjà dans le dépôt. Les respecter, ne pas en inventer d'autres :
+
+- chaque client lève l'erreur de son moteur (`BotanicalEngineError`,
+  `ClimateEngineError`, `GISEngineError`, `PedologyEngineError`) ;
+- les routers de ces quatre moteurs traduisent en **502 Bad Gateway** — code
+  sémantiquement juste pour une défaillance amont. Les moteurs de calcul
+  (correlation, reasoning, diagnostic…) rendent 400 : ne pas mélanger les deux
+  régimes ;
+- le message d'erreur remonté au client doit être **contrôlé et rédigé**, pas
+  un `str(exc)` d'exception amont : celui-ci expose l'URL interne, le nom du
+  fournisseur et parfois le corps de sa réponse. Nommer la cause en français,
+  sans divulguer la structure interne.
+
+Si une correction exige de toucher un moteur ou un router — hors périmètre —
+**la signaler dans le rapport sans la faire**.
 
 ## Obligations de preuve
 
-Ces obligations ne sont pas des formalités : elles existent précisément parce
-qu'une suite volumineuse a déjà échoué à détecter des défauts réels.
+Ces obligations existent parce qu'une suite de plus de mille tests a déjà
+échoué à détecter dix-huit défauts réels. Elles ne sont pas négociables.
 
-1. **Reproduire avant de corriger.** Tout défaut trouvé doit d'abord être
-   reproduit par un test qui échoue, avec `respx` (déjà en dépendance) pour
-   simuler la réponse amont. Un raisonnement sur le code ne vaut pas preuve.
-2. **Un test qui ne peut pas échouer ne compte pas.** Proscrire
-   `assert x is not None`, `assert status in (200, 400, 422, 500)` et toute
-   assertion qu'un code cassé satisferait encore. Chaque test doit affirmer
-   une valeur ou un type d'erreur précis.
-3. **Ajouter la mutation correspondante** dans
-   `GSIE/API/tests/mutation/harnais.py` pour chaque garde ajoutée, et vérifier
-   qu'elle est *tuée* : `python tests/mutation/harnais.py` doit rester à 100 %.
-   Une garde sans mutation est une garde que personne ne surveille.
-4. **Interdiction de neutraliser l'existant** : aucun `xfail`, `skip`,
+1. **Reproduire avant de corriger.** Tout défaut doit d'abord être reproduit
+   par un test qui échoue, avec `respx` pour simuler la réponse amont. Un
+   raisonnement sur le code ne vaut pas preuve.
+2. **Un test qui ne peut pas échouer ne compte pas.** Sont proscrits
+   `assert x is not None`, `assert status in (200, 400, 502)`, et toute
+   assertion qu'un code cassé satisferait encore. Affirmer une valeur précise
+   ou un type d'erreur précis.
+3. **Vérifier que chaque test mord.** Pour chaque test ajouté, casser
+   volontairement la garde qu'il protège et constater qu'il échoue, puis
+   restaurer. Reporter les deux résultats. Un test jamais vu échouer n'a rien
+   prouvé.
+4. **Ajouter la mutation au harnais** `tests/mutation/harnais.py` pour chaque
+   garde ajoutée, et montrer qu'elle **survit avant** le correctif et qu'elle
+   est **tuée après**. Ajouter une mutation déjà tuée par construction ne
+   démontre rien.
+5. **Interdiction de neutraliser l'existant** : aucun `xfail`, `skip`,
    `skipif`, assertion commentée, ni exclusion de couverture. Si un test
    existant devient faux, le signaler — ne pas le désactiver.
-5. **Aucun appel réseau réel** en test. Tout passe par `respx`.
+6. **Aucun appel réseau réel.** Tout passe par `respx`. Pour les formats non
+   HTTP (GRIB via `eccodes`), injecter un fichier corrompu depuis
+   `tests/fixtures/`.
 
 ## Organisation attendue (sous-agents)
 
-Le volume se prête au parallélisme. Organisation recommandée :
+Le volume se prête au parallélisme, sur fichiers disjoints :
 
-- **un sous-agent par famille de clients** — botanical (2), climate (6),
-  gis (1), pedology (1) — travaillant sur des fichiers disjoints ;
-- **un sous-agent réfuteur** distinct, qui reprend chaque défaut annoncé par
-  les autres et tente de le *démolir* : reproduire réellement, chercher le
-  garde plus haut dans la pile, la valeur par défaut, le chemin mort jamais
-  atteint. Un constat non reproduit est rejeté. Ce rôle est le plus important
-  de la mission : il est ce qui manquait au travail précédent.
+- **botanical** (2 clients) — **climate** (6) — **gis** (1) — **pedology** (1) ;
+- **un sous-agent réfuteur distinct**, qui reprend chaque défaut annoncé par
+  les autres et tente de le **démolir** : le reproduire réellement, chercher
+  le garde plus haut dans la pile, la valeur par défaut, le chemin mort jamais
+  atteint en pratique. Un constat non reproduit est rejeté.
+
+Ce rôle de réfuteur est le plus important de la mission. C'est précisément ce
+qui manquait au travail précédent : des constats plausibles que personne ne
+reproduisait.
+
+## Environnement
+
+```
+cd GSIE/API
+./.venv/Scripts/python.exe -m pytest tests/unit -q --no-cov
+./.venv/Scripts/python.exe -m ruff check src tests
+./.venv/Scripts/python.exe -m ruff format --check src tests
+./.venv/Scripts/python.exe -m mypy src --strict
+./.venv/Scripts/python.exe tests/mutation/harnais.py
+```
+
+Tests d'intégration : préfixer `TESTCONTAINERS_RYUK_DISABLED=true` (Docker requis).
 
 ## Interdictions
 
-- aucune modification hors des fichiers possédés — un autre agent travaille en
-  parallèle sur le dépôt ;
+- aucune modification hors du périmètre possédé — un autre agent travaille en
+  parallèle sur ce dépôt ;
 - aucune modification des schémas Pydantic ni des contrats de moteur : un
   invariant de type est une décision d'architecture ;
 - aucune valeur scientifique inventée ou « par défaut » pour compenser une
   donnée amont absente ;
 - aucun document `Locked` touché ;
-- aucun `git push`, aucune fusion.
+- aucun `git push`, aucune fusion, aucun commit sur une autre branche.
 
 ## Livrable
 
-Un rapport comprenant :
-
-1. le tableau des dix clients × cinq modes de panne, avec pour chaque case le
-   comportement **constaté avant** et **après** ;
-2. la liste des défauts trouvés, chacun avec la commande qui le reproduit et
-   sa sortie ;
-3. les mutations ajoutées au harnais et le score obtenu ;
-4. les commandes de validation avec leurs codes de sortie :
-   `ruff check src tests`, `ruff format --check src tests`,
-   `mypy src --strict`, `pytest tests/unit`,
-   `python tests/mutation/harnais.py` ;
-5. la couverture de branches avant/après sur les modules visés ;
-6. ce qui n'a pas été fait et pourquoi.
+1. Le tableau **dix clients × cinq modes de panne**, chaque case portant le
+   comportement **constaté avant** et **après**. Une case non instruite doit
+   être déclarée comme telle, pas laissée vide.
+2. La liste des défauts, chacun avec la commande qui le reproduit et sa sortie.
+3. Pour chaque test ajouté : la preuve qu'il échoue quand la garde est cassée.
+4. Les mutations ajoutées, avec leur état **avant** (survivante) et **après**
+   (tuée).
+5. Les commandes de validation ci-dessus avec leurs **codes de sortie**.
+6. Ce qui n'a pas été fait, et pourquoi.
 
 ## Critère d'acceptation
 
 Le travail est accepté si, et seulement si :
 
-- chaque défaut annoncé est reproductible par la commande fournie ;
-- le harnais de mutation reste à 100 % ;
-- la couverture de branches des dix clients dépasse 85 % ;
+- les cinquante cases du tableau sont instruites — traitées ou explicitement
+  déclarées hors d'atteinte avec le motif ;
+- chaque défaut annoncé est reproductible par la commande fournie, vérifiée
+  par l'Architecte ;
+- chaque test ajouté a été vu échouer au moins une fois ;
+- le harnais de mutation reste à 100 %, mutations nouvelles comprises ;
 - aucune porte qualité ne régresse.
 
-Un rapport qui annonce des corrections sans preuve exécutée sera rejeté, comme
+**Aucun objectif chiffré de couverture n'est fixé, volontairement.** Viser un
+pourcentage produit des tests qui traversent le code sans rien vérifier —
+c'est exactement ce qui a permis aux dix-huit défauts de passer. Ce qui est
+demandé est un comportement établi, pas une métrique atteinte.
+
+Un rapport annonçant des corrections sans preuve exécutée sera rejeté, comme
 l'a été `GSIE-PROMPT-0015`.
