@@ -157,6 +157,14 @@ def build_autecology_pilot_profiles() -> list[AutecologyProfileCreate]:
                 variable=variable,
                 evidence_level=evidence_level,
                 source=source,
+                # Parelle et al. (2007) est une etude physiologique en
+                # conditions controlees : elle ne declare aucune zone
+                # geographique. On enregistre cette limite plutot que d'en
+                # supposer une (DEC-000038, ADR-009).
+                territory_description=(
+                    "Portée physiologique d'espèce — étude en conditions "
+                    "contrôlées, aucune zone géographique déclarée par la source"
+                ),
                 value_text=value_text,
             )
         )

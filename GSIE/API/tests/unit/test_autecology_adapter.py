@@ -75,6 +75,7 @@ def should_raise_for_unknown_species() -> None:
     profile = AutecologyProfileCreate(
         species_gbif_taxon_key=999999999,  # espèce inconnue
         variable="preference_edaphique",
+        territory_description="France métropolitaine",
         value_text="test",
         evidence_level=EvidenceLevel.C,
         source=SourceReference(

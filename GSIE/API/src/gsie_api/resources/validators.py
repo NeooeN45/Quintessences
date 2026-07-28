@@ -270,6 +270,11 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "autecology_profile": [
         "species_entity_id",
         "variable",
+        # Domaine de validite obligatoire (DEC-000038) : une connaissance
+        # autecologique sans territoire declare serait appliquee partout, y
+        # compris hors de la zone que sa source couvre. Le silence ne vaut pas
+        # universalite — la declarer est un acte explicite.
+        "territory_description",
         "evidence_level",
         "source_id",
     ],

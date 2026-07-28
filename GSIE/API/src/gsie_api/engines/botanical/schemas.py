@@ -202,7 +202,10 @@ class AutecologyProfileCreate(BaseModel):
         default=None, max_length=100, description="Ex. « adulte », « semis »"
     )
     season: str | None = Field(default=None, max_length=50)
-    territory_description: str | None = Field(default=None, max_length=2000)
+    # Obligatoire depuis DEC-000038 : la portee reelle de la source, jamais
+    # devinee. Une source nationale le declare (« France metropolitaine »),
+    # une etude physiologique declare sa portee d'espece.
+    territory_description: str = Field(min_length=3, max_length=2000)
     method: str | None = None
     uncertainty: str | None = None
     evidence_level: EvidenceLevel

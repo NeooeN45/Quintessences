@@ -188,6 +188,7 @@ def test_autecology_profile_requires_a_value() -> None:
         AutecologyProfileCreate(
             species_gbif_taxon_key=5285725,
             variable="ph_optimal",
+            territory_description="France métropolitaine",
             evidence_level="B",
             source=_source(),
         )
@@ -197,6 +198,7 @@ def test_autecology_profile_accepts_numeric_value() -> None:
     profile = AutecologyProfileCreate(
         species_gbif_taxon_key=5285725,
         variable="ph_optimal",
+        territory_description="France métropolitaine",
         value_numeric=6.5,
         unit="pH",
         evidence_level="B",
@@ -209,6 +211,7 @@ def test_autecology_profile_accepts_text_value_without_numeric() -> None:
     profile = AutecologyProfileCreate(
         species_gbif_taxon_key=5285725,
         variable="tolerance_secheresse",
+        territory_description="France métropolitaine",
         value_text="Élevée",
         evidence_level="B",
         source=_source(),
@@ -556,3 +559,72 @@ def test_evidence_statement_extra_field_rejected() -> None:
             source=_source(),
             evidence_bare_integer=1,
         )
+
+
+class TestTerritoireObligatoire:
+    """`DEC-000038` — une connaissance sans territoire déclaré n'entre pas.
+
+    Le silence ne vaut pas universalité. Une règle tirée d'un catalogue
+    régional, appliquée hors de sa zone, produirait une conclusion fausse
+    citant une source réelle — invisible, parce que la chaîne d'inférence
+    serait complète et le niveau de preuve intact.
+
+    Déclarer une portée universelle reste possible : c'est un acte explicite,
+    distinct d'un champ laissé vide.
+    """
+
+    def test_un_profil_sans_territoire_est_refuse(self) -> None:
+        from pydantic import ValidationError
+
+        from gsie_api.engines.botanical.schemas import AutecologyProfileCreate
+        from gsie_api.engines.evidence.schemas import SourceReference, SourceType
+
+        with pytest.raises(ValidationError) as erreur:
+            AutecologyProfileCreate(
+                species_gbif_taxon_key=2882431,
+                variable="tolerance_secheresse",
+                value_text="moyenne",
+                evidence_level="B",
+                source=SourceReference(
+                    type_source=SourceType.referentiel_officiel,
+                    auteur="Rameau et al.",
+                    reference="Flore forestière française, IDF",
+                ),
+            )
+
+        assert "territory_description" in str(erreur.value)
+
+    def test_la_porte_de_l_api_generique_exige_aussi_le_territoire(self) -> None:
+        """La même exigence vaut par l'API générique de resources."""
+        from gsie_api.resources.validators import validate_resource_data
+
+        erreurs = validate_resource_data(
+            "autecology_profile",
+            {
+                "species_entity_id": "11111111-1111-4111-8111-111111111111",
+                "variable": "tolerance_secheresse",
+                "value_text": "moyenne",
+                "evidence_level": "B",
+                "source_id": "22222222-2222-4222-8222-222222222222",
+            },
+        )
+
+        assert any("territory_description" in e for e in erreurs), erreurs
+
+    def test_une_portee_universelle_declaree_est_acceptee(self) -> None:
+        """Témoin : c'est bien l'absence qui est refusée, pas une valeur large."""
+        from gsie_api.resources.validators import validate_resource_data
+
+        erreurs = validate_resource_data(
+            "autecology_profile",
+            {
+                "species_entity_id": "11111111-1111-4111-8111-111111111111",
+                "variable": "tolerance_secheresse",
+                "value_text": "moyenne",
+                "territory_description": "France métropolitaine",
+                "evidence_level": "B",
+                "source_id": "22222222-2222-4222-8222-222222222222",
+            },
+        )
+
+        assert erreurs == []

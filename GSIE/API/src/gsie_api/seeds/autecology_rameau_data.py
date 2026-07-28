@@ -218,6 +218,10 @@ def build_autecology_rameau_profiles() -> list[AutecologyProfileCreate]:
                 value_text=value_text,
                 evidence_level=EvidenceLevel(evidence_level),
                 source=source,
+                # Portée déclarée par la source elle-même : la « Flore
+                # forestière française » couvre la France métropolitaine.
+                # Enregistrer cette portée n'est pas la supposer (DEC-000038).
+                territory_description="France métropolitaine",
                 method=(
                     "Synthèse de référentiel — Rameau et al. (2008), "
                     "Flore forestière française, guide écologique forestier, IDF"

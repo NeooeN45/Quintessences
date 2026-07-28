@@ -231,6 +231,7 @@ class TestValidators:
             {
                 "species_entity_id": uuid4(),
                 "variable": "ph_optimal",
+                "territory_description": "France métropolitaine",
                 "evidence_level": "B",
                 "source_id": uuid4(),
                 # ni value_numeric ni value_text
@@ -245,6 +246,7 @@ class TestValidators:
             {
                 "species_entity_id": uuid4(),
                 "variable": "ph_optimal",
+                "territory_description": "France métropolitaine",
                 "evidence_level": "B",
                 "source_id": uuid4(),
                 "value_text": "acide à neutre",

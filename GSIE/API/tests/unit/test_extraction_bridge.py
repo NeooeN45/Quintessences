@@ -68,6 +68,7 @@ def test_bridge_builds_profile_with_curator_supplied_variable_and_value() -> Non
         variable="preference_sol_acide_drainant",
         evidence_level="A",
         source=_source(),
+        territory_description="France métropolitaine",
         value_text="Sols acides profonds et bien drainés",
     )
     assert profile.variable == "preference_sol_acide_drainant"
@@ -89,6 +90,7 @@ def test_bridge_rejects_fact_not_in_quarantine_status() -> None:
             variable="preference_sol_acide_drainant",
             evidence_level="A",
             source=_source(),
+            territory_description="France métropolitaine",
             value_text="Sols acides profonds et bien drainés",
         )
 
@@ -106,6 +108,7 @@ def test_bridge_still_requires_a_value_from_curator() -> None:
             variable="preference_sol_acide_drainant",
             evidence_level="A",
             source=_source(),
+            territory_description="France métropolitaine",
         )
 
 
@@ -139,6 +142,7 @@ def test_real_pilot_facts_load_and_bridge() -> None:
         variable="tolerance_secheresse_relative",
         evidence_level="B",
         source=_source(),
+        territory_description="France métropolitaine",
         value_text="Plus tolérant à la sécheresse que Quercus robur",
     )
     assert profile.value_text == "Plus tolérant à la sécheresse que Quercus robur"

@@ -238,6 +238,18 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_climate_arome_edge_cases.py",),
     ),
+    Mutation(
+        cle="territoire_non_exige",
+        fichier="gsie_api/resources/validators.py",
+        # Motif sur une seule ligne : le champ obligatoire lui-meme.
+        ancien='        "territory_description",',
+        nouveau="",
+        defaut_reproduit=(
+            "une connaissance autecologique entre sans territoire declare — "
+            "elle sera appliquee hors de la zone que sa source couvre (DEC-000038)"
+        ),
+        tests=("tests/unit/test_forestry_schemas.py",),
+    ),
 )
 
 

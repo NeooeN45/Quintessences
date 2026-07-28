@@ -63,12 +63,12 @@ def build_autecology_profile_from_quarantined_fact(
     variable: str,
     evidence_level: str,
     source: SourceReference,
+    territory_description: str,
     value_numeric: float | None = None,
     value_text: str | None = None,
     unit: str | None = None,
     life_stage: str | None = None,
     season: str | None = None,
-    territory_description: str | None = None,
     uncertainty: str | None = None,
 ) -> AutecologyProfileCreate:
     """Construit un `AutecologyProfileCreate` à partir d'un fait en quarantaine validé.
