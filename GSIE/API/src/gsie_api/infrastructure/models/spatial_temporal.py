@@ -61,9 +61,7 @@ class PlaceModel(Base, TimestampMixin):
     label: Mapped[str | None] = mapped_column(String(300), nullable=True, index=True)
     area_m2: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    __table_args__ = (
-        Index("idx_place_geom_4326", "geom_4326", postgresql_using="gist"),
-    )
+    __table_args__ = (Index("idx_place_geom_4326", "geom_4326", postgresql_using="gist"),)
 
 
 @register_type("temporal_context")

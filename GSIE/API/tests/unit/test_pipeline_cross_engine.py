@@ -16,18 +16,33 @@ import pytest
 
 from gsie_api.engines.diagnostic.schemas import (
     Diagnostic,
-    ElementDiagnostic,
     DomaineElement,
+    ElementDiagnostic,
     EtatGlobal,
-    StatutValidation,
     TypeDiagnostic,
 )
 from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference, SourceType
 from gsie_api.engines.learning.engine import LearningEngine
 from gsie_api.engines.learning.schemas import (
-    LearningOutputType,
     LearningSignal,
     LearningSignalType,
+)
+from gsie_api.engines.reasoning.schemas import (
+    Conclusion,
+    EtapeInference,
+    MethodeConfiance,
+    SourceMoteurContexte,
+    niveau_plancher,
+)
+from gsie_api.engines.recommendation.engine import RecommendationEngine
+from gsie_api.engines.recommendation.schemas import (
+    ObjectifForestier,
+    RecommendationRequest,
+    RecommendationSet,
+)
+from gsie_api.engines.validation.schemas import (
+    TypeSortie,
+    ValidationStatut,
 )
 from gsie_api.engines.validation_pipeline import (
     PipelineError,
@@ -37,28 +52,6 @@ from gsie_api.engines.validation_pipeline import (
     run_validation_pipeline,
     validation_failure_to_learning_signal,
 )
-from gsie_api.engines.reasoning.schemas import (
-    Conclusion,
-    EtapeInference,
-    MethodeConfiance,
-    SourceMoteurContexte,
-    niveau_plancher,
-)
-from gsie_api.engines.recommendation.schemas import (
-    JustificationRecommandation,
-    ObjectifForestier,
-    Recommendation,
-    RecommendationRequest,
-    RecommendationSet,
-    TypeAction,
-)
-from gsie_api.engines.recommendation.engine import RecommendationEngine
-from gsie_api.engines.validation.schemas import (
-    TypeSortie,
-    ValidationRequest,
-    ValidationStatut,
-)
-
 
 # --- Fixtures : objets typés réalistes ---
 
@@ -167,6 +160,7 @@ def should_convert_diagnostic_to_validation_request() -> None:
 def should_convert_recommendation_set_to_validation_request() -> None:
     """L'adaptateur extrait les recommandations et leurs sources."""
     import asyncio
+
     diagnostic = _make_diagnostic()
     reco_set = asyncio.run(_make_recommendation_set(diagnostic.diagnostic_id))
     request = recommendation_set_to_validation_request(reco_set)
@@ -178,6 +172,7 @@ def should_convert_recommendation_set_to_validation_request() -> None:
 def should_reject_ensemble_complet_with_mismatched_diagnostic() -> None:
     """L'adaptateur refuse un reco_set dont le diagnostic_source ne correspond pas."""
     import asyncio
+
     diagnostic = _make_diagnostic()
     # reco_set avec un diagnostic_id différent
     reco_set = asyncio.run(_make_recommendation_set(uuid4()))
@@ -192,6 +187,7 @@ def should_reject_learning_signal_for_valid_result() -> None:
         ResultatControle,
         ValidationResult,
     )
+
     result = ValidationResult(
         validation_id=uuid4(),
         requete_origine=uuid4(),

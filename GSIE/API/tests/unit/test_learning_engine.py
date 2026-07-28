@@ -34,7 +34,9 @@ def _make_retour_signal(decision: str = "refuse", contexte: uuid4 | None = None)
     )
 
 
-def _make_pattern_signal(confiance: float = 0.8, description: str = "Pattern test") -> LearningSignal:
+def _make_pattern_signal(
+    confiance: float = 0.8, description: str = "Pattern test"
+) -> LearningSignal:
     return LearningSignal(
         signal_id=uuid4(),
         type=LearningSignalType.pattern_emergent,
@@ -53,6 +55,7 @@ def engine() -> LearningEngine:
 
 
 # --- Tests retour forestier ---
+
 
 @pytest.mark.asyncio
 async def should_return_none_when_single_refus(engine: LearningEngine) -> None:
@@ -90,6 +93,7 @@ async def should_not_propose_for_accepte_decisions() -> None:
 
 # --- Tests pattern émergent ---
 
+
 @pytest.mark.asyncio
 async def should_return_pattern_confirme_when_high_confidence(engine: LearningEngine) -> None:
     """Un pattern émergent avec confiance >= 0.7 produit une proposition confirmée."""
@@ -110,6 +114,7 @@ async def should_return_none_when_low_confidence_pattern(engine: LearningEngine)
 
 
 # --- Tests sortie bloquée (Validation Engine → Learning) ---
+
 
 @pytest.mark.asyncio
 async def should_accumulate_sortie_bloquee_and_propose_calibration(engine: LearningEngine) -> None:
@@ -190,6 +195,7 @@ async def should_raise_for_observation_terrain_in_v1(engine: LearningEngine) -> 
 
 
 # --- Tests invariants schéma ---
+
 
 def should_require_justification_non_vide() -> None:
     """Le schéma rejette une proposition sans justification."""

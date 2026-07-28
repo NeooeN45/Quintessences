@@ -44,6 +44,7 @@ def engine() -> SimulationEngine:
 
 # --- Tests simulation ---
 
+
 @pytest.mark.asyncio
 async def should_generate_projections_for_standard_horizon(engine: SimulationEngine) -> None:
     """Un horizon 30y génère des projections à 5, 10 et 30 ans."""
@@ -93,6 +94,7 @@ async def should_compute_biomasse_growth(engine: SimulationEngine) -> None:
 
 # --- Tests parsing horizon ---
 
+
 @pytest.mark.asyncio
 async def should_parse_horizon_with_y_suffix(engine: SimulationEngine) -> None:
     """L'horizon '10y' est parsé comme 10 ans."""
@@ -134,6 +136,7 @@ async def should_raise_for_excessive_horizon(engine: SimulationEngine) -> None:
 
 
 # --- Tests invariants schéma ---
+
 
 def should_reject_simulation_result_without_sources() -> None:
     """Le schéma rejette un résultat sans sources (GSIE-CON-005)."""

@@ -5,8 +5,7 @@ pour que les autres suites (Knowledge Engine, pipeline) puissent réutiliser
 la même base de test sans relancer un conteneur Docker par fichier.
 """
 
-from collections.abc import AsyncGenerator
-from collections.abc import Sequence
+from collections.abc import AsyncGenerator, Sequence
 from typing import Any
 
 import pytest

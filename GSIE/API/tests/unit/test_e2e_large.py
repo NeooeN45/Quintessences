@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -34,7 +33,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
-from gsie_api.engines.autecology_adapter import profiles_to_rules, profile_to_rule
+from gsie_api.engines.autecology_adapter import profiles_to_rules
 from gsie_api.engines.diagnostic.engine import DiagnosticEngine
 from gsie_api.engines.diagnostic.schemas import (
     ContradictionDeclaree,
@@ -49,7 +48,6 @@ from gsie_api.engines.diagnostic.schemas import (
     TypeDiagnostic,
 )
 from gsie_api.engines.evidence.schemas import (
-    EvidenceLevel,
     SourceReference,
     SourceType,
 )
@@ -76,15 +74,12 @@ from gsie_api.engines.validation.schemas import ValidationStatut
 from gsie_api.engines.validation_pipeline import run_validation_pipeline
 from gsie_api.infrastructure.models.enums import EvidenceLevel as DbEvidenceLevel
 from gsie_api.seeds.autecology_pilot_data import (
-    GBIF_TAXON_KEY_QUERCUS_PETRAEA,
-    GBIF_TAXON_KEY_QUERCUS_ROBUR,
     build_autecology_pilot_profiles,
 )
 from gsie_api.seeds.autecology_rameau_data import (
     GBIF_TAXON_KEY_ABIES_ALBA,
     GBIF_TAXON_KEY_FAGUS_SYLVATICA,
     GBIF_TAXON_KEY_PINUS_SYLVESTRIS,
-    GBIF_TAXON_KEY_QUERCUS_ILEX,
     build_autecology_rameau_profiles,
 )
 
@@ -236,9 +231,7 @@ async def should_reason_on_multi_species_station() -> None:
 
     # Seules les règles dont la condition matchent `peuplement_essence_cible`
     # produisent des conclusions — ici Fagus sylvatica.
-    fagus_conclusions = [
-        c for c in result.conclusions if "Fagus sylvatica" in c.enonce
-    ]
+    fagus_conclusions = [c for c in result.conclusions if "Fagus sylvatica" in c.enonce]
     assert len(fagus_conclusions) == 5  # 5 variables Rameau pour Fagus
     # Les règles Pinus et Abies ne matchent pas (essence_cible != leur nom)
     pinus_conclusions = [c for c in result.conclusions if "Pinus sylvestris" in c.enonce]
@@ -281,9 +274,7 @@ async def should_detect_contradiction_between_parelle_and_rameau() -> None:
 
     # Construire un diagnostic avec une contradiction déclarée
     # entre deux conclusions (la première et la dernière)
-    quercus_conclusions = [
-        c for c in result.conclusions if "Quercus" in c.enonce
-    ]
+    quercus_conclusions = [c for c in result.conclusions if "Quercus" in c.enonce]
     if len(quercus_conclusions) >= 2:
         contradiction = ContradictionDeclaree(
             conclusion_a=quercus_conclusions[0].conclusion_id,
@@ -477,9 +468,7 @@ def should_cap_volume_at_production_maximale_for_abies() -> None:
     """Abies alba (production max 600) — projection plafonnée à maturité."""
     backend = CalibratedGrowthBackend()
     # AMA Abies = 9.0, sur 100 ans = 900, initial 200 → 1100 > 600 → capped
-    result = backend.simulate_growth(
-        "Abies alba", {"volume": 200.0}, 100
-    )
+    result = backend.simulate_growth("Abies alba", {"volume": 200.0}, 100)
     assert result["capped"] is True
     assert result["final_volume"] <= 600.0
 
@@ -541,9 +530,7 @@ def should_compare_growth_across_four_species_over_30_years() -> None:
     backend = CalibratedGrowthBackend()
     results = {}
     for species in ["Abies alba", "Fagus sylvatica", "Pinus sylvestris", "Quercus ilex"]:
-        result = backend.simulate_growth(
-            species, {"volume": 100.0}, 30
-        )
+        result = backend.simulate_growth(species, {"volume": 100.0}, 30)
         results[species] = result["volume_increment"]
 
     # Classement attendu : Abies > Fagus > Pinus > Quercus ilex
@@ -671,9 +658,18 @@ class TestApiHttpEndpoints:
     @pytest.mark.parametrize(
         "engine",
         [
-            "evidence", "knowledge", "correlation", "reasoning", "diagnostic",
-            "gis", "climate", "pedology", "recommendation", "validation",
-            "learning", "simulation",
+            "evidence",
+            "knowledge",
+            "correlation",
+            "reasoning",
+            "diagnostic",
+            "gis",
+            "climate",
+            "pedology",
+            "recommendation",
+            "validation",
+            "learning",
+            "simulation",
         ],
     )
     def should_return_200_on_engine_status(self, engine: str) -> None:
@@ -702,7 +698,7 @@ class TestApiHttpEndpoints:
         app = create_app()
         client = TestClient(app)
         response = client.get("/health")
-        assert "x-trace-id" in {k.lower() for k in response.headers.keys()}
+        assert "x-trace-id" in {k.lower() for k in response.headers}
 
     def should_return_security_headers(self) -> None:
         """Les headers de sécurité OWASP sont présents."""
@@ -808,7 +804,9 @@ async def should_run_complete_pipeline_with_all_engines_e2e() -> None:
 
     # 4. Validation + Learning
     pipeline = await run_validation_pipeline(
-        diagnostic, reco, conclusions=inference.conclusions,
+        diagnostic,
+        reco,
+        conclusions=inference.conclusions,
         learning_engine=LearningEngine(),
     )
     validation = pipeline["validation"]

@@ -12,7 +12,6 @@ Valeurs métier (ADR-009) :
 
 from __future__ import annotations
 
-import math
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from uuid import UUID
@@ -40,7 +39,6 @@ from gsie_api.engines.reasoning.schemas import (
     EtapeInference,
     MethodeConfiance,
 )
-
 
 # --- Correlation : fallback _classify_strength (ligne 277) ------------------
 

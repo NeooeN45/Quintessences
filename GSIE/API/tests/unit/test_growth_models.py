@@ -17,14 +17,13 @@ from gsie_api.engines.growth_models import (
     project_circumference,
     project_volume,
 )
+from gsie_api.engines.simulation.schemas import ConfidenceLevel
 from gsie_api.engines.simulation_backend import (
     CalibratedGrowthBackend,
     CapsisBackend,
     LinearGrowthBackend,
     SimulationBackendError,
 )
-from gsie_api.engines.simulation.schemas import ConfidenceLevel
-
 
 # --- Tests growth_models.py ---
 

@@ -10,9 +10,9 @@ L'IA assiste, elle ne décide pas (GSIE-CON-001).
 from gsie_api.engines.learning.engine import LearningEngine, LearningEngineError
 from gsie_api.engines.learning.schemas import (
     LearningOutput,
+    LearningOutputType,
     LearningSignal,
     LearningSignalType,
-    LearningOutputType,
     LearningStatut,
     PatternEmergent,
     RetourForestier,

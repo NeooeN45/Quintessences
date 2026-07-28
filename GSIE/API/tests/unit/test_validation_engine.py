@@ -52,6 +52,7 @@ def engine() -> ValidationEngine:
 
 # --- Tests statut valide ---
 
+
 @pytest.mark.asyncio
 async def should_return_valide_when_diagnostic_complete(engine: ValidationEngine) -> None:
     """Un diagnostic complet avec source, niveau de preuve, chaîne et justification est valide."""
@@ -59,7 +60,11 @@ async def should_return_valide_when_diagnostic_complete(engine: ValidationEngine
     assert result.statut == ValidationStatut.valide
     assert not result.causes_blocage
     assert len(result.controles) == 5
-    assert all(c.resultat == ResultatControle.conforme for c in result.controles if c.resultat != ResultatControle.non_applicable)
+    assert all(
+        c.resultat == ResultatControle.conforme
+        for c in result.controles
+        if c.resultat != ResultatControle.non_applicable
+    )
 
 
 @pytest.mark.asyncio
@@ -68,9 +73,16 @@ async def should_return_valide_when_recommandation_complete(engine: ValidationEn
     contenu = {
         "evidence_level": "B",
         "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
-        "justification": {"sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]},
+        "justification": {
+            "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+        },
         "recommandations": [
-            {"contournable": True, "justification": {"sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]}},
+            {
+                "contournable": True,
+                "justification": {
+                    "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+                },
+            },
         ],
     }
     result = await engine.validate(_make_request(TypeSortie.recommandation, contenu))
@@ -78,6 +90,7 @@ async def should_return_valide_when_recommandation_complete(engine: ValidationEn
 
 
 # --- Tests statut bloque ---
+
 
 @pytest.mark.asyncio
 async def should_return_bloque_when_no_evidence_level(engine: ValidationEngine) -> None:
@@ -108,26 +121,41 @@ async def should_return_bloque_when_no_chaine_inference(engine: ValidationEngine
     """Un diagnostic sans chaîne d'inférence est bloqué (GSIE-CON-004)."""
     result = await engine.validate(_make_request(chaines_inference=[]))
     assert result.statut == ValidationStatut.bloque
-    assert any(c.type_cause == TypeCauseBlocage.sans_chaine_inference for c in result.causes_blocage)
+    assert any(
+        c.type_cause == TypeCauseBlocage.sans_chaine_inference for c in result.causes_blocage
+    )
 
 
 @pytest.mark.asyncio
-async def should_return_bloque_when_recommandation_non_contournable(engine: ValidationEngine) -> None:
+async def should_return_bloque_when_recommandation_non_contournable(
+    engine: ValidationEngine,
+) -> None:
     """Une recommandation non contournable est bloquée (GSIE-CON-001)."""
     contenu = {
         "evidence_level": "B",
         "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
-        "justification": {"sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]},
+        "justification": {
+            "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+        },
         "recommandations": [
-            {"contournable": False, "justification": {"sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]}},
+            {
+                "contournable": False,
+                "justification": {
+                    "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+                },
+            },
         ],
     }
     result = await engine.validate(_make_request(TypeSortie.recommandation, contenu))
     assert result.statut == ValidationStatut.bloque
-    assert any(c.type_cause == TypeCauseBlocage.recommandation_non_contournable for c in result.causes_blocage)
+    assert any(
+        c.type_cause == TypeCauseBlocage.recommandation_non_contournable
+        for c in result.causes_blocage
+    )
 
 
 # --- Tests statut partiellement_valide ---
+
 
 @pytest.mark.asyncio
 async def should_return_partiellement_valide_when_ensemble_complet_with_non_critical_failure(
@@ -141,7 +169,12 @@ async def should_return_partiellement_valide_when_ensemble_complet_with_non_crit
             "justification": "Diagnostic fondé.",
         },
         "recommandations": [
-            {"contournable": True, "justification": {"sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]}},
+            {
+                "contournable": True,
+                "justification": {
+                    "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+                },
+            },
         ],
     }
     # Pas de chaîne d'inférence — non critique pour ensemble_complet
@@ -154,6 +187,7 @@ async def should_return_partiellement_valide_when_ensemble_complet_with_non_crit
 
 # --- Tests invariants schéma ---
 
+
 def should_reject_valide_with_causes_blocage() -> None:
     """Le schéma rejette statut=valide avec causes de blocage."""
     with pytest.raises(ValueError, match="valide.*causes"):
@@ -162,7 +196,9 @@ def should_reject_valide_with_causes_blocage() -> None:
             requete_origine=uuid4(),
             statut=ValidationStatut.valide,
             controles=[
-                ControleResultat(nom_controle="test", resultat=ResultatControle.conforme, details="ok")
+                ControleResultat(
+                    nom_controle="test", resultat=ResultatControle.conforme, details="ok"
+                )
             ],
             causes_blocage=[
                 CauseBlocage(
@@ -183,7 +219,9 @@ def should_reject_bloque_without_causes_blocage() -> None:
             requete_origine=uuid4(),
             statut=ValidationStatut.bloque,
             controles=[
-                ControleResultat(nom_controle="test", resultat=ResultatControle.non_conforme, details="ko")
+                ControleResultat(
+                    nom_controle="test", resultat=ResultatControle.non_conforme, details="ko"
+                )
             ],
             causes_blocage=[],
             date_validation=datetime.now(UTC),

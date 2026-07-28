@@ -21,7 +21,6 @@ from uuid import uuid4
 import pytest
 
 from gsie_api.engines.evidence.schemas import (
-    ConflitBibliographique,
     EvidenceLevel,
     KnowledgeStatus,
     SourceReference,
@@ -41,7 +40,6 @@ from gsie_api.engines.knowledge.schemas import (
     KnowledgeRevisionRequest,
     KnowledgeType,
     QueryType,
-    RelationRef,
 )
 
 
@@ -242,9 +240,7 @@ class TestFilterByCustomFilters:
         obj2 = _make_knowledge_object()
         obj2.connaissance_id = uuid4()
 
-        result = engine._filter_by_custom_filters(
-            [obj1, obj2], {"connaissance_id": str(target_id)}
-        )
+        result = engine._filter_by_custom_filters([obj1, obj2], {"connaissance_id": str(target_id)})
 
         assert result == [obj1]
 
@@ -253,9 +249,7 @@ class TestFilterByCustomFilters:
         hetre = _make_knowledge_object(mots_cles=["hetre", "RUM"])
         chene = _make_knowledge_object(mots_cles=["chene", "pH"])
 
-        result = engine._filter_by_custom_filters(
-            [hetre, chene], {"mots_cles": ["HETRE"]}
-        )
+        result = engine._filter_by_custom_filters([hetre, chene], {"mots_cles": ["HETRE"]})
 
         assert result == [hetre]
 

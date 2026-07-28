@@ -15,14 +15,13 @@ from gsie_api.engines.autecology_adapter import (
     profiles_to_rules,
 )
 from gsie_api.engines.evidence.schemas import EvidenceLevel
-from gsie_api.seeds.autecology_rameau_data import (
-    GBIF_TAXON_KEY_ABIES_ALBA,
-    GBIF_TAXON_KEY_FAGUS_SYLVATICA,
-    build_autecology_rameau_profiles,
-)
 from gsie_api.seeds.autecology_pilot_data import (
     GBIF_TAXON_KEY_QUERCUS_ROBUR,
     build_autecology_pilot_profiles,
+)
+from gsie_api.seeds.autecology_rameau_data import (
+    GBIF_TAXON_KEY_FAGUS_SYLVATICA,
+    build_autecology_rameau_profiles,
 )
 
 
@@ -30,7 +29,8 @@ def should_convert_rameau_profile_to_rule() -> None:
     """Un profil Rameau devient une règle avec condition sur l'essence."""
     profiles = build_autecology_rameau_profiles()
     fagus_edaphique = next(
-        p for p in profiles
+        p
+        for p in profiles
         if p.species_gbif_taxon_key == GBIF_TAXON_KEY_FAGUS_SYLVATICA
         and p.variable == "preference_edaphique"
     )
@@ -47,7 +47,8 @@ def should_convert_parelle_profile_to_rule() -> None:
     """Un profil Parelle (grade B) devient une règle avec confiance 0.80."""
     profiles = build_autecology_pilot_profiles()
     quercus_waterlogging = next(
-        p for p in profiles
+        p
+        for p in profiles
         if p.species_gbif_taxon_key == GBIF_TAXON_KEY_QUERCUS_ROBUR
         and p.variable == "tolerance_engorgement_racinaire"
     )

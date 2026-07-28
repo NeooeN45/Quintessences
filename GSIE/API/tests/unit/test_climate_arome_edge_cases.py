@@ -41,7 +41,10 @@ def _fake_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @respx.mock
 async def test_should_raise_arome_client_error_when_get_capabilities_network_fails() -> None:
-    """Une panne réseau (pas une erreur HTTP applicative) sur GetCapabilities doit lever AromeClientError."""
+    """Une panne réseau sur GetCapabilities doit lever AromeClientError.
+
+    Distincte d'une erreur HTTP applicative.
+    """
     respx.get(_GET_CAPABILITIES_URL).mock(side_effect=httpx.ConnectError("connexion refusée"))
     client = AromeClient()
 
@@ -50,7 +53,9 @@ async def test_should_raise_arome_client_error_when_get_capabilities_network_fai
 
 
 @respx.mock
-async def test_should_raise_arome_client_error_when_get_capabilities_body_is_not_valid_xml() -> None:
+async def test_should_raise_arome_client_error_when_get_capabilities_body_is_not_valid_xml() -> (
+    None
+):
     """Un corps de réponse GetCapabilities illisible (pas du XML) doit lever AromeClientError."""
     respx.get(_GET_CAPABILITIES_URL).mock(
         return_value=Response(200, content=b"<<< pas du XML valide >>>")

@@ -130,14 +130,16 @@ def test_should_return_none_and_log_when_taxon_absent_from_indigenat_dataset() -
     engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
 
     result = engine.get_indigenat(
-        IndigenatQuery(requete_id=uuid4(), nom_scientifique="Taxon totalement inexistant", code_ser="A11")
+        IndigenatQuery(
+            requete_id=uuid4(), nom_scientifique="Taxon totalement inexistant", code_ser="A11"
+        )
     )
 
     assert result is None
 
 
 def test_should_raise_botanical_engine_error_when_indigenat_statut_values_are_invalid() -> None:
-    """Des valeurs de statut d'indigénat non conformes au référentiel doivent lever BotanicalEngineError.
+    """Un statut d'indigénat hors référentiel doit lever BotanicalEngineError.
 
     Le dataset Bellifa et al. 2026 est un TSV externe versionné —
     toute valeur de statut hors de `StatutIndigenatFrance` /

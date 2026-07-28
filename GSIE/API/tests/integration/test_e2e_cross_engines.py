@@ -25,7 +25,6 @@ from gsie_api.app import create_app
 from gsie_api.core.auth import create_access_token
 from gsie_api.engines.evidence.schemas import (
     ContentType,
-    EvidenceLevel,
     RawKnowledgeSubmission,
     SourceReference,
     SourceType,
@@ -34,17 +33,11 @@ from gsie_api.infrastructure.database import get_db
 from tests.conftest import requires_docker
 
 # --- Tokens JWT de test ---
-_WRITER_TOKEN = create_access_token(
-    subject="test-e2e-writer", claims={"roles": ["writer"]}
-)
+_WRITER_TOKEN = create_access_token(subject="test-e2e-writer", claims={"roles": ["writer"]})
 _WRITER_HEADERS = {"Authorization": f"Bearer {_WRITER_TOKEN}"}
-_READER_TOKEN = create_access_token(
-    subject="test-e2e-reader", claims={"roles": ["reader"]}
-)
+_READER_TOKEN = create_access_token(subject="test-e2e-reader", claims={"roles": ["reader"]})
 _READER_HEADERS = {"Authorization": f"Bearer {_READER_TOKEN}"}
-_ADMIN_TOKEN = create_access_token(
-    subject="test-e2e-admin", claims={"roles": ["admin"]}
-)
+_ADMIN_TOKEN = create_access_token(subject="test-e2e-admin", claims={"roles": ["admin"]})
 _ADMIN_HEADERS = {"Authorization": f"Bearer {_ADMIN_TOKEN}"}
 
 
@@ -81,9 +74,7 @@ class TestChaineCrossMoteurs:
     que le niveau de preuve se propage correctement.
     """
 
-    async def should_preserve_sources_across_full_chain(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_preserve_sources_across_full_chain(self, async_client: AsyncClient) -> None:
         """ADR-009 : la source doit être préservée de Evidence à Knowledge."""
         # --- Étape 1 : Evidence (évaluer une raw knowledge) ---
         soumission_id = uuid4()
@@ -151,9 +142,7 @@ class TestChaineCrossMoteurs:
         assert knowledge_data["source"]["auteur"] == "Rameau et al. (2008)"
         assert knowledge_data["evidence_level"] == "B"
 
-    async def should_reject_chain_when_evidence_refused(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_reject_chain_when_evidence_refused(self, async_client: AsyncClient) -> None:
         """Si Evidence refuse (source non sourcée), la chaîne s'arrête tôt."""
         sub = RawKnowledgeSubmission(
             soumission_id=uuid4(),
@@ -177,9 +166,7 @@ class TestChaineCrossMoteurs:
         # observation_terrain -> niveau D ou E, potentiellement refuse ou quarantine
         assert data["statut"] in ("refuse", "quarantine", "accepte")
 
-    async def should_query_knowledge_after_ingest(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_query_knowledge_after_ingest(self, async_client: AsyncClient) -> None:
         """Après ingest, la knowledge doit être queryable."""
         # D'abord évaluer une connaissance via Evidence
         soumission_id = uuid4()

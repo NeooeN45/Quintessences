@@ -76,6 +76,7 @@ def _engines_documentés() -> set[str]:
 
 # --- Tests de conformité structurelle ---
 
+
 def should_have_all_14_engines_implemented() -> None:
     """Les 14 moteurs documentés doivent avoir une implémentation Python."""
     implémentés = _engines_implémentés()
@@ -110,6 +111,7 @@ def should_have_engine_py_and_schemas_py_for_each_engine() -> None:
 
 # --- Tests de conformité API ---
 
+
 @pytest.mark.parametrize("engine_name", sorted(_ENGINES_ATTENDUS))
 def should_return_200_when_engine_status_requested(engine_name: str) -> None:
     """Chaque moteur doit exposer GET /api/v1/{engine}/status (200).
@@ -137,14 +139,14 @@ def should_return_200_when_engine_status_requested(engine_name: str) -> None:
 
 # --- Tests de conformité documentation ---
 
+
 def should_have_all_engines_documented() -> None:
     """Les 14 moteurs implémentés doivent être documentés dans GSIE/ENGINES/."""
     implémentés = _engines_implémentés()
     documentés = _engines_documentés()
     non_documentés = implémentés - documentés
     assert not non_documentés, (
-        f"Moteurs implémentés mais non documentés dans GSIE/ENGINES/ : "
-        f"{sorted(non_documentés)}"
+        f"Moteurs implémentés mais non documentés dans GSIE/ENGINES/ : " f"{sorted(non_documentés)}"
     )
 
 
@@ -161,6 +163,7 @@ def should_have_readme_for_each_documented_engine() -> None:
 
 
 # --- Tests de cohérence import ---
+
 
 @pytest.mark.parametrize("engine_name", sorted(_ENGINES_ATTENDUS))
 def should_import_engine_module_without_error(engine_name: str) -> None:

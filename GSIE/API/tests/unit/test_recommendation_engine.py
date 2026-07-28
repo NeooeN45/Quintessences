@@ -11,13 +11,12 @@ from uuid import uuid4
 
 import pytest
 
-from gsie_api.engines.recommendation.engine import RecommendationEngine, RecommendationEngineError
+from gsie_api.engines.recommendation.engine import RecommendationEngine
 from gsie_api.engines.recommendation.schemas import (
     DecisionForestier,
     ForestierDecision,
     ObjectifForestier,
     RecommendationRequest,
-    RecommendationSet,
     TypeAction,
 )
 
@@ -40,6 +39,7 @@ def engine() -> RecommendationEngine:
 
 
 # --- Tests génération ---
+
 
 @pytest.mark.asyncio
 async def should_generate_non_empty_recommendation_set(engine: RecommendationEngine) -> None:
@@ -123,6 +123,7 @@ async def should_reference_diagnostic_in_justification(engine: RecommendationEng
 
 # --- Tests décision forestier ---
 
+
 @pytest.mark.asyncio
 async def should_record_accepte_decision(engine: RecommendationEngine) -> None:
     """Une décision 'accepte' est enregistrée avec accusé."""
@@ -163,6 +164,7 @@ async def should_record_modifie_decision_with_modifications(engine: Recommendati
 
 
 # --- Tests invariants schéma (déjà couverts par test_recommendation_schemas.py) ---
+
 
 @pytest.mark.asyncio
 async def should_generate_distinct_alternative_ids(engine: RecommendationEngine) -> None:

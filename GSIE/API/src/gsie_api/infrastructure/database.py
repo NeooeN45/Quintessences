@@ -104,12 +104,8 @@ async def set_rls_context(session: AsyncSession, user_id: str, roles: str) -> No
         user_id: UUID de l'utilisateur authentifié (JWT ``sub``).
         roles: Liste CSV des rôles (ex. ``"admin,researcher"``).
     """
-    await session.execute(
-        text("SET LOCAL app.current_user_id = :uid"), {"uid": user_id}
-    )
-    await session.execute(
-        text("SET LOCAL app.current_user_roles = :roles"), {"roles": roles}
-    )
+    await session.execute(text("SET LOCAL app.current_user_id = :uid"), {"uid": user_id})
+    await session.execute(text("SET LOCAL app.current_user_roles = :roles"), {"roles": roles})
 
 
 # Type alias pour l'annotation Annotated dans les routers

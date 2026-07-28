@@ -79,9 +79,9 @@ def should_cover_5_variables_per_species() -> None:
         GBIF_TAXON_KEY_ABIES_ALBA,
     }:
         vars_for_species = {p.variable for p in profiles if p.species_gbif_taxon_key == species_key}
-        assert vars_for_species == expected_vars, (
-            f"Variables manquantes pour {species_key}: {expected_vars - vars_for_species}"
-        )
+        assert (
+            vars_for_species == expected_vars
+        ), f"Variables manquantes pour {species_key}: {expected_vars - vars_for_species}"
 
 
 def should_combine_parelle_and_rameau_in_corpus() -> None:

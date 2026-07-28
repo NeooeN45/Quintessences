@@ -136,9 +136,7 @@ class TestProcessAccepted:
     ) -> None:
         # Arrange : force evaluate() a retourner un statut accepte
         qualified = _make_qualified(KnowledgeStatus.accepte, EvidenceLevel.B)
-        monkeypatch.setattr(
-            "gsie_api.engines.pipeline.evaluate", lambda sub: qualified
-        )
+        monkeypatch.setattr("gsie_api.engines.pipeline.evaluate", lambda sub: qualified)
         expected_obj = _make_knowledge_object(qualified.connaissance_id)
         mock_knowledge_engine.ingest.return_value = expected_obj
 
@@ -167,9 +165,7 @@ class TestProcessAccepted:
     ) -> None:
         # Arrange
         qualified = _make_qualified(KnowledgeStatus.accepte, EvidenceLevel.A)
-        monkeypatch.setattr(
-            "gsie_api.engines.pipeline.evaluate", lambda sub: qualified
-        )
+        monkeypatch.setattr("gsie_api.engines.pipeline.evaluate", lambda sub: qualified)
         mock_knowledge_engine.ingest.side_effect = KnowledgeEngineError("DB down")
 
         # Act

@@ -37,12 +37,10 @@ from gsie_api.engines.reasoning.engine import (
     _dependances_transitives,
     _detecter_contradictions,
     _evaluer_condition,
-    _evaluer_noeud,
 )
 from gsie_api.engines.reasoning.schemas import (
     BlocContexte,
     Conclusion,
-    ContradictionDetectee,
     EtapeInference,
     MethodeConfiance,
     ReasoningRequest,
@@ -296,9 +294,7 @@ class TestCollecterDependances:
         """Une règle inconnue (non dans la liste) retourne un ensemble vide (ligne 585)."""
         regle = _regle("R1", "pedologie_pH > 4")
         # L'identifiant passé n'est pas dans la liste des règles
-        deps = _dependances_transitives(
-            "REGLE_INCONNUE", {}, [regle], {}
-        )
+        deps = _dependances_transitives("REGLE_INCONNUE", {}, [regle], {})
         assert deps == set()
 
     def test_regle_sans_dependances(self) -> None:
@@ -422,7 +418,10 @@ class TestIntegrationChainageComplet:
         assert "R2" in resultat.regles_non_appliquees
 
     async def test_variable_conclusion_non_produite_ne_leve_pas(self) -> None:
-        """Une règle référençant conclusion_RX où RX n'est pas appliquée ne lève pas (ligne 303-304)."""
+        """Une règle citant conclusion_RX sans que RX soit appliquée ne lève pas.
+
+        Cf. engine.py lignes 303-304.
+        """
         contexte = StationContexte(pedologie=_bloc({"pH": 5.0}))
         # R1 ne s'applique pas (pH > 10 est faux)
         r1 = _regle("R1", "pedologie_pH > 10", enonce="Sol tres alcalin.")

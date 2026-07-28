@@ -52,8 +52,7 @@ def _make_source_metadata() -> dict[str, Any]:
         "type": "seuil",
         "titre": "RUM minimale pour le hêtre (Fagus sylvatica)",
         "description": (
-            "Réserve utile en eau minimale sous laquelle la station est "
-            "défavorable au hêtre."
+            "Réserve utile en eau minimale sous laquelle la station est " "défavorable au hêtre."
         ),
         "domaine_scientifique": "pedologie",
         "contenu": {"valeur": "80 mm"},
@@ -250,9 +249,7 @@ class TestReviseEvidenceLevel:
 
         # Assert — une nouvelle EvidenceAssessmentModel a été ajoutée à la session
         assert result.evidence_level == EvidenceLevel.A
-        evidence_models = [
-            m for m in added_models if type(m).__name__ == "EvidenceAssessmentModel"
-        ]
+        evidence_models = [m for m in added_models if type(m).__name__ == "EvidenceAssessmentModel"]
         assert len(evidence_models) == 1
         assert evidence_models[0].method == "knowledge_engine_revise"
 
@@ -277,9 +274,7 @@ class TestReviseEvidenceLevel:
         # Assert — le niveau de preuve du résultat est bien mis à jour malgré
         # l'absence d'EvidenceAssessment antérieure à réviser
         assert result.evidence_level == EvidenceLevel.C
-        evidence_models = [
-            m for m in added_models if type(m).__name__ == "EvidenceAssessmentModel"
-        ]
+        evidence_models = [m for m in added_models if type(m).__name__ == "EvidenceAssessmentModel"]
         assert len(evidence_models) == 0
 
 

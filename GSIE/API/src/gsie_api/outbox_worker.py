@@ -342,9 +342,7 @@ def _valider_requete_requeue(
         raise ValueError("Ré-enfilement refusé : reason est obligatoire (traçabilité CON-010)")
 
 
-def _select_dead_letters_statement(
-    event_ids: Sequence[UUID] | None, limit: int | None
-) -> Any:
+def _select_dead_letters_statement(event_ids: Sequence[UUID] | None, limit: int | None) -> Any:
     """Construit la requête des événements en lettre morte à ré-enfiler."""
     statement = select(OutboxEvent).where(OutboxEvent.status == OUTBOX_STATUS_DEAD_LETTER)
     if event_ids is not None:

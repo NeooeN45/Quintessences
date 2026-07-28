@@ -29,13 +29,10 @@ Une future version intégrera :
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
-from uuid import UUID
 
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.simulation.schemas import (
     ConfidenceLevel,
-    InterventionSpec,
     ScenarioSimulation,
     SimulationResult,
     TimedProjection,
@@ -122,9 +119,7 @@ class SimulationEngine:
                 f"Horizon invalide '{horizon}' — format attendu : '5y', '10y', '30y'"
             ) from exc
         if years <= 0 or years > 200:
-            raise SimulationEngineError(
-                f"Horizon {years} hors plage valide (1-200 ans)"
-            )
+            raise SimulationEngineError(f"Horizon {years} hors plage valide (1-200 ans)")
         return years
 
     def _generate_projections(
@@ -144,9 +139,7 @@ class SimulationEngine:
         # En v1, valeurs par défaut — une future version les récupérera
         # du diagnostic source et du Forest Dynamics Engine.
         biomasse_initiale = 100.0  # t/ha — valeur abstraite v1
-        densite_initiale = float(
-            intervention.parametres.get("densite", 1000)
-        )
+        densite_initiale = float(intervention.parametres.get("densite", 1000))
 
         # Taux d'accroissement annuel — modèle linéaire v1
         # Une future version utilisera un modèle de croissance calibré

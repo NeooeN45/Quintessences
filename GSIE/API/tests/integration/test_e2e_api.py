@@ -16,7 +16,6 @@ asyncpg casse sur une boucle asyncio différente — voir test_pipeline_api.py.
 
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -29,7 +28,6 @@ from gsie_api.app import create_app
 from gsie_api.core.auth import create_access_token
 from gsie_api.engines.evidence.schemas import (
     ContentType,
-    EvidenceLevel,
     RawKnowledgeSubmission,
     SourceReference,
     SourceType,
@@ -72,7 +70,16 @@ class TestEngineStatusEndpoints:
 
     @pytest.mark.parametrize(
         "engine",
-        ["evidence", "knowledge", "correlation", "reasoning", "diagnostic", "gis", "climate", "pedology"],
+        [
+            "evidence",
+            "knowledge",
+            "correlation",
+            "reasoning",
+            "diagnostic",
+            "gis",
+            "climate",
+            "pedology",
+        ],
     )
     def should_return_200_on_engine_status(self, engine: str) -> None:
         app = create_app()
@@ -185,9 +192,7 @@ async def async_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, 
 class TestCorrelationComputeE2E:
     """POST /correlation/compute — calcul reel avec persistance."""
 
-    async def should_compute_and_persist_correlation(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_compute_and_persist_correlation(self, async_client: AsyncClient) -> None:
         payload = {
             "requete_id": str(uuid4()),
             "domaine": "stationnel",
@@ -226,9 +231,7 @@ class TestCorrelationComputeE2E:
         assert data["source"]["auteur"] == "Rameau et al. (2008)"
         assert data["evidence_level"] == "B"
 
-    async def should_return_400_when_method_not_calculable(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_return_400_when_method_not_calculable(self, async_client: AsyncClient) -> None:
         payload = {
             "requete_id": str(uuid4()),
             "domaine": "stationnel",
@@ -257,9 +260,7 @@ class TestCorrelationComputeE2E:
         )
         assert response.status_code == 400
 
-    async def should_return_422_when_valeurs_not_appariees(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_return_422_when_valeurs_not_appariees(self, async_client: AsyncClient) -> None:
         payload = {
             "requete_id": str(uuid4()),
             "domaine": "stationnel",
@@ -294,9 +295,7 @@ class TestPipelineE2E:
     """Chaine Evidence -> Knowledge via API (deja couvert par test_pipeline_api,
     on ajoute ici un test de bout en bout avec verification ADR-009)."""
 
-    async def should_evaluate_and_preserve_evidence_level(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_evaluate_and_preserve_evidence_level(self, async_client: AsyncClient) -> None:
         """ADR-009 : le niveau de preuve doit etre preserve dans la reponse."""
         sub = RawKnowledgeSubmission(
             soumission_id=uuid4(),
@@ -361,9 +360,7 @@ class TestReasoningE2E:
         # Sans regles, pas de conclusions — resultat honnete
         assert data["conclusions"] == []
 
-    async def should_return_422_when_contexte_empty(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def should_return_422_when_contexte_empty(self, async_client: AsyncClient) -> None:
         """Un contexte vide doit etre rejete (on ne raisonne pas sur le vide)."""
         payload = {
             "requete_id": str(uuid4()),

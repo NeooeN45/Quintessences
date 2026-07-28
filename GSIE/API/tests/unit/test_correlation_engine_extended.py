@@ -13,7 +13,6 @@ Couvre les chemins non testés par tests/integration/test_correlation.py
 Aucune DB réelle — la session est un MagicMock avec flush() en AsyncMock.
 """
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 

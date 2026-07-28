@@ -37,12 +37,12 @@ from gsie_api.engines.evidence.router import router as evidence_router
 from gsie_api.engines.forest_dynamics.router import router as forest_dynamics_router
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
+from gsie_api.engines.learning.router import router as learning_router
 from gsie_api.engines.pedology.router import router as pedology_router
 from gsie_api.engines.reasoning.router import router as reasoning_router
 from gsie_api.engines.recommendation.router import router as recommendation_router
 from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
-from gsie_api.engines.learning.router import router as learning_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import RequestBodyLimitMiddleware, TraceIdMiddleware

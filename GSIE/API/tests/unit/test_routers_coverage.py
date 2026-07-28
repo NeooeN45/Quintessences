@@ -17,8 +17,8 @@ Routers couverts :
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
@@ -40,7 +40,6 @@ from gsie_api.resources.router import router as resources_router
 from gsie_api.resources.schemas import (
     ResourceListResponse,
     ResourceRead,
-    ResourceTypesResponse,
     RevisionRead,
 )
 
@@ -85,6 +84,7 @@ def _build_engine_app(router: Any, mock_db: Any = None) -> FastAPI:
     app.add_middleware(SlowAPIASGIMiddleware)
 
     if mock_db is not None:
+
         async def _override_get_db() -> AsyncGenerator[Any, None]:
             yield mock_db
 
@@ -276,7 +276,9 @@ async def should_return_200_when_list_resources_with_type_filter(resources_clien
     """Le filtre par type passe la permission check sur ce type."""
     from gsie_api.resources.service import ResourceService
 
-    mock_response = ResourceListResponse(items=[], total=0, page=1, size=20, type_filter="assertion")
+    mock_response = ResourceListResponse(
+        items=[], total=0, page=1, size=20, type_filter="assertion"
+    )
     with patch.object(ResourceService, "list_resources", new=AsyncMock(return_value=mock_response)):
         response = await resources_client.get(
             f"{_API_PREFIX}/resources?type=assertion", headers=_auth_headers(["reader"])
@@ -311,7 +313,10 @@ async def should_return_201_when_create_resource_with_writer(resources_client: A
     with patch.object(ResourceService, "create", new=AsyncMock(return_value=mock_read)):
         response = await resources_client.post(
             f"{_API_PREFIX}/resources",
-            json={"type": "assertion", "data": {"claim_kind": "relation", "lifecycle_status": "draft"}},
+            json={
+                "type": "assertion",
+                "data": {"claim_kind": "relation", "lifecycle_status": "draft"},
+            },
             headers=_auth_headers(["writer"]),
         )
     assert response.status_code == 201
@@ -341,7 +346,10 @@ async def should_return_422_when_create_resource_validation_error(
     with patch.object(ResourceService, "create", new=AsyncMock(side_effect=error)):
         response = await resources_client.post(
             f"{_API_PREFIX}/resources",
-            json={"type": "assertion", "data": {"claim_kind": "relation", "lifecycle_status": "draft"}},
+            json={
+                "type": "assertion",
+                "data": {"claim_kind": "relation", "lifecycle_status": "draft"},
+            },
             headers=_auth_headers(["writer"]),
         )
     assert response.status_code == 422
@@ -354,7 +362,9 @@ async def should_return_400_when_create_resource_unknown_type(resources_client: 
     """Un type inconnu du registre retourne 400 (ValueError)."""
     from gsie_api.resources.service import ResourceService
 
-    with patch.object(ResourceService, "create", new=AsyncMock(side_effect=ValueError("Type inconnu"))):
+    with patch.object(
+        ResourceService, "create", new=AsyncMock(side_effect=ValueError("Type inconnu"))
+    ):
         response = await resources_client.post(
             f"{_API_PREFIX}/resources",
             json={"type": "unknown_type", "data": {}},
@@ -471,7 +481,9 @@ async def should_return_400_when_update_resource_unknown_type(resources_client: 
 
     with (
         patch.object(ResourceService, "get_type", new=AsyncMock(return_value="assertion")),
-        patch.object(ResourceService, "update", new=AsyncMock(side_effect=ValueError("Type inconnu"))),
+        patch.object(
+            ResourceService, "update", new=AsyncMock(side_effect=ValueError("Type inconnu"))
+        ),
     ):
         response = await resources_client.put(
             f"{_API_PREFIX}/resources/{uuid4()}",
@@ -666,7 +678,9 @@ async def should_return_502_when_climate_query_engine_error(climate_client: Asyn
     """POST /climate/query — ClimateEngineError retourne 502."""
     from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 
-    with patch.object(ClimateEngine, "query", new=AsyncMock(side_effect=ClimateEngineError("API down"))):
+    with patch.object(
+        ClimateEngine, "query", new=AsyncMock(side_effect=ClimateEngineError("API down"))
+    ):
         response = await climate_client.post(
             f"{_API_PREFIX}/climate/query",
             json={"station_id": "07510"},
@@ -679,7 +693,9 @@ async def should_return_502_when_climate_danger_feux_error(climate_client: Async
     """GET /climate/danger-feux — ClimateEngineError retourne 502."""
     from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 
-    with patch.object(ClimateEngine, "get_danger_feux", new=AsyncMock(side_effect=ClimateEngineError("API down"))):
+    with patch.object(
+        ClimateEngine, "get_danger_feux", new=AsyncMock(side_effect=ClimateEngineError("API down"))
+    ):
         response = await climate_client.get(
             f"{_API_PREFIX}/climate/danger-feux",
             headers=_auth_headers(["reader"]),
@@ -760,7 +776,9 @@ async def should_return_200_when_climate_climatologie_quotidienne_success(
     """POST /climate/climatologie-quotidienne avec succes retourne la liste."""
     from gsie_api.engines.climate.engine import ClimateEngine
 
-    with patch.object(ClimateEngine, "get_climatologie_quotidienne", new=AsyncMock(return_value=[])):
+    with patch.object(
+        ClimateEngine, "get_climatologie_quotidienne", new=AsyncMock(return_value=[])
+    ):
         response = await climate_client.post(
             f"{_API_PREFIX}/climate/climatologie-quotidienne",
             json={
@@ -777,7 +795,9 @@ async def should_return_502_when_climate_vigilance_error(climate_client: AsyncCl
     """GET /climate/vigilance — ClimateEngineError retourne 502."""
     from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 
-    with patch.object(ClimateEngine, "get_vigilance", new=AsyncMock(side_effect=ClimateEngineError("API down"))):
+    with patch.object(
+        ClimateEngine, "get_vigilance", new=AsyncMock(side_effect=ClimateEngineError("API down"))
+    ):
         response = await climate_client.get(
             f"{_API_PREFIX}/climate/vigilance",
             headers=_auth_headers(["reader"]),
@@ -870,7 +890,9 @@ async def should_return_200_when_climate_arome_temperature_success(climate_clien
             reference="https://meteofrance.fr",
         ),
     )
-    with patch.object(ClimateEngine, "get_temperature_arome", new=AsyncMock(return_value=mock_result)):
+    with patch.object(
+        ClimateEngine, "get_temperature_arome", new=AsyncMock(return_value=mock_result)
+    ):
         response = await climate_client.post(
             f"{_API_PREFIX}/climate/arome-temperature",
             json={
@@ -925,7 +947,9 @@ async def should_return_502_when_botanical_query_engine_error(botanical_client: 
     """POST /botanical/query — BotanicalEngineError retourne 502."""
     from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
 
-    with patch.object(BotanicalEngine, "query", new=AsyncMock(side_effect=BotanicalEngineError("GBIF down"))):
+    with patch.object(
+        BotanicalEngine, "query", new=AsyncMock(side_effect=BotanicalEngineError("GBIF down"))
+    ):
         response = await botanical_client.post(
             f"{_API_PREFIX}/botanical/query",
             json={"essence": "Quercus petraea"},
@@ -962,7 +986,9 @@ async def should_return_502_when_botanical_indigenat_error(botanical_client: Asy
     """POST /botanical/indigenat — BotanicalEngineError retourne 502."""
     from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
 
-    with patch.object(BotanicalEngine, "get_indigenat", side_effect=BotanicalEngineError("Dataset missing")):
+    with patch.object(
+        BotanicalEngine, "get_indigenat", side_effect=BotanicalEngineError("Dataset missing")
+    ):
         response = await botanical_client.post(
             f"{_API_PREFIX}/botanical/indigenat",
             json={"cd_nom": 135, "code_ser": "A11"},
@@ -1006,7 +1032,11 @@ async def should_return_502_when_botanical_taxref_error(botanical_client: AsyncC
     """POST /botanical/taxref — BotanicalEngineError retourne 502."""
     from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
 
-    with patch.object(BotanicalEngine, "resolve_taxref", new=AsyncMock(side_effect=BotanicalEngineError("TAXREF down"))):
+    with patch.object(
+        BotanicalEngine,
+        "resolve_taxref",
+        new=AsyncMock(side_effect=BotanicalEngineError("TAXREF down")),
+    ):
         response = await botanical_client.post(
             f"{_API_PREFIX}/botanical/taxref",
             json={"nom_scientifique": "Quercus petraea"},
@@ -1018,7 +1048,7 @@ async def should_return_502_when_botanical_taxref_error(botanical_client: AsyncC
 async def should_return_200_when_botanical_taxref_success(botanical_client: AsyncClient):
     """POST /botanical/taxref avec succes retourne l'entree TAXREF."""
     from gsie_api.engines.botanical.engine import BotanicalEngine
-    from gsie_api.engines.botanical.schemas import TaxrefResult, TaxonStatus
+    from gsie_api.engines.botanical.schemas import TaxonStatus, TaxrefResult
     from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
     mock_result = TaxrefResult(
@@ -1090,9 +1120,9 @@ async def should_return_502_when_gis_cadastre_ign_error(gis_client: AsyncClient)
 
 async def should_return_200_when_gis_cadastre_success(gis_client: AsyncClient):
     """POST /gis/cadastre/parcelle avec succes retourne la parcelle."""
+    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
     from gsie_api.engines.gis.engine import GISEngine
     from gsie_api.engines.gis.schemas import GeoData
-    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
     mock_geodata = GeoData(
         requete_id=uuid4(),
@@ -1116,7 +1146,9 @@ async def should_return_502_when_gis_altitude_engine_error(gis_client: AsyncClie
     """POST /gis/altitude — GISEngineError retourne 502."""
     from gsie_api.engines.gis.engine import GISEngine, GISEngineError
 
-    with patch.object(GISEngine, "get_altitude", new=AsyncMock(side_effect=GISEngineError("IGN down"))):
+    with patch.object(
+        GISEngine, "get_altitude", new=AsyncMock(side_effect=GISEngineError("IGN down"))
+    ):
         response = await gis_client.post(
             f"{_API_PREFIX}/gis/altitude",
             json={"latitude": 43.6, "longitude": 1.4},
@@ -1127,9 +1159,9 @@ async def should_return_502_when_gis_altitude_engine_error(gis_client: AsyncClie
 
 async def should_return_200_when_gis_altitude_success(gis_client: AsyncClient):
     """POST /gis/altitude avec succes retourne l'altitude."""
+    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
     from gsie_api.engines.gis.engine import GISEngine
     from gsie_api.engines.gis.schemas import StationCharacteristics
-    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
     mock_alt = StationCharacteristics(
         requete_id=uuid4(),
@@ -1183,7 +1215,9 @@ async def should_return_502_when_pedology_query_engine_error(pedology_client: As
     """POST /pedology/query — PedologyEngineError retourne 502."""
     from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
 
-    with patch.object(PedologyEngine, "query", new=AsyncMock(side_effect=PedologyEngineError("SoilGrids down"))):
+    with patch.object(
+        PedologyEngine, "query", new=AsyncMock(side_effect=PedologyEngineError("SoilGrids down"))
+    ):
         response = await pedology_client.post(
             f"{_API_PREFIX}/pedology/query",
             json={"latitude": 43.6, "longitude": 1.4},
@@ -1194,9 +1228,9 @@ async def should_return_502_when_pedology_query_engine_error(pedology_client: As
 
 async def should_return_200_when_pedology_query_success(pedology_client: AsyncClient):
     """POST /pedology/query avec succes retourne les proprietes de sol."""
+    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
     from gsie_api.engines.pedology.engine import PedologyEngine
     from gsie_api.engines.pedology.schemas import PedologyData
-    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
     mock_data = PedologyData(
         requete_id=uuid4(),
@@ -1262,9 +1296,9 @@ async def should_return_200_when_forest_dynamics_dendrometrics_success(
     forest_dynamics_client: AsyncClient,
 ):
     """POST /forest-dynamics/dendrometrics avec succes retourne les caracteristiques."""
+    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
     from gsie_api.engines.forest_dynamics.engine import ForestDynamicsEngine
     from gsie_api.engines.forest_dynamics.schemas import DendrometricResult
-    from gsie_api.engines.evidence.schemas import SourceReference, SourceType
 
     mock_result = DendrometricResult(
         requete_id=uuid4(),
@@ -1414,7 +1448,9 @@ def _minimal_diagnostic_request() -> dict[str, Any]:
                         "regle_appliquee": "R_PH_CHENE_SESSILE",
                         "source_regle": source,
                         "premisses": ["pH <= 6.0"],
-                        "conclusion_locale": "Le pH de la station est dans la gamme du chene sessile",
+                        "conclusion_locale": (
+                            "Le pH de la station est dans la gamme du chene sessile"
+                        ),
                         "evidence_level": "B",
                     },
                 ],
@@ -1504,7 +1540,12 @@ async def should_return_401_when_knowledge_ingest_without_token(knowledge_client
 
 async def should_return_201_when_knowledge_ingest_success(knowledge_client: AsyncClient):
     """POST /knowledge/ingest avec succes retourne 201."""
-    from gsie_api.engines.evidence.schemas import EvidenceLevel, KnowledgeStatus, SourceReference, SourceType
+    from gsie_api.engines.evidence.schemas import (
+        EvidenceLevel,
+        KnowledgeStatus,
+        SourceReference,
+        SourceType,
+    )
     from gsie_api.engines.knowledge.engine import KnowledgeEngine
     from gsie_api.engines.knowledge.schemas import (
         DomaineScientifique,
@@ -1543,7 +1584,9 @@ async def should_return_400_when_knowledge_ingest_engine_error(knowledge_client:
     """POST /knowledge/ingest — KnowledgeEngineError retourne 400."""
     from gsie_api.engines.knowledge.engine import KnowledgeEngine, KnowledgeEngineError
 
-    with patch.object(KnowledgeEngine, "ingest", new=AsyncMock(side_effect=KnowledgeEngineError("deja present"))):
+    with patch.object(
+        KnowledgeEngine, "ingest", new=AsyncMock(side_effect=KnowledgeEngineError("deja present"))
+    ):
         response = await knowledge_client.post(
             f"{_API_PREFIX}/knowledge/ingest",
             json=_minimal_knowledge_ingest(),
@@ -1579,7 +1622,12 @@ async def should_return_200_when_knowledge_query_success(knowledge_client: Async
 
 async def should_return_200_when_knowledge_revise_success(knowledge_client: AsyncClient):
     """POST /knowledge/revise avec succes retourne la connaissance revisee."""
-    from gsie_api.engines.evidence.schemas import EvidenceLevel, KnowledgeStatus, SourceReference, SourceType
+    from gsie_api.engines.evidence.schemas import (
+        EvidenceLevel,
+        KnowledgeStatus,
+        SourceReference,
+        SourceType,
+    )
     from gsie_api.engines.knowledge.engine import KnowledgeEngine
     from gsie_api.engines.knowledge.schemas import (
         DomaineScientifique,
@@ -1622,7 +1670,9 @@ async def should_return_404_when_knowledge_revise_not_found(knowledge_client: As
     """POST /knowledge/revise — KnowledgeNotFoundError retourne 404."""
     from gsie_api.engines.knowledge.engine import KnowledgeEngine, KnowledgeNotFoundError
 
-    with patch.object(KnowledgeEngine, "revise", new=AsyncMock(side_effect=KnowledgeNotFoundError("introuvable"))):
+    with patch.object(
+        KnowledgeEngine, "revise", new=AsyncMock(side_effect=KnowledgeNotFoundError("introuvable"))
+    ):
         response = await knowledge_client.post(
             f"{_API_PREFIX}/knowledge/revise",
             json={
@@ -1639,7 +1689,11 @@ async def should_return_400_when_knowledge_revise_engine_error(knowledge_client:
     """POST /knowledge/revise — KnowledgeEngineError retourne 400."""
     from gsie_api.engines.knowledge.engine import KnowledgeEngine, KnowledgeEngineError
 
-    with patch.object(KnowledgeEngine, "revise", new=AsyncMock(side_effect=KnowledgeEngineError("aucun champ modifie"))):
+    with patch.object(
+        KnowledgeEngine,
+        "revise",
+        new=AsyncMock(side_effect=KnowledgeEngineError("aucun champ modifie")),
+    ):
         response = await knowledge_client.post(
             f"{_API_PREFIX}/knowledge/revise",
             json={
@@ -1656,7 +1710,9 @@ async def should_return_200_when_knowledge_stats_success(knowledge_client: Async
     """GET /knowledge/stats avec succes retourne les statistiques."""
     from gsie_api.engines.knowledge.engine import KnowledgeEngine
 
-    with patch.object(KnowledgeEngine, "stats", new=AsyncMock(return_value={"concept": 5, "regle": 3})):
+    with patch.object(
+        KnowledgeEngine, "stats", new=AsyncMock(return_value={"concept": 5, "regle": 3})
+    ):
         response = await knowledge_client.get(
             f"{_API_PREFIX}/knowledge/stats",
             headers=_auth_headers(["reader"]),

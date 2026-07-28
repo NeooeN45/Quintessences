@@ -28,20 +28,17 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
 from gsie_api.engines.autecology_adapter import profiles_to_rules
 from gsie_api.engines.diagnostic.engine import DiagnosticEngine
 from gsie_api.engines.diagnostic.schemas import (
-    Diagnostic,
     DiagnosticRequest,
     DomaineElement,
-    DomaineRisque,
     EtatGlobal,
     EtatGlobalDeclare,
-    Probabilite,
     QualificationConclusion,
     RoleDiagnostic,
     TypeDiagnostic,
@@ -59,10 +56,10 @@ from gsie_api.engines.learning.engine import LearningEngine
 from gsie_api.engines.learning.schemas import LearningSignalType
 from gsie_api.engines.reasoning.engine import ReasoningEngine
 from gsie_api.engines.reasoning.schemas import (
-    ReasoningRequest,
-    StationContexte,
     BlocContexte,
+    ReasoningRequest,
     SourceMoteurContexte,
+    StationContexte,
 )
 from gsie_api.engines.recommendation.engine import RecommendationEngine
 from gsie_api.engines.recommendation.schemas import (
@@ -71,8 +68,6 @@ from gsie_api.engines.recommendation.schemas import (
 )
 from gsie_api.engines.simulation.schemas import (
     ConfidenceLevel,
-    InterventionSpec,
-    ScenarioSimulation,
 )
 from gsie_api.engines.simulation_backend import CalibratedGrowthBackend
 from gsie_api.engines.validation.schemas import ValidationStatut
@@ -363,13 +358,14 @@ async def should_detect_blocked_validation_and_feed_learning_e2e() -> None:
         )()
         # Utiliser le vrai LearningSignal
         from gsie_api.engines.learning.schemas import LearningSignal
+
         real_signal = LearningSignal(
             signal_id=signal.signal_id,
             type=signal.type,
             contenu=signal.contenu,
             date_signal=signal.date_signal,
         )
-        result = await learning_engine.process(real_signal)
+        await learning_engine.process(real_signal)
 
     # Le 5e doit avoir déclenché une calibration
     # (vérifié via le test unitaire — ici on vérifie que l'accumulateur
