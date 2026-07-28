@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0028 |
-| **Statut** | Brouillon — arbitrages tranchés, soumis à validation |
+| **Statut** | Validée — `DEC-000038` (2026-07-28) |
 | **Auteur** | Architecte, sous autorité du Fondateur |
 | **Date** | 2026-07-28 |
 | **Périmètre** | Knowledge Engine, Reasoning Engine, moteurs consommateurs |
@@ -57,7 +57,7 @@ Le métamodèle est plus avancé que ne le laisse croire l'état du code.
 Rien de tout cela n'est utilisé pour le raisonnement. **La décision porte donc
 sur l'usage de structures existantes, non sur leur création.**
 
-## 4. Décision proposée
+## 4. Décision
 
 ### 4.1 Une règle est une Assertion, pas une table nouvelle
 

@@ -4,6 +4,39 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RFC-0028 — PERSISTANCE DES RÈGLES D'INFÉRENCE] - 2026-07-28
+
+Adoption de `RFC-0028` par `DEC-000038`. Le Reasoning Engine recevait ses règles
+dans la requête : GeoSylva devrait donc embarquer la connaissance sylvicole, et
+toute révision d'un seuil imposerait une mise à jour de l'application sur chaque
+téléphone.
+
+### Décisions
+
+- **Une règle est une Assertion** (`claim_kind` `rule`/`threshold`), sans table
+  nouvelle : le métamodèle portait déjà `rule_subtype`, les trois `*_scope_id`
+  du domaine de validité, `assertion_qualifier` et `evidence_assessment`.
+- **La condition exécutable est dérivée du fait, jamais stockée.** Une chaîne
+  persistée peut diverger du seuil qu'elle traduit : on corrigerait le fait sans
+  corriger la règle, et le moteur appliquerait l'ancienne valeur en citant la
+  source révisée.
+- **Un domaine de validité non renseigné vaut « nulle part »**, jamais
+  « partout ». Une règle tirée d'un catalogue régional appliquée hors zone
+  produirait une conclusion fausse citant une source réelle, avec une chaîne
+  d'inférence complète — invisible. Corollaire : territoire obligatoire sur
+  `silvicultural_rule` et `autecology_profile`.
+- **Aucun plancher de preuve par défaut**, mais `evidence_level_plancher`
+  obligatoire dans la réponse : le danger n'est pas la connaissance faible,
+  c'est la connaissance faible présentée comme forte.
+- **Une source invalidée** sort la règle du service et rend énumérables les
+  conclusions passées qui la citaient.
+
+### Périmètre du premier lot
+
+Chêne sessile, réserve utile maximale, un territoire — de bout en bout.
+
+---
+
 ## [FIABILITÉ API — AUDIT PAR RÉFUTATION] - 2026-07-28
 
 Audit de fiabilité de l'API GSIE : chaque constat prouvé par exécution réelle

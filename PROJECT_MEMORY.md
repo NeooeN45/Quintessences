@@ -375,6 +375,8 @@ brainstorming v5 n'est adoptée.
 - **DEC-000033** — Orientation de la refondation constitutionnelle (décision d'orientation, **non** décision d'adoption)
 - **DEC-000035** — Rust devient un critère de pertinence mesuré, non un plan de vague
 - **DEC-000036** — Baseline Alembic v6.2 unique, lignée locale 0001-0013 remplacée
+- **DEC-000037** — Stratégie de fiabilisation et de sécurisation de la base de données GSIE
+- **DEC-000038** — Persistance des règles d'inférence (adoption `RFC-0028`). Une règle est une Assertion (`claim_kind` `rule`/`threshold`), aucune table nouvelle. La condition exécutable est **dérivée** du fait sourcé, jamais stockée — une chaîne persistée pourrait diverger du seuil qu'elle traduit et appliquer l'ancienne valeur en citant la source révisée. **Un domaine de validité non renseigné vaut « nulle part »** : le silence ne vaut pas universalité, et une conclusion fausse portant une citation vérifiable est pire qu'une absence de réponse. Corollaire : territoire obligatoire sur `silvicultural_rule` et `autecology_profile`, comme il l'est déjà sur `station_type`, `fertility_class` et `provenance_material`. Aucun plancher de preuve par défaut mais `evidence_level_plancher` obligatoire en réponse ; une source invalidée sort la règle du service **et** rend énumérables les conclusions passées qui la citaient. Premier lot : chêne sessile, réserve utile maximale, un territoire, de bout en bout.
 
 ## Documents structurants
 
