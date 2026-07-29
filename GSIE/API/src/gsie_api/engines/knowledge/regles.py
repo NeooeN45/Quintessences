@@ -31,8 +31,19 @@ _CLE_VARIABLE = "variable"
 _CLE_OPERATEUR = "operateur"
 _CLE_VALEUR = "valeur"
 _CLE_ENONCE = "enonce_conclusion"
+# Distinct du niveau de preuve : celui-ci qualifie la SOURCE, celui-la dit
+# avec quelle force la regle s'applique. Le Diagnostic Engine pose la
+# doctrine — « le moteur n'invente aucune table de conversion » (ADR-009) —
+# donc la confiance est declaree, jamais deduite du niveau de preuve.
+_CLE_CONFIANCE = "niveau_confiance"
 
-_CLES_REQUISES: tuple[str, ...] = (_CLE_VARIABLE, _CLE_OPERATEUR, _CLE_VALEUR, _CLE_ENONCE)
+_CLES_REQUISES: tuple[str, ...] = (
+    _CLE_VARIABLE,
+    _CLE_OPERATEUR,
+    _CLE_VALEUR,
+    _CLE_ENONCE,
+    _CLE_CONFIANCE,
+)
 
 __all__ = ["DerivationImpossibleError", "condition_derivee", "deriver_regle"]
 
@@ -59,6 +70,7 @@ class RegleDerivee:
     condition: str
     enonce_conclusion: str
     variable: str
+    niveau_confiance: float
 
 
 def _nombre_lisible(valeur: str) -> str | None:
@@ -75,6 +87,15 @@ def _nombre_lisible(valeur: str) -> str | None:
     except ValueError:
         return None
     return texte
+
+
+def _confiance_lisible(valeur: str) -> float | None:
+    """Rend la confiance déclarée, ou None si elle n'est pas exploitable."""
+    try:
+        confiance = float(valeur.strip())
+    except ValueError:
+        return None
+    return confiance if 0.0 <= confiance <= 1.0 else None
 
 
 def condition_derivee(variable: str, operateur: str, valeur: str) -> str:
@@ -146,9 +167,20 @@ def deriver_regle(
     except ValueError as exc:
         raise DerivationImpossibleError(assertion_id, [str(exc)]) from exc
 
+    confiance = _confiance_lisible(qualificateurs[_CLE_CONFIANCE])
+    if confiance is None:
+        raise DerivationImpossibleError(
+            assertion_id,
+            [
+                f"niveau_confiance « {qualificateurs[_CLE_CONFIANCE]} » invalide : "
+                "attendu un nombre entre 0 et 1"
+            ],
+        )
+
     return RegleDerivee(
         identifiant=assertion_id,
         condition=condition,
         enonce_conclusion=qualificateurs[_CLE_ENONCE].strip(),
         variable=variable,
+        niveau_confiance=confiance,
     )

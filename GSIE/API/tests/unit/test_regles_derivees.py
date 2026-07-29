@@ -23,6 +23,7 @@ _SEUIL_COMPLET = {
     "operateur": "<",
     "valeur": "120",
     "enonce_conclusion": "contrainte hydrique pour le chêne sessile",
+    "niveau_confiance": "0.8",
 }
 
 
@@ -71,7 +72,7 @@ class TestRefusPlutotQueCompletion:
         with pytest.raises(DerivationImpossibleError) as erreur:
             deriver_regle("a", {"variable": "reserve_utile_mm"})
 
-        assert len(erreur.value.manques) == 3
+        assert len(erreur.value.manques) == 4
 
     def test_un_operateur_non_comparatif_est_refuse(self) -> None:
         """La surface d'exécution reste une comparaison, jamais un appel."""
@@ -138,3 +139,31 @@ class TestVocabulaireControle:
         regle = deriver_regle("a", {**_SEUIL_COMPLET, "variable": "RUM"})
 
         assert regle.variable == "RUM"
+
+
+class TestConfianceDeclaree:
+    """La confiance est déclarée, jamais déduite du niveau de preuve.
+
+    Les deux mesurent des choses différentes : le niveau de preuve qualifie la
+    **source**, la confiance dit avec quelle force la règle s'applique. Les
+    convertir l'un en l'autre supposerait une table de correspondance que
+    personne n'a établie — c'est ce que le Diagnostic Engine refuse
+    explicitement (`ADR-009`).
+    """
+
+    def test_la_confiance_declaree_est_reprise(self) -> None:
+        regle = deriver_regle("a", {**_SEUIL_COMPLET, "niveau_confiance": "0.65"})
+
+        assert regle.niveau_confiance == 0.65
+
+    @pytest.mark.parametrize("valeur", ["1.5", "-0.2", "beaucoup", ""])
+    def test_une_confiance_hors_bornes_ou_illisible_refuse_la_regle(self, valeur: str) -> None:
+        with pytest.raises(DerivationImpossibleError):
+            deriver_regle("a", {**_SEUIL_COMPLET, "niveau_confiance": valeur})
+
+    @pytest.mark.parametrize("borne", ["0", "1"])
+    def test_les_bornes_restent_admises(self, borne: str) -> None:
+        """Témoin : ce sont les valeurs hors [0,1] qui sont refusées."""
+        regle = deriver_regle("a", {**_SEUIL_COMPLET, "niveau_confiance": borne})
+
+        assert regle.niveau_confiance == float(borne)

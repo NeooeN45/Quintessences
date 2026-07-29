@@ -294,6 +294,32 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_resources_fiabilite.py",),
     ),
+    Mutation(
+        cle="regle_hors_domaine_retournee",
+        fichier="gsie_api/engines/knowledge/engine.py",
+        ancien="                func.ST_Contains(domaine.geometry, territoire.geometry),",
+        nouveau='                literal_column("true"),',
+        defaut_reproduit=(
+            "une regle tiree d'un catalogue regional sort hors de sa zone — "
+            "conclusion fausse citant une source reelle, invisible"
+        ),
+        tests=("tests/integration/test_regles_applicables.py",),
+    ),
+    Mutation(
+        cle="regle_non_sourcee_retournee",
+        fichier="gsie_api/engines/knowledge/engine.py",
+        # La jointure `citation` seule ne suffit pas : la jointure `source` qui
+        # suit reste interne et filtrerait quand meme. C'est le role `primary`
+        # qui porte l'exigence — une regle citee « en passant » ne vaut pas
+        # une regle sourcee.
+        ancien="                CitationModel.citation_role == CitationRole.primary,",
+        nouveau='                literal_column("true"),',
+        defaut_reproduit=(
+            "une citation de role secondaire suffit a faire sortir une regle — "
+            "la source citee n'est plus celle qui la fonde"
+        ),
+        tests=("tests/integration/test_regles_applicables.py",),
+    ),
 )
 
 
