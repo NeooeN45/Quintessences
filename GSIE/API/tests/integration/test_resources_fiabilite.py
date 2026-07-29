@@ -17,6 +17,7 @@ Ces tests exercent donc le chemin nominal **sans** rien préparer à la main.
 """
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -239,3 +240,79 @@ class TestExclusionRGPD:
         types_vus = {item["type"] for item in reponse.json()["items"]}
         assert types_vus.isdisjoint(RGPD_RESOURCE_TYPES)
         assert "entity" in types_vus
+
+
+class TestResolutionNativeDeclaree:
+    """Une distribution qui déclare une échelle doit en déclarer le grain.
+
+    `NOMENCLATURE_SOURCES.md` §4 : la résolution native d'une source doit être
+    un nombre. Tant qu'elle reste en prose — « 50 cm rasters », « Placettes
+    20 m rayon » — deux sources ne sont pas comparables, et aucun moteur ne
+    peut refuser de croiser des données d'échelles incompatibles.
+    """
+
+    @staticmethod
+    async def _creer_echelle(client: AsyncClient, grain: float | None) -> str:
+        data: dict[str, Any] = {"level": "landscape"}
+        if grain is not None:
+            data["grain_m2"] = grain
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={"type": "scale_context", "data": data},
+            headers=_ENTETES_ECRITURE,
+        )
+        assert reponse.status_code == 201, reponse.text
+        identifiant: str = reponse.json()["id"]
+        return identifiant
+
+    @staticmethod
+    async def _creer_version(client: AsyncClient) -> str:
+        jeu = await client.post(
+            "/api/v1/resources",
+            json={"type": "dataset", "data": {"title": "LiDAR HD", "description": "IGN"}},
+            headers=_ENTETES_ECRITURE,
+        )
+        assert jeu.status_code == 201, jeu.text
+        version = await client.post(
+            "/api/v1/resources",
+            json={
+                "type": "dataset_version",
+                "data": {"dataset_id": jeu.json()["id"], "version": "2024"},
+            },
+            headers=_ENTETES_ECRITURE,
+        )
+        assert version.status_code == 201, version.text
+        identifiant: str = version.json()["id"]
+        return identifiant
+
+    async def _distribution(self, client: AsyncClient, echelle: str) -> Any:
+        version = await self._creer_version(client)
+        return await client.post(
+            "/api/v1/resources",
+            json={
+                "type": "distribution",
+                "data": {
+                    "dataset_version_id": version,
+                    "access_method": "file_download",
+                    "licence": "Licence Ouverte 2.0",
+                    "scale_context_id": echelle,
+                },
+            },
+            headers=_ENTETES_ECRITURE,
+        )
+
+    async def test_une_echelle_sans_grain_est_refusee(self, client: AsyncClient) -> None:
+        sans_grain = await self._creer_echelle(client, None)
+
+        reponse = await self._distribution(client, sans_grain)
+
+        assert reponse.status_code == 422, reponse.text
+        assert any("grain_m2" in e for e in reponse.json()["detail"]["errors"])
+
+    async def test_une_echelle_avec_grain_est_acceptee(self, client: AsyncClient) -> None:
+        """Témoin : c'est bien l'absence de grain qui est refusée, pas le lien."""
+        avec_grain = await self._creer_echelle(client, 0.25)
+
+        reponse = await self._distribution(client, avec_grain)
+
+        assert reponse.status_code == 201, reponse.text

@@ -397,6 +397,7 @@ class ResourceService:
             raise ResourceValidationError(request.type, errors)
 
         safe_data = self._filtrer_et_coercer(request.type, model_cls, request.data)
+        await self._refuser_grain_absent(request.type, safe_data)
         gsie_id = request.gsie_id or self._generate_gsie_id(request.type)
 
         async with self._references_nommees(request.type, safe_data):
@@ -504,6 +505,7 @@ class ResourceService:
         # patch partiel ne peut pas rendre la resource invalide en silence,
         # et un patch refusé ne laisse ni Revision ni événement d'outbox.
         await self._reject_invalid_update(resource.type, type_instance, request.data, safe_data)
+        await self._refuser_grain_absent(resource.type, safe_data)
 
         async with self._references_nommees(resource.type, safe_data):
             field_changes = self._compute_field_changes(type_instance, safe_data)
@@ -536,6 +538,35 @@ class ResourceService:
         )
         result = await self.get(resource_id)
         return result
+
+    async def _refuser_grain_absent(self, type_name: str, safe_data: dict[str, Any]) -> None:
+        """Une distribution qui déclare une échelle exige son grain.
+
+        `scale_context` porte la résolution native d'une source
+        (`NOMENCLATURE_SOURCES.md` §4). S'y rattacher sans renseigner le grain
+        laisserait la résolution implicite, donc inexploitable : deux sources
+        ne sont comparables que si leur grain est un nombre.
+
+        Le contrôle ne peut pas vivre dans la porte de validation pure — il
+        exige de relire la resource référencée.
+        """
+        if type_name != "distribution":
+            return
+        scale_context_id = safe_data.get("scale_context_id")
+        if scale_context_id is None:
+            return
+
+        echelle = await self._session.get(self._get_model_cls("scale_context"), scale_context_id)
+        # Une référence pendante est nommée par `_references_nommees`.
+        if echelle is not None and echelle.grain_m2 is None:
+            raise ResourceValidationError(
+                type_name,
+                [
+                    "scale_context_id désigne une échelle sans grain_m2 : la "
+                    "résolution native d'une source doit être un nombre, jamais "
+                    "laissée implicite"
+                ],
+            )
 
     async def _reject_invalid_update(
         self,

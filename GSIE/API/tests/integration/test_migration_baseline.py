@@ -25,7 +25,7 @@ _REVISION = "20260726_0001"
 # Tête courante de la lignée : la baseline reste la base, les révisions
 # suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
 # additives 20260727_0003 à 0005).
-_HEAD = "20260728_0007"
+_HEAD = "20260728_0008"
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,
@@ -259,6 +259,24 @@ def _verifier_schema_courant(url: str) -> None:
 _DIFFS_TOLERES: frozenset[tuple[str, str]] = frozenset()
 
 
+def _aplatir_diffs(diffs: list[Any]) -> list[Any]:
+    """Deplie les diffs groupes par alembic.
+
+    `compare_metadata` ne rend pas une liste plate : les modifications d'une
+    meme colonne (`modify_nullable`, `modify_type`, `modify_comment`) arrivent
+    regroupees dans une sous-liste. Les traiter comme un diff simple faisait
+    echouer le controle sur `TypeError: unhashable type` — donc le controle
+    de derive ne controlait plus rien.
+    """
+    plats: list[Any] = []
+    for diff in diffs:
+        if isinstance(diff, list):
+            plats.extend(diff)
+        else:
+            plats.append(diff)
+    return plats
+
+
 def _decrire_diff(diff: Any) -> tuple[str, str, str]:
     """Reduit un diff alembic a (operation, table concernee, libelle).
 
@@ -323,7 +341,8 @@ def _verifier_absence_de_derive(url: str) -> None:
     notres = {
         (operation, libelle)
         for operation, table, libelle in (
-            _decrire_diff(diff) for diff in asyncio.run(_comparer_registre_et_base(url))
+            _decrire_diff(diff)
+            for diff in _aplatir_diffs(asyncio.run(_comparer_registre_et_base(url)))
         )
         if table in Base.metadata.tables
     }
