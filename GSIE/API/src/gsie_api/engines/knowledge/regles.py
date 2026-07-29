@@ -19,6 +19,7 @@ n'est pas « probablement inférieur à », il est inutilisable.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 # Opérateurs admis dans une condition dérivée. Volontairement restreint aux
 # comparaisons : une règle dérivée d'un seuil ne fait que comparer. Les formes
@@ -44,6 +45,9 @@ _CLES_REQUISES: tuple[str, ...] = (
     _CLE_ENONCE,
     _CLE_CONFIANCE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 __all__ = ["DerivationImpossibleError", "condition_derivee", "deriver_regle"]
 
@@ -119,15 +123,24 @@ def condition_derivee(variable: str, operateur: str, valeur: str) -> str:
 def deriver_regle(
     assertion_id: str,
     qualificateurs: dict[str, str],
-    variables_connues: frozenset[str] | None = None,
+    variables_connues: Mapping[str, str] | None = None,
 ) -> RegleDerivee:
     """Dérive une règle exécutable depuis les qualificateurs d'une assertion.
 
     Args:
         assertion_id: identifiant de l'assertion porteuse, cité dans les erreurs.
         qualificateurs: couples `key`/`value` d'`assertion_qualifier`.
-        variables_connues: codes du vocabulaire contrôlé. Quand il est fourni,
-            une variable hors vocabulaire est refusée.
+        variables_connues: correspondance code du vocabulaire → nom du fait
+            dans le contexte. Quand elle est fournie, une variable hors
+            vocabulaire est refusée, et la condition est construite contre le
+            nom du fait — pas contre le code.
+
+            La règle stocke le code nu (« reserve_utile_mm ») ; le contexte
+            expose un nom préfixé par son bloc d'origine
+            (« pedologie_reserve_utile_mm ») pour éviter les collisions entre
+            moteurs. Coupler la règle au schéma de requête rendrait toute
+            révision de `StationContexte` destructrice pour les règles déjà
+            enregistrées.
 
             C'est ce qui empêche le flottement : sans référentiel commun, « RUM »,
             « réserve utile » et `reserve_utile_mm` désignent la même grandeur
@@ -149,6 +162,7 @@ def deriver_regle(
         )
 
     variable = qualificateurs[_CLE_VARIABLE].strip()
+    nom_du_fait = variable
     if variables_connues is not None and variable not in variables_connues:
         raise DerivationImpossibleError(
             assertion_id,
@@ -158,9 +172,12 @@ def deriver_regle(
                 "notion ne se rejoignent jamais"
             ],
         )
+    if variables_connues is not None:
+        nom_du_fait = variables_connues[variable]
+
     try:
         condition = condition_derivee(
-            variable,
+            nom_du_fait,
             qualificateurs[_CLE_OPERATEUR].strip(),
             qualificateurs[_CLE_VALEUR],
         )

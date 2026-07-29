@@ -114,12 +114,18 @@ class TestVocabulaireControle:
     de connaissance, sans que personne ne le voie.
     """
 
-    _VOCABULAIRE = frozenset({"reserve_utile_mm", "ph_optimal", "profondeur_cm"})
+    # Correspondance code -> nom du fait dans le contexte : le contexte prefixe
+    # ses faits par leur bloc d'origine.
+    _VOCABULAIRE = {
+        "reserve_utile_mm": "pedologie_reserve_utile_mm",
+        "ph_optimal": "pedologie_ph_optimal",
+        "profondeur_cm": "pedologie_profondeur_cm",
+    }
 
     def test_une_variable_du_vocabulaire_passe(self) -> None:
         regle = deriver_regle("a", _SEUIL_COMPLET, variables_connues=self._VOCABULAIRE)
 
-        assert regle.condition == "reserve_utile_mm < 120"
+        assert regle.condition == "pedologie_reserve_utile_mm < 120"
 
     @pytest.mark.parametrize("ecriture", ["RUM", "reserve utile", "reserve_utile", "RU_mm"])
     def test_une_ecriture_flottante_est_refusee(self, ecriture: str) -> None:

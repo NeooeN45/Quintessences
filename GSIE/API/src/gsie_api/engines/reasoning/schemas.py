@@ -257,7 +257,11 @@ class EtapeInference(BaseModel):
     premisses: list[str] = Field(min_length=1)
     conclusion_locale: str = Field(min_length=1, max_length=500)
     evidence_level: EvidenceLevel = Field(
-        description="Niveau de preuve de la règle appliquée à cette étape"
+        description=(
+            "Plancher de preuve de l'étape : le plus faible entre la règle "
+            "appliquée et les faits qu'elle consomme. Une étape ne peut pas "
+            "être mieux établie que la mesure qui la fonde."
+        )
     )
 
 

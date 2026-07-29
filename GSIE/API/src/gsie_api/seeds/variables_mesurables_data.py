@@ -34,6 +34,7 @@ __all__ = [
     "NAMESPACE_VARIABLES",
     "NOM_VOCABULAIRE",
     "VariableMesurable",
+    "noms_de_faits_par_code",
     "source_reserve_utile_inrae",
     "variables_mesurables",
 ]
@@ -72,6 +73,12 @@ class VariableMesurable:
     unite: str
     definition: str
     source: SourceReference
+    # Bloc de `StationContexte` qui fournit la grandeur. Les faits y sont
+    # prefixes par leur bloc pour eviter les collisions entre moteurs
+    # (`pedologie_ph` contre `climat_ph`). Une regle, elle, stocke le code nu :
+    # la coupler au schema de requete rendrait toute revision de
+    # `StationContexte` destructrice pour les regles deja enregistrees.
+    bloc_contexte: str
 
 
 def variables_mesurables() -> list[VariableMesurable]:
@@ -97,14 +104,22 @@ def variables_mesurables() -> list[VariableMesurable]:
                 "l'essence et constitue une valeur dérivée."
             ),
             source=source_reserve_utile_inrae(),
+            bloc_contexte="pedologie",
         ),
     ]
 
 
-def codes_variables_mesurables() -> frozenset[str]:
-    """Codes admis dans une condition de règle dérivée.
+def noms_de_faits_par_code() -> dict[str, str]:
+    """Correspondance code du vocabulaire → nom du fait dans le contexte.
 
-    C'est ce jeu que `deriver_regle` reçoit en `variables_connues` : une
-    variable absente est refusée plutôt que rapprochée par ressemblance.
+    C'est ce que `deriver_regle` reçoit en `variables_connues`. Une variable
+    absente est refusée plutôt que rapprochée par ressemblance.
+
+    La correspondance vit ici, et non dans la règle : une règle tirée d'un
+    catalogue de stations dit « réserve utile », elle n'a pas à connaître la
+    structure de `StationContexte`.
     """
-    return frozenset(variable.code for variable in variables_mesurables())
+    return {
+        variable.code: f"{variable.bloc_contexte}_{variable.code}"
+        for variable in variables_mesurables()
+    }

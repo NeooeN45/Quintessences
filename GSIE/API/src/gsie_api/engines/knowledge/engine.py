@@ -32,6 +32,7 @@ classification convergent tous deux vers claim_kind=classification —
 RFC-0011 §3.3) et ne permettrait pas un aller-retour exact.
 """
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -125,6 +126,15 @@ _NATURE_VERS_TYPE_SOURCE: dict[str, SourceType] = {
     "expert_statement": SourceType.expert_identifie,
     "model_output": SourceType.observation_terrain,
 }
+
+
+class TerritoireInconnuError(ValueError):
+    """Le territoire demande n'existe pas, ou ne porte pas de geometrie.
+
+    Distinct d'une absence de regle : « je ne sais pas ou tu es » et « aucune
+    regle ne s'applique ici » sont deux reponses differentes, et les confondre
+    ferait passer une erreur d'appel pour un etat de la connaissance.
+    """
 
 
 class SourceIncitableError(ValueError):
@@ -673,7 +683,7 @@ class KnowledgeEngine:
         self,
         territoire_id: UUID,
         *,
-        variables_connues: frozenset[str],
+        variables_connues: Mapping[str, str],
         evidence_min: EvidenceLevelSchema | None = None,
     ) -> tuple[list[RegleInference], list[str]]:
         """Retourne les règles applicables à un territoire, et ce qui a été écarté.
@@ -706,6 +716,13 @@ class KnowledgeEngine:
         Returns:
             Les règles dérivées, et la liste des motifs d'écartement.
         """
+        territoire_connu = await self._session.get(PlaceModel, territoire_id)
+        if territoire_connu is None:
+            raise TerritoireInconnuError(
+                f"territoire {territoire_id} inconnu : aucune `place` ne porte cet "
+                "identifiant, donc aucune zone ne peut être comparée"
+            )
+
         territoire = aliased(PlaceModel)
         domaine = aliased(PlaceModel)
 

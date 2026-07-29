@@ -47,7 +47,8 @@ from tests.conftest import requires_docker
 
 pytestmark = requires_docker
 
-_VOCABULAIRE = frozenset({"reserve_utile_mm"})
+# Correspondance code -> nom du fait : le contexte prefixe par bloc.
+_VOCABULAIRE = {"reserve_utile_mm": "pedologie_reserve_utile_mm"}
 
 # Deux polygones disjoints en Lambert-93 : le second ne contient pas le premier.
 _PARCELLE = (
@@ -174,7 +175,7 @@ class TestSelectionParDomaine:
         )
 
         assert len(regles) == 1, ecartees
-        assert regles[0].condition == "reserve_utile_mm < 120"
+        assert regles[0].condition == "pedologie_reserve_utile_mm < 120"
         assert regles[0].niveau_confiance == 0.8
         assert regles[0].source.auteur == "CRPF Normandie"
 
@@ -281,3 +282,80 @@ class TestExigencesDeSortie:
         )
 
         assert len(regles) == attendu
+
+
+class TestChaineComplete:
+    """Le Reasoning Engine va chercher ses règles quand l'appelant n'en donne pas.
+
+    C'est la promesse de `GSIE-PROMPT-0017` — « le branchement sur le Knowledge
+    Engine se fera sans rupture de contrat » — tenue deux ans plus tard.
+    """
+
+    @staticmethod
+    def _requete(station_id: object, regles: list[object] | None = None) -> object:
+        from gsie_api.engines.evidence.schemas import SourceReference, SourceType
+        from gsie_api.engines.reasoning.schemas import (
+            BlocContexte,
+            ReasoningRequest,
+            SourceMoteurContexte,
+            StationContexte,
+        )
+
+        bloc = BlocContexte(
+            source_moteur=SourceMoteurContexte.pedology,
+            source=SourceReference(
+                type_source=SourceType.observation_terrain,
+                auteur="Relevé terrain",
+                reference="sondage tarière, parcelle test",
+            ),
+            evidence_level=EvidenceLevelSchema.F,
+            valeurs={"reserve_utile_mm": 85.0},
+        )
+        return ReasoningRequest(
+            requete_id=uuid4(),
+            station_id=station_id,
+            contexte=StationContexte(pedologie=bloc),
+            regles=regles or [],
+            question="La station présente-t-elle une contrainte hydrique ?",
+            profondeur_max=3,
+        )
+
+    async def test_le_moteur_recupere_ses_regles_et_conclut(self, db_session: AsyncSession) -> None:
+        """Document → règle → observation → conclusion tracée, sans règle fournie."""
+        from gsie_api.engines.reasoning.engine import ReasoningEngine
+
+        parcelle = await _place(db_session, _PARCELLE, "parcelle")
+        region = await _place(db_session, _REGION_CONTENANTE, "haute-normandie")
+        await _regle(db_session, domaine=region, source=await _source(db_session))
+        await db_session.commit()
+
+        resultat = await ReasoningEngine(db_session).infer(
+            self._requete(parcelle.id), datetime.now(UTC)
+        )
+
+        # 85 mm observés contre un seuil à 120 : la contrainte est établie.
+        assert len(resultat.conclusions) == 1, resultat
+        conclusion = resultat.conclusions[0]
+        assert "contrainte hydrique" in conclusion.enonce
+        # La conclusion remonte à la source, sans quoi elle serait incitable.
+        assert conclusion.sources_utilisees
+        # Le plancher de preuve est celui du maillon le plus faible : le relevé
+        # terrain (F) et non la règle (B).
+        assert conclusion.evidence_level_plancher is EvidenceLevelSchema.F
+
+    async def test_une_regle_hors_domaine_ne_produit_aucune_conclusion(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Le refus se propage jusqu'au bout : pas de règle, donc pas de conclusion."""
+        from gsie_api.engines.reasoning.engine import ReasoningEngine
+
+        parcelle = await _place(db_session, _PARCELLE, "parcelle")
+        ailleurs = await _place(db_session, _REGION_AILLEURS, "mediterranee")
+        await _regle(db_session, domaine=ailleurs, source=await _source(db_session))
+        await db_session.commit()
+
+        resultat = await ReasoningEngine(db_session).infer(
+            self._requete(parcelle.id), datetime.now(UTC)
+        )
+
+        assert resultat.conclusions == []

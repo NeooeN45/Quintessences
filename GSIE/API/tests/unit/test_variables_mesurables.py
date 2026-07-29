@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from gsie_api.engines.evidence.schemas import SourceType
 from gsie_api.seeds.variables_mesurables_data import (
-    codes_variables_mesurables,
+    noms_de_faits_par_code,
     source_reserve_utile_inrae,
     variables_mesurables,
 )
@@ -59,7 +59,7 @@ class TestVocabulaireExploitable:
 
     def test_la_reserve_utile_est_au_vocabulaire(self) -> None:
         """Variable du périmètre pilote acté par DEC-000038."""
-        assert "reserve_utile_mm" in codes_variables_mesurables()
+        assert noms_de_faits_par_code()["reserve_utile_mm"] == "pedologie_reserve_utile_mm"
 
     def test_la_definition_distingue_le_plafond_de_l_accessible(self) -> None:
         """La confusion des deux produirait une sous-détection de contrainte.
@@ -86,4 +86,4 @@ class TestFamillesDisjointes:
             "tolerance_engorgement_racinaire",
         }
 
-        assert codes_variables_mesurables().isdisjoint(qualitatives)
+        assert set(noms_de_faits_par_code()).isdisjoint(qualitatives)

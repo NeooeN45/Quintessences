@@ -320,6 +320,17 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_regles_applicables.py",),
     ),
+    Mutation(
+        cle="plancher_ignore_les_faits",
+        fichier="gsie_api/engines/reasoning/engine.py",
+        ancien="niveau_plancher([regle.evidence_level, *niveaux_des_faits])",
+        nouveau="regle.evidence_level",
+        defaut_reproduit=(
+            "une conclusion tiree d'un releve terrain isole (F) via une regle "
+            "de catalogue (B) est annoncee comme B — surestimation silencieuse"
+        ),
+        tests=("tests/integration/test_regles_applicables.py",),
+    ),
 )
 
 
