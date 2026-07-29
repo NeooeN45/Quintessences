@@ -250,6 +250,28 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_forestry_schemas.py",),
     ),
+    Mutation(
+        cle="vocabulaire_non_controle",
+        fichier="gsie_api/engines/knowledge/regles.py",
+        ancien="    if variables_connues is not None and variable not in variables_connues:",
+        nouveau="    if False:",
+        defaut_reproduit=(
+            "une variable hors vocabulaire passe : « RUM » et reserve_utile_mm "
+            "cohabitent, la regle echoue ensuite en silence"
+        ),
+        tests=("tests/unit/test_regles_derivees.py",),
+    ),
+    Mutation(
+        cle="valeur_non_numerique_admise",
+        fichier="gsie_api/engines/knowledge/regles.py",
+        ancien="    nombre = _nombre_lisible(valeur)",
+        nouveau="    nombre = valeur.strip()",
+        defaut_reproduit=(
+            "une valeur non numerique entre dans la condition derivee — "
+            "surface d'execution ouverte"
+        ),
+        tests=("tests/unit/test_regles_derivees.py",),
+    ),
 )
 
 
