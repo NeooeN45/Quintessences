@@ -272,6 +272,17 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_regles_derivees.py",),
     ),
+    Mutation(
+        cle="source_de_grandeur_derivee",
+        fichier="gsie_api/seeds/variables_mesurables_data.py",
+        ancien='            "Réservoir utile des sols de la France métropolitaine, version 2.0, "',
+        nouveau='            "Reserve utile, source a preciser, "',
+        defaut_reproduit=(
+            "la source qui definit une grandeur mesurable derive sans etre "
+            "remarquee — la definition devient citable sans etre verifiable"
+        ),
+        tests=("tests/unit/test_variables_mesurables.py",),
+    ),
 )
 
 
