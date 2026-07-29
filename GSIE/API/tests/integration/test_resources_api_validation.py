@@ -135,6 +135,8 @@ class TestValidation422:
             "silvicultural_rule",
             {
                 "required_context": "futaie reguliere de hetre",
+                # Zone de validite obligatoire depuis DEC-000038.
+                "validity_zone_description": "Haute-Normandie",
                 "trigger": "surface terriere > 30",
                 "action": "eclaircie par le haut",
                 "intensity": "moderee",

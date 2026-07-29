@@ -372,8 +372,11 @@ class SilviculturalRuleModel(Base, TimestampMixin):
     validity_zone_description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
-        doc="Zone geographique de validite declaree par la source "
-        "(ex. « Haute-Normandie », « France metropolitaine »)",
+        # `comment=` et non `doc=` : `doc` est de la documentation Python, que
+        # PostgreSQL ne voit pas. La migration pose un COMMENT ON COLUMN ; sans
+        # `comment=` ici, le modele et la base divergent — divergence que le
+        # controle de derive strict a effectivement rattrapee.
+        comment="Zone geographique de validite declaree par la source (DEC-000038)",
     )
     trigger: Mapped[str] = mapped_column(Text, nullable=False)
     action: Mapped[str] = mapped_column(Text, nullable=False)
