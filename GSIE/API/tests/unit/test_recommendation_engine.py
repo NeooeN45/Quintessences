@@ -19,6 +19,7 @@ from gsie_api.engines.recommendation.schemas import (
     RecommendationRequest,
     TypeAction,
 )
+from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
 from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 
@@ -181,3 +182,79 @@ async def should_generate_distinct_alternative_ids(engine: RecommendationEngine)
     principale = result.recommandations[0]
     ids = [alt.recommandation_id for alt in principale.alternatives]
     assert len(ids) == len(set(ids))
+
+
+# --- L'etat du peuplement pilote la sortie ---
+
+
+@pytest.mark.parametrize(
+    "etat_degrade",
+    [DiagnosticGlobalState.deperissement, DiagnosticGlobalState.critique],
+)
+@pytest.mark.asyncio
+async def should_refuse_intervention_on_degraded_stand(
+    etat_degrade: DiagnosticGlobalState,
+) -> None:
+    """Un peuplement dégradé ne reçoit pas le conseil du peuplement sain.
+
+    Défaut reproduit avant correction : le moteur dérivait l'action du seul
+    objectif forestier. Un peuplement diagnostiqué `critique`, avec 45 % de
+    mortalité dans son contenu, recevait mot pour mot « éclaircie modérée
+    (prélèvement 25 %) pour favoriser la croissance » — le conseil du peuplement
+    sain, à l'identique.
+
+    Le moteur n'arbitre pas quelle intervention convient à un peuplement
+    dégradé : ce serait une table de conversion inventée (`ADR-009`). Il
+    constate que son mapping ne couvre pas le cas et le dit.
+    """
+    moteur = RecommendationEngine(SessionDiagnosticFictif(etat_global=etat_degrade))
+    requete = RecommendationRequest(
+        requete_id=uuid4(),
+        diagnostic_id=uuid4(),
+        objectif_forestier=ObjectifForestier.PRODUCTION,
+        alternatives_demandees=True,
+    )
+
+    ensemble = await moteur.recommend(requete)
+
+    types = {reco.type_action for reco in ensemble.recommandations}
+    assert types == {TypeAction.ATTENTE_SURVEILLANCE}, (
+        f"actions proposées sur un peuplement {etat_degrade.value} : " f"{[t.value for t in types]}"
+    )
+
+    reco = ensemble.recommandations[0]
+    # Le motif doit etre lisible par le forestier, pas seulement encode dans le
+    # type d'action : c'est lui qui decide (`GSIE-CON-001`), il lui faut le
+    # pourquoi.
+    assert etat_degrade.value in reco.description
+    assert any(
+        etat_degrade.value in f for f in reco.justification.facteurs_limitants
+    ), "l'état du peuplement ne figure pas dans les facteurs limitants"
+    assert not reco.alternatives, (
+        "des alternatives sont proposées alors qu'aucune règle ne couvre le cas "
+        "— elles seraient inventées"
+    )
+
+
+@pytest.mark.asyncio
+async def should_still_recommend_on_healthy_stand() -> None:
+    """Le peuplement sain continue de recevoir une action.
+
+    Sans ce contrôle, refuser sur tous les états ferait passer le test
+    précédent : « ne jamais rien proposer » satisfait « ne pas proposer sur un
+    peuplement dégradé ».
+    """
+    moteur = RecommendationEngine(SessionDiagnosticFictif(etat_global=DiagnosticGlobalState.sain))
+    requete = RecommendationRequest(
+        requete_id=uuid4(),
+        diagnostic_id=uuid4(),
+        objectif_forestier=ObjectifForestier.PRODUCTION,
+        alternatives_demandees=True,
+    )
+
+    ensemble = await moteur.recommend(requete)
+
+    assert ensemble.recommandations[0].type_action == TypeAction.ECLAIRCIE
+    assert ensemble.recommandations[0].alternatives, (
+        "les alternatives restent dues sur un peuplement dont l'état permet " "l'intervention"
+    )

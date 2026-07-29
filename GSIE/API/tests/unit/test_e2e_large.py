@@ -650,11 +650,27 @@ class TestApiHttpEndpoints:
         assert data["status"] == "healthy"
 
     def should_return_200_on_ready(self) -> None:
-        """GET /ready retourne 200 — l'API est prête."""
+        """GET /ready — le code HTTP suit l'état réel des dépendances.
+
+        Ce test exigeait `200` inconditionnellement, et passait parce que
+        l'endpoint rendait `200` quel que soit l'état : il ne pouvait pas
+        échouer sur cet axe. L'environnement de test n'a pas toujours Redis, et
+        un `degraded` doit précisément se voir.
+
+        L'invariant contrôlé est la cohérence code ↔ corps : c'est lui qui a de
+        la valeur pour une sonde Kubernetes, et il tient que les dépendances
+        soient là ou non.
+        """
         app = create_app()
         client = TestClient(app)
         response = client.get("/ready")
-        assert response.status_code == 200
+
+        corps = response.json()
+        attendu = 200 if corps["status"] == "healthy" else 503
+        assert response.status_code == attendu, (
+            f"HTTP {response.status_code} pour un corps {corps['status']!r} — "
+            f"une sonde de disponibilité décide sur le code. {corps['dependencies']}"
+        )
 
     @pytest.mark.parametrize(
         "engine",

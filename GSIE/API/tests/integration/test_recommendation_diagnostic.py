@@ -6,17 +6,21 @@ en citant un `diagnostic_id` tiré au hasard, jamais présent en base. La
 justification portait la mention du diagnostic ; le forestier lisait une
 référence vérifiable en apparence qui ne renvoyait à rien (`GSIE-CON-004`).
 
-Deux exigences distinctes, deux tests :
+Trois exigences distinctes :
 
 * un diagnostic absent fait **refuser** — jamais produire une variante
   dégradée, qui serait un conseil sylvicole assorti d'une confiance inventée ;
 * un diagnostic présent **impose sa confiance** — une recommandation ne peut
-  pas être plus assurée que le diagnostic sur lequel elle repose.
+  pas être plus assurée que le diagnostic sur lequel elle repose ;
+* l'**état du peuplement** relu en base pilote la sortie. Le moteur dérivait
+  l'action du seul objectif forestier : un peuplement `critique` recevait mot
+  pour mot le conseil du peuplement sain.
 
-Ces deux points exigent une base réelle. Les tests unitaires emploient
-`SessionDiagnosticFictif`, qui rend un diagnostic pour tout identifiant :
-il rend le mapping objectif → action testable sans base, mais masquerait par
-construction ce qui est vérifié ici.
+Ces trois points exigent une base réelle. Les tests unitaires emploient
+`SessionDiagnosticFictif`, qui rend un diagnostic pour tout identifiant : il
+rend le mapping objectif → action testable sans base, mais masquerait par
+construction ce qui est vérifié ici — notamment l'aller-retour de
+`DiagnosticGlobalState`, stocké par sa valeur et non par son nom de membre.
 """
 
 from collections.abc import AsyncGenerator
@@ -36,6 +40,7 @@ from gsie_api.engines.recommendation.engine import (
 from gsie_api.engines.recommendation.schemas import (
     ObjectifForestier,
     RecommendationRequest,
+    TypeAction,
 )
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.models.base import ResourceModel
@@ -59,7 +64,11 @@ _HEADERS_WRITER = {"Authorization": f"Bearer {_TOKEN_WRITER}"}
 _CONFIANCE_DIAGNOSTIC = 0.33
 
 
-async def _diagnostic_reel(session: AsyncSession, confiance: float) -> UUID:
+async def _diagnostic_reel(
+    session: AsyncSession,
+    confiance: float,
+    etat_global: DiagnosticGlobalState = DiagnosticGlobalState.sain,
+) -> UUID:
     """Insère un diagnostic complet et retourne son identifiant.
 
     Le diagnostic hérite de `resource` (ADR-001, héritage par table de
@@ -81,7 +90,7 @@ async def _diagnostic_reel(session: AsyncSession, confiance: float) -> UUID:
             requete_origine=uuid4(),
             station_id=uuid4(),
             type_diagnostic=DiagnosticType.stationnel,
-            etat_global=DiagnosticGlobalState.sain,
+            etat_global=etat_global,
             confiance=confiance,
             evidence_level_plancher=EvidenceLevel.b,
             # Seul etat qu'un moteur peut produire (`GSIE-CON-001`).
@@ -193,3 +202,39 @@ async def test_l_api_refuse_un_diagnostic_absent(
         "le refus ne nomme pas le diagnostic manquant : l'appelant ne peut "
         f"pas corriger. Corps : {reponse.text[:300]}"
     )
+
+
+@pytest.mark.asyncio
+async def test_un_peuplement_critique_ne_recoit_pas_le_conseil_du_sain(
+    db_session: AsyncSession,
+) -> None:
+    """L'état lu en base pilote la sortie, pas seulement l'objectif forestier.
+
+    Le moteur dérivait l'action du seul `objectif_forestier` : un peuplement
+    diagnostiqué `critique` recevait « éclaircie modérée (prélèvement 25 %) pour
+    favoriser la croissance » — mot pour mot le conseil du peuplement sain.
+
+    Le contrôle passe par PostgreSQL, et non par le stub, parce que l'aller-retour
+    de l'énumération compte : `DiagnosticGlobalState` est stocké par sa *valeur*
+    (`values_callable`), et un état relu de travers ferait retomber le moteur
+    dans la branche nominale sans que rien ne le signale.
+    """
+    critique = await _diagnostic_reel(
+        db_session, _CONFIANCE_DIAGNOSTIC, DiagnosticGlobalState.critique
+    )
+    sain = await _diagnostic_reel(db_session, _CONFIANCE_DIAGNOSTIC, DiagnosticGlobalState.sain)
+
+    moteur = RecommendationEngine(db_session)
+    sur_critique = await moteur.recommend(_requete(critique))
+    sur_sain = await moteur.recommend(_requete(sain))
+
+    action_critique = sur_critique.recommandations[0].type_action
+    action_sain = sur_sain.recommandations[0].type_action
+
+    assert action_critique != action_sain, (
+        f"même action ({action_critique.value}) pour un peuplement critique et "
+        "un peuplement sain — l'état relu n'est pas pris en compte"
+    )
+    assert action_critique == TypeAction.ATTENTE_SURVEILLANCE
+    assert action_sain == TypeAction.ECLAIRCIE
+    assert "critique" in sur_critique.recommandations[0].description

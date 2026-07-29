@@ -442,6 +442,120 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_migration_baseline.py",),
     ),
+    Mutation(
+        cle="etat_du_peuplement_ignore",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Retour a la derivation par le seul objectif forestier : un peuplement
+        # critique recevait alors mot pour mot le conseil du peuplement sain.
+        ancien="        if diagnostic.etat_global in _ETATS_HORS_MAPPING_V1:",
+        nouveau="        if False:",
+        defaut_reproduit=(
+            "un peuplement diagnostique critique recoit « eclaircie moderee, "
+            "prelevement 25 % » — le conseil du peuplement sain, a l'identique"
+        ),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_diagnostic.py",
+        ),
+    ),
+    Mutation(
+        cle="etat_degrade_absent_du_perimetre",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Un seul des deux etats retire. Un test qui ne verifierait que
+        # `critique` survivrait — `deperissement` est tout aussi incompatible
+        # avec le mapping objectif -> action.
+        ancien="        DiagnosticGlobalState.deperissement,\n        DiagnosticGlobalState.critique,",  # noqa: E501
+        nouveau="        DiagnosticGlobalState.critique,",
+        defaut_reproduit=(
+            "un peuplement deperissant repasse par le mapping nominal et recoit "
+            "une intervention qu'aucune regle sourcee ne fonde"
+        ),
+        tests=("tests/unit/test_recommendation_engine.py",),
+    ),
+    Mutation(
+        cle="motif_du_refus_muet",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Le type d'action seul ne suffit pas : c'est le forestier qui decide
+        # (`GSIE-CON-001`), il lui faut le pourquoi, en clair.
+        ancien='                f"Peuplement diagnostiqué « {etat_global.value} ». Aucune règle "',
+        nouveau='                f"Aucune règle "',
+        defaut_reproduit=(
+            "le forestier lit « pas d'intervention » sans savoir que l'etat de "
+            "son peuplement en est le motif"
+        ),
+        tests=("tests/unit/test_recommendation_engine.py",),
+    ),
+    # --- Fail-closed : ni l'autorisation ni la disponibilite ne s'accordent
+    #     par omission
+    Mutation(
+        cle="action_non_evaluee_accordee",
+        fichier="gsie_api/core/rbac.py",
+        # Retour a la sortie ouverte : toute action qu'aucune branche n'evalue
+        # ressortait autorisee. `admin` etait dans ce cas.
+        ancien="    if action not in _ACTIONS_EVALUEES:",
+        nouveau="    if False:",
+        defaut_reproduit=(
+            "un porteur de JWT sans aucun role obtient l'action `admin` sur " "tout type non-RGPD"
+        ),
+        tests=("tests/unit/test_rbac.py",),
+    ),
+    Mutation(
+        cle="readiness_toujours_disponible",
+        fichier="gsie_api/infrastructure/health.py",
+        # Le corps disait `degraded`, le code disait 200. Kubernetes lit le code.
+        ancien='    return status.HTTP_200_OK if statut == "healthy" else status.HTTP_503_SERVICE_UNAVAILABLE',  # noqa: E501
+        nouveau="    return status.HTTP_200_OK",
+        defaut_reproduit=(
+            "un pod dont la base est inaccessible reste en rotation : la sonde "
+            "readiness rend 200 avec un corps `degraded`"
+        ),
+        tests=("tests/unit/test_health.py",),
+    ),
+    Mutation(
+        cle="code_du_cache_non_recalcule",
+        fichier="gsie_api/infrastructure/health.py",
+        # Le chemin avec cache doit rendre le meme code que le chemin sans
+        # cache, sinon un `degraded` en cache rejoue un 200 pendant 5 s.
+        ancien="            response.status_code = _code_http(en_cache.status)\n            return en_cache",  # noqa: E501
+        nouveau="            return en_cache",
+        defaut_reproduit=(
+            "cinq secondes de trafic vers un pod tombe, parce que le code n'est "
+            "pas recalcule sur le chemin avec cache"
+        ),
+        tests=("tests/unit/test_health.py",),
+    ),
+    Mutation(
+        cle="secret_du_broker_dans_last_error",
+        fichier="gsie_api/outbox_worker.py",
+        # Interdiction posee des le premier brief : jamais de secret ni de
+        # traceback brute dans `last_error`. Le message d'une exception de
+        # connexion transporte l'URL du broker, donc son mot de passe
+        # (`redis://:motdepasse@...`), et `last_error_code` est persiste.
+        ancien='    code = _ERROR_CODE_PATTERN.sub("_", type(exc).__name__)',
+        nouveau="    code = str(exc)",
+        defaut_reproduit=(
+            "le mot de passe du broker est ecrit en base dans "
+            "outbox_event.last_error_code, puis expose par les metriques"
+        ),
+        tests=(
+            "tests/unit/test_infra_coverage.py",
+            "tests/integration/test_outbox_concurrence.py",
+        ),
+    ),
+    Mutation(
+        cle="joker_origine_accepte_en_production",
+        fichier="gsie_api/websocket/router.py",
+        # Le joker `*` ne vaut qu'en developpement. L'accepter partout ouvrirait
+        # le hub a toute page web : le jeton passe en parametre de requete, une
+        # origine tierce suffirait alors a etablir la connexion.
+        ancien='    if "*" in allowed:\n        return _settings.environment == "development"',
+        nouveau='    if "*" in allowed:\n        return True',
+        defaut_reproduit=(
+            "une configuration laissee a `*` ouvre le hub WebSocket a toute "
+            "origine, y compris en production"
+        ),
+        tests=("tests/unit/test_infra_coverage.py",),
+    ),
 )
 
 

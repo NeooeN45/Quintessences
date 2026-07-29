@@ -13,7 +13,7 @@ from contextlib import suppress
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response, status
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +30,16 @@ _settings = get_settings()
 
 # Clé Redis pour le cache du readiness check
 _READY_CACHE_KEY = "gsie:ready:cache"
+
+
+def _code_http(statut: str) -> int:
+    """Traduit le statut de disponibilité en code HTTP.
+
+    Un seul endroit décide, pour que le chemin avec cache et le chemin sans
+    cache ne puissent pas diverger : un `degraded` relu du cache rendait
+    autrement un 200.
+    """
+    return status.HTTP_200_OK if statut == "healthy" else status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 async def _check_database(db: AsyncSession) -> str:
@@ -79,19 +89,36 @@ async def liveness(request: Request) -> HealthResponse:
 @router.get("/ready", response_model=HealthResponse)
 async def readiness(
     request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> HealthResponse:
     """Readiness probe — vérifie DB + Redis avec cache Redis 5s.
 
-    Pour Kubernetes readiness probe. Le cache évite de pinger DB+Redis
-    à chaque requête (recommandation stress test : -40% latence).
+    Le code HTTP porte la réponse, et non le seul corps : une sonde de
+    disponibilité Kubernetes décide sur le statut, jamais sur le contenu. Cet
+    endpoint rendait `200` avec un corps `degraded` et une base `unhealthy` —
+    vérifié, reproduit. Le pod restait donc en rotation alors que sa base était
+    inaccessible, ce qui est exactement ce que la sonde existe pour éviter.
+
+    `503 Service Unavailable` est la réponse attendue d'une sonde readiness :
+    « ce processus vit, ne lui envoyez pas de trafic ». Le corps reste complet
+    pour le diagnostic — quelle dépendance est tombée.
+
+    `/health` (liveness) reste inconditionnellement `200` : il répond « le
+    processus n'est pas bloqué », et rendre 503 y ferait redémarrer le pod pour
+    une panne de base qu'un redémarrage ne corrige pas.
+
+    Le cache est appliqué au corps **et** au code : un `degraded` en cache
+    rejouerait sinon un 200.
     """
     # Vérifier le cache Redis d'abord
     try:
         cached = await redis.get(_READY_CACHE_KEY)
         if cached:
-            return HealthResponse.model_validate_json(cached)
+            en_cache = HealthResponse.model_validate_json(cached)
+            response.status_code = _code_http(en_cache.status)
+            return en_cache
     except Exception:
         pass  # Cache indisponible — on continue avec le check réel
 
@@ -101,20 +128,21 @@ async def readiness(
     }
     all_healthy = all(v.startswith("healthy") for v in dependencies.values())
 
-    response = HealthResponse(
+    corps = HealthResponse(
         status="healthy" if all_healthy else "degraded",
         version=_settings.app_version,
         environment=_settings.environment,
         timestamp=datetime.now(UTC),
         dependencies=dependencies,
     )
+    response.status_code = _code_http(corps.status)
 
     # Mettre en cache le résultat (TTL 5s)
     with suppress(Exception):
         await redis.setex(
             _READY_CACHE_KEY,
             _settings.health_cache_ttl,
-            response.model_dump_json(),
+            corps.model_dump_json(),
         )
 
-    return response
+    return corps

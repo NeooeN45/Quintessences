@@ -19,6 +19,7 @@ from typing import Any
 from uuid import UUID  # noqa: TC003 — annotation evaluee par SQLAlchemy
 
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
+from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
 
 __all__ = ["CONFIANCE_DIAGNOSTIC_FICTIF", "SessionDiagnosticFictif"]
 
@@ -26,12 +27,30 @@ CONFIANCE_DIAGNOSTIC_FICTIF = 0.7
 
 
 class SessionDiagnosticFictif:
-    """Rend un `DiagnosticModel` non persisté, quel que soit l'identifiant."""
+    """Rend un `DiagnosticModel` non persisté, quel que soit l'identifiant.
 
-    def __init__(self, confiance: float = CONFIANCE_DIAGNOSTIC_FICTIF) -> None:
+    `etat_global` vaut `sain` par défaut, et non `None` : le moteur lit désormais
+    l'état du peuplement, et un état absent n'existe pas en base — la colonne est
+    NOT NULL. Un stub qui le laissait vide aurait fait passer les tests par une
+    branche impossible en production.
+
+    Le paramètre reste ouvert pour que les tests unitaires exercent aussi l'état
+    dégradé, pour lequel le mapping v1 ne propose plus d'intervention.
+    """
+
+    def __init__(
+        self,
+        confiance: float = CONFIANCE_DIAGNOSTIC_FICTIF,
+        etat_global: DiagnosticGlobalState = DiagnosticGlobalState.sain,
+    ) -> None:
         self._confiance = confiance
+        self._etat_global = etat_global
 
     async def get(self, modele: type[Any], identifiant: UUID) -> Any:
         if modele is not DiagnosticModel:
             return None
-        return DiagnosticModel(id=identifiant, confiance=self._confiance)
+        return DiagnosticModel(
+            id=identifiant,
+            confiance=self._confiance,
+            etat_global=self._etat_global,
+        )

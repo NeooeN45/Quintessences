@@ -231,3 +231,93 @@ def should_use_simple_ping_in_production():
 
         result = asyncio.run(_check_database(mock_db))
         assert result == "healthy"
+
+
+# --- Le code HTTP porte la reponse, pas seulement le corps ---
+
+
+def should_answer_503_when_a_dependency_is_down():
+    """Une sonde readiness décide sur le code HTTP, jamais sur le corps.
+
+    `/ready` rendait `200` avec un corps `degraded` et une base `unhealthy` —
+    vérifié, reproduit. Kubernetes lit le code : le pod restait en rotation avec
+    sa base inaccessible, ce que la sonde existe précisément pour éviter.
+
+    Les deux tests `degraded` voisins contrôlaient le corps et jamais le code :
+    le défaut leur était donc invisible.
+    """
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=Exception("Connection refused"))
+
+    mock_redis = AsyncMock()
+    mock_redis.ping = AsyncMock(return_value=True)
+    mock_redis.get = AsyncMock(return_value=None)
+    mock_redis.setex = AsyncMock(return_value=True)
+
+    test_client, app = _create_client(mock_db, mock_redis)
+    response = test_client.get("/ready")
+
+    assert response.status_code == 503, (
+        f"HTTP {response.status_code} alors que le corps dit "
+        f"{response.json()['status']!r} — le trafic continuerait d'arriver"
+    )
+    assert response.json()["status"] == "degraded"
+    # Le corps reste exploitable : savoir *quelle* dependance est tombee.
+    assert response.json()["dependencies"]["database"] == "unhealthy"
+    app.dependency_overrides.clear()
+
+
+def should_answer_200_when_everything_is_healthy():
+    """Le cas nominal reste 200.
+
+    Sans ce contrôle, rendre 503 en toutes circonstances ferait passer le test
+    précédent — et mettrait l'application hors rotation en permanence.
+    """
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one=MagicMock(return_value="3.4.2")))
+
+    mock_redis = AsyncMock()
+    mock_redis.ping = AsyncMock(return_value=True)
+    mock_redis.get = AsyncMock(return_value=None)
+    mock_redis.setex = AsyncMock(return_value=True)
+
+    test_client, app = _create_client(mock_db, mock_redis)
+    response = test_client.get("/ready")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
+    app.dependency_overrides.clear()
+
+
+def should_replay_503_from_the_cache():
+    """Un `degraded` relu du cache rend 503, pas 200.
+
+    Le cache stocke le corps sérialisé. Le rejouer sans recalculer le code
+    aurait rendu `200` pendant toute la durée de vie du cache — cinq secondes
+    de trafic vers un pod dont la base est tombée.
+    """
+    import json as _json
+
+    corps_degrade = _json.dumps(
+        {
+            "status": "degraded",
+            "version": "0.1.0",
+            "environment": "test",
+            "timestamp": "2026-07-30T00:00:00Z",
+            "dependencies": {"database": "unhealthy", "redis": "healthy"},
+        }
+    )
+
+    mock_db = AsyncMock()
+    mock_redis = AsyncMock()
+    mock_redis.get = AsyncMock(return_value=corps_degrade)
+
+    test_client, app = _create_client(mock_db, mock_redis)
+    response = test_client.get("/ready")
+
+    assert (
+        response.status_code == 503
+    ), "le chemin avec cache rend un code different du chemin sans cache"
+    # La base n'a pas ete interrogee : c'est bien la reponse en cache.
+    mock_db.execute.assert_not_called()
+    app.dependency_overrides.clear()

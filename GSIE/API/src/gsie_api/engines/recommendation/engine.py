@@ -53,6 +53,7 @@ from gsie_api.engines.recommendation.schemas import (
     TypeAction,
 )
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
+from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
 
 logger = get_logger("gsie_api.recommendation.engine")
 
@@ -63,6 +64,27 @@ _V1_SOURCE_REGLES = SourceReference(
     auteur="GSIE Knowledge Engine (v1 — règles déclaratives)",
     reference="KNOWLEDGE_ENGINE.md §5 — règles sylvicoles",
     version_source="0.1.0",
+)
+
+
+# États de peuplement que le mapping objectif → action de la v1 ne couvre pas.
+#
+# Ce mapping dérive l'action du seul objectif forestier ; il présuppose donc un
+# peuplement dont l'état permet l'intervention. Sur un peuplement dépérissant ou
+# critique, le présupposé est faux et l'action proposée ne repose sur rien.
+#
+# `vigueur_reduite` n'y figure pas volontairement : une éclaircie sanitaire sur
+# un peuplement de vigueur réduite est une intervention sylvicole réelle, et
+# l'exclure supposerait un seuil que ce moteur n'a pas le droit de fixer
+# (`ADR-009`). Ce cas reste au forestier, qui dispose du diagnostic.
+#
+# Élargir cet ensemble, ou proposer une intervention pour ces états, suppose une
+# règle sourcée passant par le Knowledge Engine — jamais un ajout ici.
+_ETATS_HORS_MAPPING_V1: frozenset[DiagnosticGlobalState] = frozenset(
+    {
+        DiagnosticGlobalState.deperissement,
+        DiagnosticGlobalState.critique,
+    }
 )
 
 
@@ -125,6 +147,18 @@ class RecommendationEngine:
         le diagnostic sur lequel elle repose. Le Diagnostic Engine pose déjà la
         règle — « le moteur n'invente aucune table de conversion » (`ADR-009`).
 
+        L'**état du peuplement** est également lu. Il ne l'était pas : le moteur
+        dérivait l'action du seul objectif forestier, si bien qu'un peuplement
+        diagnostiqué `critique` recevait mot pour mot le conseil du peuplement
+        sain — « éclaircie modérée, prélèvement 25 % ». Vérifié, reproduit.
+
+        Le moteur n'arbitre pas pour autant quelle intervention convient à un
+        peuplement dégradé : ce serait une table de conversion inventée, donc
+        interdite (`ADR-009`). Il constate que son mapping v1 ne couvre pas le
+        cas et le dit — `attente_surveillance`, dont `TypeAction` précise qu'elle
+        est « un conseil honnête, pas une absence de réponse ». Le forestier
+        garde la décision (`GSIE-CON-001`), avec le motif sous les yeux.
+
         Raises:
             DiagnosticIntrouvableError: si le diagnostic invoqué n'existe pas.
         """
@@ -132,29 +166,36 @@ class RecommendationEngine:
         confiance = float(diagnostic.confiance)
         recommandations: list[Recommendation] = []
 
-        # Recommandation principale — dérivée de l'objectif forestier.
-        # En v1, la logique est déclarative et simple. Une future version
-        # l'enrichira via Knowledge Engine + Forest Dynamics Engine.
-        principale = self._generer_recommandation_principale(request, confiance)
-        recommandations.append(principale)
+        if diagnostic.etat_global in _ETATS_HORS_MAPPING_V1:
+            # Aucune regle sourcee ne couvre ce cas : le moteur le declare
+            # plutot que d'appliquer le mapping objectif -> action, qui
+            # presuppose un peuplement en etat d'etre exploite.
+            logger.info(
+                "recommendation_etat_hors_mapping",
+                requete_id=str(request.requete_id),
+                etat_global=diagnostic.etat_global.value,
+            )
+            recommandations.append(
+                self._generer_attente_surveillance(request, confiance, diagnostic.etat_global)
+            )
+        else:
+            # Recommandation principale — dérivée de l'objectif forestier.
+            # En v1, la logique est déclarative et simple. Une future version
+            # l'enrichira via Knowledge Engine + Forest Dynamics Engine.
+            principale = self._generer_recommandation_principale(request, confiance)
+            recommandations.append(principale)
 
-        # Alternatives — systématiquement proposées si demandées
-        if request.alternatives_demandees:
-            alternatives = self._generer_alternatives(request, principale, confiance)
-            principale_avec_alts = principale.model_copy(update={"alternatives": alternatives})
-            recommandations[0] = principale_avec_alts
-
-        # Recommandation de fallback — attente/surveillance si aucune
-        # action fondée n'est possible. Le contrat §5 interdit un
-        # ensemble vide : l'absence d'action se dit par
-        # `attente_surveillance`.
-        if not recommandations:
-            recommandations.append(self._generer_attente_surveillance(request, confiance))
+            # Alternatives — systématiquement proposées si demandées
+            if request.alternatives_demandees:
+                alternatives = self._generer_alternatives(request, principale, confiance)
+                principale_avec_alts = principale.model_copy(update={"alternatives": alternatives})
+                recommandations[0] = principale_avec_alts
 
         logger.info(
             "recommendation_complete",
             requete_id=str(request.requete_id),
             objectif=request.objectif_forestier.value,
+            etat_global=diagnostic.etat_global.value,
             n_recommandations=len(recommandations),
             n_alternatives=len(recommandations[0].alternatives) if recommandations else 0,
         )
@@ -334,27 +375,47 @@ class RecommendationEngine:
         return alternatives
 
     def _generer_attente_surveillance(
-        self, request: RecommendationRequest, confiance: float
+        self,
+        request: RecommendationRequest,
+        confiance: float,
+        etat_global: DiagnosticGlobalState,
     ) -> Recommendation:
-        """Génère une recommandation d'attente/surveillance (fallback).
+        """Génère une recommandation d'attente/surveillance faute de règle fondée.
 
-        Le contrat §5 interdit un ensemble vide : si aucune action
-        fondée n'est possible, `attente_surveillance` est un conseil
-        honnête, pas une absence de réponse.
+        Ce générateur était **inatteignable** : la branche qui l'appelait
+        testait `if not recommandations` après y avoir déjà ajouté la
+        recommandation principale. Le contrat §5 interdit un ensemble vide, ce
+        qui rendait la garde vraie par construction — donc morte.
+
+        Il est désormais appelé sur la condition qui le justifie : un état de
+        peuplement que le mapping v1 ne couvre pas. `TypeAction` le dit —
+        « lorsque les connaissances disponibles ne permettent pas de proposer
+        une intervention, ne rien faire et observer est un conseil honnête, pas
+        une absence de réponse ».
         """
         return Recommendation(
             recommandation_id=uuid4(),
             type_action=TypeAction.ATTENTE_SURVEILLANCE,
             description=(
-                "Les connaissances disponibles ne permettent pas de proposer "
-                "une intervention fondée. Surveiller et réévaluer."
+                f"Peuplement diagnostiqué « {etat_global.value} ». Aucune règle "
+                "sylvicole sourcée ne couvre ce cas en v1 : le moteur ne propose "
+                "pas d'intervention. Surveiller, et faire évaluer le peuplement "
+                "par un forestier."
             ),
             justification=JustificationRecommandation(
                 diagnostic_ref=request.diagnostic_id,
-                regles_appliquees=["Règle v1 : fallback — données insuffisantes"],
+                regles_appliquees=[
+                    f"Aucune : l'état « {etat_global.value} » n'est couvert par le "
+                    "mapping objectif → action de la v1"
+                ],
                 sources=[_V1_SOURCE_REGLES],
                 facteurs_limitants=[
-                    "L'attente prolongée sans réévaluation régulière est un risque.",
+                    f"État du peuplement : {etat_global.value}.",
+                    "Le mapping v1 dérive l'action du seul objectif forestier. Il "
+                    "présuppose un peuplement dont l'état permet l'intervention — "
+                    "présupposé faux ici.",
+                    "L'attente prolongée sans réévaluation régulière est un risque, "
+                    "d'autant plus sur un peuplement dégradé.",
                 ],
                 moteurs_solicites=["recommendation"],
             ),

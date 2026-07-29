@@ -40,6 +40,16 @@ _RGPD_TYPES = RGPD_RESOURCE_TYPES
 # Actions possibles
 _ACTIONS: frozenset[str] = frozenset({"read", "write", "delete", "admin", "export"})
 
+# Actions accordées à `writer` ou `rgpd_manager`.
+_ACTIONS_ECRITURE: frozenset[str] = frozenset({"write", "delete", "export"})
+
+# Actions que `check_permission` évalue par une branche dédiée. Toute action de
+# `_ACTIONS` absente d'ici est refusée hors du rôle `admin` — c'est la seule
+# lecture sûre d'un oubli. Le fait que ce soit `_ACTIONS - {"admin"}` n'est pas
+# un hasard : `admin` est précisément l'action que seul le rôle `admin` obtient,
+# et le retour anticipé de la ligne 72 s'en charge.
+_ACTIONS_EVALUEES: frozenset[str] = frozenset({"read"}) | _ACTIONS_ECRITURE
+
 
 def get_user_roles(user: dict[str, Any]) -> set[str]:
     """Extrait les rôles du payload JWT."""
@@ -88,11 +98,29 @@ def check_permission(
         )
 
     # Vérification des actions d'écriture
-    is_write_action = action in ("write", "delete", "export")
+    is_write_action = action in _ACTIONS_ECRITURE
     if is_write_action and "writer" not in roles and "rgpd_manager" not in roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"{action} action requires writer, rgpd_manager or admin role",
+        )
+
+    # Sortie fermée : toute action que les branches ci-dessus n'ont pas évaluée
+    # est refusée, jamais accordée par défaut.
+    #
+    # `admin` figurait dans `_ACTIONS` sans qu'aucune branche la traite : elle
+    # traversait donc la fonction et ressortait autorisée — pour un utilisateur
+    # sans aucun rôle, sur tout type non-RGPD. Le seul retour de l'admin
+    # (ligne 72) l'attrape déjà ; le trou concernait tous les autres.
+    #
+    # Vérifié : `read`, `write` et `delete` refusées pour un porteur de JWT sans
+    # rôle, `admin` accordée. Aucun appelant n'employait l'action, mais une
+    # fonction d'autorisation dont l'oubli accorde est un piège — d'autant que
+    # le nom `admin` suggère le contrôle le plus fort.
+    if action not in _ACTIONS_EVALUEES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{action} action requires the admin role",
         )
 
 
