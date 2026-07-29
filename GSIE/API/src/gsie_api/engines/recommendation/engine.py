@@ -19,10 +19,14 @@ Garanties encodées (§6) :
   `ForestierDecision`.
 
 Périmètre v1 :
-- Génération de recommandations à partir d'un diagnostic abstrait
-  (référencé par UUID). Le moteur ne reconstitue pas le diagnostic
-  lui-même — il fait confiance au contenu transmis par l'appelant
-  via `RecommendationRequest`.
+- Génération de recommandations à partir d'un diagnostic **lu en base**.
+  Le moteur ne reconstitue pas le raisonnement du diagnostic, mais il
+  refuse d'en invoquer un qui n'existe pas : il citait auparavant
+  `diagnostic_id` dans sa justification sans jamais le consulter, et un
+  identifiant inexistant produisait un conseil sylvicole complet — type
+  d'action, prélèvement chiffré, confiance — dont la référence ne
+  renvoyait à rien. La confiance annoncée est celle du diagnostic, jamais
+  un nombre propre au moteur.
 - Les règles sylvicoles sont encodées sous forme de règles
   déclaratives simples en v1. Une future version les récupérera du
   Knowledge Engine.
@@ -33,7 +37,9 @@ Périmètre v1 :
 
 from datetime import UTC, datetime
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.evidence.schemas import SourceReference, SourceType
@@ -46,6 +52,7 @@ from gsie_api.engines.recommendation.schemas import (
     RecommendationSet,
     TypeAction,
 )
+from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
 
 logger = get_logger("gsie_api.recommendation.engine")
 
@@ -63,38 +70,77 @@ class RecommendationEngineError(Exception):
     """Erreur de base du Recommendation Engine."""
 
 
+class DiagnosticIntrouvableError(RecommendationEngineError):
+    """La recommandation invoque un diagnostic qui n'existe pas.
+
+    Refuser est le seul comportement acceptable. Une recommandation qui cite
+    un diagnostic jamais consulte porte une justification decorative : le
+    forestier lit une reference verifiable en apparence, qui ne renvoie a
+    rien (`GSIE-CON-004`, `ADR-009`).
+    """
+
+
 class RecommendationEngine:
-    """Moteur de recommandation — stateless en v1.
+    """Moteur de recommandation — lit le diagnostic, n'écrit rien en v1.
 
     Le moteur ne persiste pas les recommandations en v1 : chaque
     requête est indépendante. Une future version persistera les
     recommandations et les décisions du forestier pour traçabilité
     et alimentation du Learning Engine (§3).
+
+    Il **lit** en revanche le diagnostic invoqué : c'est ce qui rend sa
+    justification vérifiable, et ce qui borne sa confiance à celle du
+    diagnostic. D'où la session en dépendance de construction.
     """
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
     @staticmethod
     def version() -> str:
         """Version du moteur."""
-        return "0.1.0"
+        return "0.2.0"
+
+    async def _diagnostic(self, diagnostic_id: UUID) -> DiagnosticModel:
+        """Charge le diagnostic invoque, ou refuse.
+
+        Le moteur etait sans etat : il citait `diagnostic_id` dans sa
+        justification sans jamais lire le diagnostic correspondant. Un
+        identifiant inexistant produisait donc un conseil sylvicole complet,
+        assorti d'une confiance, citant une reference vide.
+        """
+        diagnostic = await self._session.get(DiagnosticModel, diagnostic_id)
+        if diagnostic is None:
+            raise DiagnosticIntrouvableError(
+                f"diagnostic {diagnostic_id} introuvable : une recommandation ne "
+                "peut pas se justifier par un diagnostic qui n'existe pas"
+            )
+        return diagnostic
 
     async def recommend(self, request: RecommendationRequest) -> RecommendationSet:
         """Génère un ensemble de recommandations à partir d'un diagnostic.
 
+        La confiance annoncée est **celle du diagnostic**, jamais un nombre
+        propre au moteur : une recommandation ne peut pas être plus assurée que
+        le diagnostic sur lequel elle repose. Le Diagnostic Engine pose déjà la
+        règle — « le moteur n'invente aucune table de conversion » (`ADR-009`).
+
         Raises:
-            RecommendationEngineError: si la requête est invalide ou
-                si aucun diagnostic n'est référencé.
+            DiagnosticIntrouvableError: si le diagnostic invoqué n'existe pas.
         """
+        diagnostic = await self._diagnostic(request.diagnostic_id)
+        confiance = float(diagnostic.confiance)
         recommandations: list[Recommendation] = []
 
         # Recommandation principale — dérivée de l'objectif forestier.
         # En v1, la logique est déclarative et simple. Une future version
         # l'enrichira via Knowledge Engine + Forest Dynamics Engine.
-        principale = self._generer_recommandation_principale(request)
+        principale = self._generer_recommandation_principale(request, confiance)
         recommandations.append(principale)
 
         # Alternatives — systématiquement proposées si demandées
         if request.alternatives_demandees:
-            alternatives = self._generer_alternatives(request, principale)
+            alternatives = self._generer_alternatives(request, principale, confiance)
             principale_avec_alts = principale.model_copy(update={"alternatives": alternatives})
             recommandations[0] = principale_avec_alts
 
@@ -103,7 +149,7 @@ class RecommendationEngine:
         # ensemble vide : l'absence d'action se dit par
         # `attente_surveillance`.
         if not recommandations:
-            recommandations.append(self._generer_attente_surveillance(request))
+            recommandations.append(self._generer_attente_surveillance(request, confiance))
 
         logger.info(
             "recommendation_complete",
@@ -122,17 +168,28 @@ class RecommendationEngine:
         )
 
     async def record_decision(self, decision: ForestierDecision) -> dict[str, Any]:
-        """Enregistre la décision du forestier sur une recommandation.
+        """Reçoit la décision du forestier sans encore la persister.
 
-        En v1, ne persiste pas — retourne un accusé de réception.
+        Le statut retourné était `enregistre` alors que la méthode ne persiste
+        rien : le forestier qui refuse une recommandation lisait un accusé de
+        conservation pour une trace qui n'existait que dans une ligne de log.
+        `GSIE-CON-005` exige la traçabilité, et « aucune décision perdue » n'est
+        pas satisfait par un message qui l'affirme.
+
+        Tant que la persistance n'est pas là, le statut le dit —
+        `recu_non_persiste` — plutôt que de laisser croire l'inverse. Le champ
+        `avertissement` porte la conséquence en clair, car un code de statut se
+        lit rarement.
+
         Une future version persistera la décision pour traçabilité
-        (GSIE-CON-005) et alimentation du Learning Engine (§3).
+        (`GSIE-CON-005`) et alimentation du Learning Engine (§3) ; ce statut
+        deviendra alors `enregistre`, et il sera vrai.
 
         Raises:
             RecommendationEngineError: si la décision est invalide.
         """
         logger.info(
-            "recommendation_decision_recorded",
+            "recommendation_decision_received_not_persisted",
             recommandation_id=str(decision.recommandation_id),
             decision=decision.decision.value,
         )
@@ -140,12 +197,19 @@ class RecommendationEngine:
             "recommandation_id": str(decision.recommandation_id),
             "decision": decision.decision.value,
             "date_decision": decision.date_decision.isoformat(),
-            "statut": "enregistre",
+            "statut": "recu_non_persiste",
+            "avertissement": (
+                "Décision reçue et validée, non conservée : la persistance des "
+                "décisions n'est pas implémentée en v1. Conservez votre trace "
+                "hors GSIE."
+            ),
         }
 
     # --- Génération des recommandations ---
 
-    def _generer_recommandation_principale(self, request: RecommendationRequest) -> Recommendation:
+    def _generer_recommandation_principale(
+        self, request: RecommendationRequest, confiance: float
+    ) -> Recommendation:
         """Génère la recommandation principale selon l'objectif forestier.
 
         Logique v1 : mapping déclaratif objectif → type d'action.
@@ -210,11 +274,11 @@ class RecommendationEngine:
                 {"densite": "1100", "unite": "t/ha"} if type_action == TypeAction.PLANTATION else {}
             ),
             justification=justification,
-            niveau_confiance=0.70,  # Confiance modérée — modèle v1
+            niveau_confiance=confiance,
         )
 
     def _generer_alternatives(
-        self, request: RecommendationRequest, principale: Recommendation
+        self, request: RecommendationRequest, principale: Recommendation, confiance: float
     ) -> list[Recommendation]:
         """Génère des alternatives à la recommandation principale.
 
@@ -241,7 +305,7 @@ class RecommendationEngine:
                 ],
                 moteurs_solicites=["recommendation"],
             ),
-            niveau_confiance=0.60,
+            niveau_confiance=confiance,
         )
         alternatives.append(alt_attente)
 
@@ -263,13 +327,15 @@ class RecommendationEngine:
                     ],
                     moteurs_solicites=["recommendation"],
                 ),
-                niveau_confiance=0.55,
+                niveau_confiance=confiance,
             )
             alternatives.append(alt_forte)
 
         return alternatives
 
-    def _generer_attente_surveillance(self, request: RecommendationRequest) -> Recommendation:
+    def _generer_attente_surveillance(
+        self, request: RecommendationRequest, confiance: float
+    ) -> Recommendation:
         """Génère une recommandation d'attente/surveillance (fallback).
 
         Le contrat §5 interdit un ensemble vide : si aucune action
@@ -292,5 +358,5 @@ class RecommendationEngine:
                 ],
                 moteurs_solicites=["recommendation"],
             ),
-            niveau_confiance=0.50,
+            niveau_confiance=confiance,
         )

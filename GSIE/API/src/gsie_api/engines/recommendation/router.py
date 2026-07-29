@@ -89,7 +89,7 @@ async def recommendation_recommend(
         400: Si la requête est invalide.
     """
     try:
-        return await RecommendationEngine().recommend(request_body)
+        return await RecommendationEngine(session).recommend(request_body)
     except RecommendationEngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -118,6 +118,6 @@ async def recommendation_decision(
         400: Si la décision est invalide.
     """
     try:
-        return await RecommendationEngine().record_decision(decision)
+        return await RecommendationEngine(session).record_decision(decision)
     except RecommendationEngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

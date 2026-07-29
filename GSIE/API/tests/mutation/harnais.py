@@ -118,14 +118,13 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_constantes_scientifiques.py",),
     ),
-    Mutation(
-        cle="niveau_de_confiance_derive",
-        fichier="gsie_api/engines/recommendation/engine.py",
-        ancien="            niveau_confiance=0.70,",
-        nouveau="            niveau_confiance=0.01,",
-        defaut_reproduit=("la confiance annoncée au forestier passe de 0,70 à 0,01 en silence"),
-        tests=("tests/unit/test_constantes_scientifiques.py",),
-    ),
+    # `niveau_de_confiance_derive` a ete retiree ici : elle verrouillait la
+    # valeur `0.70` du moteur de recommandation, c'est-a-dire le defaut
+    # lui-meme — une confiance propre au moteur, sans lien avec le diagnostic
+    # invoque. Verrouiller un nombre invente le rend durable. Les mutations
+    # `diagnostic_jamais_lu` et `confiance_alternatives_codee_en_dur`
+    # (fin de liste) portent desormais l'exigence : la confiance vient du
+    # diagnostic lu, et aucun litteral ne subsiste dans le moteur.
     Mutation(
         cle="nan_correlation_non_garde",
         fichier="gsie_api/engines/correlation/engine.py",
@@ -330,6 +329,103 @@ MUTATIONS: tuple[Mutation, ...] = (
             "de catalogue (B) est annoncee comme B — surestimation silencieuse"
         ),
         tests=("tests/integration/test_regles_applicables.py",),
+    ),
+    # --- Recommendation Engine : ne pas conseiller sans avoir lu le diagnostic
+    Mutation(
+        cle="diagnostic_absent_tolere",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien="        if diagnostic is None:\n            raise DiagnosticIntrouvableError(",
+        nouveau="        if diagnostic is None and False:\n            raise DiagnosticIntrouvableError(",  # noqa: E501
+        defaut_reproduit=(
+            "un conseil sylvicole complet — type d'action, prelevement chiffre, "
+            "confiance — est rendu en citant un diagnostic qui n'existe pas"
+        ),
+        tests=("tests/integration/test_recommendation_diagnostic.py",),
+    ),
+    Mutation(
+        cle="diagnostic_jamais_lu",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Retour a l'etat sans etat : la confiance redevient une constante du
+        # moteur, et `diagnostic_id` n'est plus qu'une chaine recopiee dans la
+        # justification.
+        ancien=(
+            "        diagnostic = await self._diagnostic(request.diagnostic_id)\n"
+            "        confiance = float(diagnostic.confiance)"
+        ),
+        nouveau="        confiance = 0.70",
+        defaut_reproduit=(
+            "le moteur cite `diagnostic_id` dans sa justification sans jamais "
+            "le consulter — reference verifiable en apparence, vide en fait"
+        ),
+        tests=("tests/integration/test_recommendation_diagnostic.py",),
+    ),
+    Mutation(
+        cle="confiance_alternatives_codee_en_dur",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Une seule des quatre confiances remise en dur. Un test qui ne
+        # verifierait que la recommandation principale survivrait a cette
+        # mutation : les alternatives sont imbriquees sous elle.
+        ancien="            niveau_confiance=confiance,\n        )\n        alternatives.append(alt_attente)",  # noqa: E501
+        nouveau="            niveau_confiance=0.60,\n        )\n        alternatives.append(alt_attente)",  # noqa: E501
+        defaut_reproduit=(
+            "une alternative s'annonce plus ou moins assuree que le diagnostic "
+            "qui la fonde — l'ecart ne vient d'aucune source"
+        ),
+        tests=(
+            "tests/integration/test_recommendation_diagnostic.py",
+            "tests/unit/test_constantes_scientifiques.py",
+        ),
+    ),
+    Mutation(
+        cle="refus_diagnostic_en_erreur_serveur",
+        fichier="gsie_api/engines/recommendation/router.py",
+        # Un 500 dirait « panne » la ou le refus est un jugement du moteur :
+        # l'appelant conclurait a un incident et reessaierait la meme requete.
+        # L'ancrage sur le decorateur suivant evite de muter aussi le
+        # gestionnaire de `/decision`, qui porte un bloc `except` identique.
+        ancien='    except RecommendationEngineError as exc:\n        raise HTTPException(status_code=400, detail=str(exc)) from exc\n\n\n@router.post(\n    "/decision",',  # noqa: E501
+        nouveau='    except RecommendationEngineError as exc:\n        raise HTTPException(status_code=500, detail="erreur interne") from exc\n\n\n@router.post(\n    "/decision",',  # noqa: E501
+        defaut_reproduit=(
+            "le refus d'un diagnostic introuvable remonte en 500 sans nommer "
+            "le diagnostic manquant — l'appelant ne peut pas corriger"
+        ),
+        tests=("tests/integration/test_recommendation_diagnostic.py",),
+    ),
+    Mutation(
+        cle="accuse_de_conservation_mensonger",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien='            "statut": "recu_non_persiste",',
+        nouveau='            "statut": "enregistre",',
+        defaut_reproduit=(
+            "le forestier lit un accuse de conservation pour une decision que "
+            "rien ne persiste — il cesse alors de tenir sa propre trace"
+        ),
+        tests=("tests/unit/test_recommendation_engine.py",),
+    ),
+    Mutation(
+        cle="station_non_enregistree_refusee",
+        fichier="gsie_api/engines/reasoning/engine.py",
+        # `station_id` est facultatif et n'est pas contractuellement une
+        # `place`. Laisser remonter `TerritoireInconnuError` refuse une requete
+        # dont le contexte suffit a raisonner — regression constatee.
+        ancien="        except TerritoireInconnuError:",
+        nouveau="        except ZeroDivisionError:",
+        defaut_reproduit=(
+            "une station decrite integralement par le contexte de la requete "
+            "fait refuser l'inference parce qu'aucune `place` ne l'enregistre"
+        ),
+        tests=("tests/integration/test_reasoning.py",),
+    ),
+    Mutation(
+        cle="taux_arbitraire_sans_aveu",
+        fichier="gsie_api/engines/simulation_backend.py",
+        ancien='            "taux_annuel_arbitraire": annual_rate,',
+        nouveau="",
+        defaut_reproduit=(
+            "une projection de volume circule avec une citation documentaire "
+            "(dont ADR-009) pour un taux que rien ne source"
+        ),
+        tests=("tests/unit/test_growth_models.py",),
     ),
 )
 

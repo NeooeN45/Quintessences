@@ -189,3 +189,26 @@ def should_capsis_backend_document_source() -> None:
     sources = backend.sources()
     assert any("Dufour-Kowalski" in s or "Capsis" in s for s in sources)
     assert any("Java" in a or "INRAE" in a for a in backend.assumptions())
+
+
+def should_linear_backend_avow_its_arbitrary_rate_in_the_payload() -> None:
+    """Un taux inventé ne circule pas sous une référence documentaire seule.
+
+    `simulate_growth` retournait `"source": "FOREST_DYNAMICS_ENGINE.md §5 —
+    modèle de croissance (ADR-009)"` pour un taux de 5 %/an que la classe
+    elle-même qualifie d'arbitraire — et ADR-009 est précisément le garde-fou
+    anti-invention. L'aveu existait dans `assumptions()`, méthode distincte que
+    rien n'obligeait à appeler : un consommateur du dictionnaire lisait donc une
+    projection sylvicole assortie d'une citation, sans savoir qu'aucune source
+    ne la fonde.
+
+    Le contrôle porte sur la charge utile, pas sur `assumptions()` : c'est elle
+    qui traverse les couches.
+    """
+    resultat = LinearGrowthBackend().simulate_growth("Fagus sylvatica", {"volume": 100.0}, 10)
+
+    assert "avertissement" in resultat, (
+        "la charge utile cite une source documentaire sans dire que le taux " "n'en a aucune"
+    )
+    assert "arbitraire" in resultat["avertissement"].lower()
+    assert resultat["taux_annuel_arbitraire"] == 0.05

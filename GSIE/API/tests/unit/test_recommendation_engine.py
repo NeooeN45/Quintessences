@@ -19,6 +19,7 @@ from gsie_api.engines.recommendation.schemas import (
     RecommendationRequest,
     TypeAction,
 )
+from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 
 def _make_request(
@@ -35,7 +36,7 @@ def _make_request(
 
 @pytest.fixture
 def engine() -> RecommendationEngine:
-    return RecommendationEngine()
+    return RecommendationEngine(SessionDiagnosticFictif())
 
 
 # --- Tests génération ---
@@ -90,7 +91,7 @@ async def should_return_justified_recommendations(engine: RecommendationEngine) 
 @pytest.mark.asyncio
 async def should_map_objectif_to_action_type() -> None:
     """L'objectif forestier détermine le type d'action de la recommandation principale."""
-    engine = RecommendationEngine()
+    engine = RecommendationEngine(SessionDiagnosticFictif())
     mapping = {
         ObjectifForestier.REBOISEMENT: TypeAction.PLANTATION,
         ObjectifForestier.PRODUCTION: TypeAction.ECLAIRCIE,
@@ -126,15 +127,21 @@ async def should_reference_diagnostic_in_justification(engine: RecommendationEng
 
 @pytest.mark.asyncio
 async def should_record_accepte_decision(engine: RecommendationEngine) -> None:
-    """Une décision 'accepte' est enregistrée avec accusé."""
+    """Une décision 'accepte' est reçue, et l'accusé ne prétend pas la conserver.
+
+    Le statut valait `enregistre` alors que la méthode ne persiste rien. Un
+    accusé de conservation pour une trace inexistante est plus dommageable que
+    l'absence d'accusé : le forestier cesse de tenir la sienne.
+    """
     decision = ForestierDecision(
         recommandation_id=uuid4(),
         decision=DecisionForestier.ACCEPTE,
         date_decision=datetime.now(UTC),
     )
     result = await engine.record_decision(decision)
-    assert result["statut"] == "enregistre"
+    assert result["statut"] == "recu_non_persiste"
     assert result["decision"] == "accepte"
+    assert "non conservée" in result["avertissement"]
 
 
 @pytest.mark.asyncio

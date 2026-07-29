@@ -52,6 +52,7 @@ from gsie_api.engines.validation_pipeline import (
     run_validation_pipeline,
     validation_failure_to_learning_signal,
 )
+from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 # --- Fixtures : objets typés réalistes ---
 
@@ -132,7 +133,7 @@ def _make_conclusion(conclusion_id: UUID | None = None) -> Conclusion:
 
 
 async def _make_recommendation_set(diagnostic_id: UUID) -> RecommendationSet:
-    engine = RecommendationEngine()
+    engine = RecommendationEngine(SessionDiagnosticFictif())
     request = RecommendationRequest(
         requete_id=uuid4(),
         diagnostic_id=diagnostic_id,

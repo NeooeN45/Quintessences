@@ -66,23 +66,35 @@ def test_chaque_essence_cite_sa_source(essence: str) -> None:
     assert "IGN" in source.auteur or "IGN" in source.reference
 
 
-def test_les_niveaux_de_confiance_des_recommandations_sont_figes() -> None:
-    """Le moteur v1 annonce une confiance déclarée : elle ne doit pas glisser.
+def test_aucune_confiance_codee_en_dur_dans_les_recommandations() -> None:
+    """La confiance d'une recommandation est celle du diagnostic, jamais un littéral.
 
-    Ces valeurs sont lues par le forestier pour pondérer une proposition. Les
-    voir changer sans décision tracée reviendrait à modifier un jugement
-    au nom de quelqu'un d'autre (GSIE-CON-001).
+    Le moteur portait quatre constantes — 0,70 / 0,60 / 0,55 / 0,50 — sans
+    lire le diagnostic qu'il invoquait. Un `diagnostic_id` inexistant produisait
+    donc un conseil sylvicole complet, assorti d'une confiance inventée, citant
+    une référence vide.
+
+    Une recommandation ne peut pas être plus assurée que le diagnostic sur
+    lequel elle repose. Ce verrou interdit le retour d'un nombre propre au
+    moteur — c'est la règle que le Diagnostic Engine énonce déjà : « le moteur
+    n'invente aucune table de conversion » (`ADR-009`).
+
+    La source est lue via `module.__file__`, jamais par un chemin relatif : le
+    harnais de mutation copie l'arborescence dans un dossier temporaire et
+    pointe `PYTHONPATH` dessus. Un chemin en dur lirait le fichier intact du
+    dépôt — le verrou passerait quelle que soit la mutation, et ne
+    verrouillerait donc rien.
     """
-    import inspect
+    import re
+    from pathlib import Path
 
-    from gsie_api.engines.recommendation import engine as moteur
+    from gsie_api.engines.recommendation import engine as module_moteur
 
-    source = inspect.getsource(moteur)
-    attendus = ["niveau_confiance=0.70", "niveau_confiance=0.60", "niveau_confiance=0.55"]
+    assert module_moteur.__file__ is not None
+    source = Path(module_moteur.__file__).read_text(encoding="utf-8")
+    litteraux = re.findall(r"niveau_confiance\s*=\s*([0-9.]+)", source)
 
-    for litteral in attendus:
-        assert litteral in source, (
-            f"Niveau de confiance modifié : « {litteral} » absent de "
-            "recommendation/engine.py. Toute évolution doit être tracée "
-            "(DEC-xxxxxx) et répercutée ici."
-        )
+    assert litteraux == [], (
+        f"confiance(s) codée(s) en dur : {litteraux}. La valeur doit venir du "
+        "diagnostic lu, jamais du moteur."
+    )

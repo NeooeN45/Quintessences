@@ -236,16 +236,39 @@ class ReasoningEngine:
         parce qu'elle est mal formée doit pouvoir être corrigée, et le silence
         laisserait croire à une absence de connaissance.
 
-        Un territoire inconnu remonte tel quel — « je ne sais pas où tu es » et
-        « aucune règle ne s'applique ici » sont deux réponses différentes.
+        Un territoire inconnu n'est pas une erreur **ici**. `station_id` est
+        facultatif dans `ReasoningRequest` et n'est pas contractuellement une
+        `place` enregistrée : une station peut être décrite intégralement par le
+        contexte de la requête, sans exister en base — c'est la même raison qui
+        fait que `diagnostic.station_id` ne porte pas de clé étrangère. Faire
+        remonter l'erreur refuserait une requête légitime dont le contexte
+        suffit à raisonner.
+
+        L'exigence reste entière là où elle a un sens : `regles_applicables`,
+        interrogé directement, continue de lever. À cette question-là — « quelles
+        règles s'appliquent ici ? » — répondre « aucune » pour un territoire
+        introuvable serait une réponse fausse. Ici, l'appelant n'a pas posé cette
+        question ; la récupération est un complément, et son échec est
+        journalisé en avertissement plutôt que tu.
         """
-        from gsie_api.engines.knowledge.engine import KnowledgeEngine
+        from gsie_api.engines.knowledge.engine import KnowledgeEngine, TerritoireInconnuError
         from gsie_api.seeds.variables_mesurables_data import noms_de_faits_par_code
 
-        regles, ecartees = await KnowledgeEngine(self._session).regles_applicables(
-            territoire_id,
-            variables_connues=noms_de_faits_par_code(),
-        )
+        try:
+            regles, ecartees = await KnowledgeEngine(self._session).regles_applicables(
+                territoire_id,
+                variables_connues=noms_de_faits_par_code(),
+            )
+        except TerritoireInconnuError:
+            logger.warning(
+                "regles_du_territoire_indisponibles",
+                territoire_id=str(territoire_id),
+                motif=(
+                    "aucune `place` ne porte cet identifiant — le raisonnement "
+                    "se poursuit sur les seules règles fournies dans la requête"
+                ),
+            )
+            return []
         if ecartees:
             logger.info(
                 "regles_ecartees",

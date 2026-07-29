@@ -82,6 +82,7 @@ from gsie_api.seeds.autecology_rameau_data import (
     GBIF_TAXON_KEY_PINUS_SYLVESTRIS,
     build_autecology_rameau_profiles,
 )
+from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 _DATE = datetime(2026, 7, 27, 12, 0, tzinfo=UTC)
 
@@ -793,7 +794,7 @@ async def should_run_complete_pipeline_with_all_engines_e2e() -> None:
     assert len(diagnostic.atouts) + len(diagnostic.contraintes) >= 1
 
     # 3. Recommendation
-    reco = await RecommendationEngine().recommend(
+    reco = await RecommendationEngine(SessionDiagnosticFictif()).recommend(
         RecommendationRequest(
             requete_id=uuid4(),
             diagnostic_id=diagnostic.diagnostic_id,
