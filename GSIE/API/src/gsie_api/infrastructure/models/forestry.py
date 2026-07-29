@@ -237,7 +237,7 @@ class StationTypeModel(Base, TimestampMixin):
     validity_zone_description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
-        doc="Zone de validité du guide en texte libre (pas de géométrie en tranche 2)",
+        comment="Zone de validité du guide en texte libre (pas de géométrie en tranche 2)",
     )
     ser_greco_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     topography_description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -277,7 +277,7 @@ class StationObservationModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("station_type.id"), nullable=True, index=True
     )
     key_path_followed: Mapped[str | None] = mapped_column(
-        Text, nullable=True, doc="Réponses saisies et embranchement obtenu dans la clé du guide"
+        Text, nullable=True, comment="Réponses saisies et embranchement obtenu dans la clé du guide"
     )
     topography_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
     substrate_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -395,7 +395,7 @@ class SilviculturalRuleModel(Base, TimestampMixin):
     human_validator: Mapped[str | None] = mapped_column(
         String(300),
         nullable=True,
-        doc="Nom/qualité du validateur humain (curateur + forestier compétent) — "
+        comment="Nom/qualité du validateur humain (curateur + forestier compétent) — "
         "obligatoire dès que status passe à accepted",
     )
     source_id: Mapped[UUID] = mapped_column(
@@ -524,7 +524,7 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
     base_material: Mapped[str] = mapped_column(
         String(300),
         nullable=False,
-        doc="Identifiant du matériel de base (verger à graines, " "peuplement classé, etc.)",
+        comment="Identifiant du matériel de base (verger à graines, " "peuplement classé, etc.)",
     )
     base_material_category: Mapped[MaterielBaseCategory] = mapped_column(
         Enum(MaterielBaseCategory, name="materiel_base_category"), nullable=False, index=True
@@ -533,7 +533,7 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
     decree_version: Mapped[str] = mapped_column(
         String(300),
         nullable=False,
-        doc="Version de l'arrêté MFR qui fonde l'admissibilité (ex. « arrêté du 6 mars 2026 »)",
+        comment="Version de l'arrêté MFR qui fonde l'admissibilité (ex. « arrêté du 6 mars 2026 »)",
     )
     valid_region_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(

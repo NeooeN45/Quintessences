@@ -25,7 +25,7 @@ _REVISION = "20260726_0001"
 # Tête courante de la lignée : la baseline reste la base, les révisions
 # suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
 # additives 20260727_0003 à 0005).
-_HEAD = "20260728_0009"
+_HEAD = "20260728_0010"
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,

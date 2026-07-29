@@ -427,6 +427,21 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_growth_models.py",),
     ),
+    Mutation(
+        cle="description_de_colonne_invisible_en_base",
+        fichier="gsie_api/infrastructure/models/forestry.py",
+        # `doc=` est de la documentation Python : PostgreSQL ne la voit pas. La
+        # faute a ete commise trois fois dans ce depot, dont deux fois par moi
+        # a 24 h d'intervalle. Seul le controle de derive strict la rattrape —
+        # le modele ne declare plus le commentaire que la migration a pose.
+        ancien='        comment="Nom/qualité du validateur humain',
+        nouveau='        doc="Nom/qualité du validateur humain',
+        defaut_reproduit=(
+            "une contrainte metier — human_validator obligatoire des que le "
+            "statut passe a accepted — n'existe plus que dans le code Python"
+        ),
+        tests=("tests/integration/test_migration_baseline.py",),
+    ),
 )
 
 
