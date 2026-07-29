@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| **Statut** | Draft — soumis au Fondateur |
+| **Statut** | Validée — arbitrages du Fondateur consignés au §8 |
 | **Auteur** | Architecte |
 | **Date** | 2026-07-28 |
 | **Portée** | Toute source de données entrant dans GSIE |
@@ -113,8 +113,9 @@ base tant que le régime d'usage n'est pas écrit. Le moment où l'on copie une
 donnée puis où on la re-sert par son propre service, **on redistribue** : ce
 n'est plus de la consultation.
 
-Statut d'attente à porter dans l'inventaire : `licence_a_formaliser`, avec
-l'interlocuteur et la date de la demande.
+Aucune valeur d'énumération n'est ajoutée pour cet état (§8.2) : la
+distinction se lit à la présence ou à l'absence de licence renseignée. Porter
+dans l'inventaire l'interlocuteur et la date de la demande suffit.
 
 ## 6. Fiche minimale d'une source
 
@@ -168,14 +169,55 @@ Ne pas tout enregistrer d'un coup. Priorité par usage réel :
    HD, BD Forêt.
 4. **Les sources sous accord à formaliser** — après formalisation seulement.
 
-## 8. Ce qui reste à décider
+## 8. Arbitrages du Fondateur (2026-07-28)
 
-1. **Rendre `grain_m2` obligatoire sur `scale_context` ?** Cohérent avec
-   `DEC-000038`, mais casserait tout `scale_context` non spatial. Une
-   alternative : l'exiger dès qu'un `scale_context` est rattaché à une
-   `distribution`.
-2. **Faut-il un statut `licence_a_formaliser`** dans `usage_rights`, ou une
-   convention documentaire suffit-elle ? Ajouter une valeur d'énumération est
-   une modification de contrat.
-3. **Qui valide qu'une licence autorise l'entraînement ?** Ce n'est pas une
-   décision d'ingénierie.
+### 8.1 Le grain est exigé quand la source est spatiale — mais le lien manque
+
+**Retenu** : `grain_m2` devient obligatoire dès qu'un `scale_context` décrit
+une source de données spatiale, et reste facultatif pour les contextes
+d'échelle sémantiques (une question posée « à l'échelle du peuplement » n'a pas
+de grain).
+
+**Obstacle structurel constaté à l'implémentation** : aucun `dataset`,
+`distribution` ni `data_asset` ne référence `scale_context`. Quinze tables le
+font — `question`, `decision`, `correlation`, `scenario`, `sampling_event`… —
+mais **pas la chaîne des jeux de données**.
+
+Autrement dit, `scale_context.grain_m2` décrit aujourd'hui *le grain
+d'observation d'un objet de connaissance*, pas *la résolution native d'une
+source*. La seconde n'a donc **aucun emplacement** dans le métamodèle.
+
+La règle ne peut pas être appliquée sans trancher d'abord :
+
+| Voie | Effet |
+|---|---|
+| Ajouter `scale_context_id` à `distribution` | réutilise un concept existant, cohérent avec le métamodèle ; migration |
+| Ajouter `native_grain_m2` à `distribution` | plus direct, mais duplique une notion déjà modélisée |
+| Statu quo | la résolution native reste en prose, inexploitable par un moteur |
+
+**Recommandation** : la première. `scale_context` porte déjà `level`,
+`extent_m2` (couverture) et `grain_m2` (résolution) — exactement ce qu'une
+distribution doit déclarer. Dupliquer le nombre ailleurs créerait deux sources
+de vérité, faute que `DEC-000038` a précisément écartée pour les règles.
+
+C'est une modification de contrat : elle relève d'une décision tracée, non de
+la présente nomenclature.
+
+### 8.2 Pas de valeur d'énumération pour la licence non formalisée
+
+**Retenu** : aucun `licence_a_formaliser` dans `usage_rights`. La distinction
+se lit à la présence ou à l'absence de licence renseignée, ce qui suffit
+aujourd'hui et pourra évoluer si l'usage le démontre.
+
+La règle opérationnelle est inchangée : **licence absente, pas d'ingestion.**
+
+### 8.3 Le droit d'entraînement reste à approfondir
+
+**Non tranché.** `ai_training_allowed` vaut `False` par défaut, ce qui est le
+réglage prudent : en l'absence de vérification, la source ne sert pas à
+l'apprentissage.
+
+Reste à établir **qui vérifie, sur quels critères, et avec quelle trace** qu'une
+licence autorise l'entraînement. Une licence ouverte n'emporte pas
+automatiquement ce droit, et l'engagement est juridique, pas technique. À
+instruire avec `19_LEGAL/`.
