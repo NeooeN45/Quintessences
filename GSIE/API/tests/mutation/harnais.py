@@ -556,6 +556,20 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_infra_coverage.py",),
     ),
+    Mutation(
+        cle="cause_de_blocage_par_defaut",
+        fichier="gsie_api/engines/validation/engine.py",
+        # Retour au repli : tout controle non repertorie etait etiquete
+        # `explicabilite_insuffisante`. La specification exige « la cause
+        # precise de blocage » (VALIDATION_ENGINE.md §6).
+        ancien="        if nom_controle not in mapping:",
+        nouveau="        if False:",
+        defaut_reproduit=(
+            "le forestier lit une cause de blocage fausse — plausible et "
+            "verifiable en apparence — et cherche le defaut au mauvais endroit"
+        ),
+        tests=("tests/unit/test_validation_engine.py",),
+    ),
 )
 
 

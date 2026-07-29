@@ -265,7 +265,23 @@ class ValidationEngine:
 
     @staticmethod
     def _cause_pour_controle(nom_controle: str) -> TypeCauseBlocage:
-        """Mappe un nom de contrôle à sa cause de blocage."""
+        """Mappe un nom de contrôle à sa cause de blocage.
+
+        Aucun repli par défaut. La correspondance retombait sur
+        `explicabilite_insuffisante` pour tout contrôle non répertorié : un
+        contrôle ajouté sans son entrée aurait donc annoncé au forestier une
+        cause **fausse**, plausible et vérifiable en apparence. Il aurait
+        cherché un défaut d'explicabilité là où le blocage venait d'ailleurs.
+
+        La spécification l'exclut explicitement : « Toute sortie bloquée est
+        journalisée avec la cause précise de blocage »
+        (`VALIDATION_ENGINE.md` §6). Une cause approchée n'est pas une cause
+        précise.
+
+        `KeyError` plutôt qu'un statut : un contrôle sans cause est une erreur
+        de programmation, pas une sortie non conforme. `validate` ne lève jamais
+        pour une sortie non conforme — cette garantie-là est intacte.
+        """
         mapping = {
             "presence_niveau_preuve": TypeCauseBlocage.sans_niveau_preuve,
             "presence_source": TypeCauseBlocage.sans_source,
@@ -273,7 +289,12 @@ class ValidationEngine:
             "recommandation_contournable": TypeCauseBlocage.recommandation_non_contournable,
             "explicabilite": TypeCauseBlocage.explicabilite_insuffisante,
         }
-        return mapping.get(nom_controle, TypeCauseBlocage.explicabilite_insuffisante)
+        if nom_controle not in mapping:
+            raise ValidationEngineError(
+                f"contrôle « {nom_controle} » sans cause de blocage déclarée : "
+                "la cause rapportée serait fausse"
+            )
+        return mapping[nom_controle]
 
     @staticmethod
     def _tous_non_critiques(non_conformes: list[ControleResultat]) -> bool:

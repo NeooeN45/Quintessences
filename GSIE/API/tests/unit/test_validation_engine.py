@@ -6,12 +6,13 @@ de blocage/partiellement_valide/valide.
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
 
-from gsie_api.engines.validation.engine import ValidationEngine
+from gsie_api.engines.validation.engine import ValidationEngine, ValidationEngineError
 from gsie_api.engines.validation.schemas import (
     CauseBlocage,
     ControleResultat,
@@ -236,3 +237,44 @@ def should_reject_ensemble_complet_without_diagnostic_and_recommandations() -> N
             type_sortie=TypeSortie.ensemble_complet,
             contenu={"diagnostic": {}},  # manque recommandations
         )
+
+
+# --- Chaque controle a sa cause propre, aucune par defaut ---
+
+
+def test_chaque_controle_produit_a_sa_cause_declaree() -> None:
+    """Aucun contrôle ne se voit attribuer une cause de blocage par défaut.
+
+    La correspondance retombait sur `explicabilite_insuffisante` pour tout
+    contrôle non répertorié. Un contrôle ajouté sans son entrée aurait annoncé
+    au forestier une cause **fausse** — plausible, vérifiable en apparence, et
+    l'envoyant chercher un défaut d'explicabilité là où le blocage venait
+    d'ailleurs. `VALIDATION_ENGINE.md` §6 exige « la cause précise de blocage ».
+
+    Le paramétrage part des noms que le moteur produit réellement, et non d'une
+    liste écrite à la main : c'est ce qui rend ce contrôle durable. Un contrôle
+    ajouté à `validate` sans entrée dans la correspondance fera tomber ce test.
+    """
+    import inspect
+
+    from gsie_api.engines.validation import engine as module_moteur
+
+    source = inspect.getsource(module_moteur.ValidationEngine)
+    # Les noms de controle tels que les `ControleResultat` les portent.
+    noms = set(re.findall(r'nom_controle="([a-z_]+)"', source))
+    assert noms, "aucun nom de contrôle trouvé — le motif de lecture est périmé"
+
+    for nom in sorted(noms):
+        cause = ValidationEngine._cause_pour_controle(nom)
+        assert cause is not None, f"contrôle {nom} sans cause"
+
+
+def test_un_controle_inconnu_est_refuse_et_non_etiquete_au_hasard() -> None:
+    """Un contrôle sans cause déclarée lève, plutôt que de mentir sur le motif.
+
+    `ValidationEngineError` et non un statut : c'est une erreur de
+    programmation, pas une sortie non conforme. La garantie « `validate` ne lève
+    jamais pour une sortie non conforme » (§6) reste entière.
+    """
+    with pytest.raises(ValidationEngineError, match="sans cause de blocage"):
+        ValidationEngine._cause_pour_controle("controle_ajoute_sans_cause")
