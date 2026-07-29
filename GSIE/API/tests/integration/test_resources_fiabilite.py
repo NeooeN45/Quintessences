@@ -316,3 +316,52 @@ class TestResolutionNativeDeclaree:
         reponse = await self._distribution(client, avec_grain)
 
         assert reponse.status_code == 201, reponse.text
+
+
+class TestSourceCitable:
+    """Une source qui ne peut pas être citée n'est pas une source (CON-005).
+
+    `SourceReference` — le format qu'attend toute conclusion pour citer —
+    exige un auteur. Sans lui, une conclusion invoquerait un document sans
+    pouvoir dire qui l'a écrit : citable en apparence, invérifiable en fait.
+
+    C'est ce qui bloquait la récupération des règles : aucune `SourceReference`
+    du dépôt n'était construite depuis la base, faute de pouvoir l'être.
+    """
+
+    @staticmethod
+    def _source(**champs: str) -> dict[str, Any]:
+        base = {
+            "title": "Catalogue des stations forestières",
+            "subtype": "publication",
+            "source_nature": "reference",
+            "auteur": "CRPF Normandie",
+            "date_publication": "2019",
+        }
+        base.update(champs)
+        return base
+
+    @pytest.mark.parametrize("manquant", ["auteur", "date_publication"])
+    async def test_une_source_incitable_est_refusee(
+        self, client: AsyncClient, manquant: str
+    ) -> None:
+        data = {k: v for k, v in self._source().items() if k != manquant}
+
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={"type": "source", "data": data},
+            headers=_ENTETES_ECRITURE,
+        )
+
+        assert reponse.status_code == 422, reponse.text
+        assert any(manquant in e for e in reponse.json()["detail"]["errors"])
+
+    async def test_une_source_complete_est_acceptee(self, client: AsyncClient) -> None:
+        """Témoin : c'est bien le manque qui refuse, pas le type `source`."""
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={"type": "source", "data": self._source()},
+            headers=_ENTETES_ECRITURE,
+        )
+
+        assert reponse.status_code == 201, reponse.text

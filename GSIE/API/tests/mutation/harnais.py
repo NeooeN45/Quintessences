@@ -283,6 +283,17 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_variables_mesurables.py",),
     ),
+    Mutation(
+        cle="source_incitable_admise",
+        fichier="gsie_api/resources/validators.py",
+        ancien='    "source": ["title", "subtype", "source_nature", "auteur", "date_publication"],',
+        nouveau='    "source": ["title", "subtype", "source_nature"],',
+        defaut_reproduit=(
+            "une source sans auteur ni date entre en base — une conclusion la "
+            "citerait sans pouvoir dire qui l'a ecrite"
+        ),
+        tests=("tests/integration/test_resources_fiabilite.py",),
+    ),
 )
 
 
