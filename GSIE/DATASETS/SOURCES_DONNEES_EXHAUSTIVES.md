@@ -557,6 +557,42 @@
 |---|---|---|---|---|
 | **BD TOPO Express** (édition hebdomadaire) | IGN | Hebdomadaire (depuis mai 2025) | Licence Ouverte 2.0 | GIS, Ignis (enjeux temps réel) |
 
+### 6.9bis CONTRE-AUDIT DES SIGNALEMENTS — Architecte, 30/07/2026
+
+> Neuf des treize signalements critiques de `GSIE-PROMPT-0025` ont été
+> revérifiés indépendamment. **Huit exacts, souvent à la date près. Un seul
+> défaut.**
+
+| # | Signalement | Verdict du contre-audit |
+|---|---|---|
+| 1 | ERA5T devient payant | **NON CORROBORÉ** — le CDS, l'ADS et l'EWDS sont passés sous CC-BY 4.0 le 02/07/2025, soit l'inverse d'un péage |
+| 2 | `donneespubliques.meteofrance.fr` en fermeture | Confirmé — le portail l'annonce, remplaçants exacts |
+| 3 | GIS Sol — arrêt bases 18/02/2026 | Confirmé, date exacte — 7 applications touchées, aucune date de retour |
+| 4 | Hub'Eau « Indicateurs » décommissionnée | Confirmé, date exacte — 10/09/2026, annoncé le 06/07/2026 |
+| 5 | INPN — cyberattaque MNHN | Confirmé, dates exactes — 26/07/2025 → 22/07/2026 |
+| 6 | GBIF web en 403 | Confirmé, **et contournement validé** — `api.gbif.org` répond en JSON |
+| 7 | Prométhée fusionnée dans BDIFF | Confirmé — janvier 2023 |
+| 9 | BD Haie — URL sans « s » | Confirmé — `bd-haie`, V2 mars 2024, Licence Ouverte 2.0 |
+| 10 | Gallica 403 anti-bot | Confirmé |
+| 8, 11, 12, 13 | Convention, SPA, couverture OM, hétérogénéité DROM | **Non vérifiés** — caractérisations, non des faits binaires ; aucun ne conditionne une ingestion immédiate |
+
+**Règle qui s'en dégage.** L'unique défaut porte sur une **licence** — le champ
+dont `NOMENCLATURE_SOURCES.md` dit que « l'oubli refuse, autoriser est un
+acte ». Une affirmation de licence ne s'accepte jamais sur parole, quelle que
+soit la fiabilité du reste du travail.
+
+**Point ouvert — écosystème INPN.** La cyberattaque a rendu indisponibles
+DEPOBIO, ZNIEFF, GINCO/Géonature, OpenObs, NatureFrance, DeterminObs et
+**TAXREF**, ainsi que toutes les API associées. Le MNHN a décidé de **ne pas
+restaurer l'ancien système**, une refonte étant engagée : les URL et API ont
+probablement changé.
+
+TAXREF v18 figure pourtant parmi les 26 sources vérifiées. À contrôler avant
+de le compter disponible — et cela concerne **toutes** les entrées existantes
+citant l'écosystème INPN, pas seulement celles signalées.
+
+---
+
 ### 6.10 NOUVELLES SOURCES VÉRIFIÉES — GSIE-PROMPT-0025 (juillet 2026)
 
 > 26 nouvelles sources vérifiées par webfetch le 30/07/2026. Détails YAML dans `_staging_0025/`.
@@ -570,7 +606,14 @@
 | **meteo.data.gouv.fr** | Météo-France + data.gouv.fr | referentiel_officiel | Licence Ouverte 2.0 | Climate, Correlation, Forest Dynamics | https://meteo.data.gouv.fr/ |
 
 **Alertes climatiques** :
-- **ERA5T devient payant** (annonce CDS 30/07/2026) — ERA5 différé reste libre. Distinguer dans l'ingestion.
+- **ERA5T « devient payant »** — ⚠️ **NON CORROBORÉ, à vérifier avant de l'appliquer.**
+  Contre-audit Architecte du 30/07/2026 : aucune source ne confirme cette
+  annonce, et l'élément établi va dans le sens contraire — depuis le
+  **2 juillet 2025**, le Climate Data Store, l'Atmosphere Data Store et
+  l'EWDS sont passés sous **CC-BY 4.0**, remplaçant la « Licence to use
+  Copernicus Products ». C'est une libéralisation.
+  Ne pas budgéter ni écarter ERA5T sur cette base : demander confirmation
+  au forum ECMWF avant toute décision d'ingestion.
 - **donneespubliques.meteofrance.fr en fermeture** — migrer vers portail-api.meteofrance.fr ou meteo.data.gouv.fr.
 
 #### 6.10.2 Hydro — sources complémentaires
