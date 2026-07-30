@@ -26,6 +26,7 @@
 | GSIE-PROMPT-0022 (interne) | Aucun — Codex | API Resources — CRUD générique sur les types de resources enregistrés | VALIDÉE | 8 endpoints `/api/v1/resources`, RBAC fermé avant chargement | Architecte — repris en interne, non délégué |
 | GSIE-PROMPT-0023 | GLM 5.2 via Devin | Résilience des dix clients d'API externes (chemins de panne amont) | À LANCER | Audit fiabilité 2026-07-28, harnais de mutation 8/8 | Architecte |
 | GSIE-PROMPT-0024 | GLM 5.2 via Devin | Raccordement des dix clients sur `ResilientHttpClient` (abstraction livrée non branchée) | À LANCER | Suite de GSIE-PROMPT-0023 | Architecte |
+| GSIE-PROMPT-0025 | GLM 5.2 via Devin | Élargissement de l'inventaire des sources de données (179 recensées, angles morts géographiques, thématiques et modes d'accès distants) | À LANCER | Suite de l'audit `RFC-0029` §11 | Architecte |
 
 > **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
 > correspondent à du travail structurant réalisé directement par

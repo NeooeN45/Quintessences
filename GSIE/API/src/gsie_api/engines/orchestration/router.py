@@ -1,0 +1,113 @@
+"""Orchestration — un appel HTTP pour toute la chaîne GSIE.
+
+    Reasoning → Diagnostic → Recommendation → Validation
+
+Aucun endpoint ne couvrait la chaîne : `pipeline.py` n'orchestre
+qu'Evidence → Knowledge et n'est exposé nulle part. Un client — l'application
+GeoSylva — devait donc enchaîner quatre appels et reproduire de son côté les
+conversions de `validation_pipeline.py`. Chaque passage de main était un point
+de rupture que rien ne surveillait, et la logique de couture se serait
+dupliquée dans chaque client.
+
+Endpoints :
+- GET  /orchestration/status  — statut
+- GET  /orchestration/version — version
+- POST /orchestration/analyse — déroule la chaîne et retourne chaque étape
+
+La réponse porte les **quatre** sorties, pas seulement la dernière : un
+forestier à qui l'on ne présenterait que la recommandation ne pourrait voir ni
+le raisonnement qui la fonde, ni le diagnostic qu'elle invoque, ni ce que la
+validation a contrôlé (`GSIE-CON-004`).
+"""
+
+from datetime import UTC, datetime
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from gsie_api.core.limiter import limiter as _limiter
+from gsie_api.core.rbac import EngineWriteUser
+from gsie_api.engines.diagnostic.engine import DiagnosticEngineError
+from gsie_api.engines.orchestration.schemas import AnalyseComplete, AnalyseRequest
+from gsie_api.engines.orchestration.service import (
+    AnalyseImpossibleError,
+    OrchestrationEngine,
+)
+from gsie_api.engines.reasoning.engine import ReasoningEngineError
+from gsie_api.engines.recommendation.engine import RecommendationEngineError
+from gsie_api.engines.validation_pipeline import PipelineError
+from gsie_api.infrastructure.database import get_db as get_db_session
+from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
+
+router = APIRouter(prefix="/orchestration", tags=["orchestration"])
+
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
+
+@router.get("/status", response_model=EngineStatusResponse)
+async def orchestration_status(request: Request) -> EngineStatusResponse:
+    """Statut de l'orchestration."""
+    return EngineStatusResponse(
+        engine="orchestration",
+        status="active",
+        # Semaine du pipeline Evidence -> Knowledge, dont ce module reprend
+        # le precedent : brancher les moteurs sans logique metier ajoutee.
+        planned_week=4,
+        language="python",
+    )
+
+
+@router.get("/version", response_model=EngineVersionResponse)
+async def orchestration_version(request: Request) -> EngineVersionResponse:
+    """Version de l'orchestration."""
+    return EngineVersionResponse(
+        version=OrchestrationEngine.version(),
+        backend="python",
+    )
+
+
+@router.post(
+    "/analyse",
+    response_model=AnalyseComplete,
+    status_code=status.HTTP_200_OK,
+    summary="Dérouler la chaîne complète et retourner chaque étape",
+    description=(
+        "Enchaîne Reasoning → Diagnostic → Recommendation → Validation sur une "
+        "session unique. Les qualifications de conclusions et l'état global "
+        "sont déclarés par l'appelant : aucun moteur ne les devine "
+        "(GSIE-CON-001, ADR-009)."
+    ),
+)
+@_limiter.limit("20/minute")
+async def orchestration_analyse(
+    request_body: AnalyseRequest,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> AnalyseComplete:
+    """Déroule la chaîne complète.
+
+    L'horloge est lue **ici**, une seule fois, et transmise aux moteurs qui
+    l'exigent en entrée : le raisonnement et le diagnostic doivent partager le
+    même instant, sinon deux étapes du même appel portent deux dates.
+
+    Raises:
+        400: requête incomplète — conclusion sans qualification déclarée,
+            aucune règle applicable, ou refus d'un moteur.
+    """
+    try:
+        return await OrchestrationEngine(session).analyser(request_body, datetime.now(UTC))
+    except (
+        AnalyseImpossibleError,
+        ReasoningEngineError,
+        DiagnosticEngineError,
+        RecommendationEngineError,
+        PipelineError,
+    ) as exc:
+        # Le message des moteurs est repris tel quel : il nomme ce qui manque,
+        # et c'est ce dont l'appelant a besoin pour corriger. Un « requête
+        # invalide » generique l'obligerait a deviner lequel des quatre moteurs
+        # a refuse, et pourquoi.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

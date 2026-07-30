@@ -38,6 +38,7 @@ from gsie_api.engines.forest_dynamics.router import router as forest_dynamics_ro
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.learning.router import router as learning_router
+from gsie_api.engines.orchestration.router import router as orchestration_router
 from gsie_api.engines.pedology.router import router as pedology_router
 from gsie_api.engines.reasoning.router import router as reasoning_router
 from gsie_api.engines.recommendation.router import router as recommendation_router
@@ -64,6 +65,10 @@ _OPENAPI_TAGS = [
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
     {"name": "websocket", "description": "WebSocket temps réel — Hub (UE5.8) et events système"},
+    {
+        "name": "orchestration",
+        "description": ("Chaîne complète — Reasoning → Diagnostic → Recommendation → Validation"),
+    },
 ]
 
 # CORS — méthodes et headers explicites (sécurité OWASP A05)
@@ -264,6 +269,9 @@ def create_app() -> FastAPI:
     app.include_router(validation_router, prefix=_settings.api_v1_prefix)
     app.include_router(simulation_router, prefix=_settings.api_v1_prefix)
     app.include_router(learning_router, prefix=_settings.api_v1_prefix)
+    # Enregistre apres les moteurs qu'il enchaine : l'orchestration ne fait
+    # que les brancher les uns sur les autres (GSIE-CON-007).
+    app.include_router(orchestration_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
     # 404 handler custom — RFC 7807 Problem Details (OWASP A05)

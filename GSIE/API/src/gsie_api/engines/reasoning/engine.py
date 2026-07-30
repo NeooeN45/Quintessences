@@ -90,6 +90,23 @@ logger = get_logger("gsie_api.reasoning.engine")
 _NAMESPACE_DETERMINISME = UUID("00000000-0000-4000-8000-000000000010")
 
 
+def conclusion_id_pour(requete_id: UUID, identifiant_regle: str) -> UUID:
+    """Identifiant de la conclusion que produirait une règle donnée.
+
+    Extrait du corps de `infer` pour qu'un appelant puisse rattacher une
+    conclusion à la règle dont elle est issue **sans redériver la formule**.
+    L'orchestration en a besoin : les qualifications de conclusions sont
+    déclarées par l'appelant — le moteur « ne le sait pas et ne doit pas le
+    deviner » — alors que les conclusions n'existent qu'après l'inférence.
+    L'appelant déclare donc par règle, et cette fonction fait le lien.
+
+    Recopier la dérivation ailleurs la ferait diverger au premier changement,
+    et le rattachement échouerait en silence : aucune qualification ne
+    correspondrait plus, sans que la formule paraisse fautive.
+    """
+    return uuid5(_NAMESPACE_DETERMINISME, f"{requete_id}|{identifiant_regle}")
+
+
 class ReasoningEngineError(Exception):
     """Erreur de base du Reasoning Engine.
 
@@ -516,10 +533,7 @@ class ReasoningEngine:
             # Identifiant de conclusion déterministe : uuid5 dérivé de
             # l'identifiant de la règle et de la requête. Deux exécutions
             # sur les mêmes entrées produisent le même conclusion_id.
-            conclusion_id = uuid5(
-                _NAMESPACE_DETERMINISME,
-                f"{request.requete_id}|{identifiant}",
-            )
+            conclusion_id = conclusion_id_pour(request.requete_id, identifiant)
 
             conclusion = Conclusion(
                 conclusion_id=conclusion_id,

@@ -738,6 +738,47 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_pipeline_cross_engine.py",),
     ),
+    # --- Orchestration : brancher, jamais decider
+    Mutation(
+        cle="conclusion_qualifiee_d_office",
+        fichier="gsie_api/engines/orchestration/service.py",
+        # Le coeur de l'exigence : une conclusion sans qualification declaree
+        # doit faire refuser. La combler par un role par defaut serait classer
+        # a la place du forestier, et le conseil sylvicole qui en decoule
+        # porterait une chaine complete — invisible.
+        ancien="        if manquantes:",
+        nouveau="        if False:",
+        defaut_reproduit=(
+            "une conclusion est classee par la machine, et le diagnostic qui en "
+            "decoule paraît complet (GSIE-CON-001, ADR-009)"
+        ),
+        tests=("tests/integration/test_orchestration.py",),
+    ),
+    Mutation(
+        cle="qualification_rapprochee_par_ressemblance",
+        fichier="gsie_api/engines/orchestration/service.py",
+        # Rattachement par la derivation partagee du Reasoning Engine. Le
+        # remplacer par un rapprochement positionnel classerait une conclusion
+        # sous un role qui n'est pas le sien, sans que rien ne le signale.
+        ancien="            identifiant = conclusion_id_pour(requete.requete_id, declaree.identifiant_regle)",  # noqa: E501
+        nouveau="            identifiant = conclusion_id_pour(requete.requete_id, requete.regles[0].identifiant)",  # noqa: E501
+        defaut_reproduit=(
+            "toutes les qualifications se rattachent a la meme conclusion : les "
+            "autres sont classees au hasard ou manquantes"
+        ),
+        tests=("tests/integration/test_orchestration.py",),
+    ),
+    Mutation(
+        cle="raisonnement_sterile_rendu_en_succes",
+        fichier="gsie_api/engines/orchestration/service.py",
+        ancien="        if not inference.conclusions:",
+        nouveau="        if False:",
+        defaut_reproduit=(
+            "un diagnostic vide est produit la ou « aucune regle ne s'applique » "
+            "est une reponse — l'appelant interprete le silence"
+        ),
+        tests=("tests/integration/test_orchestration.py",),
+    ),
 )
 
 
