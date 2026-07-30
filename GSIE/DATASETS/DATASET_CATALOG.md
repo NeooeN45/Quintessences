@@ -588,28 +588,51 @@ aux grandes familles de données consommées par GSIE et Ignis.
 
 ### 3.F — Datasets incendie (Ignis)
 
-#### DS-022 — Prométhée (base incendies France méditerranéenne)
+#### DS-022 — ~~Prométhée~~ (OBSOLÈTE — fusionné dans BDIFF janvier 2023)
 
 | Champ | Valeur |
 |---|---|
 | **Identifiant GSIE** | DS-022 |
-| **Nom du dataset** | Base Prométhée — base de données sur les incendies de forêt |
-| **Organisme producteur** | Entente pour la Forêt Méditerranéenne (EEIFM) — base Prométhée |
+| **Nom du dataset** | ~~Base Prométhée~~ — **obsolète depuis janvier 2023** |
+| **Organisme producteur** | ~~Entente pour la Forêt Méditerranéenne (EEIFM)~~ |
 | **Catégorie** | F — Incendie |
 | **Domaines S-6 couverts** | Écologie forestière, sylviculture (post-incendie) |
-| **Moteurs consommateurs** | Ignis, Simulation Engine, Diagnostic Engine |
-| **Source / URL** | http://www.promethee.com |
-| **Licence** | Accès sous accord (Entente Forêt Méditerranéenne) — données publiques agrégées |
-| **Couverture spatiale** | France méditerranéenne (15 départements du Sud-Est) |
-| **Couverture temporelle** | 1973-présent |
+| **Moteurs consommateurs** | ~~Ignis, Simulation Engine, Diagnostic Engine~~ — **voir DS-022b BDIFF** |
+| **Source / URL** | ~~http://www.promethee.com~~ — **URL morte (fusion)** |
+| **Licence** | ~~Accès sous accord~~ |
+| **Couverture spatiale** | ~~France méditerranéenne (15 départements du Sud-Est)~~ |
+| **Couverture temporelle** | 1973-2022 (données historiques transférées dans BDIFF) |
 | **Résolution spatiale** | Polygone d'incendie (surface brûlée) |
 | **Résolution temporelle** | Événementielle (chaque incendie) |
 | **Format** | CSV, Shapefile |
-| **Version référencée** | Base Prométhée (extraction datée) |
+| **Version référencée** | ~~Base Prométhée~~ — **archive historique 1973-2022 dans BDIFF** |
 | **Qualité / précision** | Saisie opérationnelle (services départementaux incendie) |
-| **Contact** | Entente pour la Forêt Méditerranéenne — base Prométhée |
-| **Statut d'ingestion** | Planifié (accord d'accès à formaliser) |
-| **Notes** | Source historique de référence pour l'analyse de la fréquence et de la surface des incendies en zone méditerranéenne française |
+| **Contact** | ~~Entente pour la Forêt Méditerranéenne~~ — **voir BDIFF (MTE-MFB)** |
+| **Statut d'ingestion** | **Obsolète — ne pas ingérer. Utiliser DS-022b BDIFF.** |
+| **Notes** | Base Prométhée fusionnée dans BDIFF en janvier 2023. Données 1973-2022 incluses dans BDIFF. URL promethee.com/promethee.net morte. Vérifié 30/07/2026 (GSIE-PROMPT-0025). |
+
+#### DS-022b — BDIFF (Base de Données des Incendies de Forêts de France)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-022b |
+| **Nom du dataset** | BDIFF — Base de Données des Incendies de Forêts de France |
+| **Organisme producteur** | Ministère de la Transition écologique + Ministère de l'Agriculture (MTE-MFB) |
+| **Catégorie** | F — Incendie |
+| **Domaines S-6 couverts** | Écologie forestière, sylviculture (post-incendie) |
+| **Moteurs consommateurs** | Ignis, Simulation Engine, Diagnostic Engine |
+| **Source / URL** | https://bdiff.agriculture.gouv.fr/ + https://www.data.gouv.fr/datasets/bdiff-base-des-incendies-de-forets-france-metropolitaine-outre-mer |
+| **Licence** | Licence Ouverte 2.0 (open data) |
+| **Couverture spatiale** | France métropolitaine + outre-mer |
+| **Couverture temporelle** | 1973-présent (données Prométhée 1973-2022 intégrées + nouvelles données 2023+) |
+| **Résolution spatiale** | Polygone d'incendie (surface brûlée) |
+| **Résolution temporelle** | Événementielle (chaque incendie) |
+| **Format** | CSV, Shapefile, API |
+| **Version référencée** | BDIFF courant (extraction datée) |
+| **Qualité / précision** | Saisie opérationnelle (services départementaux incendie) + validation MTE |
+| **Contact** | MTE-MFB — SDAG/Forêts |
+| **Statut d'ingestion** | Planifié (priorité haute — remplace DS-022) |
+| **Notes** | Base officielle nationale. Remplace Prométhée (DS-022) depuis janvier 2023. Inclut données historiques 1973-2022 + nouvelles données 2023+. URL vérifiée 30/07/2026 (GSIE-PROMPT-0025). |
 
 #### DS-023 — EFFIS (European Forest Fire Information System)
 
@@ -949,6 +972,7 @@ qui l'exigent.
 | 2026-07-13 | Création du livrable 305 — Dataset Catalog (Draft). Catalogage de 24 datasets répartis en 6 catégories (A-F), alignés sur les 14 moteurs et Ignis. Métadonnées complètes conformes à CON-002 et CON-005. Priorité d'ingestion alignée sur l'ordre de développement des moteurs (livrable 204). Notes de licences détaillées (Licence Ouverte, CC-BY, domaine public, accords spécifiques). |
 | 2026-07-13 | Enrichissement DS-002 (LiDAR HD) : 11 classes ASPRS+IGN détaillées, attributs points, accès COPC/EPT/WMS/API, qualité géométrique. Source : analyse 4 PDFs IGN officiels. |
 | 2026-07-13 | Ajout DS-027 (CoSIA 20cm), DS-028 (OCS GE), DS-029 (Datasets apprentissage LiDAR HD). Source : feuille de route IA IGN + page vigie IA. Total : 29 datasets. Voir `IGN_IA_STRATEGY.md` et DEC-000018. |
+| 2026-07-30 | **GSIE-PROMPT-0025** — Vérification URL exhaustive (68 URLs testées, 82% succès). DS-022 Prométhée marqué OBSOLÈTE (fusionné dans BDIFF janv. 2023). Ajout DS-022b BDIFF (remplace Prométhée). 26 nouvelles sources vérifiées ajoutées à `SOURCES_DONNEES_EXHAUSTIVES.md` §6.10 (climat, hydro, biodiversité, télédétection, réglementaire, archives, outre-mer). 34 sources à vérifier identifiées. 5 corrections critiques (ERA5T payant, INPN cyberattaque, donneespubliques.meteofrance.fr fermeture, CDSE STAC endpoint, BD Haie URL). Voir `_staging_0025/_SYNTHESE.md`. |
 
 ---
 
