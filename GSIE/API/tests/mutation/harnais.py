@@ -394,13 +394,21 @@ MUTATIONS: tuple[Mutation, ...] = (
     Mutation(
         cle="accuse_de_conservation_mensonger",
         fichier="gsie_api/engines/recommendation/engine.py",
-        ancien='            "statut": "recu_non_persiste",',
-        nouveau='            "statut": "enregistre",',
+        # Cette mutation visait auparavant le statut lui-meme — `enregistre`
+        # alors que rien n'etait ecrit. Le statut est maintenant vrai, et son
+        # motif a disparu du code. Le meme mensonge reste atteignable, plus
+        # bas : ne pas ecrire la ligne `decision` tout en repondant
+        # « enregistre », avec un `decision_id` qui ne mene a rien.
+        #
+        # C'est la forme durable de cette exigence : elle ne porte plus sur une
+        # chaine de caractere, mais sur l'ecriture que la chaine affirme.
+        ancien="            DecisionModel(\n                id=decision_id,",
+        nouveau="            DecisionModel(\n                id=uuid4(),",
         defaut_reproduit=(
-            "le forestier lit un accuse de conservation pour une decision que "
-            "rien ne persiste — il cesse alors de tenir sa propre trace"
+            "l'accuse rend un `decision_id` qui ne correspond a aucune ligne : "
+            "le forestier ne peut pas retrouver sa trace, et croit l'avoir"
         ),
-        tests=("tests/unit/test_recommendation_engine.py",),
+        tests=("tests/integration/test_recommendation_persistance.py",),
     ),
     Mutation(
         cle="station_non_enregistree_refusee",
@@ -569,6 +577,166 @@ MUTATIONS: tuple[Mutation, ...] = (
             "verifiable en apparence — et cherche le defaut au mauvais endroit"
         ),
         tests=("tests/unit/test_validation_engine.py",),
+    ),
+    Mutation(
+        cle="etat_global_hors_du_plancher",
+        fichier="gsie_api/engines/diagnostic/engine.py",
+        # Le niveau de preuve de l'etat global etait exige a l'entree puis
+        # jamais lu : un diagnostic annoncait un plancher B alors que son etat
+        # global reposait sur une observation isolee F.
+        ancien="        niveaux.append(request.etat_global.evidence_level)",
+        nouveau="",
+        defaut_reproduit=(
+            "le forestier lit une fondation plus solide qu'elle ne l'est : le "
+            "plancher ignore l'affirmation qui oriente la recommandation"
+        ),
+        tests=("tests/unit/test_diagnostic_engine.py",),
+    ),
+    Mutation(
+        cle="non_contournable_seulement_partiel",
+        fichier="gsie_api/engines/validation/engine.py",
+        # `GSIE-CON-001` est l'article fondateur. Une recommandation non
+        # contournable retire au forestier la seule chose qu'il garantit ;
+        # la laisser sortir en `partiellement_valide` la fait parvenir a
+        # l'utilisateur.
+        ancien='            "recommandation_contournable",\n',
+        nouveau="",
+        defaut_reproduit=(
+            "une recommandation non contournable atteint l'utilisateur en "
+            "`partiellement_valide` — violation de l'article fondateur"
+        ),
+        tests=("tests/unit/test_validation_engine.py",),
+    ),
+    Mutation(
+        cle="documentation_publique_en_production",
+        fichier="gsie_api/app.py",
+        # Mesure OWASP A05 revendiquee par le module, que rien ne surveillait :
+        # le schema OpenAPI enumere chaque chemin, chaque modele, chaque champ.
+        ancien='        openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",',  # noqa: E501
+        nouveau='        openapi_url=f"{_settings.api_v1_prefix}/openapi.json",',
+        defaut_reproduit=(
+            "la surface complete de l'API redevient publique en production, "
+            "dans un format directement exploitable"
+        ),
+        tests=("tests/unit/test_divulgation_production.py",),
+    ),
+    Mutation(
+        cle="lecture_hors_racine_de_stockage",
+        fichier="gsie_api/infrastructure/object_storage.py",
+        # Contournement de `_resolve_key` sur la seule methode de lecture :
+        # c'est exactement le refactoring que seul `put` surveillait.
+        ancien="    async def get(self, key: str) -> BinaryIO:\n        path = self._resolve_key(key)",  # noqa: E501
+        nouveau="    async def get(self, key: str) -> BinaryIO:\n        path = self._base / key",
+        defaut_reproduit=(
+            "une cle `../../etc/passwd` fait lire un fichier hors du repertoire "
+            "de stockage — traversee de repertoire en lecture"
+        ),
+        tests=("tests/unit/test_object_storage.py",),
+    ),
+    # --- Tracabilite : « aucune decision perdue » (GSIE-CON-005)
+    Mutation(
+        cle="recommandations_non_persistees",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien="        await self._persister_recommandations(recommandations)",
+        nouveau="",
+        defaut_reproduit=(
+            "aucune decision ne peut plus citer la recommandation a laquelle "
+            "elle repond : la ligne n'existe pas"
+        ),
+        tests=("tests/integration/test_recommendation_persistance.py",),
+    ),
+    Mutation(
+        cle="alternatives_non_persistees",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Seule la principale ecrite. Un forestier qui retient une alternative
+        # voit alors sa decision refusee, ou intracable.
+        ancien="            candidate for reco in recommandations for candidate in (reco, *reco.alternatives)",  # noqa: E501
+        nouveau="            candidate for reco in recommandations for candidate in (reco,)",
+        defaut_reproduit=(
+            "le choix d'une alternative par le forestier devient intracable, "
+            "alors que proposer des alternatives est un principe fondateur"
+        ),
+        tests=("tests/integration/test_recommendation_persistance.py",),
+    ),
+    Mutation(
+        cle="jonction_decision_perdue",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # La decision subsiste, mais on ne sait plus a quoi elle repondait.
+        ancien="            insert(decision_recommendation).values(",
+        nouveau=(
+            "            insert(decision_recommendation).values(\n"
+            "                decision_id=decision_id,\n"
+            "                recommendation_id=decision_id,"
+        ),
+        defaut_reproduit=(
+            "la decision pointe sur elle-meme : on sait qu'un forestier a "
+            "refuse quelque chose, sans pouvoir dire quoi"
+        ),
+        tests=("tests/integration/test_recommendation_persistance.py",),
+    ),
+    Mutation(
+        cle="rationale_inventee",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        # Le pire des deux mondes : une explication plausible, relue comme la
+        # parole du forestier, qu'il n'a jamais donnee (`ADR-009`).
+        ancien='            "Aucune justification fournie par le forestier — non exigée "',
+        nouveau='            "Recommandation jugée inadaptée à la station par le forestier. "',
+        defaut_reproduit=(
+            "une explication inventee est consignee et relue comme celle du "
+            "forestier, qui n'en a fourni aucune"
+        ),
+        tests=("tests/integration/test_recommendation_persistance.py",),
+    ),
+    Mutation(
+        cle="decision_sans_recommandation_toleree",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien=(
+            "        if recommandation is None:\n"
+            "            raise RecommandationIntrouvableError("
+        ),
+        nouveau=(
+            "        if recommandation is None and False:\n"
+            "            raise RecommandationIntrouvableError("
+        ),
+        defaut_reproduit=(
+            "une trace inexploitable est ecrite, puis PostgreSQL refuse la "
+            "jonction en erreur serveur au lieu d'un refus metier nomme"
+        ),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
+    ),
+    # --- Passages de main entre moteurs
+    #
+    # La suite eprouvait la chaine sur des `Diagnostic` et `Conclusion` ecrits a
+    # la main : aucun test ne prenait la sortie *reelle* d'un moteur pour
+    # alimenter le suivant. Ces mutations cassent les jointures que
+    # `tests/integration/test_chaine_reelle.py` etablit.
+    Mutation(
+        cle="diagnostic_detache_de_ses_conclusions",
+        fichier="gsie_api/engines/diagnostic/engine.py",
+        ancien="            conclusions_source=conclusions_source_triees,",
+        nouveau="            conclusions_source=conclusions_source_triees[:1],",
+        defaut_reproduit=(
+            "le diagnostic ne cite plus toutes les conclusions dont il est "
+            "issu : la chaine d'inference devient incomplete a la relecture"
+        ),
+        tests=("tests/integration/test_chaine_reelle.py",),
+    ),
+    Mutation(
+        cle="ensemble_sans_verification_croisee",
+        fichier="gsie_api/engines/validation_pipeline.py",
+        # La seule verification croisee de la chaine : un ensemble qui melange
+        # un diagnostic et des recommandations issues d'un autre serait presente
+        # au forestier comme coherent.
+        ancien="    if reco_set.diagnostic_source != diagnostic.diagnostic_id:",
+        nouveau="    if False:",
+        defaut_reproduit=(
+            "un ensemble melangeant un diagnostic et des recommandations issues "
+            "d'un autre est valide sans que rien ne le signale"
+        ),
+        tests=("tests/unit/test_pipeline_cross_engine.py",),
     ),
 )
 

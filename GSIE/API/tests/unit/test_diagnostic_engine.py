@@ -182,13 +182,19 @@ def _qualification(
     )
 
 
-def _etat_global() -> EtatGlobalDeclare:
-    """Crée un EtatGlobalDeclare valide de test."""
+def _etat_global(
+    evidence_level: EvidenceLevel = EvidenceLevel.B,
+) -> EtatGlobalDeclare:
+    """Crée un EtatGlobalDeclare valide de test.
+
+    `evidence_level` est parametrable : il entre desormais dans le plancher du
+    diagnostic, et le figer masquerait ce que ce plancher doit refleter.
+    """
     return EtatGlobalDeclare(
         etat=EtatGlobal.vigueur_reduite,
         justification="Vigueur réduite constatée",
         source=_source(),
-        evidence_level=EvidenceLevel.B,
+        evidence_level=evidence_level,
     )
 
 
@@ -199,6 +205,7 @@ def _requete(
     contradictions: list[ContradictionDeclaree] | None = None,
     contexte: StationContexte | None = None,
     requete_id: UUID = _REQUETE_ID,
+    evidence_etat_global: EvidenceLevel = EvidenceLevel.B,
 ) -> DiagnosticRequest:
     """Crée une DiagnosticRequest valide de test.
 
@@ -214,7 +221,7 @@ def _requete(
         station_id=_STATION_ID,
         conclusions=conclusions,
         qualifications=qualifications,
-        etat_global=_etat_global(),
+        etat_global=_etat_global(evidence_etat_global),
         contradictions=contradictions or [],
         contexte=contexte or _contexte_climat_seul(),
         type_diagnostic=TypeDiagnostic.stationnel,
@@ -1435,3 +1442,46 @@ class TestIdentifiantCouvreLaQualification:
         requete = self._requete_qualifiee()
         identifiants = {await self._identifiant(requete) for _ in range(10)}
         assert len(identifiants) == 1
+
+
+# --- Le plancher de preuve inclut l'etat global ---
+
+
+@pytest.mark.asyncio
+async def should_lower_the_floor_when_the_global_state_is_weakly_evidenced() -> None:
+    """Un état global fondé sur une observation isolée abaisse le plancher.
+
+    `EtatGlobalDeclare.evidence_level` est un champ **obligatoire** qui n'était
+    jamais lu : le plancher ne portait que sur les contraintes, atouts et
+    risques. Un diagnostic dont toutes les conclusions étaient de niveau B, mais
+    dont l'état global reposait sur une observation isolée de niveau F,
+    annonçait donc un plancher B.
+
+    C'est l'affirmation la plus conséquente du diagnostic — celle qui oriente
+    désormais la recommandation. Le forestier lisait une fondation plus solide
+    qu'elle ne l'était.
+    """
+    diagnostic = await _engine().diagnostiquer(
+        _requete(evidence_etat_global=EvidenceLevel.F), datetime.now(UTC)
+    )
+
+    assert diagnostic.evidence_level_plancher == EvidenceLevel.F, (
+        f"plancher {diagnostic.evidence_level_plancher} alors que l'état global "
+        "est déclaré F — un plancher ne peut pas dépasser le plus faible de ses "
+        "maillons"
+    )
+    assert diagnostic.etat_global_evidence_level == EvidenceLevel.F
+
+
+@pytest.mark.asyncio
+async def should_keep_the_floor_when_the_global_state_is_well_evidenced() -> None:
+    """Un état global solide ne dégrade pas le plancher.
+
+    Sans ce contrôle, retourner F en toutes circonstances ferait passer le test
+    précédent — et sous-évaluerait tous les diagnostics.
+    """
+    diagnostic = await _engine().diagnostiquer(
+        _requete(evidence_etat_global=EvidenceLevel.A), datetime.now(UTC)
+    )
+
+    assert diagnostic.evidence_level_plancher == EvidenceLevel.B

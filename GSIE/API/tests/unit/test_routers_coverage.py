@@ -1414,6 +1414,7 @@ async def should_return_200_when_diagnostic_diagnostiquer_success(
         risques=[],
         contradictions=[],
         confiance=0.8,
+        etat_global_evidence_level=EvidenceLevel.B,
         evidence_level_plancher=EvidenceLevel.B,
         conclusions_source=[uuid4()],
         date_diagnostic=datetime.now(UTC),

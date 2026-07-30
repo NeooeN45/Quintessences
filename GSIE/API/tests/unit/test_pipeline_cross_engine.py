@@ -98,6 +98,7 @@ def _make_diagnostic(
         risques=risques,
         contradictions=[],
         confiance=0.7,
+        etat_global_evidence_level=niveau_plancher(niveaux),
         evidence_level_plancher=niveau_plancher(niveaux),
         incertitudes=["Données climatiques non disponibles."],
         conclusions_source=[uuid4()],

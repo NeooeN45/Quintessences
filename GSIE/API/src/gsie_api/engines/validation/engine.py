@@ -296,13 +296,33 @@ class ValidationEngine:
             )
         return mapping[nom_controle]
 
-    @staticmethod
-    def _tous_non_critiques(non_conformes: list[ControleResultat]) -> bool:
+    # Controles dont l'echec bloque, sans degradation possible en
+    # `partiellement_valide`.
+    #
+    # `recommandation_contournable` a ete ajoute. L'ensemble ne retenait que
+    # `presence_source` et `presence_niveau_preuve` en citant `GSIE-CON-002` —
+    # en laissant donc de cote `GSIE-CON-001`, l'article **fondateur** : « l'IA
+    # assiste, ne decide jamais ». Une recommandation qui se declare non
+    # contournable retire au forestier la seule chose que cet article lui
+    # garantit. La faire parvenir a l'utilisateur en `partiellement_valide`
+    # revient a laisser passer la violation de l'article que la validation
+    # existe pour faire respecter — elle est le dernier rempart.
+    #
+    # Enforcer un article derive tout en tolerant la violation de l'article
+    # fondateur etait une incoherence, pas une exclusion pesee.
+    _CONTROLES_CRITIQUES: frozenset[str] = frozenset(
+        {
+            "presence_source",
+            "presence_niveau_preuve",
+            "recommandation_contournable",
+        }
+    )
+
+    @classmethod
+    def _tous_non_critiques(cls, non_conformes: list[ControleResultat]) -> bool:
         """Détermine si tous les contrôles non conformes sont non critiques.
 
         Un contrôle critique bloque l'ensemble ; un contrôle non critique
-        autorise `partiellement_valide`. En v1, `presence_source` et
-        `presence_niveau_preuve` sont critiques (GSIE-CON-002).
+        autorise `partiellement_valide`.
         """
-        critiques = {"presence_source", "presence_niveau_preuve"}
-        return all(c.nom_controle not in critiques for c in non_conformes)
+        return all(c.nom_controle not in cls._CONTROLES_CRITIQUES for c in non_conformes)

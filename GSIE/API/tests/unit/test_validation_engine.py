@@ -278,3 +278,30 @@ def test_un_controle_inconnu_est_refuse_et_non_etiquete_au_hasard() -> None:
     """
     with pytest.raises(ValidationEngineError, match="sans cause de blocage"):
         ValidationEngine._cause_pour_controle("controle_ajoute_sans_cause")
+
+
+def test_une_recommandation_non_contournable_est_bloquee_non_partielle() -> None:
+    """`GSIE-CON-001` ne se dégrade pas en `partiellement_valide`.
+
+    L'ensemble des contrôles critiques ne retenait que `presence_source` et
+    `presence_niveau_preuve`, en citant `GSIE-CON-002` — laissant donc de côté
+    l'article **fondateur** : « l'IA assiste, ne décide jamais ». Une
+    recommandation qui se déclare non contournable retire au forestier la seule
+    chose que cet article lui garantit, et ressortait `partiellement_valide` :
+    elle atteignait l'utilisateur.
+
+    La validation est le dernier rempart. Enforcer un article dérivé tout en
+    tolérant la violation de l'article fondateur était une incohérence.
+    """
+    assert "recommandation_contournable" in ValidationEngine._CONTROLES_CRITIQUES
+
+    non_conforme = ControleResultat(
+        nom_controle="recommandation_contournable",
+        resultat=ResultatControle.non_conforme,
+        details="contournable=false déclaré dans le contenu",
+    )
+
+    assert ValidationEngine._tous_non_critiques([non_conforme]) is False, (
+        "un contrôle portant GSIE-CON-001 est traité comme non critique — "
+        "l'ensemble sortirait en `partiellement_valide`"
+    )

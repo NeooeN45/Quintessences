@@ -30,6 +30,7 @@ from gsie_api.engines.recommendation.schemas import (
     RecommendationSet,
 )
 from gsie_api.infrastructure.database import get_db as get_db_session
+from gsie_api.resources.router import _extract_author_id
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/recommendation", tags=["recommendation"])
@@ -110,14 +111,22 @@ async def recommendation_decision(
     request: Request,
     response: Response,
     session: DbSession,
-    _user: EngineWriteUser,
+    user: EngineWriteUser,
 ) -> dict[str, str]:
-    """Enregistre la décision du forestier.
+    """Enregistre la décision du forestier, attribuée à son auteur.
+
+    L'identité de l'appelant était ignorée (`_user`). Une décision anonyme
+    satisfait mal `GSIE-CON-005` : savoir qu'une recommandation a été refusée
+    sans savoir par qui rend la trace difficile à relire, et impossible à
+    contester. La dérivation est celle de `resources/router.py` — le sujet JWT
+    peut être un nom d'utilisateur, `uuid5` le rend déterministe.
 
     Raises:
-        400: Si la décision est invalide.
+        400: Si la décision est invalide ou si la recommandation est introuvable.
     """
     try:
-        return await RecommendationEngine(session).record_decision(decision)
+        return await RecommendationEngine(session).record_decision(
+            decision, forestier_id=_extract_author_id(user)
+        )
     except RecommendationEngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

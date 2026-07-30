@@ -20,6 +20,7 @@ from uuid import UUID  # noqa: TC003 — annotation evaluee par SQLAlchemy
 
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
 from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
+from gsie_api.infrastructure.models.reasoning import RecommendationModel
 
 __all__ = ["CONFIANCE_DIAGNOSTIC_FICTIF", "SessionDiagnosticFictif"]
 
@@ -42,15 +43,46 @@ class SessionDiagnosticFictif:
         self,
         confiance: float = CONFIANCE_DIAGNOSTIC_FICTIF,
         etat_global: DiagnosticGlobalState = DiagnosticGlobalState.sain,
+        recommandation_existe: bool = True,
     ) -> None:
         self._confiance = confiance
         self._etat_global = etat_global
+        self._recommandation_existe = recommandation_existe
 
     async def get(self, modele: type[Any], identifiant: UUID) -> Any:
-        if modele is not DiagnosticModel:
-            return None
-        return DiagnosticModel(
-            id=identifiant,
-            confiance=self._confiance,
-            etat_global=self._etat_global,
-        )
+        if modele is DiagnosticModel:
+            return DiagnosticModel(
+                id=identifiant,
+                confiance=self._confiance,
+                etat_global=self._etat_global,
+            )
+        if modele is RecommendationModel:
+            # `recommandation_existe=False` permet d'exercer le refus sans base.
+            if not self._recommandation_existe:
+                return None
+            return RecommendationModel(id=identifiant, confidence=self._confiance)
+        # Tout autre modele est absent : c'est ce qui fait materialiser les
+        # Agents, comme sur une base vierge.
+        return None
+
+    # --- Ecritures avalees : la persistance se verifie sur PostgreSQL ---
+    #
+    # `recommend` persiste desormais ce qu'il produit. Ces trois methodes
+    # acceptent l'ecriture sans rien conserver, pour que les tests de mapping
+    # objectif -> action restent sans base.
+    #
+    # Elles rendent donc la persistance **invisible** ici : c'est
+    # `tests/integration/test_recommendation_persistance.py` qui l'etablit, sur
+    # une base reelle avec ses cles etrangeres. Sans ce test-la, ce stub
+    # masquerait exactement ce qu'il simplifie — l'erreur deja commise dans ce
+    # depot, ou des tests SQLite laissaient passer des violations de cle que
+    # PostgreSQL refusait.
+
+    def add(self, instance: Any) -> None:
+        """Accepte l'objet sans le conserver."""
+
+    async def flush(self) -> None:
+        """Ne fait rien : aucune contrainte n'est evaluee."""
+
+    async def execute(self, *args: Any, **kwargs: Any) -> None:
+        """Avale les insertions dans les tables de jonction."""

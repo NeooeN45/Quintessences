@@ -11,7 +11,10 @@ from uuid import uuid4
 
 import pytest
 
-from gsie_api.engines.recommendation.engine import RecommendationEngine
+from gsie_api.engines.recommendation.engine import (
+    RecommandationIntrouvableError,
+    RecommendationEngine,
+)
 from gsie_api.engines.recommendation.schemas import (
     DecisionForestier,
     ForestierDecision,
@@ -128,11 +131,18 @@ async def should_reference_diagnostic_in_justification(engine: RecommendationEng
 
 @pytest.mark.asyncio
 async def should_record_accepte_decision(engine: RecommendationEngine) -> None:
-    """Une décision 'accepte' est reçue, et l'accusé ne prétend pas la conserver.
+    """Une décision 'accepte' est enregistrée, et le statut le dit sans mentir.
 
-    Le statut valait `enregistre` alors que la méthode ne persiste rien. Un
-    accusé de conservation pour une trace inexistante est plus dommageable que
-    l'absence d'accusé : le forestier cesse de tenir la sienne.
+    Le statut valait `enregistre` alors que la méthode ne persistait rien — un
+    accusé de conservation pour une trace inexistante, plus dommageable que
+    l'absence d'accusé : le forestier cesse de tenir la sienne. Il a valu
+    `recu_non_persiste` le temps que la persistance arrive.
+
+    Elle est là, et l'accusé porte désormais l'identifiant de la trace écrite :
+    sans lui, le forestier ne peut pas la retrouver. L'écriture elle-même est
+    vérifiée sur PostgreSQL par
+    `tests/integration/test_recommendation_persistance.py` — le stub avale les
+    écritures et ne prouve rien de ce côté.
     """
     decision = ForestierDecision(
         recommandation_id=uuid4(),
@@ -140,9 +150,33 @@ async def should_record_accepte_decision(engine: RecommendationEngine) -> None:
         date_decision=datetime.now(UTC),
     )
     result = await engine.record_decision(decision)
-    assert result["statut"] == "recu_non_persiste"
+    assert result["statut"] == "enregistre"
     assert result["decision"] == "accepte"
-    assert "non conservée" in result["avertissement"]
+    assert "avertissement" not in result, (
+        "l'avertissement de non-conservation subsiste alors que la décision est "
+        "persistée — il induirait le forestier en erreur dans l'autre sens"
+    )
+    assert result["decision_id"], "l'accusé ne permet pas de retrouver la trace"
+
+
+@pytest.mark.asyncio
+async def should_refuse_a_decision_citing_an_unknown_recommendation() -> None:
+    """Une décision qui cite une recommandation inexistante est refusée.
+
+    Enregistrer produirait une trace inexploitable : on saurait qu'un forestier
+    a refusé quelque chose, sans pouvoir dire quoi. La jonction
+    `decision_recommendation` porte d'ailleurs une clé étrangère — PostgreSQL
+    refuserait de son côté, mais en erreur serveur plutôt qu'en refus explicite.
+    """
+    moteur = RecommendationEngine(SessionDiagnosticFictif(recommandation_existe=False))
+    decision = ForestierDecision(
+        recommandation_id=uuid4(),
+        decision=DecisionForestier.REFUSE,
+        date_decision=datetime.now(UTC),
+    )
+
+    with pytest.raises(RecommandationIntrouvableError):
+        await moteur.record_decision(decision)
 
 
 @pytest.mark.asyncio

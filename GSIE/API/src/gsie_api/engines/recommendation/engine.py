@@ -30,15 +30,19 @@ Périmètre v1 :
 - Les règles sylvicoles sont encodées sous forme de règles
   déclaratives simples en v1. Une future version les récupérera du
   Knowledge Engine.
-- Pas de persistance en v1 — les recommandations sont retournées à
-  l'appelant. Une future version les persistera pour traçabilité
-  et alimentation du Learning Engine (§3 — retours d'expérience).
+- Les recommandations **et** les décisions du forestier sont persistées.
+  Le métamodèle le prévoyait depuis l'origine — types `recommendation` et
+  `decision` (`ADR-002`), jonction `decision_recommendation` — sans qu'aucun
+  code l'emprunte : `record_decision` répondait « enregistré » en n'écrivant
+  rien. `GSIE-CON-005` exige la traçabilité, et « aucune décision perdue »
+  n'est pas satisfait par un message qui l'affirme.
 """
 
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 
+from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -52,10 +56,18 @@ from gsie_api.engines.recommendation.schemas import (
     RecommendationSet,
     TypeAction,
 )
+from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
-from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
+from gsie_api.infrastructure.models.enums import AgentType, DiagnosticGlobalState
+from gsie_api.infrastructure.models.junctions import decision_recommendation
+from gsie_api.infrastructure.models.prov import AgentModel
+from gsie_api.infrastructure.models.reasoning import DecisionModel, RecommendationModel
 
 logger = get_logger("gsie_api.recommendation.engine")
+
+# Espace de noms des identifiants d'agents derives. Fixe : la trace d'une
+# decision doit rester relisible d'une execution a l'autre.
+_NAMESPACE_AGENTS = UUID("6f1d2a3b-4c5d-6e7f-8a9b-0c1d2e3f4a5b")
 
 # Source abstraite pour les règles sylvicoles en v1.
 # Une future version référencera le Knowledge Engine réel.
@@ -92,6 +104,46 @@ class RecommendationEngineError(Exception):
     """Erreur de base du Recommendation Engine."""
 
 
+class RecommandationIntrouvableError(RecommendationEngineError):
+    """La décision répond à une recommandation qui n'existe pas.
+
+    Refuser vaut mieux qu'enregistrer : une décision citant une recommandation
+    introuvable produirait une trace inexploitable — on saurait qu'un forestier
+    a refusé quelque chose, sans pouvoir dire quoi (`GSIE-CON-005`).
+    """
+
+
+def _rationale(decision: ForestierDecision) -> str:
+    """Motif à consigner, sans jamais en inventer un.
+
+    `decision.rationale` est NOT NULL en base, alors que
+    `ForestierDecision.justification_forestier` est **délibérément facultatif** :
+    « exiger une explication du forestier reviendrait à lui demander de se
+    justifier devant l'outil ».
+
+    Les deux exigences se concilient en consignant un fait, pas une raison :
+    l'absence de justification est enregistrée comme telle. Écrire une
+    explication plausible à la place serait exactement l'invention que `ADR-009`
+    interdit — et elle serait relue comme la parole du forestier.
+
+    Les modifications déclarées sont reprises telles quelles : c'est le forestier
+    qui les a formulées.
+    """
+    morceaux: list[str] = []
+    if decision.justification_forestier:
+        morceaux.append(decision.justification_forestier)
+    else:
+        morceaux.append(
+            "Aucune justification fournie par le forestier — non exigée " "(GSIE-CON-001)."
+        )
+    if decision.modifications:
+        details = "; ".join(
+            f"{cle} = {valeur}" for cle, valeur in sorted(decision.modifications.items())
+        )
+        morceaux.append(f"Modifications déclarées : {details}.")
+    return " ".join(morceaux)
+
+
 class DiagnosticIntrouvableError(RecommendationEngineError):
     """La recommandation invoque un diagnostic qui n'existe pas.
 
@@ -103,16 +155,15 @@ class DiagnosticIntrouvableError(RecommendationEngineError):
 
 
 class RecommendationEngine:
-    """Moteur de recommandation — lit le diagnostic, n'écrit rien en v1.
+    """Moteur de recommandation — lit le diagnostic, écrit la trace.
 
-    Le moteur ne persiste pas les recommandations en v1 : chaque
-    requête est indépendante. Une future version persistera les
-    recommandations et les décisions du forestier pour traçabilité
-    et alimentation du Learning Engine (§3).
+    Il **lit** le diagnostic invoqué : c'est ce qui rend sa justification
+    vérifiable, et ce qui borne sa confiance à celle du diagnostic. Il **écrit**
+    les recommandations produites et la décision du forestier : sans elles, la
+    suite donnée à un conseil sylvicole ne se relit pas, et le Learning Engine
+    n'a rien à apprendre (§3).
 
-    Il **lit** en revanche le diagnostic invoqué : c'est ce qui rend sa
-    justification vérifiable, et ce qui borne sa confiance à celle du
-    diagnostic. D'où la session en dépendance de construction.
+    D'où la session en dépendance de construction.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -121,7 +172,7 @@ class RecommendationEngine:
     @staticmethod
     def version() -> str:
         """Version du moteur."""
-        return "0.2.0"
+        return "0.3.0"
 
     async def _diagnostic(self, diagnostic_id: UUID) -> DiagnosticModel:
         """Charge le diagnostic invoque, ou refuse.
@@ -191,6 +242,12 @@ class RecommendationEngine:
                 principale_avec_alts = principale.model_copy(update={"alternatives": alternatives})
                 recommandations[0] = principale_avec_alts
 
+        # Persistance : une decision du forestier doit pouvoir citer la
+        # recommandation a laquelle elle repond. `decision_recommendation`
+        # porte une cle etrangere vers `resource(id)` — sans la ligne
+        # `recommendation`, la trace de la decision est impossible a etablir.
+        await self._persister_recommandations(recommandations)
+
         logger.info(
             "recommendation_complete",
             requete_id=str(request.requete_id),
@@ -208,43 +265,171 @@ class RecommendationEngine:
             date_generation=datetime.now(UTC),
         )
 
-    async def record_decision(self, decision: ForestierDecision) -> dict[str, Any]:
-        """Reçoit la décision du forestier sans encore la persister.
+    async def record_decision(
+        self, decision: ForestierDecision, *, forestier_id: UUID | None = None
+    ) -> dict[str, Any]:
+        """Enregistre la décision du forestier — et le statut dit vrai.
 
-        Le statut retourné était `enregistre` alors que la méthode ne persiste
-        rien : le forestier qui refuse une recommandation lisait un accusé de
-        conservation pour une trace qui n'existait que dans une ligne de log.
+        Le statut valait `enregistre` alors que rien n'était persisté : le
+        forestier qui refuse une recommandation lisait un accusé de conservation
+        pour une trace n'existant que dans une ligne de log. Il a valu
+        `recu_non_persiste` le temps que la persistance arrive. Elle est là :
         `GSIE-CON-005` exige la traçabilité, et « aucune décision perdue » n'est
         pas satisfait par un message qui l'affirme.
 
-        Tant que la persistance n'est pas là, le statut le dit —
-        `recu_non_persiste` — plutôt que de laisser croire l'inverse. Le champ
-        `avertissement` porte la conséquence en clair, car un code de statut se
-        lit rarement.
+        Le métamodèle prévoyait cette écriture depuis l'origine — type
+        `decision` (`ADR-002`) et table de jonction `decision_recommendation` —
+        sans qu'aucun code l'emprunte. Rien n'est donc ajouté au métamodèle.
 
-        Une future version persistera la décision pour traçabilité
-        (`GSIE-CON-005`) et alimentation du Learning Engine (§3) ; ce statut
-        deviendra alors `enregistre`, et il sera vrai.
+        La recommandation citée doit exister. Enregistrer une décision qui
+        répond à une recommandation introuvable produirait une trace
+        inexploitable : on saurait qu'un forestier a refusé quelque chose, sans
+        pouvoir dire quoi.
+
+        Args:
+            decision: la suite donnée par le forestier.
+            forestier_id: identité de l'auteur, matérialisée en Agent. `None`
+                est accepté et enregistré comme tel — voir
+                `_agent_forestier`.
 
         Raises:
-            RecommendationEngineError: si la décision est invalide.
+            RecommandationIntrouvableError: si la recommandation citée n'existe pas.
         """
+        recommandation = await self._session.get(RecommendationModel, decision.recommandation_id)
+        if recommandation is None:
+            raise RecommandationIntrouvableError(
+                f"recommandation {decision.recommandation_id} introuvable : une "
+                "décision qui ne cite aucune recommandation existante ne se "
+                "relit pas"
+            )
+
+        auteur_id = await self._agent_forestier(forestier_id)
+        decision_id = uuid4()
+        self._session.add(
+            ResourceModel(
+                id=decision_id,
+                type="decision",
+                gsie_id=f"decision:{decision_id}",
+            )
+        )
+        await self._session.flush()
+        self._session.add(
+            DecisionModel(
+                id=decision_id,
+                decided_by=auteur_id,
+                decision_text=decision.decision.value,
+                rationale=_rationale(decision),
+                decided_at=decision.date_decision,
+            )
+        )
+        await self._session.flush()
+        await self._session.execute(
+            insert(decision_recommendation).values(
+                decision_id=decision_id,
+                recommendation_id=decision.recommandation_id,
+            )
+        )
+        await self._session.flush()
+
         logger.info(
-            "recommendation_decision_received_not_persisted",
+            "recommendation_decision_persisted",
+            decision_id=str(decision_id),
             recommandation_id=str(decision.recommandation_id),
             decision=decision.decision.value,
         )
         return {
+            "decision_id": str(decision_id),
             "recommandation_id": str(decision.recommandation_id),
             "decision": decision.decision.value,
             "date_decision": decision.date_decision.isoformat(),
-            "statut": "recu_non_persiste",
-            "avertissement": (
-                "Décision reçue et validée, non conservée : la persistance des "
-                "décisions n'est pas implémentée en v1. Conservez votre trace "
-                "hors GSIE."
-            ),
+            "statut": "enregistre",
         }
+
+    # --- Persistance ---
+
+    async def _persister_recommandations(self, recommandations: list[Recommendation]) -> None:
+        """Écrit chaque recommandation, alternatives comprises.
+
+        Les alternatives sont persistées au même titre que la principale : le
+        forestier peut retenir une alternative, et sa décision doit pouvoir la
+        citer. N'écrire que la principale rendrait ce choix-là intraçable —
+        alors que proposer des alternatives est un principe fondateur.
+
+        Le moteur est l'agent recommandant. Il est matérialisé en Agent de type
+        `software`, car `recommendation.recommended_by` est une clé étrangère
+        vers `resource(id)` : le métamodèle veut un agent nommé, pas un
+        identifiant flottant.
+        """
+        moteur_id = await self._agent_moteur()
+        aplaties = [
+            candidate for reco in recommandations for candidate in (reco, *reco.alternatives)
+        ]
+        for reco in aplaties:
+            self._session.add(
+                ResourceModel(
+                    id=reco.recommandation_id,
+                    type="recommendation",
+                    gsie_id=f"recommendation:{reco.recommandation_id}",
+                )
+            )
+        await self._session.flush()
+        for reco in aplaties:
+            self._session.add(
+                RecommendationModel(
+                    id=reco.recommandation_id,
+                    recommended_by=moteur_id,
+                    # `type_action` et `description` sont deux informations
+                    # distinctes, et `recommendation_text` est la seule colonne
+                    # de texte : les perdre l'une ou l'autre rendrait la relecture
+                    # ambigue.
+                    recommendation_text=f"[{reco.type_action.value}] {reco.description}",
+                    confidence=reco.niveau_confiance,
+                )
+            )
+        await self._session.flush()
+        logger.info("recommendations_persisted", nombre=len(aplaties))
+
+    async def _agent_moteur(self) -> UUID:
+        """Matérialise l'Agent représentant ce moteur, une seule fois.
+
+        Identifiant déterministe (`uuid5`) : deux appels concurrents ne créent
+        pas deux agents pour le même moteur, et la trace reste stable d'une
+        exécution à l'autre — condition d'une relecture (`GSIE-CON-005`).
+        """
+        return await self._agent(
+            uuid5(_NAMESPACE_AGENTS, "recommendation-engine"),
+            nom="GSIE Recommendation Engine",
+            type_agent=AgentType.software,
+        )
+
+    async def _agent_forestier(self, forestier_id: UUID | None) -> UUID:
+        """Matérialise l'Agent du forestier, ou l'agent anonyme déclaré.
+
+        `decision.decided_by` est NOT NULL. Quand l'appelant ne transmet pas
+        d'identité, on n'en invente pas : un agent nommé « forestier non
+        identifié » l'enregistre pour ce qu'il est. Attribuer la décision à
+        quelqu'un serait pire que l'anonymat — la trace désignerait une personne
+        qui n'a rien décidé.
+        """
+        if forestier_id is not None:
+            return await self._agent(
+                forestier_id, nom=str(forestier_id), type_agent=AgentType.person
+            )
+        return await self._agent(
+            uuid5(_NAMESPACE_AGENTS, "forestier-non-identifie"),
+            nom="Forestier non identifié",
+            type_agent=AgentType.person,
+        )
+
+    async def _agent(self, agent_id: UUID, *, nom: str, type_agent: AgentType) -> UUID:
+        """Crée l'Agent et sa ligne `resource` s'ils manquent, puis retourne l'id."""
+        if await self._session.get(ResourceModel, agent_id) is not None:
+            return agent_id
+        self._session.add(ResourceModel(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}"))
+        await self._session.flush()
+        self._session.add(AgentModel(id=agent_id, name=nom, type=type_agent))
+        await self._session.flush()
+        return agent_id
 
     # --- Génération des recommandations ---
 
