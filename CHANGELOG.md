@@ -4,6 +4,34 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE-PROMPT-0025 — INVENTAIRE SOURCES ÉLARGI] - 2026-07-30
+
+Extension de l'inventaire des sources de données GSIE à un état viable 5 ans.
+9 domaines thématiques traités (A-I) avec vérification URL exhaustive.
+
+### Bilan
+
+- **68 URLs testées** (webfetch), 82% de succès (10 échecs, tous confirmés par recherche)
+- **48 entrées vérifiées** (YAML conformes RFC-0029 §11.3)
+- **26 nouvelles sources** ajoutées à `SOURCES_DONNEES_EXHAUSTIVES.md` §6.10
+- **34 sources à vérifier** identifiées (URL non testée ou statut incertain)
+- **17 signalements** (13 critiques, 4 information)
+- **5 corrections critiques** : Prométhée→BDIFF, INPN cyberattaque, ERA5T payant, donneespubliques.meteofrance.fr fermeture, CDSE STAC endpoint
+- **Nouveau comptage total** : ~205 sources vérifiées + 34 à vérifier = ~239 potentielles (+33%)
+
+### Fichiers
+
+- `_staging_0025/{A-I}_*.md` : 9 fichiers partiels (48 entrées YAML vérifiées)
+- `_staging_0025/_SYNTHESE.md` : synthèse consolidée
+- `SOURCES_DONNEES_EXHAUSTIVES.md` : §6.10 ajouté (26 nouvelles sources) + §7 comptage mis à jour
+- `DATASET_CATALOG.md` : DS-022 Prométhée marqué OBSOLÈTE, DS-022b BDIFF ajouté, historique mis à jour
+
+### Branche
+
+`feat/inventaire-sources-elargi` — 2 commits locaux (non poussés, en attente d'autorisation)
+
+---
+
 ## [RFC-0028 — PERSISTANCE DES RÈGLES D'INFÉRENCE] - 2026-07-28
 
 Adoption de `RFC-0028` par `DEC-000038`. Le Reasoning Engine recevait ses règles

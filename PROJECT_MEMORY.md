@@ -477,6 +477,19 @@ l'orientation et un texte en vigueur se résout en faveur du texte en vigueur.
 
 ## Prochaine étape
 
+### Inventaire sources élargi — GSIE-PROMPT-0025 (2026-07-30)
+
+Extension de l'inventaire des sources de données à un état viable 5 ans.
+**Branche `feat/inventaire-sources-elargi`** — 2 commits locaux, non poussés (en attente d'autorisation).
+
+- 9 domaines thématiques traités (A-I), 68 URLs testées (82% succès)
+- 48 entrées vérifiées (YAML conformes RFC-0029 §11.3) dans `_staging_0025/`
+- 26 nouvelles sources ajoutées à `SOURCES_DONNEES_EXHAUSTIVES.md` §6.10
+- 34 sources à vérifier identifiées
+- 5 corrections critiques : Prométhée→BDIFF (DS-022 obsolète, DS-022b ajouté), INPN cyberattaque, ERA5T payant, donneespubliques.meteofrance.fr fermeture, CDSE STAC endpoint
+- Nouveau total : ~205 sources vérifiées + 34 à vérifier = ~239 potentielles (+33%)
+- **Action requise** : pousser la branche et créer la PR quand autorisé
+
 ### P0 technique — Persistance des diagnostics (chantier cadré le 2026-07-26)
 
 Bloque la tranche R2 du Recommendation Engine. Analyse déjà faite, à ne pas
