@@ -468,13 +468,23 @@ Seule exigence : leur `place` doit porter la géométrie et le
 périmètre saisi au 1:100 000 employé pour une décision à la parcelle est une
 erreur silencieuse — le grain la rend visible.
 
-### 10.4 Indexation — un manque mesuré
+### 10.4 Indexation — un constat corrigé après vérification
 
-L'inventaire de la base donne **2 index GiST** sur 118 tables.
+**Rectification.** Une version antérieure de cette RFC annonçait « 2 index
+GiST sur 118 tables » comme un manque structurel. Le contre-audit établit que
+c'est **faux** : la base ne porte que **deux colonnes géométriques**,
+`place.geometry` (Lambert-93) et `place.geom_4326`, et **les deux sont
+indexées en GiST**. La couverture est donc complète, pas déficiente.
 
-Pour un système qui va recevoir des téraoctets de raster et des vecteurs sur
-toute la France, c'est un manque structurel : sans index spatial, chaque
-« quels rasters couvrent cette station ? » devient un parcours complet.
+Le constat réel est différent, et plus lourd : sur 118 tables et 703 index
+B-tree, **le modèle spatial se réduit à deux colonnes d'une seule table**.
+Pour un système qui va recevoir des téraoctets de raster, des vecteurs sur
+toute la France et des emprises d'actifs, la géométrie n'est pas
+sous-indexée — elle est **quasi absente**.
+
+Ce n'est pas un défaut à corriger mais une construction à faire, et elle
+viendra avec les schémas de domaine. La stratégie d'indexation doit donc être
+posée **avant** l'ingestion, pendant que la base est vide :
 
 | Donnée | Index | Pourquoi |
 |---|---|---|
@@ -486,6 +496,31 @@ toute la France, c'est un manque structurel : sans index spatial, chaque
 Le BRIN mérite d'être souligné : sur une table d'observations insérées dans
 l'ordre chronologique, il occupe une fraction d'un B-tree pour un résultat
 équivalent. À 175 millions de lignes par an, la différence n'est pas théorique.
+
+### 10.6 Vérifications empiriques du contre-audit
+
+Les affirmations qui portent cette RFC ont été **testées**, pas seulement
+énoncées. Trois éprouvées sur la base réelle, une corrigée, deux à établir.
+
+| Affirmation | Verdict |
+|---|---|
+| Une clé étrangère fonctionne **entre schémas** | **Prouvé** — l'insertion d'un orphelin est refusée : `violates foreign key constraint` |
+| `ON DELETE CASCADE` traverse les schémas | **Prouvé** — 0 enfant restant après suppression du parent |
+| Un rôle sans droit ne peut pas lire un schéma RGPD | **Prouvé** — `ERROR: permission denied for schema` |
+| « 2 index GiST = manque structurel » | **Faux, corrigé** — voir §10.4 |
+| `postgis_raster` disponible | **Disponible en 3.4.3, non installé** — l'out-db exige donc d'activer l'extension |
+| `timescaledb` disponible | **Absent de l'image** — l'adopter suppose de changer l'image Docker, coût à ajouter à l'arbitrage du §9.5 |
+
+Les deux premières lignes sont l'argument central du §3.1 : le cloisonnement
+par schémas conserve l'intégrité référentielle. Ce n'était pas une opinion
+d'architecte, c'est désormais un fait vérifié sur cette base.
+
+La troisième valide le premier lot du §8 : l'isolement RGPD tient par la base,
+et non par le seul code applicatif.
+
+La quatrième est une erreur de ma part, trouvée en vérifiant ce que j'avais
+écrit. Elle est conservée dans le texte plutôt que réécrite en silence — une
+RFC qui efface ses corrections apprend moins qu'une RFC qui les montre.
 
 ### 10.5 Mise en cache des services distants
 
