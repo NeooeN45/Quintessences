@@ -193,7 +193,10 @@ class FertilityClassModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     site_index_model_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("gsie_foret.site_index_model.id"), nullable=False, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.site_index_model.id"),
+        nullable=False,
+        index=True,
     )
     class_label: Mapped[str] = mapped_column(String(100), nullable=False)
     dominant_height_m: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -365,7 +368,10 @@ class SilviculturalRuleModel(Base, TimestampMixin):
         primary_key=True,
     )
     silvicultural_system_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("gsie_foret.silvicultural_system.id"), nullable=True, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.silvicultural_system.id"),
+        nullable=True,
+        index=True,
     )
     species_entity_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
@@ -482,7 +488,10 @@ class HealthRiskModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     diagnostic_protocol_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("gsie_foret.diagnostic_protocol.id"), nullable=True, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.diagnostic_protocol.id"),
+        nullable=True,
+        index=True,
     )
     symptom_observed: Mapped[str] = mapped_column(Text, nullable=False)
     suspected_causal_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)

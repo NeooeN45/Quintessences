@@ -53,9 +53,7 @@ _EXPECTED_TABLES = frozenset(Base.metadata.tables)
 # Schemas où vivent les tables du métamodèle. Dérivé du registre pour rester
 # générique : chaque nouveau schéma de domaine (RFC-0029) est inclus
 # automatiquement, sans qu'il faille modifier cette liste à la main.
-_SCHEMAS_METAMODELE = frozenset(
-    table.schema or "public" for table in Base.metadata.tables.values()
-)
+_SCHEMAS_METAMODELE = frozenset(table.schema or "public" for table in Base.metadata.tables.values())
 # Colonnes apportées par la révision de reprise sur échec de l'outbox.
 _OUTBOX_RETRY_COLUMNS = frozenset(
     {"attempt_count", "next_attempt_at", "last_error_code", "dead_lettered_at"}

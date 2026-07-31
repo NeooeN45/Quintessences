@@ -392,9 +392,7 @@ def test_le_role_applicatif_ne_peut_pas_supprimer_dans_gsie_botanique(
         )
     )
 
-    assert droits == [], (
-        "le rôle applicatif peut supprimer dans gsie_botanique, contre CON-010"
-    )
+    assert droits == [], "le rôle applicatif peut supprimer dans gsie_botanique, contre CON-010"
 
 
 def test_le_role_applicatif_ecrit_dans_gsie_botanique(base_migree: str) -> None:
@@ -436,9 +434,7 @@ def test_le_role_applicatif_ne_peut_pas_supprimer_dans_gsie_foret(
         )
     )
 
-    assert droits == [], (
-        "le rôle applicatif peut supprimer dans gsie_foret, contre CON-010"
-    )
+    assert droits == [], "le rôle applicatif peut supprimer dans gsie_foret, contre CON-010"
 
 
 def test_le_role_applicatif_ecrit_dans_gsie_foret(base_migree: str) -> None:
@@ -476,9 +472,7 @@ def test_le_role_applicatif_ne_peut_pas_supprimer_dans_gsie_gouvernance(
         )
     )
 
-    assert droits == [], (
-        "le rôle applicatif peut supprimer dans gsie_gouvernance, contre CON-010"
-    )
+    assert droits == [], "le rôle applicatif peut supprimer dans gsie_gouvernance, contre CON-010"
 
 
 def test_le_role_applicatif_ecrit_dans_gsie_gouvernance(base_migree: str) -> None:
@@ -524,9 +518,7 @@ def test_les_schemas_de_domaine_vides_existent(base_migree: str, schema: str) ->
 
 
 @pytest.mark.parametrize("schema", _SCHEMAS_VIDES)
-def test_le_role_applicatif_a_usage_sur_les_schemas_vides(
-    base_migree: str, schema: str
-) -> None:
+def test_le_role_applicatif_a_usage_sur_les_schemas_vides(base_migree: str, schema: str) -> None:
     """`gsie_application` a USAGE sur chaque schéma vide — pas de table, mais le droit.
 
     Sans USAGE, l'application ne pourrait pas accéder aux tables futures dès
