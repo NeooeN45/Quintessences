@@ -22,6 +22,16 @@ Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
    CON-) dans les 5 lignes qui la précèdent. Détection best-effort — ne
    prouve pas l'absence de donnée inventée, attrape les cas évidents.
 
+4. Qualite du code livré : les fichiers Python de `GSIE/API` **mis en
+   scène** doivent passer `ruff check` et `ruff format --check`. Le contrôle
+   porte sur les fichiers du commit, jamais sur le dépôt entier : on est
+   bloqué par ses propres erreurs, pas par celles d'un autre.
+
+   Ajoutée après qu'un commit soit passé avec trois `E501` et trois fichiers
+   non formatés. Une porte cassée coûte plus que les lignes qu'elle signale :
+   le prochain intervenant ne distingue plus ses erreurs de celles qui
+   étaient là, et cesse de la regarder.
+
 Usage : python tools/check_governance_consistency.py
 Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
 """
@@ -29,6 +39,7 @@ Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -156,6 +167,76 @@ def find_unsourced_numeric_constants(text: str) -> list[str]:
     return findings
 
 
+# Racine du projet Python : `ruff` doit y etre lance pour que sa configuration
+# (`pyproject.toml`) s'applique.
+API_ROOT = ROOT / "GSIE" / "API"
+_RUFF = API_ROOT / ".venv" / "Scripts" / "ruff.exe"
+
+
+def _fichiers_python_en_scene() -> list[str]:
+    """Fichiers `.py` de `GSIE/API` mis en scène pour ce commit.
+
+    Chemins relatifs à `GSIE/API`, pour que `ruff` les reçoive tels qu'il les
+    attend. Un fichier supprimé est écarté : le linter ne peut rien en dire.
+    """
+    resultat = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+    if resultat.returncode != 0:
+        return []
+    prefixe = "GSIE/API/"
+    return [
+        ligne[len(prefixe) :]
+        for ligne in resultat.stdout.splitlines()
+        if ligne.startswith(prefixe) and ligne.endswith(".py")
+    ]
+
+
+def verifier_qualite_python() -> list[str]:
+    """Lance `ruff check` et `ruff format --check` sur les fichiers en scène.
+
+    Ne bloque pas si `ruff` est absent : un outil manquant n'est pas une
+    incohérence de gouvernance, et empêcher de commiter pour cela punirait
+    quiconque n'a pas encore installé l'environnement. Le cas est signalé.
+    """
+    fichiers = _fichiers_python_en_scene()
+    if not fichiers:
+        return []
+    if not _RUFF.exists():
+        print(
+            f"note : {_RUFF.name} introuvable — contrôle de qualité Python non "
+            "exécuté. Installer l'environnement de GSIE/API pour l'activer."
+        )
+        return []
+
+    violations: list[str] = []
+    for arguments, libelle in (
+        (["check"], "ruff check"),
+        (["format", "--check"], "ruff format"),
+    ):
+        resultat = subprocess.run(
+            [str(_RUFF), *arguments, *fichiers],
+            capture_output=True,
+            text=True,
+            cwd=API_ROOT,
+            check=False,
+        )
+        if resultat.returncode != 0:
+            detail = (resultat.stdout + resultat.stderr).strip()
+            violations.append(
+                f"[qualité du code] {libelle} échoue sur "
+                f"{len(fichiers)} fichier(s) mis en scène :\n"
+                + "\n".join(
+                    f"      {ligne}" for ligne in detail.splitlines()[:12]
+                )
+            )
+    return violations
+
+
 def main() -> int:
     violations: list[str] = []
 
@@ -229,6 +310,8 @@ def main() -> int:
                 f"{_CITATION_LOOKBACK_LINES} lignes précédentes (ADR-009) — vérifier "
                 f"qu'elle est bien sourcée."
             )
+
+    violations.extend(verifier_qualite_python())
 
     if not violations:
         print("OK — aucune incohérence de gouvernance détectée.")
