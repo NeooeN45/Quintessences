@@ -794,6 +794,31 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_soilgrids_client.py",),
     ),
+    Mutation(
+        cle="mesure_hors_definition_admise",
+        fichier="gsie_api/engines/climate/schemas.py",
+        # Bornes definitionnelles, jamais empiriques : une humidite relative de
+        # 250 % n'est pas un record, c'est un pourcentage de saturation
+        # depassant la saturation.
+        ancien="    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)\n    pression_hpa: float | None = Field(default=None, gt=0.0)\n    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)\n    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)\n    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
+        nouveau="    humidite_pct: float | None = None\n    pression_hpa: float | None = None\n    vent_direction_deg: float | None = None\n    vent_vitesse_ms: float | None = None\n    precipitations_1h_mm: float | None = None\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
+        defaut_reproduit=(
+            "une humidite de 250 %, un azimut de 999 degres ou une vitesse de "
+            "vent negative alimentent un diagnostic sans objection"
+        ),
+        tests=("tests/unit/test_climate_bornes_physiques.py",),
+    ),
+    Mutation(
+        cle="zero_absolu_ignore",
+        fichier="gsie_api/engines/climate/schemas.py",
+        ancien="    temperature_c: float | None = Field(default=None, ge=_ZERO_ABSOLU_C)\n    humidite_pct",  # noqa: E501
+        nouveau="    temperature_c: float | None = None\n    humidite_pct",
+        defaut_reproduit=(
+            "une temperature sous le zero absolu traverse le schema — la "
+            "conversion Kelvin appliquee a une valeur hivernale deja en Celsius"
+        ),
+        tests=("tests/unit/test_climate_bornes_physiques.py",),
+    ),
 )
 
 
