@@ -167,6 +167,7 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
     assert set(tables) == {
         f"{_SCHEMA_RGPD}.access_policy",
         f"{_SCHEMA_RGPD}.consent",
+        f"{_SCHEMA_RGPD}.data_subject_consent",
         f"{_SCHEMA_RGPD}.sensitivity_classification",
         f"{_SCHEMA_IDENTITES}.data_subject",
     }
@@ -535,4 +536,125 @@ def test_le_role_applicatif_a_usage_sur_les_schemas_vides(base_migree: str, sche
     assert a_usage == [True], (
         f"gsie_application n'a pas USAGE sur {schema} — les tables futures "
         "y seraient inaccessibles"
+    )
+
+
+# --- Defense en profondeur : PUBLIC n'a aucun droit (20260728_0020) ---
+
+
+_TOUS_LES_SCHEMAS_DE_DOMAINE = (
+    "gsie_botanique",
+    "gsie_foret",
+    "gsie_gouvernance",
+    "gsie_climat",
+    "gsie_pedologie",
+    "gsie_hydro",
+    "gsie_feu",
+)
+
+
+@pytest.mark.parametrize("schema", _TOUS_LES_SCHEMAS_DE_DOMAINE)
+def test_public_n_a_aucun_droit_sur_les_schemas_de_domaine(base_migree: str, schema: str) -> None:
+    """Sans le `REVOKE`, le rôle `PUBLIC` garde ses droits et l'isolement est nul.
+
+    `20260728_0020` a ajoute `REVOKE ALL ON SCHEMA ... FROM PUBLIC` sur les sept
+    schemas de domaine — defense en profondeur manquante depuis 0013-0019.
+    PostgreSQL n'accorde rien a PUBLIC sur les nouveaux schemas par defaut, mais
+    le `REVOKE` explicite rend le refus lisible a l'audit et resistant aux
+    erreurs d'exploitation.
+    """
+    ouverts = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT has_schema_privilege('public', :schema, 'USAGE')",
+            schema=schema,
+        )
+    )
+
+    assert ouverts == [False], f"PUBLIC atteint encore {schema}"
+
+
+# --- Absence de DELETE sur TOUS les schemas de domaine ---
+
+
+@pytest.mark.parametrize("schema", _TOUS_LES_SCHEMAS_DE_DOMAINE)
+def test_le_role_applicatif_ne_peut_pas_supprimer_dans_aucun_schema_de_domaine(
+    base_migree: str, schema: str
+) -> None:
+    """`CON-010` s'applique a chaque schema de domaine, sans exception.
+
+    Les trois schemas avec tables (botanique, foret, gouvernance) ont deja des
+    tests dedies. Ce test parametre couvre les sept schemas, y compris les quatre
+    vides — quand des tables y seront ajoutees, rien ne devra inclure DELETE.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = :schema "
+            "AND privilege_type = 'DELETE'",
+            schema=schema,
+        )
+    )
+
+    assert droits == [], f"le rôle applicatif peut supprimer dans {schema}, contre CON-010"
+
+
+# --- data_subject_consent rejoint gsie_rgpd (20260728_0021) ---
+
+
+def test_data_subject_consent_n_est_plus_dans_public(base_migree: str) -> None:
+    """La table de jonction RGPD a rejoint gsie_rgpd — coherence de l'isolement.
+
+    `data_subject_consent` reliait `data_subject` (gsie_rgpd_identites) et
+    `consent` (gsie_rgpd) depuis `public`. Elle etait accessible par
+    `gsie_application` qui n'a aucun droit sur les schemas RGPD — une
+    incoherence d'isolement. `20260728_0021` l'a deplacee vers `gsie_rgpd`.
+    """
+    restantes = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = 'public' AND tablename = 'data_subject_consent'",
+        )
+    )
+
+    assert (
+        restantes == []
+    ), "data_subject_consent est encore dans public — gsie_application y a acces"
+
+
+def test_data_subject_consent_est_dans_gsie_rgpd(base_migree: str) -> None:
+    """La table de jonction est bien dans gsie_rgpd apres la migration."""
+    presente = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = 'gsie_rgpd' AND tablename = 'data_subject_consent'",
+        )
+    )
+
+    assert presente == ["data_subject_consent"]
+
+
+def test_le_role_applicatif_n_atteint_pas_data_subject_consent(
+    base_migree: str,
+) -> None:
+    """`gsie_application` ne peut pas lire la table de jonction RGPD.
+
+    Avant `20260728_0021`, cette table etait dans `public` et l'application y
+    avait acces. Desormais dans `gsie_rgpd`, elle est sous le meme controle
+    d'acces que `consent` et `sensitivity_classification`.
+    """
+    atteint = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT has_table_privilege('gsie_application', "
+            "'gsie_rgpd.data_subject_consent', 'SELECT')",
+        )
+    )
+
+    assert atteint == [False], (
+        "gsie_application peut lire data_subject_consent — " "la table de jonction n'est pas isolee"
     )
