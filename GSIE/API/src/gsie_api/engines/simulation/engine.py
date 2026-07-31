@@ -30,6 +30,7 @@ Une future version intégrera :
 
 from datetime import UTC, datetime, timedelta
 
+from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.simulation.schemas import (
     ConfidenceLevel,
@@ -136,14 +137,15 @@ class SimulationEngine:
         intervention = scenario.intervention
 
         # Indicateurs initiaux dérivés des paramètres d'intervention
-        # En v1, valeurs par défaut — une future version les récupérera
-        # du diagnostic source et du Forest Dynamics Engine.
-        biomasse_initiale = 100.0  # t/ha — valeur abstraite v1
+        # En v1, valeurs par défaut configurables — une future version les
+        # récupérera du diagnostic source et du Forest Dynamics Engine.
+        settings = get_settings()
+        biomasse_initiale = settings.simulation_biomasse_initiale
         densite_initiale = float(intervention.parametres.get("densite", 1000))
 
         # Taux d'accroissement annuel — modèle linéaire v1
         # Une future version utilisera un modèle de croissance calibré
-        taux_accroissement = 0.02  # 2%/an — valeur abstraite v1
+        taux_accroissement = settings.simulation_taux_accroissement
 
         projections: list[TimedProjection] = []
         for step in _PROJECTION_STEPS:

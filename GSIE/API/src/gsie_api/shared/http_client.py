@@ -49,6 +49,7 @@ Le paramètre ``error_label`` personnalise le message d'erreur :
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import io
 import json
@@ -58,6 +59,16 @@ from typing import Any
 import httpx
 
 _DEFAULT_TIMEOUT = 30.0
+_MAX_RETRIES = 3
+_RETRY_BASE_DELAY = 0.5  # secondes — backoff exponentiel : 0.5s, 1s, 2s
+# Erreurs réseau transitoires qui meritent un retry.
+# Les 4xx (sauf 429) sont des erreurs applicatives — pas de retry.
+_RETRYABLE_EXCEPTIONS = (
+    httpx.ConnectError,
+    httpx.ConnectTimeout,
+    httpx.ReadTimeout,
+    httpx.RemoteProtocolError,
+)
 
 
 class ResilientHttpClient(ABC):
@@ -75,8 +86,9 @@ class ResilientHttpClient(ABC):
     gèrent la requête HTTP + le parsing + la capture d'erreurs.
     """
 
-    def __init__(self, timeout: float = _DEFAULT_TIMEOUT) -> None:
+    def __init__(self, timeout: float = _DEFAULT_TIMEOUT, max_retries: int = _MAX_RETRIES) -> None:
         self._timeout = timeout
+        self._max_retries = max_retries
 
     @property
     @abstractmethod
@@ -107,23 +119,47 @@ class ResilientHttpClient(ABC):
         Lève `self.exception_class` en cas d'erreur réseau, HTTP 4xx/5xx,
         ou quota/auth. Retourne la réponse brute pour parsing par
         l'appelant.
+
+        Retry automatique sur erreurs réseau transitoires
+        (`ConnectError`, `ConnectTimeout`, `ReadTimeout`,
+        `RemoteProtocolError`) avec backoff exponentiel (0.5s, 1s, 2s).
+        Les 4xx (sauf 429) ne sont pas retryés — ce sont des erreurs
+        applicatives, pas des pannes transitoires. 429 (quota) est
+        retryé car le serveur peut lever la limite.
         """
         label = error_label or f"de l'appel API {method} {path}"
         merged_headers = {**self.auth_headers(), **(headers or {})}
         url = path if path.startswith("http") else f"{self.base_url}{path}"
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.request(
-                    method,
-                    url,
-                    params=params,
-                    json=json_body,
-                    headers=merged_headers,
-                )
-                response.raise_for_status()
-                return response
-        except httpx.HTTPError as exc:
-            raise self.exception_class(f"Échec {label} : {exc}") from exc
+        last_exc: Exception | None = None
+        for tentative in range(self._max_retries + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self._timeout) as client:
+                    response = await client.request(
+                        method,
+                        url,
+                        params=params,
+                        json=json_body,
+                        headers=merged_headers,
+                    )
+                    response.raise_for_status()
+                    return response
+            except httpx.HTTPStatusError as exc:
+                # 429 (Too Many Requests) — le serveur peut lever la limite.
+                if exc.response.status_code == 429 and tentative < self._max_retries:
+                    last_exc = exc
+                    await asyncio.sleep(_RETRY_BASE_DELAY * (2**tentative))
+                    continue
+                raise self.exception_class(f"Échec {label} : {exc}") from exc
+            except _RETRYABLE_EXCEPTIONS as exc:
+                last_exc = exc
+                if tentative < self._max_retries:
+                    await asyncio.sleep(_RETRY_BASE_DELAY * (2**tentative))
+                    continue
+                raise self.exception_class(f"Échec {label} : {exc}") from exc
+            except httpx.HTTPError as exc:
+                raise self.exception_class(f"Échec {label} : {exc}") from exc
+        # Normalement inatteignable — la boucle raise ou return toujours.
+        raise self.exception_class(f"Échec {label} : {last_exc}") from last_exc
 
     async def _get_json(
         self,

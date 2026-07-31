@@ -131,8 +131,10 @@ class Settings(BaseSettings):
     jwt_refresh_token_expire_days: int = Field(default=7, ge=1, le=30)
     jwt_private_key_path: str = "keys/private.pem"
     jwt_public_key_path: str = "keys/public.pem"
-    # Dev login — jamais en production ; credentials via variables d'environnement
-    auth_dev_login_enabled: bool = True
+    # Dev login — jamais en production ; credentials via variables d'environnement.
+    # Désactivé par défaut : un déploiement sans GSIE_ENVIRONMENT=production
+    # active le dev login si ce défaut est True — dangereux.
+    auth_dev_login_enabled: bool = False
     auth_dev_username: str = "admin"
     auth_dev_password: str = ""
 
@@ -142,6 +144,13 @@ class Settings(BaseSettings):
     # Moteur Evidence
     require_rust_backend: bool = False
     evidence_experimental_conflicts_enabled: bool = False
+
+    # Moteur Simulation — valeurs par défaut du modèle linéaire v1.
+    # Ces valeurs sont des placeholders documentés : une future version
+    # les récupérera du diagnostic source et du Forest Dynamics Engine.
+    # Configurables pour calibrer sans redéployer le code.
+    simulation_biomasse_initiale: float = Field(default=100.0, ge=0.0)
+    simulation_taux_accroissement: float = Field(default=0.02, ge=0.0, le=1.0)
 
     # Observabilité — OpenTelemetry (DEC-000019)
     otel_enabled: bool = False

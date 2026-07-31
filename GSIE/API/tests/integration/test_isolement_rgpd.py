@@ -168,7 +168,9 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
         f"{_SCHEMA_RGPD}.access_policy",
         f"{_SCHEMA_RGPD}.consent",
         f"{_SCHEMA_RGPD}.data_subject_consent",
+        f"{_SCHEMA_RGPD}.rights_statement",
         f"{_SCHEMA_RGPD}.sensitivity_classification",
+        f"{_SCHEMA_RGPD}.spatial_disclosure_policy",
         f"{_SCHEMA_IDENTITES}.data_subject",
     }
 
@@ -179,7 +181,8 @@ def test_aucune_table_personnelle_ne_subsiste_dans_public(base_migree: str) -> N
         _lire(
             base_migree,
             "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN "
-            "('consent', 'data_subject', 'sensitivity_classification', 'access_policy')",
+            "('consent', 'data_subject', 'sensitivity_classification', 'access_policy', "
+            "'data_subject_consent', 'rights_statement', 'spatial_disclosure_policy')",
         )
     )
 
@@ -658,3 +661,48 @@ def test_le_role_applicatif_n_atteint_pas_data_subject_consent(
     assert atteint == [False], (
         "gsie_application peut lire data_subject_consent — " "la table de jonction n'est pas isolee"
     )
+
+
+# --- rights_statement et spatial_disclosure_policy rejoignent gsie_rgpd (0023) ---
+
+
+@pytest.mark.parametrize("table", ["rights_statement", "spatial_disclosure_policy"])
+def test_les_politiques_d_acces_sont_dans_gsie_rgpd(base_migree: str, table: str) -> None:
+    """Les politiques de droits et de divulgation spatiale sont isolees.
+
+    `rights_statement` (licences, restrictions d'usage) et
+    `spatial_disclosure_policy` (degradation spatiale) sont des politiques
+    de controle d'acces — elles appartiennent au schema RGPD, pas a `public`.
+    """
+    presente = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = 'gsie_rgpd' AND tablename = :table",
+            table=table,
+        )
+    )
+
+    assert presente == [table], f"{table} n'est pas dans gsie_rgpd"
+
+
+@pytest.mark.parametrize("table", ["rights_statement", "spatial_disclosure_policy"])
+def test_le_role_applicatif_n_atteint_pas_les_politiques_d_acces(
+    base_migree: str, table: str
+) -> None:
+    """`gsie_application` ne peut pas lire les politiques d'acces.
+
+    Ces tables etaient dans `public` et accessibles par l'application.
+    `20260728_0023` les a deplacees vers `gsie_rgpd` avec REVOKE explicite.
+    """
+    atteint = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT has_table_privilege('gsie_application', " "'gsie_rgpd.' || :table, 'SELECT')",
+            table=table,
+        )
+    )
+
+    assert atteint == [
+        False
+    ], f"gsie_application peut lire gsie_rgpd.{table} — la politique n'est pas isolee"

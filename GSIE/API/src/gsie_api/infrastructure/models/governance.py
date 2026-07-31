@@ -20,6 +20,9 @@ class RightsStatementModel(Base, TimestampMixin):
     """Déclaration de droits (licence, usage, restrictions)."""
 
     __tablename__ = "rights_statement"
+    # Schema isole (RFC-0029 §4.2) : les declarations de droits sont des
+    # politiques de controle d'acces — elles appartiennent au schema RGPD.
+    __table_args__ = {"schema": "gsie_rgpd"}
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
@@ -91,6 +94,9 @@ class SpatialDisclosurePolicyModel(Base, TimestampMixin):
     """Politique de dégradation spatiale (maille 10km public, exact gestionnaire)."""
 
     __tablename__ = "spatial_disclosure_policy"
+    # Schema isole (RFC-0029 §4.2) : les politiques de divulgation spatiale
+    # sont des politiques de controle d'acces — elles appartiennent au schema RGPD.
+    __table_args__ = {"schema": "gsie_rgpd"}
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),

@@ -9,6 +9,7 @@ from gsie_api.app import create_app
 from gsie_api.auth import router as auth_router
 
 # Configure a dev account for tests (env-var based, not hardcoded in app code)
+auth_router._settings.auth_dev_login_enabled = True
 auth_router._settings.auth_dev_password = "changeme"
 
 client = TestClient(create_app())
