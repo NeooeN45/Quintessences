@@ -832,6 +832,46 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_pedology_bornes_unites.py",),
     ),
+    # --- Isolement RGPD : la protection tient par la base, pas par le code
+    Mutation(
+        cle="mecanisme_de_reversion_avec_les_consentements",
+        fichier="gsie_api/infrastructure/models/fair_rgpd.py",
+        # `data_subject` porte pseudonyme, agent_id et courriel chiffre : c'est
+        # la table qui DEFAIT le pseudonymat. La placer avec les consentements
+        # donnerait l'apparence de la conformite sans sa propriete principale —
+        # un role capable de lire le schema reconstituerait les identites
+        # (RGPD art. 32, lignes directrices EDPB 01/2025).
+        ancien='    __table_args__ = {"schema": "gsie_rgpd_identites"}',
+        nouveau='    __table_args__ = {"schema": "gsie_rgpd"}',
+        defaut_reproduit=(
+            "le gestionnaire des consentements peut lever le pseudonymat : les "
+            "deux pouvoirs se cumulent au lieu de rester distincts"
+        ),
+        # Le controle de derive, et non les tests d'isolement : la mutation
+        # porte sur le MODELE, tandis que les tests d'isolement eprouvent la
+        # base construite par la migration. Attribues aux seconds, ces deux
+        # mutations ont survecu — le harnais l'a etabli.
+        tests=(
+            "tests/integration/test_migration_baseline.py",
+            "tests/integration/test_isolement_rgpd.py",
+        ),
+    ),
+    Mutation(
+        cle="droits_public_conserves_sur_donnees_personnelles",
+        fichier="gsie_api/infrastructure/models/governance.py",
+        # Sans schema declare, la table retombe dans `public` — atteignable par
+        # tout role, comme avant la migration.
+        ancien='    __table_args__ = {"schema": "gsie_rgpd"}\n\n    id: Mapped[UUID]',
+        nouveau="    id: Mapped[UUID]",
+        defaut_reproduit=(
+            "une table de donnees personnelles retombe dans `public`, ou tout "
+            "moteur de domaine la lit"
+        ),
+        tests=(
+            "tests/integration/test_migration_baseline.py",
+            "tests/integration/test_isolement_rgpd.py",
+        ),
+    ),
 )
 
 

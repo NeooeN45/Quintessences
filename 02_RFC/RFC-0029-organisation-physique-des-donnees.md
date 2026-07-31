@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0029 |
-| **Statut** | Proposée — en attente d'arbitrage du Fondateur |
+| **Statut** | Validée — `DEC-000039` (2026-07-30) |
 | **Auteur** | Architecte, sous autorité du Fondateur |
 | **Date** | 2026-07-30 |
 | **Périmètre** | Base GSIE, stockage objet, tous les moteurs |
@@ -115,15 +115,17 @@ traversent ; les droits s'y appliquent ; chaque domaine modélise ce qu'il doit.
 | `gsie_feu` | Historique d'incendies, indices de danger, combustibles | Ignis |
 | `gsie_foret` | Peuplements, itinéraires, règles sylvicoles, dynamique | GeoSylva |
 | `gsie_gouvernance` | Décisions, recommandations, validations, apprentissage | Chaîne de raisonnement |
-| `gsie_rgpd` | `consent`, `data_subject`, `sensitivity_classification`, `access_policy` | **Isolement le plus strict** — voir §4.2 |
+| `gsie_rgpd` | `consent`, `sensitivity_classification`, `access_policy` | Donnees pseudonymisees — **isolement strict**, voir §4.2 |
+| `gsie_rgpd_identites` | `data_subject` | **Mecanisme de reversion du pseudonymat** — acces distinct, jamais accorde a un moteur. Corrige par le contre-audit, voir §9.1 |
 
 Le graphe AGE (`gsie_knowledge_graph`) et `ag_catalog` restent inchangés.
 
 ### 4.2 Des rôles PostgreSQL par moteur
 
 Chaque moteur reçoit un rôle qui possède `USAGE` sur son schéma et sur
-`gsie_noyau`, et rien d'autre. Le schéma `gsie_rgpd` n'est accessible qu'au
-rôle `gsie_rgpd_manager`.
+`gsie_noyau`, et rien d'autre. `gsie_rgpd` n'est accessible qu'au rôle
+`gsie_rgpd_manager`, et `gsie_rgpd_identites` qu'à `gsie_rgpd_identites_manager` —
+deux pouvoirs distincts, jamais cumulés par construction (§9.1).
 
 La protection cesse ainsi de reposer sur le seul RBAC applicatif. Les deux se
 cumulent : le code refuse par métier, la base refuse par droit. Un défaut du

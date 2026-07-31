@@ -83,6 +83,21 @@ async def session():
                 col.onupdate = None
 
     async with engine.begin() as conn:
+        # SQLite ne connait pas les schemas : il lit `gsie_rgpd.table` comme
+        # « table de la base attachee gsie_rgpd ». Depuis `20260728_0011`, les
+        # donnees personnelles vivent hors de `public` ; sans ces attachements,
+        # leur creation echoue par `unknown database gsie_rgpd`.
+        #
+        # Chaque schema recoit sa propre base en memoire. Le cloisonnement
+        # PostgreSQL n'est pas reproduit — SQLite n'a pas de roles — et ces
+        # tests n'ont pas vocation a l'eprouver : c'est
+        # `tests/integration/test_isolement_rgpd.py` qui l'etablit, sur une base
+        # reellement migree.
+        for schema in sorted(
+            {table.schema for table in Base.metadata.tables.values() if table.schema}
+        ):
+            await conn.exec_driver_sql(f"ATTACH DATABASE ':memory:' AS {schema}")
+
         # Exclure les tables avec Geometry (GeoAlchemy2 ajoute des DDL PostGIS)
         from geoalchemy2 import Geometry
 

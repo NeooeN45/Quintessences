@@ -37,9 +37,18 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# Les formes feminines manquaient : l'accord francais impose « une RFC
+# validee », et RFC-0028 comme RFC-0029 emploient cette forme. Le garde-fou
+# les tenait donc pour non adoptees, bloquant toute implementation d'une RFC
+# pourtant validee et tracee par sa DEC.
+#
+# Ce n'est pas un assouplissement : « validee » signifie « valide ». Un statut
+# « proposee » ou « brouillon » reste refuse, et un test le verifie.
 ADOPTED_STATUSES = {
-    "validé", "valide", "validated", "adopté", "adopte", "adopted",
-    "accepté", "accepte", "accepted", "locked", "verrouillé", "verrouille",
+    "validé", "validée", "valide", "validee", "validated",
+    "adopté", "adoptée", "adopte", "adoptee", "adopted",
+    "accepté", "acceptée", "accepte", "acceptee", "accepted",
+    "locked", "verrouillé", "verrouillée", "verrouille", "verrouillee",
 }
 
 ID_PATTERN = re.compile(r"\b(RFC-\d{4}|DEC-\d{6}|ADR-\d{3,4})\b")

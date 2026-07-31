@@ -39,6 +39,10 @@ class AccessPolicyModel(Base, TimestampMixin):
     """Politique d'accès (qui peut lire, écrire, exporter)."""
 
     __tablename__ = "access_policy"
+    # Schema isole (RFC-0029 §4.2). Le registre doit declarer le meme
+    # schema que la base, sinon le controle de derive strict voit la table
+    # comme disparue de `public` et echoue pour une mauvaise raison.
+    __table_args__ = {"schema": "gsie_rgpd"}
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
@@ -60,6 +64,10 @@ class SensitivityClassificationModel(Base, TimestampMixin):
     """Classification de sensibilité d'une donnée (ex. espèce protégée)."""
 
     __tablename__ = "sensitivity_classification"
+    # Schema isole (RFC-0029 §4.2). Le registre doit declarer le meme
+    # schema que la base, sinon le controle de derive strict voit la table
+    # comme disparue de `public` et echoue pour une mauvaise raison.
+    __table_args__ = {"schema": "gsie_rgpd"}
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),

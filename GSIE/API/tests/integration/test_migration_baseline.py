@@ -25,7 +25,7 @@ _REVISION = "20260726_0001"
 # Tête courante de la lignée : la baseline reste la base, les révisions
 # suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
 # additives 20260727_0003 à 0005).
-_HEAD = "20260728_0010"
+_HEAD = "20260728_0011"
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,
@@ -142,14 +142,29 @@ async def _valeurs(url: str, requete: str, **params: Any) -> list[Any]:
 
 
 def _public_tables(url: str) -> frozenset[str]:
-    return frozenset(
-        asyncio.run(
-            _valeurs(
-                url,
-                "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
-            )
+    """Tables applicatives, qualifiees par leur schema quand il n'est pas `public`.
+
+    Les donnees personnelles vivent hors de `public` depuis `20260728_0011`.
+    Ne lire que `public` ferait paraitre les quatre tables RGPD disparues.
+
+    La qualification suit la convention de `Base.metadata.tables` : une table de
+    `public` est nommee nue, une table d'un autre schema est prefixee. Le
+    controle verifie donc que chaque table est **la ou le registre la
+    declare** — invariant plus fort que « tout dans public », et le seul qui
+    detecte qu'une table sensible aurait ete rapatriee par megarde.
+    """
+    lignes = asyncio.run(
+        _valeurs(
+            url,
+            """
+            SELECT CASE WHEN schemaname = 'public' THEN tablename
+                        ELSE schemaname || '.' || tablename END
+            FROM pg_tables
+            WHERE schemaname IN ('public', 'gsie_rgpd', 'gsie_rgpd_identites')
+            """,
         )
     )
+    return frozenset(lignes)
 
 
 def _enum_names(url: str) -> frozenset[str]:
@@ -315,7 +330,17 @@ async def _comparer_registre_et_base(url: str) -> list[Any]:
         async with engine.connect() as conn:
             return await conn.run_sync(
                 lambda sync_conn: compare_metadata(
-                    MigrationContext.configure(sync_conn), Base.metadata
+                    MigrationContext.configure(
+                        sync_conn,
+                        # `include_schemas` est indispensable depuis que les
+                        # donnees personnelles vivent hors de `public`
+                        # (`20260728_0011`). Sans lui, la reflexion se limite au
+                        # `search_path` et les quatre tables RGPD paraissent
+                        # disparues : le controle echouerait en signalant une
+                        # derive qui n'existe pas, et masquerait les vraies.
+                        opts={"include_schemas": True},
+                    ),
+                    Base.metadata,
                 )
             )
     finally:

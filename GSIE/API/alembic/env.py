@@ -82,7 +82,9 @@ def compare_server_default(
     inspected_norm = _normalize_default(inspected_default)
     # metadata_default peut être un objet func.now() ; rendered_metadata_default
     # est sa version rendue en SQL (ex. "now()") — plus fiable pour comparer.
-    metadata_value = rendered_metadata_default if rendered_metadata_default is not None else metadata_default
+    metadata_value = (
+        rendered_metadata_default if rendered_metadata_default is not None else metadata_default
+    )
     metadata_norm = _normalize_default(metadata_value)
     if inspected_norm == metadata_norm:
         return False
@@ -97,6 +99,9 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         include_object=include_object,
+        # Les donnees personnelles vivent hors de `public` depuis
+        # `20260728_0011` : sans ceci, l'autogeneration ne les voit pas.
+        include_schemas=True,
         compare_type=True,
         compare_server_default=compare_server_default,
         dialect_opts={"paramstyle": "named"},
@@ -110,6 +115,9 @@ def do_run_migrations(connection: Connection) -> None:
         connection=connection,
         target_metadata=target_metadata,
         include_object=include_object,
+        # Les donnees personnelles vivent hors de `public` depuis
+        # `20260728_0011` : sans ceci, l'autogeneration ne les voit pas.
+        include_schemas=True,
         compare_type=True,
         compare_server_default=compare_server_default,
     )

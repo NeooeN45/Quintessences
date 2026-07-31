@@ -77,6 +77,15 @@ async def db_session(postgres_url: str) -> AsyncGenerator[AsyncSession, None]:
         await conn.execute(text("DROP EXTENSION IF EXISTS postgis_topology CASCADE"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
 
+    # `create_all` ne cree pas les schemas : depuis `20260728_0011`, les donnees
+    # personnelles vivent hors de `public` et leurs tables echoueraient a se
+    # creer. On declare donc les schemas que le registre reference.
+    async with engine.begin() as conn:
+        for schema in sorted(
+            {table.schema for table in Base.metadata.tables.values() if table.schema}
+        ):
+            await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
