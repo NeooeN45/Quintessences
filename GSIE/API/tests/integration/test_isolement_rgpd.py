@@ -52,11 +52,11 @@ async def _executer(url: str, *instructions: str) -> None:
         await moteur.dispose()
 
 
-async def _lire(url: str, requete: str) -> list[Any]:
+async def _lire(url: str, requete: str, **params: Any) -> list[Any]:
     moteur = create_async_engine(url)
     try:
         async with moteur.connect() as conn:
-            return list((await conn.execute(text(requete))).scalars().all())
+            return list((await conn.execute(text(requete), params)).scalars().all())
     finally:
         await moteur.dispose()
 
@@ -495,3 +495,52 @@ def test_le_role_applicatif_ecrit_dans_gsie_gouvernance(base_migree: str) -> Non
     )
 
     assert set(droits) == {"INSERT", "SELECT", "UPDATE"}
+
+
+# --- Les schemas de domaine vides : reserves et accessibles (RFC-0029) ---
+
+
+_SCHEMAS_VIDES = ("gsie_climat", "gsie_pedologie", "gsie_hydro", "gsie_feu")
+
+
+@pytest.mark.parametrize("schema", _SCHEMAS_VIDES)
+def test_les_schemas_de_domaine_vides_existent(base_migree: str, schema: str) -> None:
+    """Les quatre schémas sans table sont créés — réservés pour les tables futures.
+
+    RFC-0029 §4.1 prévoit sept schémas de domaine. Quatre n'ont pas encore de
+    table dédiée dans le métamodèle v6.2 (climat, pédologie, hydro, feu) :
+    les données correspondantes vivent dans les tables transverses. Le schéma
+    est créé vide, prêt à recevoir les tables futures.
+    """
+    existe = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT 1 FROM pg_namespace WHERE nspname = :schema",
+            schema=schema,
+        )
+    )
+
+    assert existe == [1], f"le schéma {schema} n'existe pas"
+
+
+@pytest.mark.parametrize("schema", _SCHEMAS_VIDES)
+def test_le_role_applicatif_a_usage_sur_les_schemas_vides(
+    base_migree: str, schema: str
+) -> None:
+    """`gsie_application` a USAGE sur chaque schéma vide — pas de table, mais le droit.
+
+    Sans USAGE, l'application ne pourrait pas accéder aux tables futures dès
+    leur création. Le droit est accordé par défaut (ALTER DEFAULT PRIVILEGES).
+    """
+    a_usage = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT has_schema_privilege('gsie_application', :schema, 'USAGE')",
+            schema=schema,
+        )
+    )
+
+    assert a_usage == [True], (
+        f"gsie_application n'a pas USAGE sur {schema} — les tables futures "
+        "y seraient inaccessibles"
+    )
