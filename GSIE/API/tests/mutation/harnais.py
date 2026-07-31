@@ -819,6 +819,19 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_climate_bornes_physiques.py",),
     ),
+    Mutation(
+        cle="valeur_pedologique_hors_unite_admise",
+        fichier="gsie_api/engines/pedology/schemas.py",
+        # Seconde ligne de defense, independante du client. Elle attrape le
+        # defaut `d_factor` quel que soit le producteur de la valeur.
+        ancien="        if not minimum <= self.valeur <= maximum:",
+        nouveau="        if False:",
+        defaut_reproduit=(
+            "un pH de 52 ou une teneur en argile de 500 % alimentent un "
+            "diagnostic pedologique sans objection"
+        ),
+        tests=("tests/unit/test_pedology_bornes_unites.py",),
+    ),
 )
 
 
