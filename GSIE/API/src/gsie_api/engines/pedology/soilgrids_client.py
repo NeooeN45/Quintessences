@@ -39,6 +39,49 @@ class SoilGridsClientError(Exception):
     """Erreur lors d'un appel à l'API SoilGrids (réseau, réponse inattendue)."""
 
 
+def _facteur_de_division(layer: dict[str, Any]) -> float:
+    """Facteur d'échelle déclaré par la couche, refusé s'il est absent.
+
+    SoilGrids renvoie des entiers mis à l'échelle : le pH arrive multiplié par
+    dix, les teneurs en g/kg pour un résultat attendu en pourcentage. `d_factor`
+    est le diviseur qui rétablit la valeur réelle — la docstring du module le
+    vérifie empiriquement (clay 283 + sand 233 + silt 483, divisés par dix, font
+    bien 100 %).
+
+    Le code retombait sur `1` quand `unit_measure` manquait. Vérifié : une
+    couche `phh2o` de moyenne 52 sans `unit_measure` ressortait à **pH 52**,
+    hors de l'échelle physique 0–14. La règle `pedologie_pH < 5.5` évaluait
+    alors `52 < 5.5` — Faux — et un sol acide se diagnostiquait basique, sans
+    qu'aucune erreur ne soit levée.
+
+    Un facteur absent ne vaut pas un : il signifie que **l'échelle est
+    inconnue**. Supposer l'identité, c'est inventer une conversion, ce que
+    `ADR-009` interdit — et l'inventer sur une grandeur qui fonde un diagnostic
+    pédologique.
+
+    `d_factor` valant explicitement `1` reste légitime : certaines propriétés
+    sont déjà dans l'unité cible. C'est l'omission qui est refusée, pas la
+    valeur.
+
+    Raises:
+        SoilGridsClientError: si `unit_measure.d_factor` est absent ou nul.
+    """
+    unit_measure = layer.get("unit_measure")
+    facteur = unit_measure.get("d_factor") if isinstance(unit_measure, dict) else None
+    if facteur is None:
+        raise SoilGridsClientError(
+            f"couche SoilGrids « {layer.get('name', '?')} » sans "
+            "`unit_measure.d_factor` : l'échelle de la valeur est inconnue et "
+            "ne peut pas être supposée"
+        )
+    if facteur == 0:
+        raise SoilGridsClientError(
+            f"couche SoilGrids « {layer.get('name', '?')} » avec un `d_factor` "
+            "nul : division impossible"
+        )
+    return float(facteur)
+
+
 class SoilGridsClient(ResilientHttpClient):
     """Client HTTP pour l'API SoilGrids — aucune authentification requise."""
 
@@ -89,8 +132,7 @@ class SoilGridsClient(ResilientHttpClient):
             raw_mean = depths[0].get("values", {}).get("mean")
             if raw_mean is None:
                 continue
-            d_factor = layer.get("unit_measure", {}).get("d_factor", 1)
-            results[layer["name"]] = raw_mean / d_factor
+            results[layer["name"]] = raw_mean / _facteur_de_division(layer)
 
         return results
 

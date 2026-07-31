@@ -779,6 +779,21 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_orchestration.py",),
     ),
+    Mutation(
+        cle="echelle_pedologique_supposee",
+        fichier="gsie_api/engines/pedology/soilgrids_client.py",
+        # Retour au repli sur l'identite. SoilGrids renvoie le pH multiplie par
+        # dix ; supposer un facteur de 1 sort un pH de 52, hors de l'echelle
+        # physique 0-14. La regle `pedologie_pH < 5.5` evalue alors 52 < 5.5 —
+        # Faux — et un sol acide se diagnostique basique, sans erreur levee.
+        ancien="    if facteur is None:",
+        nouveau="    if False:",
+        defaut_reproduit=(
+            "une valeur pedologique sort mise a l'echelle brute, d'un facteur "
+            "dix, et inverse silencieusement le diagnostic qui en depend"
+        ),
+        tests=("tests/unit/test_soilgrids_client.py",),
+    ),
 )
 
 
