@@ -25,6 +25,7 @@ from gsie_api.core.rbac import (
 )
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.resources.schemas import (
+    BulkIngestRequest,
     ResourceCreate,
     ResourceListResponse,
     ResourceRead,
@@ -34,6 +35,7 @@ from gsie_api.resources.schemas import (
 )
 from gsie_api.resources.service import ResourceService
 from gsie_api.resources.validators import ResourceValidationError
+from gsie_api.shared.schemas import BulkIngestResult
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
@@ -59,7 +61,10 @@ def _erreur_validation(exc: ResourceValidationError) -> HTTPException:
 
 # Réutiliser le limiter global (storage_uri Redis configuré)
 # — ne pas instancier un Limiter local (serait memory://, non distribué)
+from gsie_api.core.config import get_settings as _get_settings  # noqa: E402
 from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
+
+_settings = _get_settings()
 
 # Type aliases pour lisibilité
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -176,6 +181,51 @@ async def create_resource(
         raise _erreur_validation(exc) from exc
     except ValueError as exc:
         # Type inconnu du registre — la requête ne désigne aucune ressource.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post(
+    "/bulk",
+    response_model=BulkIngestResult,
+    status_code=status.HTTP_201_CREATED,
+    summary="Créer un lot de resources (ingestion massive)",
+    description=(
+        "Crée jusqu'à 1000 resources en une seule transaction. "
+        "Chaque item est validé indépendamment — un item invalide n'interrompt "
+        "pas le lot. Le rapport détaillé permet de corriger et rejouer les "
+        "items en échec. Rate limit différencié : 600 req/min (vs 30 pour "
+        "le unitaire) — conçu pour l'ingestion de datasets externes "
+        "(Treekipedia, BD Forêt IGN, etc.)."
+    ),
+)
+@_limiter.limit(_settings.rate_limit_bulk)
+async def create_resources_bulk(
+    body: BulkIngestRequest,
+    request: Request,
+    response: Response,
+    user: CurrentUser,
+    session: DbSession,
+) -> BulkIngestResult:
+    """Crée un lot de resources en une transaction.
+
+    RBAC : chaque item est vérifié individuellement. Un item dont le
+    type n'est pas autorisé pour l'utilisateur est marqué en erreur
+    dans le rapport, sans interrompre le lot.
+    """
+    # Vérifier les permissions pour chaque type présent dans le lot.
+    # On ne lève pas immédiatement : on marque les items non autorisés
+    # dans le rapport. Mais on lève si l'utilisateur n'a aucune permission
+    # write (protection contre le scan de types).
+    types_present = {item.type for item in body.items}
+    for type_name in types_present:
+        check_permission(user, type_name, "write")
+
+    from gsie_api.ingestion.bulk import BulkIngestService
+
+    service = BulkIngestService(session)
+    try:
+        return await service.ingest(body, author_id=_extract_author_id(user))
+    except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 

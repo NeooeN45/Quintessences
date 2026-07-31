@@ -18,6 +18,7 @@ ingérées automatiquement.
 from uuid import UUID
 
 from gsie_api.core.logging import get_logger
+from gsie_api.engines.evidence.anti_invention import appliquer_garde_anti_invention
 from gsie_api.engines.evidence.schemas import (
     KnowledgeStatus,
     QualifiedKnowledge,
@@ -109,6 +110,9 @@ class EvidenceKnowledgePipeline:
         """
         # Étape 1 : qualification par l'Evidence Engine
         qualified = evaluate(submission)
+        # Garde anti-invention RFC-0014 : les données AI-sourced sont forcées
+        # en evidence_level D + quarantine, indépendamment de la matrice.
+        qualified = appliquer_garde_anti_invention(submission, qualified)
         logger.info(
             "pipeline_evidence_qualified",
             soumission_id=str(submission.soumission_id),

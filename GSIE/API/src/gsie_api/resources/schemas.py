@@ -89,3 +89,16 @@ class ResourceTypesResponse(BaseModel):
 
     types: list[str]
     count: int
+
+
+class BulkIngestRequest(BaseModel):
+    """Lot de resources à créer en une transaction.
+
+    Limite : 1000 items par lot (BulkIngestService.MAX_BATCH_SIZE).
+    Au-delà, le client doit paginer. Chaque item est un ResourceCreate
+    validé indépendamment — un item invalide n'interrompt pas le lot.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ResourceCreate] = Field(min_length=1, max_length=1000)

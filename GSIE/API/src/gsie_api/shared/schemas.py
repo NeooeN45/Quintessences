@@ -153,3 +153,39 @@ class DecisionPassport(BaseModel):
     subject_id: UUID = Field(description="Peuplement, parcelle ou entité diagnostiquée")
     items: list[DecisionPassportItem] = Field(min_length=1, max_length=200)
     generated_at: datetime
+
+
+# --- Schémas d'ingestion en lot (bulk) ---
+
+
+class BulkItemResult(BaseModel):
+    """Résultat d'ingestion d'un item du lot.
+
+    Soit `success=True` avec `resource_id` + `gsie_id`,
+    soit `success=False` avec `error_code` + `error_detail`.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    index: int = Field(ge=0, description="Position de l'item dans le lot d'origine")
+    success: bool
+    resource_id: UUID | None = None
+    gsie_id: str | None = None
+    error_code: str | None = Field(default=None, max_length=50)
+    error_detail: str | dict[str, object] | None = None
+
+
+class BulkIngestResult(BaseModel):
+    """Rapport d'ingestion en lot — un résumé + le détail par item.
+
+    Le résumé (`total`, `success`, `errors`) permet au client de
+    décider rapidement si le lot a réussi. Le détail (`items`) permet
+    de corriger et rejouer les items en échec.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    total: int = Field(ge=0)
+    success: int = Field(ge=0)
+    errors: int = Field(ge=0)
+    items: list[BulkItemResult]

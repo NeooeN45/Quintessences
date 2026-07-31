@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     rate_limit_health: str = "300/minute"
     # Endpoints POST plus stricts (protection flood)
     rate_limit_evaluate: str = "30/minute"
+    # Ingestion en lot — 600 req/min (vs 30 pour le unitaire).
+    # Conçu pour l'ingestion de datasets externes (Treekipedia, BD Forêt IGN).
+    # 600 req/min × 1000 items/lot = 600 000 items/min — suffisant pour
+    # 67 928 espèces Treekipedia en ~7 minutes (vs ~200 jours en unitaire).
+    rate_limit_bulk: str = "600/minute"
 
     # PostgreSQL + PostGIS
     # Format : postgresql+asyncpg://user:pass@host:5432/dbname

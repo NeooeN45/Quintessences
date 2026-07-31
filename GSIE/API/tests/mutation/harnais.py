@@ -952,6 +952,37 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_migration_baseline.py",),
     ),
+    Mutation(
+        cle="garde_anti_invention_desactivee",
+        fichier="gsie_api/engines/evidence/anti_invention.py",
+        # La garde RFC-0014 force les donnees AI-sourced en evidence_level D +
+        # quarantine. La desactiver laisse une extraction LLM (Claude, GPT,
+        # Treekipedia) etre ingeree au niveau B — contournant CON-002 (la
+        # science avant tout) et CON-001 (l'IA assiste, ne decide jamais).
+        ancien="    if not est_ai_sourced(submission):\n        return qualified",
+        nouveau="    if True:\n        return qualified",
+        defaut_reproduit=(
+            "une soumission AI-sourced (auteur='Claude') qualifiee a B par la "
+            "matrice est ingeree au niveau B sans quarantine — "
+            "contournement de RFC-0014 et CON-002"
+        ),
+        tests=("tests/unit/test_anti_invention.py",),
+    ),
+    Mutation(
+        cle="rate_limit_bulk_non_differecie",
+        fichier="gsie_api/resources/router.py",
+        # L'endpoint bulk doit avoir un rate limit plus permissif (600/min)
+        # que le unitaire (30/min). Sans cela, l'ingestion de Treekipedia
+        # (67 928 especes) prendrait ~200 jours au lieu de ~7 minutes.
+        # La mutation remplace la config par le meme rate limit que le unitaire.
+        ancien="@_limiter.limit(_settings.rate_limit_bulk)",
+        nouveau='@_limiter.limit("30/minute")',
+        defaut_reproduit=(
+            "l'endpoint bulk herite du rate limit unitaire (30/min) — "
+            "l'ingestion de Treekipedia prend ~200 jours au lieu de ~7 min"
+        ),
+        tests=("tests/unit/test_rate_limit_bulk.py",),
+    ),
 )
 
 
