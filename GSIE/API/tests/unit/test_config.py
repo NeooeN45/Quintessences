@@ -18,7 +18,11 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
     return {
         "environment": "production",
         "debug": False,
-        "database_url": "postgresql+asyncpg://gsie:secure@host:5432/gsie",
+        # Role applicatif dedie : `gsie` est proprietaire de la base, et un
+        # proprietaire contourne l'isolement des donnees personnelles
+        # (20260728_0012). Une configuration de production valide ne
+        # l'emploie pas.
+        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
         "redis_url": "redis://:secret@redis-host:6379/0",
@@ -41,7 +45,7 @@ def should_reject_default_db_password_in_production():
     with pytest.raises(ValidationError, match="Default database password"):
         Settings(
             **_production_kwargs(
-                database_url="postgresql+asyncpg://gsie:gsie_dev@host:5432/gsie",
+                database_url="postgresql+asyncpg://gsie_app:gsie_dev@host:5432/gsie",
             )
         )
 

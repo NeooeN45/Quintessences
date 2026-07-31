@@ -9,6 +9,18 @@ from urllib.parse import urlparse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Roles proprietaires de la base : PostgreSQL leur accorde des droits
+# implicites que `REVOKE` n'ote pas. Une application connectee sous l'un
+# d'eux contourne l'isolement des donnees personnelles sans qu'aucune erreur
+# ne le signale — verifie par
+# `tests/integration/test_isolement_rgpd.py::test_le_proprietaire_de_la_base_contourne_l_isolement`.
+#
+# Le controle porte sur le nom parce que la configuration est validee avant
+# toute connexion : demander a la base « suis-je proprietaire ? » supposerait
+# de s'y connecter d'abord. C'est une convention, assumee comme telle, et du
+# meme ordre que le refus du mot de passe par defaut juste au-dessus.
+_ROLES_PROPRIETAIRES = frozenset({"gsie", "postgres"})
+
 
 class Settings(BaseSettings):
     """Configuration globale de l'API GSIE.
@@ -153,6 +165,16 @@ class Settings(BaseSettings):
                 raise ValueError("debug must be False in production")
             if "gsie_dev" in self.database_url:
                 raise ValueError("Default database password not allowed in production")
+            utilisateur = urlparse(self.database_url).username or ""
+            if utilisateur in _ROLES_PROPRIETAIRES:
+                raise ValueError(
+                    f"Le role de connexion « {utilisateur} » est proprietaire de la base. "
+                    "Un proprietaire PostgreSQL conserve des droits implicites que "
+                    "`REVOKE` n'ote pas : l'isolement de `gsie_rgpd_identites` "
+                    "(20260728_0011) ne s'applique pas a lui, et l'application lirait "
+                    "le mecanisme de reversion du pseudonymat. Connectez-vous avec un "
+                    "role membre de `gsie_application`, cree par la migration."
+                )
             if "*" in self.cors_origins:
                 raise ValueError("Wildcard CORS origin not allowed in production")
             if any("localhost" in o for o in self.cors_origins):

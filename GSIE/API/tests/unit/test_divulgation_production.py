@@ -33,7 +33,11 @@ def _kwargs_production(**overrides: object) -> dict[str, object]:
     return {
         "environment": "production",
         "debug": False,
-        "database_url": "postgresql+asyncpg://gsie:secure@host:5432/gsie",
+        # Role applicatif dedie, non proprietaire : `gsie` est le
+        # proprietaire, et un proprietaire PostgreSQL contourne l'isolement
+        # des donnees personnelles (20260728_0012). Une configuration de
+        # production **valide** ne l'emploie donc pas.
+        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
         "redis_url": "redis://:secret@redis-host:6379/0",

@@ -872,6 +872,36 @@ MUTATIONS: tuple[Mutation, ...] = (
             "tests/integration/test_isolement_rgpd.py",
         ),
     ),
+    Mutation(
+        cle="application_connectee_en_proprietaire",
+        fichier="gsie_api/core/config.py",
+        # Un proprietaire PostgreSQL conserve des droits implicites que `REVOKE`
+        # n'ote pas : l'isolement des donnees personnelles ne s'applique pas a
+        # lui. Sans cette garde, il est **disponible sans etre en vigueur** —
+        # ce qui etait le cas avant `20260728_0012`, et n'avait ete vu par
+        # aucun des douze tests d'isolement.
+        ancien="            if utilisateur in _ROLES_PROPRIETAIRES:",
+        nouveau="            if False:",
+        defaut_reproduit=(
+            "l'application demarre en production sous le proprietaire de la "
+            "base et lit le mecanisme de reversion du pseudonymat"
+        ),
+        tests=("tests/integration/test_auth_dev_production_blocker.py",),
+    ),
+    Mutation(
+        cle="suppression_physique_redevenue_possible",
+        fichier="alembic/versions/20260728_0012_role_applicatif.py",
+        # `CON-010` interdit la suppression physique. Retirer `DELETE` des
+        # droits rend l'interdit structurel : une suppression ecrite par erreur
+        # echoue au lieu de detruire. L'accorder le ramene a une convention.
+        ancien='        f"GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA {_SCHEMA_NOYAU} "',
+        nouveau='        f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {_SCHEMA_NOYAU} "',  # noqa: E501
+        defaut_reproduit=(
+            "le role applicatif peut supprimer physiquement : `CON-010` "
+            "redevient une convention que seul le code tient"
+        ),
+        tests=("tests/integration/test_isolement_rgpd.py",),
+    ),
 )
 
 

@@ -23,7 +23,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
     return {
         "environment": "production",
         "debug": False,
-        "database_url": "postgresql+asyncpg://gsie:secure@host:5432/gsie",
+        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://app.gsie.fr"],
         "ws_allowed_origins": ["https://app.gsie.fr"],
         "redis_url": "redis://:secret@redis-host:6379/0",
