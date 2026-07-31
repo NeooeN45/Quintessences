@@ -75,6 +75,8 @@ class ManagementPlanModel(Base, TimestampMixin):
     objectives: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    __table_args__ = {"schema": "gsie_foret"}
+
 
 @register_type("intervention")
 class InterventionModel(Base, TimestampMixin):
@@ -115,6 +117,8 @@ class InterventionModel(Base, TimestampMixin):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    __table_args__ = {"schema": "gsie_foret"}
+
 
 @register_type("economic_scenario")
 class EconomicScenarioModel(Base, TimestampMixin):
@@ -146,6 +150,8 @@ class EconomicScenarioModel(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_reference: Mapped[str | None] = mapped_column(String(500), nullable=True)
     details: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+
+    __table_args__ = {"schema": "gsie_foret"}
 
 
 @register_type("regulation")

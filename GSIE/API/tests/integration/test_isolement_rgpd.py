@@ -415,3 +415,43 @@ def test_le_role_applicatif_ecrit_dans_gsie_botanique(base_migree: str) -> None:
     )
 
     assert set(droits) == {"INSERT", "SELECT", "UPDATE"}
+
+
+def test_le_role_applicatif_ne_peut_pas_supprimer_dans_gsie_foret(
+    base_migree: str,
+) -> None:
+    """`CON-010` s'applique à gsie_foret — le domaine le plus volumineux.
+
+    Sans ce contrôle, accorder `DELETE` sur le schéma forestier passerait
+    inaperçu : le test sur `public.resource` ne regarde pas les schémas de
+    domaine.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = 'gsie_foret' "
+            "AND privilege_type = 'DELETE'",
+        )
+    )
+
+    assert droits == [], (
+        "le rôle applicatif peut supprimer dans gsie_foret, contre CON-010"
+    )
+
+
+def test_le_role_applicatif_ecrit_dans_gsie_foret(base_migree: str) -> None:
+    """Le moindre privilège n'empêche pas le travail ordinaire en forêt."""
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = 'gsie_foret' "
+            "AND table_name = 'management_plan' "
+            "ORDER BY privilege_type",
+        )
+    )
+
+    assert set(droits) == {"INSERT", "SELECT", "UPDATE"}
