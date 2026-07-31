@@ -273,3 +273,98 @@ def test_public_n_a_aucun_droit_sur_les_schemas_personnels(base_migree: str) -> 
     )
 
     assert ouverts == [], f"PUBLIC atteint encore {ouverts}"
+
+
+# --- La limite de cet isolement, et pourquoi elle compte ---
+
+
+def test_le_proprietaire_de_la_base_contourne_l_isolement(base_migree: str) -> None:
+    """Un propriétaire PostgreSQL n'est pas soumis aux `GRANT` — vérifié.
+
+    C'est la limite de tout ce qui précède, et elle doit être écrite là où on la
+    lira. Les huit tests ci-dessus prouvent que la migration installe des droits
+    corrects. Ils ne prouvent **pas** que l'application y est soumise.
+
+    PostgreSQL accorde au propriétaire d'une table des droits implicites que
+    `REVOKE` n'ôte pas. L'application se connecte aujourd'hui avec le rôle
+    `gsie`, propriétaire de la base : elle lit donc `gsie_rgpd_identites` sans
+    obstacle, et l'isolement est **disponible sans être en vigueur**.
+
+    C'est la classe de défaut traquée dans ce dépôt depuis deux jours — une
+    capacité conçue et non branchée — et cette migration en aurait créé une de
+    plus si personne ne l'avait relevé.
+
+    Ce test échouera le jour où le propriétaire cessera d'avoir accès, et ce
+    sera une bonne nouvelle : il faudra alors le réécrire pour constater
+    l'inverse.
+    """
+    lisible = asyncio.run(
+        _lire(base_migree, f"SELECT count(*) FROM {_SCHEMA_IDENTITES}.data_subject")
+    )
+
+    assert lisible == [0], (
+        "le propriétaire ne lit plus le mécanisme de réversion — l'isolement "
+        "s'applique désormais à lui, et ce test doit être réécrit"
+    )
+
+
+# --- Le role applicatif : l'isolement mis en vigueur ---
+
+
+def test_le_role_applicatif_n_atteint_aucune_donnee_personnelle(base_migree: str) -> None:
+    """`gsie_application` lit le noyau et rien des données personnelles.
+
+    C'est ce qui fait passer l'isolement de disponible à **en vigueur**. Les
+    droits corrects sur les schémas ne servent à rien si l'application se
+    connecte en propriétaire — ce qu'elle faisait, et que le test précédent
+    établit.
+    """
+    atteints = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT nspname FROM pg_namespace "
+            "WHERE nspname LIKE 'gsie_rgpd%' "
+            "AND has_schema_privilege('gsie_application', nspname, 'USAGE')",
+        )
+    )
+
+    assert atteints == [], (
+        f"le rôle applicatif atteint {atteints} — un moteur n'a pas besoin des "
+        "données personnelles pour raisonner"
+    )
+
+
+def test_le_role_applicatif_travaille_sur_le_noyau(base_migree: str) -> None:
+    """Le moindre privilège n'empêche pas le travail ordinaire.
+
+    Sans ce contrôle, ne rien accorder ferait passer le test précédent et
+    rendrait l'application inopérante.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' AND table_name = 'resource' "
+            "ORDER BY privilege_type",
+        )
+    )
+
+    assert set(droits) == {"INSERT", "SELECT", "UPDATE"}
+
+
+def test_le_role_applicatif_ne_peut_pas_supprimer(base_migree: str) -> None:
+    """`CON-010` interdit la suppression physique — l'interdit devient structurel.
+
+    Le retirer des droits rend la règle vérifiée par PostgreSQL plutôt que par
+    la seule discipline du code : une suppression écrite par erreur échoue au
+    lieu de détruire.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' AND privilege_type = 'DELETE'",
+        )
+    )
+
+    assert droits == [], "le rôle applicatif peut supprimer, contre CON-010"
