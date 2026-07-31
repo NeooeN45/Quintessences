@@ -4,6 +4,7 @@ from datetime import date
 from typing import Any
 from uuid import UUID
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Date, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -24,6 +25,11 @@ class EntityModel(Base, TimestampMixin):
         primary_key=True,
     )
     entity_subtype: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    # Embedding sémantique (1536 dim — text-embedding-3-small).
+    # Ajouté par la migration 20260731_0024 (pgvector). Nullable : seules les
+    # entités avec un embedding calculé le portent. Utilisé pour la recherche
+    # par similarité cosinus (Treekipedia, désambiguïsation d'espèces).
+    embedding: Mapped[Any] = mapped_column(Vector(1536), nullable=True)
 
 
 @register_type("entity_alias")

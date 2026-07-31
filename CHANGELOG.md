@@ -4,6 +4,53 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DEC-000041 — INGESTION BULK + PGVECTOR + GARDE ANTI-INVENTION] - 2026-07-31
+
+Préparation de l'API à recevoir des données externes massives (Treekipedia,
+BD Forêt IGN, etc.) — débit 20x supérieur au mode unitaire.
+
+### Ajouts
+
+- **Pipeline bulk (P3)** : endpoint `POST /api/v1/resources/bulk` acceptant
+  jusqu'à 1000 resources par lot en une transaction. Échec partiel (validation
+  par item), rapport détaillé. Schémas `BulkIngestRequest/Result/ItemResult`.
+- **Migration pgvector (P1)** : `20260731_0024` — extension `vector` + colonne
+  `embedding(1536)` sur `entity` + index IVFFlat (cosine, lists=100). Débloque
+  la recherche sémantique d'espèces (Treekipedia).
+- **Garde anti-invention RFC-0014 automatisée (P2)** : détection automatique
+  des sources AI-sourced (Claude, GPT, Treekipedia, etc.) dans
+  auteur/référence/version → force `evidence_level=D` + `quarantine`.
+  Intégrée au pipeline Evidence → Knowledge.
+- **Rate limiting différencié (P4)** : config `rate_limit_bulk` (600/min) vs
+  `rate_limit_evaluate` (30/min). L'endpoint bulk utilise la config.
+- **Dockerfile.db** : installe `postgresql-16-pgvector` (dépôt PGDG).
+- **Script d'init** `03-pgvector.sql` : crée l'extension à l'initialisation.
+- **Modèle `EntityModel`** : déclare la colonne `embedding` (Vector(1536),
+  nullable) via `pgvector.sqlalchemy`.
+- **Dépendance** : `pgvector` (Python) + `psycopg2-binary` (test, pour Alembic).
+
+### Tests
+
+- 37 tests unitaires (anti_invention, bulk_ingest, rate_limit_bulk,
+  migration_pgvector, migration_contract).
+- 7 tests d'intégration bulk (pipeline bout-en-bout sur PostgreSQL).
+- 2 tests d'intégration pgvector (upgrade + downgrade SQL sur vraie DB).
+- 2 nouvelles mutations au harnais (garde_anti_invention, rate_limit_bulk).
+- Suite unitaire complète : 1346 passed, 0 failed.
+
+### Corrections
+
+- `Dockerfile.db` : ajout de `postgresql-16-pgvector` (l'extension n'était pas
+  disponible dans le conteneur — la migration aurait échoué en prod).
+- `EntityModel` : ajout de la colonne `embedding` dans le modèle SQLAlchemy
+  (la migration l'ajoutait en SQL mais l'ORM ne la connaissait pas).
+- `conftest.py` : installation de pgvector à la volée dans le conteneur
+  testcontainers + `CREATE EXTENSION vector` avant `create_all`.
+- `test_migration_pgvector_integration.py` : test d'intégration qui exécute
+  les SQL de la migration sur une vraie DB avec pgvector.
+
+---
+
 ## [GSIE-PROMPT-0025 — INVENTAIRE SOURCES ÉLARGI] - 2026-07-30
 
 Extension de l'inventaire des sources de données GSIE à un état viable 5 ans.

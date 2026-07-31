@@ -10,6 +10,8 @@ ARG AGE_PACKAGE=apache-age-1.5.0
 ARG AGE_SHA256=b41abaf5fc89d6a5bcb62a63a6b2fc4b7d0d1530869879b6cc85df931b333b5d
 
 # Installation des dépendances de compilation + pgAudit (audit trail DDL/DML — P0-4)
+# + pgvector (recherche sémantique — migration 20260731_0024, débloque Treekipedia)
+# Le dépôt PGDG (apt.postgresql.org) est déjà configuré par l'image de base postgres:16.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bison \
@@ -18,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     flex \
     postgresql-server-dev-16 \
     postgresql-16-pgaudit \
+    postgresql-16-pgvector \
     && rm -rf /var/lib/apt/lists/*
 
 # Téléchargement et compilation d'Apache AGE
