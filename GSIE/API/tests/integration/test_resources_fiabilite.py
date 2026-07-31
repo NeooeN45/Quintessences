@@ -35,12 +35,24 @@ from tests.conftest import requires_docker
 pytestmark = requires_docker
 
 _SUJET = "forestier-fiabilite"
-_ENTETES_ECRITURE = {
-    "Authorization": f"Bearer {create_access_token(subject=_SUJET, claims={'roles': ['writer']})}"
-}
-_ENTETES_LECTURE = {
-    "Authorization": f"Bearer {create_access_token(subject='liseur', claims={'roles': ['reader']})}"
-}
+
+
+@pytest.fixture
+def entetes_ecriture() -> dict[str, str]:
+    """Jeton forge a l'execution — un jeton forge a l'import perime apres 15 min
+    (TTL jwt_access_token_expire_minutes), et la suite complete dure plus longtemps.
+    """
+    return {
+        "Authorization": f"Bearer {create_access_token(subject=_SUJET, claims={'roles': ['writer']})}",  # noqa: E501
+    }
+
+
+@pytest.fixture
+def entetes_lecture() -> dict[str, str]:
+    """Jeton de lecture forge a l'execution — meme raison que `entetes_ecriture`."""
+    return {
+        "Authorization": f"Bearer {create_access_token(subject='liseur', claims={'roles': ['reader']})}",  # noqa: E501
+    }
 
 
 @pytest.fixture
@@ -60,22 +72,24 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 class TestEcritureAuthentifiee:
     """L'auteur cité doit exister : le service le matérialise lui-même."""
 
-    async def test_creation_reussit_sans_agent_pre_cree(self, client: AsyncClient) -> None:
+    async def test_creation_reussit_sans_agent_pre_cree(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": "entity", "data": {"entity_subtype": "parcelle"}},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 201, reponse.text
 
     async def test_mise_a_jour_ecrit_un_diff_rattache(
-        self, client: AsyncClient, db_session: AsyncSession
+        self, client: AsyncClient, db_session: AsyncSession, entetes_ecriture: dict[str, str]
     ) -> None:
         cree = await client.post(
             "/api/v1/resources",
             json={"type": "entity", "data": {"entity_subtype": "avant"}},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
         assert cree.status_code == 201, cree.text
         identifiant = cree.json()["id"]
@@ -83,7 +97,7 @@ class TestEcritureAuthentifiee:
         maj = await client.put(
             f"/api/v1/resources/{identifiant}",
             json={"data": {"entity_subtype": "apres"}, "justification": "affinage station"},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert maj.status_code == 200, maj.text
@@ -126,17 +140,23 @@ class TestCoercitionDesTypes:
         ],
     )
     async def test_une_date_iso_est_convertie(
-        self, client: AsyncClient, type_name: str, data: dict[str, object]
+        self,
+        client: AsyncClient,
+        type_name: str,
+        data: dict[str, object],
+        entetes_ecriture: dict[str, str],
     ) -> None:
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": type_name, "data": data},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 201, reponse.text
 
-    async def test_une_geometrie_reste_lisible_apres_ecriture(self, client: AsyncClient) -> None:
+    async def test_une_geometrie_reste_lisible_apres_ecriture(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
         """La ligne était écrite puis la resource devenait illisible (500 permanent)."""
         cree = await client.post(
             "/api/v1/resources",
@@ -144,12 +164,12 @@ class TestCoercitionDesTypes:
                 "type": "place",
                 "data": {"geometry": "SRID=2154;POINT(650000 6860000)", "srid": 2154},
             },
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
         assert cree.status_code == 201, cree.text
 
         relecture = await client.get(
-            f"/api/v1/resources/{cree.json()['id']}", headers=_ENTETES_ECRITURE
+            f"/api/v1/resources/{cree.json()['id']}", headers=entetes_ecriture
         )
 
         assert relecture.status_code == 200, relecture.text
@@ -165,12 +185,16 @@ class TestCoercitionDesTypes:
         ],
     )
     async def test_une_valeur_mal_typee_donne_422_et_non_500(
-        self, client: AsyncClient, type_name: str, data: dict[str, object]
+        self,
+        client: AsyncClient,
+        type_name: str,
+        data: dict[str, object],
+        entetes_ecriture: dict[str, str],
     ) -> None:
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": type_name, "data": data},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 422, reponse.text
@@ -203,11 +227,12 @@ class TestChampsMetierHomonymes:
         parent_data: dict[str, object],
         type_name: str,
         cle_parent: str,
+        entetes_ecriture: dict[str, str],
     ) -> None:
         parent = await client.post(
             "/api/v1/resources",
             json={"type": parent_type, "data": parent_data},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
         assert parent.status_code == 201, parent.text
 
@@ -217,7 +242,7 @@ class TestChampsMetierHomonymes:
                 "type": type_name,
                 "data": {cle_parent: parent.json()["id"], "version": "1.0.0"},
             },
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 201, reponse.text
@@ -228,13 +253,17 @@ class TestExclusionRGPD:
 
     @pytest.mark.parametrize("requete", ["/api/v1/resources", "/api/v1/resources?type="])
     async def test_lecteur_ne_voit_jamais_les_types_rgpd(
-        self, client: AsyncClient, db_session: AsyncSession, requete: str
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        requete: str,
+        entetes_lecture: dict[str, str],
     ) -> None:
         db_session.add(ResourceModel(type="consent", gsie_id="consent:2026:fiabilite"))
         db_session.add(ResourceModel(type="entity", gsie_id="entity:2026:fiabilite"))
         await db_session.commit()
 
-        reponse = await client.get(requete, headers=_ENTETES_LECTURE)
+        reponse = await client.get(requete, headers=entetes_lecture)
 
         assert reponse.status_code == 200, reponse.text
         types_vus = {item["type"] for item in reponse.json()["items"]}
@@ -252,25 +281,27 @@ class TestResolutionNativeDeclaree:
     """
 
     @staticmethod
-    async def _creer_echelle(client: AsyncClient, grain: float | None) -> str:
+    async def _creer_echelle(
+        client: AsyncClient, grain: float | None, entetes: dict[str, str]
+    ) -> str:
         data: dict[str, Any] = {"level": "landscape"}
         if grain is not None:
             data["grain_m2"] = grain
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": "scale_context", "data": data},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes,
         )
         assert reponse.status_code == 201, reponse.text
         identifiant: str = reponse.json()["id"]
         return identifiant
 
     @staticmethod
-    async def _creer_version(client: AsyncClient) -> str:
+    async def _creer_version(client: AsyncClient, entetes: dict[str, str]) -> str:
         jeu = await client.post(
             "/api/v1/resources",
             json={"type": "dataset", "data": {"title": "LiDAR HD", "description": "IGN"}},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes,
         )
         assert jeu.status_code == 201, jeu.text
         version = await client.post(
@@ -279,14 +310,16 @@ class TestResolutionNativeDeclaree:
                 "type": "dataset_version",
                 "data": {"dataset_id": jeu.json()["id"], "version": "2024"},
             },
-            headers=_ENTETES_ECRITURE,
+            headers=entetes,
         )
         assert version.status_code == 201, version.text
         identifiant: str = version.json()["id"]
         return identifiant
 
-    async def _distribution(self, client: AsyncClient, echelle: str) -> Any:
-        version = await self._creer_version(client)
+    async def _distribution(
+        self, client: AsyncClient, echelle: str, entetes: dict[str, str]
+    ) -> Any:
+        version = await self._creer_version(client, entetes)
         return await client.post(
             "/api/v1/resources",
             json={
@@ -298,22 +331,26 @@ class TestResolutionNativeDeclaree:
                     "scale_context_id": echelle,
                 },
             },
-            headers=_ENTETES_ECRITURE,
+            headers=entetes,
         )
 
-    async def test_une_echelle_sans_grain_est_refusee(self, client: AsyncClient) -> None:
-        sans_grain = await self._creer_echelle(client, None)
+    async def test_une_echelle_sans_grain_est_refusee(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
+        sans_grain = await self._creer_echelle(client, None, entetes_ecriture)
 
-        reponse = await self._distribution(client, sans_grain)
+        reponse = await self._distribution(client, sans_grain, entetes_ecriture)
 
         assert reponse.status_code == 422, reponse.text
         assert any("grain_m2" in e for e in reponse.json()["detail"]["errors"])
 
-    async def test_une_echelle_avec_grain_est_acceptee(self, client: AsyncClient) -> None:
+    async def test_une_echelle_avec_grain_est_acceptee(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
         """Témoin : c'est bien l'absence de grain qui est refusée, pas le lien."""
-        avec_grain = await self._creer_echelle(client, 0.25)
+        avec_grain = await self._creer_echelle(client, 0.25, entetes_ecriture)
 
-        reponse = await self._distribution(client, avec_grain)
+        reponse = await self._distribution(client, avec_grain, entetes_ecriture)
 
         assert reponse.status_code == 201, reponse.text
 
@@ -343,25 +380,27 @@ class TestSourceCitable:
 
     @pytest.mark.parametrize("manquant", ["auteur", "date_publication"])
     async def test_une_source_incitable_est_refusee(
-        self, client: AsyncClient, manquant: str
+        self, client: AsyncClient, manquant: str, entetes_ecriture: dict[str, str]
     ) -> None:
         data = {k: v for k, v in self._source().items() if k != manquant}
 
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": "source", "data": data},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 422, reponse.text
         assert any(manquant in e for e in reponse.json()["detail"]["errors"])
 
-    async def test_une_source_complete_est_acceptee(self, client: AsyncClient) -> None:
+    async def test_une_source_complete_est_acceptee(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
         """Témoin : c'est bien le manque qui refuse, pas le type `source`."""
         reponse = await client.post(
             "/api/v1/resources",
             json={"type": "source", "data": self._source()},
-            headers=_ENTETES_ECRITURE,
+            headers=entetes_ecriture,
         )
 
         assert reponse.status_code == 201, reponse.text
