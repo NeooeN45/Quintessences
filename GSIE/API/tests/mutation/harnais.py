@@ -888,19 +888,69 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/integration/test_auth_dev_production_blocker.py",),
     ),
+    # `suppression_physique_redevenue_possible` a ete retiree : elle visait
+    # `alembic/versions/20260728_0012_role_applicatif.py`, hors du perimetre
+    # `src/` que le harnais copie. Elle a ete appliquee au depot lui-meme,
+    # ajoutant `DELETE` aux droits du role applicatif — contre `CON-010` — sous
+    # un commentaire affirmant le contraire.
+    #
+    # L'absence de `DELETE` est verifiee la ou elle doit l'etre :
+    # `test_isolement_rgpd.py::test_le_role_applicatif_ne_peut_pas_supprimer`,
+    # qui joue la migration reelle. `_verifier_perimetre` empeche desormais
+    # qu'une mutation sorte de `src/`.
     Mutation(
-        cle="suppression_physique_redevenue_possible",
-        fichier="alembic/versions/20260728_0012_role_applicatif.py",
-        # `CON-010` interdit la suppression physique. Retirer `DELETE` des
-        # droits rend l'interdit structurel : une suppression ecrite par erreur
-        # echoue au lieu de detruire. L'accorder le ramene a une convention.
-        ancien='        f"GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA {_SCHEMA_NOYAU} "',
-        nouveau='        f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {_SCHEMA_NOYAU} "',  # noqa: E501
+        cle="schema_botanique_retire",
+        fichier="gsie_api/infrastructure/models/ecology.py",
+        # Le schema de domaine gsie_botanique est porte par __table_args__ sur
+        # chaque modele. Le retirer fait revenir la table dans `public` pour le
+        # registre, tandis que la base la conserve dans `gsie_botanique` — le
+        # controle de derive detecte l'ecart.
+        ancien='    __table_args__ = {"schema": "gsie_botanique"}\n\n\n@register_type("trait_value")',  # noqa: E501
+        nouveau='    __table_args__ = {}\n\n\n@register_type("trait_value")',
         defaut_reproduit=(
-            "le role applicatif peut supprimer physiquement : `CON-010` "
-            "redevient une convention que seul le code tient"
+            "trait_definition revient dans `public` pour le registre SQLAlchemy "
+            "mais reste dans `gsie_botanique` en base — derive invisible"
         ),
-        tests=("tests/integration/test_isolement_rgpd.py",),
+        tests=("tests/integration/test_migration_baseline.py",),
+    ),
+    Mutation(
+        cle="schema_foret_retire",
+        fichier="gsie_api/infrastructure/models/business.py",
+        # Même garde pour gsie_foret — le domaine le plus volumineux.
+        ancien='    __table_args__ = {"schema": "gsie_foret"}\n\n\n@register_type("intervention")',
+        nouveau='    __table_args__ = {}\n\n\n@register_type("intervention")',
+        defaut_reproduit=(
+            "management_plan revient dans `public` pour le registre mais reste "
+            "dans `gsie_foret` en base — derive invisible"
+        ),
+        tests=("tests/integration/test_migration_baseline.py",),
+    ),
+    Mutation(
+        cle="schema_gouvernance_retire",
+        fichier="gsie_api/infrastructure/models/business.py",
+        # Même garde pour gsie_gouvernance — la chaîne de décision.
+        ancien='    __table_args__ = {"schema": "gsie_gouvernance"}\n\n\n@register_type("compliance_check")',  # noqa: E501
+        nouveau='    __table_args__ = {}\n\n\n@register_type("compliance_check")',
+        defaut_reproduit=(
+            "regulation revient dans `public` pour le registre mais reste dans "
+            "`gsie_gouvernance` en base — derive invisible"
+        ),
+        tests=("tests/integration/test_migration_baseline.py",),
+    ),
+    Mutation(
+        cle="fk_intra_foret_dequalifiee",
+        fichier="gsie_api/infrastructure/models/forestry.py",
+        # Les FK intra-domaine doivent être qualifiées avec le schema : une
+        # reference nue `"site_index_model.id"` ne trouve plus sa table quand
+        # elle a changé de schema. La qualification est la garde qui empêche
+        # NoReferencedTableError au chargement du registre.
+        ancien='ForeignKey("gsie_foret.site_index_model.id")',
+        nouveau='ForeignKey("site_index_model.id")',
+        defaut_reproduit=(
+            "fertility_class ne trouve plus site_index_model — "
+            "NoReferencedTableError au chargement du registre"
+        ),
+        tests=("tests/integration/test_migration_baseline.py",),
     ),
 )
 
@@ -938,7 +988,39 @@ def _environnement_de_base() -> dict[str, str]:
     return dict(os.environ)
 
 
+def _verifier_perimetre(mutation: Mutation) -> None:
+    """Refuse une mutation qui viserait un fichier hors de `src/`.
+
+    Le harnais mute une **copie** de `src/` dans un dossier temporaire. Une
+    mutation designant un fichier hors de ce perimetre — une migration Alembic,
+    un test, un outil — ne trouve rien a muter dans la copie, et rien ne
+    garantit qu'un appelant maladroit ne lui passera pas la racine reelle.
+
+    C'est arrive : une mutation visant `alembic/versions/` a ete appliquee au
+    depot lui-meme, ajoutant `DELETE` aux droits du role applicatif et
+    contredisant `CON-010` — avec, deux lignes plus bas, un commentaire
+    affirmant l'inverse. Le degat etait mecanique, invisible au `git diff`
+    tant qu'on ne le cherchait pas.
+
+    Le contenu des migrations se verifie par les tests d'integration, qui les
+    jouent reellement. Le harnais couvre `src/`, et le declarer ici empeche de
+    l'etendre par inadvertance.
+    """
+    if not (SOURCE / mutation.fichier).exists():
+        raise SystemExit(
+            f"[{mutation.cle}] `{mutation.fichier}` n'existe pas sous `src/`. "
+            "Le harnais ne mute que le code source : une migration ou un test "
+            "se verifie par les tests d'integration, jamais par mutation."
+        )
+
+
 def _appliquer(mutation: Mutation, racine_source: Path) -> None:
+    _verifier_perimetre(mutation)
+    if racine_source.resolve() == SOURCE.resolve():
+        raise SystemExit(
+            "refus d'appliquer une mutation sur l'arborescence reelle : le "
+            "harnais travaille sur une copie temporaire, jamais sur `src/`."
+        )
     chemin = racine_source / mutation.fichier
     source = chemin.read_text(encoding="utf-8")
     if mutation.ancien not in source:
