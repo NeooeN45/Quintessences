@@ -471,22 +471,22 @@ aux grandes familles de données consommées par GSIE et Ignis.
 |---|---|
 | **Identifiant GSIE** | DS-017 |
 | **Nom du dataset** | INPN — Inventaire National du Patrimoine Naturel |
-| **Organisme producteur** | MNHN (Muséum national d'Histoire naturelle) — UMS PatriNat |
+| **Organisme producteur** | PatriNat (OFB-MNHN-CNRS-IRD) — centre d'expertise et de données |
 | **Catégorie** | D — Taxonomique / biodiversité |
 | **Domaines S-6 couverts** | Biodiversité, botanique, entomologie, pathologie, conservation |
 | **Moteurs consommateurs** | Botanical Engine, Diagnostic Engine, Correlation Engine |
-| **Source / URL** | https://inpn.mnhn.fr |
+| **Source / URL** | https://inpn.mnhn.fr (page d'accueil) + https://inpn.mnhn.fr/referentiels-donnees (téléchargement) |
 | **Licence** | Licence Ouverte 2.0 (etalab-2.0) / CC-BY selon jeu |
 | **Couverture spatiale** | France métropolitaine, DROM-COM, eaux marines |
 | **Couverture temporelle** | 1700-présent |
 | **Résolution spatiale** | Ponctuelle et zonages (aires de répartition, ZNIEFF) |
 | **Résolution temporelle** | Événementielle et statique (zonages) |
-| **Format** | CSV, Shapefile, API REST (INPN) |
-| **Version référencée** | Snapshot INPN (téléchargement daté) |
-| **Qualité / précision** | Validation MNHN ; taxonomie TAXREF de référence |
-| **Contact** | MNHN — UMS PatriNat |
-| **Statut d'ingestion** | Planifié |
-| **Notes** | Source nationale de référence pour la biodiversité ; intègre le référentiel taxonomique TAXREF (backbone complémentaire de BDNFF) |
+| **Format** | CSV, Shapefile, ZIP (téléchargement référentiels) — ~~API REST INPN~~ (ancienne API morte) |
+| **Version référencée** | INPN v0 (nouveau site, 21/07/2026) — référentiels : TAXREF v18, HabRef v7, BDC Statuts v18, ZNIEFF v06/2025, Natura 2000 v12/2024, Espaces protégés v01/2026, INPG v07/2025, CarHab 2025 |
+| **Qualité / précision** | Validation PatriNat ; taxonomie TAXREF de référence |
+| **Contact** | PatriNat — inpn [arobase] mnhn.fr |
+| **Statut d'ingestion** | **En quarantaine** — nouveau site v0, tests jusqu'à septembre 2026. WMS/WFS morts (Erreur 500). Applications OpenObs/CardObs/INPN Espèces non disponibles (remontée prochains mois). Ingestion via téléchargement ZIP référentiels uniquement. |
+| **Notes** | **CYBERATTAQUE MNHN 26/07/2025 → 22/07/2026** (1 an hors service). Le MNHN a décidé de **ne pas restaurer l'ancien système** — reconstruction complète : hébergement, infrastructure, bases de données, site public, identité visuelle. Version zéro en ligne depuis 21/07/2026. Fiches espèces + téléchargement référentiels disponibles. Fiches espaces, indicateurs aires protégées, formulaires SINP : fin 2026. Fiches habitats, synthèses locales, nouveau moteur de recherche : 2027. ~~WMS/WFS~~ (webgeoservice) : **MORTS (Erreur 500)** — nouveau géoservice à venir. ~~API REST INPN~~ : ancienne API morte. Source PatriNat de secours : https://www.patrinat.fr/fr/page-temporaire-de-telechargement-des-referentiels-de-donnees-lies-linpn-7353 . Vérifié 30/07/2026 (GSIE-PROMPT-0025). |
 
 ---
 

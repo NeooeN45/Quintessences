@@ -557,6 +557,45 @@
 |---|---|---|---|---|
 | **BD TOPO Express** (édition hebdomadaire) | IGN | Hebdomadaire (depuis mai 2025) | Licence Ouverte 2.0 | GIS, Ignis (enjeux temps réel) |
 
+### 6.9ter CONTRE-AUDIT DE L'AUDIT D'URL — Architecte, 30/07/2026
+
+> `GSIE-PROMPT-0026` a teste **232 URL** de l'inventaire existant. Le rapport
+> brut annonce 208 vivantes (89,7 %), 11 mortes, 7 indeterminees, 6 a verifier.
+> **Le taux de mortalite est surestime : neuf verdicts reposent sur des codes
+> HTTP qui ne signifient pas la mort d'une ressource.**
+
+| Code | Ce qu'il signifie reellement |
+|---|---|
+| `405 Method Not Allowed` | La methode employee — `HEAD` — n'est pas autorisee. **Une API STAC repond en `GET`** |
+| `401 Unauthorized` | La ressource existe et exige une authentification |
+| `403 Forbidden` | Refus anti-robot, souvent contournable par l'API du service |
+
+**Deux verifications independantes, les plus consequentes** — ce sont les
+catalogues sur lesquels repose le plan raster de `RFC-0029` §9.3 :
+
+| Ressource | Verdict de l'outil | Verdict verifie |
+|---|---|---|
+| `planetarycomputer.microsoft.com/api/stac/v1` | non vivante (405) | **VIVANTE** — STAC 1.0.0 valide, 9 liens, recherche `GET` et `POST` |
+| `stac.dataspace.copernicus.eu/v1/` | non vivante (405) | **VIVANTE** — STAC 1.0.0 valide, conformite OGC declaree |
+
+Les neuf entrees concernees sont : les quatre points STAC Copernicus, le STAC
+Planetary Computer, `data.geopf.fr/extraction` (401, authentification), et
+trois pages en 403 anti-robot dont `gbif.org` — dont l'API `api.gbif.org`
+fonctionne, verifiee.
+
+**Taux de peremption reel** : au plus **15 sur 232, soit 6,5 %**, et non 10,3 %.
+Les morts averees restent significatives — `tela-botanica.org/bdnff/` rend un
+`410 Gone` explicite, `gissol.fr/programme/bdat/bdat.php` un 404 — mais
+l'inventaire est plus sain que le rapport brut ne le laisse croire.
+
+**Lecon de methode, pour toute revrification future.** Un audit d'URL qui
+emploie `HEAD` classe morts des services parfaitement vivants. La verification
+doit employer la methode que le service attend, et **un code HTTP n'est pas un
+verdict** : `405`, `401` et `403` disent que la requete etait mal formee, non
+authentifiee ou refusee au robot — jamais que la ressource a disparu.
+
+---
+
 ### 6.9bis CONTRE-AUDIT DES SIGNALEMENTS — Architecte, 30/07/2026
 
 > Neuf des treize signalements critiques de `GSIE-PROMPT-0025` ont été
