@@ -124,3 +124,5 @@ class ConflictClusterModel(Base, TimestampMixin):
         index=True,
     )
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = {"schema": "gsie_gouvernance"}

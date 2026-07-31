@@ -180,6 +180,8 @@ class RegulationModel(Base, TimestampMixin):
     url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     penalties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
+    __table_args__ = {"schema": "gsie_gouvernance"}
+
 
 @register_type("compliance_check")
 class ComplianceCheckModel(Base, TimestampMixin):
@@ -213,6 +215,8 @@ class ComplianceCheckModel(Base, TimestampMixin):
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
     waiver_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = {"schema": "gsie_gouvernance"}
 
 
 @register_type("outcome_tracking")
@@ -252,6 +256,8 @@ class OutcomeTrackingModel(Base, TimestampMixin):
     recalibration_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     feedback_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     lessons_learned: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = {"schema": "gsie_gouvernance"}
 
 
 @register_type("administrative_unit")

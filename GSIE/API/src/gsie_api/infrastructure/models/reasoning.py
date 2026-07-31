@@ -100,6 +100,8 @@ class DecisionModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
 
+    __table_args__ = {"schema": "gsie_gouvernance"}
+
 
 @register_type("recommendation")
 class RecommendationModel(Base, TimestampMixin):
@@ -129,6 +131,8 @@ class RecommendationModel(Base, TimestampMixin):
     temporal_context_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
+
+    __table_args__ = {"schema": "gsie_gouvernance"}
 
 
 @register_type("scenario")
