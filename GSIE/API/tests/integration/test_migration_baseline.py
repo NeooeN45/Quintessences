@@ -25,7 +25,7 @@ _REVISION = "20260726_0001"
 # Tête courante de la lignée : la baseline reste la base, les révisions
 # suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
 # additives 20260727_0003 à 0005).
-_HEAD = "20260728_0012"
+_HEAD = "20260728_0013"
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,
@@ -50,6 +50,12 @@ _LEGACY_TABLES = frozenset(
     }
 )
 _EXPECTED_TABLES = frozenset(Base.metadata.tables)
+# Schemas où vivent les tables du métamodèle. Dérivé du registre pour rester
+# générique : chaque nouveau schéma de domaine (RFC-0029) est inclus
+# automatiquement, sans qu'il faille modifier cette liste à la main.
+_SCHEMAS_METAMODELE = frozenset(
+    table.schema or "public" for table in Base.metadata.tables.values()
+)
 # Colonnes apportées par la révision de reprise sur échec de l'outbox.
 _OUTBOX_RETRY_COLUMNS = frozenset(
     {"attempt_count", "next_attempt_at", "last_error_code", "dead_lettered_at"}
@@ -144,8 +150,13 @@ async def _valeurs(url: str, requete: str, **params: Any) -> list[Any]:
 def _public_tables(url: str) -> frozenset[str]:
     """Tables applicatives, qualifiees par leur schema quand il n'est pas `public`.
 
-    Les donnees personnelles vivent hors de `public` depuis `20260728_0011`.
-    Ne lire que `public` ferait paraitre les quatre tables RGPD disparues.
+    Les donnees personnelles vivent hors de `public` depuis `20260728_0011`,
+    et les schemas de domaine depuis `20260728_0013` (RFC-0029). Ne lire que
+    `public` ferait paraitre ces tables disparues.
+
+    La liste des schemas est derivee du registre SQLAlchemy (`_SCHEMAS_METAMODELE`) :
+    chaque nouveau schema de domaine est inclus automatiquement, sans qu'il
+    faille modifier cette fonction a la main.
 
     La qualification suit la convention de `Base.metadata.tables` : une table de
     `public` est nommee nue, une table d'un autre schema est prefixee. Le
@@ -160,8 +171,9 @@ def _public_tables(url: str) -> frozenset[str]:
             SELECT CASE WHEN schemaname = 'public' THEN tablename
                         ELSE schemaname || '.' || tablename END
             FROM pg_tables
-            WHERE schemaname IN ('public', 'gsie_rgpd', 'gsie_rgpd_identites')
+            WHERE schemaname = ANY(:schemas)
             """,
+            schemas=list(_SCHEMAS_METAMODELE),
         )
     )
     return frozenset(lignes)
@@ -200,8 +212,9 @@ def _source_id_indexes(url: str) -> frozenset[str]:
                 JOIN pg_namespace AS n ON n.oid = table_class.relnamespace
                 JOIN pg_attribute AS a
                   ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-                WHERE n.nspname = 'public' AND a.attname = 'source_id'
+                WHERE n.nspname = ANY(:schemas) AND a.attname = 'source_id'
                 """,
+                schemas=list(_SCHEMAS_METAMODELE),
             )
         )
     )

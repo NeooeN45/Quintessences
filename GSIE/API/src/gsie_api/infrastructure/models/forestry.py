@@ -119,6 +119,7 @@ class AutecologyProfileModel(Base, TimestampMixin):
             "value_numeric IS NOT NULL OR value_text IS NOT NULL",
             name="ck_autecology_profile_value_present",
         ),
+        {"schema": "gsie_botanique"},
     )
 
 

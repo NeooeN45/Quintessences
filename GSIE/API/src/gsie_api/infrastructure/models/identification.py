@@ -73,6 +73,8 @@ class BotanicalIdentificationRequestModel(Base, TimestampMixin):
     # CheckConstraint SQL : `jsonb_array_length` est spécifique PostgreSQL
     # et n'existe pas sous SQLite, utilisé par la suite de tests unitaires.
 
+    __table_args__ = {"schema": "gsie_botanique"}
+
 
 @register_type("botanical_identification_result")
 class BotanicalIdentificationResultModel(Base, TimestampMixin):
@@ -104,6 +106,8 @@ class BotanicalIdentificationResultModel(Base, TimestampMixin):
 
     # Au moins un candidat (GEO-ID-06) est validé au niveau applicatif pour
     # la même raison que ci-dessus (portabilité SQLite/PostgreSQL).
+
+    __table_args__ = {"schema": "gsie_botanique"}
 
 
 @register_type("botanical_identification_decision")
@@ -159,4 +163,5 @@ class BotanicalIdentificationDecisionModel(Base, TimestampMixin):
             "(status != 'rejetee') OR " "(validated_by_id IS NOT NULL AND decided_at IS NOT NULL)",
             name="ck_bid_rejection_requires_validator",
         ),
+        {"schema": "gsie_botanique"},
     )

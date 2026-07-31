@@ -368,3 +368,50 @@ def test_le_role_applicatif_ne_peut_pas_supprimer(base_migree: str) -> None:
     )
 
     assert droits == [], "le rôle applicatif peut supprimer, contre CON-010"
+
+
+# --- Les schemas de domaine : pas de DELETE non plus (CON-010) ---
+
+
+def test_le_role_applicatif_ne_peut_pas_supprimer_dans_gsie_botanique(
+    base_migree: str,
+) -> None:
+    """`CON-010` s'applique à chaque schéma de domaine, pas seulement au noyau.
+
+    Le premier schéma de domaine (GSIE-PROMPT-0027, lot 1) est `gsie_botanique`.
+    Sans ce contrôle, accorder `DELETE` sur un schéma de domaine passerait
+    inaperçu : le test précédent ne regarde que `public.resource`.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = 'gsie_botanique' "
+            "AND privilege_type = 'DELETE'",
+        )
+    )
+
+    assert droits == [], (
+        "le rôle applicatif peut supprimer dans gsie_botanique, contre CON-010"
+    )
+
+
+def test_le_role_applicatif_ecrit_dans_gsie_botanique(base_migree: str) -> None:
+    """Le moindre privilège n'empêche pas le travail ordinaire.
+
+    Sans ce contrôle, ne rien accorder ferait passer le test précédent et
+    rendrait le schéma botanique inopérant pour l'application.
+    """
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = 'gsie_botanique' "
+            "AND table_name = 'autecology_profile' "
+            "ORDER BY privilege_type",
+        )
+    )
+
+    assert set(droits) == {"INSERT", "SELECT", "UPDATE"}
