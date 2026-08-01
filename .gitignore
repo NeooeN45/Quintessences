@@ -60,6 +60,13 @@ apps/Ignis/run_px4.sh
 # Données brutes Météo-France (scratch, non versionnées — 18MB+)
 GSIE/API/scratch_synop/
 
+# Sorties de travail du harnais de mutation et échantillons de mise au point.
+# Elles portent l'état d'une exécution, pas une décision : les versionner
+# ferait passer un instantané de poste de travail pour un résultat de projet.
+GSIE/API/harnais_*.txt
+GSIE/API/climate_sample.json
+GSIE/API/knowledge_stats.json
+
 # Repos externes (repos git indépendants dans la structure Quintessences)
 # GeoSylva — repo GitHub NeooeN45/GeoSylva
 apps/GeoSylva/
@@ -67,6 +74,11 @@ apps/GeoSylva/
 apps/QGISIA/
 # Forge — usine de données (pas de remote configuré)
 Forge/
+# Treekipedia — clone d'inspection du dépôt MIT (porte son propre .git).
+# Copie de travail servant l'analyse RFC-0030 ; la source de vérité reste le
+# dépôt amont. Vendorer le clone dans Quintessences en ferait un gitlink cassé
+# et masquerait sa licence d'origine.
+21_EXPERIMENTS/_treekipedia_inspection/
 
 # Vault Obsidian personnel de navigation (NON canonique — cf. CHANGELOG 2026-07-13).
 # La source de vérité de la gouvernance vit dans les dossiers numérotés
