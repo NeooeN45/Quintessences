@@ -5,6 +5,7 @@ pour que les autres suites (Knowledge Engine, pipeline) puissent réutiliser
 la même base de test sans relancer un conteneur Docker par fichier.
 """
 
+import os
 from collections.abc import AsyncGenerator, Sequence
 from typing import Any
 
@@ -31,18 +32,45 @@ def pytest_collection_modifyitems(items: Sequence[Any]) -> None:
             item.add_marker(pytest.mark.xdist_group(name="outbox_concurrence"))
 
 
-def _docker_available() -> bool:
-    """Vérifie si Docker est disponible sans lever d'exception."""
-    try:
-        import docker
+def _docker_available(tentatives: int = 3, pause: float = 2.0) -> bool:
+    """Vérifie si Docker est disponible sans lever d'exception.
 
-        docker.from_env().version()
-        return True
-    except Exception:
-        return False
+    Réessaie, parce que la sonde est faillible sous charge : `docker.from_env()`
+    a échoué alors que `docker ps` répondait sur la même machine, et les
+    47 tests d'isolement RGPD ont été sautés en silence — la suite affichant
+    « 210 passés » sans avoir vérifié une seule garantie de la base. Un test de
+    sécurité qui ne s'exécute pas se distingue mal d'un test qui passe.
+
+    Une seule tentative suffit quand Docker est réellement absent : la connexion
+    est refusée immédiatement et les reprises n'ajoutent que quelques secondes,
+    payées une fois par session.
+    """
+    import time
+
+    for restantes in range(tentatives - 1, -1, -1):
+        try:
+            import docker
+
+            docker.from_env().version()
+            return True
+        except Exception:
+            if restantes:
+                time.sleep(pause)
+    return False
 
 
 DOCKER_AVAILABLE = _docker_available()
+
+# Filet pour l'intégration continue : là où Docker est censé être présent, une
+# sonde en échec doit arrêter la suite, pas la vider de ses tests. Sur un poste
+# de développement sans Docker, la variable reste absente et le saut demeure —
+# on ne bloque personne pour un outil qu'il n'a pas.
+if not DOCKER_AVAILABLE and os.environ.get("GSIE_REQUIRE_DOCKER") == "1":
+    raise RuntimeError(
+        "GSIE_REQUIRE_DOCKER=1 mais Docker est injoignable : les tests "
+        "d'intégration seraient sautés et la suite passerait au vert sans "
+        "avoir rien vérifié."
+    )
 
 requires_docker = pytest.mark.skipif(
     not DOCKER_AVAILABLE,
