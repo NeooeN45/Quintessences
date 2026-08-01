@@ -7,6 +7,7 @@ la même base de test sans relancer un conteneur Docker par fichier.
 
 import asyncio
 import os
+import warnings
 from collections.abc import AsyncGenerator, Iterator, Sequence
 from contextlib import ExitStack
 from typing import Any
@@ -62,9 +63,17 @@ def _ensure_fresh_event_loop() -> object:
     est fermée, on en crée une nouvelle. Pour les tests async, pytest-asyncio
     crée sa propre loop (qui remplace celle-ci). Le coût est négligeable
     (un test ``is_closed()`` par test).
+
+    ``get_event_loop()`` émet un ``DeprecationWarning`` quand aucune loop
+    n'est posée — et c'est justement le cas qu'on interroge. Le filtre est
+    local à l'appel : on tait l'avertissement de la sonde, pas ceux du code
+    testé. L'API disparaît en 3.14 ; d'ici là, elle reste le seul moyen de
+    savoir si la loop courante est fermée sans en créer une au passage.
     """
     try:
-        loop = asyncio.get_event_loop_policy().get_event_loop()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            loop = asyncio.get_event_loop_policy().get_event_loop()
         if loop.is_closed():
             asyncio.set_event_loop(asyncio.new_event_loop())
     except RuntimeError:
