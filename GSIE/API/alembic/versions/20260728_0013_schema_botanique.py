@@ -115,12 +115,8 @@ def upgrade() -> None:
     # Le role applicatif existe depuis 20260728_0012. On etend ses droits au
     # nouveau schema : lecture-ecriture sans DELETE (CON-010).
     op.execute(f"GRANT USAGE ON SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
-    op.execute(
-        f"GRANT {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}"
-    )
-    op.execute(
-        f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}"
-    )
+    op.execute(f"GRANT {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
+    op.execute(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
     # Une table ajoutee plus tard doit heriter des memes droits, sinon
     # l'application perd l'acces au premier ajout sans que rien ne le signale.
     op.execute(
@@ -148,9 +144,7 @@ def downgrade() -> None:
     # Retirer les droits avant de supprimer le schema : sinon le DROP CASCADE
     # les supprime implicitement, mais le retrait explicite est lisible a
     # l'audit.
-    op.execute(
-        f"REVOKE {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}"
-    )
+    op.execute(f"REVOKE {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}")
     op.execute(f"REVOKE USAGE ON SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}")
     op.execute(
         f"ALTER DEFAULT PRIVILEGES IN SCHEMA {_SCHEMA} "

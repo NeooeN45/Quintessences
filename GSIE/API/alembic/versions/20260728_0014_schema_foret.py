@@ -121,12 +121,8 @@ def upgrade() -> None:
             _renommer_index(table, colonne, _SCHEMA)
 
     op.execute(f"GRANT USAGE ON SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
-    op.execute(
-        f"GRANT {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}"
-    )
-    op.execute(
-        f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}"
-    )
+    op.execute(f"GRANT {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
+    op.execute(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {_SCHEMA} TO {_ROLE_APPLICATION}")
     op.execute(
         f"ALTER DEFAULT PRIVILEGES IN SCHEMA {_SCHEMA} "
         f"GRANT {_ECRITURE} ON TABLES TO {_ROLE_APPLICATION}"
@@ -147,9 +143,7 @@ def downgrade() -> None:
     for table in _TABLES:
         op.execute(f"ALTER TABLE {_SCHEMA}.{table} SET SCHEMA public")
 
-    op.execute(
-        f"REVOKE {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}"
-    )
+    op.execute(f"REVOKE {_ECRITURE} ON ALL TABLES IN SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}")
     op.execute(f"REVOKE USAGE ON SCHEMA {_SCHEMA} FROM {_ROLE_APPLICATION}")
     op.execute(
         f"ALTER DEFAULT PRIVILEGES IN SCHEMA {_SCHEMA} "

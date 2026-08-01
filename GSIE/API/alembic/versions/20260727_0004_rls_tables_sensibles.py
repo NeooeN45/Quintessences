@@ -62,8 +62,7 @@ _TEXT_COLUMNS: frozenset[str] = frozenset({"principal"})
 def _bypass_predicate() -> str:
     """Construit la clause OR de bypass rôle admin/dpo/governance."""
     clauses = [
-        f"current_setting('app.current_user_roles', true) LIKE '%{role}%'"
-        for role in _BYPASS_ROLES
+        f"current_setting('app.current_user_roles', true) LIKE '%{role}%'" for role in _BYPASS_ROLES
     ]
     return " OR ".join(clauses)
 
@@ -82,8 +81,7 @@ def upgrade() -> None:
         op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
         op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
         op.execute(
-            f"CREATE POLICY {policy_name} ON {table} "
-            f"USING ({bypass} OR {owner_predicate})"
+            f"CREATE POLICY {policy_name} ON {table} " f"USING ({bypass} OR {owner_predicate})"
         )
 
 
