@@ -16,7 +16,7 @@ Architecture (DEC-000019) :
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -247,6 +247,45 @@ def create_app() -> FastAPI:
         include_in_schema=not is_production,
         dependencies=metrics_dependencies,
     )
+
+    # Métriques métier personnalisées (audit qualité base du 2026-08-01) :
+    # complétude, fraîcheur, cohérence des données d'enrichissement.
+    # Calculées à la demande via /metrics/db-quality (admin-only hors dev).
+    from gsie_api.metrics import collect_db_metrics
+
+    # POST et non GET : l'appel n'est pas une lecture. Il déclenche cinq
+    # agrégats sur toute la table `resource`, dont des `count(*) FILTER` sur
+    # `metadata_json`. En GET, un préchargement de navigateur, un retry de
+    # proxy ou un crawler suffisait à les rejouer. Le débit est plafonné dans
+    # tous les environnements — l'authentification, elle, ne s'applique pas en
+    # développement, où l'endpoint reste donc ouvert.
+    #
+    # À terme, une tâche périodique devrait alimenter les Gauges plutôt qu'un
+    # déclenchement par requête, comme l'annonce le docstring de
+    # `collect_db_metrics`.
+    @app.post(
+        "/metrics/db-quality",
+        tags=["metrics"],
+        include_in_schema=not is_production,
+        dependencies=metrics_dependencies,
+    )
+    @limiter.limit("6/minute")
+    async def _db_quality_metrics(request: Request, response: Response) -> dict[str, str]:
+        """Déclenche le calcul des métriques de qualité DB et retourne un ack."""
+        # Le calcul publie directement dans le registry Prometheus par défaut.
+        # Il est attendu : `collect_db_metrics` est une coroutine, la boucle
+        # asyncio du serveur est déjà en cours.
+        try:
+            await collect_db_metrics()
+        except Exception as exc:
+            # L'ack ne doit pas annoncer une collecte qui n'a pas eu lieu. Le
+            # motif reste generique — le texte du pilote est deja au journal
+            # (`collect_db_metrics` le trace avant de relayer).
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Collecte des metriques de qualite DB indisponible",
+            ) from exc
+        return {"status": "collected"}
 
     # Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)
     app.state.limiter = limiter

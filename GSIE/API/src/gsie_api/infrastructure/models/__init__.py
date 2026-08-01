@@ -16,6 +16,7 @@ from gsie_api.infrastructure.models import (
     diagnostic,  # noqa: F401 — diagnostic stationnel persisté (Diagnostic Engine)
     dynamics,  # noqa: F401
     ecology,  # noqa: F401
+    enrichment,  # noqa: F401 — entity_image, entity_description, ingestion_progress
     fair_rgpd,  # noqa: F401
     forestry,  # noqa: F401 — types RFC-0016 (schéma forestier spécialisé)
     governance,  # noqa: F401
