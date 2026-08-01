@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,6 +30,25 @@ class EntityModel(Base, TimestampMixin):
     # entités avec un embedding calculé le portent. Utilisé pour la recherche
     # par similarité cosinus (Treekipedia, désambiguïsation d'espèces).
     embedding: Mapped[Any] = mapped_column(Vector(1536), nullable=True)
+
+    # L'index IVFFlat est créé par la migration `20260731_0024` ; il doit aussi
+    # être déclaré ici, sinon le registre et la base divergent et le prochain
+    # `alembic revision --autogenerate` proposerait de le supprimer — perdant
+    # silencieusement la recherche vectorielle. Le test de dérive de
+    # `test_migration_baseline.py` signalait déjà l'écart, mais il ne s'exécute
+    # que si l'image `gsie-db` est construite localement.
+    #
+    # `lists = 100` reprend la valeur de la migration : les deux descriptions
+    # d'un même index doivent coïncider, faute de quoi la dérive réapparaît.
+    __table_args__ = (
+        Index(
+            "ix_entity_embedding",
+            "embedding",
+            postgresql_using="ivfflat",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+            postgresql_with={"lists": 100},
+        ),
+    )
 
 
 @register_type("entity_alias")

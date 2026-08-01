@@ -22,10 +22,30 @@ from tests.conftest import requires_docker
 pytestmark = requires_docker
 
 _REVISION = "20260726_0001"
-# Tête courante de la lignée : la baseline reste la base, les révisions
-# suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
-# additives 20260727_0003 à 0005).
-_HEAD = "20260728_0023"
+
+
+def _tete_alembic() -> str:
+    """Tête courante de la lignée, lue dans le dossier de migrations.
+
+    Était recopiée à la main. La migration `20260731_0024` (pgvector) a déplacé
+    la tête sans que cette copie suive : ces tests comparaient à
+    `20260728_0023` et échouaient — sans que personne le voie, puisqu'ils
+    sautent quand l'image `gsie-db` n'est pas construite localement.
+
+    Ce que ces tests éprouvent, c'est qu'un aller-retour `upgrade`/`downgrade`
+    revienne au point de départ, pas que la tête porte tel numéro. Ce numéro-là
+    reste épinglé délibérément dans `tests/unit/test_migration_contract.py`, qui
+    a pour objet de signaler tout déplacement non voulu. Deux copies d'une même
+    constante finissent toujours par diverger : celle-ci n'avait pas de raison
+    d'exister.
+    """
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    return ScriptDirectory.from_config(Config("alembic.ini")).get_current_head() or ""
+
+
+_HEAD = _tete_alembic()
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,
