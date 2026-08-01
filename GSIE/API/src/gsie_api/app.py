@@ -16,7 +16,7 @@ Architecture (DEC-000019) :
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -29,6 +29,7 @@ from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
+from gsie_api.core.rbac import require_roles
 from gsie_api.engines.botanical.router import router as botanical_router
 from gsie_api.engines.climate.router import router as climate_router
 from gsie_api.engines.correlation.router import router as correlation_router
@@ -117,6 +118,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         environment=_settings.environment,
     )
 
+    # Privilèges du rôle de connexion — on interroge PostgreSQL, on ne se fie
+    # pas au nom présent dans la chaîne de connexion. Un superutilisateur
+    # rendrait inopérants l'isolement RGPD et toutes les politiques RLS.
+    from gsie_api.infrastructure.database import async_session_factory
+    from gsie_api.infrastructure.db_privileges import verifier_privileges_de_connexion
+
+    await verifier_privileges_de_connexion(async_session_factory)
+
     # OpenTelemetry — instrumentation conditionnelle (CON-005, DEC-000019)
     if _settings.otel_enabled:
         _setup_opentelemetry(app)
@@ -201,7 +210,11 @@ def _setup_opentelemetry(app: FastAPI) -> None:
 
 def create_app() -> FastAPI:
     """Factory FastAPI — app creation avec tous les middlewares et routes."""
-    is_production = _settings.environment == "production"
+    # La pré-production sert de vraies données et est exposée comme la
+    # production. `validate_production_security` les traite déjà à
+    # l'identique ; laisser `/docs` et l'OpenAPI ouverts sur l'une des deux
+    # revenait à publier l'arborescence que le handler 404 s'applique à taire.
+    is_production = _settings.environment in ("production", "staging")
 
     app = FastAPI(
         title=_settings.app_name,
@@ -216,11 +229,23 @@ def create_app() -> FastAPI:
     )
 
     # Prometheus /metrics — monitoring production (CON-005)
+    #
+    # L'endpoint était ouvert dans tous les environnements. Le label `handler`
+    # des histogrammes énumère les routes réellement servies : c'est
+    # exactement ce que `docs_url=None` et le handler 404 s'appliquent à
+    # taire en production. Les compteurs de l'outbox sont en outre labellisés
+    # par type d'agrégat (`data_subject`, `consent`), donc la cadence des
+    # traitements RGPD devenait publique. Hors développement, il faut le rôle
+    # `admin` — un scraper Prometheus porte un jeton comme un autre appelant.
+    metrics_dependencies = (
+        [] if _settings.environment == "development" else [Depends(require_roles("admin"))]
+    )
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/metrics",
         tags=["metrics"],
         include_in_schema=not is_production,
+        dependencies=metrics_dependencies,
     )
 
     # Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)

@@ -21,6 +21,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # meme ordre que le refus du mot de passe par defaut juste au-dessus.
 _ROLES_PROPRIETAIRES = frozenset({"gsie", "postgres"})
 
+# Valeurs de remplissage livrées par `.env.example` ou choisies par réflexe.
+# Le dev login accorde `roles=["admin"]` : laisser passer l'une d'elles revient
+# à publier un compte administrateur. Le contrôle vaut dans tous les
+# environnements — c'est justement en développement que le mot de passe reste
+# celui de l'exemple, et un poste de développement est joignable.
+_MOTS_DE_PASSE_DE_REMPLISSAGE = frozenset(
+    {
+        "",
+        "change-me-in-.env",
+        "change-me",
+        "changeme",
+        "admin",
+        "password",
+        "motdepasse",
+        "secret",
+    }
+)
+
 
 class Settings(BaseSettings):
     """Configuration globale de l'API GSIE.
@@ -46,7 +64,12 @@ class Settings(BaseSettings):
     # API
     api_v1_prefix: str = "/api/v1"
     cors_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:3000", "http://localhost:8080"]
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:4000",
+            "http://localhost:8080",
+            "http://127.0.0.1:4000",
+        ]
     )
     # Limite taille corps de requête (bytes) — défaut 1 MiB (OWASP A04)
     max_request_body_size: int = 1_048_576
@@ -68,6 +91,11 @@ class Settings(BaseSettings):
     # PostgreSQL + PostGIS
     # Format : postgresql+asyncpg://user:pass@host:5432/dbname
     database_url: str = "postgresql+asyncpg://gsie:gsie_dev@localhost:5432/gsie"
+    # URL de migration — distincte parce que le compte d'exécution ne doit
+    # plus pouvoir faire de DDL. `gsie_application` n'a ni CREATE ni ALTER :
+    # Alembic doit se connecter sous le compte d'administration. Vide, on
+    # retombe sur `database_url` (poste de développement, tests).
+    migration_database_url: str = ""
     # Pool sizing par worker Gunicorn :
     # workers × (pool_size + max_overflow) = connexions max applicatives.
     # Doit rester <= db_max_connections - 6 (reserve outbox-worker + admin).
@@ -162,6 +190,11 @@ class Settings(BaseSettings):
     otel_endpoint: str = "http://localhost:4317"
     otel_service_name: str = "gsie-api"
 
+    @property
+    def url_de_migration(self) -> str:
+        """URL employée par Alembic — le compte d'administration, pas l'API."""
+        return self.migration_database_url or self.database_url
+
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Valide que la configuration est sûre en production et staging."""
@@ -173,6 +206,16 @@ class Settings(BaseSettings):
                 f"Pool sizing incoherent: {self.gunicorn_workers} workers × "
                 f"{self.db_pool_size + self.db_max_overflow} connexions = "
                 f"{max_app_connections} + 6 reserve > max_connections={self.db_max_connections}"
+            )
+        # Contrôle valable partout : le dev login ouvre un compte `admin`.
+        if (
+            self.auth_dev_login_enabled
+            and self.auth_dev_password.strip().lower() in _MOTS_DE_PASSE_DE_REMPLISSAGE
+        ):
+            raise ValueError(
+                "GSIE_AUTH_DEV_PASSWORD porte une valeur de remplissage. Le dev "
+                "login accorde le role `admin` : choisissez un mot de passe reel, "
+                "ou posez GSIE_AUTH_DEV_LOGIN_ENABLED=false."
             )
         if self.environment in ("production", "staging"):
             if self.debug:

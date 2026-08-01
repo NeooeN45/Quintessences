@@ -222,12 +222,14 @@ class TestConnectionManagerRedis:
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
-        # Les reprises sont bornées : on annule seulement l'attente entre elles
-        # pour que le test reste instantané.
-        monkeypatch.setattr(manager_module, "_DELAI_REPRISE_PUBSUB", 0)
+        # Les reprises sont bornées : la boucle s'arrête d'elle-même après
+        # _REPRISES_PUBSUB_MAX tentatives. On accélère le délai entre reprises
+        # pour que le test reste instantané. Pas de wait_for (deadlock sur
+        # Windows avec asyncio.sleep + wait_for, Python 3.12).
+        monkeypatch.setattr(manager_module, "_DELAI_REPRISE_PUBSUB", 0.001)
 
         with patch.object(mgr, "_get_redis", new_callable=AsyncMock, return_value=fake_redis):
-            await asyncio.wait_for(mgr._redis_subscriber_loop(), timeout=5.0)
+            await mgr._redis_subscriber_loop()
 
         assert fake_pubsub.psubscribe.await_count == manager_module._REPRISES_PUBSUB_MAX + 1
 

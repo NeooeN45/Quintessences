@@ -6,9 +6,16 @@ from pydantic import ValidationError
 from gsie_api.core.config import Settings
 
 
-def should_accept_development_defaults():
-    """Settings doit accepter les valeurs par défaut en développement."""
-    settings = Settings(environment="development", debug=False)
+def should_accept_development_defaults(monkeypatch: pytest.MonkeyPatch):
+    """Settings doit accepter les valeurs par défaut en développement.
+
+    Le .env local peut surcharger rate_limit_storage_url (Redis en dev) ;
+    on l'isole pour vérifier que la valeur par défaut du code est bien
+    "memory://" quand aucune variable d'environnement n'est définie.
+    """
+    monkeypatch.delenv("GSIE_RATE_LIMIT_STORAGE_URL", raising=False)
+    # _env_file=None empêche pydantic-settings de lire le .env local
+    settings = Settings(environment="development", debug=False, _env_file=None)
     assert settings.debug is False
     assert settings.rate_limit_storage_url == "memory://"
 
