@@ -9,12 +9,24 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { getResourceTypes, getResources, type ResourceList } from "../lib/api";
+import { getResourceTypes, getResources, fetchWithAuth, API_PREFIX, type ResourceList } from "../lib/api";
+import { useDebounce } from "../lib/useDebounce";
 import { HoverCard, Skeleton, StatusBadge } from "./ui";
 import { useToast } from "./ToastProvider";
 
 type SortField = "id" | "type" | "status" | "created_at";
 type SortDir = "asc" | "desc";
+
+interface ResourceItem {
+  id: string;
+  type: string;
+  gsie_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  status?: string;
+  metadata_json?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 export default function ResourcesPanel() {
   const { showToast } = useToast();
@@ -24,24 +36,75 @@ export default function ResourcesPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [typeCounts, setTypeCounts] = useState<Record<string, number>>({});
+  const [failedCounts, setFailedCounts] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
+  // Fetch des types + counts en parallèle (batches de 10)
   useEffect(() => {
-    getResourceTypes()
-      .then((data) => {
+    let cancelled = false;
+    const counts: Record<string, number> = {};
+    const failed = new Set<string>();
+
+    (async () => {
+      try {
+        const data = await getResourceTypes();
+        if (cancelled) return;
         setTypes(data);
-        if (data.length > 0) setSelectedType(data[0]);
-      })
-      .catch((err) => {
+
+        // Fetch des counts en batches parallèles de 10 (évite le rate limit 60/min)
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < data.length; i += BATCH_SIZE) {
+          if (cancelled) return;
+          const batch = data.slice(i, i + BATCH_SIZE);
+          await Promise.allSettled(
+            batch.map(async (t) => {
+              try {
+                const resp = await fetchWithAuth(
+                  `${API_PREFIX}/resources?type=${encodeURIComponent(t)}&page=1&page_size=1`,
+                );
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const d = (await resp.json()) as ResourceList;
+                counts[t] = d.total;
+              } catch {
+                failed.add(t);
+              }
+            }),
+          );
+          if (cancelled) return;
+          setTypeCounts({ ...counts });
+          setFailedCounts(new Set(failed));
+          // Petit délai entre les batches pour respecter le rate limit
+          if (i + BATCH_SIZE < data.length) {
+            await new Promise((r) => setTimeout(r, 100));
+          }
+        }
+
+        if (cancelled) return;
+        // Sélectionner le type avec le plus grand count (qui a des données)
+        const sorted = Object.entries(counts)
+          .filter(([, c]) => c > 0)
+          .sort((a, b) => b[1] - a[1]);
+        if (sorted.length > 0) {
+          setSelectedType(sorted[0][0]);
+        } else if (data.length > 0) {
+          // Fallback : premier type si aucun n'a de données
+          setSelectedType(data[0]);
+        }
+      } catch (err) {
+        if (cancelled) return;
         const msg = err instanceof Error ? err.message : "Erreur";
         setError(msg);
         showToast(msg, "error");
         setLoading(false);
-      });
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [showToast]);
 
   useEffect(() => {
@@ -62,44 +125,21 @@ export default function ResourcesPanel() {
       .finally(() => setLoading(false));
   }, [selectedType, showToast]);
 
-  useEffect(() => {
-    if (types.length === 0) return;
-    // Sérialisation : on évite 10 requêtes parallèles qui saturent le rate limit (60/min)
-    const sample = types.slice(0, 10);
-    const counts: Record<string, number> = {};
-
-    const fetchSequentially = async () => {
-      for (const t of sample) {
-        try {
-          const r = await getResources(t, 1, 1);
-          counts[t] = r.total;
-          setTypeCounts({ ...counts });
-        } catch {
-          // Skip sur erreur (rate limit ou autre) — on garde les counts déjà obtenus
-        }
-        // Petit délai entre chaque requête pour éviter le burst
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      }
-    };
-
-    void fetchSequentially();
-  }, [types]);
-
   // Tri + filtrage côté client
   const sortedItems = useMemo(() => {
     if (!resources) return [];
-    let items = [...resources.items];
+    let items = [...resources.items] as ResourceItem[];
 
     // Filtrage par recherche
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter((item: any) =>
+    if (debouncedQuery) {
+      const q = debouncedQuery.toLowerCase();
+      items = items.filter((item) =>
         JSON.stringify(item).toLowerCase().includes(q),
       );
     }
 
     // Tri
-    items.sort((a: any, b: any) => {
+    items.sort((a, b) => {
       const av = a[sortField] ?? "";
       const bv = b[sortField] ?? "";
       if (av < bv) return sortDir === "asc" ? -1 : 1;
@@ -108,7 +148,7 @@ export default function ResourcesPanel() {
     });
 
     return items;
-  }, [resources, sortField, sortDir, searchQuery]);
+  }, [resources, sortField, sortDir, debouncedQuery]);
 
   // Pagination côté client
   const totalPages = Math.ceil(sortedItems.length / pageSize);
@@ -129,7 +169,7 @@ export default function ResourcesPanel() {
   const exportCSV = () => {
     if (!sortedItems.length) return;
     const headers = ["id", "type", "status", "created_at"];
-    const rows = sortedItems.map((item: any) =>
+    const rows = sortedItems.map((item: ResourceItem) =>
       headers.map((h) => `"${item[h] ?? ""}"`).join(","),
     );
     const csv = [headers.join(","), ...rows].join("\n");
@@ -270,9 +310,9 @@ export default function ResourcesPanel() {
               }`}
             >
               {type}
-              {typeCounts[type] !== undefined && (
+              {(typeCounts[type] !== undefined || failedCounts.has(type)) && (
                 <span className={`ml-1.5 text-[10px] ${selectedType === type ? "text-white/70" : "text-fg-500"}`}>
-                  {typeCounts[type]}
+                  {failedCounts.has(type) ? "—" : typeCounts[type]}
                 </span>
               )}
             </motion.button>
@@ -301,7 +341,7 @@ export default function ResourcesPanel() {
             aria-label="Exporter en CSV"
             className="flex items-center gap-1.5 rounded-md border border-border bg-bg-100 px-3 py-1.5 text-[12px] text-fg-300 transition-colors hover:border-border-strong hover:text-fg-100"
           >
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             CSV
@@ -311,7 +351,7 @@ export default function ResourcesPanel() {
             aria-label="Exporter en JSON"
             className="flex items-center gap-1.5 rounded-md border border-border bg-bg-100 px-3 py-1.5 text-[12px] text-fg-300 transition-colors hover:border-border-strong hover:text-fg-100"
           >
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             JSON
@@ -355,7 +395,7 @@ export default function ResourcesPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-light">
-                {paginatedItems.map((item: any, i: number) => (
+                {paginatedItems.map((item: ResourceItem, i: number) => (
                   <motion.tr
                     key={i}
                     initial={{ opacity: 0, x: -10 }}
@@ -383,7 +423,7 @@ export default function ResourcesPanel() {
               className="flex flex-col items-center justify-center rounded-lg border border-border bg-bg-100 p-12 text-center"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-bg-200">
-                <svg class="h-8 w-8 text-fg-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                <svg className="h-8 w-8 text-fg-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
               </div>

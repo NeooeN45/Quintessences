@@ -29,13 +29,14 @@ from gsie_api.engines.evidence.schemas import (
 # context manager. Sans eux, le lifespan crée de vraies connexions DB
 # (asyncpg) et Redis qui, au shutdown, ferment l'event loop sur Windows
 # et polluent les tests suivants (RuntimeError: Event loop is closed).
+# Note : ``close_refresh_token_store`` n'est PAS mocké — le mock laisse la
+# connexion Redis orpheline (voir conftest.py _LIFESPAN_MOCK_TARGETS).
 _LIFESPAN_MOCK_TARGETS = (
     "gsie_api.infrastructure.database.async_session_factory",
     "gsie_api.infrastructure.db_privileges.verifier_privileges_de_connexion",
     "gsie_api.websocket.manager.manager.start_redis_subscriber",
     "gsie_api.websocket.manager.manager.start_heartbeat",
     "gsie_api.websocket.manager.manager.shutdown",
-    "gsie_api.auth.refresh_tokens.close_refresh_token_store",
 )
 
 
@@ -114,11 +115,13 @@ def should_call_setup_opentelemetry_in_lifespan_when_enabled():
         mock_settings.rate_limit_storage_url = "memory://"
         mock_settings.max_request_body_size = 1_048_576
 
-        with (
-            patch("gsie_api.app._setup_opentelemetry") as mock_otel,
-            patch("gsie_api.infrastructure.database.engine") as mock_engine,
-            patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool,
-        ):
+        with ExitStack() as stack:
+            mock_otel = stack.enter_context(patch("gsie_api.app._setup_opentelemetry"))
+            mock_engine = stack.enter_context(patch("gsie_api.infrastructure.database.engine"))
+            mock_pool = stack.enter_context(
+                patch("gsie_api.infrastructure.redis_client.redis_pool")
+            )
+            _mock_lifespan(stack)
             mock_engine.dispose = AsyncMock()
             mock_pool.aclose = AsyncMock()
 

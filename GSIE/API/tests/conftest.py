@@ -5,9 +5,12 @@ pour que les autres suites (Knowledge Engine, pipeline) puissent réutiliser
 la même base de test sans relancer un conteneur Docker par fichier.
 """
 
+import asyncio
 import os
-from collections.abc import AsyncGenerator, Sequence
+from collections.abc import AsyncGenerator, Iterator, Sequence
+from contextlib import ExitStack
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy import text
@@ -15,11 +18,89 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from gsie_api.infrastructure.models import Base
 
+# Cibles du lifespan qui créent de vraies connexions (asyncpg, WebSocket).
+# Sans les mocker, ``TestClient(app)`` déclenche le lifespan qui ouvre/firme des
+# connexions async, fermant l'event loop sur Windows et polluant les tests
+# suivants (RuntimeError: Event loop is closed).
+# Note : ``close_refresh_token_store`` n'est PAS mocké ici — le mock laisse la
+# connexion Redis orpheline, qui réapparaît sur l'event loop fermée au test
+# suivant. La fermeture propre est gérée par le fixture ``_ensure_fresh_event_loop``.
+_LIFESPAN_MOCK_TARGETS = (
+    "gsie_api.infrastructure.database.async_session_factory",
+    "gsie_api.infrastructure.db_privileges.verifier_privileges_de_connexion",
+    "gsie_api.websocket.manager.manager.start_redis_subscriber",
+    "gsie_api.websocket.manager.manager.start_heartbeat",
+    "gsie_api.websocket.manager.manager.shutdown",
+)
+
+
+@pytest.fixture
+def mock_lifespan() -> Iterator[ExitStack]:
+    """Mocke les cibles async du lifespan pour éviter les connexions réelles.
+
+    Utiliser ce fixture dans tout test unitaire qui crée un ``TestClient(app)``
+    avec le lifespan context manager. Les tests d'intégration qui nécessitent
+    de vraies connexions DB/Redis ne l'utilisent pas.
+    """
+    with ExitStack() as stack:
+        for target in _LIFESPAN_MOCK_TARGETS:
+            stack.enter_context(patch(target, new_callable=AsyncMock))
+        yield stack
+
+
+@pytest.fixture(autouse=True)
+def _ensure_fresh_event_loop() -> object:
+    """Garantit une event loop non fermée pour chaque test.
+
+    Sur Windows, pytest-asyncio (mode auto, scope function) ferme l'event
+    loop après chaque test async mais ne la remet pas à ``None``. Les tests
+    synchrones utilisant ``TestClient`` (qui appelle ``asyncio.get_event_loop()``
+    en interne via httpx) récupèrent alors une loop fermée et lèvent
+    ``RuntimeError: Event loop is closed``.
+
+    Cette fixture autouse s'exécute avant chaque test : si la loop courante
+    est fermée, on en crée une nouvelle. Pour les tests async, pytest-asyncio
+    crée sa propre loop (qui remplace celle-ci). Le coût est négligeable
+    (un test ``is_closed()`` par test).
+    """
+    try:
+        loop = asyncio.get_event_loop_policy().get_event_loop()
+        if loop.is_closed():
+            asyncio.set_event_loop(asyncio.new_event_loop())
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter() -> object:
+    """Réinitialise les compteurs du rate limiter (slowapi) avant chaque test.
+
+    Le ``Limiter`` est un singleton module-level (``core/limiter.py``) partagé
+    par toutes les instances d'app créées via ``create_app()``. Sans reset,
+    les compteurs s'accumulent entre tests dans le même worker xdist et les
+    tests E2E reçoivent un ``429 Too Many Requests`` fallacieux.
+
+    ``limiter.reset()`` vide le storage (Redis ou memory). Les tests qui
+    vérifient explicitement le comportement du rate limiter
+    (``test_rate_limit_bulk.py``, ``test_limiter_contrat.py``) utilisent
+    leur propre limiter mocké et ne sont pas affectés.
+    """
+    from gsie_api.core.limiter import limiter
+
+    limiter.reset()
+    yield
+
+
 # Fichiers dont les tests dépendent d'un état de concurrence réel (verrous
-# PostgreSQL `FOR UPDATE SKIP LOCKED`) et ne doivent jamais tourner en
-# parallèle avec un autre test du même fichier. On ne modifie pas le fichier
-# de test lui-même : le marquage se fait ici, à la collecte.
-_FICHIERS_SERIAL = ("test_outbox_concurrence.py",)
+# PostgreSQL `FOR UPDATE SKIP LOCKED`) ou d'un quota de rate limiter partagé
+# sur Redis, et ne doivent jamais tourner en parallèle avec un autre test du
+# même fichier. On ne modifie pas le fichier de test lui-même : le marquage
+# se fait ici, à la collecte.
+_FICHIERS_SERIAL = (
+    "test_outbox_concurrence.py",
+    "test_e2e_cross_engines.py",  # TestRateLimiting consomme 35 req sur /correlation/compute
+)
 
 
 def pytest_collection_modifyitems(items: Sequence[Any]) -> None:

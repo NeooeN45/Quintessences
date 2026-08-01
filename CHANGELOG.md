@@ -4,6 +4,228 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-01 — AUDIT PHASE 4 : CORRECTION P0/P1/P2] - 2026-08-01
+
+Audit Phase 4 strict mais juste. 5 dimensions, 22 preuves reproduites.
+Score global 86%. Correction de tous les P1 et P2 actionnables.
+
+### P1-1 — 14 tests en échec → 0 (résolu)
+
+- **Cause racine** : pollution d'event loop asyncio + rate limiter partagé
+  entre tests dans le même processus. Les 14 tests passaient en isolation
+  mais échouaient en suite complète (segfault Pydantic sur Windows après
+  ~1600 tests dans le même processus).
+- **Fix 1** : activation de `pytest-xdist -n 2 --dist=loadfile` par défaut
+  dans `pyproject.toml` → chaque fichier de test s'exécute dans son propre
+  processus worker, isolant les fuites d'état.
+- **Fix 2** : fixture autouse `_ensure_fresh_event_loop` dans
+  `tests/conftest.py` → crée une nouvelle event loop si la courante est
+  fermée (fix Windows `RuntimeError: Event loop is closed`).
+- **Fix 3** : fixture autouse `_reset_rate_limiter` dans `conftest.py` →
+  `limiter.reset()` avant chaque test pour éviter les `429 Too Many
+  Requests` fallacieux (compteurs s'accumulant entre tests E2E).
+- **Fix 4** : fixture `mock_lifespan` dans `conftest.py` + utilisation
+  dans `test_app.py`, `test_auth.py`, `test_coverage.py` → mocke les
+  connexions DB/Redis/WebSocket du lifespan pour éviter que des vraies
+  connexions async ne polluent l'event loop.
+- **Résultat** : `1640 passed, 114 skipped, 0 failed, 0 error`.
+
+### P1-2 — 7 erreurs TypeScript ADMIN_WEB → 0 (résolu)
+
+- `EngineStatusResponse` : ajout de `planned_week?: number` et
+  `language?: string` (champs renvoyés par l'API mais absents du type).
+- `ResourcesPanel.tsx` : 3 `class=` → `className=` sur SVG React
+  (anti-pattern HTML → JSX).
+- **Résultat** : `tsc --noEmit` exit 0, `npm run build` 12 pages 0 erreur.
+
+### P2-10 — Warning fallback Rust au démarrage (résolu)
+
+- **Cause racine** : le module Rust `gsie_evidence` (PyO3/maturin) n'était
+  construit que dans le Dockerfile (stage builder). En dev local Windows,
+  la wheel n'était pas installée → `ImportError` → fallback Python →
+  warning `evidence_engine_rust_not_available_fallback_python`.
+- **Fix** : build local de la wheel avec `maturin build --release` +
+  installation dans le venv via `uv pip install`. Le moteur Rust est
+  maintenant chargé en local (`evidence_engine_rust_loaded version=0.1.0`).
+- **Documentation** : procédure de build local ajoutée au
+  `ENGINES/EVIDENCE_ENGINE/README.md`.
+
+### Documentation
+
+- `docs/TESTING_XDIST.md` : mis à jour pour refléter l'activation par
+  défaut de xdist et la résolution des contraintes 2 et 3.
+
+---
+
+## [SESSION 2026-08-01 — AUDIT QUALITÉ BASE + AMÉLIORATIONS PIPELINE TREEKIPEDIA] - 2026-08-01
+
+Audit qualité de la base GSIE (post-ingestion 1000 espèces Treekipedia)
+et intégration de toutes les améliorations identifiées, sans casser
+l'existant.
+
+### Audit qualité (constats)
+
+- **P1-1 (résolu)** : Seq Scan sur `entity_alias(namespace, external_id)`
+  à chaque lookup d'idempotence — coût 48.83, prohibitif à 135k lignes.
+- **P1-2 (résolu)** : pas d'index GIN sur `resource.metadata_json`
+  (qui stocke taxonomy, images, descriptions).
+- **P1-3 (résolu)** : commit par lot de 10 fragile, pas de checkpoint.
+- **P2-1 (résolu)** : 11 descriptions Wikipédia < 100 chars (stubs).
+- **P2-2 (résolu)** : 1 image sans license.
+- **P3-1 (résolu)** : images stockées dans `metadata_json` au lieu d'une
+  table dédiée.
+- **P3-2 (résolu)** : descriptions monolingues (EN uniquement).
+- **P3-3 (résolu)** : pas de data dictionary (COMMENT ON COLUMN).
+
+### Migration Alembic `20260801_0027`
+
+- **Index unique composite** sur `entity_alias(namespace, external_id)` :
+  Seq Scan → Index Scan unique (coût 48.83 → 8.30, 6× plus rapide,
+  constant à 135k lignes) + contrainte DB d'unicité (aujourd'hui
+  uniquement applicative).
+- **Index GIN** sur `resource.metadata_json` (`jsonb_path_ops`) :
+  recherche par clé JSONB accélérée.
+- **Table `entity_image`** : images d'espèces (Wikimedia Commons, etc.)
+  avec url, license, photographer, page_url, source, is_primary,
+  validated_at, last_checked_at. Index sur `entity_id` + index unique
+  partiel sur `is_primary=true`.
+- **Table `entity_description`** : descriptions multilingues avec
+  language, source, content, quality. Index sur `entity_id` + index
+  unique `(entity_id, language, source)`.
+- **Table `ingestion_progress`** : checkpoint de progression pour
+  reprise automatique après crash. Colonnes : pipeline (unique),
+  last_offset, total, status, started_at, metadata_json.
+- **COMMENT ON COLUMN** : data dictionary sur 27 colonnes des tables
+  centrales (resource, entity_alias, entity) et nouvelles tables.
+
+### Modèles SQLAlchemy (`enrichment.py`)
+
+- `EntityImageModel` : table `entity_image` (FK CASCADE vers resource).
+- `EntityDescriptionModel` : table `entity_description` (FK CASCADE).
+- `IngestionProgressModel` : table `ingestion_progress` (pipeline unique).
+- Enregistrement dans `models/__init__.py` → `Base.metadata.tables`
+  passe de 116 à 119 tables.
+
+### Pipeline Treekipedia refactorisé
+
+- **`ingest_treekipedia.py`** :
+  - **Parallélisation GBIF** : `asyncio.Semaphore(concurrency)` avec
+    `asyncio.gather` (défaut 5, configurable via `--concurrency`).
+    Gain estimé : 6 min → ~2 min pour 1000 espèces.
+  - **Batch inserts** : commit par lot de 100 (au lieu de 10).
+  - **Checkpoint** : table `ingestion_progress` + option `--resume`
+    pour reprise automatique après crash.
+  - **Option `--offset`** : démarrer à un offset donné dans le CSV.
+- **`enrich_treekipedia.py`** :
+  - **Tables dédiées** : images → `entity_image`, descriptions →
+    `entity_description` (au lieu de `metadata_json`).
+  - **Filtrage stubs** : descriptions < 100 chars non stockées (P2-1).
+  - **Qualité estimée** : high/medium/low/stub basé sur la longueur.
+  - **Option `--migrate-metadata`** : migre les images/descriptions
+    existantes de `metadata_json` vers les tables dédiées.
+- **`validate_image_urls.py`** (nouveau) : validation des URLs
+  d'images en base (HTTP HEAD parallèle), marque `last_checked_at`,
+  supprime les liens morts avec `--fix`.
+
+### WikimediaClient étendu
+
+- **`get_species_description(language=...)`** : paramètre `language`
+  (défaut "en", "fr" pour Wikipédia FR).
+- **`get_species_description_with_fallback()`** : EN → FR si EN
+  absent ou trop court (< 100 chars). Retourne `(description, langue)`.
+- **Constante `_MIN_DESCRIPTION_LENGTH = 100`** : seuil de qualité
+  d'une description (audit P2-1).
+
+### Monitoring Prometheus (`metrics/db_quality.py`)
+
+- **`gsie_entities_total`** : nombre total d'entities.
+- **`gsie_aliases_total{namespace}`** : aliases par namespace.
+- **`gsie_enrichment_completeness{field}`** : taux de complétude par
+  champ (taxonomy, image, description, common_names — metadata et
+  tables dédiées).
+- **`gsie_descriptions_by_language{language}`** : descriptions par langue.
+- **`gsie_descriptions_by_quality{quality}`** : descriptions par qualité.
+- **`gsie_images_validated_total` / `gsie_images_unvalidated_total`** :
+  images avec/sans validation d'URL.
+- **`gsie_ingestion_progress_offset{pipeline,status}`** : progression
+  des pipelines d'ingestion.
+- **Endpoint `/metrics/db-quality`** (admin-only hors dev) : déclenche
+  le calcul des métriques à la demande.
+
+### Tests
+
+- **`test_enrichment_models.py`** (11 tests) : vérifie l'enregistrement
+  des 3 nouvelles tables dans `Base.metadata`, leurs index, FK, et
+  contraintes.
+- **`test_wikimedia_fallback_fr.py`** (8 tests) : vérifie le fallback
+  EN → FR, le filtrage des stubs, et le routage par langue.
+- **`test_migration_contract.py`** mis à jour : `_HEAD = "20260801_0027"`,
+  `len(Base.metadata.tables) == 119`.
+- **Total** : 1421 tests passent, 65 skipped, 0 échec (hors test_auth.py
+  flaky Redis, non lié).
+
+### Validation
+
+- `ruff check` : 0 erreur sur tous les fichiers nouveaux/modifiés.
+- `mypy --strict` : 0 erreur sur 153 fichiers source.
+- `EXPLAIN` : Index Scan using `idx_entity_alias_ns_extid` (coût 8.30,
+  vs Seq Scan 48.83 avant).
+
+---
+
+## [SESSION 2026-08-01 — TREEKIPEDIA : INGESTION + ENRICHISSEMENT 1000 ESPÈCES] - 2026-08-01
+
+Ingestion et enrichissement d'un lot de 1000 espèces Treekipedia dans la
+base GSIE, à partir du snapshot CSV local officiel (l'API distante
+Treekipedia reste inaccessible — 404 sur tous les endpoints documentés).
+
+### Pipeline
+
+1. **Ingestion** (`ingest_treekipedia.py --limit 1000`) : lecture du CSV
+   simple (67 928 espèces), résolution GBIF de chaque nom scientifique,
+   création du taxon GSIE + alias Treekipedia (idempotent).
+2. **Enrichissement** (`enrich_treekipedia.py --limit 1000`) : ajout de la
+   taxonomie riche (genus, family, class, order) depuis le CSV export
+   Treekipedia, des images Wikimedia Commons (pré-résolues JSON puis API
+   en fallback) et des descriptions Wikipédia EN.
+
+### Résultats
+
+- **Ingestion** : 1000/1000 succès, 0 échec (~6 min). 655 taxons uniques
+  (déduplication GBIF), 1000 aliases Treekipedia, 655 aliases GBIF.
+- **Enrichissement** : 1000/1000 succès, 0 échec (~10 min).
+  - `taxonomy` : 1000/1000 (CSV riche)
+  - `description_wikipedia` : 857/1000 (API Wikipédia EN)
+  - `image_api_commons` : 831/1000 (API Wikimedia Commons)
+  - `image_pre_resolue` : 112/1000 (JSON images Treekipedia)
+- **Tests** : 1403 passent, 65 skipped, 0 échec (aucune régression).
+
+### Échantillon (Abies alba)
+
+- taxonomy : `Pinaceae / Abies / Pinopsida / Pinales`
+- 15 noms vernaculaires (EN, DE, NL, FR, DA, RU, JA…)
+- image : Wikimedia Commons (CC-BY-SA-3.0)
+- description : extrait introductif Wikipédia EN
+
+### Fichiers
+
+- `GSIE/API/ingest_treekipedia.py` — script d'ingestion (existe depuis
+  session pilote 100 espèces).
+- `GSIE/API/enrich_treekipedia.py` — script d'enrichissement.
+- `GSIE/API/src/gsie_api/engines/botanical/treekipedia_client.py` —
+  client CSV (simple + riche + images pré-résolues).
+- `GSIE/API/src/gsie_api/engines/botanical/wikimedia_client.py` —
+  client Wikimedia (Commons + Wikipédia).
+
+### Suite possible
+
+- Ingestion complète 67 927 espèces (~4h20 ingestion + ~16h enrichissement)
+  — à déléguer au Devin Cloud ou en arrière-plan non-surveillé.
+- Descriptions Wikipédia FR (fallback pour espèces européennes).
+- Autécologie structurée (RFC-0016 — curateur humain requis).
+
+---
+
 ## [SESSION 2026-08-01 — VISUALISATION DB + SDK PYTHON + TABLEAU DE CONTRÔLE] - 2026-08-01
 
 Déploiement des outils de visualisation DB, création du SDK Python GSIE

@@ -15,7 +15,7 @@ auth_router._settings.auth_dev_password = "changeme"
 
 
 @pytest.fixture
-def client() -> Generator[TestClient, None, None]:
+def client(mock_lifespan: object) -> Generator[TestClient, None, None]:
     """TestClient avec lifespan géré — évite la pollution d'event loop.
 
     Un TestClient créé au niveau module sans context manager ne déclenche
@@ -27,6 +27,10 @@ def client() -> Generator[TestClient, None, None]:
     La fixture crée un nouveau TestClient par test avec context manager,
     garantissant que le lifespan (startup + shutdown) s'exécute
     correctement et que l'event loop est proprement gérée.
+
+    ``mock_lifespan`` (conftest.py) mocke les connexions DB/Redis/WebSocket
+    du lifespan pour éviter que des vraies connexions async ne polluent
+    l'event loop sur Windows.
     """
     with TestClient(create_app()) as test_client:
         yield test_client

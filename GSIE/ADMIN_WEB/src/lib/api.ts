@@ -288,6 +288,8 @@ export interface EngineStatusResponse {
   status: string;
   version?: string;
   message?: string;
+  planned_week?: number;
+  language?: string;
 }
 
 export async function getEngineStatus(engine: string): Promise<EngineStatusResponse> {

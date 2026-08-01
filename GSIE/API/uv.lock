@@ -791,7 +791,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-redis", specifier = "==0.50b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = "==0.50b0" },
     { name = "opentelemetry-sdk", specifier = "==1.29.0" },
-    { name = "pgvector", specifier = ">=0.5.0" },
+    { name = "pgvector", specifier = "==0.5.0" },
     { name = "prometheus-fastapi-instrumentator", specifier = "==7.0.0" },
     { name = "pydantic", specifier = "==2.10.4" },
     { name = "pydantic-settings", specifier = "==2.7.0" },
@@ -818,7 +818,7 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "psycopg2-binary", specifier = ">=2.9.12" }]
+dev = [{ name = "psycopg2-binary", specifier = "==2.9.12" }]
 
 [[package]]
 name = "gunicorn"
