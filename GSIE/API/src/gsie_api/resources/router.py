@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
 from gsie_api.core.rbac import (
+    PERSONAL_DATA_TYPES,
     RGPD_RESOURCE_TYPES,
     can_access_resource,
     check_permission,
@@ -98,11 +99,16 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
 
 
 def _excluded_read_types(user: dict[str, Any]) -> frozenset[str]:
-    """Calcule les types à retirer avant toute requête paginée."""
+    """Calcule les types à retirer avant toute requête paginée.
+
+    Inclut les types RGPD (consent, data_subject, etc.) et les types
+    portant des identifiants directs de personnes (agent, resource_diff)
+    que l'utilisateur n'a pas le droit de lire.
+    """
     check_permission(user, "resource", "read")
     return frozenset(
         resource_type
-        for resource_type in RGPD_RESOURCE_TYPES
+        for resource_type in RGPD_RESOURCE_TYPES | PERSONAL_DATA_TYPES
         if not can_access_resource(user, resource_type, "read")
     )
 
@@ -112,8 +118,10 @@ def _excluded_read_types(user: dict[str, Any]) -> frozenset[str]:
     response_model=ResourceTypesResponse,
     summary="Liste des types de resources disponibles",
 )
+@_limiter.limit("120/minute")
 async def list_types(
     request: Request,
+    response: Response,
     user: CurrentUser,
 ) -> ResourceTypesResponse:
     """Retourne la liste autorisée des types de ressources enregistrés."""
@@ -127,7 +135,7 @@ async def list_types(
     response_model=ResourceListResponse,
     summary="Liste paginée de resources",
 )
-@_limiter.limit("60/minute")
+@_limiter.limit("120/minute")
 async def list_resources(
     request: Request,
     response: Response,

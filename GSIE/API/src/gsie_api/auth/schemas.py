@@ -40,3 +40,19 @@ class VerifyResponse(BaseModel):
     subject: str | None = None
     token_type: str | None = None
     expires_at: str | None = None
+
+
+class LogoutRequest(BaseModel):
+    """Requête de logout — refresh token à révoquer."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    refresh_token: str = Field(min_length=1, description="Refresh token JWT à révoquer")
+
+
+class LogoutResponse(BaseModel):
+    """Réponse de logout — confirmation de révocation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    revoked: bool

@@ -21,11 +21,17 @@ n'est pas testé ici : ces contrôles n'appartiennent pas au code.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
 from gsie_api.core.config import Settings
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def _kwargs_production(**overrides: object) -> dict[str, object]:
@@ -49,16 +55,57 @@ def _kwargs_production(**overrides: object) -> dict[str, object]:
     } | overrides
 
 
+# Mocks du lifespan appliqués à tous les tests de ce module.
+# Sans eux, le lifespan crée de vraies connexions DB (asyncpg) et Redis
+# qui, au shutdown du TestClient, ferment l'event loop sur Windows et
+# polluent les tests suivants (RuntimeError: Event loop is closed).
+_LIFESPAN_PATCHES = (
+    patch("gsie_api.infrastructure.database.engine"),
+    patch("gsie_api.infrastructure.database.async_session_factory"),
+    patch(
+        "gsie_api.infrastructure.db_privileges" ".verifier_privileges_de_connexion",
+        new_callable=AsyncMock,
+    ),
+    patch(
+        "gsie_api.websocket.manager.manager.start_redis_subscriber",
+        new_callable=AsyncMock,
+    ),
+    patch(
+        "gsie_api.websocket.manager.manager.start_heartbeat",
+        new_callable=AsyncMock,
+    ),
+    patch(
+        "gsie_api.websocket.manager.manager.shutdown",
+        new_callable=AsyncMock,
+    ),
+    patch(
+        "gsie_api.auth.refresh_tokens.close_refresh_token_store",
+        new_callable=AsyncMock,
+    ),
+    patch("gsie_api.infrastructure.redis_client.redis_pool"),
+)
+
+
 @pytest.fixture
-def app_production(monkeypatch: pytest.MonkeyPatch):
-    """Application construite avec une configuration de production."""
+def app_production(monkeypatch: pytest.MonkeyPatch) -> Iterator[object]:
+    """Application construite avec une configuration de production.
+
+    Les mocks du lifespan sont actifs pendant la durée de la fixture pour
+    éviter que le TestClient ne crée de vraies connexions DB/Redis.
+    """
     reglages = Settings(**_kwargs_production())  # type: ignore[arg-type]
     monkeypatch.setattr("gsie_api.app._settings", reglages)
-    return create_app()
+    for p in _LIFESPAN_PATCHES:
+        p.start()
+    try:
+        yield create_app()
+    finally:
+        for p in _LIFESPAN_PATCHES:
+            p.stop()
 
 
 @pytest.fixture
-def app_developpement(monkeypatch: pytest.MonkeyPatch):
+def app_developpement(monkeypatch: pytest.MonkeyPatch) -> Iterator[object]:
     """Application construite en développement — la comparaison utile."""
     reglages = Settings(
         **_kwargs_production(
@@ -68,7 +115,13 @@ def app_developpement(monkeypatch: pytest.MonkeyPatch):
         )  # type: ignore[arg-type]
     )
     monkeypatch.setattr("gsie_api.app._settings", reglages)
-    return create_app()
+    for p in _LIFESPAN_PATCHES:
+        p.start()
+    try:
+        yield create_app()
+    finally:
+        for p in _LIFESPAN_PATCHES:
+            p.stop()
 
 
 @pytest.mark.parametrize("chemin", ["/docs", "/redoc"])

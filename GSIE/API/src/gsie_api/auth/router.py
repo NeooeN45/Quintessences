@@ -16,7 +16,14 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from gsie_api.auth.refresh_tokens import RefreshTokenStore, get_refresh_token_store
-from gsie_api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, VerifyResponse
+from gsie_api.auth.schemas import (
+    LoginRequest,
+    LogoutRequest,
+    LogoutResponse,
+    RefreshRequest,
+    TokenResponse,
+    VerifyResponse,
+)
 from gsie_api.core.auth import (
     create_access_token,
     create_refresh_token,
@@ -166,12 +173,15 @@ async def login(
         "et un nouveau refresh token (rotation)."
     ),
 )
+@_limiter.limit("30/minute")
 async def refresh_token(
-    request: RefreshRequest,
+    request: Request,
+    response: Response,
+    refresh_request: RefreshRequest,
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
 ) -> TokenResponse:
     """Échange un refresh token contre un nouveau access token."""
-    payload = verify_token(request.refresh_token, expected_type="refresh")
+    payload = verify_token(refresh_request.refresh_token, expected_type="refresh")
     subject = payload.get("sub")
     jti = payload.get("jti")
     if not isinstance(subject, str) or not isinstance(jti, str):
@@ -222,7 +232,10 @@ async def refresh_token(
     summary="Vérifier un token",
     description="Vérifie la validité du token d'accès fourni dans le header Authorization.",
 )
+@_limiter.limit("60/minute")
 async def verify_access_token(
+    request: Request,
+    response: Response,
     user: Annotated[dict[str, object], Depends(get_current_user)],
 ) -> VerifyResponse:
     """Vérifie la validité du token d'accès."""
@@ -239,3 +252,35 @@ async def verify_access_token(
         token_type=token_type if isinstance(token_type, str) else None,
         expires_at=expires_at,
     )
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Déconnexion — révocation du refresh token",
+    description=(
+        "Révoque le refresh token fourni dans le registre. Le access token "
+        "actif reste valide jusqu'à son expiration (15 min) — c'est la "
+        "limite du JWT sans liste noire centralisée. Le refresh token ne "
+        "peut plus être utilisé pour obtenir un nouveau access token."
+    ),
+)
+@_limiter.limit("30/minute")
+async def logout(
+    request: Request,
+    response: Response,
+    logout_request: LogoutRequest,
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+) -> LogoutResponse:
+    """Révoque un refresh token (consommation atomique dans le registre)."""
+    payload = verify_token(logout_request.refresh_token, expected_type="refresh")
+    jti = payload.get("jti")
+    if not isinstance(jti, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token claims",
+        )
+    revoked = await refresh_store.consume(jti)
+    logger.info("logout", jti=jti, revoked=revoked)
+    return LogoutResponse(revoked=revoked)

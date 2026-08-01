@@ -123,8 +123,13 @@ class ResourceService:
     def _get_model_cls(self, type_name: str) -> type[Any]:
         """Récupère la classe modèle SQLAlchemy pour un type donné."""
         if type_name not in RESOURCE_TYPES:
+            # Ne pas énumérer les types : le message d'erreur renvoyé au
+            # client exposait les 90 types du registre, y compris les 4
+            # que /resources/types censure pour les non-RGPD-managers
+            # (audit 2026-08-01, constat K).
             raise ValueError(
-                f"Type inconnu : {type_name}. Types disponibles : {sorted(RESOURCE_TYPES.keys())}"
+                f"Type inconnu : {type_name}. "
+                "Consultez GET /resources/types pour la liste autorisée."
             )
         return RESOURCE_TYPES[type_name]
 

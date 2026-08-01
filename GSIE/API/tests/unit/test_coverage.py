@@ -8,6 +8,7 @@ Couvre :
 
 import os
 import tempfile
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -23,6 +24,26 @@ from gsie_api.engines.evidence.schemas import (
     SourceReference,
     SourceType,
 )
+
+# Mocks du lifespan applés par les tests qui créent un TestClient avec
+# context manager. Sans eux, le lifespan crée de vraies connexions DB
+# (asyncpg) et Redis qui, au shutdown, ferment l'event loop sur Windows
+# et polluent les tests suivants (RuntimeError: Event loop is closed).
+_LIFESPAN_MOCK_TARGETS = (
+    "gsie_api.infrastructure.database.async_session_factory",
+    "gsie_api.infrastructure.db_privileges.verifier_privileges_de_connexion",
+    "gsie_api.websocket.manager.manager.start_redis_subscriber",
+    "gsie_api.websocket.manager.manager.start_heartbeat",
+    "gsie_api.websocket.manager.manager.shutdown",
+    "gsie_api.auth.refresh_tokens.close_refresh_token_store",
+)
+
+
+def _mock_lifespan(stack: ExitStack) -> None:
+    """Active les mocks du lifespan sur l'ExitStack donnée."""
+    for target in _LIFESPAN_MOCK_TARGETS:
+        stack.enter_context(patch(target, new_callable=AsyncMock))
+
 
 # --- app.py : OpenTelemetry setup ---
 
@@ -128,10 +149,12 @@ def should_close_connections_on_shutdown():
         mock_settings.rate_limit_storage_url = "memory://"
         mock_settings.max_request_body_size = 1_048_576
 
-        with (
-            patch("gsie_api.infrastructure.database.engine") as mock_engine,
-            patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool,
-        ):
+        with ExitStack() as stack:
+            mock_engine = stack.enter_context(patch("gsie_api.infrastructure.database.engine"))
+            mock_pool = stack.enter_context(
+                patch("gsie_api.infrastructure.redis_client.redis_pool")
+            )
+            _mock_lifespan(stack)
             mock_engine.dispose = AsyncMock()
             mock_pool.disconnect = AsyncMock()
 
@@ -163,17 +186,21 @@ def should_log_error_when_shutdown_cleanup_fails():
         mock_settings.rate_limit_storage_url = "memory://"
         mock_settings.max_request_body_size = 1_048_576
 
-        with patch("gsie_api.infrastructure.database.engine") as mock_engine:
+        with ExitStack() as stack:
+            mock_engine = stack.enter_context(patch("gsie_api.infrastructure.database.engine"))
+            _mock_lifespan(stack)
             mock_engine.dispose = AsyncMock(side_effect=RuntimeError("dispose failed"))
-            with patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool:
-                mock_pool.aclose = AsyncMock()
+            mock_pool = stack.enter_context(
+                patch("gsie_api.infrastructure.redis_client.redis_pool")
+            )
+            mock_pool.aclose = AsyncMock()
 
-                app = create_app()
-                client = TestClient(app)
+            app = create_app()
+            client = TestClient(app)
 
-                # Le shutdown ne doit pas crasher même si dispose échoue
-                with client:
-                    pass
+            # Le shutdown ne doit pas crasher même si dispose échoue
+            with client:
+                pass
 
 
 # --- core/auth.py : chargement clés depuis fichiers ---

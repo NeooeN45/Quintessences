@@ -15,6 +15,7 @@ from fastapi import HTTPException
 from gsie_api.core.rbac import (
     _ACTIONS,
     _RGPD_TYPES,
+    PERSONAL_DATA_TYPES,
     check_permission,
     require_roles,
 )
@@ -86,6 +87,68 @@ class TestCheckPermission:
             with pytest.raises(HTTPException) as exc:
                 check_permission(user, "assertion", action)
             assert exc.value.status_code == 403
+
+
+class TestConstatERgpdManagerRestreint:
+    """Le rgpd_manager ne peut écrire que sur les types RGPD.
+
+    Audit 2026-08-01, constat E : sans cette restriction, un DPO au
+    moindre privilège pouvait modifier ou supprimer tout le métamodèle.
+    """
+
+    def test_should_deny_rgpd_manager_write_on_non_rgpd_type(self) -> None:
+        user = {"sub": "rgpd1", "roles": ["rgpd_manager"]}
+        for action in ("write", "delete", "export"):
+            with pytest.raises(HTTPException) as exc:
+                check_permission(user, "assertion", action)
+            assert exc.value.status_code == 403
+
+    def test_should_allow_rgpd_manager_write_on_rgpd_type(self) -> None:
+        user = {"sub": "rgpd1", "roles": ["rgpd_manager"]}
+        for rtype in _RGPD_TYPES:
+            check_permission(user, rtype, "write")  # ne lève pas
+
+    def test_should_allow_rgpd_manager_read_on_non_rgpd_type(self) -> None:
+        """La lecture reste ouverte : un DPO peut auditer le métamodèle."""
+        user = {"sub": "rgpd1", "roles": ["rgpd_manager"]}
+        check_permission(user, "assertion", "read")  # ne lève pas
+
+
+class TestConstatBPersonalDataTypes:
+    """Les types portant des identifiants directs sont isolés du reader.
+
+    Audit 2026-08-01, constat B : `agent` (nom, ORCID) est dans public
+    sans RLS. `data_subject.agent_id` pointe vers lui : un reader
+    reconstituait l'identité derrière un pseudonyme en un GET.
+
+    Audit 2026-08-01, constat J : `resource_diff` conserve les
+    old_value/new_value de chaque modification — le droit à l'effacement
+    n'est pas honoré si un reader peut les lire.
+    """
+
+    def test_should_deny_reader_read_on_personal_data_types(self) -> None:
+        user = {"sub": "reader1", "roles": ["reader"]}
+        for rtype in PERSONAL_DATA_TYPES:
+            with pytest.raises(HTTPException) as exc:
+                check_permission(user, rtype, "read")
+            assert exc.value.status_code == 403
+
+    def test_should_allow_writer_read_on_personal_data_types(self) -> None:
+        user = {"sub": "writer1", "roles": ["writer"]}
+        for rtype in PERSONAL_DATA_TYPES:
+            check_permission(user, rtype, "read")  # ne lève pas
+
+    def test_should_allow_writer_write_on_agent(self) -> None:
+        """Les writers peuvent créer des agents (provenance PROV-O)."""
+        user = {"sub": "writer1", "roles": ["writer"]}
+        check_permission(user, "agent", "write")  # ne lève pas
+
+    def test_should_deny_rgpd_manager_write_on_agent(self) -> None:
+        """Le rgpd_manager ne gère pas la provenance."""
+        user = {"sub": "rgpd1", "roles": ["rgpd_manager"]}
+        with pytest.raises(HTTPException) as exc:
+            check_permission(user, "agent", "write")
+        assert exc.value.status_code == 403
 
 
 class TestRequireRoles:

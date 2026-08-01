@@ -24,15 +24,40 @@ from fastapi import Depends, HTTPException, status
 
 from gsie_api.core.auth import get_current_user
 
-# Types RGPD — nécessitent le rôle rgpd_manager ou admin
+# Types RGPD — nécessitent le rôle rgpd_manager ou admin.
+# Les migrations 0021 et 0023 ont déplacé data_subject_consent,
+# rights_statement et spatial_disclosure_policy vers gsie_rgpd : ils
+# portent des données personnelles ou des décisions d'accès et doivent
+# être isolés du reader/writer ordinaires.
 RGPD_RESOURCE_TYPES: frozenset[str] = frozenset(
     {
         "consent",
         "data_subject",
         "sensitivity_classification",
         "access_policy",
+        "rights_statement",
+        "spatial_disclosure_policy",
     }
 )
+
+# Types portant des identifiants directs de personnes (nom, ORCID) ou
+# des historiques de modification qui peuvent contenir d'anciennes
+# valeurs de données personnelles.
+#
+# `agent` est une table de provenance (PROV-O), pas une table RGPD :
+# elle reste dans `public` et les writers peuvent y écrire pour tracer
+# l'origine des données. Mais `data_subject.agent_id` pointe vers elle,
+# et un reader pouvait reconstituer « propriétaire forestier ↔
+# géométrie de sa parcelle » en trois GET (audit 2026-08-01, constat B).
+#
+# `resource_diff` porte les old_value/new_value de chaque modification
+# (champ `changes` JSONB). Quand une donnée personnelle est modifiée ou
+# supprimée, le diff en conserve l'ancienne valeur : le droit à
+# l'effacement n'est pas honoré si un reader peut le lire
+# (audit 2026-08-01, constat J).
+#
+# La lecture est donc restreinte à writer/rgpd_manager/admin — pas reader.
+PERSONAL_DATA_TYPES: frozenset[str] = frozenset({"agent", "resource_diff"})
 
 # Alias temporaire pour compatibilité des imports historiques.
 _RGPD_TYPES = RGPD_RESOURCE_TYPES
@@ -89,6 +114,20 @@ def check_permission(
             detail=(f"Access to {resource_type} requires rgpd_manager or admin role"),
         )
 
+    # Types portant des identifiants directs de personnes : un reader
+    # ne peut pas les lire. `data_subject.agent_id` pointe vers `agent`
+    # (nom, ORCID) — sans cette barrière, un reader reconstitue
+    # l'identité derrière un pseudonyme (audit 2026-08-01, constat B).
+    if (
+        resource_type in PERSONAL_DATA_TYPES
+        and action == "read"
+        and not roles.intersection({"writer", "rgpd_manager"})
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Read access to {resource_type} requires writer, rgpd_manager or admin role",
+        )
+
     # Toute lecture exige un role explicite. Un JWT valide sans autorisation
     # n'accorde aucun droit implicite.
     if action == "read" and not roles.intersection({"reader", "writer", "rgpd_manager"}):
@@ -97,13 +136,28 @@ def check_permission(
             detail="read action requires reader, writer, rgpd_manager or admin role",
         )
 
-    # Vérification des actions d'écriture
+    # Vérification des actions d'écriture.
+    #
+    # `rgpd_manager` ne peut écrire que sur les types RGPD : son rôle est
+    # de gérer les consentements et les politiques d'accès, pas le
+    # métamodèle forestier. Sans cette restriction, un DPO au moindre
+    # privilège pouvait modifier ou supprimer tout le métamodèle
+    # (assertion, observation, place, etc.) — audit 2026-08-01, constat E.
     is_write_action = action in _ACTIONS_ECRITURE
-    if is_write_action and "writer" not in roles and "rgpd_manager" not in roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"{action} action requires writer, rgpd_manager or admin role",
-        )
+    if is_write_action:
+        if "writer" in roles:
+            pass  # writer écrit sur les types non-RGPD (déjà vérifié ci-dessus)
+        elif "rgpd_manager" in roles and resource_type in RGPD_RESOURCE_TYPES:
+            pass  # rgpd_manager écrit sur les types RGPD uniquement
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"{action} action requires writer role"
+                    + (" on non-RGPD types" if "rgpd_manager" in roles else "")
+                    + ", rgpd_manager role on RGPD types, or admin role"
+                ),
+            )
 
     # Sortie fermée : toute action que les branches ci-dessus n'ont pas évaluée
     # est refusée, jamais accordée par défaut.
