@@ -1,0 +1,126 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Connexion">
+  <div class="flex min-h-screen items-center justify-center bg-bg-000 px-4">
+    <div class="w-full max-w-sm">
+      <!-- Logo -->
+      <div class="mb-8 flex items-center justify-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded bg-accent text-sm font-bold text-white">
+          G
+        </div>
+        <span class="text-lg font-semibold tracking-tight text-fg-100">GSIE Admin</span>
+      </div>
+
+      <!-- Card -->
+      <div class="rounded-lg border border-border bg-bg-100 p-8">
+        <h1 class="text-lg font-semibold text-fg-100">Connexion</h1>
+        <p class="mt-1 text-[13px] text-fg-400">
+          Authentification JWT RS256 via l'API GSIE.
+        </p>
+
+        <form id="login-form" class="mt-6 space-y-4">
+          <div>
+            <label for="username" class="mb-1.5 block text-[13px] font-medium text-fg-200">
+              Nom d'utilisateur
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              autocomplete="username"
+              class="w-full rounded-md border border-border bg-bg-000 px-3 py-2 text-[14px] text-fg-100 placeholder-fg-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              placeholder="admin"
+            />
+          </div>
+
+          <div>
+            <label for="password" class="mb-1.5 block text-[13px] font-medium text-fg-200">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              class="w-full rounded-md border border-border bg-bg-000 px-3 py-2 text-[14px] text-fg-100 placeholder-fg-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div id="error-msg" class="hidden rounded-md border border-error/30 bg-error-bg px-3 py-2 text-[13px] text-error">
+          </div>
+
+          <button
+            type="submit"
+            id="submit-btn"
+            class="w-full rounded-md bg-accent px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg-000 disabled:opacity-50"
+          >
+            Se connecter
+          </button>
+        </form>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-fg-500">
+        GSIE — General System Intelligence Engine
+      </p>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  const form = document.getElementById("login-form") as HTMLFormElement;
+  const errorMsg = document.getElementById("error-msg");
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add("hidden");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Connexion…";
+
+    const formData = new FormData(form);
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const resp = await fetch("http://localhost:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!resp.ok) {
+        let detail = "Identifiants invalides";
+        try {
+          const body = await resp.json();
+          detail = body.detail ?? detail;
+        } catch {}
+        throw new Error(detail);
+      }
+
+      const data = await resp.json();
+      const session = {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: Date.now() + data.expires_in * 1000,
+      };
+      sessionStorage.setItem("gsie_admin_session", JSON.stringify(session));
+      window.location.href = "/";
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erreur de connexion";
+      // Détecter les erreurs réseau (API down)
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("load failed")) {
+        errorMsg.textContent = "API indisponible — vérifiez que le serveur GSIE est démarré (port 8000).";
+      } else {
+        errorMsg.textContent = msg;
+      }
+      errorMsg.classList.remove("hidden");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Se connecter";
+    }
+  });
+</script>

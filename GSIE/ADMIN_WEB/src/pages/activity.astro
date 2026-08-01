@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import ActivityPanel from "../components/ActivityPanel.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Activité">
+  <div class="space-y-6">
+    <PageHeader
+      title="Activité"
+      description="Flux d'événements temps réel via WebSocket — resource.created, assertions, observations, alertes."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <ActivityPanel client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

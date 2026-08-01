@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import AuditLogViewer from "../components/AuditLogViewer.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Audit">
+  <div class="space-y-6">
+    <PageHeader
+      title="Audit"
+      description="Traçabilité des actions — qui a fait quoi, quand."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <AuditLogViewer client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

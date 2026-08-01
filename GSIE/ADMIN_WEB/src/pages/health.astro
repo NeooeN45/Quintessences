@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import HealthPanel from "../components/HealthPanel.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Santé système">
+  <div class="space-y-6">
+    <PageHeader
+      title="Santé système"
+      description="Liveness (/health) et readiness (/ready) — DB, Redis, PostGIS."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <HealthPanel client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

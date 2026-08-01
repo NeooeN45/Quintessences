@@ -1,0 +1,29 @@
+{
+  "name": "gsie-admin-web",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tableau de contrôle admin GSIE — Astro 5 + React Islands",
+  "scripts": {
+    "dev": "astro dev --port 4000",
+    "build": "astro build",
+    "preview": "astro preview --port 4000",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.3.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "astro": "^5.13.0",
+    "framer-motion": "^11.18.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^3.10.1",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.9.0"
+  }
+}
