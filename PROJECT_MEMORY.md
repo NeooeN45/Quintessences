@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-31 — **Ingestion bulk + pgvector + garde anti-invention automatisée (DEC-000041 Draft)** : pipeline bulk (POST /resources/bulk, 1000 items/lot, 600 req/min vs 30), migration `20260731_0024` pgvector (extension vector + colonne embedding(1536) sur entity + index IVFFlat cosine), garde anti-invention RFC-0014 automatisée (détection AI-sourced → evidence_level=D + quarantine), rate limiting différencié (config rate_limit_bulk). Dockerfile.db installe `postgresql-16-pgvector`. Modèle `EntityModel` déclare la colonne `embedding` (Vector(1536)). 1346 tests unitaires OK + 9 tests d'intégration (7 bulk + 2 pgvector sur vraie DB). Tête Alembic `20260731_0024` (24 révisions, chaîne linéaire). **Historique Alembic assaini (DEC-000036)** : la baseline `20260726_0001` reste immuable. |
+| **Dernière mise à jour** | 2026-08-01 — **Outils de visualisation DB + SDK Python + tableau de contrôle admin (finalisé)** : (1) Migration Alembic `20260801_0025` appliquée — crée `gsie_viz_lecture` (SELECT seul sur 8 schémas, REVOKE explicite sur `gsie_rgpd` + `gsie_rgpd_identites`), comptes `gsie_api`/`gsie_viz` (NOSUPERUSER, NOBYPASSRLS). (2) Stack viz déployée et **initialisée** via `docker-compose.viz.yml` : Metabase (:3030, admin créé depuis env vars, DB GSIE PostGIS connectée + sync complète), Superset (:8088, admin créé depuis env vars, DB pré-configurée), Dekart (:8089, PostGIS datasource). (3) SDK Python GSIE créé (`GSIE/SDK/python/`) : client async httpx, JWT RS256 auto-refresh, wrappers moteurs, tests respx + pytest-asyncio, ruff + mypy --strict OK. (4) Tableau de contrôle admin (`GSIE/ADMIN_WEB/`) : Astro 5 + React 19 Islands + Tailwind 4, **design calqué sur Tabler** (sidebar groupée + topbar sticky + cards + stat cards avec icône/trend + badges), 4 pages, client API hybride, build OK 0 erreur/0 warning/0 hint. (5) Documentation du schéma DB générée (`SCHEMA_DB.md`, 120 tables, 2122 colonnes) par script SQL+Python (remplace SchemaSpy incompatible PG16 et tbls incompatible class-table). (6) Audit concurrentielle corrigé (P0-4 et P0-5 invalidés). Tête Alembic `20260801_0025` (25 révisions). |
 
 ---
 
@@ -797,6 +797,124 @@ d'exécution :
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.
+
+### Session 2026-08-01 — Visualisation DB + SDK + Tableau de contrôle
+
+#### Outils de visualisation de base de données
+
+Stack open-source self-hosted déployée via `GSIE/docker-compose.viz.yml`
+(veille `GSIE/RESEARCH/VEILLE_OUTILS_VISUALISATION_DB_2026-07-31.md`) :
+
+| Outil | Rôle | URL | Conteneur |
+|---|---|---|---|
+| Metabase | BI self-service (non-tech) | http://localhost:3030 | `gsie-metabase` |
+| Apache Superset | BI avancée (SQL Lab, dashboards) | http://localhost:8088 | `gsie-superset` |
+| Dekart | Carto web Kepler.gl (PostGIS) | http://localhost:8089 | `gsie-dekart` |
+
+**Sécurité** :
+- Migration Alembic `20260801_0025` appliquée — crée le groupe
+  `gsie_viz_lecture` (NOLOGIN) avec `SELECT` sur `public` + 7 schémas de
+  domaine, `REVOKE ALL` explicite sur `gsie_rgpd` et
+  `gsie_rgpd_identites`.
+- Comptes de connexion créés via `docker/comptes-de-connexion.sql` :
+  `gsie_api` (LOGIN, NOSUPERUSER, NOBYPASSRLS) pour l'API, `gsie_viz`
+  (LOGIN, NOSUPERUSER) pour les outils de visualisation.
+- Vérifié : `gsie_viz` peut lire `spatial_ref_sys` (8500 lignes) mais est
+  bloqué sur `gsie_rgpd_identites.data_subject` (permission denied).
+- Profil `viz` dans le compose : les conteneurs ne démarrent pas sans
+  `--profile viz` (audit sécurité, constat D).
+- Ports liés à `127.0.0.1` (pas d'exposition externe).
+- `MB_ENCRYPTION_SECRET_KEY` et `SUPERSET_SECRET_KEY` configurées.
+- `DEKART_CORS_ORIGIN` restreint à `localhost:8089`.
+
+**Dekart** : configuration corrigée — séparation stockage SQLite embarqué
+(sans licence) / datasource PostGIS via
+`DEKART_POSTGRES_DATASOURCE_CONNECTION`. Les variables
+`DEKART_POSTGRES_*` (DB/USER/PASSWORD/HOST/PORT) sont pour le backend de
+métadonnées Postgres qui exige une licence — non utilisées.
+
+**Metabase** : initialisé via API `/api/setup` — compte admin créé
+depuis `GSIE_METABASE_ADMIN_EMAIL`/`GSIE_METABASE_ADMIN_PASSWORD`, DB
+« GSIE PostGIS » connectée (sync complète, PG 16.14 détecté), sample DB
+supprimée, locale fr.
+
+**Superset** : initialisé via CLI — `superset db upgrade`, `superset fab
+create-admin` (depuis `GSIE_SUPERSET_ADMIN_PASSWORD`), `superset init`,
+connexion DB « GSIE PostGIS » créée via `superset set-database-uri`.
+
+**SchemaSpy → script SQL+Python** : SchemaSpy incompatible PG16
+(`datlastsysoid` supprimé en PG15) et tbls incompatible avec l'héritage
+class-table de PostgreSQL. Remplacés par `GSIE/TOOLS/generate_schema_doc.sql`
++ `generate_schema_doc.py` qui génèrent `GSIE/DOCUMENTATION/SCHEMA_DB.md`
+(120 tables, 2122 colonnes, 7 schémas avec types, contraintes,
+commentaires et tailles).
+
+**Documentation** : `GSIE/DOCUMENTATION/VISUALISATION_DB_ACCES.md`
+(URLs, credentials, commandes Docker, architecture réseau, sécurité)
++ `GSIE/DOCUMENTATION/SCHEMA_DB.md` (doc du schéma DB).
+
+#### SDK Python GSIE
+
+SDK minimal créé dans `GSIE/SDK/python/` (P0-3 première moitié) :
+- Client async `httpx` avec authentification JWT RS256 et refresh
+  automatique des tokens.
+- Wrappers pour les moteurs GSIE : diagnostic, recommendation,
+  validation, simulation.
+- Exceptions typées (`GSIEAuthError`, `GSIEAPIError`, `GSIEConnectionError`).
+- Tests unitaires avec `respx` (mock réseau) + `pytest-asyncio`.
+- Validation : `ruff check` OK, `mypy --strict` OK, tous tests passent.
+- `pyproject.toml` configure le package `gsie_sdk` avec dépendances
+  minimales (`httpx`, `pyjwt[crypto]`).
+
+#### Tableau de contrôle admin GSIE
+
+Dashboard web créé dans `GSIE/ADMIN_WEB/` (Astro 5 + React 19 Islands +
+Tailwind CSS 4 + TypeScript). **Design calqué sur Tabler** (dashboard
+open-source Bootstrap 5, reproduit en Tailwind 4 sans dépendance
+Bootstrap) : sidebar gauche groupée par sections + topbar sticky avec
+search/notifications/user menu + cards avec header + stat cards avec
+icône/trend + badges semi-transparents + tables borderless avec hover.
+
+| Page | URL | Contenu |
+|---|---|---|
+| Vue d'ensemble | `/` | 4 stat cards (icône + trend) + santé système (DB, API, disque, mémoire, alertes) |
+| Moteurs | `/engines` | 14 moteurs avec filtres (core/domain/transverse), statut, uptime, latence |
+| Utilisateurs | `/users` | Tableau avec recherche + filtres par rôle (admin, forestier, chercheur, lecteur) |
+| Données | `/data` | Catalogue datasets avec filtres par source (Treekipedia, IGN, Météo-France, GBIF, SoilGrids) |
+
+**Architecture** :
+- Hydratation sélective : sidebar, topbar et stat cards en HTML statique
+  (0 JS), seuls les tableaux/grids interactifs sont des React Islands
+  (`client:load`).
+- Client API hybride (`lib/api.ts`) : mock data par défaut, détection
+  auto de l'API GSIE sur `localhost:8000/health` — bascule sans
+  modification de l'UI.
+- Types partagés (`lib/types.ts`) compatibles avec l'API FastAPI.
+- Build de production : 4 pages, 0 erreur, islands 3.5-4.5 KB chacun.
+- `astro check` : 0 erreur, 0 warning, 0 hint (17 fichiers).
+- Port 4000 (évite conflits avec API :8000 et viz :3030/:8088/:8089).
+
+**Préparation version serveur** : l'architecture est découplée —
+`lib/api.ts` centralise les appels, les composants consomment uniquement
+les types. Quand la version serveur GSIE sera déployée, définir
+`GSIE_API_URL` dans `.env` — aucune modification de l'UI.
+
+#### Audit concurrentielle — corrections
+
+L'analyse concurrentielle (`22_PROJECT_MEMORY/analyses/ANALYSE_CONCURRENTIELLE_2026-07-31.md`)
+a été corrigée sur deux P0 invalides :
+- **P0-4 « 3 moteurs stubs »** : incorrect — les moteurs Recommendation,
+  Validation et Simulation sont implémentés avec tests.
+- **P0-5 « autécologie absente »** : incorrect — l'adapter autecology
+  existe dans Botanical Engine (RFC-0016 Phase A, 10 tables forestières).
+
+#### P0 restants (après cette session)
+
+| ID | Description | Statut |
+|---|---|---|
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.

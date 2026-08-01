@@ -381,7 +381,44 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 ### API et SDK
 
 - API publique (lecture)
-- SDK Python / TypeScript
+- ✅ **SDK Python** (`GSIE/SDK/python/`) — client async httpx, JWT RS256
+  auto-refresh, wrappers moteurs (diagnostic, recommendation, validation,
+  simulation), tests respx + pytest-asyncio, ruff + mypy --strict OK
+  (2026-08-01)
+- SDK Kotlin pour GeoSylva — **à faire** (P0-3 2e moitié)
+- SDK TypeScript — différé
+
+### Outils de visualisation DB
+
+- ✅ **Metabase** (:3030) — BI self-service, déployé + **initialisé via
+  API** (compte admin depuis env vars, DB GSIE PostGIS connectée, sync
+  complète, PG 16.14) via `docker-compose.viz.yml` (2026-08-01)
+- ✅ **Apache Superset** (:8088) — BI avancée, initialisé
+  (compte admin depuis env vars, connexion DB pré-configurée) (2026-08-01)
+- ✅ **Dekart** (:8089) — carto Kepler.gl, datasource PostGIS (2026-08-01)
+- ✅ **Documentation du schéma DB** — `SCHEMA_DB.md` (120 tables, 2122
+  colonnes) générée par script SQL+Python (remplace SchemaSpy/tbls)
+- ✅ **Migration Alembic `20260801_0025`** — rôle `gsie_viz_lecture`,
+  barrière RGPD en base (REVOKE sur `gsie_rgpd` + `gsie_rgpd_identites`)
+- Voir `GSIE/DOCUMENTATION/VISUALISATION_DB_ACCES.md`
+
+### Tableau de contrôle admin
+
+- ✅ **Dashboard web** (`GSIE/ADMIN_WEB/`) — Astro 5 + React 19 Islands
+  + Tailwind 4, **design calqué sur Tabler** (sidebar + topbar + cards +
+  stat cards + badges), 4 pages (vue d'ensemble, moteurs, utilisateurs,
+  données), client API hybride (mock → API GSIE auto), build OK 0
+  erreur/0 warning/0 hint (2026-08-01)
+- Préparation version serveur : architecture découplée, bascule via
+  `GSIE_API_URL` dans `.env`
+
+### P0 restants (après session 2026-08-01)
+
+| ID | Description | Statut |
+|---|---|---|
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Applications
 

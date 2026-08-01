@@ -4,6 +4,88 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-01 — VISUALISATION DB + SDK PYTHON + TABLEAU DE CONTRÔLE] - 2026-08-01
+
+Déploiement des outils de visualisation DB, création du SDK Python GSIE
+et du tableau de contrôle admin web.
+
+### Ajouts
+
+- **Migration Alembic `20260801_0025`** : crée le groupe `gsie_viz_lecture`
+  (NOLOGIN, SELECT sur 8 schémas, REVOKE explicite sur `gsie_rgpd` et
+  `gsie_rgpd_identites`) + rattache les comptes `gsie_api` et `gsie_viz`
+  à leurs groupes respectifs (`gsie_application`, `gsie_viz_lecture`).
+- **Comptes de connexion DB** : `gsie_api` (LOGIN, NOSUPERUSER,
+  NOBYPASSRLS) pour l'API + `gsie_viz` (LOGIN, NOSUPERUSER) pour les
+  outils de visualisation. Créés via `docker/comptes-de-connexion.sql`.
+- **`docker-compose.viz.yml`** : stack de visualisation avec profil `viz`
+  (Metabase :3030, Superset :8088, Dekart :8089). Réseau `api_default`
+  partagé avec la DB. Ports liés à `127.0.0.1`.
+- **Metabase** : déployé + **initialisé via API** (compte admin créé
+  depuis `GSIE_METABASE_ADMIN_EMAIL`/`GSIE_METABASE_ADMIN_PASSWORD`, DB
+  « GSIE PostGIS » connectée, sync complète, PG 16.14 détecté, sample DB
+  supprimée, locale fr).
+- **Apache Superset** : déployé + initialisé (compte admin créé depuis
+  `GSIE_SUPERSET_ADMIN_PASSWORD`, connexion DB « GSIE PostGIS »
+  pré-configurée via CLI).
+- **Dekart** : déployé avec datasource PostGIS
+  (`DEKART_POSTGRES_DATASOURCE_CONNECTION`), stockage SQLite embarqué
+  (sans licence), CORS restreint à `localhost:8089`.
+- **SDK Python GSIE** (`GSIE/SDK/python/`) : client async `httpx`, auth
+  JWT RS256 avec auto-refresh, wrappers moteurs (diagnostic,
+  recommendation, validation, simulation), exceptions typées. Tests
+  `respx` + `pytest-asyncio`. `ruff` + `mypy --strict` OK.
+- **Tableau de contrôle admin** (`GSIE/ADMIN_WEB/`) : Astro 5 + React 19
+  Islands + Tailwind CSS 4. Design calqué sur **Tabler** (sidebar
+  groupée + topbar sticky avec search/notifications/user menu + cards
+  avec header + stat cards avec icône/trend + badges semi-transparents
+  + tables borderless). 4 pages (vue d'ensemble, moteurs, utilisateurs,
+  données). Client API hybride (mock → API GSIE auto). Build OK, 0
+  erreur, 0 warning, 0 hint.
+- **Documentation du schéma DB** (`GSIE/DOCUMENTATION/SCHEMA_DB.md`) :
+  120 tables, 2122 colonnes, 7 schémas. Générée par script SQL +
+  Python (`GSIE/TOOLS/generate_schema_doc.py`), remplace SchemaSpy
+  (incompatible PG16) et tbls (incompatible class-table inheritance).
+- **Documentation** : `GSIE/DOCUMENTATION/VISUALISATION_DB_ACCES.md`
+  (URLs, credentials, commandes Docker, architecture réseau, sécurité).
+- **Veille** : `GSIE/RESEARCH/VEILLE_OUTILS_VISUALISATION_DB_2026-07-31.md`.
+- **RFC-0030 + DEC-000040** : mapping Treekipedia ↔ métamodèle v6.2
+  (Draft, en attente d'ingestion).
+
+### Corrections
+
+- **Audit concurrentielle** : P0-4 « 3 moteurs stubs » et P0-5
+  « autécologie absente » invalidés — les moteurs Recommendation,
+  Validation, Simulation et l'adapter autecology sont implémentés.
+  Document `ANALYSE_CONCURRENTIELLE_2026-07-31.md` mis à jour.
+- **Dekart** : variables `DEKART_POSTGRES_*` (backend métadonnées,
+  licence requise) remplacées par `DEKART_POSTGRES_DATASOURCE_CONNECTION`
+  (datasource, sans licence) + `DEKART_STORAGE=USER`.
+- **Healthcheck Dekart** : `curl` absent de l'image → remplacé par test
+  TCP via `/dev/tcp` (bash builtin).
+- **SchemaSpy → script SQL** : SchemaSpy incompatible PG16
+  (`datlastsysoid` supprimé) et tbls incompatible avec l'héritage
+  class-table de PostgreSQL → remplacés par un script SQL + Python qui
+  génère un markdown complet du schéma.
+
+### Sécurité
+
+- Barrière RGPD en base (pas dans l'outil) : `gsie_viz` n'a aucun USAGE
+  sur `gsie_rgpd` ni `gsie_rgpd_identites` — vérifié par test.
+- Comptes applicatifs NOSUPERUSER + NOBYPASSRLS.
+- Mots de passe distincts de l'administrateur (refus sinon).
+- Clés secrètes Metabase + Superset générées (non versionnées).
+
+### P0 restants
+
+| ID | Description | Statut |
+|---|---|---|
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | À faire |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | À faire |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | À faire |
+
+---
+
 ## [DEC-000041 — INGESTION BULK + PGVECTOR + GARDE ANTI-INVENTION] - 2026-07-31
 
 Préparation de l'API à recevoir des données externes massives (Treekipedia,
