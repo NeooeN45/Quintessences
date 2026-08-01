@@ -20,9 +20,16 @@ Garde-fous :
 - CON-010 : une Revision v1 est créée pour chaque resource insérée.
 
 Échec partiel : si une resource échoue (validation ou référence), elle
-est marquée dans le rapport mais n'interrompt pas le lot. La
-transaction est rollbackée en cas d'erreur critique (IntegrityError
-non prévue), et toutes les resources échouent.
+est marquée dans le rapport mais n'interrompt pas le lot. Chaque item
+est inséré dans son propre point de reprise (`SAVEPOINT`) : l'échec de
+l'un annule l'un, jamais les précédents. La transaction entière n'est
+rollbackée qu'en cas d'erreur critique au commit final, et toutes les
+resources échouent alors ensemble.
+
+Divulgation : le rapport rendu au client ne porte jamais le texte brut
+du pilote PostgreSQL — noms de schéma, de table et de contrainte
+restent côté serveur, dans le journal. Seul un motif normalisé sort,
+comme sur le chemin unitaire (`ResourceService._references_nommees`).
 """
 
 from __future__ import annotations
@@ -33,7 +40,7 @@ from sqlalchemy.exc import IntegrityError
 
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure.models import ResourceModel
-from gsie_api.resources.service import ResourceService
+from gsie_api.resources.service import ResourceService, _champ_de_reference_fautif
 from gsie_api.resources.validators import ResourceValidationError, validate_resource_data
 from gsie_api.shared.schemas import BulkIngestResult, BulkItemResult
 
@@ -51,6 +58,15 @@ logger = get_logger("gsie_api.ingestion.bulk")
 # si les resources sont petites, mais les grosses resources (assertions
 # avec contenu normalisé) peuvent dépasser. Le client doit chunker.
 MAX_BATCH_SIZE = 1000
+
+# Motif rendu au client quand la contrainte violée n'est pas une référence
+# venue de la charge utile. Le texte du pilote (schéma, table, contrainte,
+# clause DETAIL) reste au journal : le rendre transformait l'endpoint en
+# cartographie de la base pour tout porteur du rôle `writer` (OWASP A01/A09).
+_DETAIL_INTEGRITE_GENERIQUE = (
+    "Conflit d'intégrité : la resource viole une contrainte de la base "
+    "(doublon ou référence invalide)"
+)
 
 
 class BulkIngestService:
@@ -89,7 +105,12 @@ class BulkIngestService:
 
         for index, item in enumerate(request.items):
             try:
-                resource_read = await self._create_one(item, author_id)
+                # Point de reprise par item : l'échec de celui-ci n'annule
+                # que celui-ci. Sans SAVEPOINT, le `rollback()` du bloc
+                # IntegrityError effaçait tous les items déjà insérés du
+                # lot alors qu'ils restaient annoncés `success: true`.
+                async with self._session.begin_nested():
+                    resource_read = await self._create_one(item, author_id)
                 items_result.append(
                     BulkItemResult(
                         index=index,
@@ -120,20 +141,21 @@ class BulkIngestService:
                 )
                 error_count += 1
             except IntegrityError as exc:
-                await self._session.rollback()
+                # Le SAVEPOINT a déjà été défait par `begin_nested`.
                 items_result.append(
                     BulkItemResult(
                         index=index,
                         success=False,
                         error_code="integrity_error",
-                        error_detail=str(exc.orig)[:500],
+                        error_detail=self._detail_integrite(index, exc, item.data),
                     )
                 )
                 error_count += 1
 
         # Commit unique pour tout le lot — les resources valides sont persistées.
-        # Les resources en erreur n'ont pas été ajoutées à la session (ou ont
-        # été rollbackées), donc le commit ne persiste que les succès.
+        # Les items en erreur ont vu leur SAVEPOINT défait, donc le commit ne
+        # persiste que les succès, et les succès annoncés sont bien tous ceux
+        # qui survivent.
         try:
             await self._session.commit()
         except IntegrityError as exc:
@@ -168,6 +190,30 @@ class BulkIngestService:
             errors=error_count,
             items=items_result,
         )
+
+    def _detail_integrite(self, index: int, exc: IntegrityError, payload: dict[str, Any]) -> str:
+        """Normalise une violation d'intégrité — rien du pilote ne sort.
+
+        Une référence pendante venue de la charge utile est une faute de
+        l'appelant : on la nomme, exactement comme le chemin unitaire
+        (`ResourceService._references_nommees`), parce que l'appelant a
+        lui-même fourni la valeur et peut la corriger.
+
+        Toute autre violation reste opaque côté client : le texte
+        d'asyncpg porte le schéma, la table, la contrainte et la clause
+        `DETAIL`, c'est-à-dire la cartographie des schémas `gsie_*` et
+        `gsie_rgpd*` que le cloisonnement de la RFC-0029 vient d'établir.
+        Il part au journal, sous l'index de l'item, pour l'exploitant.
+        """
+        logger.warning(
+            "bulk_ingest_integrity_error",
+            index=index,
+            error=str(exc.orig)[:500],
+        )
+        champ = _champ_de_reference_fautif(exc)
+        if champ is not None and champ in payload:
+            return f"Référence inexistante pour {champ} : aucune resource ne porte cet identifiant"
+        return _DETAIL_INTEGRITE_GENERIQUE
 
     async def _create_one(self, item: ResourceCreate, author_id: UUID | None) -> ResourceRead:
         """Crée une resource dans la transaction courante (sans commit).

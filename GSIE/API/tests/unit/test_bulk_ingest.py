@@ -15,6 +15,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from gsie_api.ingestion.bulk import MAX_BATCH_SIZE, BulkIngestService
 from gsie_api.resources.schemas import BulkIngestRequest, ResourceCreate
@@ -115,3 +116,83 @@ def test_bulk_item_result_failure_has_error_code() -> None:
     assert result.success is False
     assert result.error_code == "validation_failed"
     assert result.resource_id is None
+
+
+# --- Divulgation : le texte du pilote ne doit jamais sortir ---
+
+
+class _ViolationCleEtrangereErrorError(Exception):
+    """Imite `asyncpg.exceptions.ForeignKeyViolationError`.
+
+    `_champ_de_reference_fautif` reconnaît la violation par le *nom* de la
+    classe, pas par son type — asyncpg n'est pas importable sans connexion.
+    """
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+_ViolationCleEtrangereErrorError.__name__ = "ForeignKeyViolationError"
+
+
+def _integrity_error(orig: Exception) -> IntegrityError:
+    """Emballe une exception pilote comme SQLAlchemy le fait."""
+    return IntegrityError("INSERT INTO ...", {}, orig)
+
+
+def test_detail_integrite_ne_divulgue_pas_le_texte_du_pilote() -> None:
+    """Le rapport rendu au client ne doit porter ni schéma, ni table, ni contrainte.
+
+    `str(exc.orig)` d'asyncpg décrit la ligne fautive au complet. Le rendre
+    transformait `POST /resources/bulk` en cartographie des schémas
+    cloisonnés par la RFC-0029, pour tout porteur du rôle `writer`.
+    """
+    brut = (
+        'duplicate key value violates unique constraint "resource_gsie_id_key"\n'
+        "DETAIL:  Key (gsie_id)=(entity:2026:deadbeef) already exists.\n"
+        "SCHEMA NAME:  gsie_rgpd\nTABLE NAME:  data_subject"
+    )
+    service = BulkIngestService(_make_session_mock())
+
+    detail = service._detail_integrite(0, _integrity_error(Exception(brut)), {"label": "x"})
+
+    assert isinstance(detail, str)
+    for fuite in ("resource_gsie_id_key", "gsie_rgpd", "data_subject", "DETAIL", "SCHEMA"):
+        assert fuite not in detail, f"le motif rendu divulgue « {fuite} »"
+
+
+def test_detail_integrite_nomme_une_reference_venue_de_la_charge_utile() -> None:
+    """Une clé étrangère pendante fournie par l'appelant est nommée.
+
+    L'appelant a lui-même écrit la valeur : la lui nommer ne lui apprend
+    rien qu'il ignore, et lui permet de corriger son lot. C'est le même
+    contrat que le chemin unitaire (`_references_nommees`).
+    """
+    violation = _ViolationCleEtrangereErrorError(
+        'Key (source_id)=(00000000-0000-0000-0000-000000000000) is not present in table "resource".'
+    )
+    service = BulkIngestService(_make_session_mock())
+
+    detail = service._detail_integrite(
+        3, _integrity_error(violation), {"source_id": "00000000-0000-0000-0000-000000000000"}
+    )
+
+    assert "Référence inexistante pour source_id" in detail
+
+
+def test_detail_integrite_reste_opaque_si_la_colonne_ne_vient_pas_du_client() -> None:
+    """Une violation sur une colonne gérée par le service reste opaque.
+
+    Le client n'a pas écrit `author_id` : le lui nommer lui apprendrait
+    l'existence d'une colonne qu'il n'a pas soumise.
+    """
+    violation = _ViolationCleEtrangereErrorError(
+        'Key (author_id)=(00000000-0000-0000-0000-000000000000) is not present in table "resource".'
+    )
+    service = BulkIngestService(_make_session_mock())
+
+    detail = service._detail_integrite(1, _integrity_error(violation), {"label": "x"})
+
+    assert "author_id" not in detail
+    assert "Conflit d'intégrité" in detail

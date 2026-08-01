@@ -119,6 +119,63 @@ class TestBulkIngestion:
         assert item_echec["index"] == 1
         assert item_echec["error_code"] in ("unknown_type", "validation_failed")
 
+    async def test_une_violation_d_integrite_n_annule_que_son_item(
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        entetes_ecriture: dict[str, str],
+    ) -> None:
+        """L'échec d'un item ne doit effacer aucun des items déjà insérés.
+
+        Le service annulait la transaction entière (`session.rollback()`) au
+        premier `IntegrityError`, tout en laissant les items précédents
+        annoncés `success: true` avec un `resource_id`. Le client se voyait
+        confirmer des resources qui n'existaient plus. Chaque item vit
+        désormais dans son propre point de reprise.
+        """
+        gsie_id_double = "entity:2026:aaaaaaaa"
+        reponse = await client.post(
+            "/api/v1/resources/bulk",
+            json={
+                "items": [
+                    {
+                        "type": "entity",
+                        "gsie_id": gsie_id_double,
+                        "data": {"entity_subtype": "parcelle"},
+                    },
+                    # Même gsie_id : viole la contrainte d'unicité.
+                    {
+                        "type": "entity",
+                        "gsie_id": gsie_id_double,
+                        "data": {"entity_subtype": "essence"},
+                    },
+                    {"type": "entity", "data": {"entity_subtype": "station"}},
+                ]
+            },
+            headers=entetes_ecriture,
+        )
+
+        assert reponse.status_code == 201, reponse.text
+        body = reponse.json()
+        assert body["success"] == 2
+        assert body["errors"] == 1
+
+        echec = next(i for i in body["items"] if not i["success"])
+        assert echec["index"] == 1
+        assert echec["error_code"] == "integrity_error"
+        # Le texte du pilote ne doit pas ressortir (OWASP A01/A09).
+        assert "constraint" not in str(echec["error_detail"])
+        assert "resource_gsie_id_key" not in str(echec["error_detail"])
+
+        # Les deux succès annoncés doivent réellement exister.
+        succes = [i for i in body["items"] if i["success"]]
+        assert len(succes) == 2
+        for item in succes:
+            persistee = await db_session.get(ResourceModel, item["resource_id"])
+            assert (
+                persistee is not None
+            ), f"l'item {item['index']} est annoncé créé mais absent de la base"
+
     async def test_should_reject_empty_batch(
         self, client: AsyncClient, entetes_ecriture: dict[str, str]
     ) -> None:
