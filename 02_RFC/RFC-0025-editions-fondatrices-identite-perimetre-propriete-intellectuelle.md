@@ -16,8 +16,8 @@
 La présente RFC est l'unique véhicule prévu pour porter les textes cibles
 complets résultant de `RFC-0023`.
 
-Elle existe afin qu'aucune décision d'adoption ni publication d'un document
-`Locked` ne puisse reposer sur une intention générale dépourvue du texte
+Elle existe afin qu'aucune décision d'adoption ni édition documentaire d'un
+document `Locked` ne puisse reposer sur une intention générale dépourvue du texte
 exact, de son diff et de son contre-audit.
 
 Cette version est une **enveloppe procédurale**. Elle ne contient pas encore
@@ -105,6 +105,24 @@ La RFC reste `Brouillon` tant que :
 
 Le passage à `Proposé` ne vaut ni adoption ni autorisation de modifier un
 document `Locked`.
+
+### 7.1 Autorité du changement de statut
+
+Le passage de `Brouillon` à `Proposé` est prononcé par le **Fondateur**, et par
+lui seul. Aucun agent IA, aucun contributeur et aucun contrôle automatique ne
+peut le prononcer, ni le déduire du fait que les critères ci-dessus paraissent
+remplis.
+
+Constater que les critères sont remplis est un acte **préparatoire** : il est
+consigné, daté et accompagné des empreintes exactes des textes cibles. Il ne
+vaut pas changement de statut.
+
+Le même régime s'applique à `RFC-0026`.
+
+**Justification.** Une liste de critères sans autorité désignée se prononce
+elle-même : le premier lecteur qui les estime remplis fait avancer le statut, et
+un texte constitutionnel cible franchirait alors une porte que personne n'a
+ouverte.
 
 ## 8. Critère de clôture
 

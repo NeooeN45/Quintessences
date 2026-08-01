@@ -35,8 +35,8 @@ droits des utilisateurs.
 Cette RFC ne modifie aucun texte constitutionnel à elle seule et ne porte pas
 le texte cible des nouvelles éditions. Les éditions complètes, leurs
 différences et leur séquence de publication doivent être portées par
-`RFC-0025`. Aucune décision ni publication d'un document `Locked` ne peut être
-fondée sur la seule présente RFC.
+`RFC-0025`. Aucune décision ni édition documentaire d'un document `Locked` ne
+peut être fondée sur la seule présente RFC.
 
 ## 2. Problème
 
@@ -244,7 +244,7 @@ compte :
 - avantage stratégique ;
 - obligations des dépendances ;
 - financement et modèle économique ;
-- capacité de maintenance.
+- aptitude à assurer la maintenance.
 
 Les catégories possibles comprennent :
 
@@ -306,11 +306,19 @@ conditions suivantes sont satisfaites :
 Restent possibles, sans créer de droit général d'exploitation pour un tiers :
 
 - un export ou partage déclenché par l'utilisateur vers un destinataire et
-  une finalité qu'il choisit explicitement ;
+  une finalité qu'il choisit explicitement **et librement** ;
 - une communication strictement imposée par la loi, documentée et limitée
   au minimum requis ;
 - la publication de statistiques réellement anonymes après une analyse
   documentée du risque de ré-identification et une approbation indépendante.
+
+Le choix n'est **pas libre** lorsqu'il conditionne l'accès à un outil de
+travail, l'exécution d'une obligation professionnelle ou le bénéfice d'un
+service. Un forestier salarié à qui son employeur impose l'export de ses
+relevés n'a rien choisi : l'exception ne joue pas et le régime commun du
+présent §7.2.1 s'applique. Confondre le consentement de l'utilisateur avec
+l'instruction de son employeur ferait porter à la personne la responsabilité
+d'un transfert qu'elle subit.
 
 La pseudonymisation seule n'est jamais considérée comme une anonymisation.
 Les données dont les droits ne sont pas formellement vérifiés restent en
@@ -331,14 +339,14 @@ totale ou partielle, sur :
 
 - Quintessences, GSIE ou Forge ;
 - une application, une verticale métier ou un domaine environnemental ;
-- une capacité scientifique, un moteur, un modèle, une API ou un standard
+- un composant scientifique, un moteur, un modèle, une API ou un standard
   d'interopérabilité essentiel ;
 - un territoire, une catégorie d'utilisateurs ou un type d'usage ;
 - un corpus commun, un résultat de recherche ou une évolution financée dans
   le cadre de l'écosystème.
 
 Est interdite toute clause qui empêche ou limite Quintessences dans sa
-capacité à rechercher, développer, exploiter, publier ou proposer une
+liberté de rechercher, développer, exploiter, publier ou proposer une
 fonction identique ou équivalente avec d'autres acteurs.
 
 Ne constituent pas une exclusivité :
@@ -361,6 +369,20 @@ Tout composant dont la sortie conditionne une affirmation scientifique
 publiée, un niveau de preuve, un diagnostic validé, une recommandation ou
 une connaissance canonique doit pouvoir être vérifié et contesté par un
 tiers qualifié indépendant.
+
+Le **tiers qualifié indépendant** ne s'auto-désigne pas. Il satisfait
+cumulativement les deux conditions suivantes, chacune tracée au dossier :
+
+| Condition | Ce qui l'établit |
+|---|---|
+| **Qualifié** | compétence attestée dans le domaine scientifique du composant : publication, diplôme, exercice professionnel ou mandat d'un organisme du domaine |
+| **Indépendant** | au moins deux des critères vérifiables du §6.3.1 de `RFC-0024` — absence de lien hiérarchique avec le proposant, absence de responsabilité sur le délai de livraison, mandat ou budget distinct, déclaration datée d'absence de conflit d'intérêts |
+
+Le tiers ne peut être choisi au sein de Quintessences, du fournisseur du
+composant, ni parmi les personnes rémunérées pour sa livraison. Une
+qualification affirmée sans pièce citée est réputée absente — même règle qu'au
+§6.3.1 de `RFC-0024`, dont les critères sont repris ici plutôt que redéfinis,
+pour éviter deux standards d'indépendance divergents.
 
 Cette exigence s'applique également aux composants propriétaires,
 confidentiels ou fournis comme service. La vérification peut être organisée
