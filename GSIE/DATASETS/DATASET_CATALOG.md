@@ -805,6 +805,255 @@ aux grandes familles de données consommées par GSIE et Ignis.
 | **Statut d'ingestion** | À évaluer (Phase 4) |
 | **Notes** | La feuille de route IA IGN (mesure 3) prévoit la diffusion de jeux de données d'apprentissage LiDAR HD et de modèles entraînés. Source directe pour le Learning Engine (transfer learning, classification essences). Complément de la bibliothèque `IGN_LIDAR_HD_DATASET` v4.1.2 (voir `LIDAR_HD_SPECIFICATIONS.md` §8). Source : `GSIE/RESEARCH/IGN_IA_STRATEGY.md` §7. |
 
+#### DS-030 — Memento FCBA (série annuelle récurrente)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-030 |
+| **Nom du dataset** | Memento FCBA — série annuelle (Institut technologique FCBA) |
+| **Organisme producteur** | FCBA — Institut Technologique Forêt Cellulose Bois-construction Ameublement |
+| **Catégorie** | A — Forestier (document de référence synthétique, série récurrente) |
+| **Domaines S-6 couverts** | Sylviculture, dendrométrie, écologie forestière, dynamique des peuplements, botanique (essences), économie de la filière forêt-bois |
+| **Moteurs consommateurs** | Knowledge Engine, Reasoning Engine, Diagnostic Engine, Recommendation Engine, Forest Dynamics Engine |
+| **Source / URL** | Édition courante : https://www.fcba.fr/wp-content/uploads/2026/04/Memento-2025-2026-WEB.pdf — portail FCBA : https://www.fcba.fr/ (section Ressources) ; archivage CIBE : https://cibe.fr/documents/fcba-memento/ |
+| **Licence** | © FCBA — diffusion libre (téléchargement public), droits d'exploitation réservés. Ingestion en citation/extraits sous fair use scientifique (CON-002, CON-005) ; vérifier les conditions de réutilisation auprès de FCBA avant redistribution. |
+| **Couverture spatiale** | France métropolitaine (essences et sylviculture françaises) |
+| **Couverture temporelle** | 2016-présent (série annuelle, parfois biennale : 2024/2025) |
+| **Résolution spatiale** | N/A — document de référence (synthèse par essence et par région forestière) |
+| **Résolution temporelle** | Annuelle (édition mise à jour chaque année) |
+| **Format** | PDF/X-1a (Adobe InDesign, Acrobat Distiller) |
+| **Version référencée** | Édition courante : Memento 2025-2026 (PDF daté 2026-03-31). Éditions archivées : 2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024/2025, 2025-2026. |
+| **Qualité / précision** | Référentiel professionnel FCBA — synthèse sylvicole annuelle reconnue (essences, croissances, volumes, itinéraires sylvicoles, économie filière). Source de niveau preuve B/C (synthèse professionnelle reconnue, non peer-reviewed). |
+| **Contact** | FCBA — pôle Forêt (www.fcba.fr) |
+| **Statut d'ingestion** | Planifié (Phase 4 — Knowledge Engine) |
+| **Notes** | Le Memento FCBA est une référence annuelle récurrente pour la sylviculture française : caractéristiques des essences (croissance, productivité, exigences stationnelles), coefficients de cubage, itinéraires sylvicoles, données dendrométriques de terrain, et économie de la filière forêt-bois. **Série continue depuis 2016** — chaque édition est une nouvelle version de la même source (DS-030), à ingérer incrémentalement. Complémentaire des référentiels IGN (DS-001, DS-003) et INRAE (DS-006) — apporte la dimension sylvicole opérationnelle (recommandations de gestion, itinéraires) qui alimente directement le Recommendation Engine. **Mécanisme d'ingestion récurrente** : (1) détection automatique de la nouvelle édition via le portail FCBA (veille annuelle) ; (2) extraction structurée (essences → AutecologyProfile, itinéraires → RegleInference, coefficients → constantes Forest Dynamics) ; (3) citation systématique de l'édition (CON-005) ; (4) comparaison inter-éditions pour détecter les évolutions sylvicoles (Knowledge Engine — versionnage des connaissances). Voir aussi `GSIE/RESEARCH/CORPUS_SYLVICOLE_SCIENTIFIQUE_QUINTESSENCES_2026-07-18.md`. |
+
+##### DS-030 — Éditions archivées
+
+| Édition | URL | Statut ingestion |
+|---|---|---|
+| Memento 2025-2026 (courante) | https://www.fcba.fr/wp-content/uploads/2026/04/Memento-2025-2026-WEB.pdf | Planifié (priorité P1) |
+| Memento 2024/2025 | https://cibe.fr/documents/fcba-memento/ | Planifié (P2 — historique) |
+| Memento 2023 | https://pre23.fcba.fr/wp-content/uploads/2024/02/Memento-2023-WEB-v4.pdf | Planifié (P2 — historique) |
+| Memento 2022 | https://cibe.fr/wp-content/uploads/2020/07/Memento-2022-WEB.pdf | Planifié (P2 — historique) |
+| Memento 2020, 2019, 2018, 2017, 2016 | Portail FCBA / CIBE (à localiser) | Planifié (P3 — série longue pour tendances) |
+
+> **Règle de versionnage (CON-005) :** chaque édition du Memento est une
+> version datée de la source DS-030. Les connaissances extraites portent
+> l'édition de référence (ex. `source_version: "Memento 2025-2026"`), et
+> toute évolution détectée entre éditions est tracée comme une révision
+> de connaissance dans le Knowledge Engine.
+
+#### DS-031 — Prix des bois sur pied (Observatoire économique France Bois Forêt)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-031 |
+| **Nom du dataset** | Indicateur annuel du prix de vente des bois sur pied en forêt privée (série récurrente) |
+| **Organisme producteur** | France Bois Forêt (interprofession nationale) — produit par La Forestière (Caisse des Dépôts), ASFFOR, Experts Forestiers de France (EFF) |
+| **Catégorie** | A — Forestier (donnée économique annuelle récurrente) |
+| **Domaines S-6 couverts** | Sylviculture, économie de la filière forêt-bois |
+| **Moteurs consommateurs** | Knowledge Engine, Recommendation Engine, Simulation Engine (projets économiques), Forest Dynamics Engine (rente sylvicole) |
+| **Source / URL** | Édition courante : https://observatoire.franceboisforet.com/prix-de-vente-des-bois-sur-pied-en-foret-privee-indicateur-2026/ — portail : https://franceboisforet.fr/ (section Observatoire économique) |
+| **Licence** | Données publiques diffusées librement par France Bois Forêt (interprofession). Vérifier les conditions de réutilisation des séries détaillées auprès de l'observatoire. |
+| **Couverture spatiale** | France métropolitaine + déclinaisons régionales (Occitanie, Nouvelle-Aquitaine, etc. via les interprofessions régionales FIBOIS) |
+| **Couverture temporelle** | 2004-présent (série annuelle, 21 ans d'historique — édition 2026 publiée en mai 2026) |
+| **Résolution spatiale** | Nationale + régionale (Massif central, Occitanie, etc. — granularité départementale non systématique) |
+| **Résolution temporelle** | Annuelle (indicateur publié chaque année sur les prix constatés l'année précédente) |
+| **Format** | HTML (portail), PDF (communiqués), données tabulaires (à extraire) |
+| **Version référencée** | Indicateur 2026 (prix constatés en 2025) — édition courante. Série : 2004→2026. |
+| **Qualité / précision** | Source de référence nationale — issues des ventes groupées des Experts Forestiers de France (>1,3 M m³/an, 90% vendus en séance). Indice général + indices par essence (chêne, hêtre, douglas, épicéa, sapin, pin maritime, peuplier, châtaignier, frêne). Niveau de preuve B (statistique professionnelle reconnue). |
+| **Contact** | France Bois Forêt — Observatoire économique (observatoire.franceboisforet.com) |
+| **Statut d'ingestion** | Planifié (Phase 4 — Knowledge Engine + Recommendation Engine) |
+| **Notes** | Indicateur annuel de référence pour les prix du bois sur pied en forêt privée. Série longue (21 ans) permettant l'analyse des tendances de marché, des cycles prix-volume, et la calibration de projections économiques. **Granularité** : indice général + indices par essence + déclinaisons régionales (Occitanie, Massif central, etc.). Les prix moyens 2025 : 86 €/m³ toutes essences (vs 90 €/m³ en 2024, 94 €/m³ record 2022). **Mécanisme d'ingestion** : (1) extraction annuelle du communiqué + données tabulaires ; (2) structuration par essence × région × année (table `prix_bois_sur_pied`) ; (3) calcul d'indices de tendance (Knowledge Engine) ; (4) alimentation du Recommendation Engine (rente sylvicole par essence) et du Simulation Engine (projets économiques de coupes). **Limites** : forêt privée uniquement (voir DS-032 pour la forêt publique ONF), granularité départementale non systématique, pas de prix par commune. |
+
+##### DS-031 — Éditions archivées
+
+| Édition | URL | Statut ingestion |
+|---|---|---|
+| Indicateur 2026 (prix 2025, courante) | https://observatoire.franceboisforet.com/prix-de-vente-des-bois-sur-pied-en-foret-privee-indicateur-2026/ | Planifié (P1) |
+| Indicateur 2025 (prix 2024) | https://franceboisforet.fr/2025/07/21/le-prix-de-vente-des-bois-sur-pied-en-foret-privee-repart-a-la-hausse/ | Planifié (P1) |
+| Indicateurs 2004-2024 | Portail observatoire.franceboisforet.com (archives) | Planifié (P2 — série longue pour tendances) |
+
+##### DS-031 — Sources régionales complémentaires (déclinaisons interprofessions)
+
+| Région | Interprofession | URL | Statut |
+|---|---|---|---|
+| Occitanie | FIBOIS Occitanie | https://www.fibois-occitanie.com/ressources/observabois/secteur-foret/ | Planifié (P2) |
+| Nouvelle-Aquitaine | FIBOIS Nouvelle-Aquitaine | À localiser | Planifié (P2) |
+| Auvergne-Rhône-Alpes | FIBOIS AURA | À localiser | Planifié (P2) |
+| Autres régions | Interprofessions régionales (FIBOIS réseau) | À recenser | Planifié (P3) |
+
+> **Note sur la granularité territoriale :** l'indicateur France Bois Forêt
+> fournit des déclinaisons régionales (Occitanie, Massif central, etc.) mais
+> pas systématiquement départementales ou communales. Pour atteindre la
+> granularité département/commune, il faudra croiser avec les mercuriales
+> locales (ONF, CRPF, experts forestiers) et les données de ventes
+> communales. Les données BTS du Fondateur (à ingérer — voir DS-033) peuvent
+> apporter cette granularité terrain.
+
+#### DS-032 — Mercuriales ONF (prix des bois en forêt publique)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-032 |
+| **Nom du dataset** | Mercuriales des ventes de bois en forêt publique (série récurrente) |
+| **Organisme producteur** | ONF — Office National des Forêts |
+| **Catégorie** | A — Forestier (donnée économique annuelle récurrente) |
+| **Domaines S-6 couverts** | Sylviculture, économie de la filière forêt-bois |
+| **Moteurs consommateurs** | Knowledge Engine, Recommendation Engine, Simulation Engine |
+| **Source / URL** | https://www.onf.fr/ (section mercuriales / ventes de bois) |
+| **Licence** | Données publiques ONF — vérifier conditions de réutilisation |
+| **Couverture spatiale** | France métropolitaine + DROM (forêts publiques domaniales + communales) |
+| **Couverture temporelle** | Série pluriannuelle (à confirmer l'historique disponible) |
+| **Résolution spatiale** | Nationale + régionale + départementale (ventes par massif domanial) |
+| **Résolution temporelle** | Annuelle (mercuriales publiées chaque année) |
+| **Format** | PDF / HTML / données tabulaires |
+| **Version référencée** | Édition courante (à confirmer auprès de l'ONF) |
+| **Qualité / précision** | Source officielle ONF — prix réels des ventes en séance en forêt publique (domaniale + communale). Complémentaire de DS-031 (forêt privée). Niveau de preuve B (statistique publique reconnue). |
+| **Contact** | ONF — direction commerciale (www.onf.fr) |
+| **Statut d'ingestion** | Planifié (Phase 4 — à confirmer disponibilité des données ouvertes) |
+| **Notes** | Les mercuriales ONF couvrent la forêt publique (domaniale + communale), complémentaires de l'indicateur France Bois Forêt (forêt privée, DS-031). La réunion des deux sources donne une vision exhaustive du marché français du bois sur pied. **Granularité** : par massif domanial (potentiellement départementale). **À valider** : disponibilité des mercuriales en open data (sinon, demande d'accès à l'ONF). |
+
+#### DS-033 — Données BTS Gestion Forestière (Fondateur)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-033 |
+| **Nom du dataset** | Données terrain et cours BTS Gestion Forestière (Fondateur) |
+| **Organisme producteur** | Camil (Fondateur) — données personnelles de formation et de terrain |
+| **Catégorie** | A — Forestier (donnée terrain et pédagogique) |
+| **Domaines S-6 couverts** | Sylviculture, dendrométrie, écologie forestière, économie de la filière, botanique, pédologie |
+| **Moteurs consommateurs** | Knowledge Engine, Reasoning Engine, Diagnostic Engine, Recommendation Engine, Forest Dynamics Engine, Pedology Engine, Botanical Engine |
+| **Source / URL** | À fournir par le Fondateur (documents BTS, données terrain, cours) |
+| **Licence** | Données personnelles du Fondateur — ingestion sur autorisation explicite, usage interne GSIE uniquement (pas de redistribution sans accord) |
+| **Couverture spatiale** | France (à préciser selon les terrains BTS du Fondateur — régions/départiments visités) |
+| **Couverture temporelle** | Période BTS (à préciser) |
+| **Résolution spatiale** | Terrain (potentiellement communale/parcellaire — à préciser) |
+| **Résolution temporelle** | Ponctuelle (données de formation et de terrain) |
+| **Format** | À préciser (cours, fiches terrain, relevés dendrométriques, mémoires, etc.) |
+| **Version référencée** | Édition BTS du Fondateur (à dater) |
+| **Qualité / précision** | Données terrain réelles et pédagogiques — niveau de preuve variable (C/D pour les observations personnelles, B pour les cours référencés). Traçabilité par essence, par station, par région (à structurer à l'ingestion). |
+| **Contact** | Fondateur (Quintessences) |
+| **Statut d'ingestion** | En attente de transmission par le Fondateur |
+| **Notes** | Les données BTS du Fondateur peuvent apporter une granularité terrain (commune, parcelle, station) que les sources nationales (DS-031, DS-032) n'ont pas — notamment sur les prix locaux, les coûts d'exploitation, les itinéraires sylvicoles régionaux, et les observations autécologiques de terrain. **Mécanisme d'ingestion** : (1) réception des documents par le Fondateur ; (2) structuration selon le métamodèle GSIE (essence → AutecologyProfile, prix → table `prix_bois_sur_pied` avec granularité locale, itinéraires → RegleInference, observations → Evidence) ; (3) citation systématique (CON-005) avec mention "Données BTS — Fondateur" ; (4) niveau de preuve adapté (C/D pour observations personnelles, B pour cours référencés). **À transmettre** : cours, fiches de terrain, relevés dendrométriques, mémoires, données de prix/coûts locaux, observations autécologiques. |
+
+#### DS-034 — Diagnostic stationnel forestier (méthodes et guides régionaux)
+
+| Champ | Valeur |
+|---|---|
+| **Identifiant GSIE** | DS-034 |
+| **Nom du dataset** | Diagnostic stationnel forestier — méthodes, catalogues et guides régionaux (série récurrente multi-sources) |
+| **Organisme producteur** | IGN (Inventaire forestier), ONF, CNPF (Centre National de la Propriété Forestière), CRPF régionaux, MNHN, INRAE |
+| **Catégorie** | A — Forestier (méthodes et référentiels stationnels) |
+| **Domaines S-6 couverts** | Écologie forestière, pédologie, botanique, sylviculture, biodiversité (habitats Natura 2000) |
+| **Moteurs consommateurs** | Diagnostic Engine (cœur de cible), Reasoning Engine, Knowledge Engine, Botanical Engine, Pedology Engine, Recommendation Engine |
+| **Source / URL** | Voir sous-tables DS-034a à DS-034f ci-dessous (sources multiples) |
+| **Licence** | Variable selon la source : Licence Ouverte 2.0 (IGN, ONF publics), © Documentation française (Cahiers d'habitats), © CRPF (guides régionaux). Vérifier par document. |
+| **Couverture spatiale** | France métropolitaine + DROM (par région forestière naturelle) |
+| **Couverture temporelle** | 1985-présent (méthodes mises au point à partir des années 1980, guides publiés depuis 1990) |
+| **Résolution spatiale** | Région forestière naturelle (découpage IFN/IGN) — granularité par massif |
+| **Résolution temporelle** | Ponctuelle (publication par guide, mise à jour irrégulière) |
+| **Format** | PDF, ouvrages imprimés, logiciels (Cartyp), fiches terrain |
+| **Version référencée** | Éditions courantes (voir sous-tables) |
+| **Qualité / précision** | Sources de référence nationales et régionales — méthodes scientifiques validées (phytoécologie, pédologie, dendrométrie). Niveau de preuve A/B (référentiels officiels IGN/ONF/MNHN). |
+| **Contact** | IGN (inventaire-forestier.ign.fr), CNPF (cnpf.fr), ONF (onf.fr), MNHN |
+| **Statut d'ingestion** | Planifié (Phase 4 — Diagnostic Engine + implémentation interactive GeoSylva) |
+| **Notes** | Le diagnostic stationnel est la **méthode pivot** du forestier français : identifier le type de station (climat + relief + sol + végétation spontanée) pour en déduire les essences adaptées et les itinéraires sylvicoles. **Cas d'usage GeoSylva** : implémentation interactive du diagnostic stationnel sur le terrain (saisie des critères → clé de détermination → fiche station → préconisations sylvicoles). **Mécanisme d'ingestion** : (1) ingestion des catalogues/guides régionaux (structure : région → type de station → critères diagnostiques → essences adaptées → préconisations) ; (2) modélisation comme règles d'inférence dans le Reasoning Engine (clé de détermination → type de station) ; (3) alimentation du Diagnostic Engine (type de station → potentialités, contraintes, essences adaptées) ; (4) alimentation du Recommendation Engine (préconisations sylvicoles par station). **Variantes méthodologiques** : voir DS-034a à DS-034f. |
+
+##### DS-034a — Catalogues des Types de Stations Forestières (CTSF)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Catalogues des Types de Stations Forestières (CTSF) — méthode de référence |
+| **Producteur** | IGN (Inventaire forestier), ONF, universités |
+| **URL** | https://inventaire-forestier.ign.fr/spip.php?rubrique255= (outils d'aide) ; https://inventaire-forestier.ign.fr/IMG/pdf/L_IF_no04_typologie.pdf (méthode) |
+| **Description** | Inventaire exhaustif des types de station d'une région naturelle, avec critères de reconnaissance terrain (groupes écologiques d'espèces, sol, climat). Cinq parties : présentation régionale, méthode, description des types, clé de détermination, annexes. |
+| **Méthode** | Phytoécologie — relevés floristiques + pédologiques + dendrométriques → typologie statistique → types de station |
+| **Granularité** | Région forestière naturelle (découpage IFN/IGN) |
+| **Statut** | Planifié (P1 — cœur du Diagnostic Engine) |
+
+##### DS-034b — Guides simplifiés des stations (CNPF/CRPF)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Guides simplifiés des stations forestières (par région) |
+| **Producteur** | CNPF (Centre National de la Propriété Forestière), CRPF régionaux |
+| **URL** | https://www.cnpf.fr/nos-actions-nos-outils/outils-et-techniques/les-stations-forestieres ; https://ifc.cnpf.fr/nos-actions/outils-d-aide-la-decision/description-des-parcelles-et-choix-des-essences |
+| **Description** | Version simplifiée des CTSF, accessible aux sylviculteurs. Critères simples : position topographique, caractéristiques du sol, flore. Clé de détermination → fiche par station (végétation typique, sol, potentialités, préconisations sylvicoles et patrimoniales). |
+| **Méthode** | Simplification des CTSF + ajout de préconisations de gestion |
+| **Granularité** | Région administrative ou naturelle (ex. Brie, Tardenois, Gâtinais, Vexin, Pays d'Yveline) |
+| **Statut** | Planifié (P1 — interface utilisateur GeoSylva) |
+
+##### DS-034c — Guides de choix des essences (CNPF/CRPF)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Guides pour le choix des essences (par région) |
+| **Producteur** | CNPF, CRPF régionaux |
+| **URL** | https://ifc.cnpf.fr/nos-actions/outils-d-aide-la-decision/description-des-parcelles-et-choix-des-essences |
+| **Description** | Guides pédagogiques reliant sol + climat (actuel et à venir) → choix des essences à favoriser (plantation, éclaircie). Complémentaires des guides de stations — focal sur la décision sylvicole. |
+| **Méthode** | Croisement station × essence × climat (projection) |
+| **Granularité** | Région administrative ou naturelle |
+| **Statut** | Planifié (P1 — alimente Recommendation Engine) |
+
+##### DS-034d — Cahiers d'habitats Natura 2000 (habitats forestiers)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Cahiers d'habitats Natura 2000 — tome 1 : Habitats forestiers (Bensettiti, Rameau, Chevallier, 2001) |
+| **Producteur** | MNHN (Muséum National d'Histoire Naturelle), La Documentation française |
+| **URL** | https://biblio.cbnpmp.fr/index.php?id=31&lvl=serie_see (catalogue) ; https://doi.org/10.4267/2042/38949 (typologie phytoécologique) |
+| **Description** | Typologie des habitats forestiers de la directive européenne 92/43 (Natura 2000) — 29 types d'habitats d'intérêt communautaire. Fiche par habitat : flore, conditions écologiques, états à privilégier, gestion. |
+| **Méthode** | Classification phytosociologique (CORINE biotopes adaptée France) + expertise |
+| **Granularité** | Nationale (France tempérée hors méditerranéenne) + habitats élémentaires |
+| **Statut** | Planifié (P2 — volet patrimonial/biodiversité du diagnostic) |
+
+##### DS-034e — Méthode d'évaluation de l'état de conservation des habitats forestiers (MNHN/ONF)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | État de conservation des habitats forestiers d'intérêt communautaire (Carnino, 2009) |
+| **Producteur** | MNHN (SPN) + ONF (DEDD) |
+| **URL** | https://www.tela-botanica.org/wp-content/uploads/2017/03/etatdeconservationhabitatsinteretcommunautaire_Carnino_2009_methode_EC_hab_foret.pdf ; https://biblio.cbnpmp.fr/doc_num.php?explnum_id=7661 (guide d'application) |
+| **Description** | Méthode d'évaluation de l'état de conservation des 29 habitats forestiers Natura 2000 à l'échelle du site. Cadre méthodologique commun, critères et valeurs seuils. Appliquée aux DOCOB (documents d'objectifs Natura 2000). |
+| **Méthode** | Évaluation multi-critères (composition, structure, fonctions, dégradations) → état favorable/défavorable/inadéquat |
+| **Granularité** | Site Natura 2000 (potentiellement tout massif forestier) |
+| **Statut** | Planifié (P2 — volet évaluation/monitoring du diagnostic) |
+
+##### DS-034f — Habitats forestiers de France tempérée (typologie phytoécologique quantitative)
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Habitats forestiers de la France tempérée : typologie et caractérisation phytoécologique |
+| **Producteur** | INRAE / MNHN (étude publiée via HAL) |
+| **URL** | https://doi.org/10.4267/2042/38949 |
+| **Description** | Caractérisation quantitative (floristique, climatique, édaphique) des habitats forestiers de France tempérée hors méditerranéenne. Complément des Cahiers d'habitats (DS-034d) avec données chiffrées. |
+| **Méthode** | Phytoécologie quantitative — analyse multivariée (floristique + climat + sol) |
+| **Granularité** | Nationale (France tempérée) + habitats élémentaires |
+| **Statut** | Planifié (P2 — base scientifique du Diagnostic Engine) |
+
+##### DS-034 — Outil de référence transverse
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | Les outils d'aide à la reconnaissance des stations forestières et au choix des essences (ouvrage de référence, IGN 2006) |
+| **Producteur** | IGN (Inventaire forestier) |
+| **URL** | https://inventaire-forestier.ign.fr/spip.php?rubrique255= |
+| **Description** | Ouvrage de référence (224 pages, 100 figures/tableaux) sur l'élaboration et la diffusion des outils de typologie des stations. Analyse de l'état de l'art, méthodes, recommandations opérationnelles, liste des guides parus. ISBN : 2-11-096455-3, parution novembre 2006. |
+| **Statut** | Planifié (P1 — cadre méthodologique de référence) |
+
+> **Note sur l'implémentation GeoSylva** : le diagnostic stationnel interactif
+> dans GeoSylva nécessitera l'ingestion préalable des guides régionaux
+> (DS-034a/b/c) sous forme structurée : (1) clé de détermination arborescente
+> (critères → type de station) ; (2) fiches station (végétation typique,
+> sol, potentialités, essences adaptées, préconisations) ; (3) géoréférencement
+> des régions forestières naturelles (croisement avec GIS Engine). Le
+> diagnostic interactif suivra le workflow : saisie terrain (position
+> topographique + sol + flore observée) → clé de détermination → type de
+> station → préconisations sylvicoles. Voir aussi `GSIE/ENGINES/DIAGNOSTIC_ENGINE/`
+> et `GSIE/RESEARCH/CORPUS_SYLVICOLE_SCIENTIFIQUE_QUINTESSENCES_2026-07-18.md`.
+
 ---
 
 ## 4. Priorité d'ingestion
@@ -827,6 +1076,10 @@ moteurs qui les consomment.
 | Priorité | Dataset | Justification |
 |---|---|---|
 | P1 | DS-006 INRAE SOERE F-ORE-T | Données expérimentales peer-reviewed — alimentent directement Knowledge avec niveau de preuve A/B |
+| P1 | DS-030 FCBA Memento (série annuelle) | Référentiel sylvicole opérationnel récurrent — itinéraires, essences, cubage (alimente Knowledge + Recommendation). Ingestion incrémentale à chaque nouvelle édition. |
+| P1 | DS-031 Prix bois sur pied (France Bois Forêt) | Indicateur annuel prix par essence × région (21 ans d'historique) — alimente Recommendation (rente sylvicole) + Simulation (projets économiques) |
+| P1 | DS-033 Données BTS Fondateur | Granularité terrain (commune/parcelle) manquante des sources nationales — prix locaux, coûts exploitation, itinéraires régionaux, observations autécologiques |
+| P1 | DS-034 Diagnostic stationnel (CTSF + guides régionaux) | Cœur du Diagnostic Engine + implémentation interactive GeoSylva — méthodes, catalogues et guides régionaux (DS-034a à DS-034f) |
 | P1 | DS-003 IGN IFN | Données dendrométriques nationales — base de calibration des modèles |
 
 ### 4.3 Vague 2 — Moteurs domaine (GIS, Botanical, Pedology, Climate)

@@ -187,6 +187,11 @@ async def fetch_one(
                 record["status"] = e.status
                 record["error"] = f"{e.status} {e.message}"
                 continue
+            except aiohttp.ClientConnectorCertificateError as e:
+                # Certificat invalide : la source n'est pas authentifiable.
+                # On ne peut rien conclure sur sa vitalité — on le dit.
+                record["error"] = f"TLS_INVALIDE: {e.certificate_error}"
+                break
             except aiohttp.ClientConnectorError as e:
                 record["error"] = f"CONNECT: {e}"
             except asyncio.TimeoutError:
@@ -220,6 +225,9 @@ def classify(record: dict[str, Any]) -> None:
     if status == "TEMPLATE":
         record["verdict"] = "INDETERMINEE"
         record["verdict_detail"] = "URL contient des variables non substituees"
+    elif status is None and str(record["error"] or "").startswith("TLS_INVALIDE"):
+        record["verdict"] = "TLS_INVALIDE"
+        record["verdict_detail"] = record["error"]
     elif status is None:
         record["verdict"] = "INDETERMINEE"
         record["verdict_detail"] = record["error"] or "Erreur de connexion"
@@ -253,7 +261,13 @@ async def main() -> None:
             unique.append(u)
     print(f"[{datetime.now(timezone.utc).isoformat()}] {len(unique)} URLs uniques a tester.")
 
-    connector = aiohttp.TCPConnector(limit=20, limit_per_host=5, ssl=False)
+    # La vérification TLS reste active. Elle l'était désactivée (`ssl=False`),
+    # ce qui rendait le verdict de chaque URL falsifiable par quiconque tient
+    # une position réseau entre l'auditeur et la source : un certificat forgé
+    # suffisait à faire passer une source morte pour vivante, ou l'inverse.
+    # Un certificat réellement invalide devient un verdict à part entière
+    # (`TLS_INVALIDE`) plutôt qu'une acceptation silencieuse.
+    connector = aiohttp.TCPConnector(limit=20, limit_per_host=5)
     timeout = aiohttp.ClientTimeout(total=20, connect=10)
     headers = {"User-Agent": USER_AGENT, "Accept": "*/*"}
     semaphore = asyncio.Semaphore(20)
