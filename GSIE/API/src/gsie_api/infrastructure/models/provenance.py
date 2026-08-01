@@ -69,6 +69,22 @@ class EntityAliasModel(Base, TimestampMixin):
     external_id: Mapped[str] = mapped_column(String(200), nullable=False)
     external_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # Index unique, et non `UniqueConstraint` : la migration `20260801_0027`
+    # pose un `CREATE UNIQUE INDEX`, qui n'inscrit rien dans `pg_constraint`.
+    # Déclarer une contrainte ici ferait diverger le registre et la base —
+    # `alembic revision --autogenerate` proposerait d'ajouter une contrainte
+    # qui existe déjà sous forme d'index. C'est la dérive corrigée sur
+    # `ix_entity_embedding` : les deux descriptions d'un même objet doivent
+    # coïncider, sinon l'écart réapparaît à chaque génération.
+    __table_args__ = (
+        Index(
+            "idx_entity_alias_ns_extid",
+            "namespace",
+            "external_id",
+            unique=True,
+        ),
+    )
+
 
 @register_type("concept")
 class ConceptModel(Base, TimestampMixin):
