@@ -13,9 +13,11 @@ le climat et les territoires.
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
-[![Moteurs](https://img.shields.io/badge/moteurs-14%20documentés-orange)](GSIE/ENGINES/)
+[![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-22%20DEC-yellow)](03_DECISIONS/)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-41%20DEC-yellow)](03_DECISIONS/)
+[![RFC](https://img.shields.io/badge/RFC-30-lightgrey)](02_RFC/)
+[![Base](https://img.shields.io/badge/PostgreSQL%2016-27%20migrations%20%C2%B7%20120%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
@@ -327,10 +329,12 @@ maintenabilité, la testabilité et l'extensibilité.
 | Learning Engine | Apprentissage encadré (retours terrain, feedback) |
 | Simulation Engine | Simulation de scénarios (interventions, évolutions) |
 
-> **Implémentation Phase 4** : Evidence Engine (cœur Rust + bindings
-> PyO3) et Knowledge Engine (Python) sont implémentés et testés
-> (166 tests, couverture 100%). Le pipeline intégré
-> Evidence → Knowledge est opérationnel (Semaines 1-4, Vague 1).
+> **Implémentation Phase 4** : les 14 moteurs ont leur module, leur
+> routeur HTTP et leurs tests. L'Evidence Engine garde un cœur Rust
+> (bindings PyO3) ; les autres sont en Python. L'Orchestration Engine
+> exécute la chaîne Reasoning → Diagnostic → Recommendation →
+> Validation de bout en bout. Voir [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
+> pour l'état courant, moteur par moteur.
 
 ---
 
@@ -364,27 +368,33 @@ complet.
 
 ## Avancement Phase 4
 
-### Vague 1 — Fondations (semaines 1-4, livrées)
+### Livré
 
-| Semaine | Livrable | Statut |
-|---|---|---|
-| S1 | Structure FastAPI + Docker Compose, auth JWT, health/readiness, rate limiting, observabilité | Livrée |
-| S2 | Evidence Engine — cœur Rust + bindings PyO3, matrice A-F, détection de conflits, versionnement | Livrée |
-| S3 | Knowledge Engine — ingestion, requêtes typées, versionnement CON-010, révision avec archivage | Livrée |
-| S4 | Pipeline intégré Evidence → Knowledge (tranche verticale prioritaire) | Livrée |
+| Domaine | État |
+|---|---|
+| **Les 14 moteurs** | Implémentés, chacun avec son module, son routeur HTTP et ses tests. La chaîne complète Reasoning → Diagnostic → Recommendation → Validation s'exécute de bout en bout via l'Orchestration Engine. |
+| **API GSIE** | FastAPI — authentification JWT RS256 (login, refresh avec rotation, logout révocant le jeton), RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
+| **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 27 migrations Alembic, 120 tables, 7 schémas. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
+| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`), inaccessibles au rôle applicatif. RLS active et forcée sur les tables sensibles. |
+| **Comptes de connexion** | L'API s'exécute sous un compte `NOSUPERUSER NOBYPASSRLS` sans `DELETE` (CON-010 rendu structurel). Les privilèges réels sont interrogés au démarrage, pas déduits du nom du compte. |
+| **Ingestion** | Pipeline unitaire et en lot (1 000 items), garde anti-invention RFC-0014 — une donnée d'origine IA est forcée au niveau de preuve D et mise en quarantaine. |
+| **SDK Python** | Client asynchrone `httpx`, JWT RS256 avec rafraîchissement automatique, wrappers des moteurs. |
+| **Tableau de contrôle** | Astro 5 + React 19 en îlots + Tailwind 4. |
+| **Visualisation** | Metabase, Superset et Dekart branchés sur un compte en lecture seule, sans aucun accès aux schémas RGPD — la barrière est en base, pas dans l'outil. |
 
-**Tests** : 166 tests au total (122 Python + 41 Rust + 3 API E2E),
-couverture 100% sur la logique métier.
+**Tests** : plus de 900 fonctions de test sur 129 fichiers (unitaires et
+intégration sur base réelle via testcontainers), harnais de mutation à
+100 % de mutants tués sur le périmètre couvert.
 
-### Vagues 2-6 — Plan révisé 24 semaines (DEC-000019)
+### En cours
 
-Correlation Engine, Reasoning Engine, Diagnostic Engine,
-Recommendation Engine, Validation Engine, moteurs domaine (GIS,
-Climate, Pedology, Botanical, Forest Dynamics), moteurs transverses
-(Learning, Simulation), Centre de Commandement UE 5.8, applications
-clientes (GeoSylva, Ignis).
+Sauvegardes de la base (pgBackRest + archivage WAL), SDK Kotlin pour
+GeoSylva, intégration GeoSylva et QGISIA via le SDK, Centre de
+Commandement Unreal Engine 5.8.
 
-Voir `ROADMAP.md` pour le détail complet.
+Voir [ROADMAP.md](ROADMAP.md) pour le détail et
+[PROJECT_MEMORY.md](PROJECT_MEMORY.md) pour l'état courant — cette
+section en est un résumé, jamais la source de vérité.
 
 ---
 
@@ -506,12 +516,13 @@ Quintessences/
 ├── GSIE/RESEARCH/            Travaux scientifiques et bibliographie
 ├── GSIE/KNOWLEDGE/           Base de connaissances structurée
 ├── GSIE/DATASETS/            Jeux de données référencés et sourcés
-├── GSIE/ENGINES/             14 moteurs GSIE (documentés, Evidence Engine implémenté en Phase 4)
+├── GSIE/ENGINES/             14 moteurs GSIE — documentation de référence
 ├── GSIE/ALGORITHMS/          Procédures computationnelles formelles
 ├── GSIE/MODELS/              Modèles scientifiques et d'apprentissage
 ├── GSIE/APPLICATIONS/        Interfaces utilisateurs (GeoSylva, Ignis, …)
-├── GSIE/API/                 Contrats d'interface exposés
-├── GSIE/SDK/                 Bibliothèques clientes
+├── GSIE/API/                 API FastAPI — code des 14 moteurs, migrations, tests
+├── GSIE/SDK/                 Bibliothèques clientes (Python ; Kotlin à venir)
+├── GSIE/ADMIN_WEB/           Tableau de contrôle d'administration
 ├── GSIE/TESTS/               Tests unitaires, intégration et non-régression
 ├── GSIE/TOOLS/               Utilitaires et chaînes de construction
 ├── GSIE/DOCUMENTATION/       Documentation officielle et guides contributeurs
