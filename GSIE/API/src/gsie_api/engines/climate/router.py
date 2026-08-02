@@ -12,7 +12,7 @@ Endpoints :
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser
@@ -130,8 +130,14 @@ async def climate_danger_feux(
 async def climate_climatologie_stations(
     request: Request,
     response: Response,
-    id_departement: str,
     _user: EngineReadUser,
+    id_departement: str = Query(
+        ...,
+        min_length=2,
+        max_length=3,
+        pattern=r"^\d{2,3}[A-B]?$",
+        description="Code département INSEE (ex. 075, 013, 2A)",
+    ),
 ) -> list[dict[str, Any]]:
     """Récupère la liste réelle des stations DPClim d'un département.
 
@@ -221,8 +227,14 @@ async def climate_vigilance(
 async def climate_observations_horaires(
     request: Request,
     response: Response,
-    id_departement: str,
     _user: EngineReadUser,
+    id_departement: str = Query(
+        ...,
+        min_length=2,
+        max_length=3,
+        pattern=r"^\d{2,3}[A-B]?$",
+        description="Code département INSEE (ex. 075, 013, 2A)",
+    ),
 ) -> list[ObservationHoraireDepartement]:
     """Récupère les observations horaires réelles des 24h d'un département.
 

@@ -91,6 +91,10 @@ USER gsie
 
 EXPOSE 8000
 
+# Healthcheck embarqué — fonctionne hors docker-compose (K8s, Swarm, registry pull)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
 # Gunicorn + SecureUvicornWorker (sans header Server, OWASP A05)
 # Config dans gunicorn.conf.py (workers, keep-alive, max-requests, timeouts)
 # entrypoint.sh ne migre que si les drapeaux opératoires sont explicitement fournis
