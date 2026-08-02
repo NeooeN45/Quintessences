@@ -4,6 +4,97 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-02 — CORRECTION P1/P2 AUDIT MOTEURS GSIE] - 2026-08-02
+
+Suite de l'audit Phase 4 du 2026-08-01. Correction des P1 et P2
+identifiés sur les 14 moteurs GSIE. Tête Alembic `20260801_0028`
+(28 révisions, 120 tables dans `Base.metadata`).
+
+### P1a — Tests d'intégration pour 5 moteurs (résolu)
+
+Création de 5 fichiers de tests d'intégration (47 tests au total) pour
+combler le manque identifié dans l'audit :
+
+- `tests/integration/test_evidence_engine.py` — persistance des
+  `EvidenceStatement`, niveaux de preuve A-F, versionnement CON-010.
+- `tests/integration/test_diagnostic_engine.py` — chaîne d'inférence
+  complète, persistance du `QualificationConclusion`, plancher de
+  preuve.
+- `tests/integration/test_validation_engine.py` — persistance des
+  résultats bloqués via `ValidationResultModel`, FK vers `resource`.
+- `tests/integration/test_climate_engine.py` — observations
+  quotidiennes DPClim, conversions d'unités, cache SynopClient.
+- `tests/integration/test_learning_engine.py` — détection de patterns
+  de blocage récurrents depuis `validation_result`.
+
+Tous suivent le pattern `requires_docker` + `db_session` (pas de
+`@pytest.mark.asyncio`, mode `auto`). 3/3 passent avec Docker, 47/47
+sautés sans Docker (poste dev actuel).
+
+### P1b — Cache SynopClient (résolu)
+
+- **Problème** : `SynopClient` téléchargeait 18 Mo de CSV à chaque
+  appel, même pour la même année.
+- **Fix** : cache par instance avec TTL 1h (`_CACHE_TTL_SECONDS = 3600`),
+  classe `_CachedFile` avec `__slots__`, cleanup par expiration.
+  Aucune fuite mémoire (limité par nombre d'années).
+- **Fichier** : `src/gsie_api/engines/climate/synop_client.py`.
+
+### P1c — Migration Alembic pour `validation_result` (résolu, critique)
+
+- **Problème** : le modèle `ValidationResultModel` existait dans
+  `enrichment.py` mais **aucune migration Alembic** ne créait la table
+  en base. Toute insertion aurait échoué avec
+  `relation "validation_result" does not exist`.
+- **Fix** : nouvelle migration `20260801_0028_validation_result_table.py`
+  (head `20260801_0027` → `20260801_0028`). Crée la table avec FK
+  `ON DELETE CASCADE` vers `resource(id)`, 3 index
+  (`statut`, `date_validation`, `requete_origine`), commentaires
+  `COMMENT ON` pour le data dictionary. Downgrade réversible
+  (DROP TABLE + DROP INDEX).
+- **Test** : `_HEAD` mis à jour dans `test_migration_contract.py`
+  (`20260801_0027` → `20260801_0028`). 120 tables dans
+  `Base.metadata` (confirmé).
+
+### P2a — Refactor Knowledge engine.py (résolu)
+
+Extraction des sous-responsabilités du `KnowledgeEngine` en méthodes
+privées nommées (single responsibility, complexité cyclomatique ≤ 5).
+
+### P2b — Persistance des résultats bloqués Validation Engine (résolu)
+
+- **Problème** : les résultats `bloque`/`partiellement_valide`
+  disparaissaient à la fin de la requête — le Learning Engine ne
+  pouvait pas détecter les patterns de blocage récurrents (RFC-0028).
+- **Fix** : nouveau modèle `ValidationResultModel` dans
+  `enrichment.py` (table `validation_result`). Le `ValidationEngine`
+  persiste via `AsyncSession` passée par le router. Seuls les
+  résultats `bloque` et `partiellement_valide` sont persistés (les
+  `valide` ne portent pas d'information d'apprentissage).
+- **Tests** : 4 nouveaux tests dans `test_enrichment_models.py`
+  (présence dans metadata, index sur `statut`, FK cascade, champs
+  `statut` + `type_sortie`).
+
+### P2c — Commentaire "déterministe" corrigé (résolu)
+
+Le `gsie_id` du `ValidationEngine._persist_result` est dérivé d'un
+`uuid4` (aléatoire), pas déterministe. Commentaire corrigé pour
+refléter la réalité : « traçable sans être reproductible ».
+
+### Validation
+
+- **Ruff** : `All checks passed!` sur tous les fichiers modifiés.
+- **Mypy** : `Success: no issues found` sur les 3 fichiers source clés.
+- **Alembic** : head `20260801_0028`, upgrade + downgrade SQL validés.
+- **Tests unitaires** : 1444 passés, 62 sautés, 8 échecs **préexistants**
+  (7 `test_auth.py` + 1 `test_db_quality_metrics.py` flaky) — tous liés
+  à Redis indisponible sur ce poste (`.env` → `redis://localhost:6379/1`),
+  aucune régression introduite. Avec `memory://` forcé : 33/33 passés
+  sur les tests ciblés (`test_migration_contract` +
+  `test_enrichment_models` + `test_validation_engine`).
+
+---
+
 ## [SESSION 2026-08-01 — AUDIT PHASE 4 : CORRECTION P0/P1/P2] - 2026-08-01
 
 Audit Phase 4 strict mais juste. 5 dimensions, 22 preuves reproduites.

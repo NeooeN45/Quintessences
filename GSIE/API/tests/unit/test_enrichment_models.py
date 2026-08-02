@@ -83,3 +83,31 @@ def test_ingestion_progress_has_status_and_offset() -> None:
     assert "status" in table.columns
     assert "last_offset" in table.columns
     assert table.columns["last_offset"].type.python_type is int
+
+
+def test_validation_result_model_is_registered_in_metadata() -> None:
+    """La table validation_result doit être dans Base.metadata."""
+    assert "validation_result" in Base.metadata.tables
+
+
+def test_validation_result_has_index_on_statut() -> None:
+    """validation_result doit avoir un index sur statut (filtrage Learning Engine)."""
+    table = Base.metadata.tables["validation_result"]
+    index_columns = [tuple(col.name for col in index.columns) for index in table.indexes]
+    assert ("statut",) in index_columns
+
+
+def test_validation_result_has_fk_to_resource_cascade() -> None:
+    """validation_result.requete_origine doit être une FK vers resource.id avec CASCADE."""
+    table = Base.metadata.tables["validation_result"]
+    fk = list(table.foreign_keys)[0]
+    assert fk.column.name == "id"
+    assert fk.column.table.name == "resource"
+    assert fk.ondelete == "CASCADE"
+
+
+def test_validation_result_has_statut_and_type_sortie() -> None:
+    """validation_result doit avoir statut et type_sortie."""
+    table = Base.metadata.tables["validation_result"]
+    assert "statut" in table.columns
+    assert "type_sortie" in table.columns

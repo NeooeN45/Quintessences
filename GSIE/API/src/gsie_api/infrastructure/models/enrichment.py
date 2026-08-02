@@ -129,3 +129,37 @@ class IngestionProgressModel(Base):
         onupdate=func.now(),
     )
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class ValidationResultModel(Base, TimestampMixin):
+    """Résultat de validation persisté — alimentation du Learning Engine.
+
+    Seuls les résultats `bloque` et `partiellement_valide` sont persistés
+    (les résultats `valide` ne portent pas d'information d'apprentissage).
+    Le Learning Engine consomme ces lignes pour détecter des patterns
+    de blocage récurrents (RFC-0028, VALIDATION_ENGINE.md §3).
+    """
+
+    __tablename__ = "validation_result"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    requete_origine: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    statut: Mapped[str] = mapped_column(String(30), nullable=False)
+    type_sortie: Mapped[str] = mapped_column(String(30), nullable=False)
+    controles: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    causes_blocage: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
+    date_validation: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_validation_result_statut", "statut"),
+        Index("idx_validation_result_date", "date_validation"),
+    )

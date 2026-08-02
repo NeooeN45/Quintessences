@@ -33,6 +33,8 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.validation.schemas import (
     CauseBlocage,
@@ -44,6 +46,8 @@ from gsie_api.engines.validation.schemas import (
     ValidationResult,
     ValidationStatut,
 )
+from gsie_api.infrastructure.models.base import ResourceModel
+from gsie_api.infrastructure.models.enrichment import ValidationResultModel
 
 logger = get_logger("gsie_api.validation.engine")
 
@@ -53,13 +57,16 @@ class ValidationEngineError(Exception):
 
 
 class ValidationEngine:
-    """Moteur de validation — pas de persistance en v1.
+    """Moteur de validation — persistance des résultats bloqués.
 
-    Le moteur est stateless : chaque validation est indépendante et
-    tracée par l'appelant (journal d'audit). Une future version
-    pourra persister les résultats bloqués pour alimentation du
-    Learning Engine (§3 — sorties vers LEARNING_ENGINE).
+    Le moteur persiste les résultats `bloque` et `partiellement_valide`
+    en base pour alimentation du Learning Engine (§3 — sorties vers
+    LEARNING_ENGINE). Les résultats `valide` ne sont pas persistés
+    (pas d'information d'apprentissage).
     """
+
+    def __init__(self, session: AsyncSession | None = None) -> None:
+        self._session = session
 
     @staticmethod
     def version() -> str:
@@ -122,7 +129,7 @@ class ValidationEngine:
             n_causes=len(causes_blocage),
         )
 
-        return ValidationResult(
+        result = ValidationResult(
             validation_id=uuid4(),
             requete_origine=request.requete_id,
             statut=statut,
@@ -130,6 +137,53 @@ class ValidationEngine:
             causes_blocage=causes_blocage if statut != ValidationStatut.valide else [],
             date_validation=datetime.now(UTC),
         )
+
+        # Persistance des résultats bloqués pour le Learning Engine
+        if statut != ValidationStatut.valide and self._session is not None:
+            await self._persist_result(request, result)
+
+        return result
+
+    async def _persist_result(self, request: ValidationRequest, result: ValidationResult) -> None:
+        """Persiste un résultat bloqué/partiel pour alimentation du Learning Engine.
+
+        Crée la resource racine puis la ligne validation_result. La
+        resource porte un gsie_id dérivé du validation_id (uuid4), ce
+        qui la rend traçable sans être reproductible — un rejeu produit
+        un nouvel identifiant, conforme à l'unicité attendue.
+        """
+        session = self._session
+        if session is None:
+            return
+
+        # La resource racine doit exister pour la FK — on la crée si besoin.
+        # L'appelant (router) passe une session ; la resource est créée ici.
+        resource_id = uuid4()
+        session.add(
+            ResourceModel(
+                id=resource_id,
+                type="validation_result",
+                gsie_id=f"gsie:validation:{result.validation_id}",
+                metadata_json={
+                    "requete_origine": str(request.requete_id),
+                    "type_sortie": request.type_sortie.value,
+                },
+            )
+        )
+        await session.flush()
+
+        session.add(
+            ValidationResultModel(
+                id=result.validation_id,
+                requete_origine=resource_id,
+                statut=result.statut.value,
+                type_sortie=request.type_sortie.value,
+                controles=[c.model_dump(mode="json") for c in result.controles],
+                causes_blocage=[c.model_dump(mode="json") for c in result.causes_blocage],
+                date_validation=result.date_validation,
+            )
+        )
+        await session.flush()
 
     # --- Contrôles individuels ---
 
