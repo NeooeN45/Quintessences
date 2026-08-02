@@ -352,3 +352,92 @@ async def should_return_agent_id_when_resource_already_exists() -> None:
     assert result == agent_id
     # session.add ne doit pas avoir été appelé
     session.add.assert_not_called()
+
+
+# --- Garde : la persistance des recommandations est traçable (GSIE-CON-005)
+#
+# Ces tests tuent les mutations `recommandations_non_persistees`,
+# `alternatives_non_persistees`, `jonction_decision_perdue` et
+# `rationale_inventee` qui survivaient parce que `SessionDiagnosticFictif`
+# avale les écritures. La `SessionEspion` enregistre les appels.
+
+
+@pytest.mark.asyncio
+async def should_persist_recommendations_when_generated() -> None:
+    """Les recommandations produites doivent être persistées en session."""
+    from gsie_api.infrastructure.models.reasoning import RecommendationModel
+    from tests.unit.aide_recommendation import SessionEspion
+
+    session = SessionEspion()
+    engine = RecommendationEngine(session)
+    await engine.recommend(_make_request())
+    # Au moins une RecommendationModel doit être ajoutée à la session
+    recs = [a for a in session.ajouts if isinstance(a, RecommendationModel)]
+    assert len(recs) >= 1
+
+
+@pytest.mark.asyncio
+async def should_persist_alternatives_when_requested() -> None:
+    """Les alternatives doivent être persistées au même titre que la principale."""
+    from gsie_api.infrastructure.models.reasoning import RecommendationModel
+    from tests.unit.aide_recommendation import SessionEspion
+
+    session = SessionEspion()
+    engine = RecommendationEngine(session)
+    await engine.recommend(_make_request(alternatives=True))
+    # La principale + au moins une alternative doivent être persistées
+    recs = [a for a in session.ajouts if isinstance(a, RecommendationModel)]
+    assert len(recs) >= 2, (
+        f"attendu >= 2 recommandations persistées (principale + alternative), " f"got {len(recs)}"
+    )
+
+
+@pytest.mark.asyncio
+async def should_link_decision_to_correct_recommendation_when_recorded() -> None:
+    """La jonction decision_recommendation doit pointer vers la recommandation citée."""
+    from tests.unit.aide_recommendation import SessionEspion
+
+    session = SessionEspion()
+    engine = RecommendationEngine(session)
+    reco_id = uuid4()
+    decision = ForestierDecision(
+        recommandation_id=reco_id,
+        decision=DecisionForestier.REFUSE,
+        justification_forestier="Test",
+        date_decision=datetime.now(UTC),
+    )
+    await engine.record_decision(decision)
+    # L'insert dans decision_recommendation doit contenir recommendation_id=reco_id
+    # (pas decision_id — la mutation `jonction_decision_perdue` remplace l'un par l'autre)
+    # SQLAlchemy compile les UUID sans tirets : on compare donc en hex.
+    reco_hex = reco_id.hex
+    found = False
+    for ins in session.insertions:
+        if ins is None:
+            continue
+        compiled = str(ins.compile(compile_kwargs={"literal_binds": True}))
+        if "decision_recommendation" in compiled and reco_hex in compiled:
+            found = True
+            break
+    assert found, (
+        "la jonction decision_recommendation doit contenir recommendation_id="
+        f"{reco_id}, aucune insertion correspondante trouvée"
+    )
+
+
+def should_record_default_rationale_when_no_justification_provided() -> None:
+    """Le rationale par défaut doit dire « Aucune justification », pas inventer.
+
+    Tuer la mutation `rationale_inventee` qui remplace le texte neutre par une
+    explication plausible que le forestier n'a jamais donnée (ADR-009).
+    """
+    from gsie_api.engines.recommendation.engine import _rationale
+
+    decision = ForestierDecision(
+        recommandation_id=uuid4(),
+        decision=DecisionForestier.REFUSE,
+        date_decision=datetime.now(UTC),
+    )
+    rationale = _rationale(decision)
+    assert "Aucune justification fournie" in rationale
+    assert "inadaptée" not in rationale.lower()

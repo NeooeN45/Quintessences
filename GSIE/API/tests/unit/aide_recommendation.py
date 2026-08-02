@@ -86,3 +86,28 @@ class SessionDiagnosticFictif:
 
     async def execute(self, *args: Any, **kwargs: Any) -> None:
         """Avale les insertions dans les tables de jonction."""
+
+
+class SessionEspion(SessionDiagnosticFictif):
+    """Session fictive qui **enregistre** les écritures au lieu de les avaler.
+
+    Utilisée pour tuer les mutations de persistance du Recommendation Engine
+    en mode unitaire : le harnais de mutation ne joue que `tests/unit`, et la
+    `SessionDiagnosticFictif` de base avale les `add`/`execute` — rendant
+    invisibles les suppressions de persistance.
+
+    Cette variante enregistre chaque objet passé à `add` et chaque `insert`
+    passé à `execute`, permettant aux tests d'assertionner que les
+    recommandations, alternatives et jonctions sont bien écrites.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.ajouts: list[Any] = []
+        self.insertions: list[Any] = []
+
+    def add(self, instance: Any) -> None:
+        self.ajouts.append(instance)
+
+    async def execute(self, *args: Any, **kwargs: Any) -> None:
+        self.insertions.append(args[0] if args else None)
