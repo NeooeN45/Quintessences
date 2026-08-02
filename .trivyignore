@@ -13,3 +13,12 @@
 #     d'une regex contrôlée par l'attaquant sur un build 32-bit
 #   - Conclusion : faux positif sur notre image amd64
 CVE-2026-8376
+#
+# CVE-2026-57433 — Storable (Perl) signed integer overflow (SX_HOOK)
+#   - Affecte Storable < 3.41 (module Perl de sérialisation)
+#   - Notre application n'utilise ni Perl ni Storable
+#   - Le fix (Storable 3.41) n'est pas backporté dans bookworm
+#   - Debian marque ce CVE sans DSA pour bookworm
+#   - Le vecteur nécessite de désérialiser un blob crafté via Storable
+#   - Conclusion : non applicable à notre stack Python/Rust
+CVE-2026-57433
