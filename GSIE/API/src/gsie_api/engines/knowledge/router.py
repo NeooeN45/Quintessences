@@ -16,7 +16,7 @@ Endpoints :
 - GET  /knowledge/stats     — statistiques du graphe
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,6 +167,9 @@ async def knowledge_stats(
     request: Request,
     session: DbSession,
     _user: EngineReadUser,
-) -> dict[str, int]:
-    """Retourne les statistiques du graphe (nombre d'objets par type)."""
+) -> dict[str, Any]:
+    """Retourne les statistiques du graphe (nombre d'objets par type).
+
+    Format : ``{"total_objects": int, "types": {type: count}}``.
+    """
     return await KnowledgeEngine(session).stats()

@@ -479,7 +479,7 @@ class KnowledgeEngine:
         result.historique = await self._load_historique(request.connaissance_id, new_version)
         return result
 
-    async def stats(self) -> dict[str, int]:
+    async def stats(self) -> dict[str, Any]:
         """Retourne les statistiques du graphe."""
         result = await self._session.execute(
             select(AssertionModel.claim_kind, ResourceModel.metadata_json).join(
@@ -495,7 +495,7 @@ class KnowledgeEngine:
 
         return {
             "total_objects": total,
-            **{f"type_{k}": v for k, v in type_counts.items()},
+            "types": type_counts,
         }
 
     # --- Reconstruction / helpers internes ---
