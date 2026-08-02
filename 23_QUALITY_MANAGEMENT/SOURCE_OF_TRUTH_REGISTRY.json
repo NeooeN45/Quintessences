@@ -71,7 +71,7 @@
     {
       "id": "agent_operations",
       "scope": "Instructions et contrats opérationnels des agents IA",
-      "paths": ["AGENTS.md", "CLAUDE.md", "GSIE/PROMPTS/*.md"],
+      "paths": ["AGENTS.md", "GSIE/PROMPTS/*.md"],
       "authority": 30,
       "owner": "Direction technique",
       "status": "reference",

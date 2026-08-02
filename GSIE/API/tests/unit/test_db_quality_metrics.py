@@ -23,6 +23,7 @@ from fastapi.testclient import TestClient
 from prometheus_client import CollectorRegistry, Gauge
 
 from gsie_api.app import create_app
+from gsie_api.core.limiter import limiter
 from gsie_api.metrics import collect_db_metrics
 from gsie_api.metrics.db_quality import _MAX_SERIES_PAR_METRIQUE, _publier_series
 
@@ -52,6 +53,7 @@ async def should_propagate_collection_failure():
 def should_return_503_when_collection_fails(mock_lifespan: object):
     """L'ack ne doit jamais annoncer une collecte qui n'a pas eu lieu."""
     with (
+        patch.object(limiter, "enabled", False),
         patch(
             "gsie_api.metrics.collect_db_metrics",
             new=AsyncMock(side_effect=RuntimeError("connexion refusee")),
@@ -71,6 +73,7 @@ def should_acknowledge_when_collection_succeeds(mock_lifespan: object):
     # `create_app` importe la collecte localement : la cible du patch est le
     # module d'origine, et l'app doit etre construite sous le patch.
     with (
+        patch.object(limiter, "enabled", False),
         patch("gsie_api.metrics.collect_db_metrics", new=collecte),
         TestClient(create_app()) as client,
     ):
@@ -89,6 +92,7 @@ def should_refuse_get_on_the_collection_endpoint(mock_lifespan: object):
     """
     collecte = AsyncMock()
     with (
+        patch.object(limiter, "enabled", False),
         patch("gsie_api.metrics.collect_db_metrics", new=collecte),
         TestClient(create_app()) as client,
     ):
