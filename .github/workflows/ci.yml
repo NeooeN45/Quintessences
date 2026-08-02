@@ -159,6 +159,19 @@ jobs:
       - name: Type check with mypy
         run: uv run mypy src --strict
 
+      # Porte OpenAPI : régénère la spec et vérifie qu'elle n'a pas dérivé
+      # par rapport à docs/openapi.json commité. Une spec périmée documente
+      # une API qui n'existe plus — pire qu'absente (audit 2026-08-02, 3ᵉ passe).
+      - name: Check OpenAPI spec is up to date
+        run: |
+          uv run python scripts/extract_openapi.py
+          if ! git diff --quiet docs/openapi.json; then
+            echo "::error::docs/openapi.json a dérivé — régénérez-le avec :"
+            echo "::error::  uv run python scripts/extract_openapi.py"
+            git diff --stat docs/openapi.json
+            exit 1
+          fi
+
       - name: Test with pytest
         run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=80
 
@@ -238,6 +251,115 @@ jobs:
 
       - name: Build Docker image
         run: docker build -f GSIE/API/Dockerfile --tag gsie-api:ci .
+
+  security-scan:
+    name: Scan de sécurité (Trivy)
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      # L'image n'est pas publiée sur ghcr.io pendant la CI (pas de push) :
+      # on la reconstruit localement sous le nom cible pour la scanner. Si
+      # la construction échoue, on scanne le filesystem du dépôt à la place.
+      - name: Build image cible pour le scan
+        id: build_image
+        continue-on-error: true
+        run: |
+          docker build -f GSIE/API/Dockerfile --tag ghcr.io/neooen45/gsie-api:latest .
+
+      - name: Scan Trivy — image Docker
+        if: steps.build_image.outcome == 'success'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ghcr.io/neooen45/gsie-api:latest
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+
+      - name: Scan Trivy — image Docker (SARIF)
+        if: steps.build_image.outcome == 'success'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ghcr.io/neooen45/gsie-api:latest
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+
+      - name: Scan Trivy — filesystem du dépôt (repli)
+        if: steps.build_image.outcome != 'success'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+
+      - name: Scan Trivy — filesystem du dépôt (SARIF, repli)
+        if: steps.build_image.outcome != 'success'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+
+      - name: Upload résultats SARIF vers GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Échec CI si vulnérabilité CRITICAL détectée
+        if: always()
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: ${{ steps.build_image.outcome == 'success' && 'image' || 'fs' }}
+          image-ref: ${{ steps.build_image.outcome == 'success' && 'ghcr.io/neooen45/gsie-api:latest' || '' }}
+          scan-ref: ${{ steps.build_image.outcome == 'success' && '' || '.' }}
+          format: table
+          severity: CRITICAL
+          exit-code: "1"
+
+  python-sast:
+    name: Analyse SAST Python (Bandit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer Bandit
+        run: pip install bandit==1.7.10
+
+      # Les avertissements Bandit ne font pas échouer la CI (rapport SARIF
+      # informatif uniquement) ; B101 (assert) est ignoré car les tests
+      # utilisent `assert` de façon légitime.
+      - name: Analyse Bandit (SARIF)
+        run: |
+          bandit -r GSIE/API/src/gsie_api/ -f sarif -o bandit-results.sarif --skip B101 || true
+
+      - name: Upload résultats SARIF vers GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit-results.sarif
 
   governance-check:
     name: Governance Guard
