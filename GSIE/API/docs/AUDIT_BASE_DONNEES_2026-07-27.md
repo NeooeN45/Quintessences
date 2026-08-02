@@ -2,7 +2,7 @@
 
 > Audit exhaustif du système de base de données, de la création à la sauvegarde.
 > 5 sous-agents spécialisés (QA, backend/sécurité, SIG, architecte/DR) + analyse directe.
-> Périmètre : `A:\Quintessences\GSIE\API` — PostgreSQL 16 + PostGIS 3.4 + Apache AGE, 116 tables, schéma v6.2.
+> Périmètre : `E:\Projets\Quintessences\GSIE\API` — PostgreSQL 16 + PostGIS 3.4 + Apache AGE, 116 tables, schéma v6.2.
 
 ---
 

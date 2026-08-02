@@ -209,6 +209,25 @@ services:
           cpus: "0.5"
           memory: 256M
 
+  # Uptime Kuma — monitoring uptime des services GSIE
+  # (veille techno 2026-08-02, RFC-0031 action 7)
+  # Interface web sur http://localhost:3001
+  # Surveille /health et /ready de l API + db + redis
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - gsie_kuma_data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
 networks:
   default:
     driver: bridge
@@ -216,3 +235,4 @@ networks:
 volumes:
   gsie_pgdata:
   gsie_redisdata:
+  gsie_kuma_data:

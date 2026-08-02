@@ -2,9 +2,9 @@
 
 > **Date :** 2026-08-02
 > **Auditeur :** Auditeur sécurité (agent IA, skill `/securite-gsie`)
-> **Cible :** `A:\Quintessences\GSIE\API\` (FastAPI 0.115.6) + `A:\Quintessences\GSIE\ENGINES\`
+> **Cible :** `E:\Projets\Quintessences\GSIE\API\` (FastAPI 0.115.6) + `E:\Projets\Quintessences\GSIE\ENGINES\`
 > **Méthode :** Revue statique du code source, `git log -S`, grep ciblé, analyse Docker
-> **Référence :** Skill `/securite-gsie` (`A:\Quintessences\.devin\skills\securite-gsie\SKILL.md`)
+> **Référence :** Skill `/securite-gsie` (`E:\Projets\Quintessences\.devin\skills\securite-gsie\SKILL.md`)
 > **Périmètre :** API GSIE + moteurs (sécurité entrées/sorties). EXCLUS : `apps/`, `Forge/`.
 
 ---
@@ -80,7 +80,7 @@ Dockerfile (présent uniquement dans docker-compose.yml).
 
 #### P1-1 : Clé API Météo-France réelle en clair dans `.env` local
 
-**Fichier :** `A:\Quintessences\GSIE\API\.env:18`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\.env:18`
 **Sévérité :** Haute (secret en clair sur disque, non commité mais exposé localement)
 
 **Preuve :**
@@ -97,7 +97,7 @@ METEOFRANCE_API_KEY=eyJ4NXQiOiJZV0kxTTJZNE1qWTNOemsyTkRZeU5XTTRPV014TXpjek1UVmhN
 
 #### P1-2 : Paramètres de query non validés par Pydantic (Climate Engine)
 
-**Fichier :** `A:\Quintessences\GSIE\API\src\gsie_api\engines\climate\router.py:133` et `:224`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\src\gsie_api\engines\climate\router.py:133` et `:224`
 **Sévérité :** Haute (absence de validation de boundary sur entrée utilisateur)
 
 **Preuve :**
@@ -135,7 +135,7 @@ arbitraires au client Météo-France. Bien que le client HTTP soit résilient
 
 #### P1-3 : Absence de HEALTHCHECK dans le Dockerfile
 
-**Fichier :** `A:\Quintessences\GSIE\API\Dockerfile:90-100`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\Dockerfile:90-100`
 **Sévérité :** Moyenne-Haute (détection de panne retardée en orchestrateur standalone)
 
 **Preuve :**
@@ -161,9 +161,9 @@ HEALTHCHECK dans le Dockerfile.
 #### P2-1 : `dict[str, Any]` non typé sur le CRUD générique et 2 retours d'endpoint
 
 **Fichiers :**
-- `A:\Quintessences\GSIE\API\src\gsie_api\resources\schemas.py:31` — `data: dict[str, Any]` sur `ResourceCreate`
-- `A:\Quintessences\GSIE\API\src\gsie_api\resources\schemas.py:37` — `data: dict[str, Any]` sur `ResourceUpdate`
-- `A:\Quintessences\GSIE\API\src\gsie_api\engines\climate\router.py:120` — retour `list[dict[str, Any]]` sur `/climatologie-stations`
+- `E:\Projets\Quintessences\GSIE\API\src\gsie_api\resources\schemas.py:31` — `data: dict[str, Any]` sur `ResourceCreate`
+- `E:\Projets\Quintessences\GSIE\API\src\gsie_api\resources\schemas.py:37` — `data: dict[str, Any]` sur `ResourceUpdate`
+- `E:\Projets\Quintessences\GSIE\API\src\gsie_api\engines\climate\router.py:120` — retour `list[dict[str, Any]]` sur `/climatologie-stations`
 
 **Sévérité :** Moyenne (validation différée, pas de schéma strict à la frontière API)
 
@@ -224,7 +224,7 @@ minimum `EngineReadUser` (reader), ou les désactiver comme `/docs`.
 
 #### P2-3 : Validation SRID absente sur entrée EWKT utilisateur
 
-**Fichier :** `A:\Quintessences\GSIE\API\src\gsie_api\resources\coercion.py:85-104`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\src\gsie_api\resources\coercion.py:85-104`
 **Sévérité :** Moyenne (géométrie acceptée dans n'importe quel SRID)
 
 **Preuve :**
@@ -259,7 +259,7 @@ rejeter tout EWKT sans SRID explicite si la colonne cible attend un SRID précis
 
 #### P2-4 : WebSocket token en query param (standard mais à surveiller)
 
-**Fichier :** `A:\Quintessences\GSIE\API\src\gsie_api\websocket\router.py:114`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\src\gsie_api\websocket\router.py:114`
 **Sévérité :** Moyenne (token dans URL → logs proxy/CDN)
 
 **Preuve :**
@@ -283,7 +283,7 @@ query params (vérifié : `shared/middleware.py` logge uniquement `path`, pas
 
 #### P2-5 : Rate limiter WebSocket in-memory (non distribué)
 
-**Fichier :** `A:\Quintessences\GSIE\API\src\gsie_api\websocket\router.py:65-86`
+**Fichier :** `E:\Projets\Quintessences\GSIE\API\src\gsie_api\websocket\router.py:65-86`
 **Sévérité :** Moyenne (contournable avec plusieurs workers)
 
 **Preuve :**

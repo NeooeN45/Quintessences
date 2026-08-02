@@ -39,10 +39,10 @@ Pour construire et installer la wheel Rust localement :
 
 ```powershell
 # Prérequis : Rust toolchain (rustup), Python 3.12 dans GSIE/API/.venv
-cd A:\Quintessences\GSIE\GSIE\API
+cd E:\Projets\Quintessences\GSIE\API
 uv pip install maturin==1.9.6
 
-cd A:\Quintessences\GSIE\GSIE\ENGINES\EVIDENCE_ENGINE\rust
+cd E:\Projets\Quintessences\GSIE\ENGINES\EVIDENCE_ENGINE\rust
 ..\..\..\..\GSIE\API\.venv\Scripts\maturin.exe build --release
 # → target/wheels/gsie_evidence-0.1.0-cp312-cp312-win_amd64.whl
 

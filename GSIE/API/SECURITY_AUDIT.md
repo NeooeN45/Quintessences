@@ -8,7 +8,7 @@
 
 **Date :** 2026-07-13
 **Auditeur :** Expert sécurité API (agent IA)
-**Cible :** `A:\Quintessences\GSIE\API\` — FastAPI 0.115.6, PostgreSQL+PostGIS, Redis
+**Cible :** `E:\Projets\Quintessences\GSIE\API\` — FastAPI 0.115.6, PostgreSQL+PostGIS, Redis
 **Endpoint testé :** `http://localhost:8000` (Docker Compose, environnement `development`)
 **Méthode :** Revue statique du code source + tests live avec `curl`
 
