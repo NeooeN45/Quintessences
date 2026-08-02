@@ -47,7 +47,11 @@ from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
-from gsie_api.shared.middleware import RequestBodyLimitMiddleware, TraceIdMiddleware
+from gsie_api.shared.middleware import (
+    RequestBodyLimitMiddleware,
+    StatusVersionGuardMiddleware,
+    TraceIdMiddleware,
+)
 from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
@@ -315,6 +319,9 @@ def create_app() -> FastAPI:
 
     # Outermost : ajoute trace_id et headers de sécurité aux réponses CORS et 413.
     app.add_middleware(TraceIdMiddleware)
+    # P2-2 : bloque /status et /version des moteurs en production/staging
+    # (divulgation d'architecture). 404 pour ne pas confirmer l'existence.
+    app.add_middleware(StatusVersionGuardMiddleware)
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)

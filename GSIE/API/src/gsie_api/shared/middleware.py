@@ -156,3 +156,32 @@ def _validate_trace_id(client_trace_id: str | None) -> str | None:
     if _TRACE_ID_PATTERN.match(client_trace_id):
         return client_trace_id
     return None
+
+
+# Suffixes des endpoints de métadonnées moteur à protéger en production
+# (audit sécurité P2-2). /health et /ready restent publics (probes K8s).
+_PROTECTED_ENGINE_SUFFIXES = ("/status", "/version")
+
+
+class StatusVersionGuardMiddleware(BaseHTTPMiddleware):
+    """Bloque /status et /version des moteurs en production/staging.
+
+    Ces endpoints divulguent l'architecture (nom du moteur, backend Rust/Python,
+    semaine d'implémentation). En développement, ils restent accessibles sans
+    auth pour le debug. En production/staging, ils renvoient 404 — comme pour
+    /docs, on ne confirme pas que la route existe.
+    """
+
+    def __init__(self, app: ASGIApp, environment: str = _settings.environment) -> None:
+        super().__init__(app)
+        self._is_production = environment in ("production", "staging")
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if self._is_production:
+            path = request.url.path
+            if any(path.endswith(suffix) for suffix in _PROTECTED_ENGINE_SUFFIXES):
+                return JSONResponse(
+                    status_code=404,
+                    content={"detail": "Not Found", "error_code": "NOT_FOUND"},
+                )
+        return await call_next(request)
