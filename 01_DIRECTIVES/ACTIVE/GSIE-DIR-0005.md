@@ -2,7 +2,7 @@
 # GSIE-IGNIS — DIRECTIVE FONDATRICE (GCS / GROUND CONTROL SYSTEM)
 # Directive ID : GSIE-DIR-0005
 # Version : 1.0
-# Statut : Draft
+# Statut : Review
 # Priorité : CRITIQUE — guide toutes les décisions futures de Ignis
 # Classification : FONDATION
 # Auteur : Camille Perraudeau (Fondateur)

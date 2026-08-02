@@ -4,6 +4,103 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-02 — VEILLE TECHNOLOGIQUE EXHAUSTIVE + CORRECTION POST-REVUE] - 2026-08-02
+
+### Veille technologique (8 sous-agents en parallèle)
+
+Document de synthèse : `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md`.
+Domaines couverts : DB PostgreSQL/PostGIS, Moteurs AI/ML, API FastAPI,
+Géospatial, Observabilité/Sécurité, Concurrence forestière, Infrastructure
+DevOps, Data pipelines/science.
+
+**Position concurrentielle** : GSIE occupe un positionnement unique
+(14 moteurs intégrés, multi-domaines, multi-applications, prescriptif).
+19 concurrents directs identifiés. Stratégie recommandée : partenariats
+intégratifs (IGN, INRAE, CIRAD, PlantNet, Arboreal, Dryad, CTrees, GFW).
+
+### Correction post-revue dépôt
+
+Le document initial contenait 5 écarts vérifiables avec l'état réel du
+dépôt, corrigés dans la version révisée (§13 Errata) :
+
+1. Security headers — **déjà implémentés** dans `middleware.py:25-33`
+2. pg_stat_statements — **déjà activé** (`docker-compose.yml:36`,
+   `docker/init/01-pg-stat-statements.sql`)
+3. Apache AGE — **déjà déployé** (`shared_preload_libraries=age`)
+4. API versioning `/api/v1/` — **en place depuis l'origine**
+   (`config.py:140`)
+5. PgBouncer — config présent mais **service orphelin non déployé**
+   (audit P2-6)
+
+Les chiffres non sourcés (vLLM tok/s, NeuralProphet accuracy, OpenObserve
+coût, etc.) sont marqués comme impressions d'agent IA (niveau de preuve D
+per RFC-0014), à sourcer dans `GSIE/RESEARCH/` ou retirer avant décision.
+
+Azure Key Vault reframé comme **transition** depuis Fernet local (commité
+97e269d), pas remplacement.
+
+### Implémentations effectives (par le Fondateur)
+
+- **Trivy** dans CI : job `security-scan` ajouté à `ci.yml`
+  (scan image Docker + filesystem repli, SARIF upload, fail-on CRITICAL)
+- **Bandit** dans CI : job `python-sast` ajouté (SARIF, skip B101)
+- **Tenacity** : dépendance ajoutée à `pyproject.toml` (8.5.0)
+
+### Validation
+
+- ruff : All checks passed
+- mypy : Success, no issues found
+- pytest unit : 0 régression
+
+---
+
+## [SESSION 2026-08-02 — CORRECTIONS AUDIT PHASE 4 + AUDIT CLAUDE] - 2026-08-02
+
+### Gouvernance — DIR-0005 et DIR-0006 passent en Review
+
+- **GSIE-DIR-0005** (Directive fondatrice Ignis / GCS) : Draft → Review.
+  Justification : livrables en pilote actif (Centre de Commandement
+  UE5.8 configuré sur `E:\GSIE-Centre-Commandement`, DEC-000010).
+- **GSIE-DIR-0006** (Vision du Moteur Cognitif Ignis) : Draft → Review.
+  Même justification.
+- Décision du Fondateur (Camille Perraudeau), tracée dans
+  `PROJECT_MEMORY.md` (section Documents structurants).
+
+### Audit Claude — 6 corrections (P1/P2)
+
+1. **P1 Rate limiting** : `storage_uri="memory://"` dans conftest.py
+   (compteur par processus xdist), limiter actif pour tous les tests.
+2. **P1 validation_result** : FK vers resource existante (plus de
+   resource fantôme), Revision créée (invariant CON-010), persistance
+   obligatoire (erreur si pas de session), docstring enrichment.py
+   corrigée.
+3. **P1 SynopClient** : cache LRU borné (5 entrées, OrderedDict),
+   verrou par année (asyncio.Lock), TTL 24h.
+4. **P2 _FICHIERS_SERIAL** : groupe xdist renommé `shared_state_serial`.
+5. **P2 stdout/stderr.txt** : supprimés + .gitignore.
+6. **P2 ClimateEngine** : `logger.warning` sur CSV mal formé (clés
+   surnuméraires).
+
+### Audit Phase 4 — 7 P1 restants corrigés
+
+1. **P1-3 HEALTHCHECK Dockerfile** : déjà présent (lignes 94-96).
+2. **P1-4 Traçabilité DEC** : DEC-000024/028/034/040 ajoutées à
+   `PROJECT_MEMORY.md` (section Décisions actives) et `CHANGELOG.md`.
+3. **P1-7 OpenAPI versionnée** : script `scripts/extract_openapi.py`
+   + `docs/openapi.json` (73 paths, 142 schemas, version 0.1.0).
+4. **P1-8 Skill /gsie-governance** : créée dans
+   `.devin/skills/gsie-governance/SKILL.md` (158 lignes).
+5. **P1-6 README moteurs** : enrichissement contrats d'interface (14
+   moteurs, en cours via sous-agent documentation).
+
+### Validation
+
+- ruff : All checks passed
+- mypy : Success, no issues found
+- pytest unit : 1453 passed, 62 skipped, 0 failed
+
+---
+
 ## [SESSION 2026-08-02 — CORRECTION P1/P2 AUDIT MOTEURS GSIE] - 2026-08-02
 
 Suite de l'audit Phase 4 du 2026-08-01. Correction des P1 et P2
@@ -1086,6 +1183,14 @@ utilisable et aucune base partenaire n'en dépend.
   constitutionnel ou `Locked`, une autonomie critique en production, une
   licence finale de composant, ni l'ouverture de Forge aux partenaires.
 
+## [DEC-000034 — RÉASSIGNATION DE L'ORCHESTRATION DES AGENTS IA] - 2026-07-25
+
+- Amende DEC-000032 (orchestration contrôlée des agents IA) — RFC-0022
+  Adopté. Décision d'organisation sans effet constitutionnel.
+- Codex conserve l'orchestration technique et le contrôle des preuves
+  avant acceptation ; le Fondateur conserve l'autorité finale.
+- Voir `03_DECISIONS/DEC-000034.md`.
+
 ## [GSIE — CONTRE-AUDIT DE FIABILITÉ ET BUILD LINUX] - 2026-07-22
 
 - RBAC explicite sur toutes les opérations des moteurs ; les routes de statut
@@ -1406,6 +1511,14 @@ utilisable et aucune base partenaire n'en dépend.
 ---
 
 ## [PHASE 4 — RFC-0015 ENVIRONMENTAL MODEL FABRIC + CLIMATE ENGINE ÉTENDU] - 2026-07-18
+
+### DEC-000028 — Incrément démontrable « territoire + capsule + Golden Bench »
+
+- Première tranche verticale hors-ligne de GSIE sous forme de capsule
+  territoriale signée (ADR-008, EXP-0001). Renuméroté depuis DEC-000025
+  (collision d'ID avec une décision Validated préexistante). Statut
+  Review — validation du Fondateur requise.
+- Voir `03_DECISIONS/DEC-000028.md`.
 
 ### RFC-0015 adoptée (DEC-000026)
 

@@ -451,6 +451,63 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
   IGN/Cerema/Inria, France 2030, 25 M€). Veille stratégique, pas un
   partenariat actif.
 
+### Veille technologique exhaustive (2026-08-02)
+
+Document de synthèse : `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md`
+(niveau de preuve D per RFC-0014, statut Draft — **pas une feuille de route**).
+8 sous-agents en parallèle : DB, Moteurs AI/ML, API FastAPI, Géospatial,
+Observabilité/Sécurité, Concurrence, Infrastructure, Data pipelines.
+
+**Position concurrentielle** : GSIE occupe un positionnement unique
+(14 moteurs intégrés, multi-domaines, multi-applications, prescriptif).
+19 concurrents directs identifiés. Stratégie recommandée : partenariats
+intégratifs (IGN, INRAE, CIRAD, PlantNet, Arboreal, Dryad, CTrees, GFW).
+
+**Correction post-revue** : 5 écarts avec le dépôt corrigés dans le
+document (§13 Errata). Security headers, pg_stat_statements, Apache AGE,
+API versioning déjà en place. PgBouncer config présent mais non déployé.
+Chiffres non sourcés marqués comme impressions d'agent (niveau D).
+
+#### Implémentations effectives (2026-08-02)
+
+| # | Action | Domaine | Statut |
+|---|---|---|---|
+| 1 | Trivy scan CI | Sécurité | ✅ (par Fondateur) |
+| 2 | Bandit SAST CI | Sécurité | ✅ (par Fondateur) |
+| 3 | Tenacity dépendance | Résilience | ✅ (par Fondateur) |
+
+#### Actions Phase 1 réellement à faire
+
+| # | Action | Domaine | Statut |
+|---|---|---|---|
+| 1 | orjson sérialisation JSON | API | **À faire** |
+| 2 | uvloop sur Linux | API | **À faire** |
+| 3 | Dependabot | Sécurité | **À faire** |
+| 4 | Azure Key Vault (transition Fernet) | Sécurité | **À faire** |
+| 5 | Uptime Kuma | Monitoring | **À faire** |
+| 6 | API PlantNet dans Evidence Engine | Moteurs | **À faire** |
+
+#### Roadmap post-veille (Phase 2-4)
+
+Voir `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` §9 (Top 20 actions).
+**Ce document n'est pas une feuille de route** — si ces actions doivent
+orienter le travail, elles doivent passer par un RFC dédié dans `02_RFC/`.
+
+#### Partenariats stratégiques recommandés
+
+| Partenaire | Type | Apport |
+|---|---|---|
+| IGN | Données | BD Forêt v3, LiDAR HD, Géoportail API |
+| INRAE | Science | Modèles croissance, CAPSIS, validation |
+| CIRAD | Science | CAPSIS, 25+ modèles, IN-SYLVA |
+| CNPF | Terrain | BioClimSol, ClimEssences, réseau propriétaires |
+| ONF | Terrain | Forêt 4.0, applications mobiles |
+| PlantNet | API | Identification 77k espèces |
+| Arboreal | Techno | AR measurements smartphone |
+| Dryad Networks | Techno | Capteurs incendie LoRaWAN |
+| CTrees | Données | Carbone global 1-hectare |
+| GFW (WRI) | Données | Alerts déforestation temps réel |
+
 ---
 
 > Chaque phase fait l'objet d'une Directive dédiée.
