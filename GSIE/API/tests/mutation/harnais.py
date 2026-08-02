@@ -41,7 +41,12 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[2]
 SOURCE = RACINE / "src"
-PYTHON = RACINE / ".venv" / "Scripts" / "python.exe"
+# Windows : .venv/Scripts/python.exe — Linux/macOS : .venv/bin/python
+PYTHON = (
+    RACINE / ".venv" / "Scripts" / "python.exe"
+    if sys.platform == "win32"
+    else RACINE / ".venv" / "bin" / "python"
+)
 
 
 @dataclass(frozen=True)
