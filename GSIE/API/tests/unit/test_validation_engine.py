@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -55,7 +55,9 @@ def _mock_session() -> AsyncMock:
     result_mock.scalar_one.return_value = None
     session.execute = AsyncMock(return_value=result_mock)
     session.flush = AsyncMock()
-    session.add = AsyncMock()
+    # Session.add() est synchrone en SQLAlchemy — MagicMock, pas AsyncMock.
+    # Un AsyncMock produirait une coroutine jamais attendue (RuntimeWarning).
+    session.add = MagicMock()
     return session
 
 
@@ -322,21 +324,28 @@ def test_une_recommandation_non_contournable_est_bloquee_non_partielle() -> None
     )
 
 
-# --- Persistance obligatoire (RFC-0028) ---
+# --- Persistance (RFC-0028) ---
 
 
 @pytest.mark.asyncio
-async def should_raise_when_bloque_and_no_session() -> None:
-    """Un résultat bloqué sans session DB lève — la persistance est obligatoire.
+async def should_warn_when_bloque_and_no_session() -> None:
+    """Un résultat bloqué sans session DB journalise un warning — pas silencieux.
 
-    Sans cette garde, un ValidationEngine() construit sans session avale
-    silencieusement un pattern de blocage récurrent : le Learning Engine
-    perdrait l'information d'apprentissage (RFC-0028, migration 0028).
+    Le moteur reste utilisable en validation seule (tests, intégration sans
+    resource origine), mais le warning ``validation_result_non_persiste`` trace
+    le manque : un déploiement production sans session serait repéré dans les
+    journaux (RFC-0028, migration 0028).
     """
     engine = ValidationEngine()  # pas de session
     contenu = {
         "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
         "justification": "Diagnostic fondé sur observations.",
     }
-    with pytest.raises(ValidationEngineError, match="Persistance.*requise"):
-        await engine.validate(_make_request(contenu=contenu))
+    # On mock le logger pour vérifier l'émission du warning — structlog en
+    # test utilise la config par défaut (stdlib), ce qui rend caplog/capsys
+    # peu fiable selon le moment où setup_logging a été appelé.
+    with patch("gsie_api.engines.validation.engine.logger") as mock_logger:
+        result = await engine.validate(_make_request(contenu=contenu))
+    assert result.statut == ValidationStatut.bloque
+    mock_logger.warning.assert_called_once()
+    assert "validation_result_non_persiste" in mock_logger.warning.call_args[0]

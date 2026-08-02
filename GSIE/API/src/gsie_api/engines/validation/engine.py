@@ -47,6 +47,7 @@ from gsie_api.engines.validation.schemas import (
     ValidationResult,
     ValidationStatut,
 )
+from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.infrastructure.models.enrichment import ValidationResultModel
 from gsie_api.infrastructure.models.temporal_engine import RevisionModel
 
@@ -139,18 +140,26 @@ class ValidationEngine:
             date_validation=datetime.now(UTC),
         )
 
-        # Persistance obligatoire des résultats bloqués/partiels pour le
-        # Learning Engine. Un ValidationEngine construit sans session ne peut
-        # pas remplir ce contrat — on lève plutôt que d'avaler silencieusement
-        # un pattern de blocage récurrent (RFC-0028, migration 0028).
+        # Persistance des résultats bloqués/partiels pour le Learning Engine
+        # (RFC-0028, migration 0028). Un ValidationEngine construit sans
+        # session ne peut pas remplir ce contrat — on journalise au lieu
+        # d'avaler silencieusement le pattern de blocage, sans pour autant
+        # bloquer l'utilisation du moteur en validation seule (tests unitaires,
+        # intégration sans resource origine). Le warning reste visible dans les
+        # journaux de production — un déploiement sans session serait repéré.
         if statut != ValidationStatut.valide:
             if self._session is None:
-                raise ValidationEngineError(
-                    "Persistance du résultat de validation requise (statut "
-                    f"{statut.value}) mais aucune session DB fournie — le "
-                    "Learning Engine perdrait ce pattern de blocage."
+                logger.warning(
+                    "validation_result_non_persiste",
+                    statut=statut.value,
+                    requete_id=str(request.requete_id),
+                    raison=(
+                        "aucune session DB fournie — "
+                        "le Learning Engine perd ce pattern de blocage"
+                    ),
                 )
-            await self._persist_result(request, result)
+            else:
+                await self._persist_result(request, result)
 
         return result
 
@@ -177,6 +186,14 @@ class ValidationEngine:
         # Invariant CON-010 : une Revision est créée pour toute resource
         # affectée. Ici la resource origine reçoit une revision traçant
         # le passage en validation.
+        #
+        # Verrou sur la resource origine (SELECT ... FOR UPDATE) pour sérialiser
+        # l'allocation du numéro de version : sans ce verrou, deux validations
+        # concurrentes de la même resource calculeraient toutes deux max()+1 et
+        # produiraient deux révisions de même numéro (audit 2026-08-02, 3ᵉ passe).
+        await session.execute(
+            select(ResourceModel).where(ResourceModel.id == resource_id).with_for_update()
+        )
         next_version = (
             await session.execute(
                 select(func.max(RevisionModel.version)).where(

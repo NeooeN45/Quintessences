@@ -81,17 +81,19 @@ def _ensure_fresh_event_loop() -> object:
     (un test ``is_closed()`` par test).
     """
     try:
-        # Python 3.12+ : get_event_loop() lève DeprecationWarning si aucune
-        # loop n'est en cours. On utilise get_event_loop_policy() puis on
-        # vérifie la loop courante via une API non dépréciée.
+        # Python 3.12+ : get_event_loop() est déprécié quand aucune loop
+        # n'est en cours. On utilise get_running_loop() (non déprécié) qui
+        # lève RuntimeError s'il n'y a pas de loop — dans ce cas, on en crée
+        # une nouvelle. On n'appelle jamais get_event_loop() ni
+        # get_event_loop_policy().get_event_loop() (les deux dépréciés).
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             # Pas de loop en cours — en créer une pour TestClient.
             asyncio.set_event_loop(asyncio.new_event_loop())
-            loop = asyncio.get_event_loop_policy().get_event_loop()
-        if loop.is_closed():
-            asyncio.set_event_loop(asyncio.new_event_loop())
+        else:
+            if loop.is_closed():
+                asyncio.set_event_loop(asyncio.new_event_loop())
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
     yield
