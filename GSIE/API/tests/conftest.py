@@ -145,6 +145,7 @@ _FICHIERS_SERIAL = (
     "test_recommendation_diagnostic.py",  # Diagnostic → recommandation — état DB partagé
     "test_db_quality_metrics.py",  # Patch collect_db_metrics — singleton partagé
     "test_treekipedia_performance.py",  # Index lookup — état DB partagé
+    "test_restauration_db.py",  # Backup/restore — conteneur dédié, pas en parallèle
 )
 _XDIST_SERIAL_GROUP = "shared_state_serial"
 
