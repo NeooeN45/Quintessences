@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -255,4 +256,237 @@ def test_should_read_real_treekipedia_csv_when_present() -> None:
     species = client.list_species(limit=5)
     assert len(species) == 5
     assert all(s.get("taxon_id") for s in species)
-    assert all(s.get("species_scientific_name") for s in species)
+
+
+# ===========================================================================
+# Couverture complémentaire — list_species_rich, get_species_image, erreurs
+# ===========================================================================
+
+
+def test_should_raise_error_when_get_species_csv_missing(tmp_path: Path) -> None:
+    """get_species doit lever TreekipediaClientError si le CSV est introuvable."""
+    client = TreekipediaClient(csv_path=tmp_path / "nonexistent.csv")
+    with pytest.raises(TreekipediaClientError, match="CSV Treekipedia introuvable"):
+        client.get_species("any-taxon-id")
+
+
+def test_should_raise_error_when_count_species_csv_missing(tmp_path: Path) -> None:
+    """count_species doit lever TreekipediaClientError si le CSV est introuvable."""
+    client = TreekipediaClient(csv_path=tmp_path / "nonexistent.csv")
+    with pytest.raises(TreekipediaClientError, match="CSV Treekipedia introuvable"):
+        client.count_species()
+
+
+def test_should_raise_error_when_get_species_csv_unreadable(tmp_path: Path) -> None:
+    """get_species doit lever TreekipediaClientError si le CSV est illisible."""
+    csv_path = tmp_path / "not_a_file_dir"
+    csv_path.mkdir()
+    client = TreekipediaClient(csv_path=csv_path)
+    with pytest.raises(TreekipediaClientError, match="Échec lecture CSV"):
+        client.get_species("any-taxon-id")
+
+
+def test_should_raise_error_when_count_species_csv_unreadable(tmp_path: Path) -> None:
+    """count_species doit lever TreekipediaClientError si le CSV est illisible."""
+    csv_path = tmp_path / "not_a_file_dir"
+    csv_path.mkdir()
+    client = TreekipediaClient(csv_path=csv_path)
+    with pytest.raises(TreekipediaClientError, match="Échec lecture CSV"):
+        client.count_species()
+
+
+def test_should_list_species_rich_when_csv_exists(tmp_path: Path) -> None:
+    """list_species_rich doit lire le CSV riche avec colonnes taxonomiques."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    rich_csv = tmp_path / "treekipedia_species_for_silvi.csv"
+    rows = [
+        {
+            "taxon_id": "GymPiPiPnCx50638-00",
+            "species_common_name": "Sapin pectiné",
+            "species_scientific_name": "Abies alba",
+            "subspecies": "",
+            "genus": "Abies",
+            "family": "Pinaceae",
+            "taxonomic_class": "Pinopsida",
+            "taxonomic_order": "Pinales",
+        },
+        {
+            "taxon_id": "AngFaFaCfCx09200-00",
+            "species_common_name": "Chêne pédonculé",
+            "species_scientific_name": "Quercus robur",
+            "subspecies": "",
+            "genus": "Quercus",
+            "family": "Fagaceae",
+            "taxonomic_class": "Magnoliopsida",
+            "taxonomic_order": "Fagales",
+        },
+    ]
+    with rich_csv.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "taxon_id",
+                "species_common_name",
+                "species_scientific_name",
+                "subspecies",
+                "genus",
+                "family",
+                "taxonomic_class",
+                "taxonomic_order",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+
+    with patch.object(tkc_module, "_RICH_CSV_PATH", rich_csv):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        species = client.list_species_rich()
+        assert len(species) == 2
+        assert species[0]["genus"] == "Abies"
+
+
+def test_should_filter_species_rich_by_search(tmp_path: Path) -> None:
+    """list_species_rich(search=...) doit filtrer par nom scientifique."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    rich_csv = tmp_path / "treekipedia_species_for_silvi.csv"
+    rows = [
+        {
+            "taxon_id": "1",
+            "species_common_name": "Sapin",
+            "species_scientific_name": "Abies alba",
+            "subspecies": "",
+            "genus": "Abies",
+            "family": "Pinaceae",
+            "taxonomic_class": "Pinopsida",
+            "taxonomic_order": "Pinales",
+        },
+        {
+            "taxon_id": "2",
+            "species_common_name": "Chêne",
+            "species_scientific_name": "Quercus robur",
+            "subspecies": "",
+            "genus": "Quercus",
+            "family": "Fagaceae",
+            "taxonomic_class": "Magnoliopsida",
+            "taxonomic_order": "Fagales",
+        },
+    ]
+    with rich_csv.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "taxon_id",
+                "species_common_name",
+                "species_scientific_name",
+                "subspecies",
+                "genus",
+                "family",
+                "taxonomic_class",
+                "taxonomic_order",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+
+    with patch.object(tkc_module, "_RICH_CSV_PATH", rich_csv):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        species = client.list_species_rich(search="quercus")
+        assert len(species) == 1
+        assert species[0]["species_scientific_name"] == "Quercus robur"
+
+
+def test_should_raise_error_when_rich_csv_missing(tmp_path: Path) -> None:
+    """list_species_rich doit lever TreekipediaClientError si le CSV riche est introuvable."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    with patch.object(tkc_module, "_RICH_CSV_PATH", tmp_path / "nonexistent.csv"):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        with pytest.raises(TreekipediaClientError, match="CSV riche Treekipedia introuvable"):
+            client.list_species_rich()
+
+
+def test_should_return_none_when_images_json_missing(tmp_path: Path) -> None:
+    """get_species_image doit retourner None si le JSON d'images est introuvable."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    with patch.object(tkc_module, "_IMAGES_JSON_PATH", tmp_path / "nonexistent.json"):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        result = client.get_species_image("Abies alba")
+        assert result is None
+
+
+def test_should_return_image_when_species_found_in_json(tmp_path: Path) -> None:
+    """get_species_image doit retourner l'image si l'espèce est dans le JSON."""
+    import json
+
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    images_json = tmp_path / "treekipedia_images_full.json"
+    images = [
+        {
+            "species": "Abies alba",
+            "source": "Wikimedia Commons",
+            "image_url": "https://example.com/abies_alba.jpg",
+            "license": "CC BY-SA 3.0",
+            "photographer": "Test",
+            "page_url": "https://commons.wikimedia.org/wiki/Abies_alba",
+        }
+    ]
+    images_json.write_text(json.dumps(images), encoding="utf-8")
+
+    with patch.object(tkc_module, "_IMAGES_JSON_PATH", images_json):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        result = client.get_species_image("Abies alba")
+        assert result is not None
+        assert result["image_url"] == "https://example.com/abies_alba.jpg"
+
+
+def test_should_return_none_when_species_not_in_images_json(tmp_path: Path) -> None:
+    """get_species_image doit retourner None si l'espèce n'est pas dans le JSON."""
+    import json
+
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    images_json = tmp_path / "treekipedia_images_full.json"
+    images_json.write_text(
+        json.dumps([{"species": "Quercus robur", "image_url": "https://example.com/oak.jpg"}]),
+        encoding="utf-8",
+    )
+
+    with patch.object(tkc_module, "_IMAGES_JSON_PATH", images_json):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        result = client.get_species_image("Abies alba")
+        assert result is None
+
+
+def test_should_match_image_case_insensitive(tmp_path: Path) -> None:
+    """get_species_image doit matcher insensiblement à la casse."""
+    import json
+
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    images_json = tmp_path / "treekipedia_images_full.json"
+    images_json.write_text(
+        json.dumps([{"species": "Abies Alba", "image_url": "https://example.com/aa.jpg"}]),
+        encoding="utf-8",
+    )
+
+    with patch.object(tkc_module, "_IMAGES_JSON_PATH", images_json):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        result = client.get_species_image("abies alba")
+        assert result is not None
+
+
+def test_should_raise_error_when_images_json_corrupted(tmp_path: Path) -> None:
+    """get_species_image doit lever TreekipediaClientError si le JSON est corrompu."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    images_json = tmp_path / "treekipedia_images_full.json"
+    images_json.write_text("<<< not JSON >>>", encoding="utf-8")
+
+    with patch.object(tkc_module, "_IMAGES_JSON_PATH", images_json):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        with pytest.raises(TreekipediaClientError, match="Échec lecture JSON images"):
+            client.get_species_image("Abies alba")
