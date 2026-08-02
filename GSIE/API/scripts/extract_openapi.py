@@ -42,9 +42,13 @@ def extract_openapi() -> int:
 
     _OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     # sort_keys=True + indent=2 → diff git stable et lisible.
+    # newline="\n" force LF — la CI tourne sur Linux (LF) et le dépôt
+    # normalise en LF via .gitattributes ; sans ça, Windows écrit CRLF
+    # et la CI voit un diff sur tous les fichiers.
     _OUTPUT_PATH.write_text(
         json.dumps(spec, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     n_paths = len(spec.get("paths", {}))
