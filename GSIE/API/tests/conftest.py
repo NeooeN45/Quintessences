@@ -7,6 +7,23 @@ la même base de test sans relancer un conteneur Docker par fichier.
 
 import asyncio
 import os
+
+# Rate limiter en memory:// pour les tests — AVANT tout import gsie_api.
+#
+# Le limiter production utilise Redis (DB 1) partagé entre workers Gunicorn.
+# En test xdist (-n 2), ce Redis est partagé entre les workers pytest : un
+# worker peut épuiser le quota d'un endpoint avant qu'un autre worker
+# n'arrive, produisant des 429 fallacieux. ``memory://`` donne un compteur
+# par processus Python — chaque worker xdist a le sien, isolé des autres.
+#
+# Cette variable d'environnement doit être set AVANT l'import de
+# ``gsie_api.core.limiter`` (qui crée le singleton Limiter au moment de
+# l'import). pydantic-settings priorise les env vars sur le .env file,
+# donc ``GSIE_RATE_LIMIT_STORAGE_URL=memory://`` surcharge la valeur Redis
+# du .env local. Le comportement du limiter (comptage, 429) est identique
+# avec memory storage ; seul le partage cross-worker disparaît.
+os.environ.setdefault("GSIE_RATE_LIMIT_STORAGE_URL", "memory://")
+
 from collections.abc import AsyncGenerator, Iterator, Sequence
 from contextlib import ExitStack
 from typing import Any
@@ -64,7 +81,15 @@ def _ensure_fresh_event_loop() -> object:
     (un test ``is_closed()`` par test).
     """
     try:
-        loop = asyncio.get_event_loop_policy().get_event_loop()
+        # Python 3.12+ : get_event_loop() lève DeprecationWarning si aucune
+        # loop n'est en cours. On utilise get_event_loop_policy() puis on
+        # vérifie la loop courante via une API non dépréciée.
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # Pas de loop en cours — en créer une pour TestClient.
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop = asyncio.get_event_loop_policy().get_event_loop()
         if loop.is_closed():
             asyncio.set_event_loop(asyncio.new_event_loop())
     except RuntimeError:
@@ -81,29 +106,15 @@ def _reset_rate_limiter() -> object:
     les compteurs s'accumulent entre tests dans le même worker xdist et les
     tests E2E reçoivent un ``429 Too Many Requests`` fallacieux.
 
-    **Isolation du stockage.** Le limiter production utilise Redis (DB 1)
-    partagé entre workers Gunicorn. En test xdist, ce Redis est partagé entre
-    les workers pytest : un worker peut épuiser le quota d'un endpoint avant
-    qu'un autre worker n'arrive, produisant des 429 fallacieux. La réponse
-    correcte est d'isoler le stockage, pas de couper le contrôle :
-    ``storage_uri="memory://"`` donne un compteur par processus, chaque
-    worker xdist a le sien, et les limites redeviennent testables partout.
-
-    Un test de sécurité qui ne s'exécute pas se distingue mal d'un test qui
-    passe (cf. commentaire dans ``_docker_available`` plus bas) : on garde le
-    limiter actif pour toute la suite, pas seulement les tests dont le nom
-    contient ``rate_limit`` — sélection par nom = couplage fragile qui prive
-    silencieusement un test renommé de son propre sujet.
+    ``limiter.reset()`` vide le storage (Redis ou memory). Les tests qui
+    vérifient explicitement le comportement du rate limiter
+    (``test_rate_limit_bulk.py``, ``test_limiter_contrat.py``) utilisent
+    leur propre limiter mocké et ne sont pas affectés.
     """
     from gsie_api.core.limiter import limiter
 
-    # Compteur par processus (memory://) : chaque worker xdist a le sien,
-    # fini les 429 fallacieux cross-worker. Le limiter reste actif partout.
-    limiter._storage_uri = "memory://"
-    limiter.enabled = True
     limiter.reset()
     yield
-    limiter.reset()
 
 
 # Fichiers dont les tests partagent un état global (DB PostgreSQL, singleton
@@ -187,11 +198,13 @@ requires_docker = pytest.mark.skipif(
 
 @pytest.fixture(scope="session")
 def postgres_url() -> AsyncGenerator[str, None]:
-    """Lance un conteneur PostgreSQL/PostGIS (une fois par session de tests).
+    """Lance un conteneur PostgreSQL/PostGIS/pgvector (une fois par session).
 
-    L'image `postgis/postgis:16-3.4` n'inclut pas pgvector. On l'installe
-    à la volée via apt (le dépôt PGDG est déjà configuré par l'image de
-    base postgres:16) avant de créer l'extension.
+    Utilise l'image locale `gsie-testdb:latest` si elle existe (construite
+    via `docker build -t gsie-testdb:latest -f tests/Dockerfile.testdb .`),
+    ce qui évite l'apt-get à chaque session (~15s économisés). Sinon,
+    fallback sur l'image officielle `postgis/postgis:16-3.4` avec
+    installation de pgvector à la volée.
 
     L'installation dépend du réseau : sans elle, `CREATE EXTENSION vector`
     échoue plus loin, dans `db_session`, sur un message qui ne dit pas que
@@ -199,30 +212,44 @@ def postgres_url() -> AsyncGenerator[str, None]:
     remonte la sortie d'apt telle quelle — un diagnostic à sa cause coûte
     moins cher qu'un diagnostic à trois fixtures de distance.
     """
+    import docker as _docker
     from testcontainers.postgres import PostgresContainer
 
+    # Détection de l'image locale pré-construite (pgvector déjà installé).
+    _image_local = "gsie-testdb:latest"
+    _use_local = False
+    try:
+        client = _docker.from_env()
+        client.images.get(_image_local)
+        _use_local = True
+    except Exception:
+        pass  # Image absente — fallback sur l'image officielle
+
+    image = _image_local if _use_local else "postgis/postgis:16-3.4"
+
     with PostgresContainer(
-        image="postgis/postgis:16-3.4",
+        image=image,
         driver="asyncpg",
         username="gsie",
         password="gsie_test",
         dbname="gsie_test",
     ) as postgres:
-        # Installer pgvector dans le conteneur (le dépôt PGDG est présent).
-        container = postgres.get_wrapped_container()
-        code, sorties = container.exec_run(
-            ["sh", "-c", "apt-get update -qq && apt-get install -y -qq postgresql-16-pgvector"],
-            demux=True,
-        )
-        if code != 0:
-            # `demux=True` renvoie le couple (stdout, stderr), chacun pouvant
-            # être None si le flux est resté vide.
-            flux = b"\n".join(f for f in (sorties or (None, None)) if f)
-            raise RuntimeError(
-                "Installation de pgvector échouée dans le conteneur de test "
-                f"(code {code}). Vérifier l'accès réseau au dépôt PGDG.\n"
-                f"{flux.decode('utf-8', errors='replace')}"
+        if not _use_local:
+            # Installer pgvector dans le conteneur (le dépôt PGDG est présent).
+            container = postgres.get_wrapped_container()
+            code, sorties = container.exec_run(
+                ["sh", "-c", "apt-get update -qq && apt-get install -y -qq postgresql-16-pgvector"],
+                demux=True,
             )
+            if code != 0:
+                # `demux=True` renvoie le couple (stdout, stderr), chacun pouvant
+                # être None si le flux est resté vide.
+                flux = b"\n".join(f for f in (sorties or (None, None)) if f)
+                raise RuntimeError(
+                    "Installation de pgvector échouée dans le conteneur de test "
+                    f"(code {code}). Vérifier l'accès réseau au dépôt PGDG.\n"
+                    f"{flux.decode('utf-8', errors='replace')}"
+                )
         yield postgres.get_connection_url().replace("postgresql+psycopg2", "postgresql+asyncpg")
 
 
