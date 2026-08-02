@@ -37,6 +37,9 @@ CLAUDE.md
 tmp/
 *.tmp
 *.log
+# Sorties stdout/stderr capturées par redirection shell — état de poste, pas du projet
+stdout.txt
+stderr.txt
 
 # Scripts temporaires à la racine
 /_tmp_*.py
