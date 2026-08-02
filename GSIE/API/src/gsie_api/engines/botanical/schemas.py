@@ -226,3 +226,38 @@ class AutecologyProfileRecord(AutecologyProfileCreate):
     status: str = Field(
         description="draft | proposed | accepted | superseded | rejected | deprecated"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# RFC-0031 action 8 — API PlantNet (identification par image, 78 810 espèces)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class PlantNetIdentificationResult(BaseModel):
+    """Résultat d'identification PlantNet — une espèce candidate avec son score."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    score: float = Field(ge=0.0, lt=1.0, description="Score de confiance [0, 1[")
+    scientific_name: str = Field(description="Nom scientifique avec auteur")
+    scientific_name_without_author: str
+    genus: str
+    family: str
+    common_names: list[str] = Field(default_factory=list)
+    gbif_id: str | None = None
+
+
+class PlantNetIdentificationResponse(BaseModel):
+    """Réponse d'identification PlantNet — meilleure correspondance + résultats."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    best_match: str | None = Field(description="Nom scientifique de la meilleure correspondance")
+    results: list[PlantNetIdentificationResult] = Field(default_factory=list, max_length=20)
+    source: SourceReference = Field(
+        default_factory=lambda: SourceReference(
+            type_source="referentiel_officiel",
+            auteur="PlantNet",
+            reference="https://my.plantnet.org/ — identification par image (78 810 espèces)",
+        )
+    )
