@@ -25,11 +25,31 @@ from gsie_api.engines.validation.schemas import (
     ValidationResult,
     ValidationStatut,
 )
+from gsie_api.infrastructure.models import ResourceModel
 from tests.conftest import requires_docker
 
 pytestmark = requires_docker
 
 _CHAINE_INFERENCE = [{"nom": "identification_taxonomique"}]
+
+
+async def _seed_resource(db_session: AsyncSession) -> UUID:
+    """Crée une resource racine en base pour satisfaire la FK revision_target_id.
+
+    Le ValidationEngine persiste les résultats bloqués/partiels via une
+    RevisionModel dont target_id pointe vers resource.id (RFC-0028). Sans
+    resource existante, la FK revision_target_id_fkey rejette l'insert.
+    """
+    resource_id = uuid4()
+    db_session.add(
+        ResourceModel(
+            id=resource_id,
+            type="diagnostic",
+            metadata_json={},
+        )
+    )
+    await db_session.flush()
+    return resource_id
 
 
 # --- Fabriques ---
@@ -58,26 +78,32 @@ def _recommandation_valide() -> dict[str, Any]:
     }
 
 
-def _requete_diagnostic(contenu: dict[str, Any]) -> ValidationRequest:
+def _requete_diagnostic(
+    contenu: dict[str, Any], resource_id: UUID | None = None
+) -> ValidationRequest:
     return ValidationRequest(
-        requete_id=uuid4(),
+        requete_id=resource_id or uuid4(),
         type_sortie=TypeSortie.diagnostic,
         contenu=contenu,
         chaines_inference=_CHAINE_INFERENCE,
     )
 
 
-def _requete_recommandation(contenu: dict[str, Any]) -> ValidationRequest:
+def _requete_recommandation(
+    contenu: dict[str, Any], resource_id: UUID | None = None
+) -> ValidationRequest:
     return ValidationRequest(
-        requete_id=uuid4(),
+        requete_id=resource_id or uuid4(),
         type_sortie=TypeSortie.recommandation,
         contenu=contenu,
     )
 
 
-def _requete_ensemble(contenu: dict[str, Any]) -> ValidationRequest:
+def _requete_ensemble(
+    contenu: dict[str, Any], resource_id: UUID | None = None
+) -> ValidationRequest:
     return ValidationRequest(
-        requete_id=uuid4(),
+        requete_id=resource_id or uuid4(),
         type_sortie=TypeSortie.ensemble_complet,
         contenu=contenu,
         chaines_inference=_CHAINE_INFERENCE,
@@ -112,9 +138,10 @@ async def should_block_diagnostic_without_evidence_level(
 ) -> None:
     """Sans niveau de preuve, le diagnostic est bloqué (GSIE-CON-002)."""
     # Arrange
+    resource_id = await _seed_resource(db_session)
     contenu = _diagnostic_valide()
     contenu.pop("evidence_level")
-    request = _requete_diagnostic(contenu)
+    request = _requete_diagnostic(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
@@ -129,9 +156,10 @@ async def should_block_diagnostic_without_sources(
 ) -> None:
     """Sans source identifiable, le diagnostic est bloqué (GSIE-CON-002)."""
     # Arrange
+    resource_id = await _seed_resource(db_session)
     contenu = _diagnostic_valide()
     contenu.pop("source")
-    request = _requete_diagnostic(contenu)
+    request = _requete_diagnostic(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
@@ -146,8 +174,9 @@ async def should_block_diagnostic_without_chaine_inference(
 ) -> None:
     """Sans chaîne d'inférence, le diagnostic est bloqué (GSIE-CON-004)."""
     # Arrange
+    resource_id = await _seed_resource(db_session)
     request = ValidationRequest(
-        requete_id=uuid4(),
+        requete_id=resource_id,
         type_sortie=TypeSortie.diagnostic,
         contenu=_diagnostic_valide(),
         chaines_inference=[],
@@ -184,9 +213,10 @@ async def should_block_recommendation_non_contournable(
 ) -> None:
     """Une recommandation non contournable est bloquée (GSIE-CON-001)."""
     # Arrange
+    resource_id = await _seed_resource(db_session)
     contenu = _recommandation_valide()
     contenu["recommandations"][0]["contournable"] = False
-    request = _requete_recommandation(contenu)
+    request = _requete_recommandation(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
@@ -201,9 +231,10 @@ async def should_block_recommendation_without_justification(
 ) -> None:
     """Sans justification, la recommandation est bloquée (GSIE-CON-004)."""
     # Arrange
+    resource_id = await _seed_resource(db_session)
     contenu = _recommandation_valide()
     contenu["recommandations"][0].pop("justification")
-    request = _requete_recommandation(contenu)
+    request = _requete_recommandation(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
@@ -223,13 +254,14 @@ async def should_partially_validate_ensemble_with_only_non_critical_failures(
     partiellement valide — pas bloqué."""
     # Arrange — source et niveau présents (critiques), contournable (critique),
     # chaîne fournie (non critique), mais aucune justification (non critique).
+    resource_id = await _seed_resource(db_session)
     contenu = {
         "diagnostic": _diagnostic_valide(),
         "recommandations": [{"contournable": True}],
         "evidence_level": "b",
         "source": "GBIF",
     }
-    request = _requete_ensemble(contenu)
+    request = _requete_ensemble(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
@@ -244,6 +276,7 @@ async def should_block_ensemble_with_critical_failure(
 ) -> None:
     """Un ensemble avec une défaillance critique (sans source) est bloqué."""
     # Arrange — aucune source au niveau racine ni dans les recommandations.
+    resource_id = await _seed_resource(db_session)
     contenu = {
         "diagnostic": _diagnostic_valide(),
         "recommandations": [
@@ -251,7 +284,7 @@ async def should_block_ensemble_with_critical_failure(
         ],
         "evidence_level": "b",
     }
-    request = _requete_ensemble(contenu)
+    request = _requete_ensemble(contenu, resource_id=resource_id)
 
     # Act
     result = await ValidationEngine(session=db_session).validate(request)
