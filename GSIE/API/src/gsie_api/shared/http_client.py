@@ -111,6 +111,8 @@ class ResilientHttpClient(ABC):
         *,
         params: dict[str, Any] | list[tuple[str, Any]] | None = None,
         json_body: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
         headers: dict[str, str] | None = None,
         error_label: str | None = None,
     ) -> httpx.Response:
@@ -126,6 +128,9 @@ class ResilientHttpClient(ABC):
         Les 4xx (sauf 429) ne sont pas retryés — ce sont des erreurs
         applicatives, pas des pannes transitoires. 429 (quota) est
         retryé car le serveur peut lever la limite.
+
+        ``data`` et ``files`` permettent d'envoyer du multipart/form-data
+        (ex. upload d'images). Mutuellement exclusifs avec ``json_body``.
         """
         label = error_label or f"de l'appel API {method} {path}"
         merged_headers = {**self.auth_headers(), **(headers or {})}
@@ -139,6 +144,8 @@ class ResilientHttpClient(ABC):
                         url,
                         params=params,
                         json=json_body,
+                        data=data,
+                        files=files,
                         headers=merged_headers,
                     )
                     response.raise_for_status()
@@ -209,6 +216,37 @@ class ResilientHttpClient(ABC):
             "GET", path, params=params, headers=headers, error_label=error_label
         )
         return response.content
+
+    async def _post_multipart_json(
+        self,
+        path: str,
+        *,
+        data: dict[str, Any] | None = None,
+        files: list[tuple[str, tuple[str, bytes, str]]],
+        params: dict[str, Any] | list[tuple[str, Any]] | None = None,
+        headers: dict[str, str] | None = None,
+        error_label: str | None = None,
+    ) -> Any:
+        """POST multipart/form-data + parse JSON + capture erreurs.
+
+        Pour les APIs qui acceptent des fichiers (ex. PlantNet identify).
+        ``files`` est une liste de tuples httpx :
+        ``[(nom_champ, (nom_fichier, contenu_bytes, content_type))]``.
+        """
+        label = error_label or f"de l'appel API POST {path}"
+        try:
+            response = await self._request(
+                "POST",
+                path,
+                params=params,
+                data=data,
+                files=files,
+                headers=headers,
+                error_label=label,
+            )
+            return response.json()
+        except json.JSONDecodeError as exc:
+            raise self.exception_class(f"Échec {label} : {exc}") from exc
 
 
 class ResilientCsvClient(ResilientHttpClient):

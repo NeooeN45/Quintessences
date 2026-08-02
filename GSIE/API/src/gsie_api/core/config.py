@@ -249,6 +249,10 @@ class Settings(BaseSettings):
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")
 
+    # Moteur Botanical — API PlantNet (identification par image, 78 810 espèces)
+    # https://my.plantnet.org/ — clé hors préfixe GSIE_ (convention PlantNet)
+    plantnet_api_key: str | None = Field(default=None, validation_alias="PLANTNET_API_KEY")
+
     # Moteur Evidence
     require_rust_backend: bool = False
     evidence_experimental_conflicts_enabled: bool = False
