@@ -107,7 +107,12 @@ def should_accept_verify_full_tls_in_production():
 def should_reject_dev_login_enabled_in_production():
     """Settings doit refuser auth_dev_login_enabled en production."""
     with pytest.raises(ValidationError, match="Development login must be disabled"):
-        Settings(**_production_kwargs(auth_dev_login_enabled=True))
+        Settings(
+            **_production_kwargs(
+                auth_dev_login_enabled=True,
+                auth_dev_password="real-password-not-placeholder",
+            )
+        )
 
 
 def should_reject_rust_not_required_in_production():
