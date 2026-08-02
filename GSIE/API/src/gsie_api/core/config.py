@@ -1,8 +1,11 @@
 # GSIE API — Configuration
-# Les valeurs sont lues depuis les variables d'environnement (.env)
-# Aucun secret n'est commité (CON-008 souveraineté, global_rules security).
+# Les valeurs sont lues depuis les variables d'environnement (.env chiffré
+# ou .env en clair pour backward-compat). Aucun secret n'est commité
+# (CON-008 souveraineté, global_rules security).
 
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
@@ -257,7 +260,51 @@ class Settings(BaseSettings):
         return self
 
 
+# --- Chiffrement .env (audit sécurité P1-1) -------------------------------
+# La clé Fernet est stockée hors du repo (~/.config/gsie/env.key).
+# Si .env n'existe pas mais .env.enc oui, on déchiffre en mémoire et on
+# injecte les valeurs dans os.environ — aucun fichier temporaire sur disque.
+_KEY_DIR = Path.home() / ".config" / "gsie"
+_KEY_FILE = _KEY_DIR / "env.key"
+_API_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_ENV_FILE = _API_ROOT / ".env"
+_ENV_ENC_FILE = _API_ROOT / ".env.enc"
+
+
+def _load_encrypted_env() -> None:
+    """Déchiffre .env.enc dans os.environ si .env est absent.
+
+    Idempotent : ne fait rien si .env existe déjà ou si .env.enc est absent.
+    Échoue silencieusement en mode développement (log warning) pour ne pas
+    bloquer un démarrage sans secrets — la validation Settings s'en chargera.
+    """
+    if _ENV_FILE.exists() or not _ENV_ENC_FILE.exists():
+        return
+    if not _KEY_FILE.exists():
+        return  # Silencieux : get_settings() lèvera des erreurs métier
+
+    from cryptography.fernet import Fernet
+
+    fernet = Fernet(_KEY_FILE.read_bytes())
+    plaintext = fernet.decrypt(_ENV_ENC_FILE.read_bytes()).decode("utf-8")
+
+    for ligne in plaintext.splitlines():
+        ligne = ligne.strip()
+        if not ligne or ligne.startswith("#"):
+            continue
+        if "=" not in ligne:
+            continue
+        key, _, value = ligne.partition("=")
+        key = key.strip()
+        value = value.strip()
+        # N'écrase pas une variable déjà positionnée par l'environnement
+        # (priorité : env réel > .env.enc > .env).
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 @lru_cache
 def get_settings() -> Settings:
     """Retourne un singleton Settings (cache pour éviter les relectures .env)."""
+    _load_encrypted_env()
     return Settings()
