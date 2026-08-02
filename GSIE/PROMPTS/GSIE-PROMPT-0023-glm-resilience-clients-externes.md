@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | À LANCER |
+| Statut | INTÉGRÉE |
 | Agent cible | GLM 5.2 |
 | Environnement | Devin |
 | Dépôt | Quintessences |
@@ -62,6 +62,14 @@ tests/unit/test_ign_client_extended.py    tests/unit/test_botanical_engine_edge_
 Un fichier neuf n'est justifié que pour un client aujourd'hui sans test dédié
 (`soilgrids_client`, `gbif_client`, `dpclim_client`, `synop_client`,
 `vigilance_client`, `paquet_observation_client`, `meteofrance_client`).
+
+## Documents obligatoires
+
+- `GSIE/API/src/gsie_api/shared/http_client.py` — `ResilientHttpClient` et `ResilientCsvClient`.
+- `GSIE/API/src/gsie_api/engines/*/` — les 10 clients d'API externes.
+- `GSIE/API/tests/unit/test_resilience_factory.py` — factory de tests paramétrés.
+- `GSIE/API/tests/mutation/harnais.py` — harnais de mutation.
+- `GSIE/API/AGENTS.md` — convention résilience (GSIE-PROMPT-0023).
 
 ## Mission
 
@@ -164,6 +172,12 @@ Tests d'intégration : préfixer `TESTCONTAINERS_RYUK_DISABLED=true` (Docker req
   donnée amont absente ;
 - aucun document `Locked` touché ;
 - aucun `git push`, aucune fusion, aucun commit sur une autre branche.
+
+## Rapport obligatoire
+
+Le rapport de mission est la section `## Livrable` ci-dessous, complétée
+par les codes de sortie des commandes de validation. Il est déposé dans
+la session Devin et archivé dans `22_PROJECT_MEMORY/sessions/`.
 
 ## Livrable
 

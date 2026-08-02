@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | À LANCER |
+| Statut | INTÉGRÉE |
 | Agent cible | GLM 5.2 |
 | Environnement | Devin |
 | Dépôt | Quintessences |
@@ -12,6 +12,23 @@
 | Précédents | `NOMENCLATURE_SOURCES.md`, `RFC-0029`, `DEC-000038`, `ADR-009` |
 | Orchestrateur | Architecte |
 | Relecteur | Architecte puis Fondateur |
+
+## Documents obligatoires
+
+- `GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` — inventaire à élargir.
+- `GSIE/DATASETS/DATASET_CATALOG.md` — catalogue des datasets.
+- `GSIE/DATASETS/NOMENCLATURE_SOURCES.md` — nomenclature et format.
+- `02_RFC/RFC-0029.md` — audit des sources et angles morts.
+- `03_DECISIONS/DEC-000038.md` — arbitrages du Fondateur sur la nomenclature.
+- `GSIE/ARCHITECTURE/ADR-009.md` — interdiction d'inventer.
+
+## Mission
+
+Élargir l'inventaire des sources de données pour couvrir les angles morts
+géographiques, thématiques et d'accès identifiés par `RFC-0029` §11.
+Porter l'inventaire à un état qui tienne cinq ans, en qualité de
+description autant qu'en nombre. Ne rien inventer : chaque URL doit être
+vérifiée par un accès réel.
 
 ## Constat
 
@@ -184,6 +201,8 @@ rattraper une invention.
 sous-agents (l'IGN produit du forestier, du réglementaire et de l'historique).
 Dédoublonne par URL exacte, pas par nom.
 
+## Interdictions
+
 ## 7. Ce que tu ne dois pas faire
 
 - **Aucun code.** Ce prompt est documentaire. Ne touche à rien sous
@@ -211,6 +230,12 @@ Dédoublonne par URL exacte, pas par nom.
 7. Aucun doublon d'URL.
 8. Le comptage du §7 de `SOURCES_DONNEES_EXHAUSTIVES.md` est mis à jour, en
    distinguant vérifié et à vérifier.
+
+## Rapport obligatoire
+
+Le rapport de mission est la section `## 9. Compte rendu attendu` ci-dessous,
+complétée par les chiffres de vérification d'URL. Il est déposé dans la
+session Devin et archivé dans `22_PROJECT_MEMORY/sessions/`.
 
 ## 9. Compte rendu attendu
 

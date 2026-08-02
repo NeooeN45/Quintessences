@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | À LANCER |
+| Statut | INTÉGRÉE |
 | Agent cible | GLM 5.2 |
 | Environnement | Devin |
 | Dépôt | Quintessences |
@@ -11,6 +11,23 @@
 | Fichiers interdits | `src/gsie_api/engines/**` — aucun moteur ne change |
 | Précédents | `RFC-0029` (Validée, `DEC-000039`), migrations `20260728_0011` et `0012` |
 | Orchestrateur | Architecte |
+
+## Documents obligatoires
+
+- `02_RFC/RFC-0029.md` — schémas de domaine (validée par `DEC-000039`).
+- `GSIE/API/alembic/versions/` — migrations Alembic (baseline `20260726_0001`).
+- `GSIE/API/src/gsie_api/infrastructure/models/` — modèles SQLAlchemy.
+- `GSIE/API/src/gsie_api/infrastructure/enums.py` — registre de types.
+- `03_DECISIONS/DEC-000036.md` — assainissement de l'historique Alembic.
+- `GSIE/ARCHITECTURE/ADR-005.md` — Outbox/Inbox.
+
+## Mission
+
+Migrer les tables métier vers sept schémas de domaine PostgreSQL
+(botanique, foret, gouvernance, climat, pedologie, hydro, feu) via
+migrations Alembic autonomomes. Étendre le rôle applicatif pour qu'il
+n'ait accès qu'aux schémas de son moteur. Une migration par schéma,
+chacune réversible.
 
 ## Constat
 
@@ -21,6 +38,8 @@ personnelles, douze tests d'intégration.
 **Restent sept schémas de domaine.** C'est un travail mécanique, répétitif, et
 dont chaque étape est vérifiable. Il n'appelle aucune décision de conception :
 elles sont prises.
+
+## Interdictions
 
 ## 1. Ce que tu ne dois surtout pas faire
 
@@ -144,6 +163,12 @@ et ne conclus jamais d'un test vert qu'il protège ce que tu penses.
 7. `resource` est toujours dans `public`.
 8. Aucune table applicative non rattachée n'a été déplacée « pour faire
    nombre » : les ambiguïtés sont signalées, pas résolues au jugé.
+
+## Rapport obligatoire
+
+Le rapport de mission est la section `## 9. Compte rendu attendu` ci-dessous,
+complétée par les codes de sortie des commandes de validation. Il est déposé
+dans la session Devin et archivé dans `22_PROJECT_MEMORY/sessions/`.
 
 ## 9. Compte rendu attendu
 

@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | À LANCER |
+| Statut | INTÉGRÉE |
 | Agent cible | GLM 5.2 |
 | Environnement | Devin |
 | Dépôt | Quintessences |
@@ -11,6 +11,22 @@
 | Fichiers interdits | tout `GSIE/API/src/**` et `GSIE/API/tests/**` — **aucun code** |
 | Suite de | `GSIE-PROMPT-0025` |
 | Orchestrateur | Architecte |
+
+## Documents obligatoires
+
+- `GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md` — inventaire à vérifier.
+- `GSIE/DATASETS/DATASET_CATALOG.md` — catalogue des datasets.
+- `GSIE/DATASETS/NOMENCLATURE_SOURCES.md` — nomenclature et format.
+- `02_RFC/RFC-0029.md` — audit des sources et angles morts.
+- `GSIE-PROMPT-0025` — mission précédente (élargissement de l'inventaire).
+- `GSIE/ARCHITECTURE/ADR-009.md` — interdiction d'inventer.
+
+## Mission
+
+Vérifier l'inventaire existant : tester chaque URL, classer le verdict
+(vivante, déplacée, morte, indéterminée), corriger les URL déplacées,
+marquer les mortes comme obsolètes. Couvrir en priorité l'écosystème INPN
+et les signalements non vérifiés du contre-audit.
 
 ## Constat
 
@@ -123,6 +139,8 @@ Travaille **par lots**, en commitant à mesure : un lot de vérifications
 terminé, un commit. Ne garde pas une heure de travail non commitée — si la
 session est interrompue, tout serait perdu.
 
+## Interdictions
+
 ## 6. Ce que tu ne dois pas faire
 
 - **Aucun code.** Ce prompt est documentaire.
@@ -132,6 +150,12 @@ session est interrompue, tout serait perdu.
   sans les intégrer.
 - **Ne modifie ni `NOMENCLATURE_SOURCES.md` ni `RFC-0029`** — tu en es le
   lecteur.
+
+## Rapport obligatoire
+
+Le rapport de mission est la section `## 7. Compte rendu attendu` ci-dessous,
+complétée par les cinq chiffres de vérification. Il est déposé dans la
+session Devin et archivé dans `22_PROJECT_MEMORY/sessions/`.
 
 ## 7. Compte rendu attendu
 
