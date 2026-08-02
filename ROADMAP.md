@@ -296,10 +296,25 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Socle de fiabilité d'entreprise** — RFC-0021 / DEC-000031 | ✅ **Tranche critique contre-auditée (2026-07-22)** | Auth/RBAC moteurs/refresh/WebSocket RGPD, outbox transactionnel expurgé, migrations gardées, stockage et requêtes bornés ; build Linux reproductible non-root avec dépendances natives verrouillées ; CI bloquante (Python, Rust, intégration, Docker, sources de vérité, nouveaux Markdown stricts, documents Locked/RFC). Restent planifiés : migration mobile en clair, sauvegarde complète, egress réseau, stratégie LanceDB multi-hôtes, 63 exclusions historiques, réactivation progressive des règles Markdown en baseline, dette Kotlin et décision de licence GSIE. |
 | **Vague 3 — Reasoning + Diagnostic Engine** (tranches R1-R4) | ✅ **Exposés sur l'API (2026-07-26)** | Reasoning : moteur, schémas et routeur (`/reasoning/status`, `/version`, `/infer`), R1-R4 validées (`GSIE-PROMPT-0014` à `0017`). Diagnostic : moteur et schémas (R1-R3), routeur R4 repris en interne (`/diagnostic/status`, `/version`, `/diagnostiquer`). Les deux routeurs sont montés sur `app.py` et couverts par un test de montage qui échoue si un routeur présent devient inatteignable. 509 tests unitaires, 83 % de couverture, ruff et mypy `--strict` verts. **Persistance des diagnostics livrée (2026-07-26)** : type de resource `diagnostic` (registre 89 → 90), écriture transactionnelle dans `DiagnosticEngine.diagnostiquer`, intégrée à la baseline `20260726_0001` ; `diagnostic_id` est résolvable et la tranche R2 est débloquée. **Historique Alembic assaini (DEC-000036)** : l'ancienne lignée locale `0001`-`0013` est remplacée par une baseline autonome de 116 tables ; le cycle base vierge → `upgrade head` → `downgrade base` → `upgrade head` et le contrôle de dérive sont verts sur PostgreSQL/PostGIS/AGE. Les 12 tables legacy restent exclues et les anciennes bases locales doivent être recréées. Reste : le maillon Recommendation Engine (chargement par `diagnostic_id`, cas « diagnostic introuvable »). Le langage n'est plus un reste à faire : `DEC-000035` remplace l'attribution Rust *a priori* de la vague 3 par un critère de pertinence, les trois moteurs restant en Python. |
 | **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
+| **Couverture 100% + endpoints dashboard** — audit/gamification | ✅ **Complète (2026-08-02)** | 1859 tests unitaires passent, 63 skipped, 100% couverture (8831 stmts), score mutation 67/67. Endpoints `GET /audit-logs` + `GET /gamification/stats` (données statiques Phase 4). ruff + mypy OK. |
+| **Phase de stabilisation** — DEC-000043 | 🔶 **Décidée (2026-08-02)** | Ralentir les nouvelles fonctionnalités. Trois livrables : S1 restauration DB, S2 tranche verticale réelle, S3 validation scientifique + performance. Pas de nouveaux endpoints/moteurs/migrations. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
 > intégration, sécurité, packaging et critères scientifiques sont satisfaits.
+
+### Phase de stabilisation (2026-08-02 — DEC-000043)
+
+> **Diagnostic Fondateur** : le code est plus mature que le produit intégré.
+> Cette phase priorise la preuve sur l'extension.
+
+| Livrable | Description | Critère de clôture |
+|---|---|---|
+| **S1 — Restauration DB prouvée** | Backup réel → restore → vérification d'intégrité. Test CI. | Document `DR-RESTAURATION.md` + test CI vert |
+| **S2 — Tranche verticale réelle** | Données réelles, pipeline complet ingestion → recommendation. Validation humaine. | Document `TRANCHE_VERTICALE.md` validé |
+| **S3 — Validation scientifique + performance** | Prédictions vs ground truth, benchmark mesuré, reproductible. | Script reproductible + rapport |
+
+**Pendant cette phase** : pas de nouveaux endpoints, moteurs, migrations.
 
 ### Tranche verticale prioritaire
 
@@ -313,9 +328,9 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
 2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. **CI 100% verte** (Docker build validé en CI avec rustc 1.85 + maturin 1.9.6).
 3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
-4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte.
-5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout.
-6. **Performance** — ❌ SLO mesurés et profiling avant toute migration de code.
+4. **Science** — ❌ golden datasets, provenance, incertitude et validation experte. **Bloqué par S2 + S3.**
+5. **Intégration** — ❌ Evidence → Knowledge → humain → Hub vérifié de bout en bout. **Bloqué par S2.**
+6. **Performance** — ❌ SLO mesurés et profiling avant toute migration de code. **Bloqué par S3.**
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 

@@ -235,6 +235,95 @@
         "title": "AromeTemperatureResult",
         "type": "object"
       },
+      "AuditLog": {
+        "description": "Une entrée de journal d'audit.",
+        "properties": {
+          "action": {
+            "description": "Type d'action : create | update | delete | export",
+            "title": "Action",
+            "type": "string"
+          },
+          "details": {
+            "description": "Détails contextuels supplémentaires",
+            "title": "Details",
+            "type": "object"
+          },
+          "id": {
+            "description": "Identifiant unique de l'entrée",
+            "title": "Id",
+            "type": "string"
+          },
+          "ip": {
+            "description": "Adresse IP d'origine",
+            "title": "Ip",
+            "type": "string"
+          },
+          "resource": {
+            "description": "Ressource concernée (type + id)",
+            "title": "Resource",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "ISO 8601 — moment de l'action",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "user": {
+            "description": "Utilisateur ayant effectué l'action",
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "timestamp",
+          "user",
+          "action",
+          "resource",
+          "ip"
+        ],
+        "title": "AuditLog",
+        "type": "object"
+      },
+      "Badge": {
+        "description": "Badge d'engagement — débloqué ou verrouillé.",
+        "properties": {
+          "description": {
+            "description": "Condition de déblocage",
+            "title": "Description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Nom de l'icône (clé frontend)",
+            "title": "Icon",
+            "type": "string"
+          },
+          "id": {
+            "description": "Identifiant stable du badge",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Nom affiché",
+            "title": "Name",
+            "type": "string"
+          },
+          "unlocked": {
+            "description": "Badge débloqué ou non",
+            "title": "Unlocked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "icon",
+          "unlocked"
+        ],
+        "title": "Badge",
+        "type": "object"
+      },
       "BlocContexte": {
         "additionalProperties": false,
         "description": "Un bloc de contexte stationnel, avec sa provenance obligatoire.\n\n`ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc\nest donc inconstructible sans `source_moteur`, `source` et\n`evidence_level`.",
@@ -1946,6 +2035,34 @@
           "date_decision"
         ],
         "title": "ForestierDecision",
+        "type": "object"
+      },
+      "GamificationStats": {
+        "description": "Statistiques d'engagement complètes du dashboard.",
+        "properties": {
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/Badge"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressGoal"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "streak": {
+            "default": 0,
+            "description": "Série de jours d'activité",
+            "minimum": 0.0,
+            "title": "Streak",
+            "type": "integer"
+          }
+        },
+        "title": "GamificationStats",
         "type": "object"
       },
       "GeoData": {
@@ -3667,6 +3784,47 @@
         ],
         "title": "Probabilite",
         "type": "string"
+      },
+      "ProgressGoal": {
+        "description": "Objectif de progression avec valeur courante et cible.",
+        "properties": {
+          "current": {
+            "description": "Valeur courante",
+            "minimum": 0.0,
+            "title": "Current",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Identifiant stable de l'objectif",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "description": "Libellé affiché",
+            "title": "Label",
+            "type": "string"
+          },
+          "target": {
+            "description": "Valeur cible",
+            "exclusiveMinimum": 0.0,
+            "title": "Target",
+            "type": "integer"
+          },
+          "unit": {
+            "description": "Unité affichée (ex. diagnostics)",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "current",
+          "target",
+          "unit"
+        ],
+        "title": "ProgressGoal",
+        "type": "object"
       },
       "QualificationConclusion": {
         "additionalProperties": false,
@@ -5462,6 +5620,37 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/audit-logs": {
+      "get": {
+        "description": "Retourne les entrées d'audit (actions create/update/delete/export). Données actuellement statiques — seront alimentées par le middleware d'audit quand il sera implémenté (Phase 4).",
+        "operationId": "list_audit_logs_api_v1_audit_logs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLog"
+                  },
+                  "title": "Response List Audit Logs Api V1 Audit Logs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Liste des entrées du journal d'audit",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Authentifie un utilisateur avec username + password et retourne un access token (15 min) et un refresh token (7 jours). Les tokens sont signés en RS256 (DEC-000019).",
@@ -6740,6 +6929,33 @@
         "summary": "Version du moteur Forest Dynamics",
         "tags": [
           "forest-dynamics"
+        ]
+      }
+    },
+    "/api/v1/gamification/stats": {
+      "get": {
+        "description": "Retourne les badges débloqués/verrouillés, les objectifs de progression et la série de jours d'activité. Données actuellement statiques — seront alimentées par les événements moteurs pendant la Phase 4.",
+        "operationId": "gamification_stats_api_v1_gamification_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamificationStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Statistiques d'engagement (badges, objectifs, série)",
+        "tags": [
+          "gamification"
         ]
       }
     },

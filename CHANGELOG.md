@@ -4,6 +4,35 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-02 (soir) — CONSOLIDATION + DEC-000043] - 2026-08-02
+
+### Consolidation mémoire
+
+- `PROJECT_MEMORY.md` : en-tête + section « État réel mesuré » avec
+  chiffres vérifiés (14 moteurs, 28 migrations, 120 tables, 83 routes,
+  1859 tests, 100% couverture, mutation 67/67). Diagnostic Fondateur
+  intégré. Phase de stabilisation documentée.
+- `ROADMAP.md` : ligne « Couverture 100% » + section « Phase de
+  stabilisation » (S1/S2/S3). Gates 4/5/6 → ❌ (bloqués par S2/S3).
+- `DEC-000043` : décision formelle de phase de stabilisation.
+
+### État final mesuré
+
+- **1859 tests passed**, 63 skipped, 0 failed
+- **100% couverture** (8831/8831 statements)
+- **Score mutation 67/67** (100%)
+- ruff OK, mypy OK
+
+### Diagnostic Fondateur
+
+> Le code est plus mature que le produit intégré.
+
+Rapidité 9/10, qualité technique 8/10, qualité produit 6,5-7/10.
+Phase de stabilisation décidée : S1 restauration DB, S2 tranche verticale
+réelle, S3 validation scientifique + performance.
+
+---
+
 ## [SESSION 2026-08-02 — RFC-0031 PHASE 1 IMPLÉMENTÉE + PHASE 2 INTÉGRÉE] - 2026-08-02
 
 ### RFC-0031 Phase 1 — 3 quick wins restants implémentés

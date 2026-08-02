@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-02 — **Veille technologique + RFC-0031 Adopté (DEC-000042)** : 8 sous-agents veille + 2 sous-agents sourcing web. Document : `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` (niveau C sourcé, 31 chiffres vérifiés, §14 Sources). **RFC-0031 Adopté** par Fondateur (DEC-000042) : 8 actions Phase 1 (5 faites : orjson, Trivy, Bandit, Dependabot, Tenacity ; 3 à faire : uvloop, Uptime Kuma, PlantNet), 12 Phase 2 adoptées en principe, 16 écartées, 10 différées. **Intégration ROADMAP suspendue** — feu vert Fondateur attendu pour intégrer Phase 2 dans `ROADMAP.md`. Les 3 actions Phase 1 restantes peuvent être implémentées immédiatement. Validation : ruff OK app.py, mypy OK 155 fichiers, pytest 1294 passed (2 failed préexistants). |
+| **Dernière mise à jour** | 2026-08-02 — **Consolidation + diagnostic Fondateur + phase de stabilisation lancée (DEC-000043)**. État réel mesuré : 14 moteurs + orchestration, 28 migrations Alembic, 120 tables sur 6 schémas, 83 routes API, 1859 tests unitaires passent (63 skipped), 100% couverture (8831 stmts), score mutation 67/67. Endpoints dashboard audit + gamification ajoutés (données statiques Phase 4). SDK Python + dashboard admin Astro créés. Outils visualisation DB déployés. **Diagnostic Fondateur** : qualité technique 8/10, qualité produit 6,5/10 — le code est plus mature que le produit intégré. **Phase de stabilisation décidée (DEC-000043)** : ralentir les nouvelles fonctionnalités, prioriser S1 restauration DB prouvée, S2 tranche verticale réelle, S3 validation scientifique + performance. |
 
 ---
 
@@ -382,6 +382,7 @@ brainstorming v5 n'est adoptée.
 - **DEC-000038** — Persistance des règles d'inférence (adoption `RFC-0028`). Une règle est une Assertion (`claim_kind` `rule`/`threshold`), aucune table nouvelle. La condition exécutable est **dérivée** du fait sourcé, jamais stockée — une chaîne persistée pourrait diverger du seuil qu'elle traduit et appliquer l'ancienne valeur en citant la source révisée. **Un domaine de validité non renseigné vaut « nulle part »** : le silence ne vaut pas universalité, et une conclusion fausse portant une citation vérifiable est pire qu'une absence de réponse. Corollaire : territoire obligatoire sur `silvicultural_rule` et `autecology_profile`, comme il l'est déjà sur `station_type`, `fertility_class` et `provenance_material`. Aucun plancher de preuve par défaut mais `evidence_level_plancher` obligatoire en réponse ; une source invalidée sort la règle du service **et** rend énumérables les conclusions passées qui la citaient. Premier lot : chêne sessile, réserve utile maximale, un territoire, de bout en bout.
 - **DEC-000040** — Tables transverses laissées dans `public` (Draft, 2026-07-31, RFC-0029). Décision d'architecture de données : les tables transverses (junctions, outbox, temporal_engine, enrichment) restent dans le schéma `public` plutôt que d'être éclatées par moteur. Préserve DEC-000019 (PostgreSQL+PostGIS+AGE) et GSIE-PROMPT-0027 (schémas de domaine). Référencée dans CHANGELOG l.365 (mapping Treekipedia).
 - **DEC-000041** — Ingestion bulk + pgvector + garde anti-invention automatisée. Pipeline bulk (POST /resources/bulk, 1000 items/lot, 600 req/min), migration `20260731_0024` pgvector (extension vector + colonne embedding(1536) + index IVFFlat), garde anti-invention RFC-0014 automatisée (détection AI-sourced → evidence_level=D + quarantine), rate limiting différencié. Dockerfile.db installe `postgresql-16-pgvector`. Modèle `EntityModel` déclare `embedding` (Vector(1536)). 1346 tests unitaires + 9 tests d'intégration.
+- **DEC-000043** — Phase de stabilisation : ralentir pour prouver (Validé, 2026-08-02). Décision directe du Fondateur après diagnostic : qualité technique 8/10, qualité produit 6,5/10. Trois livrables : S1 restauration DB prouvée, S2 tranche verticale réelle terrain→recommandation, S3 validation scientifique + performance. Nouveaux endpoints/moteurs/migrations suspendus. Gates 4/5/6 de la ROADMAP passent à ❌ (bloqués par S2/S3).
 
 ## Documents structurants
 
@@ -919,6 +920,54 @@ a été corrigée sur deux P0 invalides :
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
 | P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
+
+### Session 2026-08-02 (soir) — Consolidation + diagnostic Fondateur + DEC-000043
+
+#### État réel mesuré (chiffres vérifiés, non estimés)
+
+| Métrique | Valeur | Source |
+|---|---|---|
+| Moteurs implémentés | 14 + orchestration | `src/gsie_api/engines/` (16 dirs) |
+| Migrations Alembic | 28 | `alembic/versions/` |
+| Tables SQLAlchemy | 120 | `Base.metadata.tables` |
+| Schémas PostgreSQL | 6 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites |
+| Routes API | 83 | `create_app().routes` |
+| Tests unitaires | 1859 passed, 63 skipped, 0 failed | `pytest tests/unit/` |
+| Couverture de code | 100% (8831/8831 stmts) | `pytest --cov=gsie_api` |
+| Score mutation | 67/67 (100%) | `tests/mutation/harnais.py` |
+| Lint | ruff OK | `ruff check src/ tests/` |
+| Typage | mypy OK | `mypy src/gsie_api/` |
+
+#### 63 skipped — analyse catégorielle
+
+| Catégorie | Count | Raison | Action |
+|---|---|---|---|
+| Seeds v6.1 legacy | 46 | Migration v6.1 → v6.2 (RFC-0012) Vague 2 | Réactiver après migration |
+| Schéma KnowledgeObject → Assertion | 14 | RFC-0012 | Réactiver après migration |
+| Rust Evidence Engine absent | 3 | Wheel Rust non construite sur Windows | CI Linux |
+
+#### Diagnostic Fondateur (2026-08-02)
+
+> Le code est plus mature que le produit intégré.
+
+Rapidité 9/10, qualité technique 8/10, qualité produit 6,5-7/10.
+Il manque la preuve complète : terrain → données réelles → preuve
+scientifique → diagnostic → recommandation → validation humaine →
+application cliente/Hub.
+
+#### Phase de stabilisation (DEC-000043)
+
+Ralentir les nouvelles fonctionnalités. Trois livrables :
+
+1. **S1 — Restauration DB prouvée** : backup → restore → vérification
+   d'intégrité. Test CI. Document `DR-RESTAURATION.md`.
+2. **S2 — Tranche verticale réelle** : données réelles, pipeline complet
+   ingestion → recommendation, validation humaine. Document
+   `TRANCHE_VERTICALE.md`.
+3. **S3 — Validation scientifique + performance** : prédictions vs ground
+   truth, benchmark mesuré, reproductible.
+
+Pendant cette phase : pas de nouveaux endpoints/moteurs/migrations.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.
