@@ -59,3 +59,46 @@ Vérification :
 
 En production (Docker), le build est automatique (stage builder du
 `Dockerfile` de l'API).
+
+## Contrat d'interface
+
+### 1. Endpoints API
+
+Source : `GSIE/API/src/gsie_api/engines/evidence/router.py`
+
+| Méthode | Route | Auth | Rate limiting | Description |
+|---|---|---|---|---|
+| GET | `/evidence/status` | aucune | — | Statut du moteur (actif / dégradé selon disponibilité du module Rust) (`router.py:28`) |
+| POST | `/evidence/evaluate` | rôle `engine:write` (`EngineWriteUser`) | `30/minute` | Évalue une soumission de connaissance brute et attribue un niveau de preuve A-F (`router.py:40`) |
+| GET | `/evidence/version` | aucune | — | Version du moteur et backend utilisé (rust+pyo3 ou python-fallback) (`router.py:82`) |
+
+### 2. Schémas d'entrée/sortie
+
+Source : `GSIE/API/src/gsie_api/engines/evidence/schemas.py`
+
+| Schéma | Rôle | Champs clés |
+|---|---|---|
+| `RawKnowledgeSubmission` | Entrée de `/evidence/evaluate` | `soumission_id`, `type_contenu` (publication/referentiel/expert/observation), `contenu` (structure libre), `source_candidate` (`SourceReference`), `soumetteur` |
+| `SourceReference` | Sous-objet source | `type_source` (peer_reviewed/referentiel_officiel/expert_identifie/observation_terrain), `auteur`, `reference` (DOI/URL/citation), `version_source` |
+| `QualifiedKnowledge` | Sortie de `/evidence/evaluate` | `connaissance_id`, `evidence_level` (A-F), `statut` (accepte/quarantine/refuse), `conflits` (liste de `ConflitBibliographique`), `version` |
+| `EvidenceStatementCreate` / `EvidenceStatementRecord` | Assertion atomique sourcée (RFC-0016 §3.1) | `claim`, `page_or_table` (localisation obligatoire), `evidence_level`, `source` |
+
+### 3. Exceptions
+
+Aucune exception métier dédiée n'est levée par ce moteur : les erreurs
+d'entrée sont couvertes par la validation Pydantic native (HTTP 422),
+et les erreurs du cœur Rust sont interceptées (`except Exception`)
+avec repli automatique sur l'implémentation Python
+(`wrapper.py:_evaluate_rust`, log `rust_engine_evaluation_failed` puis
+`falling_back_to_python_evaluation`) plutôt que propagées à l'appelant.
+
+### 4. Dépendances
+
+- **Aval (chaîne principale)** : `KNOWLEDGE_ENGINE` — toute connaissance
+  au statut `accepte` est ingérée par le Knowledge Engine
+  (`gsie_api.engines.pipeline`, DEC-000021).
+- **Amont** : aucun moteur GSIE — reçoit directement les soumissions
+  brutes (import, ingestion documentaire).
+- **Clients API externes** : aucun.
+- **Dépendance technique** : module Rust `gsie_evidence` (crate compilée
+  via PyO3/maturin) ; fallback Python intégré si absent.
