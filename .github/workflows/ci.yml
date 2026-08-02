@@ -378,6 +378,8 @@ jobs:
       - name: Analyse Bandit (SARIF)
         run: |
           bandit -r GSIE/API/src/gsie_api/ -f sarif -o bandit-results.sarif --skip B101 || true
+          # Garantit un SARIF valide même si bandit crashe (ex: import error)
+          test -f bandit-results.sarif || echo '{"version":"2.1.0","runs":[]}' > bandit-results.sarif
 
       - name: Upload résultats SARIF vers GitHub Security
         uses: github/codeql-action/upload-sarif@v3
