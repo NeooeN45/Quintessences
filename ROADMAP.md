@@ -468,30 +468,47 @@ document (§13 Errata). Security headers, pg_stat_statements, Apache AGE,
 API versioning déjà en place. PgBouncer config présent mais non déployé.
 Chiffres non sourcés marqués comme impressions d'agent (niveau D).
 
-#### Implémentations effectives (2026-08-02)
+#### Actions Phase 1 — RFC-0031 (adopté 2026-08-02, DEC-000042)
 
-| # | Action | Domaine | Statut |
+Les 8 actions Phase 1 du RFC-0031 sont **toutes implémentées** (2026-08-02).
+
+| # | Action | Domaine | Statut | Commit |
+|---|---|---|---|---|
+| 1 | orjson sérialisation JSON | API | ✅ Fait | `822933f` |
+| 2 | Trivy scan CI | Sécurité | ✅ Fait | — |
+| 3 | Bandit SAST CI | Sécurité | ✅ Fait | — |
+| 4 | Dependabot | Sécurité | ✅ Fait | — |
+| 5 | Tenacity dépendance | Résilience | ✅ Fait | `822933f` |
+| 6 | uvloop sur Linux | API | ✅ Fait | `d25179f` |
+| 7 | Uptime Kuma | Monitoring | ✅ Fait | `d25179f` |
+| 8 | API PlantNet dans Botanical Engine | Moteurs | ✅ Fait | `1062be0` |
+
+> Azure Key Vault est **différé** — transition depuis Fernet local pour
+> le déploiement Azure production, pas une action Phase 1 (RFC-0031 §2.3).
+
+#### Actions Phase 2 — RFC-0031 (court terme, 3-6 mois)
+
+Ces 12 actions nécessitent un effort d'intégration mais sont cohérentes
+avec l'architecture existante. Elles sont adoptées par DEC-000042 mais
+non encore implémentées.
+
+| # | Action | Domaine | Prérequis |
 |---|---|---|---|
-| 1 | Trivy scan CI | Sécurité | ✅ (par Fondateur) |
-| 2 | Bandit SAST CI | Sécurité | ✅ (par Fondateur) |
-| 3 | Tenacity dépendance | Résilience | ✅ (par Fondateur) |
+| 9 | pg_cron + pg_trgm + HypoPG | DB | Migration Alembic |
+| 10 | Index partiels + BRIN sur tables temporelles | DB | Audit index existants |
+| 11 | Cursor-based pagination sur endpoints list | API | Refactor endpoints |
+| 12 | SSE helper pour notifications/dashboards | API | `shared/sse.py` |
+| 13 | Backpressure middleware | API | `shared/middleware.py` |
+| 14 | Audit logging immutable (hash chain PostgreSQL) | Sécurité/RGPD | Migration + trigger |
+| 15 | Hypothesis + Schemathesis dev deps + tests | Testing | `pyproject.toml` |
+| 16 | Grafana Stack (Loki + Tempo) | Observabilité | Déploiement Docker |
+| 17 | Polars 1.x pour analytics | Data | Remplacement pandas (Forge) |
+| 18 | GeoPandas 1.0 + DuckDB Spatial | Géospatial | Upgrade |
+| 19 | BD Forêt v3 + Sentinel-2 | Données | Pipeline ingestion |
+| 20 | NeuralProphet dans Climate Engine | Moteurs | Intégration |
 
-#### Actions Phase 1 réellement à faire
-
-| # | Action | Domaine | Statut |
-|---|---|---|---|
-| 1 | orjson sérialisation JSON | API | **À faire** |
-| 2 | uvloop sur Linux | API | **À faire** |
-| 3 | Dependabot | Sécurité | **À faire** |
-| 4 | Azure Key Vault (transition Fernet) | Sécurité | **À faire** |
-| 5 | Uptime Kuma | Monitoring | **À faire** |
-| 6 | API PlantNet dans Evidence Engine | Moteurs | **À faire** |
-
-#### Roadmap post-veille (Phase 2-4)
-
-Voir `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` §9 (Top 20 actions).
-**Ce document n'est pas une feuille de route** — si ces actions doivent
-orienter le travail, elles doivent passer par un RFC dédié dans `02_RFC/`.
+> Sources vérifiées dans `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` §14.
+> Actions différées (Phase 3-4+) : voir RFC-0031 §2.4.
 
 #### Partenariats stratégiques recommandés
 

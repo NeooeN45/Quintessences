@@ -4,6 +4,38 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-02 — RFC-0031 PHASE 1 IMPLÉMENTÉE + PHASE 2 INTÉGRÉE] - 2026-08-02
+
+### RFC-0031 Phase 1 — 3 quick wins restants implémentés
+
+- **uvloop** (action 6) : `pyproject.toml` + `worker.py` — `loop=uvloop`
+  dans SecureUvicornWorker (Linux uniquement, 2-4x plus rapide qu'asyncio)
+- **Uptime Kuma** (action 7) : `docker-compose.yml` — conteneur de monitoring
+  uptime sur port 3001, surveille /health et /ready
+- **API PlantNet** (action 8) : `plantnet_client.py` — client ResilientHttpClient
+  pour identification de plantes par image (78 810 espèces), POST multipart,
+  7 tests unitaires + 5 tests factory de résilience. `http_client.py` étendu
+  avec `_post_multipart_json` pour upload + parse JSON.
+
+**Tests** : 1837 passed, 63 skipped, 0 failed (4 workers xdist).
+
+### ROADMAP.md — Phase 2 intégrée
+
+Les 12 actions Phase 2 du RFC-0031 (court terme, 3-6 mois) sont intégrées
+dans `ROADMAP.md` : pg_cron/pg_trgm/HypoPG, index partiels/BRIN, cursor
+pagination, SSE helper, backpressure middleware, audit logging immutable,
+Hypothesis/Schemathesis, Grafana Stack, Polars, GeoPandas/DuckDB Spatial,
+BD Forêt v3/Sentinel-2, NeuralProphet.
+
+### Bug fix — tests flaky xdist 8 workers
+
+`PYTEST_XDIST_AUTO_NUM_WORKERS=4` persisté au niveau utilisateur. Les tests
+`test_tout_endpoint_limite_declare_response` et `TestConfigApiRootFallback`
+échouaient aléatoirement avec 8 workers (saturation page file Windows,
+documenté dans `docs/TESTING_XDIST.md`).
+
+---
+
 ## [SESSION 2026-08-02 — VEILLE TECHNOLOGIQUE + SOURCING + RFC-0031 ADOPTÉ] - 2026-08-02
 
 ### Veille technologique (8 sous-agents en parallèle)
