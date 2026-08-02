@@ -80,7 +80,7 @@ def _mock_plantnet_identify(return_value: dict | None) -> AsyncMock:
     return mock
 
 
-def should_return_identification_when_plantnet_succeeds() -> None:
+def should_return_identification_when_plantnet_succeeds(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner les résultats PlantNet formatés."""
     with patch("gsie_api.engines.botanical.router.PlantNetClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
@@ -103,7 +103,7 @@ def should_return_identification_when_plantnet_succeeds() -> None:
     assert data["results"][0]["gbif_id"] == "2878688"
 
 
-def should_return_null_when_plantnet_finds_nothing() -> None:
+def should_return_null_when_plantnet_finds_nothing(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner null quand PlantNet ne trouve rien."""
     with patch("gsie_api.engines.botanical.router.PlantNetClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
@@ -118,7 +118,7 @@ def should_return_null_when_plantnet_finds_nothing() -> None:
     assert response.json() is None
 
 
-def should_return_400_when_file_is_empty() -> None:
+def should_return_400_when_file_is_empty(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner 400 quand le fichier est vide."""
     with TestClient(create_app()) as client:
         response = client.post(
@@ -130,7 +130,7 @@ def should_return_400_when_file_is_empty() -> None:
     assert "vide" in response.json()["detail"].lower()
 
 
-def should_return_400_when_format_unsupported() -> None:
+def should_return_400_when_format_unsupported(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner 400 pour un format non supporté."""
     with TestClient(create_app()) as client:
         response = client.post(
@@ -142,7 +142,7 @@ def should_return_400_when_format_unsupported() -> None:
     assert "gif" in response.json()["detail"].lower()
 
 
-def should_return_502_when_plantnet_api_fails() -> None:
+def should_return_502_when_plantnet_api_fails(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner 502 quand l'API PlantNet échoue."""
     from gsie_api.engines.botanical.plantnet_client import PlantNetClientError
 
@@ -159,7 +159,7 @@ def should_return_502_when_plantnet_api_fails() -> None:
     assert "API indisponible" in response.json()["detail"]
 
 
-def should_return_401_when_no_auth() -> None:
+def should_return_401_when_no_auth(mock_lifespan: object) -> None:
     """L'endpoint /identify doit retourner 401 sans authentification."""
     with TestClient(create_app()) as client:
         response = client.post(
