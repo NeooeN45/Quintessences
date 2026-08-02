@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getHealth, getReady, type HealthResponse } from "../lib/api";
+import { fetchWithAuth, type HealthResponse } from "../lib/api";
+import { POLL_INTERVALS } from "../lib/constants";
 import { HoverCard, Skeleton, StatusBadge, AnimatedCounter } from "./ui";
 
 function Gauge({
@@ -186,11 +187,21 @@ export default function HealthPanel() {
   const [latency, setLatency] = useState(0);
 
   useEffect(() => {
-    const fetch = async () => {
+    const pollHealth = async () => {
       const start = performance.now();
       const results = await Promise.allSettled([
-        getHealth().then((d) => { setLiveness(d); setLiveError(null); }),
-        getReady().then((d) => { setReadiness(d); setReadyError(null); }),
+        fetchWithAuth("/health")
+          .then(async (r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return (await r.json()) as HealthResponse;
+          })
+          .then((d) => { setLiveness(d); setLiveError(null); }),
+        fetchWithAuth("/ready")
+          .then(async (r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return (await r.json()) as HealthResponse;
+          })
+          .then((d) => { setReadiness(d); setReadyError(null); }),
       ]);
       setLatency(performance.now() - start);
       if (results[0].status === "rejected") {
@@ -201,8 +212,8 @@ export default function HealthPanel() {
       }
       setLoading(false);
     };
-    fetch();
-    const interval = setInterval(fetch, 10000);
+    pollHealth();
+    const interval = setInterval(pollHealth, POLL_INTERVALS.healthPanel);
     return () => clearInterval(interval);
   }, []);
 

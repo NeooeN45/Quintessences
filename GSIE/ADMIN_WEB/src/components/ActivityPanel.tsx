@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { fetchWithAuth, API_URL } from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { HoverCard, Skeleton } from "./ui";
 import { useToast } from "./ToastProvider";
 
 // --- Constantes ---
 
-const API_URL = "http://localhost:8000";
 const SESSION_KEY = "gsie_admin_session";
-const WS_RECONNECT_DELAY = 5000;
+const WS_RECONNECT_BASE_DELAY = 1000; // backoff exponentiel de base
+const WS_RECONNECT_MAX_DELAY = 30000; // plafond du backoff
 const WS_PING_INTERVAL = 30000; // 30s heartbeat
 
 interface WSEvent {
@@ -62,13 +63,16 @@ export default function ActivityPanel() {
   const [paused, setPaused] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<number | null>(null);
+  const reconnectAttempts = useRef(0);
   const pingTimer = useRef<number | null>(null);
   const pausedRef = useRef(paused);
+  const [sessionExpired, setSessionExpired] = useState(false);
   pausedRef.current = paused;
 
   const connect = useCallback(() => {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) {
+      setSessionExpired(true);
       setState("error");
       return;
     }
@@ -77,6 +81,7 @@ export default function ActivityPanel() {
     try {
       token = JSON.parse(raw).accessToken;
     } catch {
+      setSessionExpired(true);
       setState("error");
       return;
     }
@@ -94,6 +99,7 @@ export default function ActivityPanel() {
 
     ws.onopen = () => {
       setState("connected");
+      reconnectAttempts.current = 0;
       // Heartbeat : ping toutes les 30s pour garder la connexion active
       pingTimer.current = window.setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -131,8 +137,13 @@ export default function ActivityPanel() {
     ws.onclose = () => {
       setState("disconnected");
       if (pingTimer.current) clearInterval(pingTimer.current);
-      // Reconnexion automatique
-      reconnectTimer.current = window.setTimeout(connect, WS_RECONNECT_DELAY);
+      // Reconnexion automatique avec backoff exponentiel
+      const delay = Math.min(
+        WS_RECONNECT_BASE_DELAY * 2 ** reconnectAttempts.current,
+        WS_RECONNECT_MAX_DELAY,
+      );
+      reconnectAttempts.current += 1;
+      reconnectTimer.current = window.setTimeout(connect, delay);
     };
   }, []);
 
@@ -151,15 +162,8 @@ export default function ActivityPanel() {
   // Test broadcast pour valider la connexion
   const sendTestBroadcast = async () => {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return;
-      const token = JSON.parse(raw).accessToken;
-      const res = await fetch(`${API_URL}/api/v1/ws/broadcast-test`, {
+      const res = await fetchWithAuth("/api/v1/ws/broadcast-test", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           channel: "all",
           event_type: "observation.received",
@@ -189,7 +193,7 @@ export default function ActivityPanel() {
     connecting: { label: "Connexion…", color: "var(--color-warning)" },
     connected: { label: "Connecté", color: "var(--color-accent)" },
     disconnected: { label: "Déconnecté", color: "var(--color-error)" },
-    error: { label: "Erreur", color: "var(--color-error)" },
+    error: { label: sessionExpired ? "Session expirée" : "Erreur", color: "var(--color-error)" },
   };
 
   return (
@@ -320,7 +324,7 @@ export default function ActivityPanel() {
               <p className="mt-3 text-[13px] font-medium text-fg-200">WebSocket indisponible</p>
               <p className="mt-1 max-w-sm text-xs text-fg-500">
                 L'API GSIE doit supporter les WebSocket sur /api/v1/ws/events.
-                Reconnexion automatique dans {WS_RECONNECT_DELAY / 1000}s.
+                Reconnexion automatique dans {WS_RECONNECT_MAX_DELAY / 1000}s.
               </p>
               <button
                 onClick={connect}

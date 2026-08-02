@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFocusTrap } from "../lib/useFocusTrap";
+import { API_URL } from "../lib/api";
 
 const SESSION_KEY = "gsie_admin_session";
 const ACTIVITY_KEY = "gsie-session-activity";
@@ -22,17 +23,19 @@ export default function SessionTimeout() {
   const containerRef = useFocusTrap<HTMLDivElement>(showWarning);
 
   const reset = useCallback(() => {
+    if (typeof window === "undefined") return;
     lastActivity.current = Date.now();
     setShowWarning(false);
     localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
   }, []);
 
   const extendSession = useCallback(async () => {
+    if (typeof window === "undefined") return;
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return;
     try {
       const session = JSON.parse(raw) as SessionData;
-      const res = await fetch("http://localhost:8000/api/v1/auth/refresh", {
+      const res = await fetch(`${API_URL}/api/v1/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: session.refreshToken }),
@@ -57,6 +60,7 @@ export default function SessionTimeout() {
   }, [reset]);
 
   const logout = useCallback(() => {
+    if (typeof window === "undefined") return;
     sessionStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(ACTIVITY_KEY);
     window.location.href = "/login";

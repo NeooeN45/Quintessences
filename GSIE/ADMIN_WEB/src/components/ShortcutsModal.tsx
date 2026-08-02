@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DELAYS } from "../lib/constants";
 
 const SHORTCUTS = [
   { keys: ["⌘", "K"], description: "Ouvrir la Command Palette", group: "Global" },
@@ -46,7 +47,7 @@ export default function ShortcutsModal() {
 
       if (e.key === "g" && !gPressed) {
         gPressed = true;
-        gTimer = window.setTimeout(() => { gPressed = false; }, 1000);
+        gTimer = window.setTimeout(() => { gPressed = false; }, DELAYS.gKeyTimeout);
         return;
       }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PieChart,
@@ -7,42 +7,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { getEngineStatus, type EngineStatusResponse } from "../lib/api";
+import { fetchWithAuth, API_PREFIX, type EngineStatusResponse } from "../lib/api";
+import { ENGINES, ENGINE_DESCRIPTIONS, POLL_INTERVALS } from "../lib/constants";
 import { HoverCard, Skeleton, StatusBadge, AnimatedCounter } from "./ui";
-
-const ENGINES = [
-  "evidence",
-  "knowledge",
-  "correlation",
-  "reasoning",
-  "diagnostic",
-  "recommendation",
-  "validation",
-  "gis",
-  "climate",
-  "pedology",
-  "botanical",
-  "forest_dynamics",
-  "learning",
-  "simulation",
-];
-
-const ENGINE_DESCRIPTIONS: Record<string, string> = {
-  evidence: "Collecte et validation des preuves",
-  knowledge: "Base de connaissances structurée",
-  correlation: "Détection de corrélations",
-  reasoning: "Chaînage et inférence",
-  diagnostic: "Diagnostic forestier",
-  recommendation: "Recommandations sylvicoles",
-  validation: "Validation des recommandations",
-  gis: "Moteur géospatial (PostGIS, IGN)",
-  climate: "Données climatiques (AROME, MétéoFrance)",
-  pedology: "Sols et pédologie (SoilGrids)",
-  botanical: "Botanique (GBIF, Taxref)",
-  forest_dynamics: "Dynamique forestière",
-  learning: "Apprentissage et amélioration",
-  simulation: "Simulations et scénarios",
-};
 
 export default function EnginesPanel() {
   const [statuses, setStatuses] = useState<Record<string, EngineStatusResponse | null>>({});
@@ -50,35 +17,55 @@ export default function EnginesPanel() {
   const [loading, setLoading] = useState(true);
   const [hoveredEngine, setHoveredEngine] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.allSettled(
-      ENGINES.map((engine) => getEngineStatus(engine)),
-    ).then((results) => {
-      const newStatuses: Record<string, EngineStatusResponse | null> = {};
-      const newErrors: Record<string, string | null> = {};
-      results.forEach((r, i) => {
-        const engine = ENGINES[i];
-        if (r.status === "fulfilled") {
-          newStatuses[engine] = r.value;
-          newErrors[engine] = null;
-        } else {
-          newStatuses[engine] = null;
-          newErrors[engine] = r.reason instanceof Error ? r.reason.message : "N/A";
-        }
-      });
-      setStatuses(newStatuses);
-      setErrors(newErrors);
-      setLoading(false);
-    });
+  // Fetch d'un moteur individuel — try/catch isolé pour ne pas bloquer les autres
+  const fetchEngine = useCallback(async (engine: string): Promise<void> => {
+    try {
+      const resp = await fetchWithAuth(`${API_PREFIX}/${engine}/status`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = (await resp.json()) as EngineStatusResponse;
+      setStatuses((prev) => ({ ...prev, [engine]: data }));
+      setErrors((prev) => ({ ...prev, [engine]: null }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "N/A";
+      setStatuses((prev) => ({ ...prev, [engine]: null }));
+      setErrors((prev) => ({ ...prev, [engine]: msg }));
+    }
   }, []);
+
+  // Polling des 14 moteurs — chaque moteur a son propre try/catch
+  const fetchAll = useCallback(async () => {
+    await Promise.allSettled(ENGINES.map((engine) => fetchEngine(engine)));
+  }, [fetchEngine]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let isFirstFetch = true;
+
+    const poll = async () => {
+      await fetchAll();
+      if (!cancelled && isFirstFetch) {
+        setLoading(false);
+        isFirstFetch = false;
+      }
+    };
+
+    void poll();
+
+    const intervalId = setInterval(() => { void poll(); }, POLL_INTERVALS.engines);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [fetchAll]);
 
   const stats = {
     healthy: ENGINES.filter((e) => {
       const s = statuses[e]?.status;
-      return s === "healthy" || s === "ok";
+      return s === "healthy" || s === "ok" || s === "active";
     }).length,
     degraded: ENGINES.filter((e) => statuses[e]?.status === "degraded").length,
-    down: ENGINES.filter((e) => !statuses[e] || (statuses[e]?.status !== "healthy" && statuses[e]?.status !== "ok" && statuses[e]?.status !== "degraded")).length,
+    down: ENGINES.filter((e) => !statuses[e] || (statuses[e]?.status !== "healthy" && statuses[e]?.status !== "ok" && statuses[e]?.status !== "active" && statuses[e]?.status !== "degraded")).length,
   };
 
   const donutData = [
@@ -147,7 +134,7 @@ export default function EnginesPanel() {
           {ENGINES.map((engine, i) => {
             const status = statuses[engine];
             const error = errors[engine];
-            const isHealthy = status?.status === "healthy" || status?.status === "ok";
+            const isHealthy = status?.status === "healthy" || status?.status === "ok" || status?.status === "active";
             const isDegraded = status?.status === "degraded";
             const stat: "healthy" | "degraded" | "unhealthy" | "unknown" = loading
               ? "unknown"

@@ -12,6 +12,8 @@ import {
 import { HoverCard, Skeleton, AnimatedCounter } from "./ui";
 import { useToast } from "./ToastProvider";
 import { fetchWithAuth } from "../lib/api";
+import { useDebounce } from "../lib/useDebounce";
+import { POLL_INTERVALS } from "../lib/constants";
 
 // --- Constantes ---
 
@@ -71,14 +73,13 @@ export default function ClimatePanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 300);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const fetchDanger = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/climate/danger-feux`, {
-        headers: { ...getAuthHeader() },
-      });
+      const res = await fetchWithAuth("/api/v1/climate/danger-feux");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: unknown = await res.json();
       if (!Array.isArray(json)) throw new Error("Format inattendu");
@@ -86,9 +87,15 @@ export default function ClimatePanel() {
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur";
-      setError(msg);
-      showToast(`Danger feux : ${msg}`, "error");
+      // 401 : fetchWithAuth redirige vers /login automatiquement
+      if (err instanceof TypeError) {
+        setError("API indisponible");
+        showToast("Danger feux : API indisponible", "error");
+      } else {
+        const msg = err instanceof Error ? err.message : "Erreur";
+        setError(msg);
+        showToast(`Danger feux : ${msg}`, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -96,17 +103,25 @@ export default function ClimatePanel() {
 
   const fetchVigilance = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/climate/vigilance`, {
-        headers: { ...getAuthHeader() },
-      });
+      const res = await fetchWithAuth("/api/v1/climate/vigilance");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: unknown = await res.json();
+      if (!json || typeof json !== "object" || !("domaines" in json)) {
+        setVigilanceData(null);
+        throw new Error("Format inattendu");
+      }
       setVigilanceData(json as VigilanceData);
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur";
-      showToast(`Vigilance : ${msg}`, "error");
+      // 401 : fetchWithAuth redirige vers /login automatiquement
+      if (err instanceof TypeError) {
+        setError("API indisponible");
+        showToast("Vigilance : API indisponible", "error");
+      } else {
+        const msg = err instanceof Error ? err.message : "Erreur";
+        showToast(`Vigilance : ${msg}`, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -125,7 +140,7 @@ export default function ClimatePanel() {
   // Auto-refresh 60s
   useEffect(() => {
     if (!autoRefresh) return;
-    const interval = setInterval(refresh, 60000);
+    const interval = setInterval(refresh, POLL_INTERVALS.climate);
     return () => clearInterval(interval);
   }, [autoRefresh, refresh]);
 
@@ -144,12 +159,12 @@ export default function ClimatePanel() {
 
   const filteredDeps = useMemo(() => {
     const sorted = [...dangerData].sort((a, b) => b.niveau_j1 - a.niveau_j1);
-    if (!searchQuery) return sorted;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedQuery) return sorted;
+    const q = debouncedQuery.toLowerCase();
     return sorted.filter(
       (d) => d.dep_nom.toLowerCase().includes(q) || d.dep_code.includes(q),
     );
-  }, [dangerData, searchQuery]);
+  }, [dangerData, debouncedQuery]);
 
   const chartData = useMemo(
     () =>

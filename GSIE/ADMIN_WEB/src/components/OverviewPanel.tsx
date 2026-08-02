@@ -14,14 +14,9 @@ import {
   Area,
   CartesianGrid,
 } from "recharts";
-import { getHealth, getReady, fetchWithAuth, API_URL, getAuthHeader, type HealthResponse } from "../lib/api";
+import { getHealth, getReady, fetchWithAuth, type HealthResponse } from "../lib/api";
+import { ENGINES, POLL_INTERVALS } from "../lib/constants";
 import { AnimatedCounter, HoverCard, Skeleton, Sparkline, StatusBadge } from "./ui";
-
-const ENGINES = [
-  "evidence", "knowledge", "correlation", "reasoning", "diagnostic",
-  "recommendation", "validation", "gis", "climate", "pedology",
-  "botanical", "forest_dynamics", "learning", "simulation",
-];
 
 interface HealthPoint {
   t: number;
@@ -59,7 +54,7 @@ export default function OverviewPanel() {
 
   useEffect(() => {
     fetchHealth();
-    const interval = setInterval(fetchHealth, 5000);
+    const interval = setInterval(fetchHealth, POLL_INTERVALS.health);
     return () => clearInterval(interval);
   }, [fetchHealth]);
 
@@ -82,7 +77,7 @@ export default function OverviewPanel() {
       results.forEach((r) => {
         if (r.status === "fulfilled" && r.value) {
           const s = r.value?.status;
-          if (s === "healthy" || s === "ok") healthy++;
+          if (s === "healthy" || s === "ok" || s === "active") healthy++;
           else if (s === "degraded") degraded++;
           else down++;
         } else {

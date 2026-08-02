@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "./ui";
-
-const API_URL = "http://localhost:8000";
-const SESSION_KEY = "gsie_admin_session";
+import { fetchWithAuth } from "../lib/api";
 
 interface Badge {
   id: string;
@@ -35,48 +33,30 @@ const EMPTY_STATS: GamificationStats = {
   streak: 0,
 };
 
-const FALLBACK_STATS: GamificationStats = {
-  badges: [
-    { id: "first-login", name: "Première connexion", description: "Connexion au dashboard", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", unlocked: true },
-    { id: "data-explorer", name: "Explorateur de données", description: "Consulté 50 ressources", icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z", unlocked: true },
-    { id: "centurion", name: "Centurion", description: "100 parcelles surveillées", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", unlocked: false },
-    { id: "night-owl", name: "Veilleur nocturne", description: "Actif après minuit", icon: "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z", unlocked: false },
-  ],
-  goals: [
-    { id: "parcels", label: "Parcelles surveillées", current: 73, target: 100, unit: "parcelles" },
-    { id: "alerts", label: "Alertes traitées", current: 28, target: 50, unit: "alertes" },
-    { id: "reports", label: "Rapports générés", current: 12, target: 20, unit: "rapports" },
-  ],
-  streak: 7,
-};
-
-function getAuthHeader(): Record<string, string> {
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) return {};
-  try {
-    return { Authorization: `Bearer ${JSON.parse(raw).accessToken}` };
-  } catch {
-    return {};
-  }
-}
-
 export default function GamificationPanel() {
   const [stats, setStats] = useState<GamificationStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const resp = await fetch(`${API_URL}/api/v1/gamification/stats`, {
-          headers: { ...getAuthHeader() },
-        });
+        const resp = await fetchWithAuth("/api/v1/gamification/stats");
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         if (!cancelled) setStats(data);
       } catch (err) {
+        // 401 : fetchWithAuth redirige vers /login automatiquement
+        if (!cancelled) {
+          if (err instanceof TypeError) {
+            setError("API indisponible");
+          } else {
+            setError(err instanceof Error ? err.message : "Erreur");
+          }
+          setStats(EMPTY_STATS);
+        }
         console.error("[GamificationPanel]", err);
-        if (!cancelled) setStats(EMPTY_STATS);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -101,14 +81,29 @@ export default function GamificationPanel() {
     );
   }
 
-  const hasData = stats.badges.length > 0 || stats.goals.length > 0;
-  const displayStats = hasData ? stats : FALLBACK_STATS;
+  const hasData = stats.badges.length > 0 || stats.goals.length > 0 || stats.streak > 0;
+
+  if (!hasData && !loading && !error) {
+    return (
+      <div className="rounded-lg border border-border bg-bg-100 p-8 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-bg-200">
+          <svg className="h-6 w-6 text-fg-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-sm font-medium text-fg-200">Aucune donnée de gamification</h3>
+        <p className="mt-1 text-xs text-fg-500">
+          Les statistiques d'engagement apparaîtront ici quand l'endpoint /gamification/stats sera disponible.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 rounded-lg border border-border bg-bg-100 p-4">
-      <StreakSection streak={displayStats.streak} />
-      <BadgesSection badges={displayStats.badges} />
-      <ProgressSection goals={displayStats.goals} />
+      <StreakSection streak={stats.streak} />
+      <BadgesSection badges={stats.badges} />
+      <ProgressSection goals={stats.goals} />
     </div>
   );
 }

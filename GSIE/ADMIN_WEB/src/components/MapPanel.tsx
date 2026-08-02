@@ -2,11 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { fetchWithAuth } from "../lib/api";
 
 // --- Constantes ---
-
-const API_URL = "http://localhost:8000";
-const SESSION_KEY = "gsie_admin_session";
 
 const LEVEL_COLORS: Record<number, { label: string; color: string }> = {
   1: { label: "Faible", color: "#22c55e" },
@@ -135,18 +133,6 @@ interface HexCell {
 
 // --- Helpers ---
 
-function getAuthHeader(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) return {};
-  try {
-    const s = JSON.parse(raw) as { accessToken: string };
-    return { Authorization: `Bearer ${s.accessToken}` };
-  } catch {
-    return {};
-  }
-}
-
 function hexPoints(cx: number, cy: number, size: number): string {
   const pts: string[] = [];
   for (let i = 0; i < 6; i++) {
@@ -172,16 +158,19 @@ export default function MapPanel() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/climate/danger-feux`, {
-        headers: { ...getAuthHeader() },
-      });
+      const res = await fetchWithAuth("/api/v1/climate/danger-feux");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: unknown = await res.json();
       if (!Array.isArray(json)) throw new Error("Format inattendu");
       setData(json as DangerDep[]);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
+      // 401 : fetchWithAuth redirige vers /login automatiquement
+      if (err instanceof TypeError) {
+        setError("API indisponible");
+      } else {
+        setError(err instanceof Error ? err.message : "Erreur");
+      }
     } finally {
       setLoading(false);
     }

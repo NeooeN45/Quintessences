@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchWithAuth, API_PREFIX } from "../lib/api";
 
 // --- Types ---
 
@@ -26,9 +27,6 @@ interface ApiNotification {
 
 // --- Constantes ---
 
-const API_URL = "http://localhost:8000";
-const API_PREFIX = "/api/v1";
-const SESSION_KEY = "gsie_admin_session";
 const POLL_INTERVAL = 30000;
 const EASE_OUT_QUART: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -43,18 +41,6 @@ const TYPE_CONFIG: Record<
 };
 
 // --- Helpers ---
-
-function getAuthHeader(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) return {};
-  try {
-    const s = JSON.parse(raw) as { accessToken: string };
-    return { Authorization: `Bearer ${s.accessToken}` };
-  } catch {
-    return {};
-  }
-}
 
 function normalizeType(raw?: string): Notification["type"] {
   if (raw === "success" || raw === "warning" || raw === "error") return raw;
@@ -98,15 +84,21 @@ export default function NotificationCenter() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const resp = await fetch(`${API_URL}${API_PREFIX}/notifications`, {
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
-      });
+      const resp = await fetchWithAuth(`${API_PREFIX}/notifications`);
+      // Endpoint pas encore implémenté — 0 notifications au lieu de crasher
+      if (resp.status === 404) {
+        setNotifications([]);
+        setError(null);
+        return;
+      }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const body = await resp.json();
       const items: ApiNotification[] = Array.isArray(body) ? body : (body.items ?? []);
       setNotifications(items.map(normalizeNotification));
       setError(null);
     } catch {
+      // 401 → fetchWithAuth a déjà redirigé vers /login
+      // API down ou autre erreur réseau — afficher "Erreur" sur la cloche
       setError("Impossible de charger les notifications");
     } finally {
       setLoading(false);
@@ -134,10 +126,7 @@ export default function NotificationCenter() {
   const markAllRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
-      await fetch(`${API_URL}${API_PREFIX}/notifications/read-all`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
-      });
+      await fetchWithAuth(`${API_PREFIX}/notifications/read-all`, { method: "POST" });
     } catch {
       // Échec silencieux — l'UI reste à jour localement
     }
@@ -163,6 +152,14 @@ export default function NotificationCenter() {
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </motion.span>
+        )}
+        {error && unreadCount === 0 && (
+          <span
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-[9px] font-bold text-white"
+            title="Erreur de chargement des notifications"
+          >
+            !
+          </span>
         )}
       </button>
 
@@ -193,8 +190,8 @@ export default function NotificationCenter() {
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-accent" />
                 </div>
               ) : error && notifications.length === 0 ? (
-                <div className="px-4 py-8 text-center text-xs text-fg-500">
-                  Aucune notification
+                <div className="px-4 py-8 text-center text-xs text-error">
+                  {error}
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-xs text-fg-500">

@@ -72,6 +72,8 @@ import AdminLayout from "../layouts/AdminLayout.astro";
 </AdminLayout>
 
 <script>
+  import { API_URL, API_PREFIX } from "../lib/api";
+
   const form = document.getElementById("login-form") as HTMLFormElement;
   const errorMsg = document.getElementById("error-msg");
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
@@ -87,7 +89,7 @@ import AdminLayout from "../layouts/AdminLayout.astro";
     const password = formData.get("password") as string;
 
     try {
-      const resp = await fetch("http://localhost:8000/api/v1/auth/login", {
+      const resp = await fetch(`${API_URL}${API_PREFIX}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -111,12 +113,11 @@ import AdminLayout from "../layouts/AdminLayout.astro";
       sessionStorage.setItem("gsie_admin_session", JSON.stringify(session));
       window.location.href = "/";
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur de connexion";
-      // Détecter les erreurs réseau (API down)
-      if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("load failed")) {
-        errorMsg.textContent = "API indisponible — vérifiez que le serveur GSIE est démarré (port 8000).";
+      // Erreur réseau (API down) — TypeError: Failed to fetch
+      if (err instanceof TypeError) {
+        errorMsg.textContent = "API indisponible";
       } else {
-        errorMsg.textContent = msg;
+        errorMsg.textContent = err instanceof Error ? err.message : "Erreur de connexion";
       }
       errorMsg.classList.remove("hidden");
       submitBtn.disabled = false;

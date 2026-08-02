@@ -5,11 +5,16 @@ import Topbar from "../components/Topbar.astro";
 import CommandPalette from "../components/CommandPalette.tsx";
 import ShortcutsModal from "../components/ShortcutsModal.tsx";
 import SessionTimeout from "../components/SessionTimeout.tsx";
+import { API_URL } from "../lib/api";
 
 const { title = "Dashboard" } = Astro.props;
 const currentPath = Astro.url.pathname;
 
 const isLoginPage = currentPath === "/login";
+
+// URLs externes — configurables via env vars
+const METABASE_URL = import.meta.env.PUBLIC_METABASE_URL ?? "http://localhost:3030";
+const SUPERSET_URL = import.meta.env.PUBLIC_SUPERSET_URL ?? "http://localhost:8088";
 ---
 
 <!doctype html>
@@ -66,9 +71,9 @@ const isLoginPage = currentPath === "/login";
             <div class="flex items-center justify-between">
               <span>GSIE — General System Intelligence Engine</span>
               <div class="flex items-center gap-4">
-                <a href="http://localhost:8000/docs" target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">API Docs</a>
-                <a href="http://localhost:3030" target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Metabase</a>
-                <a href="http://localhost:8088" target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Superset</a>
+                <a href={API_URL + "/docs"} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">API Docs</a>
+                <a href={METABASE_URL} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Metabase</a>
+                <a href={SUPERSET_URL} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Superset</a>
                 <span id="footer-version">v0.1.0</span>
               </div>
             </div>

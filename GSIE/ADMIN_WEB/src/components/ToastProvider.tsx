@@ -7,6 +7,7 @@ import {
 } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Toast } from "./ui";
+import { DELAYS } from "../lib/constants";
 
 interface ToastItem {
   id: number;
@@ -31,7 +32,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((prev) => [...prev, { id, message, type }]);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+      }, DELAYS.toastDismiss);
     },
     [],
   );

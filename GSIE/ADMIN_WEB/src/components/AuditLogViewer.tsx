@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "./ui";
+import { fetchWithAuth } from "../lib/api";
+import { useDebounce } from "../lib/useDebounce";
 
-const API_URL = "http://localhost:8000";
-const SESSION_KEY = "gsie_admin_session";
 const PAGE_SIZE = 10;
 
 type ActionType = "create" | "update" | "delete" | "export";
@@ -33,16 +33,6 @@ const ACTION_OPTIONS: { value: ActionType; label: string }[] = [
   { value: "delete", label: "Suppression" },
   { value: "export", label: "Export" },
 ];
-
-function getAuthHeader(): Record<string, string> {
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) return {};
-  try {
-    return { Authorization: `Bearer ${JSON.parse(raw).accessToken}` };
-  } catch {
-    return {};
-  }
-}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -87,19 +77,27 @@ export default function AuditLogViewer() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const debouncedUser = useDebounce(userFilter, 300);
+  const debouncedDateFrom = useDebounce(dateFrom, 300);
+  const debouncedDateTo = useDebounce(dateTo, 300);
+
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_URL}/api/v1/audit-logs`, {
-        headers: { ...getAuthHeader() },
-      });
+      const resp = await fetchWithAuth("/api/v1/audit-logs");
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       setLogs(Array.isArray(data) ? data : (data.items ?? []));
     } catch (err) {
-      console.error("[AuditLogViewer]", err);
+      // 401 : fetchWithAuth redirige vers /login automatiquement
+      if (err instanceof TypeError) {
+        setError("API indisponible");
+      } else {
+        setError(err instanceof Error ? err.message : "Erreur");
+      }
       setLogs([]);
+      console.error("[AuditLogViewer]", err);
     } finally {
       setLoading(false);
     }
@@ -111,15 +109,15 @@ export default function AuditLogViewer() {
 
   const filtered = useMemo(() => {
     return logs.filter((log) => {
-      if (userFilter && !log.user.toLowerCase().includes(userFilter.toLowerCase()))
+      if (debouncedUser && !log.user.toLowerCase().includes(debouncedUser.toLowerCase()))
         return false;
       if (actionFilter && log.action !== actionFilter) return false;
-      if (dateFrom && new Date(log.timestamp) < new Date(dateFrom)) return false;
-      if (dateTo && new Date(log.timestamp) > new Date(dateTo + "T23:59:59"))
+      if (debouncedDateFrom && new Date(log.timestamp) < new Date(debouncedDateFrom)) return false;
+      if (debouncedDateTo && new Date(log.timestamp) > new Date(debouncedDateTo + "T23:59:59"))
         return false;
       return true;
     });
-  }, [logs, userFilter, actionFilter, dateFrom, dateTo]);
+  }, [logs, debouncedUser, actionFilter, debouncedDateFrom, debouncedDateTo]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const pageLogs = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);

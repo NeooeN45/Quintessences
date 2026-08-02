@@ -1,6 +1,8 @@
 ---
 // Topbar entreprise — sticky, avec profil user, badge env, search, horloge.
 // Style Linear/Vercel Pro : dense, hairline borders, tabular nums.
+import { API_URL } from "../lib/api";
+import { POLL_INTERVALS } from "../lib/constants";
 const { currentPath = "/" } = Astro.props;
 
 const breadcrumbMap: Record<string, string> = {
@@ -127,7 +129,7 @@ const breadcrumb = breadcrumbMap[currentPath] ?? "404";
       </svg>
       Journal d'audit
     </a>
-    <a href="http://localhost:8000/docs" target="_blank" rel="noopener" class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] text-fg-300 transition-colors hover:bg-bg-200 hover:text-fg-100" role="menuitem">
+    <a href={API_URL + "/docs"} target="_blank" rel="noopener" class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] text-fg-300 transition-colors hover:bg-bg-200 hover:text-fg-100" role="menuitem">
       <svg class="h-3.5 w-3.5 text-fg-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
       </svg>
@@ -166,7 +168,10 @@ const breadcrumb = breadcrumbMap[currentPath] ?? "404";
   </div>
 </header>
 
-<script is:inline>
+<script>
+  import { API_URL } from "../lib/api";
+  import { POLL_INTERVALS } from "../lib/constants";
+
   // --- User menu ---
   const userTrigger = document.getElementById("user-menu-trigger");
   const userDropdown = document.getElementById("user-dropdown");
@@ -241,7 +246,7 @@ const breadcrumb = breadcrumbMap[currentPath] ?? "404";
     el.textContent = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
   updateClock();
-  setInterval(updateClock, 1000);
+  const clockInterval = setInterval(updateClock, POLL_INTERVALS.clock);
 
   // --- API status ---
   async function checkApiStatus() {
@@ -249,7 +254,7 @@ const breadcrumb = breadcrumbMap[currentPath] ?? "404";
     const pill = document.getElementById("topbar-api-status");
     if (!label || !pill) return;
     try {
-      const resp = await fetch("http://localhost:8000/health");
+      const resp = await fetch(`${API_URL}/health`);
       if (resp.ok) {
         const data = await resp.json();
         label.textContent = data.status === "healthy" ? "OK" : data.status;
@@ -269,7 +274,13 @@ const breadcrumb = breadcrumbMap[currentPath] ?? "404";
     }
   }
   checkApiStatus();
-  setInterval(checkApiStatus, 30000);
+  const apiStatusInterval = setInterval(checkApiStatus, POLL_INTERVALS.apiStatus);
+
+  // --- Cleanup des intervals (SPA-like) ---
+  window.addEventListener("beforeunload", () => {
+    clearInterval(clockInterval);
+    clearInterval(apiStatusInterval);
+  });
 
   // --- Theme toggle (dropdown) ---
   const ddThemeToggle = document.getElementById("dd-theme-toggle");

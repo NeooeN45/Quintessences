@@ -3,6 +3,8 @@
 // statut API en footer, pas de décorations.
 // Responsive : hamburger sur mobile, fixe sur desktop.
 import NotificationCenter from "./NotificationCenter.tsx";
+import { API_URL } from "../lib/api";
+import { POLL_INTERVALS } from "../lib/constants";
 const { currentPath = "/" } = Astro.props;
 
 const navGroups = [
@@ -128,7 +130,10 @@ const navGroups = [
 
 <div class="hidden w-60 flex-shrink-0 lg:block"></div>
 
-<script is:inline>
+<script>
+  import { API_URL } from "../lib/api";
+  import { POLL_INTERVALS } from "../lib/constants";
+
   // --- Mobile sidebar toggle ---
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebar-overlay");
@@ -149,7 +154,7 @@ const navGroups = [
   // Fermer la sidebar mobile après navigation
   document.querySelectorAll("#sidebar a").forEach((a) => {
     a.addEventListener("click", () => {
-      if (window.innerWidth < 1024) closeSidebar();
+      if (typeof window !== "undefined" && window.innerWidth < 1024) closeSidebar();
     });
   });
 
@@ -157,6 +162,7 @@ const navGroups = [
   function updateSessionCountdown() {
     const el = document.getElementById("session-time");
     if (!el) return;
+    if (typeof window === "undefined") return;
     const raw = sessionStorage.getItem("gsie_admin_session");
     if (!raw) {
       el.textContent = "Session: —";
@@ -185,14 +191,14 @@ const navGroups = [
     }
   }
   updateSessionCountdown();
-  setInterval(updateSessionCountdown, 1000);
+  setInterval(updateSessionCountdown, POLL_INTERVALS.sessionCountdown);
 
   // --- API version (sidebar footer) ---
   async function loadApiVersion() {
     const vEl = document.getElementById("api-version");
     if (!vEl) return;
     try {
-      const resp = await fetch("http://localhost:8000/health");
+      const resp = await fetch(`${API_URL}/health`);
       if (resp.ok) {
         const data = await resp.json();
         if (data.version) vEl.textContent = `v${data.version}`;

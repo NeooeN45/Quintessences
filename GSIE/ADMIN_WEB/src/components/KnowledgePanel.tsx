@@ -11,12 +11,12 @@ import {
 } from "recharts";
 import { HoverCard, Skeleton, AnimatedCounter, StatusBadge } from "./ui";
 import { useToast } from "./ToastProvider";
+import { fetchWithAuth, API_URL } from "../lib/api";
+import { POLL_INTERVALS } from "../lib/constants";
 
 // --- Constantes ---
 
-const SESSION_KEY = "gsie_admin_session";
-const STATS_ENDPOINT = "http://localhost:8000/api/v1/knowledge/stats";
-const REFRESH_INTERVAL_MS = 30_000;
+const STATS_ENDPOINT = `${API_URL}/api/v1/knowledge/stats`;
 
 const ACCENT_COLOR = "var(--color-accent)";
 const BAR_COLORS = [
@@ -45,13 +45,7 @@ interface KnowledgeStats {
   avgPerType: number;
 }
 
-interface SessionData {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-}
-
-// --- Parsing de la réponse API ---
+// --- Tooltip personnalisé pour le bar chart ---
 
 /**
  * Extrait les paires type -> count depuis la réponse de l'API.
@@ -136,24 +130,6 @@ function parseStatsResponse(data: unknown): KnowledgeStats {
   return { byType, totalObjects, distinctTypes, maxCount, avgPerType };
 }
 
-// --- Récupération du token ---
-
-function getAccessToken(): string | null {
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) return null;
-  try {
-    const session = JSON.parse(raw) as SessionData;
-    if (Date.now() > session.expiresAt) {
-      sessionStorage.removeItem(SESSION_KEY);
-      return null;
-    }
-    return session.accessToken;
-  } catch {
-    sessionStorage.removeItem(SESSION_KEY);
-    return null;
-  }
-}
-
 // --- Tooltip personnalisé pour le bar chart ---
 
 function ChartTooltip({
@@ -184,28 +160,8 @@ export default function KnowledgePanel() {
   const { showToast } = useToast();
 
   const fetchStats = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      const msg = "Session expirée — veuillez vous reconnecter";
-      setError(msg);
-      showToast(msg, "error");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const resp = await fetch(STATS_ENDPOINT, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (resp.status === 401) {
-        sessionStorage.removeItem(SESSION_KEY);
-        const msg = "Token invalide ou expiré — reconnexion requise";
-        setError(msg);
-        showToast(msg, "error");
-        setLoading(false);
-        return;
-      }
+      const resp = await fetchWithAuth(STATS_ENDPOINT);
 
       if (!resp.ok) {
         let detail = `Erreur ${resp.status}`;
@@ -219,10 +175,17 @@ export default function KnowledgePanel() {
       }
 
       const data = await resp.json();
-      const parsed = parseStatsResponse(data);
+      let parsed: KnowledgeStats;
+      try {
+        parsed = parseStatsResponse(data);
+      } catch {
+        // Format inattendu — afficher "—" au lieu de crasher
+        parsed = { byType: [], totalObjects: 0, distinctTypes: 0, maxCount: 0, avgPerType: 0 };
+      }
       setStats(parsed);
       setError(null);
     } catch (err) {
+      // fetchWithAuth lance ApiError(401) après redirection vers /login
       const msg =
         err instanceof Error
           ? `Stats connaissance : ${err.message}`
@@ -236,7 +199,7 @@ export default function KnowledgePanel() {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, REFRESH_INTERVAL_MS);
+    const interval = setInterval(fetchStats, POLL_INTERVALS.knowledge);
     return () => clearInterval(interval);
   }, [fetchStats]);
 
