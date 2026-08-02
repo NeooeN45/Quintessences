@@ -28,9 +28,13 @@ from gsie_api.shared.http_client import ResilientHttpClient
 
 _COMMONS_BASE_URL = "https://commons.wikimedia.org"
 _WIKIPEDIA_BASE_URL = "https://en.wikipedia.org"
+_WIKIPEDIA_FR_BASE_URL = "https://fr.wikipedia.org"
 _DEFAULT_TIMEOUT = 30.0
 _THUMBNAIL_WIDTH = 400
 _MAX_IMAGES = 3
+# Seuil de qualité d'une description (en caractères). En dessous, la
+# description est considérée comme un stub et non stockée (audit P2-1).
+_MIN_DESCRIPTION_LENGTH = 100
 
 
 class WikimediaClientError(Exception):
@@ -124,14 +128,17 @@ class WikimediaClient(ResilientHttpClient):
 
         return images
 
-    async def get_species_description(self, scientific_name: str) -> str | None:
-        """Récupère l'extrait introductif de l'article Wikipédia (EN).
-
-        L'API EN est utilisée car plus exhaustive pour les espèces que la FR
-        (vérifié sur Abies alba : extrait EN ~300 chars, extrait FR vide).
+    async def get_species_description(
+        self,
+        scientific_name: str,
+        *,
+        language: str = "en",
+    ) -> str | None:
+        """Récupère l'extrait introductif de l'article Wikipédia.
 
         Args:
             scientific_name: nom scientifique (ex. "Abies alba")
+            language: code langue ISO 639-1 ("en" par défaut, "fr" pour FR)
 
         Returns:
             L'extrait en plain text, ou None si aucun article n'existe.
@@ -139,9 +146,9 @@ class WikimediaClient(ResilientHttpClient):
         Raises:
             WikimediaClientError: en cas d'erreur réseau ou de réponse inattendue.
         """
-        # Wikipédia utilise un host différent — on construit l'URL manuellement
+        base_url = _WIKIPEDIA_FR_BASE_URL if language == "fr" else _WIKIPEDIA_BASE_URL
         data: dict[str, Any] = await self._get_json(
-            f"{_WIKIPEDIA_BASE_URL}/w/api.php",
+            f"{base_url}/w/api.php",
             params={
                 "action": "query",
                 "prop": "extracts",
@@ -151,7 +158,7 @@ class WikimediaClient(ResilientHttpClient):
                 "format": "json",
                 "redirects": "1",
             },
-            error_label=f"de l'extrait Wikipédia pour '{scientific_name}'",
+            error_label=f"de l'extrait Wikipédia ({language}) pour '{scientific_name}'",
         )
 
         pages = data.get("query", {}).get("pages", {})
@@ -164,6 +171,34 @@ class WikimediaClient(ResilientHttpClient):
         if not extract:
             return None
         return str(extract).strip()
+
+    async def get_species_description_with_fallback(
+        self,
+        scientific_name: str,
+    ) -> tuple[str | None, str]:
+        """Récupère la description EN, puis fallback FR si EN absent/trop court.
+
+        Args:
+            scientific_name: nom scientifique (ex. "Abies alba")
+
+        Returns:
+            Tuple (description, langue) — description peut être None,
+            langue est "en", "fr" ou "" si aucune trouvée.
+        """
+        # 1. Tentative EN
+        desc_en = await self.get_species_description(scientific_name, language="en")
+        if desc_en and len(desc_en) >= _MIN_DESCRIPTION_LENGTH:
+            return desc_en, "en"
+
+        # 2. Fallback FR si EN absent ou trop court
+        desc_fr = await self.get_species_description(scientific_name, language="fr")
+        if desc_fr and len(desc_fr) >= _MIN_DESCRIPTION_LENGTH:
+            return desc_fr, "fr"
+
+        # 3. Retourner EN même si court (mieux que rien)
+        if desc_en:
+            return desc_en, "en"
+        return None, ""
 
 
 def _strip_html(html: str) -> str:

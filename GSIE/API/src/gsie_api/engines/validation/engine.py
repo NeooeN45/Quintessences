@@ -33,6 +33,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -46,8 +47,8 @@ from gsie_api.engines.validation.schemas import (
     ValidationResult,
     ValidationStatut,
 )
-from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.infrastructure.models.enrichment import ValidationResultModel
+from gsie_api.infrastructure.models.temporal_engine import RevisionModel
 
 logger = get_logger("gsie_api.validation.engine")
 
@@ -138,8 +139,17 @@ class ValidationEngine:
             date_validation=datetime.now(UTC),
         )
 
-        # Persistance des résultats bloqués pour le Learning Engine
-        if statut != ValidationStatut.valide and self._session is not None:
+        # Persistance obligatoire des résultats bloqués/partiels pour le
+        # Learning Engine. Un ValidationEngine construit sans session ne peut
+        # pas remplir ce contrat — on lève plutôt que d'avaler silencieusement
+        # un pattern de blocage récurrent (RFC-0028, migration 0028).
+        if statut != ValidationStatut.valide:
+            if self._session is None:
+                raise ValidationEngineError(
+                    "Persistance du résultat de validation requise (statut "
+                    f"{statut.value}) mais aucune session DB fournie — le "
+                    "Learning Engine perdrait ce pattern de blocage."
+                )
             await self._persist_result(request, result)
 
         return result
@@ -147,27 +157,44 @@ class ValidationEngine:
     async def _persist_result(self, request: ValidationRequest, result: ValidationResult) -> None:
         """Persiste un résultat bloqué/partiel pour alimentation du Learning Engine.
 
-        Crée la resource racine puis la ligne validation_result. La
-        resource porte un gsie_id dérivé du validation_id (uuid4), ce
-        qui la rend traçable sans être reproductible — un rejeu produit
-        un nouvel identifiant, conforme à l'unicité attendue.
+        La ligne ``validation_result`` est un attribut de la resource validée
+        (``requete_id``), pas une resource à part entière — conforme à la
+        docstring de ``models/enrichment.py`` qui exclut ces tables du
+        métamodèle (pas de ``register_type``). La FK ``requete_origine`` pointe
+        donc vers la resource existante, pas vers une resource fantôme.
+
+        Invariant CON-010 : une Revision v1 est créée sur la resource origine,
+        comme pour toute insertion de resource (``ResourceService.create``,
+        ``KnowledgeEngine``). Sans cela, le chemin d'écriture contourne
+        l'invariant documenté dans ``ingestion/bulk.py``.
         """
         session = self._session
         if session is None:
-            return
+            return  # garde-fou — le caller (validate) a déjà levé si besoin
 
-        # La resource racine doit exister pour la FK — on la crée si besoin.
-        # L'appelant (router) passe une session ; la resource est créée ici.
-        resource_id = uuid4()
+        resource_id = request.requete_id
+
+        # Invariant CON-010 : une Revision est créée pour toute resource
+        # affectée. Ici la resource origine reçoit une revision traçant
+        # le passage en validation.
+        next_version = (
+            await session.execute(
+                select(func.max(RevisionModel.version)).where(
+                    RevisionModel.target_id == resource_id
+                )
+            )
+        ).scalar_one()
+        version = (next_version or 0) + 1
+        now = datetime.now(UTC)
         session.add(
-            ResourceModel(
-                id=resource_id,
-                type="validation_result",
-                gsie_id=f"gsie:validation:{result.validation_id}",
-                metadata_json={
-                    "requete_origine": str(request.requete_id),
-                    "type_sortie": request.type_sortie.value,
-                },
+            RevisionModel(
+                target_id=resource_id,
+                version=version,
+                justification=(
+                    f"Validation {result.statut.value}" f" — {len(result.causes_blocage)} cause(s)"
+                ),
+                valid_time_start=now,
+                transaction_time=now,
             )
         )
         await session.flush()

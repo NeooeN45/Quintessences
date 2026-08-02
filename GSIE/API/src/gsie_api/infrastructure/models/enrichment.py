@@ -1,19 +1,25 @@
-"""Modèles d'enrichissement — images, descriptions multilingues, progression.
+"""Modèles d'enrichissement — images, descriptions multilingues, progression,
+résultats de validation.
 
-Tables satellites introduites par la migration `20260801_0027` pour
-structurer les données d'enrichissement Treekipedia (audit qualité base
-du 2026-08-01) :
+Tables satellites attachées à une `resource` existante (pas des types du
+métamodèle — pas de `register_type`) :
 
 - `entity_image` : images d'espèces (Wikimedia Commons, etc.) — remplace
   le stockage dans `metadata_json->primary_image`. Permet multi-images,
-  validation de URLs, index sur `entity_id`.
+  validation de URLs, index sur `entity_id`. Introduite par la migration
+  `20260801_0027` (audit qualité base du 2026-08-01).
 - `entity_description` : descriptions multilingues (Wikipédia EN/FR,
-  etc.) — remplace `metadata_json->wikipedia_extract`.
+  etc.) — remplace `metadata_json->wikipedia_extract`. Migration 0027.
 - `ingestion_progress` : checkpoint de progression pour reprise
-  automatique après crash du pipeline d'ingestion.
+  automatique après crash du pipeline d'ingestion. Migration 0027.
+- `validation_result` : résultat de validation persisté — alimentation
+  du Learning Engine (RFC-0028, migration 0028). Seuls les résultats
+  `bloque` et `partiellement_valide` sont persistés ; la FK
+  `requete_origine` pointe vers la resource validée (diagnostic ou
+  recommandation), pas vers une resource fantôme.
 
 Ces tables ne sont pas des types du métamodèle (pas de `register_type`) :
-ce sont des attributs multi-valués d'une `entity`, pas des ressources à
+ce sont des attributs multi-valués d'une `resource`, pas des ressources à
 part entière. Elles ont leur propre PK UUID et FK vers `resource.id`.
 """
 

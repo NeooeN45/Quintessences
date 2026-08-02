@@ -7,7 +7,6 @@ la même base de test sans relancer un conteneur Docker par fichier.
 
 import asyncio
 import os
-import warnings
 from collections.abc import AsyncGenerator, Iterator, Sequence
 from contextlib import ExitStack
 from typing import Any
@@ -63,17 +62,9 @@ def _ensure_fresh_event_loop() -> object:
     est fermée, on en crée une nouvelle. Pour les tests async, pytest-asyncio
     crée sa propre loop (qui remplace celle-ci). Le coût est négligeable
     (un test ``is_closed()`` par test).
-
-    ``get_event_loop()`` émet un ``DeprecationWarning`` quand aucune loop
-    n'est posée — et c'est justement le cas qu'on interroge. Le filtre est
-    local à l'appel : on tait l'avertissement de la sonde, pas ceux du code
-    testé. L'API disparaît en 3.14 ; d'ici là, elle reste le seul moyen de
-    savoir si la loop courante est fermée sans en créer une au passage.
     """
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            loop = asyncio.get_event_loop_policy().get_event_loop()
+        loop = asyncio.get_event_loop_policy().get_event_loop()
         if loop.is_closed():
             asyncio.set_event_loop(asyncio.new_event_loop())
     except RuntimeError:
@@ -90,26 +81,52 @@ def _reset_rate_limiter() -> object:
     les compteurs s'accumulent entre tests dans le même worker xdist et les
     tests E2E reçoivent un ``429 Too Many Requests`` fallacieux.
 
-    ``limiter.reset()`` vide le storage (Redis ou memory). Les tests qui
-    vérifient explicitement le comportement du rate limiter
-    (``test_rate_limit_bulk.py``, ``test_limiter_contrat.py``) utilisent
-    leur propre limiter mocké et ne sont pas affectés.
+    **Isolation du stockage.** Le limiter production utilise Redis (DB 1)
+    partagé entre workers Gunicorn. En test xdist, ce Redis est partagé entre
+    les workers pytest : un worker peut épuiser le quota d'un endpoint avant
+    qu'un autre worker n'arrive, produisant des 429 fallacieux. La réponse
+    correcte est d'isoler le stockage, pas de couper le contrôle :
+    ``storage_uri="memory://"`` donne un compteur par processus, chaque
+    worker xdist a le sien, et les limites redeviennent testables partout.
+
+    Un test de sécurité qui ne s'exécute pas se distingue mal d'un test qui
+    passe (cf. commentaire dans ``_docker_available`` plus bas) : on garde le
+    limiter actif pour toute la suite, pas seulement les tests dont le nom
+    contient ``rate_limit`` — sélection par nom = couplage fragile qui prive
+    silencieusement un test renommé de son propre sujet.
     """
     from gsie_api.core.limiter import limiter
 
+    # Compteur par processus (memory://) : chaque worker xdist a le sien,
+    # fini les 429 fallacieux cross-worker. Le limiter reste actif partout.
+    limiter._storage_uri = "memory://"
+    limiter.enabled = True
     limiter.reset()
     yield
+    limiter.reset()
 
 
-# Fichiers dont les tests dépendent d'un état de concurrence réel (verrous
-# PostgreSQL `FOR UPDATE SKIP LOCKED`) ou d'un quota de rate limiter partagé
-# sur Redis, et ne doivent jamais tourner en parallèle avec un autre test du
-# même fichier. On ne modifie pas le fichier de test lui-même : le marquage
-# se fait ici, à la collecte.
+# Fichiers dont les tests partagent un état global (DB PostgreSQL, singleton
+# de métriques, quota Redis) et ne doivent pas tourner en parallèle sur
+# plusieurs workers xdist. On ne modifie pas le fichier de test lui-même :
+# le marquage se fait ici, à la collecte.
+#
+# Le groupe xdist porte un nom générique — ces fichiers couvrent l'outbox,
+# l'orchestration, les index Treekipedia et les métriques DB, pas seulement
+# la concurrence outbox. Le nom ancien `outbox_concurrence` décrivait mal le
+# contenu et grandissait au fil des ajouts.
 _FICHIERS_SERIAL = (
     "test_outbox_concurrence.py",
-    "test_e2e_cross_engines.py",  # TestRateLimiting consomme 35 req sur /correlation/compute
+    "test_e2e_cross_engines.py",  # TestRateLimiting — 35 req consécutives
+    "test_e2e_api.py",  # TestCorrelationComputeE2E — état DB partagé
+    "test_orchestration.py",  # Chaîne complète — état DB partagé
+    "test_pipeline_api.py",  # Pipeline complet — état DB partagé
+    "test_resources_api_validation.py",  # Révisions + outbox — état DB partagé
+    "test_recommendation_diagnostic.py",  # Diagnostic → recommandation — état DB partagé
+    "test_db_quality_metrics.py",  # Patch collect_db_metrics — singleton partagé
+    "test_treekipedia_performance.py",  # Index lookup — état DB partagé
 )
+_XDIST_SERIAL_GROUP = "shared_state_serial"
 
 
 def pytest_collection_modifyitems(items: Sequence[Any]) -> None:
@@ -119,7 +136,7 @@ def pytest_collection_modifyitems(items: Sequence[Any]) -> None:
     for item in items:
         if item.fspath.basename in _FICHIERS_SERIAL:
             item.add_marker(pytest.mark.serial)
-            item.add_marker(pytest.mark.xdist_group(name="outbox_concurrence"))
+            item.add_marker(pytest.mark.xdist_group(name=_XDIST_SERIAL_GROUP))
 
 
 def _docker_available(tentatives: int = 3, pause: float = 2.0) -> bool:
