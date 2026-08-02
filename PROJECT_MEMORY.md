@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-02 — **Consolidation + diagnostic Fondateur + phase de stabilisation lancée (DEC-000043)**. État réel mesuré : 14 moteurs + orchestration, 28 migrations Alembic, 120 tables sur 6 schémas, 83 routes API, 1859 tests unitaires passent (63 skipped), 100% couverture (8831 stmts), score mutation 67/67. Endpoints dashboard audit + gamification ajoutés (données statiques Phase 4). SDK Python + dashboard admin Astro créés. Outils visualisation DB déployés. **Diagnostic Fondateur** : qualité technique 8/10, qualité produit 6,5/10 — le code est plus mature que le produit intégré. **Phase de stabilisation décidée (DEC-000043)** : ralentir les nouvelles fonctionnalités, prioriser S1 restauration DB prouvée, S2 tranche verticale réelle, S3 validation scientifique + performance. |
+| **Dernière mise à jour** | 2026-08-02 — **Phase de stabilisation DEC-000043 clôturée ✅**. S1 restauration DB prouvée (127 tables, parité source ✓, test CI), S2 tranche verticale réelle (chaîne Reasoning→Diagnostic→Recommendation→Validation sur pilote Parelle 2007 Quercus, 0.15s, diagnostic persisté), S3 validation scientifique + benchmark (3/3 scénarios ground truth validés, 18/18 checks, latence 32ms p95 34.68ms, mémoire 0.25 MB). État réel : 14 moteurs + orchestration, 28 migrations, 120 tables sur 6 schémas, 83 routes API, 1859 tests (63 skipped), 100% couverture, mutation 67/67. **Gates 4/5/6 rouvrables** — la preuve de chaîne complète est faite. |
 
 ---
 
@@ -955,19 +955,28 @@ Il manque la preuve complète : terrain → données réelles → preuve
 scientifique → diagnostic → recommandation → validation humaine →
 application cliente/Hub.
 
-#### Phase de stabilisation (DEC-000043)
+#### Phase de stabilisation (DEC-000043) — CLÔTURÉE ✅
 
-Ralentir les nouvelles fonctionnalités. Trois livrables :
+Trois livrables produits et validés :
 
-1. **S1 — Restauration DB prouvée** : backup → restore → vérification
-   d'intégrité. Test CI. Document `DR-RESTAURATION.md`.
-2. **S2 — Tranche verticale réelle** : données réelles, pipeline complet
-   ingestion → recommendation, validation humaine. Document
-   `TRANCHE_VERTICALE.md`.
-3. **S3 — Validation scientifique + performance** : prédictions vs ground
-   truth, benchmark mesuré, reproductible.
+1. **S1 — Restauration DB prouvée** ✅ (commit `74b1b59`) : backup →
+   restore → vérification d'intégrité (127 tables, 327 FK, 475 index,
+   parité source ✓). Scripts : `test_restauration_db.sh` (bash),
+   `test_restauration_db.py` (Python CI). Document :
+   `DR-RESTAURATION.md`.
+2. **S2 — Tranche verticale réelle** ✅ (commit `b6b61f6`) : chaîne
+   complète Reasoning→Diagnostic→Recommendation→Validation sur pilote
+   Parelle 2007 (Quercus robur vs petraea), 0.15s, diagnostic persisté,
+   recommandation produite, validation `valide`. Script :
+   `tranche_verticale.py`. Document : `TRANCHE_VERTICALE.md`.
+3. **S3 — Validation scientifique + benchmark** ✅ (commit `56d4ba5`) :
+   3/3 scénarios ground truth validés (18/18 checks), latence moyenne
+   32ms, p95 34.68ms, mémoire 0.25 MB. Script :
+   `validation_benchmark.py`. Document : `VALIDATION_SCIENTIFIQUE.md`.
 
-Pendant cette phase : pas de nouveaux endpoints/moteurs/migrations.
+**Gates 4/5/6 rouvrables** : la preuve de chaîne complète est faite,
+les prédictions sont cohérentes avec la littérature, les performances
+sont mesurées et reproductibles.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.

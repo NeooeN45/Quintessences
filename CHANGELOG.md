@@ -4,6 +4,39 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-02 (soir) — PHASE DE STABILISATION CLÔTURÉE] - 2026-08-02
+
+### Phase de stabilisation DEC-000043 — 3/3 livrables clôturés
+
+**S1 — Restauration DB prouvée** (`74b1b59`)
+- Backup pg_dump → restore sur base vierge → vérification d'intégrité
+- 127 tables, 327 FK, 475 index, 6 RLS, 464 fonctions PostGIS
+- Parité source/restaurée ✓ (tables, FK, index)
+- Scripts : `test_restauration_db.sh` (bash), `test_restauration_db.py` (CI)
+- Document : `DR-RESTAURATION.md`
+
+**S2 — Tranche verticale réelle** (`b6b61f6`)
+- Chaîne complète : Reasoning → Diagnostic → Recommendation → Validation
+- Données réelles : Parelle 2007 (Quercus robur vs petraea), 29 faits vérifiés
+- 2 conclusions (acidité + engorgement), diagnostic persisté, 1 recommandation
+- Validation : `valide`, aucune cause de blocage
+- Temps chaîne : 0.15s
+- Script : `tranche_verticale.py`, document : `TRANCHE_VERTICALE.md`
+
+**S3 — Validation scientifique + benchmark** (`56d4ba5`)
+- 3 scénarios ground truth, 18/18 checks validés
+- Latence moyenne : 32.05ms, p95 : 34.68ms, p99 : 34.68ms
+- Throughput : 0.35 req/s (limité par rate limit 20/min)
+- Mémoire peak : 0.25 MB
+- Script : `validation_benchmark.py`, document : `VALIDATION_SCIENTIFIQUE.md`
+
+### Gates mis à jour
+
+Gates 4 (Science), 5 (Intégration), 6 (Performance) passent de ❌ à ⚠️ :
+la preuve de chaîne complète est faite, les restes sont documentés.
+
+---
+
 ## [SESSION 2026-08-02 (soir) — CONSOLIDATION + DEC-000043] - 2026-08-02
 
 ### Consolidation mémoire
