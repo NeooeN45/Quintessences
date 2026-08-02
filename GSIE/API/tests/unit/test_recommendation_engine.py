@@ -441,3 +441,36 @@ def should_record_default_rationale_when_no_justification_provided() -> None:
     rationale = _rationale(decision)
     assert "Aucune justification fournie" in rationale
     assert "inadaptée" not in rationale.lower()
+
+
+@pytest.mark.asyncio
+async def should_return_decision_id_matching_persisted_model() -> None:
+    """L'identifiant retourné correspond à la ligne DecisionModel écrite.
+
+    Sans cette vérification, l'accusé rend un ``decision_id`` qui ne mène à
+    aucune ligne : le forestier ne peut pas retrouver sa trace, et croit
+    l'avoir.
+    """
+    from gsie_api.infrastructure.models.reasoning import DecisionModel
+    from tests.unit.aide_recommendation import SessionEspion
+
+    # Arrange — session espion qui enregistre les écritures
+    session = SessionEspion()
+    engine = RecommendationEngine(session)
+    decision = ForestierDecision(
+        recommandation_id=uuid4(),
+        decision=DecisionForestier.ACCEPTE,
+        date_decision=datetime.now(UTC),
+    )
+
+    # Act
+    result = await engine.record_decision(decision)
+    returned_id_str = result["decision_id"]
+
+    # Assert — le DecisionModel persisté doit porter le même id que l'accusé
+    decision_models = [obj for obj in session.ajouts if isinstance(obj, DecisionModel)]
+    assert len(decision_models) == 1, "exactement un DecisionModel doit être persisté"
+    assert str(decision_models[0].id) == returned_id_str, (
+        "l'id du DecisionModel persisté ne correspond pas à l'accusé rendu — "
+        "le forestier ne peut pas retrouver sa trace"
+    )

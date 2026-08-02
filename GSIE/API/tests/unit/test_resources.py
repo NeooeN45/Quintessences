@@ -357,6 +357,40 @@ class TestValidators:
         )
         assert errors == []
 
+    def should_fail_when_source_missing_auteur(self) -> None:
+        """Une source sans auteur n'est pas citable (CON-005)."""
+        errors = validate_resource_data(
+            "source",
+            {
+                "title": "Guide de sylviculture",
+                "subtype": "publication",
+                "source_nature": "reference",
+                # auteur manquant
+                "date_publication": "2024",
+            },
+        )
+        assert any("auteur" in e for e in errors), (
+            "une source sans auteur doit être rejetée — "
+            "une conclusion la citerait sans pouvoir dire qui l'a écrite"
+        )
+
+    def should_fail_when_source_missing_date_publication(self) -> None:
+        """Une source sans date de publication n'est pas citable (CON-005)."""
+        errors = validate_resource_data(
+            "source",
+            {
+                "title": "Guide de sylviculture",
+                "subtype": "publication",
+                "source_nature": "reference",
+                "auteur": "Dupont et al.",
+                # date_publication manquante
+            },
+        )
+        assert any("date_publication" in e for e in errors), (
+            "une source sans date de publication doit être rejetée — "
+            "sans date, la citation n'est pas vérifiable"
+        )
+
     def test_should_validate_botanical_identification_result_all_required(self) -> None:
         errors = validate_resource_data(
             "botanical_identification_result",

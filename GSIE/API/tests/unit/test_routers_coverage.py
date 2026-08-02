@@ -35,6 +35,7 @@ from gsie_api.engines.forest_dynamics.router import router as forest_dynamics_ro
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.pedology.router import router as pedology_router
+from gsie_api.engines.recommendation.router import router as recommendation_router
 from gsie_api.infrastructure.database import get_db
 from gsie_api.resources.router import router as resources_router
 from gsie_api.resources.schemas import (
@@ -197,6 +198,17 @@ async def knowledge_client() -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides.clear()
 
 
+@pytest.fixture
+async def recommendation_client() -> AsyncGenerator[AsyncClient, None]:
+    """Client AsyncClient pour le router recommendation (DB mockee)."""
+    mock_db = AsyncMock()
+    app = _build_engine_app(recommendation_router, mock_db)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.clear()
+
+
 # ===========================================================================
 # 1. Resources Router — CRUD generique (auth, RBAC, validation 422)
 # ===========================================================================
@@ -294,6 +306,34 @@ async def should_return_403_when_list_resources_with_rgpd_type_without_role(
         f"{_API_PREFIX}/resources?type=consent", headers=_auth_headers(["reader"])
     )
     assert response.status_code == 403
+
+
+async def should_apply_rgpd_exclusion_when_type_filter_is_empty(
+    resources_client: AsyncClient,
+):
+    """Un type vide (?type=) ne désactive pas l'exclusion RGPD.
+
+    Le défaut d'origine : ``if type is not None`` traitait la chaîne vide
+    comme un filtre explicite, sautant l'exclusion RGPD. Un simple reader
+    pouvait alors lister consent et data_subject.
+    """
+    from gsie_api.resources.service import ResourceService
+
+    # Arrange — mock du service pour capturer les arguments reçus
+    mock_response = ResourceListResponse(items=[], total=0, page=1, size=20)
+    mock_list = AsyncMock(return_value=mock_response)
+    with patch.object(ResourceService, "list_resources", new=mock_list):
+        response = await resources_client.get(
+            f"{_API_PREFIX}/resources?type=", headers=_auth_headers(["reader"])
+        )
+
+    # Assert — l'exclusion RGPD doit rester active (excluded_types non vide)
+    assert response.status_code == 200
+    kwargs = mock_list.call_args.kwargs
+    assert kwargs.get("excluded_types") != frozenset(), (
+        "un type vide ne doit pas désactiver l'exclusion RGPD — "
+        "un reader ne doit pas voir consent et data_subject"
+    )
 
 
 async def should_return_401_when_create_resource_without_token(resources_client: AsyncClient):
@@ -1762,3 +1802,44 @@ def _minimal_knowledge_object() -> dict[str, Any]:
         "version": 1,
         "date_integration": "2026-07-21T12:00:00Z",
     }
+
+
+# ===========================================================================
+# 9. Recommendation Router — refus du moteur en 400, pas 500
+# ===========================================================================
+
+
+async def should_return_400_when_recommendation_engine_raises(
+    recommendation_client: AsyncClient,
+):
+    """Le refus d'un diagnostic introuvable remonte en 400, pas en 500.
+
+    Un 500 dirait « panne » là où le refus est un jugement du moteur :
+    l'appelant conclurait à un incident et réessaierait la même requête.
+    """
+    from gsie_api.engines.recommendation.engine import (
+        RecommendationEngine,
+        RecommendationEngineError,
+    )
+
+    # Arrange — le moteur lève une erreur métier (diagnostic introuvable)
+    with patch.object(
+        RecommendationEngine,
+        "recommend",
+        new=AsyncMock(side_effect=RecommendationEngineError("diagnostic introuvable")),
+    ):
+        response = await recommendation_client.post(
+            f"{_API_PREFIX}/recommendation/recommend",
+            json={
+                "requete_id": str(uuid4()),
+                "diagnostic_id": str(uuid4()),
+                "objectif_forestier": "production",
+            },
+            headers=_auth_headers(["writer"]),
+        )
+
+    # Assert — 400 : le refus est un jugement, pas une panne
+    assert response.status_code == 400, (
+        "le refus du moteur est un jugement, pas une panne — "
+        "un 500 ferait croire à un incident et masquerait le diagnostic manquant"
+    )

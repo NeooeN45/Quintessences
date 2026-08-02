@@ -307,3 +307,25 @@ class TestRefuserGrainAbsent:
 
         # Act & Assert — aucune exception levée
         await service._refuser_grain_absent("distribution", {"scale_context_id": scale_context_id})
+
+
+class TestAddResourceDiff:
+    """Couverture de _add_resource_diff — garde du type resource_diff."""
+
+    async def should_create_diff_with_resource_diff_type_when_updating(self) -> None:
+        # Arrange — revision et diff_data minimales
+        service = _make_service()
+        revision = MagicMock()
+        revision.id = 1
+        diff_data: dict[str, object] = {}
+
+        # Act
+        await service._add_resource_diff(revision, diff_data)
+
+        # Assert — le premier objet ajouté est un ResourceModel de type
+        # "resource_diff" (type 61 du métamodèle). Sans cette ligne racine,
+        # le ResourceDiff n'est pas rattaché au bon type et la mise à jour
+        # échoue en violation de clé étrangère.
+        assert service._session.add.call_count == 2
+        first_added = service._session.add.call_args_list[0].args[0]
+        assert first_added.type == "resource_diff"

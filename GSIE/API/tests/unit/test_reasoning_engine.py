@@ -838,3 +838,44 @@ class TestCheminsManquants:
         resultat = await engine.infer(requete, date_inference=_DATE_INFERENCE)
         # Au moins une conclusion doit être produite
         assert len(resultat.conclusions) > 0
+
+
+# --- Plancher de preuve : la règle ET les faits qu'elle consomme ---
+
+
+async def should_set_step_evidence_to_weakest_fact_when_rule_is_stronger() -> None:
+    """Le plancher d'une étape est le plus faible entre la règle et les faits.
+
+    Une conclusion tirée d'un relevé terrain isolé (F) via une règle de
+    catalogue (B) doit être annoncée F, jamais B. Sans le plancher, le
+    moteur surestime silencieusement le niveau de preuve — exactement ce
+    que ADR-009 prévient.
+    """
+    # Arrange — règle de catalogue (B) consommant un fait terrain (F)
+    bloc_faible = BlocContexte(
+        source_moteur=SourceMoteurContexte.pedology,
+        source=_source(),
+        evidence_level=EvidenceLevel.F,
+        valeurs={"pH": 5.2},
+    )
+    contexte = StationContexte(pedologie=bloc_faible)
+    regle = _regle_ph_acide(evidence=EvidenceLevel.B)
+    requete = ReasoningRequest(
+        requete_id=_REQUETE_ID,
+        contexte=contexte,
+        regles=[regle],
+        question="Quelles essences ?",
+        profondeur_max=5,
+    )
+
+    # Act
+    resultat = await _engine().infer(requete, date_inference=_DATE_INFERENCE)
+
+    # Assert — l'étape doit porter le niveau F (plancher), pas B (règle)
+    assert len(resultat.conclusions) == 1
+    etape = resultat.conclusions[0].chaine_inference[0]
+    assert etape.evidence_level == EvidenceLevel.F, (
+        f"le plancher de l'étape doit être F (le fait le plus faible), "
+        f"pas {etape.evidence_level.value} (le niveau de la règle seule) — "
+        "une conclusion ne peut pas être mieux établie que la mesure qui la fonde"
+    )

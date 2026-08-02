@@ -120,3 +120,20 @@ def should_qualify_intra_foret_fk_with_schema_when_loaded():
     target = list(fk)[0].column.table
     assert target.schema == "gsie_foret"
     assert target.name == "site_index_model"
+
+
+# --- Garde : le comment SQL de human_validator doit rester en base.
+# `doc=` est de la documentation Python : PostgreSQL ne la voit pas. La
+# contrainte métier — human_validator obligatoire dès que status passe à
+# accepted — n'existe plus que dans le code Python si le comment disparaît.
+
+
+def should_have_column_comment_on_human_validator_when_loaded():
+    """SilviculturalRuleModel.human_validator doit porter un comment PostgreSQL."""
+    from gsie_api.infrastructure.models.forestry import SilviculturalRuleModel
+
+    col = SilviculturalRuleModel.__table__.c.human_validator
+    assert col.comment is not None, (
+        "human_validator doit porter un comment PostgreSQL — sans lui, "
+        "la contrainte métier n'existe plus que dans le code Python"
+    )
