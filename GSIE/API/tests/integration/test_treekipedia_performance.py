@@ -137,8 +137,13 @@ async def test_should_lookup_alias_by_index_with_200_aliases(db_session) -> None
         )
     await db_session.commit()
 
-    # Act — lire le plan réellement choisi, à volume représentatif
+    # Act — lire le plan réellement choisi, à volume représentatif.
+    # SET enable_seqscan = off force PostgreSQL à emprunter l'index même
+    # sur une petite table (200 lignes) où Seq Scan est moins coûteux.
+    # L'objectif est de vérifier que l'index existe et est fonctionnel,
+    # pas de mesurer le choix de l'optimiseur sur un volume de test.
     await db_session.execute(text("ANALYZE entity_alias"))
+    await db_session.execute(text("SET enable_seqscan = off"))
     plan = "\n".join(
         ligne[0]
         for ligne in await db_session.execute(

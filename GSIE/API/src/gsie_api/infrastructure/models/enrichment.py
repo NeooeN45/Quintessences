@@ -35,7 +35,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    UniqueConstraint,
     func,
     text,
 )
@@ -60,7 +59,6 @@ class EntityImageModel(Base, TimestampMixin):
         PGUUID(as_uuid=True),
         ForeignKey("resource.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     url: Mapped[str] = mapped_column(String(1000), nullable=False)
     license: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -72,6 +70,7 @@ class EntityImageModel(Base, TimestampMixin):
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
+        Index("idx_entity_image_entity_id", "entity_id"),
         # Index unique partiel : une seule image primaire par entity.
         Index(
             "idx_entity_image_entity_primary",
@@ -96,7 +95,6 @@ class EntityDescriptionModel(Base, TimestampMixin):
         PGUUID(as_uuid=True),
         ForeignKey("resource.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     language: Mapped[str] = mapped_column(String(10), nullable=False)
     source: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -104,12 +102,17 @@ class EntityDescriptionModel(Base, TimestampMixin):
     quality: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     __table_args__ = (
-        UniqueConstraint(
+        # Index unique, et non UniqueConstraint : la migration 20260801_0027
+        # pose un CREATE UNIQUE INDEX, qui n'inscrit rien dans pg_constraint.
+        # Déclarer une contrainte ici ferait diverger le registre et la base.
+        Index(
+            "idx_entity_description_entity_lang_src",
             "entity_id",
             "language",
             "source",
-            name="idx_entity_description_entity_lang_src",
+            unique=True,
         ),
+        Index("idx_entity_description_entity_id", "entity_id"),
     )
 
 
@@ -153,7 +156,6 @@ class ValidationResultModel(Base, TimestampMixin):
         PGUUID(as_uuid=True),
         ForeignKey("resource.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     statut: Mapped[str] = mapped_column(String(30), nullable=False)
     type_sortie: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -166,6 +168,7 @@ class ValidationResultModel(Base, TimestampMixin):
     )
 
     __table_args__ = (
+        Index("idx_validation_result_requete_origine", "requete_origine"),
         Index("idx_validation_result_statut", "statut"),
         Index("idx_validation_result_date", "date_validation"),
     )

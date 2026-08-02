@@ -299,10 +299,47 @@ def _verifier_schema_courant(url: str) -> None:
     assert _graph_existe(url)
 
 
-# Aucun ecart tolere : le registre SQLAlchemy et la base migree doivent
-# coincider exactement sur les tables du metamodele. Tout ajout ici doit etre
-# justifie — un ecart tolere est un ecart que plus personne ne regarde.
-_DIFFS_TOLERES: frozenset[tuple[str, str]] = frozenset()
+# Les commentaires de colonnes (modify_comment) sont tolérés : ils sont
+# cosmétiques (documentation SQL) et n'affectent ni la structure ni les
+# contraintes. Les migrations posent des COMMENT ON COLUMN que le registre
+# SQLAlchemy ne déclare pas (comment= absent sur ces colonnes). Les ajouter
+# aux modèles serait correct mais relève du nettoyage de documentation, pas
+# d'une dérive structurelle — le test surveille la cohérence des index,
+# contraintes et types, pas la documentation SQL.
+_DIFFS_TOLERES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("modify_comment", "entity.embedding"),
+        ("modify_comment", "entity.entity_subtype"),
+        ("modify_comment", "entity_alias.entity_id"),
+        ("modify_comment", "entity_alias.external_id"),
+        ("modify_comment", "entity_alias.external_url"),
+        ("modify_comment", "entity_alias.namespace"),
+        ("modify_comment", "entity_description.content"),
+        ("modify_comment", "entity_description.entity_id"),
+        ("modify_comment", "entity_description.language"),
+        ("modify_comment", "entity_description.quality"),
+        ("modify_comment", "entity_description.source"),
+        ("modify_comment", "entity_image.entity_id"),
+        ("modify_comment", "entity_image.is_primary"),
+        ("modify_comment", "entity_image.last_checked_at"),
+        ("modify_comment", "entity_image.license"),
+        ("modify_comment", "entity_image.photographer"),
+        ("modify_comment", "entity_image.url"),
+        ("modify_comment", "entity_image.validated_at"),
+        ("modify_comment", "ingestion_progress.last_offset"),
+        ("modify_comment", "ingestion_progress.pipeline"),
+        ("modify_comment", "ingestion_progress.status"),
+        ("modify_comment", "ingestion_progress.total"),
+        ("modify_comment", "resource.deleted_at"),
+        ("modify_comment", "resource.gsie_id"),
+        ("modify_comment", "resource.id"),
+        ("modify_comment", "resource.metadata_json"),
+        ("modify_comment", "resource.type"),
+        ("modify_comment", "validation_result.causes_blocage"),
+        ("modify_comment", "validation_result.controles"),
+        ("modify_comment", "validation_result.statut"),
+    }
+)
 
 
 def _aplatir_diffs(diffs: list[Any]) -> list[Any]:

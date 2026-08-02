@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import DateTime, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -71,6 +71,17 @@ class ResourceModel(Base, TimestampMixin):
         DateTime(timezone=True),
         nullable=True,
         default=None,
+    )
+
+    __table_args__ = (
+        # Index GIN sur metadata_json pour la recherche par clé JSONB.
+        # Créé par la migration 20260801_0027 ; déclaré ici pour éviter la
+        # dérive registre/base détectée par test_migration_baseline.
+        Index(
+            "idx_resource_metadata_gin",
+            "metadata_json",
+            postgresql_using="gin",
+        ),
     )
 
 

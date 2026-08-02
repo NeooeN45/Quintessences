@@ -39,6 +39,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
+        "auth_dev_password": "mot_de_passe_reel_pour_tests_integration",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
     } | overrides
@@ -70,7 +71,12 @@ def should_not_raise_when_production_and_dev_auth_disabled() -> None:
 def should_not_raise_when_development_and_dev_auth_enabled() -> None:
     """Le login dev doit rester autorisé en développement (usage normal)."""
     # Arrange / Act
-    settings = Settings(environment="development", debug=False, auth_dev_login_enabled=True)
+    settings = Settings(
+        environment="development",
+        debug=False,
+        auth_dev_login_enabled=True,
+        auth_dev_password="mot_de_passe_reel_pour_tests_integration",
+    )
 
     # Assert
     assert settings.auth_dev_login_enabled is True
