@@ -145,6 +145,10 @@ services:
       GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:-}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
+      # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)
+      # Lue par get_settings().meteofrance_api_key — sans elle, les endpoints
+      # /climate/danger-feux et /climate/vigilance retournent 502.
+      METEOFRANCE_API_KEY: ${METEOFRANCE_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

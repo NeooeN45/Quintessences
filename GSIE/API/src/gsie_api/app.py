@@ -25,6 +25,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 
+from gsie_api.audit.router import router as audit_router
 from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
@@ -45,6 +46,7 @@ from gsie_api.engines.reasoning.router import router as reasoning_router
 from gsie_api.engines.recommendation.router import router as recommendation_router
 from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
+from gsie_api.gamification.router import router as gamification_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import (
@@ -329,6 +331,8 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
+    app.include_router(audit_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(correlation_router, prefix=_settings.api_v1_prefix)
