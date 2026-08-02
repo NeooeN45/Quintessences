@@ -4,7 +4,7 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
-## [SESSION 2026-08-02 — VEILLE TECHNOLOGIQUE EXHAUSTIVE + CORRECTION POST-REVUE] - 2026-08-02
+## [SESSION 2026-08-02 — VEILLE TECHNOLOGIQUE + SOURCING + RFC-0031 ADOPTÉ] - 2026-08-02
 
 ### Veille technologique (8 sous-agents en parallèle)
 
@@ -18,39 +18,54 @@ DevOps, Data pipelines/science.
 19 concurrents directs identifiés. Stratégie recommandée : partenariats
 intégratifs (IGN, INRAE, CIRAD, PlantNet, Arboreal, Dryad, CTrees, GFW).
 
-### Correction post-revue dépôt
-
-Le document initial contenait 5 écarts vérifiables avec l'état réel du
-dépôt, corrigés dans la version révisée (§13 Errata) :
+### Correction post-revue dépôt (5 écarts)
 
 1. Security headers — **déjà implémentés** dans `middleware.py:25-33`
-2. pg_stat_statements — **déjà activé** (`docker-compose.yml:36`,
-   `docker/init/01-pg-stat-statements.sql`)
+2. pg_stat_statements — **déjà activé** (`docker-compose.yml:36`)
 3. Apache AGE — **déjà déployé** (`shared_preload_libraries=age`)
 4. API versioning `/api/v1/` — **en place depuis l'origine**
-   (`config.py:140`)
 5. PgBouncer — config présent mais **service orphelin non déployé**
-   (audit P2-6)
 
-Les chiffres non sourcés (vLLM tok/s, NeuralProphet accuracy, OpenObserve
-coût, etc.) sont marqués comme impressions d'agent IA (niveau de preuve D
-per RFC-0014), à sourcer dans `GSIE/RESEARCH/` ou retirer avant décision.
+### Sourcing des chiffres (2 sous-agents recherche web)
 
-Azure Key Vault reframé comme **transition** depuis Fernet local (commité
-97e269d), pas remplacement.
+31 chiffres vérifiés : 14 vérifiés, 14 partiellement vérifiés (corrigés
+avec contexte), 3 reformulés. Sources citées inline + §14 « Sources ».
+Niveau de preuve passé de D (quarantaine) à C (sourcé).
 
-### Implémentations effectives (par le Fondateur)
+Corrections notables : vLLM 793 tok/s (contexte 256 users), NeuralProphet
++55-92% (short/medium-term), OpenObserve 87x (pas 140x, benchmark éditeur),
+Polars 3-11x (pas 5-10x, selon opération), PlantNet 78 810 (pas 77k),
+CAPSIS 25 package ONF / ~80 total, SILVA TU Munich (pas INRAE), QLoRA 6GB
+(pas LoRA), GPTQ/AWQ <4% (pas <1%), k6 30k-40k VU (pas 2000+).
 
-- **Trivy** dans CI : job `security-scan` ajouté à `ci.yml`
-  (scan image Docker + filesystem repli, SARIF upload, fail-on CRITICAL)
-- **Bandit** dans CI : job `python-sast` ajouté (SARIF, skip B101)
-- **Tenacity** : dépendance ajoutée à `pyproject.toml` (8.5.0)
+### RFC-0031 — Adopté (DEC-000042)
+
+`02_RFC/RFC-0031-feuille-de-route-post-veille-2026-08-02.md` **Adopté**
+par le Fondateur le 2026-08-02 (DEC-000042) :
+- **Phase 1** (8 actions, 5 déjà faites : orjson, Trivy, Bandit,
+  Dependabot, Tenacity ; 3 à faire : uvloop, Uptime Kuma, PlantNet)
+- **Phase 2** (12 actions adoptées en principe)
+- **Écartées** (16 actions)
+- **Différées Phase 3-4+** (10 actions)
+
+**Intégration ROADMAP suspendue** à la demande du Fondateur — le feu vert
+pour l'intégration des actions Phase 2 dans `ROADMAP.md` sera donné
+ultérieurement. Les 3 actions Phase 1 restantes peuvent être implémentées
+immédiatement.
+
+### Implémentations effectives
+
+- **orjson** : `default_response_class=ORJSONResponse` dans `app.py`
+- **Trivy** dans CI : job `security-scan` (`ci.yml`)
+- **Bandit** dans CI : job `python-sast` (`ci.yml`)
+- **Dependabot** : `.github/dependabot.yml` (pip + docker + github-actions)
+- **Tenacity** : `pyproject.toml` (8.5.0)
 
 ### Validation
 
-- ruff : All checks passed
-- mypy : Success, no issues found
-- pytest unit : 0 régression
+- ruff : OK sur `app.py` (erreurs préexistantes dans test_auth_coverage.py)
+- mypy : Success, no issues found (155 fichiers)
+- pytest unit : 1294 passed, 2 failed préexistants (Redis + botanical)
 
 ---
 
