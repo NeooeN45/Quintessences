@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -46,9 +47,23 @@ def _make_request(
     )
 
 
+def _mock_session() -> AsyncMock:
+    """Session DB mock — scalar_one retourne None (pas de revision existante)."""
+    session = AsyncMock()
+    # scalar_one est synchrone sur le Result (pas async) — MagicMock, pas AsyncMock.
+    result_mock = MagicMock()
+    result_mock.scalar_one.return_value = None
+    session.execute = AsyncMock(return_value=result_mock)
+    session.flush = AsyncMock()
+    session.add = AsyncMock()
+    return session
+
+
 @pytest.fixture
 def engine() -> ValidationEngine:
-    return ValidationEngine()
+    # La persistance étant obligatoire pour les résultats non-valides
+    # (RFC-0028), on fournit une session mock aux tests unitaires.
+    return ValidationEngine(session=_mock_session())
 
 
 # --- Tests statut valide ---
@@ -305,3 +320,23 @@ def test_une_recommandation_non_contournable_est_bloquee_non_partielle() -> None
         "un contrôle portant GSIE-CON-001 est traité comme non critique — "
         "l'ensemble sortirait en `partiellement_valide`"
     )
+
+
+# --- Persistance obligatoire (RFC-0028) ---
+
+
+@pytest.mark.asyncio
+async def should_raise_when_bloque_and_no_session() -> None:
+    """Un résultat bloqué sans session DB lève — la persistance est obligatoire.
+
+    Sans cette garde, un ValidationEngine() construit sans session avale
+    silencieusement un pattern de blocage récurrent : le Learning Engine
+    perdrait l'information d'apprentissage (RFC-0028, migration 0028).
+    """
+    engine = ValidationEngine()  # pas de session
+    contenu = {
+        "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
+        "justification": "Diagnostic fondé sur observations.",
+    }
+    with pytest.raises(ValidationEngineError, match="Persistance.*requise"):
+        await engine.validate(_make_request(contenu=contenu))
