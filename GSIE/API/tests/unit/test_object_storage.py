@@ -103,3 +103,38 @@ def should_cover_every_key_accepting_method(tmp_path) -> None:
         f"méthodes acceptant une clé mais non couvertes : {sorted(publiques - couvertes)} ; "
         f"couvertes mais disparues : {sorted(couvertes - publiques)}"
     )
+
+
+# ===========================================================================
+# Couverture complémentaire — S3Storage stub (lignes 106, 109, 112, 115, 118)
+# ===========================================================================
+
+
+def should_raise_not_implemented_on_s3_init() -> None:
+    """S3Storage init doit lever NotImplementedError (Vague 2)."""
+    from gsie_api.infrastructure.object_storage import S3Storage
+
+    with pytest.raises(NotImplementedError, match="Vague 2"):
+        S3Storage(endpoint="s3.example.com", access_key="k", secret_key="s", bucket="test")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method,kwargs",
+    [
+        ("put", {"key": "k", "data": BytesIO(b"x"), "content_type": "text/plain"}),
+        ("get", {"key": "k"}),
+        ("delete", {"key": "k"}),
+        ("exists", {"key": "k"}),
+        ("get_presigned_url", {"key": "k", "expires_in": 60}),
+    ],
+)
+async def should_raise_not_implemented_on_every_s3_method(method: str, kwargs: dict) -> None:
+    """Chaque méthode S3Storage doit lever NotImplementedError."""
+    from gsie_api.infrastructure.object_storage import S3Storage
+
+    # Contourne l'init qui lève — on crée l'instance sans appeler __init__
+    storage = S3Storage.__new__(S3Storage)
+    fn = getattr(storage, method)
+    with pytest.raises(NotImplementedError):
+        await fn(**kwargs)

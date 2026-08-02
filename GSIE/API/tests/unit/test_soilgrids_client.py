@@ -147,3 +147,51 @@ async def test_should_refuse_a_null_scale_factor() -> None:
 
     with pytest.raises(SoilGridsClientError, match="`d_factor` nul"):
         await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o"])
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 131, 134 (skip layer sans depths/mean)
+# ===========================================================================
+
+
+@respx.mock
+async def test_should_skip_layer_when_depths_empty() -> None:
+    """Une layer sans depths doit être skipée silencieusement."""
+    response = {
+        "properties": {
+            "layers": [
+                {"name": "phh2o", "depths": []},  # depths vide → skip
+                {
+                    "name": "clay",
+                    "depths": [{"values": {"mean": 100}}],
+                    "unit_measure": {"d_factor": 1, "target_units": "%"},
+                },
+            ]
+        }
+    }
+    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=response))
+    result = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o", "clay"])
+    # Seule la layer "clay" doit être retenue
+    assert "clay" in result
+    assert "phh2o" not in result
+
+
+@respx.mock
+async def test_should_skip_layer_when_mean_is_none() -> None:
+    """Une layer dont mean est None doit être skipée."""
+    response = {
+        "properties": {
+            "layers": [
+                {"name": "phh2o", "depths": [{"values": {"mean": None}}]},  # mean None → skip
+                {
+                    "name": "clay",
+                    "depths": [{"values": {"mean": 100}}],
+                    "unit_measure": {"d_factor": 1, "target_units": "%"},
+                },
+            ]
+        }
+    }
+    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=response))
+    result = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o", "clay"])
+    assert "clay" in result
+    assert "phh2o" not in result

@@ -114,3 +114,15 @@ async def should_not_treat_an_unreadable_role_as_authorised():
     """Une lecture impossible n'est pas une autorisation implicite."""
     with _environnement("production"), pytest.raises(PrivilegesDeConnexionInvalidesError):
         await verifier_privileges_de_connexion(_fabrique_de_sessions(None))
+
+
+async def should_only_warn_when_role_unreadable_in_development():
+    """En développement, un rôle illisible doit juste logger un warning."""
+    with (
+        _environnement("development"),
+        patch("gsie_api.infrastructure.db_privileges.logger") as journal,
+    ):
+        await verifier_privileges_de_connexion(_fabrique_de_sessions(None))
+
+    journal.warning.assert_called_once()
+    assert journal.warning.call_args.args[0] == "privileges_db_illisibles"

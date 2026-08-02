@@ -188,3 +188,36 @@ async def should_recheck_cache_under_lock() -> None:
     result = await client.get_latest_observation("07510", year=_YEAR)
     assert result is not None
     assert result["geo_id_wmo"] == "07510"
+
+
+# ===========================================================================
+# Couverture complémentaire — properties (85), re-vérification cache (133-134)
+# ===========================================================================
+
+
+def should_return_correct_base_url() -> None:
+    """base_url doit retourner l'URL SYNOP Météo-France."""
+    client = SynopClient()
+    assert client.base_url == "https://meteofrance.s3.sbg.io.cloud.ovh.net"
+
+
+def should_return_correct_exception_class() -> None:
+    """exception_class doit retourner SynopClientError."""
+    client = SynopClient()
+    assert client.exception_class is SynopClientError
+
+
+@respx.mock
+async def should_use_cache_on_recheck_under_lock_when_filled_by_another() -> None:
+    """La re-vérification sous lock doit utiliser le cache rempli par un autre appelant."""
+    # Ce test couvre les lignes 133-134 : move_to_end + return cached.csv_text
+    respx.get(_URL).mock(return_value=Response(200, content=_gzipped_csv([_ROW])))
+    client = SynopClient()
+    # Pré-remplit le cache avec un CSV valide
+    client._put(_YEAR, "\n".join([_HEADER, _ROW]))
+    # L'appel doit utiliser le cache (move_to_end + return)
+    result = await client.get_latest_observation("07510", year=_YEAR)
+    assert result is not None
+    assert result["geo_id_wmo"] == "07510"
+    # Vérifie que le cache a été déplacé à la fin (move_to_end)
+    assert list(client._cache.keys())[-1] == _YEAR

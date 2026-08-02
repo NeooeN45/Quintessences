@@ -190,3 +190,48 @@ def test_should_include_user_agent_in_auth_headers() -> None:
     headers = client.auth_headers()
     assert "User-Agent" in headers
     assert "GSIE" in headers["User-Agent"]
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 111, 114, 209
+# ===========================================================================
+
+
+@respx.mock
+async def test_should_skip_non_dict_pages() -> None:
+    """_parse_images doit skip les pages qui ne sont pas des dict."""
+    # Une page non-dict (string) doit être skipée
+    response_data = {
+        "query": {"pages": ["not a dict", {"imageinfo": [{"url": "https://example.com/img.jpg"}]}]}
+    }
+    respx.get(_COMMONS_URL).mock(return_value=Response(200, json=response_data))
+    client = WikimediaClient()
+    images = await client.search_species_images("Abies alba")
+    # Seule la page dict avec imageinfo doit être retenue
+    assert len(images) == 1
+    assert images[0]["url"] == "https://example.com/img.jpg"
+
+
+@respx.mock
+async def test_should_skip_pages_without_imageinfo() -> None:
+    """_parse_images doit skip les pages sans imageinfo."""
+    response_data = {
+        "query": {
+            "pages": [
+                {"title": "File:NoImage.jpg"},  # pas de imageinfo
+                {"imageinfo": [{"url": "https://example.com/img.jpg"}]},
+            ]
+        }
+    }
+    respx.get(_COMMONS_URL).mock(return_value=Response(200, json=response_data))
+    client = WikimediaClient()
+    images = await client.search_species_images("Abies alba")
+    assert len(images) == 1
+
+
+def test_should_return_empty_string_when_html_is_falsy() -> None:
+    """_strip_html doit retourner '' quand html est falsy."""
+    from gsie_api.engines.botanical.wikimedia_client import _strip_html
+
+    assert _strip_html("") == ""
+    assert _strip_html(None) == ""

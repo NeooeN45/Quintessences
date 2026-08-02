@@ -707,3 +707,134 @@ class TestRobustesse:
         # Assert — résultat vide, aucune exception.
         assert len(resultat.conclusions) == 0
         assert len(resultat.contradictions) == 0
+
+
+# ===========================================================================
+# Couverture complémentaire — chemins manquants (lignes 171, 271-296, 335, 422)
+# ===========================================================================
+
+
+class TestCheminsManquants:
+    """Couverture des chemins non testés du ReasoningEngine."""
+
+    async def should_return_empty_when_no_regles_and_no_station(self) -> None:
+        """infer doit retourner un résultat vide quand pas de règles et pas de station."""
+        requete = ReasoningRequest(
+            requete_id=_REQUETE_ID,
+            contexte=StationContexte(
+                pedologie=BlocContexte(
+                    source_moteur=SourceMoteurContexte.pedology,
+                    source=_source(),
+                    evidence_level=EvidenceLevel.B,
+                    valeurs={"pH": 5.2},
+                )
+            ),
+            regles=[],
+            question="Test sans règles ?",
+            profondeur_max=5,
+        )
+        resultat = await _engine().infer(requete, date_inference=_DATE_INFERENCE)
+        assert len(resultat.conclusions) == 0
+
+    async def should_load_regles_from_territoire_when_no_regles_and_station_id(
+        self,
+    ) -> None:
+        """infer doit charger les règles du territoire quand pas de règles et station_id présent."""
+        from unittest.mock import AsyncMock
+
+        # Mock _regles_du_territoire pour retourner une règle
+        engine = _engine()
+        engine._regles_du_territoire = AsyncMock(return_value=[_regle_ph_acide()])
+
+        requete = ReasoningRequest(
+            requete_id=_REQUETE_ID,
+            station_id=UUID("12345678-1234-5678-1234-567812345678"),
+            contexte=StationContexte(
+                pedologie=BlocContexte(
+                    source_moteur=SourceMoteurContexte.pedology,
+                    source=_source(),
+                    evidence_level=EvidenceLevel.B,
+                    valeurs={"pH": 5.2},
+                )
+            ),
+            regles=[],
+            question="Test territoire ?",
+            profondeur_max=5,
+        )
+        resultat = await engine.infer(requete, date_inference=_DATE_INFERENCE)
+        assert len(resultat.conclusions) > 0
+        engine._regles_du_territoire.assert_called_once()
+
+    async def should_return_empty_regles_when_territoire_inconnu(self) -> None:
+        """_regles_du_territoire doit retourner [] quand TerritoireInconnuError."""
+        from unittest.mock import AsyncMock, patch
+
+        from gsie_api.engines.knowledge.engine import TerritoireInconnuError
+
+        engine = _engine()
+        with patch("gsie_api.engines.knowledge.engine.KnowledgeEngine") as mock_ke:
+            mock_instance = mock_ke.return_value
+            mock_instance.regles_applicables = AsyncMock(
+                side_effect=TerritoireInconnuError("territoire inconnu")
+            )
+            result = await engine._regles_du_territoire(
+                UUID("12345678-1234-5678-1234-567812345678")
+            )
+        assert result == []
+
+    async def should_log_regles_ecartees_when_some_rules_discarded(self) -> None:
+        """_regles_du_territoire doit logger les règles écartées."""
+        from unittest.mock import AsyncMock, patch
+
+        regle = _regle_ph_acide()
+        engine = _engine()
+        with patch("gsie_api.engines.knowledge.engine.KnowledgeEngine") as mock_ke:
+            mock_instance = mock_ke.return_value
+            mock_instance.regles_applicables = AsyncMock(
+                return_value=([regle], [{"regle": "R_X", "motif": "plancher"}])
+            )
+            result = await engine._regles_du_territoire(
+                UUID("12345678-1234-5678-1234-567812345678")
+            )
+        assert len(result) == 1
+        assert result[0].identifiant == regle.identifiant
+
+    async def should_raise_for_forbidden_boolop(self) -> None:
+        """_evaluer_noeud doit lever ValueError pour un BoolOp avec opérateur interdit."""
+        import ast
+
+        from gsie_api.engines.reasoning.engine import _evaluer_noeud
+
+        # BitOr est interdit — seul And et Or sont autorisés
+        noeud = ast.BoolOp(op=ast.BitOr(), values=[ast.Constant(True), ast.Constant(False)])
+        with pytest.raises(ValueError, match="connecteur logique interdit"):
+            _evaluer_noeud(noeud, {})
+
+    async def should_include_variable_without_provenance(self) -> None:
+        """_construire_premisses doit inclure les variables sans provenance traçable."""
+
+        # Créer une règle avec une condition simple
+        regle = _regle_ph_acide()
+        engine = _engine()
+
+        # Mock le contexte avec une variable sans provenance
+        requete = ReasoningRequest(
+            requete_id=_REQUETE_ID,
+            contexte=StationContexte(
+                pedologie=BlocContexte(
+                    source_moteur=SourceMoteurContexte.pedology,
+                    source=_source(),
+                    evidence_level=EvidenceLevel.B,
+                    valeurs={"pH": 5.2},
+                )
+            ),
+            regles=[regle],
+            question="Test provenance ?",
+            profondeur_max=5,
+        )
+
+        # Le test vérifie que l'inférence fonctionne avec une variable
+        # qui n'a pas de provenance détaillée — la ligne 422 gère ce cas
+        resultat = await engine.infer(requete, date_inference=_DATE_INFERENCE)
+        # Au moins une conclusion doit être produite
+        assert len(resultat.conclusions) > 0

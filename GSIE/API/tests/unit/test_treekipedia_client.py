@@ -490,3 +490,54 @@ def test_should_raise_error_when_images_json_corrupted(tmp_path: Path) -> None:
         client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
         with pytest.raises(TreekipediaClientError, match="Échec lecture JSON images"):
             client.get_species_image("Abies alba")
+
+
+# ===========================================================================
+# Couverture complémentaire — properties, OSError CSV riche, pagination limit
+# ===========================================================================
+
+
+def test_should_return_correct_exception_class() -> None:
+    """exception_class doit retourner TreekipediaClientError."""
+    client = TreekipediaClient(csv_path=Path("nonexist.csv"))
+    assert client.exception_class is TreekipediaClientError
+
+
+def test_should_return_correct_base_url() -> None:
+    """base_url doit retourner l'URL de l'API Treekipedia."""
+    client = TreekipediaClient(csv_path=Path("nonexist.csv"))
+    assert client.base_url == "https://treekipedia-api.silvi.earth"
+
+
+def test_should_raise_error_when_rich_csv_oserror(tmp_path: Path) -> None:
+    """list_species_rich doit lever TreekipediaClientError si OSError à la lecture."""
+    from unittest.mock import MagicMock
+
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    # Mock _RICH_CSV_PATH.exists() → True, mais open lève OSError
+    mock_path = MagicMock()
+    mock_path.exists.return_value = True
+    mock_path.open.side_effect = OSError("Permission denied")
+
+    with patch.object(tkc_module, "_RICH_CSV_PATH", mock_path):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        with pytest.raises(TreekipediaClientError, match="Échec lecture CSV riche"):
+            client.list_species_rich()
+
+
+def test_should_paginate_with_limit(tmp_path: Path) -> None:
+    """list_species_rich doit paginer avec limit."""
+    from gsie_api.engines.botanical import treekipedia_client as tkc_module
+
+    csv_content = "species_scientific_name,family\n"
+    for i in range(10):
+        csv_content += f"Species {i},Family\n"
+
+    rich_csv = tmp_path / "rich.csv"
+    rich_csv.write_text(csv_content, encoding="utf-8")
+
+    with patch.object(tkc_module, "_RICH_CSV_PATH", rich_csv):
+        client = TreekipediaClient(csv_path=tmp_path / "nonexist.csv")
+        result = client.list_species_rich(limit=3)
+        assert len(result) == 3

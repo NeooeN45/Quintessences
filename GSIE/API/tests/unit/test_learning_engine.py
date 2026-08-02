@@ -223,3 +223,49 @@ def should_require_confidence_in_range() -> None:
             date_output=datetime.now(UTC),
             statut=LearningStatut.propose,
         )
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 100, 111-112
+# ===========================================================================
+
+
+async def should_raise_for_unknown_signal_type(engine: LearningEngine) -> None:
+    """Un type de signal inconnu doit lever LearningEngineError (garde défensive)."""
+    # Tous les types de LearningSignalType sont gérés en v1.
+    # La ligne 100 est une garde défensive — on la teste en mockant
+    # les vérifications pour qu'aucune ne matche.
+    from unittest.mock import patch
+
+    signal = LearningSignal(
+        signal_id=uuid4(),
+        type=LearningSignalType.sortie_bloquee,
+        contenu={},
+        date_signal=datetime.now(UTC),
+    )
+
+    # Patch les 4 vérifications pour qu'aucune ne matche → ligne 100
+    with (
+        patch("gsie_api.engines.learning.engine.LearningSignalType") as mock_type,
+    ):
+        mock_type.retour_forestier = "fake_retour"
+        mock_type.pattern_emergent = "fake_pattern"
+        mock_type.sortie_bloquee = "fake_sortie"
+        mock_type.observation_terrain = "fake_obs"
+        # signal.type vaut toujours "sortie_bloquee" (StrEnum),
+        # mais les comparaisons ne matchent plus → ligne 100
+
+        with pytest.raises(Exception, match="Type de signal inconnu"):
+            await engine.process(signal)
+
+
+async def should_raise_when_retour_forestier_content_invalid(engine: LearningEngine) -> None:
+    """Un retour_forestier avec contenu invalide doit lever LearningEngineError."""
+    signal = LearningSignal(
+        signal_id=uuid4(),
+        type=LearningSignalType.retour_forestier,
+        contenu={"champ_inattendu": "valeur"},  # manque les champs requis
+        date_signal=datetime.now(UTC),
+    )
+    with pytest.raises(Exception, match="Contenu de retour_forestier invalide"):
+        await engine.process(signal)

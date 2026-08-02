@@ -355,3 +355,63 @@ class TestLogoutEndpoint:
             assert second.json()["revoked"] is False
         finally:
             client.app.dependency_overrides.pop(_get_store, None)
+
+
+# ===========================================================================
+# core/auth.py — reserved claims, production key errors, None token
+# ===========================================================================
+
+
+class TestCoreAuthReservedClaims:
+    """Couverture lignes 128-129, 159-160 — reserved claims override."""
+
+    def should_raise_when_access_token_claims_include_reserved(self) -> None:
+        """create_access_token doit lever si claims contient des claims réservés."""
+        from gsie_api.core.auth import create_access_token
+
+        with pytest.raises(ValueError, match="Reserved JWT claims"):
+            create_access_token(subject="test", claims={"sub": "override"})
+
+    def should_raise_when_refresh_token_claims_include_reserved(self) -> None:
+        """create_refresh_token doit lever si claims contient des claims réservés."""
+        from gsie_api.core.auth import create_refresh_token
+
+        with pytest.raises(ValueError, match="Reserved JWT claims"):
+            create_refresh_token(subject="test", claims={"jti": "override"})
+
+
+class TestCoreAuthProductionKeys:
+    """Couverture lignes 46, 58 — RuntimeError en production si clé absente."""
+
+    def should_raise_runtime_error_when_private_key_missing_in_production(self) -> None:
+        """_load_private_key doit lever RuntimeError en production sans clé."""
+
+        import gsie_api.core.auth as auth_module
+
+        with (
+            patch.object(auth_module._settings, "environment", "production"),
+            patch.object(auth_module._settings, "jwt_private_key_path", "/nonexistent/key.pem"),
+            pytest.raises(RuntimeError, match="JWT private key not found"),
+        ):
+            auth_module._load_private_key()
+
+    def should_raise_runtime_error_when_public_key_missing_in_production(self) -> None:
+        """_load_public_key doit lever RuntimeError en production sans clé."""
+        import gsie_api.core.auth as auth_module
+
+        with (
+            patch.object(auth_module._settings, "environment", "production"),
+            patch.object(auth_module._settings, "jwt_public_key_path", "/nonexistent/key.pem"),
+            pytest.raises(RuntimeError, match="JWT public key not found"),
+        ):
+            auth_module._load_public_key()
+
+
+class TestCoreAuthOptionalToken:
+    """Couverture ligne 253 — verify_ws_token avec token=None."""
+
+    async def should_return_none_when_token_is_none(self) -> None:
+        """verify_ws_token doit retourner None quand token est None."""
+        from gsie_api.core.auth import verify_ws_token
+
+        assert await verify_ws_token(None) is None

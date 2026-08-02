@@ -183,6 +183,35 @@ def should_capsis_backend_raise_not_implemented() -> None:
         backend.simulate_growth("Fagus sylvatica", {"volume": 100.0}, 10)
 
 
+# ===========================================================================
+# Couverture complémentaire — gardes de validation (lignes 199, 244, 246)
+# ===========================================================================
+
+
+def should_raise_when_horizon_years_negative_in_project_volume() -> None:
+    """project_volume doit lever quand horizon_years est négatif."""
+    from gsie_api.engines.growth_models import GrowthModelError, project_volume
+
+    with pytest.raises(GrowthModelError, match="horizon_years négatif"):
+        project_volume("Fagus sylvatica", initial_volume=10.0, horizon_years=-1)
+
+
+def should_raise_when_initial_circumference_negative_in_project_circumference() -> None:
+    """project_circumference doit lever quand initial_circumference est négatif."""
+    from gsie_api.engines.growth_models import GrowthModelError, project_circumference
+
+    with pytest.raises(GrowthModelError, match="initial_circumference négatif"):
+        project_circumference("Fagus sylvatica", initial_circumference=-10.0, horizon_years=10)
+
+
+def should_raise_when_horizon_years_negative_in_project_circumference() -> None:
+    """project_circumference doit lever quand horizon_years est négatif."""
+    from gsie_api.engines.growth_models import GrowthModelError, project_circumference
+
+    with pytest.raises(GrowthModelError, match="horizon_years négatif"):
+        project_circumference("Fagus sylvatica", initial_circumference=50.0, horizon_years=-5)
+
+
 def should_capsis_backend_document_source() -> None:
     """Le backend CAPSIS documente sa source (Dufour-Kowalski 2012)."""
     backend = CapsisBackend()
