@@ -72,7 +72,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "revision.author_id référence une resource inexistante — "
             "toute écriture authentifiée échoue en 500"
         ),
-        tests=("tests/integration/test_resources_fiabilite.py",),
+        tests=(
+            "tests/unit/test_resources_service_coverage.py",
+            "tests/integration/test_resources_fiabilite.py",
+        ),
     ),
     Mutation(
         cle="diff_sans_ligne_racine",
@@ -80,7 +83,10 @@ MUTATIONS: tuple[Mutation, ...] = (
         ancien='        diff_resource = ResourceModel(\n            type="resource_diff",',
         nouveau='        diff_resource = ResourceModel(\n            type="entity",',
         defaut_reproduit="le ResourceDiff n'est plus rattaché au type 61 du métamodèle",
-        tests=("tests/integration/test_resources_fiabilite.py",),
+        tests=(
+            "tests/unit/test_resources_service_coverage.py",
+            "tests/integration/test_resources_fiabilite.py",
+        ),
     ),
     Mutation(
         cle="filtre_type_vide",
@@ -94,7 +100,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "GET /resources?type= désactive l'exclusion RGPD — "
             "un simple lecteur liste consent et data_subject"
         ),
-        tests=("tests/integration/test_resources_fiabilite.py",),
+        tests=(
+            "tests/unit/test_routers_coverage.py",
+            "tests/integration/test_resources_fiabilite.py",
+        ),
     ),
     Mutation(
         cle="type_de_jeton_non_verifie",
@@ -110,7 +119,10 @@ MUTATIONS: tuple[Mutation, ...] = (
         ancien="        try:\n            converti[champ] = _coercer_valeur(valeur, colonne)",
         nouveau="        try:\n            converti[champ] = valeur",
         defaut_reproduit="une date ISO part telle quelle vers un timestamptz — 500",
-        tests=("tests/integration/test_resources_fiabilite.py",),
+        tests=(
+            "tests/unit/test_coercion.py",
+            "tests/integration/test_resources_fiabilite.py",
+        ),
     ),
     Mutation(
         cle="constante_ign_derivee",
@@ -136,7 +148,10 @@ MUTATIONS: tuple[Mutation, ...] = (
         ancien="        if math.isnan(coefficient) or math.isnan(p_valeur):",
         nouveau="        if False:",
         defaut_reproduit="une variable constante fait rendre 500 au lieu d'une erreur métier",
-        tests=("tests/integration/test_moteurs_fiabilite.py",),
+        tests=(
+            "tests/unit/test_correlation_engine_extended.py",
+            "tests/integration/test_moteurs_fiabilite.py",
+        ),
     ),
     # =================================================================
     # GSIE-PROMPT-0023/0024 — résilience des clients d'API externes
@@ -296,7 +311,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une source sans auteur ni date entre en base — une conclusion la "
             "citerait sans pouvoir dire qui l'a ecrite"
         ),
-        tests=("tests/integration/test_resources_fiabilite.py",),
+        tests=(
+            "tests/unit/test_resources.py",
+            "tests/integration/test_resources_fiabilite.py",
+        ),
     ),
     Mutation(
         cle="regle_hors_domaine_retournee",
@@ -307,7 +325,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une regle tiree d'un catalogue regional sort hors de sa zone — "
             "conclusion fausse citant une source reelle, invisible"
         ),
-        tests=("tests/integration/test_regles_applicables.py",),
+        tests=(
+            "tests/unit/test_knowledge_engine.py",
+            "tests/integration/test_regles_applicables.py",
+        ),
     ),
     Mutation(
         cle="regle_non_sourcee_retournee",
@@ -322,7 +343,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une citation de role secondaire suffit a faire sortir une regle — "
             "la source citee n'est plus celle qui la fonde"
         ),
-        tests=("tests/integration/test_regles_applicables.py",),
+        tests=(
+            "tests/unit/test_knowledge_engine.py",
+            "tests/integration/test_regles_applicables.py",
+        ),
     ),
     Mutation(
         cle="plancher_ignore_les_faits",
@@ -333,7 +357,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une conclusion tiree d'un releve terrain isole (F) via une regle "
             "de catalogue (B) est annoncee comme B — surestimation silencieuse"
         ),
-        tests=("tests/integration/test_regles_applicables.py",),
+        tests=(
+            "tests/unit/test_reasoning_engine.py",
+            "tests/integration/test_regles_applicables.py",
+        ),
     ),
     # --- Recommendation Engine : ne pas conseiller sans avoir lu le diagnostic
     Mutation(
@@ -345,7 +372,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "un conseil sylvicole complet — type d'action, prelevement chiffre, "
             "confiance — est rendu en citant un diagnostic qui n'existe pas"
         ),
-        tests=("tests/integration/test_recommendation_diagnostic.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_diagnostic.py",
+        ),
     ),
     Mutation(
         cle="diagnostic_jamais_lu",
@@ -362,7 +392,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "le moteur cite `diagnostic_id` dans sa justification sans jamais "
             "le consulter — reference verifiable en apparence, vide en fait"
         ),
-        tests=("tests/integration/test_recommendation_diagnostic.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_diagnostic.py",
+        ),
     ),
     Mutation(
         cle="confiance_alternatives_codee_en_dur",
@@ -394,7 +427,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "le refus d'un diagnostic introuvable remonte en 500 sans nommer "
             "le diagnostic manquant — l'appelant ne peut pas corriger"
         ),
-        tests=("tests/integration/test_recommendation_diagnostic.py",),
+        tests=(
+            "tests/unit/test_routers_coverage.py",
+            "tests/integration/test_recommendation_diagnostic.py",
+        ),
     ),
     Mutation(
         cle="accuse_de_conservation_mensonger",
@@ -413,7 +449,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "l'accuse rend un `decision_id` qui ne correspond a aucune ligne : "
             "le forestier ne peut pas retrouver sa trace, et croit l'avoir"
         ),
-        tests=("tests/integration/test_recommendation_persistance.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
     ),
     Mutation(
         cle="station_non_enregistree_refusee",
@@ -427,7 +466,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une station decrite integralement par le contexte de la requete "
             "fait refuser l'inference parce qu'aucune `place` ne l'enregistre"
         ),
-        tests=("tests/integration/test_reasoning.py",),
+        tests=(
+            "tests/unit/test_reasoning_engine.py",
+            "tests/integration/test_reasoning.py",
+        ),
     ),
     Mutation(
         cle="taux_arbitraire_sans_aveu",
@@ -453,7 +495,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une contrainte metier — human_validator obligatoire des que le "
             "statut passe a accepted — n'existe plus que dans le code Python"
         ),
-        tests=("tests/integration/test_migration_baseline.py",),
+        tests=(
+            "tests/unit/test_models.py",
+            "tests/integration/test_migration_baseline.py",
+        ),
     ),
     Mutation(
         cle="etat_du_peuplement_ignore",
@@ -648,7 +693,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "aucune decision ne peut plus citer la recommandation a laquelle "
             "elle repond : la ligne n'existe pas"
         ),
-        tests=("tests/integration/test_recommendation_persistance.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
     ),
     Mutation(
         cle="alternatives_non_persistees",
@@ -661,7 +709,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "le choix d'une alternative par le forestier devient intracable, "
             "alors que proposer des alternatives est un principe fondateur"
         ),
-        tests=("tests/integration/test_recommendation_persistance.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
     ),
     Mutation(
         cle="jonction_decision_perdue",
@@ -677,7 +728,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "la decision pointe sur elle-meme : on sait qu'un forestier a "
             "refuse quelque chose, sans pouvoir dire quoi"
         ),
-        tests=("tests/integration/test_recommendation_persistance.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
     ),
     Mutation(
         cle="rationale_inventee",
@@ -690,7 +744,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une explication inventee est consignee et relue comme celle du "
             "forestier, qui n'en a fourni aucune"
         ),
-        tests=("tests/integration/test_recommendation_persistance.py",),
+        tests=(
+            "tests/unit/test_recommendation_engine.py",
+            "tests/integration/test_recommendation_persistance.py",
+        ),
     ),
     Mutation(
         cle="decision_sans_recommandation_toleree",
@@ -727,7 +784,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "le diagnostic ne cite plus toutes les conclusions dont il est "
             "issu : la chaine d'inference devient incomplete a la relecture"
         ),
-        tests=("tests/integration/test_chaine_reelle.py",),
+        tests=(
+            "tests/unit/test_diagnostic_engine.py",
+            "tests/integration/test_chaine_reelle.py",
+        ),
     ),
     Mutation(
         cle="ensemble_sans_verification_croisee",
@@ -757,7 +817,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "une conclusion est classee par la machine, et le diagnostic qui en "
             "decoule paraît complet (GSIE-CON-001, ADR-009)"
         ),
-        tests=("tests/integration/test_orchestration.py",),
+        tests=(
+            "tests/unit/test_orchestration_engine.py",
+            "tests/integration/test_orchestration.py",
+        ),
     ),
     Mutation(
         cle="qualification_rapprochee_par_ressemblance",
@@ -771,7 +834,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "toutes les qualifications se rattachent a la meme conclusion : les "
             "autres sont classees au hasard ou manquantes"
         ),
-        tests=("tests/integration/test_orchestration.py",),
+        tests=(
+            "tests/unit/test_orchestration_engine.py",
+            "tests/integration/test_orchestration.py",
+        ),
     ),
     Mutation(
         cle="raisonnement_sterile_rendu_en_succes",
@@ -782,7 +848,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "un diagnostic vide est produit la ou « aucune regle ne s'applique » "
             "est une reponse — l'appelant interprete le silence"
         ),
-        tests=("tests/integration/test_orchestration.py",),
+        tests=(
+            "tests/unit/test_orchestration_engine.py",
+            "tests/integration/test_orchestration.py",
+        ),
     ),
     Mutation(
         cle="echelle_pedologique_supposee",
@@ -857,6 +926,7 @@ MUTATIONS: tuple[Mutation, ...] = (
         # base construite par la migration. Attribues aux seconds, ces deux
         # mutations ont survecu — le harnais l'a etabli.
         tests=(
+            "tests/unit/test_models.py",
             "tests/integration/test_migration_baseline.py",
             "tests/integration/test_isolement_rgpd.py",
         ),
@@ -873,6 +943,7 @@ MUTATIONS: tuple[Mutation, ...] = (
             "moteur de domaine la lit"
         ),
         tests=(
+            "tests/unit/test_models.py",
             "tests/integration/test_migration_baseline.py",
             "tests/integration/test_isolement_rgpd.py",
         ),
@@ -891,7 +962,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "l'application demarre en production sous le proprietaire de la "
             "base et lit le mecanisme de reversion du pseudonymat"
         ),
-        tests=("tests/integration/test_auth_dev_production_blocker.py",),
+        tests=(
+            "tests/unit/test_config.py",
+            "tests/integration/test_auth_dev_production_blocker.py",
+        ),
     ),
     # `suppression_physique_redevenue_possible` a ete retiree : elle visait
     # `alembic/versions/20260728_0012_role_applicatif.py`, hors du perimetre
@@ -916,7 +990,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "trait_definition revient dans `public` pour le registre SQLAlchemy "
             "mais reste dans `gsie_botanique` en base — derive invisible"
         ),
-        tests=("tests/integration/test_migration_baseline.py",),
+        tests=(
+            "tests/unit/test_models.py",
+            "tests/integration/test_migration_baseline.py",
+        ),
     ),
     Mutation(
         cle="schema_foret_retire",
@@ -928,7 +1005,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "management_plan revient dans `public` pour le registre mais reste "
             "dans `gsie_foret` en base — derive invisible"
         ),
-        tests=("tests/integration/test_migration_baseline.py",),
+        tests=(
+            "tests/unit/test_models.py",
+            "tests/integration/test_migration_baseline.py",
+        ),
     ),
     Mutation(
         cle="schema_gouvernance_retire",
@@ -940,7 +1020,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "regulation revient dans `public` pour le registre mais reste dans "
             "`gsie_gouvernance` en base — derive invisible"
         ),
-        tests=("tests/integration/test_migration_baseline.py",),
+        tests=(
+            "tests/unit/test_models.py",
+            "tests/integration/test_migration_baseline.py",
+        ),
     ),
     Mutation(
         cle="fk_intra_foret_dequalifiee",
@@ -955,7 +1038,10 @@ MUTATIONS: tuple[Mutation, ...] = (
             "fertility_class ne trouve plus site_index_model — "
             "NoReferencedTableError au chargement du registre"
         ),
-        tests=("tests/integration/test_migration_baseline.py",),
+        tests=(
+            "tests/unit/test_models.py",
+            "tests/integration/test_migration_baseline.py",
+        ),
     ),
     Mutation(
         cle="garde_anti_invention_desactivee",

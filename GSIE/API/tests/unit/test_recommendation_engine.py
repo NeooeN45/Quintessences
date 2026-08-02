@@ -292,3 +292,63 @@ async def should_still_recommend_on_healthy_stand() -> None:
     assert ensemble.recommandations[0].alternatives, (
         "les alternatives restent dues sur un peuplement dont l'état permet " "l'intervention"
     )
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 187, 415, 427
+# ===========================================================================
+
+
+@pytest.mark.asyncio
+async def should_raise_diagnostic_introuvable_when_id_missing() -> None:
+    """_diagnostic doit lever DiagnosticIntrouvableError si introuvable."""
+    from unittest.mock import AsyncMock
+
+    from gsie_api.engines.recommendation.engine import DiagnosticIntrouvableError
+
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=None)
+    engine = RecommendationEngine(session)
+
+    with pytest.raises(DiagnosticIntrouvableError, match="introuvable"):
+        await engine._diagnostic(uuid4())
+
+
+@pytest.mark.asyncio
+async def should_create_forestier_agent_when_forestier_id_provided() -> None:
+    """_agent_forestier doit créer un agent quand forestier_id est fourni."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=None)  # Resource n'existe pas
+    session.add = MagicMock()
+    session.flush = AsyncMock()
+    engine = RecommendationEngine(session)
+
+    forestier_id = uuid4()
+    result = await engine._agent_forestier(forestier_id)
+    assert result == forestier_id
+    # session.add doit avoir été appelé pour créer la resource + l'agent
+    assert session.add.call_count >= 2
+
+
+@pytest.mark.asyncio
+async def should_return_agent_id_when_resource_already_exists() -> None:
+    """_agent doit retourner l'agent_id si la resource existe déjà."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from gsie_api.infrastructure.models.base import ResourceModel
+
+    session = AsyncMock()
+    # Resource existe déjà
+    existing = MagicMock(spec=ResourceModel)
+    session.get = AsyncMock(return_value=existing)
+    session.add = MagicMock()
+    session.flush = AsyncMock()
+    engine = RecommendationEngine(session)
+
+    agent_id = uuid4()
+    result = await engine._agent(agent_id, nom="Test", type_agent=MagicMock())
+    assert result == agent_id
+    # session.add ne doit pas avoir été appelé
+    session.add.assert_not_called()

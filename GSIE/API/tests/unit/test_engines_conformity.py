@@ -63,7 +63,7 @@ def _engines_implémentés() -> set[str]:
 
 def _engines_documentés() -> set[str]:
     """Liste les moteurs documentés (dossiers sous GSIE/ENGINES/)."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     engines_doc_dir = repo_root / "GSIE" / "ENGINES"
     if not engines_doc_dir.exists():
         pytest.skip(f"Dossier {engines_doc_dir} introuvable")
@@ -152,7 +152,7 @@ def should_have_all_engines_documented() -> None:
 
 def should_have_readme_for_each_documented_engine() -> None:
     """Chaque moteur documenté doit avoir un README.md."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[4]
     engines_doc_dir = repo_root / "GSIE" / "ENGINES"
     if not engines_doc_dir.exists():
         pytest.skip(f"Dossier {engines_doc_dir} introuvable")

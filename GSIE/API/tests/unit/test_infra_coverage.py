@@ -1557,12 +1557,18 @@ class TestOutboxWorkerMain:
         ):
             main()
         mock_run.assert_called_once()
+        # Ferme la coroutine créée par run_worker() que le mock d'asyncio.run
+        # n'a jamais attendue — sinon RuntimeWarning « coroutine never awaited ».
+        mock_run.call_args.args[0].close()
 
     def should_suppress_keyboard_interrupt_in_main(self) -> None:
         from gsie_api.outbox_worker import main
 
-        with patch("gsie_api.outbox_worker.asyncio.run", side_effect=KeyboardInterrupt):
+        with patch("gsie_api.outbox_worker.asyncio.run", side_effect=KeyboardInterrupt) as mock_run:
             main()
+        # run_worker() a créé une coroutine réelle que asyncio.run factice a
+        # levée sans attendre — il faut la fermer explicitement.
+        mock_run.call_args.args[0].close()
 
 
 class TestOutboxWorkerCodeErreur:

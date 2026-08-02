@@ -349,3 +349,104 @@ async def should_warn_when_bloque_and_no_session() -> None:
     assert result.statut == ValidationStatut.bloque
     mock_logger.warning.assert_called_once()
     assert "validation_result_non_persiste" in mock_logger.warning.call_args[0]
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 122, 301, 341
+# ===========================================================================
+
+
+@pytest.mark.asyncio
+async def should_return_partiellement_valide_strict(engine: ValidationEngine) -> None:
+    """Un ensemble_complet avec échec non critique doit être partiellement_valide."""
+    from unittest.mock import patch
+
+    contenu = {
+        "diagnostic": {
+            "evidence_level": "B",
+            "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
+            "justification": "Diagnostic fondé.",
+        },
+        "recommandations": [
+            {
+                "contournable": True,
+                "justification": {
+                    "sources": [{"type_source": "peer_reviewed", "auteur": "X", "reference": "Y"}]
+                },
+            },
+        ],
+    }
+    # Mock _tous_non_critiques pour retourner True (tous les échecs sont non critiques)
+    with patch.object(ValidationEngine, "_tous_non_critiques", return_value=True):
+        result = await engine.validate(
+            _make_request(
+                TypeSortie.ensemble_complet,
+                contenu,
+                chaines_inference=[{"regle_id": "R1", "conclusion": "test"}],
+            )
+        )
+    assert result.statut == ValidationStatut.partiellement_valide
+
+
+@pytest.mark.asyncio
+async def should_fail_recommandation_contournable_when_not_list(engine: ValidationEngine) -> None:
+    """recommandation_contournable doit échouer si recommandations n'est pas une liste."""
+    contenu = {
+        "diagnostic": {
+            "evidence_level": "B",
+            "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
+            "justification": "Diagnostic fondé.",
+        },
+        "recommandations": "not a list",  # type invalide
+    }
+    result = await engine.validate(
+        _make_request(
+            TypeSortie.ensemble_complet, contenu, chaines_inference=[{"conclusion": "test"}]
+        )
+    )
+    # Le contrôle doit être non conforme
+    controle = next(c for c in result.controles if c.nom_controle == "recommandation_contournable")
+    assert controle.resultat == ResultatControle.non_conforme
+    assert "pas une liste" in controle.details
+
+
+@pytest.mark.asyncio
+async def should_fail_explicabilite_when_no_justification(engine: ValidationEngine) -> None:
+    """Le controle explicabilite doit échouer si aucune justification n'est présente."""
+    contenu = {
+        "source": {"type_source": "peer_reviewed", "auteur": "Test", "reference": "DOI"},
+        # Pas de justification
+    }
+    result = await engine.validate(_make_request(contenu=contenu))
+    controle = next(c for c in result.controles if c.nom_controle == "explicabilite")
+    assert controle.resultat == ResultatControle.non_conforme
+    assert "explicabilité insuffisante" in controle.details
+
+
+@pytest.mark.asyncio
+async def should_noop_when_persist_result_called_without_session() -> None:
+    """_persist_result avec session=None doit retourner silencieusement (garde défensive)."""
+    from uuid import uuid4
+
+    engine = ValidationEngine()  # pas de session
+    request = _make_request()
+    result = ValidationResult(
+        validation_id=uuid4(),
+        requete_origine=request.requete_id,
+        statut=ValidationStatut.bloque,
+        controles=[
+            ControleResultat(
+                nom_controle="test", resultat=ResultatControle.non_conforme, details="test"
+            )
+        ],
+        causes_blocage=[
+            CauseBlocage(
+                type_cause=TypeCauseBlocage.sans_source,
+                element_concerne=uuid4(),
+                description="test",
+            )
+        ],
+        date_validation=datetime.now(UTC),
+    )
+    # Ne doit pas lever — garde-fou ligne 182
+    await engine._persist_result(request, result)

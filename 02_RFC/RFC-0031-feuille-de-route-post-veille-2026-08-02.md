@@ -155,7 +155,7 @@ priorisation. Un seul RFC suffit.
 - [x] **Phase 4** : code métier autorisé (DEC-000017).
 - [x] **Français** : tout en français.
 - [x] **Traçabilité** : sources citées dans `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` §14.
-- [x] **Statut** : Proposé (Draft), en attente de décision Fondateur.
+- [x] **Statut** : Adopté (2026-08-02, DEC-000042).
 - [x] **L'IA assiste** : recommandations contournables, explicables.
 
 ## 6. Décision

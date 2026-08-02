@@ -134,7 +134,7 @@ jobs:
   python-quality:
     name: Python lint + type + test
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: GSIE/API
@@ -174,6 +174,29 @@ jobs:
 
       - name: Test with pytest
         run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=80
+
+  # Le harnais de mutation est séparé du job python-quality pour paralléliser :
+  # il lance 67 mutations en subprocess, chacune exécutant un sous-ensemble de
+  # tests unitaires. En job séparé, il tourne en parallèle de l'intégration et
+  # du build Docker, réduisant le temps total de CI de ~33 min à ~10 min.
+  python-mutation:
+    name: Python mutation harness
+    runs-on: ubuntu-latest
+    needs: [python-quality]
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: GSIE/API
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev
 
       # La couverture dit quelles lignes ont tourné, jamais si un comportement
       # faux aurait été détecté. Le harnais casse volontairement chaque garde
@@ -423,7 +446,7 @@ jobs:
   ci-gate:
     name: CI Gate (bloque merge)
     runs-on: ubuntu-latest
-    needs: [markdown-lint, consistency-checks, python-quality, python-integration, rust-quality, docker-build, governance-check]
+    needs: [markdown-lint, consistency-checks, python-quality, python-mutation, python-integration, rust-quality, docker-build, governance-check]
     timeout-minutes: 5
     if: always()
     steps:
@@ -433,6 +456,7 @@ jobs:
           echo "  markdown-lint: ${{ needs.markdown-lint.result }}"
           echo "  consistency-checks: ${{ needs.consistency-checks.result }}"
           echo "  python-quality: ${{ needs.python-quality.result }}"
+          echo "  python-mutation: ${{ needs.python-mutation.result }}"
           echo "  python-integration: ${{ needs.python-integration.result }}"
           echo "  rust-quality: ${{ needs.rust-quality.result }}"
           echo "  docker-build: ${{ needs.docker-build.result }}"
@@ -440,6 +464,7 @@ jobs:
           if [[ "${{ needs.markdown-lint.result }}" != "success" || \
                 "${{ needs.consistency-checks.result }}" != "success" || \
                 "${{ needs.python-quality.result }}" != "success" || \
+                "${{ needs.python-mutation.result }}" != "success" || \
                 "${{ needs.python-integration.result }}" != "success" || \
                 "${{ needs.rust-quality.result }}" != "success" || \
                 "${{ needs.docker-build.result }}" != "success" || \

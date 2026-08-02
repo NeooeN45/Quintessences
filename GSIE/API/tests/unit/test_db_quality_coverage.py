@@ -7,11 +7,59 @@ collect_db_metrics sans Docker.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from prometheus_client import CollectorRegistry, Gauge, Info
 
 from gsie_api.metrics import db_quality
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+
+@pytest.fixture
+def dedicated_registry() -> Generator[CollectorRegistry, None, None]:
+    """Isole les Gauges de `db_quality` dans un registre Prometheus jetable.
+
+    Les Gauges du module sont des singletons enregistrés dans le registre
+    Prometheus par défaut. `_collect_metrics` les mute réellement : sans ce
+    remplacement, les valeurs posées par ce test fuiraient vers le registre
+    partagé par le reste de la suite (et vers un futur scrape de
+    `/metrics`). Les jumelles ci-dessous portent les mêmes noms et labels,
+    mais vivent dans un `CollectorRegistry()` dédié, jeté à la fin du test.
+    """
+    registry = CollectorRegistry()
+    patched = {
+        "_g_entities_total": Gauge("gsie_entities_total", "test", registry=registry),
+        "_g_aliases_total": Gauge(
+            "gsie_aliases_total", "test", labelnames=("namespace",), registry=registry
+        ),
+        "_g_enrichment_completeness": Gauge(
+            "gsie_enrichment_completeness", "test", labelnames=("field",), registry=registry
+        ),
+        "_g_descriptions_by_language": Gauge(
+            "gsie_descriptions_by_language",
+            "test",
+            labelnames=("language",),
+            registry=registry,
+        ),
+        "_g_descriptions_by_quality": Gauge(
+            "gsie_descriptions_by_quality", "test", labelnames=("quality",), registry=registry
+        ),
+        "_g_images_validated": Gauge("gsie_images_validated_total", "test", registry=registry),
+        "_g_images_unvalidated": Gauge("gsie_images_unvalidated_total", "test", registry=registry),
+        "_g_ingestion_progress": Gauge(
+            "gsie_ingestion_progress_offset",
+            "test",
+            labelnames=("pipeline", "status"),
+            registry=registry,
+        ),
+        "_info_db": Info("gsie_db", "test", registry=registry),
+    }
+    with patch.multiple(db_quality, **patched):
+        yield registry
 
 
 class TestPublierSeries:
@@ -41,7 +89,9 @@ class TestPublierSeries:
 class TestCollectMetrics:
     """Couverture de _collect_metrics et collect_db_metrics."""
 
-    async def should_collect_all_metrics_when_db_available(self) -> None:
+    async def should_collect_all_metrics_when_db_available(
+        self, dedicated_registry: CollectorRegistry
+    ) -> None:
         # Mock de la session — chaque scalar retourne un compteur
         mock_session = AsyncMock()
         # Les scalars sont appelés dans l'ordre :
@@ -75,7 +125,9 @@ class TestCollectMetrics:
         with patch.object(db_quality, "async_session_factory", _fake_factory):
             await db_quality._collect_metrics()
 
-    async def should_handle_empty_db_gracefully(self) -> None:
+    async def should_handle_empty_db_gracefully(
+        self, dedicated_registry: CollectorRegistry
+    ) -> None:
         mock_session = AsyncMock()
         mock_session.scalar = AsyncMock(side_effect=[0, 0, 0, 0, 0])
         mock_result_empty = MagicMock()

@@ -23,6 +23,13 @@ import os
 # du .env local. Le comportement du limiter (comptage, 429) est identique
 # avec memory storage ; seul le partage cross-worker disparaît.
 os.environ.setdefault("GSIE_RATE_LIMIT_STORAGE_URL", "memory://")
+# Refresh token store en memory:// pour les tests unitaires — AVANT tout
+# import gsie_api. Sans cette surcharge, get_refresh_token_store() crée un
+# RedisRefreshTokenStore qui tente de se connecter à localhost:6379, et les
+# 6 tests auth qui utilisent les refresh tokens échouent avec ConnectionError.
+# memory:// utilise MemoryRefreshTokenStore (dict en mémoire), équivalent
+# fonctionnel pour les tests unitaires.
+os.environ.setdefault("GSIE_REFRESH_TOKEN_STORAGE_URL", "memory://")
 
 from collections.abc import AsyncGenerator, Iterator, Sequence
 from contextlib import ExitStack
