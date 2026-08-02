@@ -300,7 +300,7 @@ jobs:
 
       - name: Scan Trivy — image Docker
         if: steps.build_image.outcome == 'success'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/neooen45/gsie-api:latest
           format: table
@@ -309,7 +309,7 @@ jobs:
 
       - name: Scan Trivy — image Docker (SARIF)
         if: steps.build_image.outcome == 'success'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/neooen45/gsie-api:latest
           format: sarif
@@ -319,7 +319,7 @@ jobs:
 
       - name: Scan Trivy — filesystem du dépôt (repli)
         if: steps.build_image.outcome != 'success'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -329,7 +329,7 @@ jobs:
 
       - name: Scan Trivy — filesystem du dépôt (SARIF, repli)
         if: steps.build_image.outcome != 'success'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -345,7 +345,7 @@ jobs:
 
       - name: Échec CI si vulnérabilité CRITICAL détectée
         if: always()
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: ${{ steps.build_image.outcome == 'success' && 'image' || 'fs' }}
           image-ref: ${{ steps.build_image.outcome == 'success' && 'ghcr.io/neooen45/gsie-api:latest' || '' }}
