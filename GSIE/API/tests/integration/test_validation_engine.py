@@ -1,14 +1,14 @@
 """Tests d'intégration — le Validation Engine bloque ou valide selon la constitution.
 
-Le moteur est stateless : il ne persiste rien, mais il est le dernier rempart
-avant l'utilisateur (GSIE-CON-005). Ces tests vérifient que chaque contrôle
-constitutionnel produit le bon statut et la bonne cause de blocage, sur des
-structures réelles — pas des mocks.
+Le moteur est le dernier rempart avant l'utilisateur (GSIE-CON-005). Ces
+tests vérifient que chaque contrôle constitutionnel produit le bon statut
+et la bonne cause de blocage, sur des structures réelles — pas des mocks.
 
 Le fixture ``db_session`` garantit que Docker (PostgreSQL via testcontainers)
-est disponible, conformément au contrat des tests d'intégration. Le moteur
-lui-même n'écrit rien : la session n'est pas utilisée pour la validation,
-mais sa présence aligne ce module sur le pattern d'intégration du dépôt.
+est disponible, conformément au contrat des tests d'intégration. La session
+est passée au ValidationEngine pour la persistance des résultats bloqués
+(RFC-0028, migration 0028) — le Learning Engine lit ces patterns pour
+détecter les blocages récurrents.
 """
 
 from datetime import datetime
@@ -100,7 +100,7 @@ async def should_validate_diagnostic_with_evidence_level_and_sources(
     request = _requete_diagnostic(_diagnostic_valide())
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.valide
@@ -117,7 +117,7 @@ async def should_block_diagnostic_without_evidence_level(
     request = _requete_diagnostic(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -134,7 +134,7 @@ async def should_block_diagnostic_without_sources(
     request = _requete_diagnostic(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -154,7 +154,7 @@ async def should_block_diagnostic_without_chaine_inference(
     )
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -172,7 +172,7 @@ async def should_validate_recommendation_with_justification_and_contournable(
     request = _requete_recommandation(_recommandation_valide())
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.valide
@@ -189,7 +189,7 @@ async def should_block_recommendation_non_contournable(
     request = _requete_recommandation(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -206,7 +206,7 @@ async def should_block_recommendation_without_justification(
     request = _requete_recommandation(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -232,7 +232,7 @@ async def should_partially_validate_ensemble_with_only_non_critical_failures(
     request = _requete_ensemble(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.partiellement_valide
@@ -254,7 +254,7 @@ async def should_block_ensemble_with_critical_failure(
     request = _requete_ensemble(contenu)
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert result.statut == ValidationStatut.bloque
@@ -272,7 +272,7 @@ async def should_return_validation_id_and_timestamp(
     request = _requete_diagnostic(_diagnostic_valide())
 
     # Act
-    result = await ValidationEngine().validate(request)
+    result = await ValidationEngine(session=db_session).validate(request)
 
     # Assert
     assert isinstance(result.validation_id, UUID)
