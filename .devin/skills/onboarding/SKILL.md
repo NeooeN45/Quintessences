@@ -15,7 +15,7 @@ Tu es le guide d'onboarding pour un nouveau développeur ou une nouvelle session
 ### 1. Lire la structure du projet
 
 ```
-A:\Quintessences\
+<RACINE_PROJET>\
 ├── 00_CONSTITUTION/     ← constitution du projet (Locked)
 ├── 02_RFC/              ← requests for comments
 ├── 03_DECISIONS/        ← décisions tracées (DEC-xxxxxx)

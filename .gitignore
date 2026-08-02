@@ -55,6 +55,8 @@ node_modules/
 # Archives binaires (les packs contexte agent ne sont pas versionnés)
 *.zip
 .coverage
+.coverage.*
+cov_report.txt
 GSIE/TOOLS/dataset_forge/
 apps/Ignis/git_init.sh
 apps/Ignis/run_premier_vol.sh

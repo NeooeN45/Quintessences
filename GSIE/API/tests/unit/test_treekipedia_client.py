@@ -247,8 +247,9 @@ def test_should_read_real_treekipedia_csv_when_present() -> None:
     Ignoré si le CSV réel n'est pas présent (environnement sans le dépôt
     d'inspection Treekipedia).
     """
-    real_csv = Path(
-        "A:/Quintessences/21_EXPERIMENTS/_treekipedia_inspection/treekipedia/species_names_v2.csv"
+    real_csv = (
+        Path(__file__).resolve().parents[4]
+        / "21_EXPERIMENTS/_treekipedia_inspection/treekipedia/species_names_v2.csv"
     )
     if not real_csv.exists():
         pytest.skip("CSV réel Treekipedia non disponible")

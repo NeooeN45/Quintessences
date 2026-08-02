@@ -27,11 +27,11 @@ from urllib.parse import urlsplit, urlunsplit
 import aiohttp
 
 # Fichiers d'entrée
-SOURCES_FILE = Path("A:/Quintessences/GSIE/DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md")
-CATALOG_FILE = Path("A:/Quintessences/GSIE/DATASETS/DATASET_CATALOG.md")
+SOURCES_FILE = Path(__file__).resolve().parents[2] / "DATASETS/SOURCES_DONNEES_EXHAUSTIVES.md"
+CATALOG_FILE = Path(__file__).resolve().parents[2] / "DATASETS/DATASET_CATALOG.md"
 
 # Fichiers de sortie
-OUT_DIR = Path("A:/Quintessences/GSIE/TOOLS/url_audit")
+OUT_DIR = Path(__file__).resolve().parent / "url_audit"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_JSON = OUT_DIR / "url_report.json"
 REPORT_CSV = OUT_DIR / "url_report.csv"

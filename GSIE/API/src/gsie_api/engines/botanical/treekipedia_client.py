@@ -31,17 +31,23 @@ from pathlib import Path
 
 from gsie_api.shared.http_client import ResilientHttpClient
 
+# Racine du projet Quintessences — déduite de la position de ce fichier
+# (GSIE/API/src/gsie_api/engines/botanical/ → 6 niveaux pour remonter à la racine)
+_PROJECT_ROOT = Path(__file__).resolve().parents[6]
+
 # Export CSV officiel Treekipedia — 67 928 espèces
-_DEFAULT_CSV_PATH = Path(
-    "A:/Quintessences/21_EXPERIMENTS/_treekipedia_inspection/treekipedia/species_names_v2.csv"
+_DEFAULT_CSV_PATH = (
+    _PROJECT_ROOT / "21_EXPERIMENTS/_treekipedia_inspection/treekipedia/species_names_v2.csv"
 )
 # Export CSV riche (12 MB) — 67 744 espèces avec genus, family, class, order
-_RICH_CSV_PATH = Path(
-    "A:/Quintessences/21_EXPERIMENTS/_treekipedia_inspection/treekipedia/exports/treekipedia_species_for_silvi.csv"
+_RICH_CSV_PATH = (
+    _PROJECT_ROOT / "21_EXPERIMENTS/_treekipedia_inspection/treekipedia/exports/"
+    "treekipedia_species_for_silvi.csv"
 )
 # JSON d'images Wikimedia Commons pré-résolues par Treekipedia — 3999 espèces
-_IMAGES_JSON_PATH = Path(
-    "A:/Quintessences/21_EXPERIMENTS/_treekipedia_inspection/treekipedia/database/treekipedia_images_full.json"
+_IMAGES_JSON_PATH = (
+    _PROJECT_ROOT / "21_EXPERIMENTS/_treekipedia_inspection/treekipedia/database/"
+    "treekipedia_images_full.json"
 )
 _DEFAULT_TIMEOUT = 30.0
 
