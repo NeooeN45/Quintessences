@@ -6,11 +6,15 @@
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 # Roles proprietaires de la base : PostgreSQL leur accorde des droits
 # implicites que `REVOKE` n'ote pas. Une application connectee sous l'un
@@ -43,6 +47,48 @@ _MOTS_DE_PASSE_DE_REMPLISSAGE = frozenset(
 )
 
 
+class _DecryptedEnvSource(PydanticBaseSettingsSource):
+    """Source de settings lisant le cache .env.enc déchiffré en mémoire.
+
+    Cette source évite d'injecter les secrets dans ``os.environ`` (qui les
+    exposerait aux sous-processus via /proc/self/environ sur Linux). Elle lit
+    directement ``_decrypted_env_cache`` rempli par ``_load_encrypted_env()``.
+    """
+
+    def __init__(self, settings_cls: type[BaseSettings]) -> None:
+        super().__init__(settings_cls)
+
+    def get_field_value(self, field: object, field_name: str) -> tuple[Any, str, bool]:
+        """Retourne (valeur, clé d'origine, complex_val) pour un champ."""
+        cache = _decrypted_env_cache or {}
+        # pydantic-settings préfixe les clés env avec env_prefix.
+        prefix = self.config.get("env_prefix", "")
+        env_key = f"{prefix}{field_name}"
+        if env_key in cache:
+            return cache[env_key], env_key, False
+        # Cas insensitive (pydantic-settings lit env en case-insensitive).
+        env_key_lower = env_key.lower()
+        for k, v in cache.items():
+            if k.lower() == env_key_lower:
+                return v, k, False
+        return None, env_key, False
+
+    def prepare_field_value(
+        self, field_name: str, field: object, value: Any, value_is_complex: bool
+    ) -> Any:
+        return value
+
+    def __call__(self) -> dict[str, Any]:
+        cache = _decrypted_env_cache or {}
+        prefix = self.config.get("env_prefix", "")
+        result: dict[str, Any] = {}
+        for key, val in cache.items():
+            if key.startswith(prefix):
+                field_name = key[len(prefix) :]
+                result[field_name] = val
+        return result
+
+
 class Settings(BaseSettings):
     """Configuration globale de l'API GSIE.
 
@@ -56,6 +102,32 @@ class Settings(BaseSettings):
         env_prefix="GSIE_",
         extra="ignore",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Ajoute la source .env.enc déchiffrée en mémoire (priorité entre env et dotenv).
+
+        Ordre de priorité (du plus fort au plus faible) :
+        1. init_settings (kwargs explicites du constructeur)
+        2. env_settings (variables d'environnement réelles — os.environ)
+        3. _DecryptedEnvSource (.env.enc déchiffré en mémoire, jamais os.environ)
+        4. dotenv_settings (.env en clair, backward-compat)
+        5. file_secret_settings (secrets files pydantic, non utilisé ici)
+        """
+        return (
+            init_settings,
+            env_settings,
+            _DecryptedEnvSource(settings_cls),
+            dotenv_settings,
+            file_secret_settings,
+        )
 
     # Application
     app_name: str = "GSIE API"
@@ -263,44 +335,101 @@ class Settings(BaseSettings):
 # --- Chiffrement .env (audit sécurité P1-1) -------------------------------
 # La clé Fernet est stockée hors du repo (~/.config/gsie/env.key).
 # Si .env n'existe pas mais .env.enc oui, on déchiffre en mémoire et on
-# injecte les valeurs dans os.environ — aucun fichier temporaire sur disque.
+# passe les valeurs à pydantic-settings via un fichier temporaire éphémère
+# — on n'injecte JAMAIS dans os.environ, car cela exposerait les secrets à
+# tout sous-processus (via /proc/self/environ sur Linux, héritage par défaut).
 _KEY_DIR = Path.home() / ".config" / "gsie"
 _KEY_FILE = _KEY_DIR / "env.key"
+# Résolution robuste : remonte depuis src/gsie_api/core/config.py vers la
+# racine de l'API. Quatre .parent correspondent à :
+#   config.py → core/ → gsie_api/ → src/ → API root.
+# On utilise une garde pour vérifier qu'on tombe bien sur pyproject.toml.
 _API_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if not (_API_ROOT / "pyproject.toml").exists():
+    # Le module a été déplacé — on ne peut pas deviner la racine, on désactive
+    # le déchiffrement (get_settings() lèvera des erreurs métier explicites).
+    _API_ROOT = Path(__file__).resolve().parent  # fallback inoffensif
 _ENV_FILE = _API_ROOT / ".env"
 _ENV_ENC_FILE = _API_ROOT / ".env.enc"
 
+# Cache du contenu déchiffré (en mémoire, jamais écrit sur disque).
+_decrypted_env_cache: dict[str, str] | None = None
+
+
+def _parse_env_line(line: str) -> tuple[str, str] | None:
+    """Parse une ligne KEY=VALUE du fichier .env, en gérant les guillemets.
+
+    Retourne None pour les lignes vides ou les commentaires. Retire les
+    guillemets entourant la valeur, comme le parseur dotenv de pydantic :
+    ``KEY="value"`` → ``value``, ``KEY='value'`` → ``value``.
+    """
+    line = line.strip()
+    if not line or line.startswith("#"):
+        return None
+    if "=" not in line:
+        return None
+    key, _, value = line.partition("=")
+    key = key.strip()
+    value = value.strip()
+    # Retire les guillemets entourants (simple ou double), comme dotenv.
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+        value = value[1:-1]
+    if not key:
+        return None
+    return key, value
+
 
 def _load_encrypted_env() -> None:
-    """Déchiffre .env.enc dans os.environ si .env est absent.
+    """Déchiffre .env.enc en mémoire si .env est absent.
 
     Idempotent : ne fait rien si .env existe déjà ou si .env.enc est absent.
-    Échoue silencieusement en mode développement (log warning) pour ne pas
-    bloquer un démarrage sans secrets — la validation Settings s'en chargera.
+    Le contenu déchiffré est stocké dans ``_decrypted_env_cache`` (en mémoire,
+    jamais sur disque) et injecté via ``_env_settings`` dans pydantic-settings.
+
+    Si la clé Fernet est absente, journalise un warning explicite — ne laisse
+    pas pydantic lever une erreur de validation opaque qui ne mentionne pas
+    la vraie cause (cf. motif « panne diagnostiquée à côté » corrigé ailleurs
+    dans ce dépôt).
     """
+    global _decrypted_env_cache
+
+    if _decrypted_env_cache is not None:
+        return  # déjà chargé
     if _ENV_FILE.exists() or not _ENV_ENC_FILE.exists():
-        return
+        return  # .env présent ou .env.enc absent — rien à faire
+
     if not _KEY_FILE.exists():
-        return  # Silencieux : get_settings() lèvera des erreurs métier
+        # Warning explicite — ne laisse pas pydantic lever une erreur opaque.
+        # En production, ce warning doit être repéré dans les journaux.
+        # structlog n'est pas encore configuré à ce stade (avant get_settings),
+        # on utilise logging standard avec un message formaté.
+        import logging
+
+        logging.getLogger("gsie_api.config").warning(
+            "env_enc_key_absente — .env.enc présent mais clé Fernet absente "
+            "(key_file=%s, env_enc=%s). L'application ne pourra pas charger "
+            "ses secrets — get_settings() lèvera une erreur de validation.",
+            str(_KEY_FILE),
+            str(_ENV_ENC_FILE),
+        )
+        return
 
     from cryptography.fernet import Fernet
 
     fernet = Fernet(_KEY_FILE.read_bytes())
     plaintext = fernet.decrypt(_ENV_ENC_FILE.read_bytes()).decode("utf-8")
 
+    env_dict: dict[str, str] = {}
     for ligne in plaintext.splitlines():
-        ligne = ligne.strip()
-        if not ligne or ligne.startswith("#"):
-            continue
-        if "=" not in ligne:
-            continue
-        key, _, value = ligne.partition("=")
-        key = key.strip()
-        value = value.strip()
-        # N'écrase pas une variable déjà positionnée par l'environnement
-        # (priorité : env réel > .env.enc > .env).
-        if key and key not in os.environ:
-            os.environ[key] = value
+        parsed = _parse_env_line(ligne)
+        if parsed is not None:
+            key, value = parsed
+            # N'écrase pas une variable déjà positionnée par l'environnement
+            # réel (priorité : env réel > .env.enc).
+            if key not in os.environ:
+                env_dict[key] = value
+
+    _decrypted_env_cache = env_dict
 
 
 @lru_cache
