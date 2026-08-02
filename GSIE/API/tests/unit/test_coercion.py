@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -267,3 +268,66 @@ class TestSerialiserValeur:
     def should_pass_through_none(self) -> None:
         result = serialiser_valeur(None)
         assert result is None
+
+
+class TestCoercerValeur:
+    """Couverture de _coercer_valeur — dispatch par type SQL."""
+
+    def should_coerce_geometry_type(self) -> None:
+        from geoalchemy2 import Geometry
+
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = Geometry(geometry_type="POINT", srid=2154)
+        result = _coercer_valeur("POINT(1 2)", col)
+        assert result == "POINT(1 2)"
+
+    def should_coerce_date_type(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.Date()
+        result = _coercer_valeur("2026-01-15", col)
+        assert result == date(2026, 1, 15)
+
+    def should_coerce_boolean_true(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.Boolean()
+        result = _coercer_valeur(True, col)
+        assert result is True
+
+    def should_raise_when_boolean_with_non_bool(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.Boolean()
+        with pytest.raises(ValueError, match="attendu un booléen"):
+            _coercer_valeur("not-a-bool", col)
+
+    def should_coerce_uuid_type(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.Uuid()
+        u = uuid4()
+        result = _coercer_valeur(str(u), col)
+        assert result == u
+
+    def should_coerce_datetime_with_timezone(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.DateTime(timezone=True)
+        result = _coercer_valeur("2026-01-15T10:00:00Z", col)
+        assert result.tzinfo is not None
+
+    def should_pass_through_unknown_type(self) -> None:
+        from gsie_api.resources.coercion import _coercer_valeur
+
+        col = MagicMock()
+        col.type = sa.String(100)
+        result = _coercer_valeur("hello", col)
+        assert result == "hello"
