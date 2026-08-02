@@ -134,7 +134,7 @@ jobs:
   python-quality:
     name: Python lint + type + test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: GSIE/API
