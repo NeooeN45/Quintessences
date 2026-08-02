@@ -293,6 +293,21 @@
         "title": "BlocContexte",
         "type": "object"
       },
+      "Body_botanical_identify_api_v1_botanical_identify_post": {
+        "properties": {
+          "file": {
+            "description": "Image de la plante (JPG ou PNG)",
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_botanical_identify_api_v1_botanical_identify_post",
+        "type": "object"
+      },
       "BotanicalData": {
         "additionalProperties": false,
         "description": "Résultat d'une requête botanique (BOTANICAL_ENGINE.md §5).",
@@ -3551,6 +3566,97 @@
         "title": "PeuplementState",
         "type": "object"
       },
+      "PlantNetIdentificationResponse": {
+        "additionalProperties": false,
+        "description": "Réponse d'identification PlantNet — meilleure correspondance + résultats.",
+        "properties": {
+          "best_match": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nom scientifique de la meilleure correspondance",
+            "title": "Best Match"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/PlantNetIdentificationResult"
+            },
+            "maxItems": 20,
+            "title": "Results",
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          }
+        },
+        "required": [
+          "best_match"
+        ],
+        "title": "PlantNetIdentificationResponse",
+        "type": "object"
+      },
+      "PlantNetIdentificationResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'identification PlantNet — une espèce candidate avec son score.",
+        "properties": {
+          "common_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Common Names",
+            "type": "array"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "gbif_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gbif Id"
+          },
+          "genus": {
+            "title": "Genus",
+            "type": "string"
+          },
+          "scientific_name": {
+            "description": "Nom scientifique avec auteur",
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "scientific_name_without_author": {
+            "title": "Scientific Name Without Author",
+            "type": "string"
+          },
+          "score": {
+            "description": "Score de confiance [0, 1[",
+            "exclusiveMaximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score",
+          "scientific_name",
+          "scientific_name_without_author",
+          "genus",
+          "family"
+        ],
+        "title": "PlantNetIdentificationResult",
+        "type": "object"
+      },
       "Probabilite": {
         "description": "Probabilité qualitative d'un risque (§5).\n\nVolontairement qualitative : une probabilité chiffrée exigerait un\nmodèle sourcé que le moteur ne possède pas. Afficher un pourcentage\nnon fondé donnerait une fausse précision, ce que `GSIE-CON-002`\ninterdit.",
         "enum": [
@@ -5509,6 +5615,61 @@
         ]
       }
     },
+    "/api/v1/botanical/identify": {
+      "post": {
+        "description": "Soumet une image (JPG/PNG) à l'API PlantNet pour identification. 78 810 espèces identifiables. Retourne la meilleure correspondance et les résultats classés par score de confiance. Retourne null si aucune identification n'est possible — jamais d'espèce inventée (ADR-009).",
+        "operationId": "botanical_identify_api_v1_botanical_identify_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_botanical_identify_api_v1_botanical_identify_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlantNetIdentificationResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Botanical Identify Api V1 Botanical Identify Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Identifier une plante par image (API PlantNet, RFC-0031 action 8)",
+        "tags": [
+          "botanical"
+        ]
+      }
+    },
     "/api/v1/botanical/indigenat": {
       "post": {
         "description": "Interroge le dataset réel Bellifa et al. (2026, DOI 10.57745/DHJHGS) pour le statut d'indigénat d'une essence (France + sylvoécorégion). Retourne null si le taxon ou le code SER est introuvable — jamais un statut approximé (ADR-009).",
@@ -6871,16 +7032,13 @@
     },
     "/api/v1/knowledge/stats": {
       "get": {
-        "description": "Retourne les statistiques du graphe (nombre d'objets par type).",
+        "description": "Retourne les statistiques du graphe (nombre d'objets par type).\n\nFormat : ``{\"total_objects\": int, \"types\": {type: count}}``.",
         "operationId": "knowledge_stats_api_v1_knowledge_stats_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "integer"
-                  },
                   "title": "Response Knowledge Stats Api V1 Knowledge Stats Get",
                   "type": "object"
                 }
