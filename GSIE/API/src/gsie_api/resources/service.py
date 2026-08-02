@@ -199,7 +199,16 @@ class ResourceService:
         return f"{type_name}:{year}:{short_uuid}"
 
     async def _get_next_version(self, resource_id: UUID) -> int:
-        """Récupère le numéro de version suivant pour une resource."""
+        """Récupère le numéro de version suivant pour une resource.
+
+        Verrou sur la resource (SELECT ... FOR UPDATE) pour sérialiser
+        l'allocation du numéro de version : sans ce verrou, deux écritures
+        concurrentes calculeraient toutes deux max()+1 et produiraient deux
+        révisions de même numéro (audit 2026-08-02, 3ᵉ passe).
+        """
+        await self._session.execute(
+            select(ResourceModel).where(ResourceModel.id == resource_id).with_for_update()
+        )
         current = (
             await self._session.execute(
                 select(func.max(RevisionModel.version)).where(
