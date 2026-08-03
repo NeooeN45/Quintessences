@@ -57,11 +57,20 @@ class TestConfigApiRootFallback:
         source_path = Path(config_module.__file__)
         source_lines = source_path.read_text(encoding="utf-8").splitlines()
 
-        # Bloc de calcul de _API_ROOT (1-indexé 351-355 = indices 350-354)
-        # Inclut l'assignation principale + le if/else fallback
-        relevant_code = "\n".join(source_lines[350:355])
+        # Localiser le bloc par sa sémantique : des champs de configuration
+        # peuvent être ajoutés avant lui sans rendre ce test artificiellement
+        # dépendant de numéros de ligne historiques.
+        start = next(
+            index for index, line in enumerate(source_lines) if line.startswith("_API_ROOT =")
+        )
+        end = next(
+            index
+            for index, line in enumerate(source_lines[start:], start=start)
+            if line.startswith("_ENV_FILE =")
+        )
+        relevant_code = "\n".join(source_lines[start:end])
         # Padder avec des lignes vides pour aligner les numéros de ligne
-        padded_code = "\n" * 350 + relevant_code
+        padded_code = "\n" * start + relevant_code
         code_obj = compile(padded_code, str(source_path), "exec")
 
         namespace: dict = {"__file__": str(source_path), "Path": Path}

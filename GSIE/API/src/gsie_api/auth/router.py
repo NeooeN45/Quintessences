@@ -201,6 +201,9 @@ async def refresh_token(
     username = payload.get("username")
     if isinstance(username, str):
         session_claims["username"] = username
+    auth_provider = payload.get("auth_provider")
+    if isinstance(auth_provider, str):
+        session_claims["auth_provider"] = auth_provider
 
     access_token = create_access_token(subject=subject, claims=session_claims)
     new_refresh_token = create_refresh_token(subject=subject, claims=session_claims)

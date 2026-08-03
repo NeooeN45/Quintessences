@@ -245,6 +245,15 @@ class Settings(BaseSettings):
     auth_dev_login_enabled: bool = False
     auth_dev_username: str = "admin"
     auth_dev_password: str = ""
+    # Identité Quintessences persistée (RFC-0032 / DEC-000044).
+    auth_local_registration_enabled: bool = True
+    # Liste JSON des client IDs Web/Android autorisés à présenter un ID token
+    # au backend. Un tableau vide garde Google fermé par défaut.
+    google_oauth_client_ids: list[str] = Field(default_factory=list)
+    # Les nonces utilisent Redis hors développement ; l'URL vide réutilise le
+    # registre distribué des refresh tokens avec un préfixe de clés distinct.
+    google_nonce_storage_url: str = ""
+    google_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
 
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")

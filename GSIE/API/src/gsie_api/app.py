@@ -26,6 +26,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 
 from gsie_api.audit.router import router as audit_router
+from gsie_api.auth.identity_router import router as identity_router
 from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
@@ -64,7 +65,12 @@ logger = get_logger("gsie_api.app")
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
 _OPENAPI_TAGS = [
-    {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
+    {
+        "name": "auth",
+        "description": (
+            "Compte Quintessences — e-mail, Google OIDC, JWT RS256, refresh et révocation"
+        ),
+    },
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
     {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
@@ -160,6 +166,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "auth_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.auth.google_nonces import close_google_nonce_store
+
+        await close_google_nonce_store()
+    except Exception as exc:
+        logger.error(
+            "google_nonce_store_shutdown_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )
@@ -330,6 +346,7 @@ def create_app() -> FastAPI:
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
+    app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)

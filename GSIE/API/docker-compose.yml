@@ -134,15 +134,21 @@ services:
       # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
       GSIE_JWT_PRIVATE_KEY_PATH: /keys/private.pem
       GSIE_JWT_PUBLIC_KEY_PATH: /keys/public.pem
-      # Défaut `false` : `_get_dev_user` retourne roles=["admin"] et c'est le
-      # seul mécanisme d'authentification implémenté. Le compose l'activait
-      # par défaut, ce que `config.py` s'appliquait justement à éviter.
+      # Compte de développement historique, séparé des comptes persistés.
+      # Il reste fermé par défaut et interdit en staging/production.
       GSIE_AUTH_DEV_LOGIN_ENABLED: ${GSIE_AUTH_DEV_LOGIN_ENABLED:-false}
       GSIE_AUTH_DEV_USERNAME: ${GSIE_AUTH_DEV_USERNAME:-admin}
       # Plus obligatoire : exiger un mot de passe pour un mécanisme désactivé
       # poussait à recopier celui de `.env.example`. La configuration refuse
       # désormais toute valeur de remplissage quand le dev login est actif.
       GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:-}
+      # Identité Quintessences (RFC-0032 / DEC-000044).
+      GSIE_AUTH_LOCAL_REGISTRATION_ENABLED: ${GSIE_AUTH_LOCAL_REGISTRATION_ENABLED:-true}
+      # Tableau JSON, par exemple ["123.apps.googleusercontent.com"].
+      # Aucun secret OAuth n'est requis pour vérifier un ID token.
+      GSIE_GOOGLE_OAUTH_CLIENT_IDS: ${GSIE_GOOGLE_OAUTH_CLIENT_IDS:-[]}
+      GSIE_GOOGLE_NONCE_STORAGE_URL: ${GSIE_GOOGLE_NONCE_STORAGE_URL:-}
+      GSIE_GOOGLE_NONCE_EXPIRE_SECONDS: ${GSIE_GOOGLE_NONCE_EXPIRE_SECONDS:-300}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
       # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)

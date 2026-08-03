@@ -183,6 +183,32 @@ class TestRefreshRolesEdgeCases:
             client.app.dependency_overrides.pop(_get_store, None)
         assert response.status_code == 200
 
+    def should_preserve_auth_provider_claim(self, client: TestClient) -> None:
+        """Le refresh conserve le fournisseur de la session d'identité."""
+        from unittest.mock import AsyncMock
+
+        from gsie_api.auth.router import get_refresh_token_store as _get_store
+        from gsie_api.core.auth import create_refresh_token, verify_token
+
+        token = create_refresh_token(
+            subject=str(auth_router.DEV_USER_ID),
+            claims={"roles": ["user"], "auth_provider": "google"},
+        )
+        mock_store = AsyncMock()
+        mock_store.rotate = AsyncMock(return_value=True)
+        client.app.dependency_overrides[_get_store] = lambda: mock_store
+        try:
+            response = client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": token},
+            )
+        finally:
+            client.app.dependency_overrides.pop(_get_store, None)
+
+        payload = verify_token(response.json()["access_token"])
+        assert response.status_code == 200
+        assert payload["auth_provider"] == "google"
+
     def should_handle_missing_roles_claim(self, client: TestClient) -> None:
         """Un refresh token sans roles doit être accepté (roles=[])."""
         from gsie_api.core.auth import create_refresh_token

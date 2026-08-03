@@ -298,6 +298,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
 | **Couverture 100% + endpoints dashboard** — audit/gamification | ✅ **Complète (2026-08-02)** | 1859 tests unitaires passent, 63 skipped, 100% couverture (8831 stmts), score mutation 67/67. Endpoints `GET /audit-logs` + `GET /gamification/stats` (données statiques Phase 4). ruff + mypy OK. |
 | **Phase de stabilisation** — DEC-000043 | ✅ **Clôturée (2026-08-02)** | S1 restauration DB prouvée (127 tables, parité source ✓), S2 tranche verticale réelle (chaîne complète sur pilote Parelle 2007, 0.15s), S3 validation scientifique (3/3 scénarios, 18/18 checks, latence 32ms p95 34.68ms). Gates 4/5/6 rouvrables. |
+| **Identité Quintessences** — RFC-0032 / DEC-000044 | ✅ **Socle serveur livré (2026-08-03)** | Compte canonique multi-apps, inscription/connexion locale Argon2id, Google OIDC avec nonce et rattachement explicite, jetons GSIE RS256, 4 tables isolées dans `gsie_rgpd_identites`. Suite globale : 1 915 tests unitaires, couverture 100 % ; migration réversible et 48 preuves RGPD réelles. Restent avant ouverture publique : vérification e-mail, récupération de mot de passe, configuration/validation OAuth Google et écrans clients. Connexion entreprise OIDC/SAML différée et affichée « En développement ». |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -327,7 +328,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 
 1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
 2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. **CI 100% verte** (Docker build validé en CI avec rustc 1.85 + maturin 1.9.6).
-3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
+3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production, comptes persistés et fournisseurs local/Google isolés en base (DEC-000044). Restent avant ouverture publique : vérification e-mail, récupération du mot de passe, configuration OAuth Google et MFA administrateur.
 4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte. **S3 clôturé** : 3/3 scénarios ground truth validés (Parelle 2007), sources traçables, benchmark mesuré. Reste : multi-sources, terrain réel, validation humaine du forestier.
 5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout. **S2 clôturé** : chaîne Reasoning→Diagnostic→Recommendation→Validation prouvée sur données réelles. Reste : maillon amont (ingestion→evidence→knowledge) et validation humaine.
 6. **Performance** — ⚠️ SLO mesurés et profiling avant toute migration de code. **S3 clôturé** : latence 32ms p95 34.68ms, mémoire 0.25 MB, reproductible. Reste : benchmark charge concurrente, mémoire conteneur Docker, production.
@@ -433,6 +434,8 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
 | P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| AUTH-2 | Vérification e-mail + récupération de mot de passe | **À faire avant ouverture publique** |
+| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **À faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Applications
@@ -456,6 +459,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | GEO-001 | Spécification fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_001_SPECIFICATION.md` | Draft ✅ |
 | GEO-002 | Spécification non fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_002_NON_FUNCTIONAL.md` | Draft ✅ |
 | GEO-003 | Matrice de traçabilité GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_003_TRACEABILITY.md` | Draft ✅ |
+| ID-001 | Authentification Quintessences multi-fournisseurs | `05_SPECIFICATIONS/IDENTITE/IDENTITE_001_AUTHENTIFICATION.md` | Draft ✅ |
 
 > Ordre : Hub (P0, bloquant) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora
 > (P2) → Artemis/QGISIA (P3).

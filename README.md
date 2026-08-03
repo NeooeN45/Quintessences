@@ -15,9 +15,9 @@ le climat et les territoires.
 [![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-41%20DEC-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-30-lightgrey)](02_RFC/)
-[![Base](https://img.shields.io/badge/PostgreSQL%2016-27%20migrations%20%C2%B7%20120%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-44%20DEC-yellow)](03_DECISIONS/)
+[![RFC](https://img.shields.io/badge/RFC-32-lightgrey)](02_RFC/)
+[![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
@@ -373,18 +373,19 @@ complet.
 | Domaine | État |
 |---|---|
 | **Les 14 moteurs** | Implémentés, chacun avec son module, son routeur HTTP et ses tests. La chaîne complète Reasoning → Diagnostic → Recommendation → Validation s'exécute de bout en bout via l'Orchestration Engine. |
-| **API GSIE** | FastAPI — authentification JWT RS256 (login, refresh avec rotation, logout révocant le jeton), RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
-| **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 27 migrations Alembic, 120 tables, 7 schémas. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
-| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`), inaccessibles au rôle applicatif. RLS active et forcée sur les tables sensibles. |
+| **API GSIE** | FastAPI — compte Quintessences partagé, inscription/connexion locale Argon2id, Google OIDC configurable, JWT RS256 avec refresh rotatif et révocation, RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
+| **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 29 migrations Alembic, 124 tables SQLAlchemy. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
+| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`). Le rôle applicatif n’accède qu’aux quatre tables techniques nécessaires à l’authentification, jamais à `data_subject` ni aux consentements ; aucun droit `DELETE`. RLS active et forcée sur les tables sensibles. |
 | **Comptes de connexion** | L'API s'exécute sous un compte `NOSUPERUSER NOBYPASSRLS` sans `DELETE` (CON-010 rendu structurel). Les privilèges réels sont interrogés au démarrage, pas déduits du nom du compte. |
 | **Ingestion** | Pipeline unitaire et en lot (1 000 items), garde anti-invention RFC-0014 — une donnée d'origine IA est forcée au niveau de preuve D et mise en quarantaine. |
 | **SDK Python** | Client asynchrone `httpx`, JWT RS256 avec rafraîchissement automatique, wrappers des moteurs. |
 | **Tableau de contrôle** | Astro 5 + React 19 en îlots + Tailwind 4. |
 | **Visualisation** | Metabase, Superset et Dekart branchés sur un compte en lecture seule, sans aucun accès aux schémas RGPD — la barrière est en base, pas dans l'outil. |
 
-**Tests** : plus de 900 fonctions de test sur 129 fichiers (unitaires et
-intégration sur base réelle via testcontainers), harnais de mutation à
-100 % de mutants tués sur le périmètre couvert.
+**Tests** : 1 915 tests unitaires passent, 63 sont ignorés et la couverture
+atteint 100 % (9 338/9 338 instructions). L’intégration s’exécute sur base
+réelle via testcontainers ; le harnais de mutation tue 100 % des mutants de
+son périmètre.
 
 ### En cours
 
@@ -582,4 +583,3 @@ Voir `LICENSE` pour le texte complet.
 Pour toute question, réclamation ou collaboration :
 
 **5jvw9s5zj@mozmail.com**
-

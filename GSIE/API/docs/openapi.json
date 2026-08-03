@@ -2174,6 +2174,55 @@
         "title": "GeoLayer",
         "type": "object"
       },
+      "GoogleLoginRequest": {
+        "additionalProperties": false,
+        "description": "Preuve Google OIDC liée à un nonce serveur à usage unique.",
+        "properties": {
+          "id_token": {
+            "format": "password",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Id Token",
+            "type": "string",
+            "writeOnly": true
+          },
+          "nonce": {
+            "format": "password",
+            "maxLength": 256,
+            "minLength": 32,
+            "title": "Nonce",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "id_token",
+          "nonce"
+        ],
+        "title": "GoogleLoginRequest",
+        "type": "object"
+      },
+      "GoogleNonceResponse": {
+        "additionalProperties": false,
+        "description": "Nonce public court, à présenter à Google puis au serveur.",
+        "properties": {
+          "expires_in": {
+            "exclusiveMinimum": 0.0,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "nonce": {
+            "title": "Nonce",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nonce",
+          "expires_in"
+        ],
+        "title": "GoogleNonceResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -3062,6 +3111,31 @@
         "title": "LearningStatut",
         "type": "string"
       },
+      "LocalLoginRequest": {
+        "additionalProperties": false,
+        "description": "Connexion par adresse e-mail et mot de passe.",
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LocalLoginRequest",
+        "type": "object"
+      },
       "LoginRequest": {
         "additionalProperties": false,
         "description": "Requête de login — username + password.",
@@ -3826,6 +3900,59 @@
         "title": "ProgressGoal",
         "type": "object"
       },
+      "ProviderCapability": {
+        "additionalProperties": false,
+        "description": "État d'un moyen de connexion publié aux clients.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "provider": {
+            "enum": [
+              "local",
+              "google",
+              "enterprise"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "not_configured",
+              "development"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "status",
+          "label"
+        ],
+        "title": "ProviderCapability",
+        "type": "object"
+      },
+      "ProvidersResponse": {
+        "additionalProperties": false,
+        "description": "Capacités d'authentification réellement disponibles.",
+        "properties": {
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderCapability"
+            },
+            "title": "Providers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "title": "ProvidersResponse",
+        "type": "object"
+      },
       "QualificationConclusion": {
         "additionalProperties": false,
         "description": "Rôle et domaine attribués à une conclusion (extension v1).\n\nLe contrat §5 suppose que le moteur sait classer une conclusion. Il ne le\nsait pas et ne doit pas le deviner. Tant que le Knowledge Engine ne\nfournit pas de règles de qualification, l'appelant les déclare — sur le\nprécédent assumé du Correlation Engine et du Reasoning Engine.",
@@ -4346,6 +4473,44 @@
           "interpretation"
         ],
         "title": "RefutationResult",
+        "type": "object"
+      },
+      "RegistrationRequest": {
+        "additionalProperties": false,
+        "description": "Création d'un compte Quintessences local.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegistrationRequest",
         "type": "object"
       },
       "RegleInference": {
@@ -5651,6 +5816,73 @@
         ]
       }
     },
+    "/api/v1/auth/google/nonce": {
+      "post": {
+        "operationId": "create_google_nonce_api_v1_auth_google_nonce_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleNonceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Créer un nonce Google à usage unique",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/link/google": {
+      "post": {
+        "operationId": "link_google_api_v1_auth_link_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Rattacher Google au compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Authentifie un utilisateur avec username + password et retourne un access token (15 min) et un refresh token (7 jours). Les tokens sont signés en RS256 (DEC-000019).",
@@ -5688,6 +5920,89 @@
           }
         },
         "summary": "Authentifier un utilisateur",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login/google": {
+      "post": {
+        "operationId": "login_google_api_v1_auth_login_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Se connecter avec Google",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login/password": {
+      "post": {
+        "description": "Authentifie sans distinguer compte absent et mot de passe erroné.",
+        "operationId": "login_local_api_v1_auth_login_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Se connecter par adresse e-mail",
         "tags": [
           "auth"
         ]
@@ -5735,6 +6050,28 @@
         ]
       }
     },
+    "/api/v1/auth/providers": {
+      "get": {
+        "description": "Publie les capacités réelles, sans prétendre activer l'entreprise.",
+        "operationId": "providers_api_v1_auth_providers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvidersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Lister les moyens de connexion disponibles",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "description": "Échange un refresh token valide contre un nouveau access token et un nouveau refresh token (rotation).",
@@ -5772,6 +6109,48 @@
           }
         },
         "summary": "Rafraîchir le token d'accès",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Crée le compte canonique et son premier moyen de connexion.",
+        "operationId": "register_local_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Créer un compte Quintessences local",
         "tags": [
           "auth"
         ]
@@ -8622,7 +9001,7 @@
   },
   "tags": [
     {
-      "description": "Authentification JWT RS256 — login, refresh, verify",
+      "description": "Compte Quintessences — e-mail, Google OIDC, JWT RS256, refresh et révocation",
       "name": "auth"
     },
     {

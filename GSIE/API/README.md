@@ -37,6 +37,24 @@ une ligne dans sa table spécifique (class-table inheritance).
 
 ## Endpoints
 
+### Identité Quintessences (RFC-0032 / DEC-000044)
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/api/v1/auth/providers` | Moyens de connexion réellement disponibles |
+| POST | `/api/v1/auth/register` | Créer un compte local par e-mail et mot de passe |
+| POST | `/api/v1/auth/login/password` | Se connecter avec un compte local |
+| POST | `/api/v1/auth/google/nonce` | Créer un nonce Google à usage unique |
+| POST | `/api/v1/auth/login/google` | Se connecter ou créer un compte avec Google |
+| POST | `/api/v1/auth/link/google` | Rattacher Google au compte GSIE courant |
+| POST | `/api/v1/auth/refresh` | Rotation du refresh token, tous fournisseurs |
+| GET | `/api/v1/auth/verify` | Vérifier un access token GSIE |
+| POST | `/api/v1/auth/logout` | Révoquer un refresh token |
+
+Les comptes persistés vivent dans `gsie_rgpd_identites`. Google est fermé
+tant que `GSIE_GOOGLE_OAUTH_CLIENT_IDS` est vide. Le login de développement
+historique `/auth/login` reste interdit en staging et production.
+
 ### CRUD générique (ADR-007)
 
 | Méthode | Endpoint | Description |
@@ -91,7 +109,12 @@ curl http://localhost:8000/health
 curl http://localhost:8000/ready
 curl http://localhost:8000/docs
 
-# 7. Authentification (dev)
+# 7. Authentification persistée locale
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "forestier@example.fr", "password": "un-mot-de-passe-long-et-unique"}'
+
+# Login historique réservé au développement
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "your-dev-password"}'

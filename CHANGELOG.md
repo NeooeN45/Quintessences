@@ -4,6 +4,51 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-03 — IDENTITÉ QUINTESSENCES MULTI-FOURNISSEURS] - 2026-08-03
+
+### RFC-0032 / DEC-000044 — socle serveur livré
+
+- Compte Quintessences canonique commun à toutes les applications de
+  l’écosystème, séparé des moyens de connexion.
+- Inscription et connexion locales avec normalisation d’e-mail, mot de passe
+  Argon2id et erreurs anti-énumération.
+- Connexion Google OpenID Connect côté serveur : validation par audience,
+  émetteur et sujet stable `sub`, e-mail vérifié, nonce à usage unique ; aucun
+  rapprochement silencieux par adresse e-mail.
+- Rattachement Google explicite à un compte déjà authentifié.
+- Jetons GSIE RS256 et refresh rotatif conservés quelle que soit l’origine de
+  connexion.
+- Découverte des fournisseurs ; connexion professionnelle OIDC/SAML déclarée
+  « En développement » sans fausse activation.
+
+### Persistance et sécurité
+
+- Migration réversible `20260803_0029` : `user_account`,
+  `identity_provider_link`, `local_credential`, `account_role` dans
+  `gsie_rgpd_identites`.
+- Le rôle `gsie_application` reçoit seulement `SELECT`, `INSERT` et `UPDATE`
+  sur ces quatre tables, sans `DELETE` et sans accès à `data_subject` ou aux
+  consentements.
+- Configuration documentée pour les client IDs Google et le stockage Redis
+  des nonces.
+
+### Preuves exécutées
+
+- Migration base vierge → head → downgrade → head et parité SQLAlchemy :
+  **2 tests passés**.
+- Isolement RGPD réel sous rôles PostgreSQL : **48 tests passés**.
+- Suite unitaire globale : **1 915 tests passés**, 63 ignorés, 0 échec,
+  **100 % de couverture** (9 338/9 338 instructions).
+- Dépôt d’identité PostgreSQL : **4 tests d’intégration passés**.
+- Ruff, formatage, mypy strict et quatre gardes de gouvernance/cohérence verts.
+
+### Suites prévues avant ouverture publique
+
+- vérification de l’adresse e-mail et récupération du mot de passe ;
+- configuration et validation de la marque OAuth Google ;
+- écrans de compte web et GeoSylva ;
+- MFA administrateur puis fédération entreprise OIDC/SAML.
+
 ## [SESSION 2026-08-02 (soir) — PHASE DE STABILISATION CLÔTURÉE] - 2026-08-02
 
 ### Phase de stabilisation DEC-000043 — 3/3 livrables clôturés

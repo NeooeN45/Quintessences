@@ -11,6 +11,7 @@ les RFC métier.
 
 # Import de tous les domaines — chaque import enregistre les types dans RESOURCE_TYPES
 from gsie_api.infrastructure.models import (
+    accounts,  # noqa: F401 — comptes Quintessences multi-fournisseurs (RFC-0032)
     assertion,  # noqa: F401
     business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
     diagnostic,  # noqa: F401 — diagnostic stationnel persisté (Diagnostic Engine)

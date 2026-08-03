@@ -38,9 +38,12 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy==0.65b0",
     "opentelemetry-instrumentation-redis==0.65b0",
     "opentelemetry-exporter-otlp-proto-grpc==1.44.0",
-    # Auth — bcrypt direct (passlib 1.7.4 non maintenu, CVE potentielles)
+    # Auth — JWT GSIE + mots de passe locaux Argon2id + Google OIDC (DEC-000044)
     "pyjwt[crypto]==2.10.1",
     "bcrypt==5.0.0",
+    "argon2-cffi==25.1.0",
+    "email-validator==2.3.0",
+    "google-auth==2.56.0",
     # Sécurité — chiffrement .env (audit P1-1, tools/secure_env.py + core/config.py)
     # cryptography est tiré par pyjwt[crypto] mais importé directement → déclarer
     "cryptography==50.0.0",
@@ -156,6 +159,11 @@ ignore_missing_imports = true
 # Engine, decodage GRIB2 AROME
 [[tool.mypy.overrides]]
 module = ["cfgrib.*", "defusedxml.*"]
+ignore_missing_imports = true
+
+# google-auth ne distribue pas de stubs complets pour tous ses transports.
+[[tool.mypy.overrides]]
+module = ["google.auth.*"]
 ignore_missing_imports = true
 
 # scipy-stubs existe mais n'est pas encore ajouté aux dépendances dev —

@@ -171,7 +171,11 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
         f"{_SCHEMA_RGPD}.rights_statement",
         f"{_SCHEMA_RGPD}.sensitivity_classification",
         f"{_SCHEMA_RGPD}.spatial_disclosure_policy",
+        f"{_SCHEMA_IDENTITES}.account_role",
         f"{_SCHEMA_IDENTITES}.data_subject",
+        f"{_SCHEMA_IDENTITES}.identity_provider_link",
+        f"{_SCHEMA_IDENTITES}.local_credential",
+        f"{_SCHEMA_IDENTITES}.user_account",
     }
 
 
@@ -315,13 +319,14 @@ def test_le_proprietaire_de_la_base_contourne_l_isolement(base_migree: str) -> N
 # --- Le role applicatif : l'isolement mis en vigueur ---
 
 
-def test_le_role_applicatif_n_atteint_aucune_donnee_personnelle(base_migree: str) -> None:
-    """`gsie_application` lit le noyau et rien des données personnelles.
+def test_le_role_applicatif_n_atteint_pas_les_donnees_personnelles_metier(
+    base_migree: str,
+) -> None:
+    """`gsie_application` atteint l'identité technique, pas les données RGPD métier.
 
-    C'est ce qui fait passer l'isolement de disponible à **en vigueur**. Les
-    droits corrects sur les schémas ne servent à rien si l'application se
-    connecte en propriétaire — ce qu'elle faisait, et que le test précédent
-    établit.
+    Le compte canonique et ses moyens de connexion sont indispensables à l'API.
+    Ce droit borné ne doit ouvrir ni les consentements, ni la table
+    `data_subject` qui permet de lever le pseudonymat.
     """
     atteints = asyncio.run(
         _lire(
@@ -332,10 +337,51 @@ def test_le_role_applicatif_n_atteint_aucune_donnee_personnelle(base_migree: str
         )
     )
 
-    assert atteints == [], (
-        f"le rôle applicatif atteint {atteints} — un moteur n'a pas besoin des "
-        "données personnelles pour raisonner"
+    assert atteints == [_SCHEMA_IDENTITES], (
+        f"le rôle applicatif atteint {atteints} — seul {_SCHEMA_IDENTITES} "
+        "est requis pour l'authentification"
     )
+
+    acces_interdits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT table_schema || '.' || table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema LIKE 'gsie_rgpd%' "
+            "AND (table_schema = 'gsie_rgpd' OR table_name = 'data_subject') "
+            "AND has_table_privilege("
+            "'gsie_application', table_schema || '.' || table_name, "
+            "'SELECT,INSERT,UPDATE,DELETE') ORDER BY 1",
+        )
+    )
+    assert acces_interdits == []
+
+
+def test_le_role_applicatif_accede_uniquement_aux_tables_techniques_d_identite(
+    base_migree: str,
+) -> None:
+    """L'API dispose du DML nécessaire à l'authentification, sans suppression."""
+    droits = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT table_name || ':' || privilege_type "
+            "FROM information_schema.role_table_grants "
+            "WHERE grantee = 'gsie_application' "
+            "AND table_schema = 'gsie_rgpd_identites' ORDER BY 1",
+        )
+    )
+
+    attendus = {
+        f"{table}:{privilege}"
+        for table in (
+            "account_role",
+            "identity_provider_link",
+            "local_credential",
+            "user_account",
+        )
+        for privilege in ("INSERT", "SELECT", "UPDATE")
+    }
+    assert set(droits) == attendus
 
 
 def test_le_role_applicatif_travaille_sur_le_noyau(base_migree: str) -> None:

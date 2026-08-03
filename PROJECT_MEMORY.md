@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-02 — **Phase de stabilisation DEC-000043 clôturée ✅**. S1 restauration DB prouvée (127 tables, parité source ✓, test CI), S2 tranche verticale réelle (chaîne Reasoning→Diagnostic→Recommendation→Validation sur pilote Parelle 2007 Quercus, 0.15s, diagnostic persisté), S3 validation scientifique + benchmark (3/3 scénarios ground truth validés, 18/18 checks, latence 32ms p95 34.68ms, mémoire 0.25 MB). État réel : 14 moteurs + orchestration, 28 migrations, 120 tables sur 6 schémas, 83 routes API, 1859 tests (63 skipped), 100% couverture, mutation 67/67. **Gates 4/5/6 rouvrables** — la preuve de chaîne complète est faite. |
+| **Dernière mise à jour** | 2026-08-03 — **Socle d’identité Quintessences adopté et implémenté (RFC-0032 / DEC-000044) ✅** : compte canonique partagé par l’écosystème, inscription et connexion locales Argon2id, connexion et rattachement Google OIDC avec nonce à usage unique, jetons GSIE RS256, rôles applicatifs, migration réversible et isolement RGPD réel. Google reste inactif tant que ses identifiants OAuth ne sont pas configurés ; connexion entreprise affichée « En développement ». État structurel : 14 moteurs + orchestration, 29 migrations, 124 tables SQLAlchemy, 91 routes API, 1 915 tests unitaires passés (63 ignorés), couverture 100 % (9 338/9 338). La phase de stabilisation DEC-000043 demeure clôturée. |
 
 ---
 
@@ -383,6 +383,12 @@ brainstorming v5 n'est adoptée.
 - **DEC-000040** — Tables transverses laissées dans `public` (Draft, 2026-07-31, RFC-0029). Décision d'architecture de données : les tables transverses (junctions, outbox, temporal_engine, enrichment) restent dans le schéma `public` plutôt que d'être éclatées par moteur. Préserve DEC-000019 (PostgreSQL+PostGIS+AGE) et GSIE-PROMPT-0027 (schémas de domaine). Référencée dans CHANGELOG l.365 (mapping Treekipedia).
 - **DEC-000041** — Ingestion bulk + pgvector + garde anti-invention automatisée. Pipeline bulk (POST /resources/bulk, 1000 items/lot, 600 req/min), migration `20260731_0024` pgvector (extension vector + colonne embedding(1536) + index IVFFlat), garde anti-invention RFC-0014 automatisée (détection AI-sourced → evidence_level=D + quarantine), rate limiting différencié. Dockerfile.db installe `postgresql-16-pgvector`. Modèle `EntityModel` déclare `embedding` (Vector(1536)). 1346 tests unitaires + 9 tests d'intégration.
 - **DEC-000043** — Phase de stabilisation : ralentir pour prouver (Validé, 2026-08-02). Décision directe du Fondateur après diagnostic : qualité technique 8/10, qualité produit 6,5/10. Trois livrables : S1 restauration DB prouvée, S2 tranche verticale réelle terrain→recommandation, S3 validation scientifique + performance. Nouveaux endpoints/moteurs/migrations suspendus. Gates 4/5/6 de la ROADMAP passent à ❌ (bloqués par S2/S3).
+- **DEC-000044** — Identité Quintessences multi-fournisseurs (Validé,
+  2026-08-03, RFC-0032). Un compte canonique est partagé par GeoSylva,
+  Ignis, Hydro, Artemis, Flora, le web, le poste tout-en-un et le Centre
+  de Commandement. Connexion locale et Google OIDC livrées côté serveur ;
+  les fournisseurs professionnels OIDC/SAML restent explicitement
+  « En développement ». Aucun rapprochement de comptes par e-mail seul.
 
 ## Documents structurants
 
@@ -919,6 +925,8 @@ a été corrigée sur deux P0 invalides :
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
 | P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| AUTH-2 | Vérification e-mail + récupération de mot de passe | **À faire avant ouverture publique** |
+| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **À faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Session 2026-08-02 (soir) — Consolidation + diagnostic Fondateur + DEC-000043
@@ -928,12 +936,12 @@ a été corrigée sur deux P0 invalides :
 | Métrique | Valeur | Source |
 |---|---|---|
 | Moteurs implémentés | 14 + orchestration | `src/gsie_api/engines/` (16 dirs) |
-| Migrations Alembic | 28 | `alembic/versions/` |
-| Tables SQLAlchemy | 120 | `Base.metadata.tables` |
+| Migrations Alembic | 29 | `alembic/versions/` |
+| Tables SQLAlchemy | 124 | `Base.metadata.tables` |
 | Schémas PostgreSQL | 6 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites |
-| Routes API | 83 | `create_app().routes` |
-| Tests unitaires | 1859 passed, 63 skipped, 0 failed | `pytest tests/unit/` |
-| Couverture de code | 100% (8831/8831 stmts) | `pytest --cov=gsie_api` |
+| Routes API | 91 | `create_app().routes` |
+| Tests unitaires | 1 915 passed, 63 skipped, 0 failed | `pytest tests/unit/` |
+| Couverture de code | 100 % (9 338/9 338 statements) | `pytest --cov=gsie_api` |
 | Score mutation | 67/67 (100%) | `tests/mutation/harnais.py` |
 | Lint | ruff OK | `ruff check src/ tests/` |
 | Typage | mypy OK | `mypy src/gsie_api/` |
