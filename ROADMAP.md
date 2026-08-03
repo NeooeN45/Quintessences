@@ -38,8 +38,8 @@ mémoire (ADR-009, VISION_LLM_SPECIALISES §2.1).
 | P1 Création guidée | Forêt/parcelle/placette, questionnaires, contrôles surface, provenance | — |
 | P2 Martelage persistant | Session complète, modes classique/vocal/hybride, instantané immuable | DEC format session |
 | P3 Moteurs scientifiques locaux | Fiches méthodes versionnées, qualité, pathogènes, incertitudes | RFC fiches méthodes |
-| P4 Connexion GSIE Serveur | SDK Kotlin, contrats API moteurs, cache, pull, résolution conflits | RFC contrats GeoSylva ↔ moteurs |
-| P5 LLM on-device | Modèle T1 embarqué, RAG local, cascade T1→T2→T3, assistant vocal | RFC IA forestière on-device |
+| P4 Connexion GSIE Serveur | SDK Kotlin, contrats API moteurs, cache, pull, résolution conflits | RFC-0033 contrats GeoSylva ↔ moteurs |
+| P5 LLM on-device | Modèle T1 embarqué, RAG local, cascade T1→T2→T3, assistant vocal | RFC-0034 IA forestière on-device |
 | P6 Sync terrain | Bluetooth, QR team key, Meshtastic, paquets signés, journal fusion | RFC sync terrain |
 | P7 Refonte visuelle | Onboarding, animation, packs offline, batterie/accessibilité | — |
 

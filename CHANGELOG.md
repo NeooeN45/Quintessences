@@ -24,6 +24,29 @@ Format : `## [version] - YYYY-MM-DD`
 - ROADMAP.md racine : section GeoSylva 3.0 mise à jour avec architecture
   cible, cascade LLM, phases et sources consolidées.
 
+## [RFC — GEOSYLVA-003 DÉTAILLÉ] - 2026-08-03
+
+- Spécification GeoSylva 3.0 enrichie (v0.3.0) avec deux sections majeures :
+- **§14 Connexion GSIE Serveur détaillée** : enveloppes communes de
+  requête/réponse (requete_id, session_id, source_reference,
+  evidence_level), tableau des 8 moteurs avec déclencheurs, chaîne
+  d'analyse approfondie (Correlation → Reasoning → Diagnostic →
+  Recommendation → Simulation), cache local SQLCipher avec badges
+  version/obsolescence, pull serveur→mobile, résolution de conflits,
+  SDK Kotlin, garde-fous ADR-009/CON-001/CON-004.
+- **§15 LLM on-device et multi-tier détaillée** : architecture 3 tiers
+  (T1 mobile SmolLM3 3B ONNX, T2 edge Mistral 7B, T3 serveur vLLM),
+  règles de cascade, adaptateurs LoRA GeoSylva-Forest, RAG scientifique
+  (pgvector + RFC-0019), identification essence on-device (TFLite +
+  PureForest), assistant vocal (Vosk FR), distribution via packs de
+  données, banc d'évaluation GSIE-Eval-FR, choix de modèles.
+- **RFC-0033** créée : contrats d'interface GeoSylva ↔ moteurs GSIE.
+  Endpoints par moteur, orchestrateur, SDK Kotlin, cache, pull, conflits.
+- **RFC-0034** créée : IA forestière on-device et multi-tier. Choix
+  SmolLM3 3B, runtime ONNX, RAG local SQLite-vec, quantification INT4,
+  cascade, identification TFLite, assistant vocal, RGPD audio.
+- ROADMAP.md : références aux RFC-0033 et RFC-0034 dans les phases P4/P5.
+
 ## [DOCUMENTATION — GEOSYLVA-003] - 2026-08-03
 
 - Création de la spécification fonctionnelle GeoSylva 3.0 : parcours
