@@ -13,6 +13,7 @@ Métamodèle v6.2 — 73 types noyau et extensions métier, table racine `resour
 - **OpenTelemetry** — observabilité (CON-005)
 - **JWT RS256 + RBAC** — authentification (HTTP + WebSocket)
 - **slowapi** — rate limiting (OWASP A07)
+- **Cloudflare Tunnel optionnel** — bordure Zero Trust sans port Internet entrant (DEC-000047)
 
 ## Métamodèle v6.2 (RFC-0011, RFC-0012, ADR-007)
 
@@ -66,6 +67,16 @@ sur <http://localhost:8025> et le SMTP uniquement dans le réseau Compose.
 Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
 du relais et STARTTLS ou TLS direct ; Mailpit ne doit jamais recevoir de
 données réelles.
+
+La publication de production passe par le profil `edge` :
+
+```bash
+docker compose --profile edge up -d cloudflared
+```
+
+Le token est fourni par fichier secret hors Git. Le protocole public,
+l'isolement du plan de contrôle et la rotation sont décrits dans
+[`docs/CLOUDFLARE_ZERO_TRUST.md`](docs/CLOUDFLARE_ZERO_TRUST.md).
 
 ### CRUD générique (ADR-007)
 

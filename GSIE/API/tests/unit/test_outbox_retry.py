@@ -8,6 +8,7 @@ qu'un événement empoisonné n'empêche jamais les autres de sortir.
 
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
@@ -20,12 +21,14 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.sql.schema import DefaultClause
 
+from gsie_api import outbox_health
 from gsie_api.infrastructure.models.outbox import (
     OUTBOX_STATUS_DEAD_LETTER,
     OUTBOX_STATUS_PENDING,
     OUTBOX_STATUS_PUBLISHED,
     OutboxEvent,
 )
+from gsie_api.outbox_health import worker_heartbeat_is_fresh, write_worker_heartbeat
 from gsie_api.outbox_worker import (
     RetryPolicy,
     collect_outbox_stats,
@@ -159,6 +162,62 @@ class TestBackoff:
         for tirage in (0.0, 0.25, 0.5, 0.75, 0.999):
             delai = bruitee.delay_seconds(9, jitter=tirage)
             assert 0.0 <= delai <= 12.0
+
+
+class TestSanteWorker:
+    """Le healthcheck reflète un cycle réussi, pas un port HTTP absent."""
+
+    def test_should_write_an_atomic_fresh_heartbeat(self, tmp_path: Path) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+
+        write_worker_heartbeat(str(heartbeat))
+
+        assert heartbeat.is_file()
+        assert not heartbeat.with_suffix(".heartbeat.tmp").exists()
+        assert worker_heartbeat_is_fresh(
+            str(heartbeat),
+            max_age_seconds=30,
+            now_epoch=heartbeat.stat().st_mtime + 29,
+        )
+
+    def test_should_reject_missing_or_stale_heartbeat(self, tmp_path: Path) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+        assert not worker_heartbeat_is_fresh(str(heartbeat), max_age_seconds=30)
+
+        write_worker_heartbeat(str(heartbeat))
+        assert not worker_heartbeat_is_fresh(
+            str(heartbeat),
+            max_age_seconds=30,
+            now_epoch=heartbeat.stat().st_mtime + 31,
+        )
+
+    @pytest.mark.parametrize(("fresh", "exit_code"), [(True, 0), (False, 1)])
+    def test_should_expose_lightweight_healthcheck_as_process_exit_code(
+        self,
+        fresh: bool,
+        exit_code: int,
+    ) -> None:
+        with (
+            patch("gsie_api.outbox_health.worker_heartbeat_is_fresh", return_value=fresh),
+            pytest.raises(SystemExit) as raised,
+        ):
+            outbox_health.main()
+
+        assert raised.value.code == exit_code
+
+    @pytest.mark.parametrize("maximum", ["0", "301", "nan", "infinite"])
+    def test_should_reject_invalid_maximum_age_from_environment(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        maximum: str,
+    ) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+        write_worker_heartbeat(str(heartbeat))
+        monkeypatch.setenv("GSIE_OUTBOX_HEALTHCHECK_PATH", str(heartbeat))
+        monkeypatch.setenv("GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS", maximum)
+
+        assert not worker_heartbeat_is_fresh()
 
 
 class TestEcheance:

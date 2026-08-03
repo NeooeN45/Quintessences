@@ -4,6 +4,30 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-03 — BORDURE CLOUDFLARE ZERO TRUST] - 2026-08-03
+
+### DEC-000047 — protocole réseau GSIE
+
+- Cloudflare Tunnel adopté comme entrée publique optionnelle, sortante
+  uniquement, sans exposition directe de l'origine.
+- Séparation formelle des flux publics, machine-à-machine, plan de contrôle
+  Fondateur et réseau Docker interne.
+- Mobile : HTTPS, WAF et JWT GSIE ; aucun secret Cloudflare ou certificat mTLS
+  commun dans les APK.
+- Services de confiance : Cloudflare Access ou mTLS sur un nom dédié, puis
+  identité et rôles GSIE obligatoires.
+- Profil Compose `edge`, image `cloudflared` 2026.7.2 verrouillée par digest,
+  token monté comme secret et healthcheck natif du tunnel.
+- Quotas GSIE compatibles avec `CF-Connecting-IP` uniquement lorsque le mode
+  tunnel est explicitement activé.
+
+### Fiabilité outbox
+
+- Remplacement du faux healthcheck HTTP hérité de l'image API par un battement
+  écrit après chaque cycle PostgreSQL/Redis réussi.
+- Sonde Docker dédiée refusant un battement absent ou vieux de plus de trente
+  secondes.
+
 ## [SESSION 2026-08-03 — CYCLE COMPLET DU COMPTE LOCAL] - 2026-08-03
 
 ### DEC-000046 — profil, vérification et récupération

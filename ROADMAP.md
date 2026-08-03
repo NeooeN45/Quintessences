@@ -436,6 +436,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — identité livrée, synchronisation métier à faire** |
 | AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
 | AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
+| SEC-EDGE | Cloudflare Tunnel, protocole M2M et plan de contrôle | **Code et runbook terminés — activation avec domaine/token à faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Applications

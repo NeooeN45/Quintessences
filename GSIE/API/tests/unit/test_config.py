@@ -18,6 +18,18 @@ def should_accept_development_defaults(monkeypatch: pytest.MonkeyPatch):
     settings = Settings(environment="development", debug=False, _env_file=None)
     assert settings.debug is False
     assert settings.rate_limit_storage_url == "memory://"
+    assert settings.edge_proxy_mode == "direct"
+
+
+def should_accept_cloudflare_tunnel_as_edge_proxy_mode() -> None:
+    settings = Settings(edge_proxy_mode="cloudflare_tunnel", _env_file=None)
+
+    assert settings.edge_proxy_mode == "cloudflare_tunnel"
+
+
+def should_reject_an_unknown_edge_proxy_mode() -> None:
+    with pytest.raises(ValidationError):
+        Settings(edge_proxy_mode="proxy-inconnu", _env_file=None)
 
 
 def _production_kwargs(**overrides: object) -> dict[str, object]:

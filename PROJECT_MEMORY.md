@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-03 — **Le cycle du compte local Quintessences est complet (DEC-000046) ✅** : profil modifiable, vérification e-mail, récupération anti-énumération, révocation des anciennes sessions et SMTP local reproductible. GeoSylva expose tout le parcours, conserve ses jetons chiffrés et reste hors ligne pour le métier. État mesuré : 14 moteurs + orchestration, 30 migrations, 125 tables SQLAlchemy, 97 routes FastAPI ; domaine identité 170 tests verts et composants ajoutés couverts à 100 % ; GeoSylva 513 tests verts et Lint sans erreur bloquante. La dernière campagne API globale terminée comptait 1 936 tests passés et 63 ignorés ; la relance actuelle a dépassé la fenêtre locale de dix minutes sans résultat final. |
+| **Dernière mise à jour** | 2026-08-03 — **La bordure Cloudflare Zero Trust de GSIE est adoptée et préparée (DEC-000047) ✅** : tunnel sortant sans port Internet entrant, séparation public/M2M/contrôle, token hors Git, quotas par IP réelle et aucune identité Cloudflare embarquée dans les apps publiques. Le worker outbox possède désormais un battement de santé lié à ses cycles PostgreSQL/Redis. Le cycle de compte DEC-000046 reste complet ; l'activation publique attend uniquement les comptes, secrets fournisseurs et la recette sur matériel réel. |
 
 ---
 
@@ -399,6 +399,10 @@ brainstorming v5 n'est adoptée.
   livrés avec codes Argon2id à usage unique de quinze minutes, réponse
   anti-énumération, SMTP chiffré en production et révocation des sessions
   antérieures après changement de mot de passe.
+- **DEC-000047** — Cloudflare comme bordure Zero Trust de GSIE (Validé,
+  2026-08-03). Tunnel sortant, origine non exposée, séparation des flux
+  publics, M2M et contrôle. Cloudflare protège l'accès réseau ; JWT, rôles et
+  révocation GSIE restent l'autorité métier.
 
 ## Documents structurants
 

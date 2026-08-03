@@ -135,6 +135,9 @@ class Settings(BaseSettings):
     environment: Literal["development", "staging", "production"] = "development"
     debug: bool = False
     log_level: str = "INFO"
+    # Point d'entrée réseau. En mode tunnel, seuls les en-têtes Cloudflare
+    # validés syntaxiquement sont utilisés pour le quota par adresse IP.
+    edge_proxy_mode: Literal["direct", "cloudflare_tunnel"] = "direct"
 
     # API
     api_v1_prefix: str = "/api/v1"
@@ -221,6 +224,9 @@ class Settings(BaseSettings):
     # Amplitude du bruit aléatoire, en fraction du délai calculé (0 = aucun).
     # Évite que N workers rejouent le même lot à la même milliseconde.
     outbox_retry_jitter_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
+    # Battement écrit uniquement après un cycle PostgreSQL/Redis réussi.
+    outbox_healthcheck_path: str = "/tmp/gsie-outbox-worker.heartbeat"
+    outbox_healthcheck_max_age_seconds: float = Field(default=30.0, ge=2.0, le=300.0)
     # WebSocket (ADR-007)
     ws_max_connections: int = 1000
     ws_heartbeat_interval: int = 30  # secondes

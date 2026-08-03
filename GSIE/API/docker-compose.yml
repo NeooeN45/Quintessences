@@ -121,6 +121,7 @@ services:
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      GSIE_EDGE_PROXY_MODE: ${GSIE_EDGE_PROXY_MODE:-direct}
       # Exécution sous le compte applicatif, pas sous le propriétaire de la base.
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       # Alembic seul emprunte le compte d'administration : `gsie_application`
@@ -213,12 +214,20 @@ services:
       GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
       GSIE_OUTBOX_BATCH_SIZE: ${GSIE_OUTBOX_BATCH_SIZE:-100}
       GSIE_OUTBOX_POLL_INTERVAL_SECONDS: ${GSIE_OUTBOX_POLL_INTERVAL_SECONDS:-1.0}
+      GSIE_OUTBOX_HEALTHCHECK_PATH: /tmp/gsie-outbox-worker.heartbeat
+      GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS: ${GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS:-30}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-m", "gsie_api.outbox_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     read_only: true
     tmpfs:
       - /tmp
@@ -258,6 +267,45 @@ services:
           cpus: "0.25"
           memory: 128M
 
+  # Entrée publique optionnelle : connexion sortante uniquement vers
+  # Cloudflare, aucun port Internet ouvert sur le serveur GSIE.
+  # Activation : docker compose --profile edge up -d cloudflared
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.2@sha256:4f6655284ab3d252b7f28fedb19fe6c8fc82ee5b1295c20ac74d475e5398a52d
+    profiles: ["edge"]
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --loglevel
+      - info
+      - --metrics
+      - 0.0.0.0:2000
+      - run
+      - --token-file
+      - /run/secrets/cloudflare_tunnel_token
+    secrets:
+      - cloudflare_tunnel_token
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "127.0.0.1:2000", "ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
   # Uptime Kuma — monitoring uptime des services GSIE
   # (veille techno 2026-08-02, RFC-0031 action 7)
   # Interface web sur http://localhost:3001
@@ -285,3 +333,7 @@ volumes:
   gsie_pgdata:
   gsie_redisdata:
   gsie_kuma_data:
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${CLOUDFLARE_TUNNEL_TOKEN_FILE:-./secrets/cloudflare_tunnel_token}
