@@ -24,7 +24,11 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 _settings = get_settings()
-config.set_main_option("sqlalchemy.url", _settings.database_url)
+# Le compte d'exécution de l'API (`gsie_application`) n'a ni CREATE ni ALTER :
+# c'est le but. Alembic se connecte donc sous GSIE_MIGRATION_DATABASE_URL,
+# qui retombe sur GSIE_DATABASE_URL quand la distinction n'est pas faite
+# (poste de développement, tests).
+config.set_main_option("sqlalchemy.url", _settings.url_de_migration)
 _EXTENSION_TABLES = frozenset({"spatial_ref_sys"})
 # Index automatiquement reflétés par GeoAlchemy2 sur les colonnes Geometry
 # générées (Computed) — l'index explicite idx_place_geom_4326 est créé par
@@ -42,11 +46,14 @@ def include_object(
 ) -> bool:
     """Ignore les objets possédés par PostGIS et les index reflétés GeoAlchemy2."""
     del object_, reflected, compare_to
-    if type_ == "table" and name in _EXTENSION_TABLES:
-        return False
-    if type_ == "index" and name in _GA2_REFLECTED_INDEXES:
-        return False
-    return True
+    # Les deux exclusions sont posées côte à côte plutôt qu'en gardes
+    # successives : elles sont de même nature — un objet que nous ne possédons
+    # pas — et une garde isolée suivie d'un `return True` se lit comme si la
+    # seconde condition primait sur la première.
+    appartient_a_une_extension = (type_ == "table" and name in _EXTENSION_TABLES) or (
+        type_ == "index" and name in _GA2_REFLECTED_INDEXES
+    )
+    return not appartient_a_une_extension
 
 
 def _normalize_default(value: object) -> str:
@@ -82,7 +89,9 @@ def compare_server_default(
     inspected_norm = _normalize_default(inspected_default)
     # metadata_default peut être un objet func.now() ; rendered_metadata_default
     # est sa version rendue en SQL (ex. "now()") — plus fiable pour comparer.
-    metadata_value = rendered_metadata_default if rendered_metadata_default is not None else metadata_default
+    metadata_value = (
+        rendered_metadata_default if rendered_metadata_default is not None else metadata_default
+    )
     metadata_norm = _normalize_default(metadata_value)
     if inspected_norm == metadata_norm:
         return False
@@ -97,6 +106,9 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         include_object=include_object,
+        # Les donnees personnelles vivent hors de `public` depuis
+        # `20260728_0011` : sans ceci, l'autogeneration ne les voit pas.
+        include_schemas=True,
         compare_type=True,
         compare_server_default=compare_server_default,
         dialect_opts={"paramstyle": "named"},
@@ -110,6 +122,9 @@ def do_run_migrations(connection: Connection) -> None:
         connection=connection,
         target_metadata=target_metadata,
         include_object=include_object,
+        # Les donnees personnelles vivent hors de `public` depuis
+        # `20260728_0011` : sans ceci, l'autogeneration ne les voit pas.
+        include_schemas=True,
         compare_type=True,
         compare_server_default=compare_server_default,
     )

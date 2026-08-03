@@ -175,6 +175,8 @@ class TraitDefinitionModel(Base, TimestampMixin):
     standard_reference: Mapped[str | None] = mapped_column(String(100), nullable=True)
     value_range: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
+    __table_args__ = {"schema": "gsie_botanique"}
+
 
 @register_type("trait_value")
 class TraitValueModel(Base, TimestampMixin):
@@ -209,3 +211,5 @@ class TraitValueModel(Base, TimestampMixin):
     scale_context_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
+
+    __table_args__ = {"schema": "gsie_botanique"}

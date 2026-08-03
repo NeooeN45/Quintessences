@@ -1,0 +1,7 @@
+FROM postgis/postgis:16-3.4
+
+# Pré-installe pgvector pour éviter l'apt-get à chaque session de tests.
+# Le dépôt PGDG est déjà configuré par l'image de base postgres:16.
+RUN apt-get update -qq && \
+    apt-get install -y -qq --no-install-recommends postgresql-16-pgvector && \
+    rm -rf /var/lib/apt/lists/*

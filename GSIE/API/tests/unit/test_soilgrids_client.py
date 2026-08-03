@@ -70,3 +70,128 @@ async def test_should_return_empty_dict_when_layers_absent_in_valid_json() -> No
 async def test_mode5_quota_auth_not_applicable_for_soilgrids() -> None:
     """Mode #5 — N/A : l'API SoilGrids ne requiert aucune authentification."""
     pass
+
+
+# --- L'echelle de la valeur ne se suppose pas ---
+
+
+def _reponse_ph(mean: int, unit_measure: dict | None) -> dict:
+    """Réponse SoilGrids d'une seule couche pH, avec ou sans facteur d'échelle."""
+    couche: dict = {"name": "phh2o", "depths": [{"values": {"mean": mean}}]}
+    if unit_measure is not None:
+        couche["unit_measure"] = unit_measure
+    return {"properties": {"layers": [couche]}}
+
+
+@respx.mock
+async def test_should_refuse_a_layer_without_scale_factor() -> None:
+    """Une couche sans `d_factor` est refusée, jamais divisée par un supposé 1.
+
+    Défaut reproduit avant correction : `layer.get("unit_measure", {}).get(
+    "d_factor", 1)` retombait sur l'identité. Une couche `phh2o` de moyenne 52 —
+    soit un pH de 5,2 mis à l'échelle par dix, comme SoilGrids le fait — sortait
+    à **pH 52**, hors de l'échelle physique 0–14.
+
+    La conséquence est silencieuse et grave : la règle `pedologie_pH < 5.5`
+    évalue alors `52 < 5.5`, donc Faux, et un sol acide se diagnostique basique.
+    Aucune erreur n'est levée, aucune trace ne signale l'inversion.
+
+    Un facteur absent ne vaut pas un : il signifie que l'échelle est inconnue.
+    """
+    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=_reponse_ph(52, None)))
+
+    with pytest.raises(SoilGridsClientError, match="échelle de la valeur est inconnue"):
+        await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o"])
+
+
+@respx.mock
+async def test_should_accept_an_explicit_scale_factor_of_one() -> None:
+    """`d_factor` valant explicitement 1 reste légitime.
+
+    Certaines propriétés SoilGrids sont déjà dans l'unité cible. C'est
+    l'**omission** qui est refusée, pas la valeur — sans ce contrôle, la
+    correction refuserait des réponses parfaitement valides.
+    """
+    respx.get(_SOILGRIDS_URL).mock(
+        return_value=Response(200, json=_reponse_ph(7, {"d_factor": 1, "target_units": "-"}))
+    )
+
+    resultat = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o"])
+
+    assert resultat["phh2o"] == 7.0
+
+
+@respx.mock
+async def test_should_apply_the_declared_scale_factor() -> None:
+    """Le facteur déclaré est appliqué : 52 divisé par dix fait bien pH 5,2.
+
+    Sans ce contrôle, refuser toute couche ferait passer le premier test — et
+    le client ne rendrait plus jamais de valeur.
+    """
+    respx.get(_SOILGRIDS_URL).mock(
+        return_value=Response(200, json=_reponse_ph(52, {"d_factor": 10, "mapped_units": "pH*10"}))
+    )
+
+    resultat = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o"])
+
+    assert resultat["phh2o"] == pytest.approx(5.2)
+    assert 0 <= resultat["phh2o"] <= 14, "le pH doit rester dans l'échelle physique"
+
+
+@respx.mock
+async def test_should_refuse_a_null_scale_factor() -> None:
+    """Un `d_factor` nul est refusé plutôt que de lever une division par zéro."""
+    respx.get(_SOILGRIDS_URL).mock(
+        return_value=Response(200, json=_reponse_ph(52, {"d_factor": 0}))
+    )
+
+    with pytest.raises(SoilGridsClientError, match="`d_factor` nul"):
+        await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o"])
+
+
+# ===========================================================================
+# Couverture complémentaire — lignes 131, 134 (skip layer sans depths/mean)
+# ===========================================================================
+
+
+@respx.mock
+async def test_should_skip_layer_when_depths_empty() -> None:
+    """Une layer sans depths doit être skipée silencieusement."""
+    response = {
+        "properties": {
+            "layers": [
+                {"name": "phh2o", "depths": []},  # depths vide → skip
+                {
+                    "name": "clay",
+                    "depths": [{"values": {"mean": 100}}],
+                    "unit_measure": {"d_factor": 1, "target_units": "%"},
+                },
+            ]
+        }
+    }
+    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=response))
+    result = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o", "clay"])
+    # Seule la layer "clay" doit être retenue
+    assert "clay" in result
+    assert "phh2o" not in result
+
+
+@respx.mock
+async def test_should_skip_layer_when_mean_is_none() -> None:
+    """Une layer dont mean est None doit être skipée."""
+    response = {
+        "properties": {
+            "layers": [
+                {"name": "phh2o", "depths": [{"values": {"mean": None}}]},  # mean None → skip
+                {
+                    "name": "clay",
+                    "depths": [{"values": {"mean": 100}}],
+                    "unit_measure": {"d_factor": 1, "target_units": "%"},
+                },
+            ]
+        }
+    }
+    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=response))
+    result = await SoilGridsClient().get_properties(44.8, -0.6, ["phh2o", "clay"])
+    assert "clay" in result
+    assert "phh2o" not in result

@@ -156,3 +156,71 @@ def _validate_trace_id(client_trace_id: str | None) -> str | None:
     if _TRACE_ID_PATTERN.match(client_trace_id):
         return client_trace_id
     return None
+
+
+# Préfixes des endpoints de métadonnées moteur à protéger en production
+# (audit sécurité P2-2). /health et /ready restent publics (probes K8s).
+#
+# On filtre par préfixe moteur (et non par suffixe global) pour éviter de
+# bloquer des routes futures comme /api/v1/jobs/{id}/status ou
+# /resources/{id}/version qui ne sont pas des endpoints de métadonnées
+# moteur (audit 2026-08-02, 3ᵉ passe).
+_ENGINE_PREFIXES = (
+    "/api/v1/evidence/",
+    "/api/v1/knowledge/",
+    "/api/v1/correlation/",
+    "/api/v1/reasoning/",
+    "/api/v1/diagnostic/",
+    "/api/v1/recommendation/",
+    "/api/v1/validation/",
+    "/api/v1/gis/",
+    "/api/v1/climate/",
+    "/api/v1/pedology/",
+    "/api/v1/botanical/",
+    "/api/v1/forest_dynamics/",
+    "/api/v1/learning/",
+    "/api/v1/simulation/",
+)
+_PROTECTED_ENGINE_SUFFIXES = ("/status", "/version")
+
+
+class StatusVersionGuardMiddleware(BaseHTTPMiddleware):
+    """Bloque /status et /version des moteurs en production/staging.
+
+    Ces endpoints divulguent l'architecture (nom du moteur, backend Rust/Python,
+    semaine d'implémentation). En développement, ils restent accessibles sans
+    auth pour le debug. En production/staging, ils renvoient 404 au format
+    RFC 7807 Problem Details — comme le handler 404 global de l'app, pour
+    garder une interface uniforme (audit 2026-08-02, 3ᵉ passe).
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        super().__init__(app)
+        # Lu à la construction (pas à l'import) — reste testable par changement
+        # d'environnement via mock de get_settings().
+        self._is_production = get_settings().environment in ("production", "staging")
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if self._is_production:
+            path = request.url.path
+            # Ne filtre que les endpoints moteur (préfixe + suffixe), pas toute
+            # l'API — évite de bloquer /jobs/{id}/status par erreur.
+            is_engine_endpoint = any(path.startswith(prefix) for prefix in _ENGINE_PREFIXES)
+            if is_engine_endpoint and any(
+                path.endswith(suffix) for suffix in _PROTECTED_ENGINE_SUFFIXES
+            ):
+                trace_id = request.headers.get("X-Trace-Id", "")
+                return JSONResponse(
+                    status_code=404,
+                    content={
+                        "type": "about:blank",
+                        "title": "Not Found",
+                        "status": 404,
+                        "detail": "Resource not found",
+                        "instance": path,
+                        "error_code": "NOT_FOUND",
+                        "trace_id": trace_id,
+                    },
+                    media_type="application/problem+json",
+                )
+        return await call_next(request)

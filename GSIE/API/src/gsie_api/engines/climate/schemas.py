@@ -18,6 +18,38 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from gsie_api.engines.evidence.schemas import SourceReference
 
+# Zéro absolu — borne définitionnelle, pas un seuil météorologique.
+#
+# `engine.py` convertit les températures SYNOP de Kelvin en Celsius par
+# soustraction de 273,15. Rien ne garantissait le sens de l'opération : une
+# valeur déjà exprimée en Celsius, ou une conversion appliquée deux fois,
+# produisait une température de -253 °C qui traversait le schéma sans objection
+# et alimentait un diagnostic. Vérifié.
+#
+# **Ces bornes sont définitionnelles, jamais empiriques.** Une température
+# sous le zéro absolu n'est pas improbable, elle n'existe pas ; une humidité
+# relative de 250 % n'est pas un record, c'est un pourcentage de saturation
+# dépassant la saturation ; un azimut de 999° n'est pas un vent violent, c'est
+# un nombre hors du cercle ; une vitesse négative n'est pas une direction, une
+# vitesse est une norme.
+#
+# La distinction est ce qui les rend admissibles au regard d'`ADR-009` :
+# écrire « au-delà de 50 °C, suspect » exigerait une source climatologique et
+# resterait un jugement. Écrire « sous le zéro absolu, impossible » n'en exige
+# aucune — c'est la définition de l'échelle, déjà citée dans `engine.py`
+# d'après le BIPM (2019), §2.3.1.
+#
+# Ces bornes n'attrapent donc pas une valeur douteuse. Elles attrapent une
+# valeur qui n'est pas une mesure.
+#
+# **Limite assumee.** Le zero absolu n'attrape la double conversion que si la
+# valeur d'origine etait negative : -5 °C mal converti donne -278,15 °C et
+# tombe, mais 20 °C mal converti donne -253,15 °C et passe. Attraper ce cas
+# supposerait une borne climatologique — le record mondial de -89,2 °C a
+# Vostok, par exemple — donc empirique, exigeant sa source et relevant d'un
+# arbitrage. Elle n'est pas posee ici, et la limite est ecrite plutot que tue.
+_ZERO_ABSOLU_C = -273.15
+
 
 class ClimateQuery(BaseModel):
     """Requête de dernière observation pour une station SYNOP."""
@@ -41,12 +73,12 @@ class ObservationClimatique(BaseModel):
     latitude: float
     longitude: float
     date_observation: datetime
-    temperature_c: float | None = None
-    humidite_pct: float | None = None
-    pression_hpa: float | None = None
-    vent_direction_deg: float | None = None
-    vent_vitesse_ms: float | None = None
-    precipitations_1h_mm: float | None = None
+    temperature_c: float | None = Field(default=None, ge=_ZERO_ABSOLU_C)
+    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)
+    pression_hpa: float | None = Field(default=None, gt=0.0)
+    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)
+    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)
+    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)
     source: SourceReference
 
 
@@ -148,12 +180,12 @@ class ObservationHoraireDepartement(BaseModel):
     latitude: float
     longitude: float
     date_observation: datetime
-    temperature_c: float | None = None
-    humidite_pct: float | None = None
-    pression_hpa: float | None = None
-    vent_direction_deg: float | None = None
-    vent_vitesse_ms: float | None = None
-    precipitations_1h_mm: float | None = None
+    temperature_c: float | None = Field(default=None, ge=_ZERO_ABSOLU_C)
+    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)
+    pression_hpa: float | None = Field(default=None, gt=0.0)
+    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)
+    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)
+    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)
     source: SourceReference
 
 
@@ -179,7 +211,7 @@ class AromeTemperatureResult(BaseModel):
     latitude: float
     longitude: float
     echeance: datetime
-    temperature_c: float
+    temperature_c: float = Field(ge=_ZERO_ABSOLU_C)
     run_modele: str = Field(description="Identifiant de couverture WCS (run de modèle utilisé)")
     resolution_deg: float = Field(default=0.01, description="Résolution native AROME France")
     source: SourceReference

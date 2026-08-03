@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import OverviewPanel from "../components/OverviewPanel.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Vue d'ensemble">
+  <div class="space-y-6">
+    <PageHeader
+      title="Vue d'ensemble"
+      description="Métriques temps réel — latence, moteurs, dépendances. Rafraîchissement toutes les 5 secondes."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <OverviewPanel client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

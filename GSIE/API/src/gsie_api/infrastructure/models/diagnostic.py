@@ -115,7 +115,7 @@ class DiagnosticModel(Base, TimestampMixin):
     contenu: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
-        doc="Diagnostic sérialisé intégral — seule source de relecture",
+        comment="Diagnostic sérialisé intégral — seule source de relecture",
     )
 
     __table_args__ = (Index("ix_diagnostic_station_date", "station_id", "date_diagnostic"),)

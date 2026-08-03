@@ -1,0 +1,289 @@
+{
+  "requete_origine": "61aeec10-06c0-424c-a11f-60644ec0fe67",
+  "inference": {
+    "resultat_id": "c159cdb8-9a81-53c5-a371-ecb253618a75",
+    "requete_origine": "61aeec10-06c0-424c-a11f-60644ec0fe67",
+    "conclusions": [
+      {
+        "conclusion_id": "48913042-b45a-510a-b827-2f1a41076f67",
+        "enonce": "Le sol est acide (pH < 5.5) : Quercus petraea est préférable à Quercus robur sur sol acide profond.",
+        "niveau_confiance": 0.85,
+        "methode_confiance": "fournie_par_regle",
+        "evidence_level_plancher": "B",
+        "chaine_inference": [
+          {
+            "ordre": 1,
+            "regle_appliquee": "Le sol est acide (pH < 5.5) : Quercus petraea est préférable à Quercus robur sur sol acide profond.",
+            "source_regle": {
+              "type_source": "peer_reviewed",
+              "auteur": "Parelle J., Brendel O., Jolivet Y.",
+              "date_publication": "2007",
+              "reference": "Annals of Forest Science, hal-02653679",
+              "version_source": null
+            },
+            "regle_id": null,
+            "premisses": [
+              "pedologie_pH = 4.8 (source : INRAE (2008))"
+            ],
+            "conclusion_locale": "Le sol est acide (pH < 5.5) : Quercus petraea est préférable à Quercus robur sur sol acide profond.",
+            "evidence_level": "B"
+          }
+        ],
+        "sources_utilisees": [
+          {
+            "type_source": "peer_reviewed",
+            "auteur": "Parelle J., Brendel O., Jolivet Y.",
+            "date_publication": "2007",
+            "reference": "Annals of Forest Science, hal-02653679",
+            "version_source": null
+          }
+        ],
+        "connaissances_utilisees": [],
+        "moteurs_solicites": [
+          "PEDOLOGY"
+        ]
+      },
+      {
+        "conclusion_id": "1d8ac19a-685b-5e9a-8be2-4ef5f057d900",
+        "enonce": "Engorgement hivernal détecté : Quercus robur est plus tolérant à l'engorgement racinaire que Quercus petraea.",
+        "niveau_confiance": 0.8,
+        "methode_confiance": "fournie_par_regle",
+        "evidence_level_plancher": "B",
+        "chaine_inference": [
+          {
+            "ordre": 1,
+            "regle_appliquee": "Engorgement hivernal détecté : Quercus robur est plus tolérant à l'engorgement racinaire que Quercus petraea.",
+            "source_regle": {
+              "type_source": "peer_reviewed",
+              "auteur": "Parelle J., Brendel O., Jolivet Y.",
+              "date_publication": "2007",
+              "reference": "Annals of Forest Science, hal-02653679",
+              "version_source": null
+            },
+            "regle_id": null,
+            "premisses": [
+              "pedologie_engorgement_hivernal = True (source : INRAE (2008))"
+            ],
+            "conclusion_locale": "Engorgement hivernal détecté : Quercus robur est plus tolérant à l'engorgement racinaire que Quercus petraea.",
+            "evidence_level": "B"
+          }
+        ],
+        "sources_utilisees": [
+          {
+            "type_source": "peer_reviewed",
+            "auteur": "Parelle J., Brendel O., Jolivet Y.",
+            "date_publication": "2007",
+            "reference": "Annals of Forest Science, hal-02653679",
+            "version_source": null
+          }
+        ],
+        "connaissances_utilisees": [],
+        "moteurs_solicites": [
+          "PEDOLOGY"
+        ]
+      }
+    ],
+    "contradictions": [],
+    "date_inference": "2026-08-02T21:39:42.745157Z",
+    "resultat_partiel": false,
+    "regles_non_appliquees": []
+  },
+  "diagnostic": {
+    "statut_validation": "brouillon",
+    "validation": null,
+    "diagnostic_id": "a594c335-b764-5635-8a80-c9a0cf1cf6ac",
+    "requete_origine": "61aeec10-06c0-424c-a11f-60644ec0fe67",
+    "station_id": "903d1bee-26bb-4c04-937e-c34aa6d99a13",
+    "type_diagnostic": "stationnel",
+    "etat_global": "vigueur_reduite",
+    "contraintes": [
+      {
+        "description": "Le sol est acide (pH < 5.5) : Quercus petraea est préférable à Quercus robur sur sol acide profond.",
+        "domaine": "pedologique",
+        "evidence_level": "B",
+        "source": {
+          "type_source": "peer_reviewed",
+          "auteur": "Parelle J., Brendel O., Jolivet Y.",
+          "date_publication": "2007",
+          "reference": "Annals of Forest Science, hal-02653679",
+          "version_source": null
+        }
+      }
+    ],
+    "atouts": [],
+    "risques": [
+      {
+        "description": "Engorgement hivernal détecté : Quercus robur est plus tolérant à l'engorgement racinaire que Quercus petraea.",
+        "probabilite": "modere",
+        "horizon": "court_terme",
+        "domaine": "sanitaire",
+        "evidence_level": "B",
+        "source": {
+          "type_source": "peer_reviewed",
+          "auteur": "Parelle J., Brendel O., Jolivet Y.",
+          "date_publication": "2007",
+          "reference": "Annals of Forest Science, hal-02653679",
+          "version_source": null
+        }
+      }
+    ],
+    "contradictions": [],
+    "confiance": 0.8,
+    "etat_global_evidence_level": "B",
+    "evidence_level_plancher": "B",
+    "incertitudes": [
+      "aucune donnée géographique pour cette station",
+      "aucune donnée climatique pour cette station",
+      "aucune donnée botanique pour cette station",
+      "aucune donnée de peuplement pour cette station"
+    ],
+    "conclusions_source": [
+      "1d8ac19a-685b-5e9a-8be2-4ef5f057d900",
+      "48913042-b45a-510a-b827-2f1a41076f67"
+    ],
+    "date_diagnostic": "2026-08-02T21:39:42.745157Z"
+  },
+  "recommandations": {
+    "ensemble_id": "b041341b-b530-478c-9d77-c83bb2de489e",
+    "requete_origine": "61aeec10-06c0-424c-a11f-60644ec0fe67",
+    "diagnostic_source": "a594c335-b764-5635-8a80-c9a0cf1cf6ac",
+    "recommandations": [
+      {
+        "recommandation_id": "53e80ccf-4840-4762-9fef-c5391c374098",
+        "type_action": "eclaircie",
+        "description": "Éclaircie modérée (prélèvement 25 %) pour favoriser la croissance.",
+        "essence_concernee": null,
+        "parametres": {},
+        "justification": {
+          "diagnostic_ref": "a594c335-b764-5635-8a80-c9a0cf1cf6ac",
+          "connaissances_utilisees": [],
+          "regles_appliquees": [
+            "Règle v1 : objectif=production"
+          ],
+          "sources": [
+            {
+              "type_source": "referentiel_officiel",
+              "auteur": "GSIE Knowledge Engine (v1 — règles déclaratives)",
+              "date_publication": null,
+              "reference": "KNOWLEDGE_ENGINE.md §5 — règles sylvicoles",
+              "version_source": "0.1.0"
+            }
+          ],
+          "facteurs_limitants": [
+            "Modèle v1 déclaratif — pas de diagnostic réel exploité.",
+            "Les règles sylvicoles sont abstraites en v1."
+          ],
+          "moteurs_solicites": [
+            "recommendation"
+          ]
+        },
+        "alternatives": [
+          {
+            "recommandation_id": "51eb7e5a-fd25-4f62-9584-40503c4f78bd",
+            "type_action": "attente_surveillance",
+            "description": "Surveiller l'évolution du peuplement avant intervention — recommandé si les données sont insuffisantes.",
+            "essence_concernee": null,
+            "parametres": {},
+            "justification": {
+              "diagnostic_ref": "a594c335-b764-5635-8a80-c9a0cf1cf6ac",
+              "connaissances_utilisees": [],
+              "regles_appliquees": [
+                "Règle v1 : alternative conservatrice"
+              ],
+              "sources": [
+                {
+                  "type_source": "referentiel_officiel",
+                  "auteur": "GSIE Knowledge Engine (v1 — règles déclaratives)",
+                  "date_publication": null,
+                  "reference": "KNOWLEDGE_ENGINE.md §5 — règles sylvicoles",
+                  "version_source": "0.1.0"
+                }
+              ],
+              "facteurs_limitants": [
+                "L'attente prolongée peut laisser évoluer défavorablement le peuplement."
+              ],
+              "moteurs_solicites": [
+                "recommendation"
+              ]
+            },
+            "alternatives": [],
+            "niveau_confiance": 0.8,
+            "scenario_projection": null,
+            "contournable": true
+          },
+          {
+            "recommandation_id": "ef542b11-322a-426b-9f7f-0a77901f80b1",
+            "type_action": "eclaircie",
+            "description": "Version renforcée : éclaircie modérée (prélèvement 25 %) pour favoriser la croissance. avec intensité accrue.",
+            "essence_concernee": null,
+            "parametres": {},
+            "justification": {
+              "diagnostic_ref": "a594c335-b764-5635-8a80-c9a0cf1cf6ac",
+              "connaissances_utilisees": [],
+              "regles_appliquees": [
+                "Règle v1 : alternative interventionniste"
+              ],
+              "sources": [
+                {
+                  "type_source": "referentiel_officiel",
+                  "auteur": "GSIE Knowledge Engine (v1 — règles déclaratives)",
+                  "date_publication": null,
+                  "reference": "KNOWLEDGE_ENGINE.md §5 — règles sylvicoles",
+                  "version_source": "0.1.0"
+                }
+              ],
+              "facteurs_limitants": [
+                "Intensité accrue — risque de déstabilisation du peuplement."
+              ],
+              "moteurs_solicites": [
+                "recommendation"
+              ]
+            },
+            "alternatives": [],
+            "niveau_confiance": 0.8,
+            "scenario_projection": null,
+            "contournable": true
+          }
+        ],
+        "niveau_confiance": 0.8,
+        "scenario_projection": null,
+        "contournable": true
+      }
+    ],
+    "date_generation": "2026-08-02T21:39:42.878021Z"
+  },
+  "validation": {
+    "validation_id": "9d5041fa-a66c-4465-92ef-1ca0c21d6d52",
+    "requete_origine": "d71dcf55-620a-47bb-8fca-f4682b81b1c9",
+    "statut": "valide",
+    "controles": [
+      {
+        "nom_controle": "presence_niveau_preuve",
+        "resultat": "conforme",
+        "details": "Niveau de preuve présent sur la sortie."
+      },
+      {
+        "nom_controle": "presence_source",
+        "resultat": "conforme",
+        "details": "4 source(s) identifiée(s)."
+      },
+      {
+        "nom_controle": "presence_chaine_inference",
+        "resultat": "conforme",
+        "details": "2 chaîne(s) d'inférence fournie(s)."
+      },
+      {
+        "nom_controle": "recommandation_contournable",
+        "resultat": "conforme",
+        "details": "1 recommandation(s) toutes contournables."
+      },
+      {
+        "nom_controle": "explicabilite",
+        "resultat": "conforme",
+        "details": "Justification présente et lisible."
+      }
+    ],
+    "causes_blocage": [],
+    "date_validation": "2026-08-02T21:39:42.881484Z"
+  }
+}

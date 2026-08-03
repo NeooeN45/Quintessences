@@ -119,6 +119,7 @@ class AutecologyProfileModel(Base, TimestampMixin):
             "value_numeric IS NOT NULL OR value_text IS NOT NULL",
             name="ck_autecology_profile_value_present",
         ),
+        {"schema": "gsie_botanique"},
     )
 
 
@@ -166,6 +167,7 @@ class SiteIndexModelModel(Base, TimestampMixin):
             "OR valid_age_min_years <= valid_age_max_years",
             name="ck_site_index_model_valid_age_range",
         ),
+        {"schema": "gsie_foret"},
     )
 
 
@@ -191,7 +193,10 @@ class FertilityClassModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     site_index_model_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("site_index_model.id"), nullable=False, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.site_index_model.id"),
+        nullable=False,
+        index=True,
     )
     class_label: Mapped[str] = mapped_column(String(100), nullable=False)
     dominant_height_m: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -213,6 +218,7 @@ class FertilityClassModel(Base, TimestampMixin):
             "lower_bound_m IS NULL OR upper_bound_m IS NULL OR lower_bound_m <= upper_bound_m",
             name="ck_fertility_class_bounds_order",
         ),
+        {"schema": "gsie_foret"},
     )
 
 
@@ -237,7 +243,7 @@ class StationTypeModel(Base, TimestampMixin):
     validity_zone_description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
-        doc="Zone de validité du guide en texte libre (pas de géométrie en tranche 2)",
+        comment="Zone de validité du guide en texte libre (pas de géométrie en tranche 2)",
     )
     ser_greco_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     topography_description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -252,6 +258,8 @@ class StationTypeModel(Base, TimestampMixin):
         nullable=False,
         default=LifecycleStatus.draft,
     )
+
+    __table_args__ = {"schema": "gsie_foret"}
 
 
 @register_type("station_observation")
@@ -274,10 +282,10 @@ class StationObservationModel(Base, TimestampMixin):
     )
     plot_reference: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     station_type_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("station_type.id"), nullable=True, index=True
+        PGUUID(as_uuid=True), ForeignKey("gsie_foret.station_type.id"), nullable=True, index=True
     )
     key_path_followed: Mapped[str | None] = mapped_column(
-        Text, nullable=True, doc="Réponses saisies et embranchement obtenu dans la clé du guide"
+        Text, nullable=True, comment="Réponses saisies et embranchement obtenu dans la clé du guide"
     )
     topography_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
     substrate_observed: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -301,6 +309,7 @@ class StationObservationModel(Base, TimestampMixin):
             "station_type_id IS NOT NULL OR determination_uncertainty IS NOT NULL",
             name="ck_station_observation_uncertainty_when_undetermined",
         ),
+        {"schema": "gsie_foret"},
     )
 
 
@@ -335,6 +344,8 @@ class SilviculturalSystemModel(Base, TimestampMixin):
         default=LifecycleStatus.draft,
     )
 
+    __table_args__ = {"schema": "gsie_foret"}
+
 
 @register_type("silvicultural_rule")
 class SilviculturalRuleModel(Base, TimestampMixin):
@@ -357,7 +368,10 @@ class SilviculturalRuleModel(Base, TimestampMixin):
         primary_key=True,
     )
     silvicultural_system_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("silvicultural_system.id"), nullable=True, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.silvicultural_system.id"),
+        nullable=True,
+        index=True,
     )
     species_entity_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
@@ -395,7 +409,7 @@ class SilviculturalRuleModel(Base, TimestampMixin):
     human_validator: Mapped[str | None] = mapped_column(
         String(300),
         nullable=True,
-        doc="Nom/qualité du validateur humain (curateur + forestier compétent) — "
+        comment="Nom/qualité du validateur humain (curateur + forestier compétent) — "
         "obligatoire dès que status passe à accepted",
     )
     source_id: Mapped[UUID] = mapped_column(
@@ -412,6 +426,7 @@ class SilviculturalRuleModel(Base, TimestampMixin):
             "status <> 'accepted' OR human_validator IS NOT NULL",
             name="ck_silvicultural_rule_human_validation_required",
         ),
+        {"schema": "gsie_foret"},
     )
 
 
@@ -446,6 +461,8 @@ class DiagnosticProtocolModel(Base, TimestampMixin):
         default=LifecycleStatus.draft,
     )
 
+    __table_args__ = {"schema": "gsie_foret"}
+
 
 @register_type("health_risk")
 class HealthRiskModel(Base, TimestampMixin):
@@ -471,7 +488,10 @@ class HealthRiskModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     diagnostic_protocol_id: Mapped[UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("diagnostic_protocol.id"), nullable=True, index=True
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_foret.diagnostic_protocol.id"),
+        nullable=True,
+        index=True,
     )
     symptom_observed: Mapped[str] = mapped_column(Text, nullable=False)
     suspected_causal_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
@@ -495,6 +515,7 @@ class HealthRiskModel(Base, TimestampMixin):
             "confirmed_causal_agent IS NULL OR confirmation_method IS NOT NULL",
             name="ck_health_risk_confirmation_requires_method",
         ),
+        {"schema": "gsie_foret"},
     )
 
 
@@ -524,7 +545,7 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
     base_material: Mapped[str] = mapped_column(
         String(300),
         nullable=False,
-        doc="Identifiant du matériel de base (verger à graines, " "peuplement classé, etc.)",
+        comment="Identifiant du matériel de base (verger à graines, " "peuplement classé, etc.)",
     )
     base_material_category: Mapped[MaterielBaseCategory] = mapped_column(
         Enum(MaterielBaseCategory, name="materiel_base_category"), nullable=False, index=True
@@ -533,7 +554,7 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
     decree_version: Mapped[str] = mapped_column(
         String(300),
         nullable=False,
-        doc="Version de l'arrêté MFR qui fonde l'admissibilité (ex. « arrêté du 6 mars 2026 »)",
+        comment="Version de l'arrêté MFR qui fonde l'admissibilité (ex. « arrêté du 6 mars 2026 »)",
     )
     valid_region_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_id: Mapped[UUID] = mapped_column(
@@ -544,3 +565,5 @@ class ProvenanceMaterialModel(Base, TimestampMixin):
         nullable=False,
         default=LifecycleStatus.draft,
     )
+
+    __table_args__ = {"schema": "gsie_foret"}

@@ -99,6 +99,20 @@ class SourceModel(Base, TimestampMixin):
     source_nature: Mapped[SourceNature] = mapped_column(
         Enum(SourceNature, name="source_nature"), nullable=False, index=True
     )
+    # Une source sans auteur ni date n'est pas citable : `SourceReference`
+    # les exige, et une conclusion qui cite un document sans dire qui l'a
+    # ecrit ni quand n'est pas verifiable (CON-005).
+    # Nullable en base pour les lignes anterieures ; exige a l'ecriture.
+    auteur: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Auteurs de la source, sous la forme attendue pour une citation",
+    )
+    date_publication: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Date de publication declaree par la source (annee ou date complete)",
+    )
     url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     doi: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True)
     licence: Mapped[str | None] = mapped_column(String(100), nullable=True)

@@ -59,6 +59,11 @@ from gsie_api.engines.botanical.gbif_client import (
     GBIFClient,
     GBIFClientError,
 )
+from gsie_api.engines.botanical.plantnet_client import (
+    _IDENTIFY_URL,
+    PlantNetClient,
+    PlantNetClientError,
+)
 from gsie_api.engines.botanical.taxref_client import (
     TaxrefClient,
     TaxrefClientError,
@@ -148,6 +153,7 @@ class ClientSpec:
     auth: bool = False
     body_format: BodyFormat = BodyFormat.JSON
     match_error: str = "Échec"
+    method: str = "GET"
 
 
 # --- Helpers pour construire les mocks selon le format ---
@@ -195,6 +201,16 @@ CLIENT_REGISTRY: list[ClientSpec] = [
         call=lambda c: c.match_species("Quercus petraea"),
         auth=False,
         body_format=BodyFormat.JSON,
+    ),
+    ClientSpec(
+        name="plantnet",
+        factory=lambda: PlantNetClient(),
+        url=_IDENTIFY_URL,
+        exception=PlantNetClientError,
+        call=lambda c: c.identify(b"\x89PNG fake image bytes"),
+        auth=True,
+        body_format=BodyFormat.JSON,
+        method="POST",
     ),
     ClientSpec(
         name="taxref",
@@ -286,13 +302,18 @@ CLIENT_REGISTRY: list[ClientSpec] = [
 @pytest.fixture(autouse=True)
 def _fake_api_keys(monkeypatch: pytest.MonkeyPatch) -> None:
     """Injecte une clé API fake pour tous les clients avec auth."""
-    fake_settings = type("S", (), {"meteofrance_api_key": "fake-key-for-test"})()
+    fake_settings = type(
+        "S",
+        (),
+        {"meteofrance_api_key": "fake-key-for-test", "plantnet_api_key": "fake-key-for-test"},
+    )()
     for module_path in (
         "gsie_api.engines.climate.vigilance_client",
         "gsie_api.engines.climate.meteofrance_client",
         "gsie_api.engines.climate.paquet_observation_client",
         "gsie_api.engines.climate.dpclim_client",
         "gsie_api.engines.climate.arome_client",
+        "gsie_api.engines.botanical.plantnet_client",
     ):
         monkeypatch.setattr(
             f"{module_path}.get_settings",
@@ -312,7 +333,9 @@ _SPECS_WITHOUT_AUTH = [s for s in CLIENT_REGISTRY if not s.auth]
 @respx.mock
 async def test_mode1_network_failure(spec: ClientSpec) -> None:
     """Mode #1 — une panne réseau (ConnectError) doit lever l'exception métier."""
-    respx.get(spec.url).mock(side_effect=httpx.ConnectError("connexion refusée"))
+    respx.route(method=spec.method, url=spec.url).mock(
+        side_effect=httpx.ConnectError("connexion refusée")
+    )
     client = spec.factory()
     with pytest.raises(spec.exception):
         await spec.call(client)
@@ -323,11 +346,11 @@ async def test_mode1_network_failure(spec: ClientSpec) -> None:
 async def test_mode2_http_4xx_5xx(spec: ClientSpec) -> None:
     """Mode #2 — un statut HTTP 4xx puis 5xx doit lever l'exception métier."""
     client = spec.factory()
-    respx.get(spec.url).mock(return_value=Response(404))
+    respx.route(method=spec.method, url=spec.url).mock(return_value=Response(404))
     with pytest.raises(spec.exception):
         await spec.call(client)
 
-    respx.get(spec.url).mock(return_value=Response(500))
+    respx.route(method=spec.method, url=spec.url).mock(return_value=Response(500))
     with pytest.raises(spec.exception):
         await spec.call(client)
 
@@ -341,7 +364,7 @@ async def test_mode2_http_4xx_5xx(spec: ClientSpec) -> None:
 async def test_mode3_malformed_body(spec: ClientSpec) -> None:
     """Mode #3 — un corps malformé doit lever l'exception métier, pas planter."""
     body = _malformed_body(spec.body_format)
-    respx.get(spec.url).mock(return_value=Response(200, content=body))
+    respx.route(method=spec.method, url=spec.url).mock(return_value=Response(200, content=body))
     client = spec.factory()
     with pytest.raises(spec.exception):
         await spec.call(client)
@@ -357,7 +380,7 @@ async def test_mode4_missing_field(spec: ClientSpec) -> None:
     exception non gérée (KeyError, IndexError, TypeError, etc.).
     """
     response = _valid_but_empty_response(spec.body_format)
-    respx.get(spec.url).mock(return_value=response)
+    respx.route(method=spec.method, url=spec.url).mock(return_value=response)
     client = spec.factory()
     try:
         result = await spec.call(client)
@@ -381,7 +404,7 @@ async def test_mode5_quota_auth(spec: ClientSpec) -> None:
     """Mode #5 — un 401/403/429 (auth/quota) doit lever l'exception métier."""
     client = spec.factory()
     for status in (401, 403, 429):
-        respx.get(spec.url).mock(return_value=Response(status))
+        respx.route(method=spec.method, url=spec.url).mock(return_value=Response(status))
         with pytest.raises(spec.exception):
             await spec.call(client)
 

@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-07-27 — **Audit + fiabilisation DB GSIE (DEC-000037 Draft)** : audit complet de la base PostgreSQL 16 + PostGIS + AGE (116 tables) — score ~43%, 5 P0, 10 P1, 15 P2. Campagne de fiabilisation en 3 vagues : (1) quick wins (pg_dump, wal_level, cap_drop, doc backup/restore), (2) 3 migrations Alembic additives (`20260727_0003` 110 index FK + 13 CHECK, `20260727_0004` RLS sur 6 tables sensibles + rôles PostgreSQL + TLS + pgAudit, `20260727_0005` validation géométrique PostGIS + colonne geom_4326), pool sizing corrigé (5×14+6=76 ≤ 100), PgBouncer config orpheline, monitoring pg_stat_statements, (3) pgBackRest config + runbook DR + streaming replication. 913 tests unitaires OK (97% couverture), mypy strict + ruff OK, 1 tête Alembic `20260727_0005`. 4 fixes de Claude (auth, resource_diff, RGPD, EvidenceLevel) approuvés par audit QA non-régression. **Historique Alembic assaini (DEC-000036)** : la baseline `20260726_0001` reste immuable. |
+| **Dernière mise à jour** | 2026-08-02 — **Phase de stabilisation DEC-000043 clôturée ✅**. S1 restauration DB prouvée (127 tables, parité source ✓, test CI), S2 tranche verticale réelle (chaîne Reasoning→Diagnostic→Recommendation→Validation sur pilote Parelle 2007 Quercus, 0.15s, diagnostic persisté), S3 validation scientifique + benchmark (3/3 scénarios ground truth validés, 18/18 checks, latence 32ms p95 34.68ms, mémoire 0.25 MB). État réel : 14 moteurs + orchestration, 28 migrations, 120 tables sur 6 schémas, 83 routes API, 1859 tests (63 skipped), 100% couverture, mutation 67/67. **Gates 4/5/6 rouvrables** — la preuve de chaîne complète est faite. |
 
 ---
 
@@ -366,6 +366,8 @@ brainstorming v5 n'est adoptée.
 - **DEC-000019** — Validation architecture Phase 4 + plan révisé 24 semaines (Python+Rust+Go différé, FastAPI+PostGIS+Redis, 6 vagues)
 - **DEC-000020** — Knowledge Engine Semaine 3 : implémentation Python (ingest, query, revise, versionnement CON-010)
 - **DEC-000021** — Semaine 4 : pipeline intégré Evidence → Knowledge (tranche verticale prioritaire)
+- **DEC-000024** — Ingestion des données forestières ONF/CNPF/IGN (Review, 2026-07-16, RFC-0013). Module `gsie_api.ingestion`, datasets P0 (BD Forêt v2, IFN, catalogues stations CNPF) en Vague 2, P1 (RPF/RPFR, BDAT, LiDAR HD) en Vague 3. Mapping métamodèle v6.2, traçabilité CON-010.
+- **DEC-000028** — Incrément démontrable « territoire + capsule + Golden Bench » (Review, 2026-07-18, ADR-008, EXP-0001). Première tranche verticale hors-ligne de GSIE sous forme de capsule territoriale signée. Renuméroté depuis DEC-000025 (collision d'ID).
 - **DEC-000026** — Adoption RFC-0015 : Environmental Model Fabric — registre de modèles scientifiques, LLM orchestrateur non autoritaire, Correlation Engine v2, packs offline signés
 - **DEC-000027** — Adoption RFC-0016 : Schéma forestier spécialisé — 10 entités, chaîne de décision en 10 étapes, passeport de décision à 5 catégories, pilote Nouvelle-Aquitaine. **Phase A (schéma de données) complète le 2026-07-19** : 10/10 entités du §3.1 couvertes (10 nouvelles tables satellite + 3 entités réutilisées sans duplication — Intervention, EvidenceStatement, ConflictRecord) sur 6 tranches, registre de types 76→86, 364 tests (304 passed/60 skipped). Phases B et C restent à faire. **Audit qualité du 2026-07-20** (0 P0, aucune valeur non sourcée détectée, ADR-009 respecté) a identifié des P1/P2 de cohérence — corrigés le même jour : typage enum strict sur 6 DTO Pydantic (str → StrEnum), 4 règles métier conditionnelles répliquées dans `resources/validators.py` (reflètent des CheckConstraint SQL déjà en place), index sur les 10 FK `source_id` (désormais intégrés à la baseline `20260726_0001`). 347 tests unitaires (0 échec).
 - **DEC-000029** — Adoption du cadrage RFC-0017 (veille Pl@ntNet/NVIDIA NIM) et scission en RFC-0018 (identification botanique Pl@ntNet) et RFC-0019 (`gsie-ai-gateway`). N'autorise aucun code métier — RFC-0018 et RFC-0019 doivent chacun être adoptés séparément avant tout développement.
@@ -373,18 +375,22 @@ brainstorming v5 n'est adoptée.
 - **DEC-000031** — Socle de fiabilité d'entreprise
 - **DEC-000032** — Orchestration contrôlée des agents IA
 - **DEC-000033** — Orientation de la refondation constitutionnelle (décision d'orientation, **non** décision d'adoption)
+- **DEC-000034** — Réassignation de l'orchestration des agents IA (Review, 2026-07-25). Amende DEC-000032 (orchestration contrôlée) — RFC-0022 Adopté. Décision d'organisation sans effet constitutionnel : Codex conserve l'orchestration technique, le Fondateur l'autorité finale.
 - **DEC-000035** — Rust devient un critère de pertinence mesuré, non un plan de vague
 - **DEC-000036** — Baseline Alembic v6.2 unique, lignée locale 0001-0013 remplacée
 - **DEC-000037** — Stratégie de fiabilisation et de sécurisation de la base de données GSIE
 - **DEC-000038** — Persistance des règles d'inférence (adoption `RFC-0028`). Une règle est une Assertion (`claim_kind` `rule`/`threshold`), aucune table nouvelle. La condition exécutable est **dérivée** du fait sourcé, jamais stockée — une chaîne persistée pourrait diverger du seuil qu'elle traduit et appliquer l'ancienne valeur en citant la source révisée. **Un domaine de validité non renseigné vaut « nulle part »** : le silence ne vaut pas universalité, et une conclusion fausse portant une citation vérifiable est pire qu'une absence de réponse. Corollaire : territoire obligatoire sur `silvicultural_rule` et `autecology_profile`, comme il l'est déjà sur `station_type`, `fertility_class` et `provenance_material`. Aucun plancher de preuve par défaut mais `evidence_level_plancher` obligatoire en réponse ; une source invalidée sort la règle du service **et** rend énumérables les conclusions passées qui la citaient. Premier lot : chêne sessile, réserve utile maximale, un territoire, de bout en bout.
+- **DEC-000040** — Tables transverses laissées dans `public` (Draft, 2026-07-31, RFC-0029). Décision d'architecture de données : les tables transverses (junctions, outbox, temporal_engine, enrichment) restent dans le schéma `public` plutôt que d'être éclatées par moteur. Préserve DEC-000019 (PostgreSQL+PostGIS+AGE) et GSIE-PROMPT-0027 (schémas de domaine). Référencée dans CHANGELOG l.365 (mapping Treekipedia).
+- **DEC-000041** — Ingestion bulk + pgvector + garde anti-invention automatisée. Pipeline bulk (POST /resources/bulk, 1000 items/lot, 600 req/min), migration `20260731_0024` pgvector (extension vector + colonne embedding(1536) + index IVFFlat), garde anti-invention RFC-0014 automatisée (détection AI-sourced → evidence_level=D + quarantine), rate limiting différencié. Dockerfile.db installe `postgresql-16-pgvector`. Modèle `EntityModel` déclare `embedding` (Vector(1536)). 1346 tests unitaires + 9 tests d'intégration.
+- **DEC-000043** — Phase de stabilisation : ralentir pour prouver (Validé, 2026-08-02). Décision directe du Fondateur après diagnostic : qualité technique 8/10, qualité produit 6,5/10. Trois livrables : S1 restauration DB prouvée, S2 tranche verticale réelle terrain→recommandation, S3 validation scientifique + performance. Nouveaux endpoints/moteurs/migrations suspendus. Gates 4/5/6 de la ROADMAP passent à ❌ (bloqués par S2/S3).
 
 ## Documents structurants
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
 - **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
 - **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
-- **GSIE-DIR-0005** — Directive fondatrice Ignis (GCS / jumeau numérique vivant) (Draft — DEC-000008)
-- **GSIE-DIR-0006** — Vision du Moteur Cognitif Ignis (Draft — DEC-000009)
+- **GSIE-DIR-0005** — Directive fondatrice Ignis (GCS / jumeau numérique vivant) (Review — DEC-000008, passage Draft→Review 2026-08-02 : livrables en pilote actif)
+- **GSIE-DIR-0006** — Vision du Moteur Cognitif Ignis (Review — DEC-000009, passage Draft→Review 2026-08-02 : livrables en pilote actif)
 - **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
 - **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
 - **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
@@ -476,6 +482,19 @@ l'adoption puis la publication de nouvelles éditions. Toute divergence entre
 l'orientation et un texte en vigueur se résout en faveur du texte en vigueur.
 
 ## Prochaine étape
+
+### Inventaire sources élargi — GSIE-PROMPT-0025 (2026-07-30)
+
+Extension de l'inventaire des sources de données à un état viable 5 ans.
+**Branche `feat/inventaire-sources-elargi`** — 2 commits locaux, non poussés (en attente d'autorisation).
+
+- 9 domaines thématiques traités (A-I), 68 URLs testées (82% succès)
+- 48 entrées vérifiées (YAML conformes RFC-0029 §11.3) dans `_staging_0025/`
+- 26 nouvelles sources ajoutées à `SOURCES_DONNEES_EXHAUSTIVES.md` §6.10
+- 34 sources à vérifier identifiées
+- 5 corrections critiques : Prométhée→BDIFF (DS-022 obsolète, DS-022b ajouté), INPN cyberattaque, ERA5T payant, donneespubliques.meteofrance.fr fermeture, CDSE STAC endpoint
+- Nouveau total : ~205 sources vérifiées + 34 à vérifier = ~239 potentielles (+33%)
+- **Action requise** : pousser la branche et créer la PR quand autorisé
 
 ### P0 technique — Persistance des diagnostics (chantier cadré le 2026-07-26)
 
@@ -783,6 +802,181 @@ d'exécution :
 
 Rappel Phase 2 : les 12 livrables (201-212) sont Draft complets, prêts
 pour Review.
+
+### Session 2026-08-01 — Visualisation DB + SDK + Tableau de contrôle
+
+#### Outils de visualisation de base de données
+
+Stack open-source self-hosted déployée via `GSIE/docker-compose.viz.yml`
+(veille `GSIE/RESEARCH/VEILLE_OUTILS_VISUALISATION_DB_2026-07-31.md`) :
+
+| Outil | Rôle | URL | Conteneur |
+|---|---|---|---|
+| Metabase | BI self-service (non-tech) | http://localhost:3030 | `gsie-metabase` |
+| Apache Superset | BI avancée (SQL Lab, dashboards) | http://localhost:8088 | `gsie-superset` |
+| Dekart | Carto web Kepler.gl (PostGIS) | http://localhost:8089 | `gsie-dekart` |
+
+**Sécurité** :
+- Migration Alembic `20260801_0025` appliquée — crée le groupe
+  `gsie_viz_lecture` (NOLOGIN) avec `SELECT` sur `public` + 7 schémas de
+  domaine, `REVOKE ALL` explicite sur `gsie_rgpd` et
+  `gsie_rgpd_identites`.
+- Comptes de connexion créés via `docker/comptes-de-connexion.sql` :
+  `gsie_api` (LOGIN, NOSUPERUSER, NOBYPASSRLS) pour l'API, `gsie_viz`
+  (LOGIN, NOSUPERUSER) pour les outils de visualisation.
+- Vérifié : `gsie_viz` peut lire `spatial_ref_sys` (8500 lignes) mais est
+  bloqué sur `gsie_rgpd_identites.data_subject` (permission denied).
+- Profil `viz` dans le compose : les conteneurs ne démarrent pas sans
+  `--profile viz` (audit sécurité, constat D).
+- Ports liés à `127.0.0.1` (pas d'exposition externe).
+- `MB_ENCRYPTION_SECRET_KEY` et `SUPERSET_SECRET_KEY` configurées.
+- `DEKART_CORS_ORIGIN` restreint à `localhost:8089`.
+
+**Dekart** : configuration corrigée — séparation stockage SQLite embarqué
+(sans licence) / datasource PostGIS via
+`DEKART_POSTGRES_DATASOURCE_CONNECTION`. Les variables
+`DEKART_POSTGRES_*` (DB/USER/PASSWORD/HOST/PORT) sont pour le backend de
+métadonnées Postgres qui exige une licence — non utilisées.
+
+**Metabase** : initialisé via API `/api/setup` — compte admin créé
+depuis `GSIE_METABASE_ADMIN_EMAIL`/`GSIE_METABASE_ADMIN_PASSWORD`, DB
+« GSIE PostGIS » connectée (sync complète, PG 16.14 détecté), sample DB
+supprimée, locale fr.
+
+**Superset** : initialisé via CLI — `superset db upgrade`, `superset fab
+create-admin` (depuis `GSIE_SUPERSET_ADMIN_PASSWORD`), `superset init`,
+connexion DB « GSIE PostGIS » créée via `superset set-database-uri`.
+
+**SchemaSpy → script SQL+Python** : SchemaSpy incompatible PG16
+(`datlastsysoid` supprimé en PG15) et tbls incompatible avec l'héritage
+class-table de PostgreSQL. Remplacés par `GSIE/TOOLS/generate_schema_doc.sql`
++ `generate_schema_doc.py` qui génèrent `GSIE/DOCUMENTATION/SCHEMA_DB.md`
+(120 tables, 2122 colonnes, 7 schémas avec types, contraintes,
+commentaires et tailles).
+
+**Documentation** : `GSIE/DOCUMENTATION/VISUALISATION_DB_ACCES.md`
+(URLs, credentials, commandes Docker, architecture réseau, sécurité)
++ `GSIE/DOCUMENTATION/SCHEMA_DB.md` (doc du schéma DB).
+
+#### SDK Python GSIE
+
+SDK minimal créé dans `GSIE/SDK/python/` (P0-3 première moitié) :
+- Client async `httpx` avec authentification JWT RS256 et refresh
+  automatique des tokens.
+- Wrappers pour les moteurs GSIE : diagnostic, recommendation,
+  validation, simulation.
+- Exceptions typées (`GSIEAuthError`, `GSIEAPIError`, `GSIEConnectionError`).
+- Tests unitaires avec `respx` (mock réseau) + `pytest-asyncio`.
+- Validation : `ruff check` OK, `mypy --strict` OK, tous tests passent.
+- `pyproject.toml` configure le package `gsie_sdk` avec dépendances
+  minimales (`httpx`, `pyjwt[crypto]`).
+
+#### Tableau de contrôle admin GSIE
+
+Dashboard web créé dans `GSIE/ADMIN_WEB/` (Astro 5 + React 19 Islands +
+Tailwind CSS 4 + TypeScript). **Design calqué sur Tabler** (dashboard
+open-source Bootstrap 5, reproduit en Tailwind 4 sans dépendance
+Bootstrap) : sidebar gauche groupée par sections + topbar sticky avec
+search/notifications/user menu + cards avec header + stat cards avec
+icône/trend + badges semi-transparents + tables borderless avec hover.
+
+| Page | URL | Contenu |
+|---|---|---|
+| Vue d'ensemble | `/` | 4 stat cards (icône + trend) + santé système (DB, API, disque, mémoire, alertes) |
+| Moteurs | `/engines` | 14 moteurs avec filtres (core/domain/transverse), statut, uptime, latence |
+| Utilisateurs | `/users` | Tableau avec recherche + filtres par rôle (admin, forestier, chercheur, lecteur) |
+| Données | `/data` | Catalogue datasets avec filtres par source (Treekipedia, IGN, Météo-France, GBIF, SoilGrids) |
+
+**Architecture** :
+- Hydratation sélective : sidebar, topbar et stat cards en HTML statique
+  (0 JS), seuls les tableaux/grids interactifs sont des React Islands
+  (`client:load`).
+- Client API hybride (`lib/api.ts`) : mock data par défaut, détection
+  auto de l'API GSIE sur `localhost:8000/health` — bascule sans
+  modification de l'UI.
+- Types partagés (`lib/types.ts`) compatibles avec l'API FastAPI.
+- Build de production : 4 pages, 0 erreur, islands 3.5-4.5 KB chacun.
+- `astro check` : 0 erreur, 0 warning, 0 hint (17 fichiers).
+- Port 4000 (évite conflits avec API :8000 et viz :3030/:8088/:8089).
+
+**Préparation version serveur** : l'architecture est découplée —
+`lib/api.ts` centralise les appels, les composants consomment uniquement
+les types. Quand la version serveur GSIE sera déployée, définir
+`GSIE_API_URL` dans `.env` — aucune modification de l'UI.
+
+#### Audit concurrentielle — corrections
+
+L'analyse concurrentielle (`22_PROJECT_MEMORY/analyses/ANALYSE_CONCURRENTIELLE_2026-07-31.md`)
+a été corrigée sur deux P0 invalides :
+- **P0-4 « 3 moteurs stubs »** : incorrect — les moteurs Recommendation,
+  Validation et Simulation sont implémentés avec tests.
+- **P0-5 « autécologie absente »** : incorrect — l'adapter autecology
+  existe dans Botanical Engine (RFC-0016 Phase A, 10 tables forestières).
+
+#### P0 restants (après cette session)
+
+| ID | Description | Statut |
+|---|---|---|
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
+
+### Session 2026-08-02 (soir) — Consolidation + diagnostic Fondateur + DEC-000043
+
+#### État réel mesuré (chiffres vérifiés, non estimés)
+
+| Métrique | Valeur | Source |
+|---|---|---|
+| Moteurs implémentés | 14 + orchestration | `src/gsie_api/engines/` (16 dirs) |
+| Migrations Alembic | 28 | `alembic/versions/` |
+| Tables SQLAlchemy | 120 | `Base.metadata.tables` |
+| Schémas PostgreSQL | 6 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites |
+| Routes API | 83 | `create_app().routes` |
+| Tests unitaires | 1859 passed, 63 skipped, 0 failed | `pytest tests/unit/` |
+| Couverture de code | 100% (8831/8831 stmts) | `pytest --cov=gsie_api` |
+| Score mutation | 67/67 (100%) | `tests/mutation/harnais.py` |
+| Lint | ruff OK | `ruff check src/ tests/` |
+| Typage | mypy OK | `mypy src/gsie_api/` |
+
+#### 63 skipped — analyse catégorielle
+
+| Catégorie | Count | Raison | Action |
+|---|---|---|---|
+| Seeds v6.1 legacy | 46 | Migration v6.1 → v6.2 (RFC-0012) Vague 2 | Réactiver après migration |
+| Schéma KnowledgeObject → Assertion | 14 | RFC-0012 | Réactiver après migration |
+| Rust Evidence Engine absent | 3 | Wheel Rust non construite sur Windows | CI Linux |
+
+#### Diagnostic Fondateur (2026-08-02)
+
+> Le code est plus mature que le produit intégré.
+
+Rapidité 9/10, qualité technique 8/10, qualité produit 6,5-7/10.
+Il manque la preuve complète : terrain → données réelles → preuve
+scientifique → diagnostic → recommandation → validation humaine →
+application cliente/Hub.
+
+#### Phase de stabilisation (DEC-000043) — CLÔTURÉE ✅
+
+Trois livrables produits et validés :
+
+1. **S1 — Restauration DB prouvée** ✅ (commit `74b1b59`) : backup →
+   restore → vérification d'intégrité (127 tables, 327 FK, 475 index,
+   parité source ✓). Scripts : `test_restauration_db.sh` (bash),
+   `test_restauration_db.py` (Python CI). Document :
+   `DR-RESTAURATION.md`.
+2. **S2 — Tranche verticale réelle** ✅ (commit `b6b61f6`) : chaîne
+   complète Reasoning→Diagnostic→Recommendation→Validation sur pilote
+   Parelle 2007 (Quercus robur vs petraea), 0.15s, diagnostic persisté,
+   recommandation produite, validation `valide`. Script :
+   `tranche_verticale.py`. Document : `TRANCHE_VERTICALE.md`.
+3. **S3 — Validation scientifique + benchmark** ✅ (commit `56d4ba5`) :
+   3/3 scénarios ground truth validés (18/18 checks), latence moyenne
+   32ms, p95 34.68ms, mémoire 0.25 MB. Script :
+   `validation_benchmark.py`. Document : `VALIDATION_SCIENTIFIQUE.md`.
+
+**Gates 4/5/6 rouvrables** : la preuve de chaîne complète est faite,
+les prédictions sont cohérentes avec la littérature, les performances
+sont mesurées et reproductibles.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.

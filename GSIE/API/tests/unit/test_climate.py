@@ -8,6 +8,7 @@ donnée inventée.
 
 import gzip
 from datetime import datetime
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -258,6 +259,88 @@ async def test_get_danger_feux_raises_on_network_failure(monkeypatch: pytest.Mon
         await engine.get_danger_feux()
 
 
+# ===========================================================================
+# Couverture complémentaire — _parse_french_float, list_stations, CSV malformé
+# ===========================================================================
+
+
+def should_return_none_when_parse_french_float_value_empty() -> None:
+    """_parse_french_float doit retourner None pour une valeur vide."""
+    from gsie_api.engines.climate.engine import _parse_french_float
+
+    assert _parse_french_float({"key": ""}, "key") is None
+    assert _parse_french_float({"key": None}, "key") is None
+    assert _parse_french_float({}, "key") is None
+
+
+def should_parse_french_float_with_comma() -> None:
+    """_parse_french_float doit parser un nombre avec virgule française."""
+    from gsie_api.engines.climate.engine import _parse_french_float
+
+    assert _parse_french_float({"key": "12,5"}, "key") == 12.5
+
+
+async def should_raise_climate_engine_error_when_dpclim_list_stations_fails() -> None:
+    """list_stations doit lever ClimateEngineError quand DPClimClientError."""
+    from unittest.mock import AsyncMock
+
+    from gsie_api.engines.climate.dpclim_client import DPClimClientError
+
+    mock_client = AsyncMock()
+    mock_client.list_stations = AsyncMock(side_effect=DPClimClientError("API indisponible"))
+    engine = ClimateEngine(dpclim_client=mock_client)
+
+    with pytest.raises(ClimateEngineError, match="API indisponible"):
+        await engine.list_stations_climatologie("33")
+
+
+async def should_warn_when_dpclim_csv_has_extra_columns(monkeypatch: pytest.MonkeyPatch) -> None:
+    """get_climatologie_quotidienne doit logger un warning quand le CSV a des colonnes
+    supplémentaires."""
+    # CSV avec une ligne qui a plus de colonnes que l'en-tête (provoque clé None)
+    csv_malforme = (
+        "POSTE;DATE;RR;QRR;TN;QTN;TX;QTX;TM;QTM\n"
+        "33042001;20260601;0,0;1;12,4;1;25,2;1;19,6;1;EXTRA_COLONNE\n"
+    )
+    _patch_dpclim_transport(monkeypatch, [201], csv_malforme.encode("utf-8"))
+    engine = ClimateEngine(dpclim_client=DPClimClient(poll_interval_s=0.0))
+
+    with patch("gsie_api.engines.climate.engine.logger") as mock_logger:
+        resultats = await engine.get_climatologie_quotidienne(
+            ClimatologieQuotidienneQuery(
+                id_station="33042001",
+                date_deb_periode=datetime(2026, 6, 1),
+                date_fin_periode=datetime(2026, 6, 10),
+            )
+        )
+
+    # Le résultat est quand même produit
+    assert len(resultats) == 1
+    # Un warning doit avoir été émis pour le CSV malformé
+    warning_calls = [
+        c for c in mock_logger.warning.call_args_list if "climate_dpclim_csv_malforme" in str(c)
+    ]
+    assert len(warning_calls) > 0
+
+
+async def should_raise_climate_engine_error_when_grib_decode_fails() -> None:
+    """get_temperature_arome doit lever ClimateEngineError quand le GRIB est indécodable."""
+    from unittest.mock import AsyncMock
+
+    from gsie_api.engines.climate.schemas import AromeTemperatureQuery
+
+    mock_arome = AsyncMock()
+    mock_arome.get_latest_temperature_2m_run = AsyncMock(return_value="2026-08-02T00:00:00Z")
+    mock_arome.get_temperature_2m_grib = AsyncMock(return_value=b"not a grib file")
+
+    engine = ClimateEngine(arome_client=mock_arome)
+
+    with pytest.raises(ClimateEngineError):
+        await engine.get_temperature_arome(
+            AromeTemperatureQuery(latitude=44.8, longitude=-0.6, echeance="2026-08-02T06:00:00Z")
+        )
+
+
 def _patch_dpclim_transport(
     monkeypatch: pytest.MonkeyPatch, fichier_statuses: list[int], fichier_body: bytes
 ) -> None:
@@ -368,6 +451,51 @@ async def test_get_climatologie_quotidienne_raises_without_api_key(
         lambda: type("S", (), {"meteofrance_api_key": None})(),
     )
     engine = ClimateEngine(dpclim_client=DPClimClient())
+
+    with pytest.raises(ClimateEngineError):
+        await engine.get_climatologie_quotidienne(
+            ClimatologieQuotidienneQuery(
+                id_station="33042001",
+                date_deb_periode=datetime(2026, 6, 1),
+                date_fin_periode=datetime(2026, 6, 10),
+            )
+        )
+
+
+async def test_get_climatologie_quotidienne_raises_on_http_error(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Une erreur réseau (httpx.HTTPError) doit lever ClimateEngineError."""
+
+    # Mock la clé API
+    monkeypatch.setattr(
+        "gsie_api.engines.climate.dpclim_client.get_settings",
+        lambda: type("S", (), {"meteofrance_api_key": "fake-key"})(),
+    )
+
+    # Mock la commande (202), puis le fichier avec ConnectError (httpx.HTTPError)
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/commande-station/quotidienne"):
+            return httpx.Response(
+                202,
+                json={"elaboreProduitAvecDemandeResponse": {"return": "2026024266715"}},
+                request=request,
+            )
+        if path.endswith("/commande/fichier"):
+            raise httpx.ConnectError("connexion refusée")
+        raise AssertionError(f"URL non mockée : {request.url}")
+
+    transport = httpx.MockTransport(handler)
+    original_init = httpx.AsyncClient.__init__
+
+    def _patched_init(self: httpx.AsyncClient, *args: object, **kwargs: object) -> None:
+        kwargs["transport"] = transport
+        original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "__init__", _patched_init)
+
+    engine = ClimateEngine(dpclim_client=DPClimClient(poll_interval_s=0.0))
 
     with pytest.raises(ClimateEngineError):
         await engine.get_climatologie_quotidienne(

@@ -26,6 +26,8 @@ class ResourceBase(BaseModel):
 class ResourceCreate(BaseModel):
     """Création d'une resource — type + champs spécifiques en JSON."""
 
+    model_config = ConfigDict(extra="forbid")
+
     type: str = Field(..., description="Type de resource (ex. assertion, observation, concept)")
     gsie_id: str | None = Field(None, description="Identifiant lisible optionnel")
     data: dict[str, Any] = Field(..., description="Champs spécifiques au type")
@@ -33,6 +35,8 @@ class ResourceCreate(BaseModel):
 
 class ResourceUpdate(BaseModel):
     """Mise à jour d'une resource — champs modifiés en JSON."""
+
+    model_config = ConfigDict(extra="forbid")
 
     data: dict[str, Any] = Field(..., description="Champs modifiés")
     justification: str = Field(..., description="Justification de la révision (CON-010)")
@@ -89,3 +93,16 @@ class ResourceTypesResponse(BaseModel):
 
     types: list[str]
     count: int
+
+
+class BulkIngestRequest(BaseModel):
+    """Lot de resources à créer en une transaction.
+
+    Limite : 1000 items par lot (BulkIngestService.MAX_BATCH_SIZE).
+    Au-delà, le client doit paginer. Chaque item est un ResourceCreate
+    validé indépendamment — un item invalide n'interrompt pas le lot.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ResourceCreate] = Field(min_length=1, max_length=1000)

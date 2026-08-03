@@ -324,3 +324,29 @@ class TestStatsWithMock:
         assert stats["total_correlations"] == 5
         assert stats["methode_pearson"] == 3
         assert stats["methode_spearman"] == 2
+
+
+class TestComputeConstantVariable:
+    """compute() doit lever CorrelationEngineError sur une variable constante.
+
+    Une série de variance nulle (même valeur sur tous les relevés) rend le
+    coefficient indéfini : scipy renvoie NaN. La garde NaN traduit ce cas
+    en erreur métier plutôt qu'en 500 opaque.
+    """
+
+    async def should_raise_when_variable_is_constant(self) -> None:
+        # Arrange — variable_a constante → variance nulle → coefficient NaN
+        session = _make_mock_session()
+        engine = CorrelationEngine(session)
+        request = _make_request(
+            [5.0, 5.0, 5.0, 5.0, 5.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            methode=CorrelationMethod.pearson,
+        )
+
+        # Act & Assert
+        with pytest.raises(CorrelationEngineError, match="constante"):
+            await engine.compute(request)
+
+        # Aucun flush ne doit avoir lieu (early return avant persistance)
+        session.flush.assert_not_awaited()

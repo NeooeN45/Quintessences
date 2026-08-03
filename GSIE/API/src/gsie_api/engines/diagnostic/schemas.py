@@ -434,8 +434,23 @@ class Diagnostic(BaseModel):
             "calculée par une table inventée — voir la docstring du module."
         ),
     )
+    etat_global_evidence_level: EvidenceLevel = Field(
+        description=(
+            "Niveau de preuve de l'état global déclaré. Repris de "
+            "`EtatGlobalDeclare`, il entre dans le plancher : sans lui, un état "
+            "reposant sur une observation isolée pouvait accompagner un plancher "
+            "élevé."
+        )
+    )
     evidence_level_plancher: EvidenceLevel = Field(
-        description="Plus faible niveau de preuve parmi les éléments et risques"
+        description=(
+            "Plus faible niveau de preuve parmi les éléments, les risques **et "
+            "l'état global**. L'état global en était exclu : un diagnostic "
+            "pouvait annoncer un plancher B alors que son état — l'affirmation "
+            "la plus conséquente, celle qui oriente la recommandation — "
+            "reposait sur une observation isolée de niveau F. Le forestier "
+            "lisait alors une fondation plus solide qu'elle ne l'était."
+        )
     )
     incertitudes: list[str] = Field(
         default_factory=list,
@@ -476,10 +491,16 @@ class Diagnostic(BaseModel):
 
     @model_validator(mode="after")
     def _plancher_coherent(self) -> "Diagnostic":
-        """Le plancher déclaré est le plus faible maillon réellement présent."""
+        """Le plancher déclaré est le plus faible maillon réellement présent.
+
+        L'état global compte parmi ces maillons. Il en était absent, ici comme
+        dans le moteur : les deux devaient bouger ensemble, sans quoi le
+        validateur aurait refusé un plancher pourtant juste.
+        """
         niveaux = [element.evidence_level for element in self.contraintes]
         niveaux += [element.evidence_level for element in self.atouts]
         niveaux += [risque.evidence_level for risque in self.risques]
+        niveaux.append(self.etat_global_evidence_level)
         attendu = niveau_plancher(niveaux)
         if self.evidence_level_plancher != attendu:
             raise ValueError(

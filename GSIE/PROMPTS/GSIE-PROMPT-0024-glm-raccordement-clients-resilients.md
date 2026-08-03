@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | À LANCER |
+| Statut | INTÉGRÉE |
 | Agent cible | GLM 5.2 |
 | Environnement | Devin |
 | Dépôt | Quintessences |
@@ -34,6 +34,14 @@ rien n'utilise est **pire que pas d'abstraction** : la docstring donne à croire
 que le problème est structurellement résolu, et 48 tests verts renforcent
 l'illusion. C'est le motif exact que l'audit du 2026-07-28 a démonté :
 plausible, documenté, sans effet.
+
+## Documents obligatoires
+
+- `GSIE/API/src/gsie_api/shared/http_client.py` — `ResilientHttpClient` et `ResilientCsvClient`.
+- `GSIE/API/src/gsie_api/engines/*/` — les 10 clients d'API externes.
+- `GSIE/API/tests/unit/test_resilience_factory.py` — factory de tests paramétrés.
+- `GSIE/API/tests/mutation/harnais.py` — harnais de mutation.
+- `GSIE-PROMPT-0023` — mission précédente (résilience des clients).
 
 ## Mission
 
@@ -93,6 +101,12 @@ acceptable ; une exception silencieuse ne l'est pas.
 - aucune modification d'un test existant (voir le critère ci-dessus) ;
 - aucune modification hors des fichiers possédés ;
 - aucun `git push`, aucune fusion.
+
+## Rapport obligatoire
+
+Le rapport de mission est la section `## Livrable` ci-dessous, complétée
+par les codes de sortie des commandes de validation. Il est déposé dans
+la session Devin et archivé dans `22_PROJECT_MEMORY/sessions/`.
 
 ## Livrable
 

@@ -157,7 +157,10 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "quality_assessment": ["target_id", "dimension", "score", "method", "assessed_at"],
     "activity": ["type", "started_at"],
     "agent": ["name", "type"],
-    "source": ["title", "subtype", "source_nature"],
+    # Auteur et date obligatoires : une source qui ne peut pas etre citee
+    # n'est pas une source (CON-005). `SourceReference` les exige, et une
+    # conclusion doit pouvoir nommer qui a ecrit ce qu'elle invoque.
+    "source": ["title", "subtype", "source_nature", "auteur", "date_publication"],
     "citation": ["source_id", "target_id", "citation_role"],
     "unit": ["symbol", "name"],
     "temporal_context": [

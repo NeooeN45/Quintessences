@@ -183,10 +183,19 @@ class DiagnosticEngine:
                 "(ni contrainte, ni atout, ni risque)"
             )
 
-        # 3. Plancher du diagnostic : niveau_plancher sur TOUS les éléments.
+        # 3. Plancher du diagnostic : niveau_plancher sur TOUS les elements,
+        # l'etat global compris.
+        #
+        # `request.etat_global.evidence_level` etait collecte — le champ est
+        # obligatoire dans `EtatGlobalDeclare` — puis jamais lu. Un diagnostic
+        # pouvait donc annoncer un plancher B alors que son etat global, la
+        # seule affirmation qui oriente la recommandation, reposait sur une
+        # observation isolee de niveau F. Le forestier lisait une fondation
+        # plus solide qu'elle ne l'etait.
         niveaux = [e.evidence_level for e in contraintes]
         niveaux += [a.evidence_level for a in atouts]
         niveaux += [r.evidence_level for r in risques]
+        niveaux.append(request.etat_global.evidence_level)
         plancher_diagnostic = niveau_plancher(niveaux)
 
         # 4. Confiance : minimum des niveau_confiance des conclusions.
@@ -217,6 +226,7 @@ class DiagnosticEngine:
             station_id=request.station_id,
             type_diagnostic=request.type_diagnostic,
             etat_global=request.etat_global.etat,
+            etat_global_evidence_level=request.etat_global.evidence_level,
             contraintes=contraintes,
             atouts=atouts,
             risques=risques,

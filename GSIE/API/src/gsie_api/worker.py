@@ -19,6 +19,9 @@ if sys.platform != "win32":  # pragma: no cover (Unix-only, testé dans Docker)
         CONFIG_KWARGS = {
             "server_header": False,
             "date_header": False,
+            # uvloop — boucle d’événements libuv, 2-4x plus rapide qu’asyncio
+            # (veille techno 2026-08-02, RFC-0031 action 6, Linux uniquement)
+            "loop": "uvloop",
         }
 else:
     # Windows : fallback — SecureUvicornWorker non disponible

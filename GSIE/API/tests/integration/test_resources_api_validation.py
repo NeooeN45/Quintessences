@@ -128,6 +128,10 @@ class TestValidation422:
                 "title": "Guide des sylvicultures CNPF",
                 "subtype": "publication",
                 "source_nature": "reference",
+                # Auteur et date obligatoires depuis la revision 0009 :
+                # une source qui ne peut pas etre citee n'est pas une source.
+                "auteur": "Centre National de la Propriete Forestiere",
+                "date_publication": "2024",
             },
         )
         regle = await _creer(

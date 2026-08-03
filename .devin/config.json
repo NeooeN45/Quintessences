@@ -12,10 +12,22 @@
       "Exec(ruff check *)",
       "Exec(ruff format *)",
       "Exec(mypy *)",
-      "Exec(python -m pytest *)",
       "Exec(python -m mypy *)",
       "Exec(python -m ruff *)",
       "Exec(uv run *)",
+      "Exec(uv sync *)",
+      "Exec(uv lock *)",
+      "Exec(alembic current)",
+      "Exec(alembic history *)",
+      "Exec(alembic heads)",
+      "Exec(alembic upgrade head)",
+      "Exec(python -m alembic *)",
+      "Exec(docker compose ps *)",
+      "Exec(docker compose logs *)",
+      "Exec(docker compose up *)",
+      "Exec(docker compose down *)",
+      "Exec(docker compose build *)",
+      "Exec(python -m gsie_api *)",
       "Exec(Get-ChildItem *)",
       "Exec(ls *)",
       "Exec(cat *)",
@@ -37,44 +49,24 @@
       "mcp__devin__ask_question",
       "mcp__devin__list_available_repos"
     ],
-    "ask": [
-      "Write(**)",
-      "Exec(git add *)",
-      "Exec(git commit *)",
-      "Exec(git push *)",
-      "Exec(rm *)",
-      "Exec(del *)",
-      "Exec(Remove-Item *)",
-      "mcp__postgres__*",
-      "mcp__github__create_pull_request",
-      "mcp__github__add_comment",
-      "mcp__github__push_files"
-    ],
     "deny": [
       "mcp__github__delete_repo",
       "mcp__github__create_branch",
       "mcp__github__delete_branch",
       "mcp__github__merge_pull_request",
       "mcp__github__create_issue",
-      "mcp__postgres__*"
+      "mcp__postgres__*",
+      "Write(.env)",
+      "Write(.env.local)",
+      "Write(.env.production)",
+      "Write(.env.staging)",
+      "Write(.env.development)",
+      "Write(**/keys/*.pem)",
+      "Write(**/*.pem)",
+      "Exec(git push --force *)",
+      "Exec(git push -f *)",
+      "Exec(alembic downgrade base)",
+      "Exec(docker system prune *)"
     ]
-  },
-  "mcpServers": {
-    "geocontext": {
-      "url": "https://geollm.beta.ign.fr/geocontext/mcp",
-      "transport": "http"
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github@1.2.0"]
-    },
-    "postgres": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres@0.6.2"]
-    },
-    "devin": {
-      "url": "https://mcp.devin.ai/mcp",
-      "transport": "http"
-    }
   }
 }

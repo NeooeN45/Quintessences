@@ -52,6 +52,7 @@ from gsie_api.engines.validation_pipeline import (
     run_validation_pipeline,
     validation_failure_to_learning_signal,
 )
+from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 # --- Fixtures : objets typés réalistes ---
 
@@ -97,6 +98,7 @@ def _make_diagnostic(
         risques=risques,
         contradictions=[],
         confiance=0.7,
+        etat_global_evidence_level=niveau_plancher(niveaux),
         evidence_level_plancher=niveau_plancher(niveaux),
         incertitudes=["Données climatiques non disponibles."],
         conclusions_source=[uuid4()],
@@ -132,7 +134,7 @@ def _make_conclusion(conclusion_id: UUID | None = None) -> Conclusion:
 
 
 async def _make_recommendation_set(diagnostic_id: UUID) -> RecommendationSet:
-    engine = RecommendationEngine()
+    engine = RecommendationEngine(SessionDiagnosticFictif())
     request = RecommendationRequest(
         requete_id=uuid4(),
         diagnostic_id=diagnostic_id,
@@ -269,3 +271,67 @@ async def should_feed_learning_engine_with_blocked_validation() -> None:
         diagnostic, reco_set, conclusions, learning_engine=learning_engine
     )
     assert result["validation"] is not None
+
+
+@pytest.mark.asyncio
+async def should_log_warning_when_learning_engine_raises() -> None:
+    """Le pipeline doit logger un warning quand learning_engine.process lève LearningEngineError."""
+    from datetime import UTC, datetime
+    from unittest.mock import AsyncMock, patch
+
+    from gsie_api.engines.learning.engine import LearningEngineError
+    from gsie_api.engines.validation.schemas import (
+        CauseBlocage,
+        ControleResultat,
+        ResultatControle,
+        TypeCauseBlocage,
+        ValidationResult,
+        ValidationStatut,
+    )
+
+    # Mock le ValidationEngine pour retourner un résultat bloqué
+    blocked_validation = ValidationResult(
+        validation_id=uuid4(),
+        requete_origine=uuid4(),
+        statut=ValidationStatut.bloque,
+        controles=[
+            ControleResultat(
+                nom_controle="cohérence_interne",
+                resultat=ResultatControle.non_conforme,
+                details="Source manquante",
+            )
+        ],
+        causes_blocage=[
+            CauseBlocage(
+                type_cause=TypeCauseBlocage.sans_source,
+                element_concerne=uuid4(),
+                description="Source absente",
+            )
+        ],
+        date_validation=datetime.now(UTC),
+    )
+
+    # Mock le learning engine pour lever LearningEngineError
+    mock_engine = AsyncMock()
+    mock_engine.process = AsyncMock(side_effect=LearningEngineError("calibration failed"))
+
+    diagnostic = _make_diagnostic()
+    reco_set = await _make_recommendation_set(diagnostic.diagnostic_id)
+    conclusions = [_make_conclusion(diagnostic.conclusions_source[0])]
+
+    with (
+        patch("gsie_api.engines.validation_pipeline.ValidationEngine") as mock_ve,
+        patch("gsie_api.engines.validation_pipeline.logger") as mock_logger,
+    ):
+        mock_ve.return_value.validate = AsyncMock(return_value=blocked_validation)
+        result = await run_validation_pipeline(
+            diagnostic, reco_set, conclusions, learning_engine=mock_engine
+        )
+
+    # Le pipeline ne doit pas planter — juste logger
+    assert result["validation"] is not None
+    # Un warning doit avoir été émis pour l'erreur learning
+    warning_calls = [
+        c for c in mock_logger.warning.call_args_list if "pipeline_learning_error" in str(c)
+    ]
+    assert len(warning_calls) > 0

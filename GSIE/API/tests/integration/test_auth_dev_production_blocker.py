@@ -28,13 +28,18 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
     return {
         "environment": "production",
         "debug": False,
-        "database_url": "postgresql+asyncpg://gsie:secure@host:5432/gsie",
+        # Role applicatif dedie, non proprietaire : `gsie` est le
+        # proprietaire, et un proprietaire PostgreSQL contourne l'isolement
+        # des donnees personnelles (20260728_0012). Une configuration de
+        # production **valide** ne l'emploie donc pas.
+        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
         "redis_url": "redis://:secret@redis-host:6379/0",
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
+        "auth_dev_password": "mot_de_passe_reel_pour_tests_integration",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
     } | overrides
@@ -66,7 +71,12 @@ def should_not_raise_when_production_and_dev_auth_disabled() -> None:
 def should_not_raise_when_development_and_dev_auth_enabled() -> None:
     """Le login dev doit rester autorisé en développement (usage normal)."""
     # Arrange / Act
-    settings = Settings(environment="development", debug=False, auth_dev_login_enabled=True)
+    settings = Settings(
+        environment="development",
+        debug=False,
+        auth_dev_login_enabled=True,
+        auth_dev_password="mot_de_passe_reel_pour_tests_integration",
+    )
 
     # Assert
     assert settings.auth_dev_login_enabled is True
@@ -102,3 +112,42 @@ def should_reject_dev_login_when_disabled() -> None:
         auth_router._settings.auth_dev_login_enabled = original_enabled
         auth_router._settings.auth_dev_username = original_username
         auth_router._settings.auth_dev_password = original_password
+
+
+# --- Le role de connexion ne doit pas etre proprietaire de la base ---
+
+
+def should_refuse_production_when_connecting_as_database_owner() -> None:
+    """Un propriétaire PostgreSQL contourne l'isolement des données personnelles.
+
+    `20260728_0011` place `data_subject` — le mécanisme de réversion du
+    pseudonymat — dans un schéma dont les droits sont retirés à `PUBLIC`. Mais
+    PostgreSQL accorde au **propriétaire** des droits implicites que `REVOKE`
+    n'ôte pas : établi par
+    `test_isolement_rgpd.py::test_le_proprietaire_de_la_base_contourne_l_isolement`.
+
+    L'isolement était donc disponible sans être en vigueur, l'application se
+    connectant avec `gsie`. Cette garde refuse cette configuration en
+    production, comme la garde voisine refuse le mot de passe par défaut.
+    """
+    with pytest.raises(ValidationError, match="proprietaire de la base"):
+        Settings(
+            **_production_kwargs(
+                database_url="postgresql+asyncpg://gsie:motdepasse_solide@host:5432/gsie"
+            )  # type: ignore[arg-type]
+        )
+
+
+def should_accept_production_with_a_non_owner_role() -> None:
+    """Un rôle applicatif dédié passe.
+
+    Sans ce contrôle, refuser toute configuration ferait passer le test
+    précédent et rendrait la production impossible à démarrer.
+    """
+    reglages = Settings(
+        **_production_kwargs(
+            database_url="postgresql+asyncpg://gsie_app:motdepasse_solide@host:5432/gsie"
+        )  # type: ignore[arg-type]
+    )
+
+    assert "gsie_app" in reglages.database_url

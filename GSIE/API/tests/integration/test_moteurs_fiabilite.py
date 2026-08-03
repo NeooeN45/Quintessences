@@ -27,9 +27,15 @@ from tests.conftest import requires_docker
 
 pytestmark = requires_docker
 
-_ENTETES = {
-    "Authorization": f"Bearer {create_access_token(subject='moteurs', claims={'roles': ['admin']})}"
-}
+
+@pytest.fixture
+def entetes() -> dict[str, str]:
+    """Jeton forge a l'execution — un jeton forge a l'import perime apres 15 min
+    (TTL jwt_access_token_expire_minutes), et la suite complete dure plus longtemps.
+    """
+    return {
+        "Authorization": f"Bearer {create_access_token(subject='moteurs', claims={'roles': ['admin']})}",  # noqa: E501
+    }
 
 
 @pytest.fixture
@@ -47,14 +53,16 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 class TestDiagnosticRejouable:
     """Deux appels strictement identiques doivent rendre la même réponse."""
 
-    async def test_le_rejeu_rend_le_meme_diagnostic(self, client: AsyncClient) -> None:
+    async def test_le_rejeu_rend_le_meme_diagnostic(
+        self, client: AsyncClient, entetes: dict[str, str]
+    ) -> None:
         premier = await client.post(
-            "/api/v1/diagnostic/diagnostiquer", json=_EXEMPLE_REQUETE, headers=_ENTETES
+            "/api/v1/diagnostic/diagnostiquer", json=_EXEMPLE_REQUETE, headers=entetes
         )
         assert premier.status_code == 200, premier.text
 
         second = await client.post(
-            "/api/v1/diagnostic/diagnostiquer", json=_EXEMPLE_REQUETE, headers=_ENTETES
+            "/api/v1/diagnostic/diagnostiquer", json=_EXEMPLE_REQUETE, headers=entetes
         )
 
         assert second.status_code == 200, second.text
@@ -88,19 +96,21 @@ class TestKnowledgeSansDoublon:
     def _requete(identifiant: str) -> dict[str, Any]:
         return {"requete_id": identifiant, "type": "par_domaine"}
 
-    async def test_une_revision_ne_duplique_pas_la_connaissance(self, client: AsyncClient) -> None:
+    async def test_une_revision_ne_duplique_pas_la_connaissance(
+        self, client: AsyncClient, entetes: dict[str, str]
+    ) -> None:
         identifiant = "22222222-2222-4222-8222-222222222222"
         ingest = await client.post(
             "/api/v1/knowledge/ingest",
             json=self._connaissance(identifiant),
-            headers=_ENTETES,
+            headers=entetes,
         )
         assert ingest.status_code in (200, 201), ingest.text
 
         avant = await client.post(
             "/api/v1/knowledge/query",
             json=self._requete("33333333-3333-4333-8333-333333333331"),
-            headers=_ENTETES,
+            headers=entetes,
         )
         assert avant.status_code == 200, avant.text
         total_avant = avant.json()["total"]
@@ -112,14 +122,14 @@ class TestKnowledgeSansDoublon:
                 "justification": "montée du niveau de preuve",
                 "nouveau_evidence_level": "A",
             },
-            headers=_ENTETES,
+            headers=entetes,
         )
         assert revise.status_code == 200, revise.text
 
         apres = await client.post(
             "/api/v1/knowledge/query",
             json=self._requete("33333333-3333-4333-8333-333333333332"),
-            headers=_ENTETES,
+            headers=entetes,
         )
 
         assert apres.status_code == 200, apres.text
@@ -138,7 +148,9 @@ class TestKnowledgeSansDoublon:
 class TestReferencePendante:
     """Pointer une resource inexistante est une faute d'appelant, pas une panne."""
 
-    async def test_une_fk_inexistante_rend_422_et_nomme_le_champ(self, client: AsyncClient) -> None:
+    async def test_une_fk_inexistante_rend_422_et_nomme_le_champ(
+        self, client: AsyncClient, entetes: dict[str, str]
+    ) -> None:
         reponse = await client.post(
             "/api/v1/resources",
             json={
@@ -149,7 +161,7 @@ class TestReferencePendante:
                     "citation_role": "primary",
                 },
             },
-            headers=_ENTETES,
+            headers=entetes,
         )
 
         assert reponse.status_code == 422, reponse.text
@@ -185,7 +197,9 @@ class TestCorrelationVarianceNulle:
             "evidence_level": "B",
         }
 
-    async def test_le_cas_nominal_aboutit(self, client: AsyncClient) -> None:
+    async def test_le_cas_nominal_aboutit(
+        self, client: AsyncClient, entetes: dict[str, str]
+    ) -> None:
         """Témoin : sans lui, un refus dû à la charge utile passerait pour un succès.
 
         C'est précisément le piège dans lequel la première version de ce test
@@ -198,7 +212,7 @@ class TestCorrelationVarianceNulle:
                 "pearson",
                 [1.0, 2.1, 2.9, 4.2, 5.1],
             ),
-            headers=_ENTETES,
+            headers=entetes,
         )
 
         assert reponse.status_code in (200, 201), reponse.text
@@ -212,12 +226,12 @@ class TestCorrelationVarianceNulle:
         ],
     )
     async def test_une_serie_constante_est_refusee_proprement(
-        self, client: AsyncClient, methode: str, identifiant: str
+        self, client: AsyncClient, methode: str, identifiant: str, entetes: dict[str, str]
     ) -> None:
         reponse = await client.post(
             "/api/v1/correlation/compute",
             json=self._requete(identifiant, methode, [1.0, 1.0, 1.0, 1.0, 1.0]),
-            headers=_ENTETES,
+            headers=entetes,
         )
 
         # 400 : erreur métier nommée. Surtout pas 500, et surtout pas 422 —

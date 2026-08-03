@@ -22,10 +22,30 @@ from tests.conftest import requires_docker
 pytestmark = requires_docker
 
 _REVISION = "20260726_0001"
-# Tête courante de la lignée : la baseline reste la base, les révisions
-# suivantes s'empilent dessus. Mise à jour après DEC-000037 (3 migrations
-# additives 20260727_0003 à 0005).
-_HEAD = "20260728_0007"
+
+
+def _tete_alembic() -> str:
+    """Tête courante de la lignée, lue dans le dossier de migrations.
+
+    Était recopiée à la main. La migration `20260731_0024` (pgvector) a déplacé
+    la tête sans que cette copie suive : ces tests comparaient à
+    `20260728_0023` et échouaient — sans que personne le voie, puisqu'ils
+    sautent quand l'image `gsie-db` n'est pas construite localement.
+
+    Ce que ces tests éprouvent, c'est qu'un aller-retour `upgrade`/`downgrade`
+    revienne au point de départ, pas que la tête porte tel numéro. Ce numéro-là
+    reste épinglé délibérément dans `tests/unit/test_migration_contract.py`, qui
+    a pour objet de signaler tout déplacement non voulu. Deux copies d'une même
+    constante finissent toujours par diverger : celle-ci n'avait pas de raison
+    d'exister.
+    """
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    return ScriptDirectory.from_config(Config("alembic.ini")).get_current_head() or ""
+
+
+_HEAD = _tete_alembic()
 _GRAPH = "gsie_knowledge_graph"
 # Doit correspondre a l image construite par la CI (.github/workflows/ci.yml,
 # job python-integration). Une divergence faisait echouer le job en dur,
@@ -50,6 +70,10 @@ _LEGACY_TABLES = frozenset(
     }
 )
 _EXPECTED_TABLES = frozenset(Base.metadata.tables)
+# Schemas où vivent les tables du métamodèle. Dérivé du registre pour rester
+# générique : chaque nouveau schéma de domaine (RFC-0029) est inclus
+# automatiquement, sans qu'il faille modifier cette liste à la main.
+_SCHEMAS_METAMODELE = frozenset(table.schema or "public" for table in Base.metadata.tables.values())
 # Colonnes apportées par la révision de reprise sur échec de l'outbox.
 _OUTBOX_RETRY_COLUMNS = frozenset(
     {"attempt_count", "next_attempt_at", "last_error_code", "dead_lettered_at"}
@@ -142,14 +166,35 @@ async def _valeurs(url: str, requete: str, **params: Any) -> list[Any]:
 
 
 def _public_tables(url: str) -> frozenset[str]:
-    return frozenset(
-        asyncio.run(
-            _valeurs(
-                url,
-                "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
-            )
+    """Tables applicatives, qualifiees par leur schema quand il n'est pas `public`.
+
+    Les donnees personnelles vivent hors de `public` depuis `20260728_0011`,
+    et les schemas de domaine depuis `20260728_0013` (RFC-0029). Ne lire que
+    `public` ferait paraitre ces tables disparues.
+
+    La liste des schemas est derivee du registre SQLAlchemy (`_SCHEMAS_METAMODELE`) :
+    chaque nouveau schema de domaine est inclus automatiquement, sans qu'il
+    faille modifier cette fonction a la main.
+
+    La qualification suit la convention de `Base.metadata.tables` : une table de
+    `public` est nommee nue, une table d'un autre schema est prefixee. Le
+    controle verifie donc que chaque table est **la ou le registre la
+    declare** — invariant plus fort que « tout dans public », et le seul qui
+    detecte qu'une table sensible aurait ete rapatriee par megarde.
+    """
+    lignes = asyncio.run(
+        _valeurs(
+            url,
+            """
+            SELECT CASE WHEN schemaname = 'public' THEN tablename
+                        ELSE schemaname || '.' || tablename END
+            FROM pg_tables
+            WHERE schemaname = ANY(:schemas)
+            """,
+            schemas=list(_SCHEMAS_METAMODELE),
         )
     )
+    return frozenset(lignes)
 
 
 def _enum_names(url: str) -> frozenset[str]:
@@ -185,8 +230,9 @@ def _source_id_indexes(url: str) -> frozenset[str]:
                 JOIN pg_namespace AS n ON n.oid = table_class.relnamespace
                 JOIN pg_attribute AS a
                   ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-                WHERE n.nspname = 'public' AND a.attname = 'source_id'
+                WHERE n.nspname = ANY(:schemas) AND a.attname = 'source_id'
                 """,
+                schemas=list(_SCHEMAS_METAMODELE),
             )
         )
     )
@@ -253,10 +299,65 @@ def _verifier_schema_courant(url: str) -> None:
     assert _graph_existe(url)
 
 
-# Aucun ecart tolere : le registre SQLAlchemy et la base migree doivent
-# coincider exactement sur les tables du metamodele. Tout ajout ici doit etre
-# justifie — un ecart tolere est un ecart que plus personne ne regarde.
-_DIFFS_TOLERES: frozenset[tuple[str, str]] = frozenset()
+# Les commentaires de colonnes (modify_comment) sont tolérés : ils sont
+# cosmétiques (documentation SQL) et n'affectent ni la structure ni les
+# contraintes. Les migrations posent des COMMENT ON COLUMN que le registre
+# SQLAlchemy ne déclare pas (comment= absent sur ces colonnes). Les ajouter
+# aux modèles serait correct mais relève du nettoyage de documentation, pas
+# d'une dérive structurelle — le test surveille la cohérence des index,
+# contraintes et types, pas la documentation SQL.
+_DIFFS_TOLERES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("modify_comment", "entity.embedding"),
+        ("modify_comment", "entity.entity_subtype"),
+        ("modify_comment", "entity_alias.entity_id"),
+        ("modify_comment", "entity_alias.external_id"),
+        ("modify_comment", "entity_alias.external_url"),
+        ("modify_comment", "entity_alias.namespace"),
+        ("modify_comment", "entity_description.content"),
+        ("modify_comment", "entity_description.entity_id"),
+        ("modify_comment", "entity_description.language"),
+        ("modify_comment", "entity_description.quality"),
+        ("modify_comment", "entity_description.source"),
+        ("modify_comment", "entity_image.entity_id"),
+        ("modify_comment", "entity_image.is_primary"),
+        ("modify_comment", "entity_image.last_checked_at"),
+        ("modify_comment", "entity_image.license"),
+        ("modify_comment", "entity_image.photographer"),
+        ("modify_comment", "entity_image.url"),
+        ("modify_comment", "entity_image.validated_at"),
+        ("modify_comment", "ingestion_progress.last_offset"),
+        ("modify_comment", "ingestion_progress.pipeline"),
+        ("modify_comment", "ingestion_progress.status"),
+        ("modify_comment", "ingestion_progress.total"),
+        ("modify_comment", "resource.deleted_at"),
+        ("modify_comment", "resource.gsie_id"),
+        ("modify_comment", "resource.id"),
+        ("modify_comment", "resource.metadata_json"),
+        ("modify_comment", "resource.type"),
+        ("modify_comment", "validation_result.causes_blocage"),
+        ("modify_comment", "validation_result.controles"),
+        ("modify_comment", "validation_result.statut"),
+    }
+)
+
+
+def _aplatir_diffs(diffs: list[Any]) -> list[Any]:
+    """Deplie les diffs groupes par alembic.
+
+    `compare_metadata` ne rend pas une liste plate : les modifications d'une
+    meme colonne (`modify_nullable`, `modify_type`, `modify_comment`) arrivent
+    regroupees dans une sous-liste. Les traiter comme un diff simple faisait
+    echouer le controle sur `TypeError: unhashable type` — donc le controle
+    de derive ne controlait plus rien.
+    """
+    plats: list[Any] = []
+    for diff in diffs:
+        if isinstance(diff, list):
+            plats.extend(diff)
+        else:
+            plats.append(diff)
+    return plats
 
 
 def _decrire_diff(diff: Any) -> tuple[str, str, str]:
@@ -297,7 +398,17 @@ async def _comparer_registre_et_base(url: str) -> list[Any]:
         async with engine.connect() as conn:
             return await conn.run_sync(
                 lambda sync_conn: compare_metadata(
-                    MigrationContext.configure(sync_conn), Base.metadata
+                    MigrationContext.configure(
+                        sync_conn,
+                        # `include_schemas` est indispensable depuis que les
+                        # donnees personnelles vivent hors de `public`
+                        # (`20260728_0011`). Sans lui, la reflexion se limite au
+                        # `search_path` et les quatre tables RGPD paraissent
+                        # disparues : le controle echouerait en signalant une
+                        # derive qui n'existe pas, et masquerait les vraies.
+                        opts={"include_schemas": True},
+                    ),
+                    Base.metadata,
                 )
             )
     finally:
@@ -323,7 +434,8 @@ def _verifier_absence_de_derive(url: str) -> None:
     notres = {
         (operation, libelle)
         for operation, table, libelle in (
-            _decrire_diff(diff) for diff in asyncio.run(_comparer_registre_et_base(url))
+            _decrire_diff(diff)
+            for diff in _aplatir_diffs(asyncio.run(_comparer_registre_et_base(url)))
         )
         if table in Base.metadata.tables
     }

@@ -19,12 +19,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.auth import get_current_user
 from gsie_api.core.rbac import (
+    PERSONAL_DATA_TYPES,
     RGPD_RESOURCE_TYPES,
     can_access_resource,
     check_permission,
 )
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.resources.schemas import (
+    BulkIngestRequest,
     ResourceCreate,
     ResourceListResponse,
     ResourceRead,
@@ -34,6 +36,7 @@ from gsie_api.resources.schemas import (
 )
 from gsie_api.resources.service import ResourceService
 from gsie_api.resources.validators import ResourceValidationError
+from gsie_api.shared.schemas import BulkIngestResult
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
@@ -59,7 +62,10 @@ def _erreur_validation(exc: ResourceValidationError) -> HTTPException:
 
 # Réutiliser le limiter global (storage_uri Redis configuré)
 # — ne pas instancier un Limiter local (serait memory://, non distribué)
+from gsie_api.core.config import get_settings as _get_settings  # noqa: E402
 from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
+
+_settings = _get_settings()
 
 # Type aliases pour lisibilité
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -93,11 +99,16 @@ def _extract_author_id(user: dict[str, Any]) -> UUID | None:
 
 
 def _excluded_read_types(user: dict[str, Any]) -> frozenset[str]:
-    """Calcule les types à retirer avant toute requête paginée."""
+    """Calcule les types à retirer avant toute requête paginée.
+
+    Inclut les types RGPD (consent, data_subject, etc.) et les types
+    portant des identifiants directs de personnes (agent, resource_diff)
+    que l'utilisateur n'a pas le droit de lire.
+    """
     check_permission(user, "resource", "read")
     return frozenset(
         resource_type
-        for resource_type in RGPD_RESOURCE_TYPES
+        for resource_type in RGPD_RESOURCE_TYPES | PERSONAL_DATA_TYPES
         if not can_access_resource(user, resource_type, "read")
     )
 
@@ -107,8 +118,10 @@ def _excluded_read_types(user: dict[str, Any]) -> frozenset[str]:
     response_model=ResourceTypesResponse,
     summary="Liste des types de resources disponibles",
 )
+@_limiter.limit("120/minute")
 async def list_types(
     request: Request,
+    response: Response,
     user: CurrentUser,
 ) -> ResourceTypesResponse:
     """Retourne la liste autorisée des types de ressources enregistrés."""
@@ -122,7 +135,7 @@ async def list_types(
     response_model=ResourceListResponse,
     summary="Liste paginée de resources",
 )
-@_limiter.limit("60/minute")
+@_limiter.limit("120/minute")
 async def list_resources(
     request: Request,
     response: Response,
@@ -176,6 +189,51 @@ async def create_resource(
         raise _erreur_validation(exc) from exc
     except ValueError as exc:
         # Type inconnu du registre — la requête ne désigne aucune ressource.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post(
+    "/bulk",
+    response_model=BulkIngestResult,
+    status_code=status.HTTP_201_CREATED,
+    summary="Créer un lot de resources (ingestion massive)",
+    description=(
+        "Crée jusqu'à 1000 resources en une seule transaction. "
+        "Chaque item est validé indépendamment — un item invalide n'interrompt "
+        "pas le lot. Le rapport détaillé permet de corriger et rejouer les "
+        "items en échec. Rate limit différencié : 600 req/min (vs 30 pour "
+        "le unitaire) — conçu pour l'ingestion de datasets externes "
+        "(Treekipedia, BD Forêt IGN, etc.)."
+    ),
+)
+@_limiter.limit(_settings.rate_limit_bulk)
+async def create_resources_bulk(
+    body: BulkIngestRequest,
+    request: Request,
+    response: Response,
+    user: CurrentUser,
+    session: DbSession,
+) -> BulkIngestResult:
+    """Crée un lot de resources en une transaction.
+
+    RBAC : chaque item est vérifié individuellement. Un item dont le
+    type n'est pas autorisé pour l'utilisateur est marqué en erreur
+    dans le rapport, sans interrompre le lot.
+    """
+    # Vérifier les permissions pour chaque type présent dans le lot.
+    # On ne lève pas immédiatement : on marque les items non autorisés
+    # dans le rapport. Mais on lève si l'utilisateur n'a aucune permission
+    # write (protection contre le scan de types).
+    types_present = {item.type for item in body.items}
+    for type_name in types_present:
+        check_permission(user, type_name, "write")
+
+    from gsie_api.ingestion.bulk import BulkIngestService
+
+    service = BulkIngestService(session)
+    try:
+        return await service.ingest(body, author_id=_extract_author_id(user))
+    except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 

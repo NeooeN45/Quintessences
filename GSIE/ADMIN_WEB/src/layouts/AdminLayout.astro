@@ -1,0 +1,102 @@
+---
+import "../styles/global.css";
+import Sidebar from "../components/Sidebar.astro";
+import Topbar from "../components/Topbar.astro";
+import CommandPalette from "../components/CommandPalette.tsx";
+import ShortcutsModal from "../components/ShortcutsModal.tsx";
+import SessionTimeout from "../components/SessionTimeout.tsx";
+import { API_URL } from "../lib/api";
+
+const { title = "Dashboard" } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const isLoginPage = currentPath === "/login";
+
+// URLs externes — configurables via env vars
+const METABASE_URL = import.meta.env.PUBLIC_METABASE_URL ?? "http://localhost:3030";
+const SUPERSET_URL = import.meta.env.PUBLIC_SUPERSET_URL ?? "http://localhost:8088";
+---
+
+<!doctype html>
+<html lang="fr" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} — GSIE Admin</title>
+    {!isLoginPage && (
+      <script is:inline>
+        // Guard : redirect vers /login si pas de session
+        if (!sessionStorage.getItem("gsie_admin_session")) {
+          window.location.href = "/login";
+        }
+        // Appliquer le thème sauvegardé avant le rendu (évite le flash)
+        const savedTheme = localStorage.getItem("gsie-theme") || "dark";
+        if (savedTheme === "light") {
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+        }
+      </script>
+    )}
+  </head>
+  <body class="min-h-screen bg-bg-000 text-fg-200">
+    <!-- Loading progress bar -->
+    <div id="loading-bar"></div>
+
+    {/* Skip link — accessibility (WCAG 2.4.1) */}
+    {!isLoginPage && (
+      <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+    )}
+
+    {/* Screen reader live regions (WCAG 4.1.3) */}
+    <div id="sr-announcer-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="sr-announcer-assertive" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    {isLoginPage ? (
+      <slot />
+    ) : (
+      <div class="flex min-h-screen">
+        <Sidebar currentPath={currentPath} />
+        <div class="flex min-w-0 flex-1 flex-col">
+          <Topbar currentPath={currentPath} />
+
+          <main id="main-content" class="flex-1 overflow-x-hidden px-4 py-6 lg:px-8 lg:py-8" tabindex={-1}>
+            <slot />
+          </main>
+
+          <!-- Footer -->
+          <footer class="border-t border-border px-8 py-3 text-[11px] text-fg-500">
+            <div class="flex items-center justify-between">
+              <span>GSIE — General System Intelligence Engine</span>
+              <div class="flex items-center gap-4">
+                <a href={API_URL + "/docs"} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">API Docs</a>
+                <a href={METABASE_URL} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Metabase</a>
+                <a href={SUPERSET_URL} target="_blank" rel="noopener" class="transition-colors hover:text-fg-300">Superset</a>
+                <span id="footer-version">v0.1.0</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+        <CommandPalette client:load />
+        <ShortcutsModal client:load />
+        <SessionTimeout client:load />
+      </div>
+    )}
+
+    <!-- Loading bar animation -->
+    <script is:inline>
+      (function() {
+        const bar = document.getElementById("loading-bar");
+        if (!bar) return;
+        bar.classList.add("active");
+        window.addEventListener("load", () => {
+          bar.classList.remove("active");
+          bar.classList.add("done");
+          setTimeout(() => { bar.classList.remove("done"); }, 500);
+        });
+      })();
+    </script>
+  </body>
+</html>

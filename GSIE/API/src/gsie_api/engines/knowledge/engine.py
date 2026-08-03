@@ -32,6 +32,7 @@ classification convergent tous deux vers claim_kind=classification —
 RFC-0011 §3.3) et ne permettrait pas un aller-retour exact.
 """
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -45,7 +46,10 @@ from gsie_api.engines.evidence.schemas import (
     ConflitBibliographique,
     KnowledgeStatus,
     SourceReference,
+    SourceType,
 )
+from gsie_api.engines.evidence.schemas import EvidenceLevel as EvidenceLevelSchema
+from gsie_api.engines.knowledge.regles import DerivationImpossibleError, deriver_regle
 from gsie_api.engines.knowledge.schemas import (
     DomaineScientifique,
     DomaineValidite,
@@ -59,9 +63,21 @@ from gsie_api.engines.knowledge.schemas import (
     RelationRef,
     VersionEntry,
 )
+from gsie_api.engines.reasoning.schemas import RegleInference
 from gsie_api.infrastructure.models import ResourceModel
-from gsie_api.infrastructure.models.assertion import AssertionModel, EvidenceAssessmentModel
-from gsie_api.infrastructure.models.enums import ClaimKind, EvidenceLevel, LifecycleStatus
+from gsie_api.infrastructure.models.assertion import (
+    AssertionModel,
+    AssertionQualifierModel,
+    EvidenceAssessmentModel,
+)
+from gsie_api.infrastructure.models.enums import (
+    CitationRole,
+    ClaimKind,
+    EvidenceLevel,
+    LifecycleStatus,
+)
+from gsie_api.infrastructure.models.prov import CitationModel, SourceModel
+from gsie_api.infrastructure.models.spatial_temporal import PlaceModel
 from gsie_api.infrastructure.models.temporal_engine import RevisionModel
 
 logger = get_logger("gsie_api.knowledge.engine")
@@ -95,6 +111,71 @@ class KnowledgeEngineError(Exception):
 
 class KnowledgeNotFoundError(KnowledgeEngineError):
     """La connaissance demandée n'existe pas dans le graphe."""
+
+
+# Correspondance `source_nature` (base) -> `SourceType` (citation). Elle est
+# explicite et exhaustive : deduire le niveau d'une source par ressemblance
+# reviendrait a inventer sa qualite scientifique (ADR-009). Une nature non
+# couverte fait echouer la conversion plutot que de retomber sur une valeur
+# prudente qui masquerait le trou.
+_NATURE_VERS_TYPE_SOURCE: dict[str, SourceType] = {
+    "data_provider": SourceType.referentiel_officiel,
+    "knowledge_provider": SourceType.referentiel_officiel,
+    "reference": SourceType.referentiel_officiel,
+    "regulatory": SourceType.referentiel_officiel,
+    "expert_statement": SourceType.expert_identifie,
+    "model_output": SourceType.observation_terrain,
+}
+
+
+class TerritoireInconnuError(ValueError):
+    """Le territoire demande n'existe pas, ou ne porte pas de geometrie.
+
+    Distinct d'une absence de regle : « je ne sais pas ou tu es » et « aucune
+    regle ne s'applique ici » sont deux reponses differentes, et les confondre
+    ferait passer une erreur d'appel pour un etat de la connaissance.
+    """
+
+
+class SourceIncitableError(ValueError):
+    """La source en base ne peut pas produire une citation complete."""
+
+
+def _source_reference(source: SourceModel) -> SourceReference:
+    """Construit la citation a partir de la source enregistree.
+
+    Une source sans auteur ou sans date n'est pas citable : la revision
+    20260728_0009 les exige a l'ecriture, mais les lignes anterieures peuvent
+    encore en manquer. On refuse alors, plutot que de citer un document sans
+    dire qui l'a ecrit (CON-005).
+    """
+    manques = [
+        nom
+        for nom, valeur in (
+            ("auteur", source.auteur),
+            ("date_publication", source.date_publication),
+        )
+        if not valeur
+    ]
+    if manques:
+        raise SourceIncitableError(
+            f"source {source.id} non citable : {', '.join(manques)} absent(s)"
+        )
+
+    nature = source.source_nature.value
+    type_source = _NATURE_VERS_TYPE_SOURCE.get(nature)
+    if type_source is None:
+        raise SourceIncitableError(
+            f"source {source.id} : nature « {nature} » sans correspondance de type de source"
+        )
+
+    reference = source.doi or source.url or source.title
+    return SourceReference(
+        type_source=type_source,
+        auteur=source.auteur or "",
+        date_publication=source.date_publication,
+        reference=reference,
+    )
 
 
 class KnowledgeEngine:
@@ -398,7 +479,7 @@ class KnowledgeEngine:
         result.historique = await self._load_historique(request.connaissance_id, new_version)
         return result
 
-    async def stats(self) -> dict[str, int]:
+    async def stats(self) -> dict[str, Any]:
         """Retourne les statistiques du graphe."""
         result = await self._session.execute(
             select(AssertionModel.claim_kind, ResourceModel.metadata_json).join(
@@ -414,7 +495,7 @@ class KnowledgeEngine:
 
         return {
             "total_objects": total,
-            **{f"type_{k}": v for k, v in type_counts.items()},
+            "types": type_counts,
         }
 
     # --- Reconstruction / helpers internes ---
@@ -595,3 +676,154 @@ class KnowledgeEngine:
             result = [o for o in result if o.domaine_scientifique.value == domaine]
 
         return result
+
+    # --- Recuperation des regles par contexte (RFC-0028 §4.3) ---
+
+    async def regles_applicables(
+        self,
+        territoire_id: UUID,
+        *,
+        variables_connues: Mapping[str, str],
+        evidence_min: EvidenceLevelSchema | None = None,
+    ) -> tuple[list[RegleInference], list[str]]:
+        """Retourne les règles applicables à un territoire, et ce qui a été écarté.
+
+        Une règle est retenue si, et seulement si :
+
+        * son `claim_kind` est `rule` ou `threshold` ;
+        * son `lifecycle_status` vaut `accepted` — une règle en brouillon ou
+          dépréciée ne raisonne pas ;
+        * **son domaine de validité est renseigné et contient le territoire**.
+          Un domaine absent vaut « nulle part », jamais « partout »
+          (`DEC-000038`) : une règle tirée d'un catalogue régional appliquée
+          hors de sa zone produirait une conclusion fausse citant une source
+          réelle, avec une chaîne d'inférence complète — invisible ;
+        * elle cite une source, par une `citation` de rôle `primary`. Une règle
+          non sourcée n'influence pas un diagnostic ;
+        * son niveau de preuve atteint le plancher demandé, s'il en est un.
+
+        Ce qui est écarté est **retourné**, pas tu : une règle rejetée parce
+        qu'elle est mal formée doit pouvoir être corrigée, et le silence
+        laisserait croire à une absence de connaissance.
+
+        Args:
+            territoire_id: `place` dont on cherche les règles applicables.
+            variables_connues: codes du vocabulaire contrôlé. Une règle portant
+                une variable hors vocabulaire est écartée.
+            evidence_min: plancher de preuve. Aucun par défaut (`DEC-000038`) —
+                c'est à l'appelant de déclarer son exigence.
+
+        Returns:
+            Les règles dérivées, et la liste des motifs d'écartement.
+        """
+        territoire_connu = await self._session.get(PlaceModel, territoire_id)
+        if territoire_connu is None:
+            raise TerritoireInconnuError(
+                f"territoire {territoire_id} inconnu : aucune `place` ne porte cet "
+                "identifiant, donc aucune zone ne peut être comparée"
+            )
+
+        territoire = aliased(PlaceModel)
+        domaine = aliased(PlaceModel)
+
+        # Derniere evaluation de preuve seulement : `evidence_assessment` est
+        # une relation 1-N append-only, et joindre sans fenetrage ferait
+        # apparaitre une regle autant de fois qu'elle a ete revisee, avec des
+        # niveaux contradictoires.
+        derniere = select(
+            EvidenceAssessmentModel.assertion_id.label("assertion_id"),
+            EvidenceAssessmentModel.level.label("level"),
+            func.row_number()
+            .over(
+                partition_by=EvidenceAssessmentModel.assertion_id,
+                order_by=(
+                    EvidenceAssessmentModel.evaluated_at.desc(),
+                    EvidenceAssessmentModel.id.desc(),
+                ),
+            )
+            .label("rang"),
+        ).subquery()
+
+        requete = (
+            select(AssertionModel, derniere.c.level, SourceModel)
+            .join(domaine, domaine.id == AssertionModel.spatial_scope_id)
+            .join(territoire, territoire.id == territoire_id)
+            .join(derniere, derniere.c.assertion_id == AssertionModel.id)
+            .join(CitationModel, CitationModel.target_id == AssertionModel.id)
+            .join(SourceModel, SourceModel.id == CitationModel.source_id)
+            .where(
+                AssertionModel.claim_kind.in_([ClaimKind.rule, ClaimKind.threshold]),
+                AssertionModel.lifecycle_status == LifecycleStatus.accepted,
+                # Domaine renseigne : la jointure sur `domaine` l'impose deja,
+                # `spatial_scope_id` etant nullable.
+                CitationModel.citation_role == CitationRole.primary,
+                derniere.c.rang == 1,
+                func.ST_Contains(domaine.geometry, territoire.geometry),
+            )
+        )
+
+        lignes = (await self._session.execute(requete)).all()
+        if not lignes:
+            return [], []
+
+        qualificateurs = await self._qualificateurs_par_assertion([ligne[0].id for ligne in lignes])
+
+        regles: list[RegleInference] = []
+        ecartees: list[str] = []
+        for assertion, niveau, source in lignes:
+            if (
+                evidence_min is not None
+                and _EVIDENCE_RANKS[niveau.value] < _EVIDENCE_RANKS[evidence_min.value]
+            ):
+                ecartees.append(
+                    f"{assertion.id} : niveau de preuve {niveau.value} sous le plancher "
+                    f"{evidence_min.value}"
+                )
+                continue
+            try:
+                derivee = deriver_regle(
+                    str(assertion.id),
+                    qualificateurs.get(assertion.id, {}),
+                    variables_connues=variables_connues,
+                )
+            except DerivationImpossibleError as exc:
+                ecartees.append(f"{assertion.id} : {', '.join(exc.manques)}")
+                continue
+
+            regles.append(
+                RegleInference(
+                    identifiant=derivee.identifiant,
+                    condition=derivee.condition,
+                    enonce_conclusion=derivee.enonce_conclusion,
+                    source=_source_reference(source),
+                    evidence_level=EvidenceLevelSchema(niveau.value),
+                    niveau_confiance=derivee.niveau_confiance,
+                )
+            )
+
+        logger.info(
+            "regles_applicables",
+            territoire_id=str(territoire_id),
+            retenues=len(regles),
+            ecartees=len(ecartees),
+        )
+        return regles, ecartees
+
+    async def _qualificateurs_par_assertion(
+        self, assertion_ids: list[UUID]
+    ) -> dict[UUID, dict[str, str]]:
+        """Charge les qualificateurs des assertions en une requête."""
+        lignes = (
+            await self._session.execute(
+                select(
+                    AssertionQualifierModel.assertion_id,
+                    AssertionQualifierModel.key,
+                    AssertionQualifierModel.value,
+                ).where(AssertionQualifierModel.assertion_id.in_(assertion_ids))
+            )
+        ).all()
+
+        par_assertion: dict[UUID, dict[str, str]] = {}
+        for assertion_id, cle, valeur in lignes:
+            par_assertion.setdefault(assertion_id, {})[cle] = valeur
+        return par_assertion

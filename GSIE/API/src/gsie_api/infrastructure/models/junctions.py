@@ -288,6 +288,10 @@ terrain_session_media = Table(
 )
 
 # 18. DataSubject (64) consent_ids → Consent (n:m)
+# Schema isole (RFC-0029 §4.2) : la table de jonction relie data_subject
+# (gsie_rgpd_identites) et consent (gsie_rgpd). La laisser dans public etait
+# une incoherence d'isolement — gsie_application y avait acces alors qu'il
+# n'a aucun droit sur les schemas RGPD.
 data_subject_consent = Table(
     "data_subject_consent",
     Base.metadata,
@@ -299,8 +303,9 @@ data_subject_consent = Table(
         nullable=False,
     ),
     Column("consent_id", PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False),
-    Index("ix_ds_consent_subject", "data_subject_id"),
-    Index("ix_ds_consent_consent", "consent_id"),
+    Index("ix_gsie_rgpd_data_subject_consent_data_subject_id", "data_subject_id"),
+    Index("ix_gsie_rgpd_data_subject_consent_consent_id", "consent_id"),
+    schema="gsie_rgpd",
 )
 
 # 19. OutcomeTracking (79) evidence_ids → resource.id (observations, résultats)

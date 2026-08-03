@@ -23,6 +23,8 @@ Périmètre v1 :
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+from pydantic import ValidationError
+
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.learning.schemas import (
     LearningOutput,
@@ -106,7 +108,7 @@ class LearningEngine:
         """
         try:
             retour = RetourForestier(**signal.contenu)
-        except Exception as exc:
+        except ValidationError as exc:
             raise LearningEngineError(f"Contenu de retour_forestier invalide : {exc}") from exc
 
         contexte = retour.contexte_station

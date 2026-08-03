@@ -94,3 +94,130 @@ async def test_should_return_latest_observation_when_station_present() -> None:
 async def test_mode5_quota_auth_not_applicable_for_synop() -> None:
     """Mode #5 — N/A : les archives SYNOP sont un bucket S3 public sans auth."""
     pass
+
+
+# ===========================================================================
+# Couverture complémentaire — cache LRU, éviction, lock
+# ===========================================================================
+
+
+@respx.mock
+async def should_use_cache_on_second_call() -> None:
+    """Le cache doit éviter un second téléchargement pour la même année."""
+    respx.get(_URL).mock(return_value=Response(200, content=_gzipped_csv([_ROW])))
+    client = SynopClient()
+    await client.get_latest_observation("07510", year=_YEAR)
+    # Second call — pas de mock reset, le cache doit servir
+    result = await client.get_latest_observation("07510", year=_YEAR)
+    assert result is not None
+    assert result["geo_id_wmo"] == "07510"
+
+
+def should_evict_expired_entries() -> None:
+    """_evict_expired doit retirer les entrées expirées du cache."""
+    from gsie_api.engines.climate.synop_client import _CACHE_TTL_SECONDS, _CachedFile
+
+    client = SynopClient()
+    # Insère une entrée avec un timestamp dans le passé
+    cached = _CachedFile(_YEAR, "test")
+    cached.fetched_at = -(  # il y a très longtemps
+        _CACHE_TTL_SECONDS + 100
+    )
+    client._cache[_YEAR] = cached
+    client._locks[_YEAR] = __import__("asyncio").Lock()
+
+    client._evict_expired()
+    assert _YEAR not in client._cache
+    assert _YEAR not in client._locks
+
+
+def should_not_evict_fresh_entries() -> None:
+    """_evict_expired ne doit pas retirer les entrées fraîches."""
+    client = SynopClient()
+    client._put(_YEAR, "test")
+    client._evict_expired()
+    assert _YEAR in client._cache
+
+
+def should_evict_oldest_when_cache_full() -> None:
+    """_put doit évincer l'entrée la plus ancienne quand le cache est plein."""
+    from gsie_api.engines.climate.synop_client import _CACHE_MAX_ENTRIES
+
+    client = SynopClient()
+    # Remplit le cache au maximum
+    for year in range(_CACHE_MAX_ENTRIES + 2):
+        client._put(year, f"csv-{year}")
+    # Les plus anciennes doivent être évictées
+    assert len(client._cache) <= _CACHE_MAX_ENTRIES
+    assert 0 not in client._cache  # plus ancien évicté
+    assert _CACHE_MAX_ENTRIES + 1 in client._cache  # plus récent présent
+
+
+def should_create_lock_lazily() -> None:
+    """_get_lock doit créer un verrou par année paresseusement."""
+    import asyncio
+
+    client = SynopClient()
+    lock1 = client._get_lock(2026)
+    lock2 = client._get_lock(2026)
+    assert lock1 is lock2  # même instance
+    lock3 = client._get_lock(2027)
+    assert lock3 is not lock1  # instance différente par année
+    assert isinstance(lock1, asyncio.Lock)
+
+
+def should_cached_file_is_expired_check() -> None:
+    """_CachedFile.is_expired doit retourner True après le TTL."""
+    from gsie_api.engines.climate.synop_client import _CACHE_TTL_SECONDS, _CachedFile
+
+    cached = _CachedFile(2026, "test")
+    assert not cached.is_expired(_CACHE_TTL_SECONDS)  # fraîche
+
+    cached.fetched_at = -(_CACHE_TTL_SECONDS + 1)
+    assert cached.is_expired(_CACHE_TTL_SECONDS)  # expirée
+
+
+@respx.mock
+async def should_recheck_cache_under_lock() -> None:
+    """La re-vérification sous le verrou doit utiliser le cache si un autre appelant l'a rempli."""
+    respx.get(_URL).mock(return_value=Response(200, content=_gzipped_csv([_ROW])))
+    client = SynopClient()
+    # Pré-remplit le cache manuellement
+    client._put(_YEAR, "\n".join([_HEADER, _ROW]))
+    # L'appel doit utiliser le cache sans télécharger
+    result = await client.get_latest_observation("07510", year=_YEAR)
+    assert result is not None
+    assert result["geo_id_wmo"] == "07510"
+
+
+# ===========================================================================
+# Couverture complémentaire — properties (85), re-vérification cache (133-134)
+# ===========================================================================
+
+
+def should_return_correct_base_url() -> None:
+    """base_url doit retourner l'URL SYNOP Météo-France."""
+    client = SynopClient()
+    assert client.base_url == "https://meteofrance.s3.sbg.io.cloud.ovh.net"
+
+
+def should_return_correct_exception_class() -> None:
+    """exception_class doit retourner SynopClientError."""
+    client = SynopClient()
+    assert client.exception_class is SynopClientError
+
+
+@respx.mock
+async def should_use_cache_on_recheck_under_lock_when_filled_by_another() -> None:
+    """La re-vérification sous lock doit utiliser le cache rempli par un autre appelant."""
+    # Ce test couvre les lignes 133-134 : move_to_end + return cached.csv_text
+    respx.get(_URL).mock(return_value=Response(200, content=_gzipped_csv([_ROW])))
+    client = SynopClient()
+    # Pré-remplit le cache avec un CSV valide
+    client._put(_YEAR, "\n".join([_HEADER, _ROW]))
+    # L'appel doit utiliser le cache (move_to_end + return)
+    result = await client.get_latest_observation("07510", year=_YEAR)
+    assert result is not None
+    assert result["geo_id_wmo"] == "07510"
+    # Vérifie que le cache a été déplacé à la fin (move_to_end)
+    assert list(client._cache.keys())[-1] == _YEAR

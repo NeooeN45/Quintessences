@@ -1,0 +1,43 @@
+[project]
+name = "gsie-sdk"
+version = "0.1.0"
+description = "SDK Python pour consommer l'API GSIE (General System Intelligence Engine)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Quintessences" }]
+dependencies = [
+    "httpx==0.28.1",
+    "pydantic==2.10.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.25.0",
+    "respx==0.22.0",
+    "ruff==0.8.4",
+    "mypy==1.14.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gsie_sdk"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# Explicite, comme dans `GSIE/API/pyproject.toml` : non renseigné, pytest-asyncio
+# émet un avertissement de dépréciation et changera ce défaut dans une version
+# future. Un défaut qui bougera sous nos pieds n'est pas un défaut.
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+strict = true

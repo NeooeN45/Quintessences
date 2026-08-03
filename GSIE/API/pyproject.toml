@@ -41,6 +41,9 @@ dependencies = [
     # Auth — bcrypt direct (passlib 1.7.4 non maintenu, CVE potentielles)
     "pyjwt[crypto]==2.10.1",
     "bcrypt==4.2.1",
+    # Sécurité — chiffrement .env (audit P1-1, tools/secure_env.py + core/config.py)
+    # cryptography est tiré par pyjwt[crypto] mais importé directement → déclarer
+    "cryptography==49.0.0",
     # Sécurité — rate limiting (OWASP A07)
     "slowapi==0.1.9",
     # OGC API — pygeoapi ajouté en semaine 5 (GIS Engine)
@@ -58,7 +61,14 @@ dependencies = [
     # Utilitaires
     "python-multipart==0.0.20",
     "httpx==0.28.1",
+    # Retries avec backoff exponentiel — clients API externes (GSIE-PROMPT-0023)
+    "tenacity==8.5.0",
+    # Sérialisation JSON haute performance (veille techno 2026-08-02)
+    "orjson==3.10.11",
+    # Boucle d'événements haute performance (Linux uniquement, veille techno 2026-08-02)
+    "uvloop==0.21.0 ; sys_platform != 'win32'",
     "eccodeslib==2.47.3.23 ; sys_platform != 'win32'",
+    "pgvector==0.5.0",
 ]
 
 [project.optional-dependencies]
@@ -92,13 +102,19 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_functions = ["should_*", "test_*"]
-# pytest-xdist (P2-1) est installé mais NON activé par défaut : `-n auto`
-# change l'ordre d'exécution des fichiers entre workers, ce qui a révélé
-# une fuite d'état partagé (registre déclaratif SQLAlchemy) entre
-# tests/integration/test_migration_baseline.py et un autre module de test
-# exécuté avant lui dans le même worker (voir docs/TESTING_XDIST.md).
-# Activable manuellement en développement : `pytest -n auto --dist=loadfile`.
-addopts = "-v --tb=short --cov=gsie_api --cov-report=term-missing"
+# pytest-xdist activé par défaut avec --dist=loadfile : chaque fichier de test
+# s'exécute dans son propre processus worker, ce qui isole les fuites d'état
+# (registre SQLAlchemy déclaratif, event loop asyncio fermée) qui polluent
+# la suite séquentielle (14 échecs + segfault Pydantic sur Windows quand le
+# processus dépasse ~1600 tests). La fuite d'event loop est aussi atténuée
+# par la fixture autouse `_ensure_fresh_event_loop` dans conftest.py.
+# `-n auto` et non un nombre en dur : le plafond sûr dépend de la machine.
+# Deux workers sont le maximum sur le poste de développement Windows (huit
+# saturent le page file à cause de scipy/xarray/cfgrib), mais ce plafond n'a
+# aucune raison de brider une CI Linux — ni de tenir sur une machine plus
+# contrainte. Il se règle par `PYTEST_XDIST_AUTO_NUM_WORKERS`, que xdist lit
+# pour résoudre `auto`. Voir docs/TESTING_XDIST.md.
+addopts = "-v --tb=short -n auto --dist=loadfile --cov=gsie_api --cov-report=term-missing"
 markers = [
     "serial: tests à exécuter en série (pas de parallélisation) — concurrence DB réelle",
     "xdist_group(name): groupe de tests à exécuter sur le même worker xdist",
@@ -147,3 +163,8 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "scipy.*"
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "psycopg2-binary==2.9.12",
+]

@@ -294,20 +294,30 @@ class ClimateEngine:
             raise ClimateEngineError(str(exc)) from exc
 
         reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
-        resultats = [
-            ObservationClimatologiqueQuotidienne(
-                requete_id=request.requete_id,
-                id_station=row["POSTE"],
-                date=datetime.strptime(row["DATE"], "%Y%m%d").date(),
-                rr_mm=_parse_french_float(row, "RR"),
-                tn_c=_parse_french_float(row, "TN"),
-                tx_c=_parse_french_float(row, "TX"),
-                tm_c=_parse_french_float(row, "TM"),
-                valeurs_brutes={k: (v if v else None) for k, v in row.items()},
-                source=_DPCLIM_SOURCE,
+        resultats: list[ObservationClimatologiqueQuotidienne] = []
+        for row in reader:
+            # csv.DictReader produit une clé None quand une ligne porte plus
+            # de colonnes que l'en-tête — on la filtre (valeurs_brutes) mais
+            # on signale le CSV mal formé plutôt que de l'avaler silencieusement.
+            if None in row:
+                logger.warning(
+                    "climate_dpclim_csv_malforme",
+                    id_station=request.id_station,
+                    n_colonnes_supplementaires=sum(1 for k in row if k is None),
+                )
+            resultats.append(
+                ObservationClimatologiqueQuotidienne(
+                    requete_id=request.requete_id,
+                    id_station=row["POSTE"],
+                    date=datetime.strptime(row["DATE"], "%Y%m%d").date(),
+                    rr_mm=_parse_french_float(row, "RR"),
+                    tn_c=_parse_french_float(row, "TN"),
+                    tx_c=_parse_french_float(row, "TX"),
+                    tm_c=_parse_french_float(row, "TM"),
+                    valeurs_brutes={k: (v if v else None) for k, v in row.items() if k is not None},
+                    source=_DPCLIM_SOURCE,
+                )
             )
-            for row in reader
-        ]
 
         logger.info(
             "climate_climatologie_quotidienne_retrieved",

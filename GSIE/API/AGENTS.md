@@ -1,7 +1,7 @@
 # AGENTS.md — GSIE API
 
 > Règles opérationnelles pour tout agent IA travaillant sur l'API GSIE.
-> En cas de conflit, `A:\Quintessences\AGENTS.md` prime.
+> En cas de conflit, le fichier `AGENTS.md` racine du dépôt prime.
 
 ## Environnement
 

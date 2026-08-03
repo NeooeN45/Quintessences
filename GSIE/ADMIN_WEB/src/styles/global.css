@@ -1,0 +1,374 @@
+@import "tailwindcss";
+
+/*
+ * Thème GSIE Admin Enterprise — inspiré Linear / Vercel Pro
+ * Dark-first, pure black, accent bleu, tabular numerics, densité entreprise.
+ * Sources : vercel.com/design, linear.app, designsystems.one
+ */
+
+@theme {
+  /* Surfaces — pure black, pas de gris */
+  --color-bg-000: #000000;
+  --color-bg-100: #0a0a0a;
+  --color-bg-200: #111111;
+  --color-bg-300: #1a1a1a;
+  --color-bg-400: #222222;
+  --color-bg-500: #2a2a2a;
+
+  /* Texte — high contrast */
+  --color-fg-100: #ffffff;
+  --color-fg-200: #ededed;
+  --color-fg-300: #a1a1a1;
+  --color-fg-400: #888888;
+  --color-fg-500: #666666;
+
+  /* Borders — hairline */
+  --color-border: #333333;
+  --color-border-light: #222222;
+  --color-border-strong: #444444;
+
+  /* Accent — Vercel blue, utilisé comme ponctuation */
+  --color-accent: #0070f3;
+  --color-accent-hover: #0061d5;
+  --color-accent-light: #3291ff;
+
+  /* Statut — vert/rouge/jaune, jamais décoratifs */
+  --color-success: #0070f3;
+  --color-success-bg: rgba(0, 112, 243, 0.1);
+  --color-warning: #f5a623;
+  --color-warning-bg: rgba(245, 166, 35, 0.1);
+  --color-error: #e00;
+  --color-error-bg: rgba(238, 0, 0, 0.1);
+  --color-neutral: #666;
+
+  /* Typo — Geist si dispo, fallback system */
+  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+    Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* Thème clair — override des variables */
+html.light {
+  --color-bg-000: #ffffff;
+  --color-bg-100: #fafafa;
+  --color-bg-200: #f4f4f5;
+  --color-bg-300: #e4e4e7;
+  --color-bg-400: #d4d4d8;
+  --color-bg-500: #a1a1aa;
+
+  --color-fg-100: #09090b;
+  --color-fg-200: #18181b;
+  --color-fg-300: #3f3f46;
+  --color-fg-400: #71717a;
+  --color-fg-500: #a1a1aa;
+
+  --color-border: #e4e4e7;
+  --color-border-light: #f4f4f5;
+  --color-border-strong: #d4d4d8;
+
+  --color-accent: #0070f3;
+  --color-accent-hover: #0061d5;
+  --color-accent-light: #3291ff;
+
+  --color-success: #0070f3;
+  --color-success-bg: rgba(0, 112, 243, 0.08);
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-error: #dc2626;
+  --color-error-bg: rgba(220, 38, 38, 0.08);
+  --color-neutral: #71717a;
+
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-bg-000);
+  color: var(--color-fg-200);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numerics partout — Geist signature */
+table,
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Scrollbar minimal */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg-500);
+}
+
+/* Focus — accent bleu, jamais default outline */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+/* Page transitions — fade-in au chargement */
+main {
+  animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading progress bar — top of page */
+#loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-accent);
+  z-index: 100;
+  transition: width 0.3s ease, opacity 0.3s ease;
+  width: 0%;
+  opacity: 0;
+}
+#loading-bar.active {
+  opacity: 1;
+  animation: loadingBarGrow 1.5s ease-out forwards;
+}
+@keyframes loadingBarGrow {
+  0% { width: 0%; }
+  30% { width: 40%; }
+  60% { width: 70%; }
+  90% { width: 90%; }
+  100% { width: 100%; }
+}
+#loading-bar.done {
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.1s;
+}
+
+/* Focus visible — accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Scrollbar styling — thin dark */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-400);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-bg-500);
+}
+
+/* Stagger pour les éléments qui entrent */
+[data-animate="stagger"] > * {
+  animation: staggerIn 0.4s ease-out backwards;
+}
+[data-animate="stagger"] > *:nth-child(1) { animation-delay: 0s; }
+[data-animate="stagger"] > *:nth-child(2) { animation-delay: 0.05s; }
+[data-animate="stagger"] > *:nth-child(3) { animation-delay: 0.1s; }
+[data-animate="stagger"] > *:nth-child(4) { animation-delay: 0.15s; }
+[data-animate="stagger"] > *:nth-child(5) { animation-delay: 0.2s; }
+[data-animate="stagger"] > *:nth-child(6) { animation-delay: 0.25s; }
+
+@keyframes staggerIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Recharts — override des couleurs par défaut */
+.recharts-default-tooltip {
+  background: var(--color-bg-200) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 6px !important;
+}
+.recharts-tooltip-label {
+  color: var(--color-fg-400) !important;
+}
+.recharts-cartesian-axis-tick text {
+  fill: var(--color-fg-500) !important;
+}
+
+/* --- Accessibility (WCAG 2.2) --- */
+
+/* Screen reader only — visible only to assistive tech */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link — caché jusqu'au focus (WCAG 2.4.1) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+  padding: 0.625rem 1.25rem;
+  background: var(--color-accent);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0 0 0.5rem 0;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Reduced motion — respecte prefers-reduced-motion (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  #loading-bar {
+    display: none !important;
+  }
+}
+
+/* High contrast mode — bordures solides en fallback */
+@media (forced-colors: active) {
+  .border-border,
+  .border-border-light,
+  .border-border-strong {
+    border-color: ButtonText !important;
+  }
+}
+
+/* Touch targets — minimum 44x44px sur mobile */
+@media (max-width: 768px) {
+  button,
+  a[role="button"],
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* --- Enterprise polish --- */
+
+/* Topbar backdrop blur */
+#topbar {
+  background-color: color-mix(in srgb, var(--color-bg-100) 80%, transparent);
+}
+
+/* Cards — bordures plus subtiles, hover lift */
+.hover-card {
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.hover-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Active nav indicator — bar verticale accent */
+a[aria-current="page"] {
+  position: relative;
+}
+a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 16px;
+  width: 2px;
+  background: var(--color-accent);
+  border-radius: 0 1px 1px 0;
+}
+
+/* User dropdown animation */
+#user-dropdown {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Dense tables — enterprise info density */
+table {
+  font-size: 12px;
+}
+table th {
+  font-weight: 600;
+  color: var(--color-fg-400);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Badge — enterprise pill */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}

@@ -17,7 +17,7 @@ multi-sources, jamais A.
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference
 
@@ -36,6 +36,25 @@ class PedologyQuery(BaseModel):
     )
 
 
+# Ce qu'une unite autorise, et rien de plus.
+#
+# Chaque borne est **definitionnelle** : elle dit ce que l'unite signifie, non
+# ce qui serait agronomiquement plausible. Une unite absente de cette table
+# n'est pas contrainte — mieux vaut ne rien verifier que verifier au hasard.
+_BORNES_PAR_UNITE: dict[str, tuple[float, float]] = {
+    # Une part du tout ne depasse pas le tout.
+    "%": (0.0, 100.0),
+    # Echelle sur laquelle SoilGrids publie le pH de l'eau du sol.
+    "pH": (0.0, 14.0),
+    # Une teneur massique est positive ou nulle. Pas de borne haute : elle
+    # dependrait du materiau et releverait du jugement.
+    "g/kg": (0.0, float("inf")),
+    # Une masse volumique apparente est strictement positive ; la borne haute
+    # est celle de la matiere minerale la plus dense, laissee ouverte.
+    "kg/dm³": (0.0, float("inf")),
+}
+
+
 class SolCaracteristique(BaseModel):
     """Une caractéristique de sol (PEDOLOGY_ENGINE.md §5)."""
 
@@ -46,6 +65,39 @@ class SolCaracteristique(BaseModel):
     unite: str
     source: SourceReference
     evidence_level: EvidenceLevel = EvidenceLevel.B
+
+    @model_validator(mode="after")
+    def _valeur_dans_son_unite(self) -> "SolCaracteristique":
+        """La valeur reste dans ce que son unité autorise.
+
+        Seconde ligne de défense, indépendante du client qui produit la valeur.
+        `soilgrids_client.py` retombait sur un facteur d'échelle de 1 quand
+        SoilGrids omettait `unit_measure` : une couche `phh2o` de moyenne 52 —
+        un pH de 5,2 mis à l'échelle par dix — ressortait à **pH 52**. Ce
+        contrôle-ci l'aurait arrêté quel que soit le client fautif.
+
+        Le contrôle porte sur l'**unité**, pas sur le nom : `nom` est libre
+        (« ph », « argile_pct », « pH_eau »…), tandis que l'unité dit ce que le
+        nombre peut valoir. Se fier au nom obligerait à énumérer ses variantes,
+        et la garde manquerait la première orthographe imprévue.
+
+        **Bornes définitionnelles uniquement.** Un pourcentage supérieur à cent
+        n'est pas une teneur remarquable, c'est une part dépassant le tout. Le
+        pH 0–14 est l'échelle sur laquelle SoilGrids publie, pas un seuil
+        agronomique. Aucune borne n'est posée sur ce qui relèverait d'un
+        jugement — dire qu'un sol est « trop acide » exigerait une source, et
+        n'appartient pas à un schéma (`ADR-009`).
+        """
+        bornes = _BORNES_PAR_UNITE.get(self.unite)
+        if bornes is None:
+            return self
+        minimum, maximum = bornes
+        if not minimum <= self.valeur <= maximum:
+            raise ValueError(
+                f"« {self.nom} » vaut {self.valeur} {self.unite}, hors de "
+                f"l'intervalle {minimum}–{maximum} que cette unité autorise"
+            )
+        return self
 
 
 class PedologyData(BaseModel):

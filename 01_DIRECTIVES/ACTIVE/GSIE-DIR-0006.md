@@ -2,7 +2,7 @@
 # GSIE-IGNIS — VISION DU MOTEUR COGNITIF
 # Directive ID : GSIE-DIR-0006
 # Version : 1.0
-# Statut : Draft
+# Statut : Review
 # Priorité : CRITIQUE — guide l'architecture du cerveau Ignis
 # Classification : FONDATION
 # Auteur : Camille Perraudeau (Fondateur)

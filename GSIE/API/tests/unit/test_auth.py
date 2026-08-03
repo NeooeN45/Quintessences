@@ -1,5 +1,6 @@
 """Tests unitaires — authentification JWT RS256 (auth/router.py + core/auth.py)."""
 
+from collections.abc import Generator
 from time import time
 
 import pytest
@@ -9,12 +10,33 @@ from gsie_api.app import create_app
 from gsie_api.auth import router as auth_router
 
 # Configure a dev account for tests (env-var based, not hardcoded in app code)
+auth_router._settings.auth_dev_login_enabled = True
 auth_router._settings.auth_dev_password = "changeme"
 
-client = TestClient(create_app())
+
+@pytest.fixture
+def client(mock_lifespan: object) -> Generator[TestClient, None, None]:
+    """TestClient avec lifespan géré — évite la pollution d'event loop.
+
+    Un TestClient créé au niveau module sans context manager ne déclenche
+    pas le lifespan proprement. Quand un autre test crée un TestClient
+    avec context manager (ex. test_coverage.py), l'event loop partagée
+    se ferme et le client module-level devient inutilisable
+    (RuntimeError: Event loop is closed).
+
+    La fixture crée un nouveau TestClient par test avec context manager,
+    garantissant que le lifespan (startup + shutdown) s'exécute
+    correctement et que l'event loop est proprement gérée.
+
+    ``mock_lifespan`` (conftest.py) mocke les connexions DB/Redis/WebSocket
+    du lifespan pour éviter que des vraies connexions async ne polluent
+    l'event loop sur Windows.
+    """
+    with TestClient(create_app()) as test_client:
+        yield test_client
 
 
-def should_return_200_and_tokens_when_login_valid():
+def should_return_200_and_tokens_when_login_valid(client: TestClient):
     """POST /auth/login doit retourner access + refresh tokens pour credentials valides."""
     response = client.post(
         "/api/v1/auth/login",
@@ -28,7 +50,7 @@ def should_return_200_and_tokens_when_login_valid():
     assert data["expires_in"] > 0
 
 
-def should_return_401_when_login_invalid():
+def should_return_401_when_login_invalid(client: TestClient):
     """POST /auth/login doit retourner 401 pour credentials invalides."""
     response = client.post(
         "/api/v1/auth/login",
@@ -37,7 +59,7 @@ def should_return_401_when_login_invalid():
     assert response.status_code == 401
 
 
-def should_return_401_when_login_unknown_user():
+def should_return_401_when_login_unknown_user(client: TestClient):
     """POST /auth/login doit retourner 401 pour un utilisateur inexistant."""
     response = client.post(
         "/api/v1/auth/login",
@@ -46,7 +68,7 @@ def should_return_401_when_login_unknown_user():
     assert response.status_code == 401
 
 
-def should_return_200_and_new_tokens_when_refresh_valid():
+def should_return_200_and_new_tokens_when_refresh_valid(client: TestClient):
     """POST /auth/refresh doit retourner de nouveaux tokens pour un refresh valide."""
     # D'abord login pour obtenir un refresh token
     login_response = client.post(
@@ -76,7 +98,7 @@ def should_return_200_and_new_tokens_when_refresh_valid():
     assert refresh_payload["username"] == "admin"
 
 
-def should_return_401_when_refresh_token_is_replayed():
+def should_return_401_when_refresh_token_is_replayed(client: TestClient):
     """Un refresh token consommé ne doit jamais pouvoir être rejoué."""
     login_response = client.post(
         "/api/v1/auth/login",
@@ -127,7 +149,7 @@ async def should_preserve_current_token_when_rotation_collides():
     assert await store.consume("courant") is True
 
 
-def should_return_401_when_refresh_with_access_token():
+def should_return_401_when_refresh_with_access_token(client: TestClient):
     """POST /auth/refresh doit refuser un access token (mauvais type)."""
     login_response = client.post(
         "/api/v1/auth/login",
@@ -142,7 +164,7 @@ def should_return_401_when_refresh_with_access_token():
     assert response.status_code == 401
 
 
-def should_return_200_when_verify_with_valid_token():
+def should_return_200_when_verify_with_valid_token(client: TestClient):
     """GET /auth/verify doit retourner valid=True pour un token valide."""
     login_response = client.post(
         "/api/v1/auth/login",
@@ -166,19 +188,43 @@ def should_return_200_when_verify_with_valid_token():
     assert data["token_type"] == "access"
 
 
-def should_return_401_when_verify_without_token():
+def should_return_401_when_verify_without_token(client: TestClient):
     """GET /auth/verify doit retourner 401 sans token."""
     response = client.get("/api/v1/auth/verify")
     assert response.status_code == 401
 
 
-def should_return_401_when_verify_with_invalid_token():
+def should_return_401_when_verify_with_invalid_token(client: TestClient):
     """GET /auth/verify doit retourner 401 pour un token invalide."""
     response = client.get(
         "/api/v1/auth/verify",
         headers={"Authorization": "Bearer invalid-token-string"},
     )
     assert response.status_code == 401
+
+
+def should_return_200_and_revoke_when_logout_with_valid_refresh_token(client: TestClient):
+    """POST /auth/logout doit révoquer le refresh token."""
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin", "password": "changeme"},
+    )
+    refresh_token = login_response.json()["refresh_token"]
+
+    # Logout révoque le refresh token
+    logout_response = client.post(
+        "/api/v1/auth/logout",
+        json={"refresh_token": refresh_token},
+    )
+    assert logout_response.status_code == 200
+    assert logout_response.json()["revoked"] is True
+
+    # Le refresh token révoqué ne peut plus être utilisé
+    refresh_response = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+    assert refresh_response.status_code == 401
 
 
 def should_create_and_verify_access_token():

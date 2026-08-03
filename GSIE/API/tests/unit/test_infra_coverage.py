@@ -222,12 +222,14 @@ class TestConnectionManagerRedis:
         fake_redis = MagicMock()
         fake_redis.pubsub = MagicMock(return_value=fake_pubsub)
 
-        # Les reprises sont bornées : on annule seulement l'attente entre elles
-        # pour que le test reste instantané.
-        monkeypatch.setattr(manager_module, "_DELAI_REPRISE_PUBSUB", 0)
+        # Les reprises sont bornées : la boucle s'arrête d'elle-même après
+        # _REPRISES_PUBSUB_MAX tentatives. On accélère le délai entre reprises
+        # pour que le test reste instantané. Pas de wait_for (deadlock sur
+        # Windows avec asyncio.sleep + wait_for, Python 3.12).
+        monkeypatch.setattr(manager_module, "_DELAI_REPRISE_PUBSUB", 0.001)
 
         with patch.object(mgr, "_get_redis", new_callable=AsyncMock, return_value=fake_redis):
-            await asyncio.wait_for(mgr._redis_subscriber_loop(), timeout=5.0)
+            await mgr._redis_subscriber_loop()
 
         assert fake_pubsub.psubscribe.await_count == manager_module._REPRISES_PUBSUB_MAX + 1
 
@@ -1555,12 +1557,18 @@ class TestOutboxWorkerMain:
         ):
             main()
         mock_run.assert_called_once()
+        # Ferme la coroutine créée par run_worker() que le mock d'asyncio.run
+        # n'a jamais attendue — sinon RuntimeWarning « coroutine never awaited ».
+        mock_run.call_args.args[0].close()
 
     def should_suppress_keyboard_interrupt_in_main(self) -> None:
         from gsie_api.outbox_worker import main
 
-        with patch("gsie_api.outbox_worker.asyncio.run", side_effect=KeyboardInterrupt):
+        with patch("gsie_api.outbox_worker.asyncio.run", side_effect=KeyboardInterrupt) as mock_run:
             main()
+        # run_worker() a créé une coroutine réelle que asyncio.run factice a
+        # levée sans attendre — il faut la fermer explicitement.
+        mock_run.call_args.args[0].close()
 
 
 class TestOutboxWorkerCodeErreur:

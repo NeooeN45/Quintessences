@@ -112,6 +112,51 @@ Cette RFC :
 - ne prétend pas certifier GeoSylva, GSIE ou Ignis ;
 - ne supprime pas le droit humain de refuser, corriger ou reprendre la main.
 
+## 4 bis. Termes réservés
+
+Deux mots circulent dans `RFC-0023` à `RFC-0027` avec des sens distincts, sans
+que rien ne signale le glissement. Le lecteur qui applique la règle ne sait
+pas laquelle il applique.
+
+> La numérotation « bis » évite de décaler les sections 5 à 21, que les
+> rapports de contre-audit citent par leur numéro. Renuméroter invaliderait
+> les citations sans rien clarifier.
+
+### 4 bis.1 « Capacité »
+
+Employé seul dans `RFC-0024` et `RFC-0027`, le mot désigne **exclusivement**
+une fonction du système inscrite au registre versionné du §6.2 et classée de
+R0 à R5. C'est l'objet que la présente RFC gouverne.
+
+Deux autres sens circulent dans `RFC-0023` et n'entrent jamais au registre :
+
+| Sens | Où | Comment l'écrire désormais |
+|---|---|---|
+| Aptitude d'une personne morale à agir | `RFC-0023` §7.2.2 | « liberté de » |
+| Élément d'offre — moteur, modèle, API | `RFC-0023` §7.2.1, §6 | « composant » |
+
+Un emploi non qualifié vaut le sens gouverné. Un composant n'est soumis à
+aucune classe de risque tant qu'il n'est pas inscrit au registre : confondre
+les deux ferait croire qu'un catalogue d'offre est classé, et qu'une aptitude
+juridique pourrait l'être.
+
+### 4 bis.2 « Publication »
+
+Le mot porte deux sens sans rapport entre eux :
+
+| Sens | Définition | Classe |
+|---|---|---|
+| **Notion de la taxonomie** | §5.5 — passage d'un résultat de l'état brouillon à un état présenté comme validé | R4, R5 si alerte à la population |
+| **Édition documentaire** | mise à disposition d'un texte de gouvernance dans le dépôt | sans objet |
+
+Employé seul, le mot désigne la notion de la taxonomie. L'acte éditorial se
+dit **« édition documentaire »**.
+
+Sans cette distinction, la lecture littérale du §16 classerait en R4 l'édition
+d'un texte constitutionnel — un acte de gouvernance humain qui n'est pas une
+sortie du système, et que la matrice du §6.1 n'a jamais eu pour objet de
+couvrir.
+
 ## 5. Taxonomie normative proposée
 
 ### 5.1 Calcul
@@ -703,7 +748,8 @@ réveil et son adoption.
 ## 16. Révisions constitutionnelles envisagées
 
 La présente RFC ne porte aucun texte constitutionnel cible et ne peut
-autoriser la modification ou la publication d'un document `Locked`.
+autoriser la modification ou l'édition documentaire d'un document `Locked`
+(§4 bis.2).
 
 Son adoption éventuelle ne peut autoriser que les recherches et usages
 compatibles avec les Constitutions en vigueur. Toute évolution

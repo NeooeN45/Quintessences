@@ -16,19 +16,21 @@ Architecture (DEC-000019) :
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 
+from gsie_api.audit.router import router as audit_router
 from gsie_api.auth.router import router as auth_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
+from gsie_api.core.rbac import require_roles
 from gsie_api.engines.botanical.router import router as botanical_router
 from gsie_api.engines.climate.router import router as climate_router
 from gsie_api.engines.correlation.router import router as correlation_router
@@ -38,14 +40,20 @@ from gsie_api.engines.forest_dynamics.router import router as forest_dynamics_ro
 from gsie_api.engines.gis.router import router as gis_router
 from gsie_api.engines.knowledge.router import router as knowledge_router
 from gsie_api.engines.learning.router import router as learning_router
+from gsie_api.engines.orchestration.router import router as orchestration_router
 from gsie_api.engines.pedology.router import router as pedology_router
 from gsie_api.engines.reasoning.router import router as reasoning_router
 from gsie_api.engines.recommendation.router import router as recommendation_router
 from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
+from gsie_api.gamification.router import router as gamification_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.resources.router import router as resources_router
-from gsie_api.shared.middleware import RequestBodyLimitMiddleware, TraceIdMiddleware
+from gsie_api.shared.middleware import (
+    RequestBodyLimitMiddleware,
+    StatusVersionGuardMiddleware,
+    TraceIdMiddleware,
+)
 from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
@@ -64,6 +72,10 @@ _OPENAPI_TAGS = [
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
     {"name": "websocket", "description": "WebSocket temps réel — Hub (UE5.8) et events système"},
+    {
+        "name": "orchestration",
+        "description": ("Chaîne complète — Reasoning → Diagnostic → Recommendation → Validation"),
+    },
 ]
 
 # CORS — méthodes et headers explicites (sécurité OWASP A05)
@@ -111,6 +123,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         version=_settings.app_version,
         environment=_settings.environment,
     )
+
+    # Privilèges du rôle de connexion — on interroge PostgreSQL, on ne se fie
+    # pas au nom présent dans la chaîne de connexion. Un superutilisateur
+    # rendrait inopérants l'isolement RGPD et toutes les politiques RLS.
+    from gsie_api.infrastructure.database import async_session_factory
+    from gsie_api.infrastructure.db_privileges import verifier_privileges_de_connexion
+
+    await verifier_privileges_de_connexion(async_session_factory)
 
     # OpenTelemetry — instrumentation conditionnelle (CON-005, DEC-000019)
     if _settings.otel_enabled:
@@ -196,7 +216,11 @@ def _setup_opentelemetry(app: FastAPI) -> None:
 
 def create_app() -> FastAPI:
     """Factory FastAPI — app creation avec tous les middlewares et routes."""
-    is_production = _settings.environment == "production"
+    # La pré-production sert de vraies données et est exposée comme la
+    # production. `validate_production_security` les traite déjà à
+    # l'identique ; laisser `/docs` et l'OpenAPI ouverts sur l'une des deux
+    # revenait à publier l'arborescence que le handler 404 s'applique à taire.
+    is_production = _settings.environment in ("production", "staging")
 
     app = FastAPI(
         title=_settings.app_name,
@@ -208,15 +232,69 @@ def create_app() -> FastAPI:
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
         openapi_tags=_OPENAPI_TAGS,
+        # Sérialisation JSON haute performance (veille techno 2026-08-02).
+        # ORJSONResponse remplace le sérialiseur stdlib sur tous les endpoints.
+        default_response_class=ORJSONResponse,
     )
 
     # Prometheus /metrics — monitoring production (CON-005)
+    #
+    # L'endpoint était ouvert dans tous les environnements. Le label `handler`
+    # des histogrammes énumère les routes réellement servies : c'est
+    # exactement ce que `docs_url=None` et le handler 404 s'appliquent à
+    # taire en production. Les compteurs de l'outbox sont en outre labellisés
+    # par type d'agrégat (`data_subject`, `consent`), donc la cadence des
+    # traitements RGPD devenait publique. Hors développement, il faut le rôle
+    # `admin` — un scraper Prometheus porte un jeton comme un autre appelant.
+    metrics_dependencies = (
+        [] if _settings.environment == "development" else [Depends(require_roles("admin"))]
+    )
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/metrics",
         tags=["metrics"],
         include_in_schema=not is_production,
+        dependencies=metrics_dependencies,
     )
+
+    # Métriques métier personnalisées (audit qualité base du 2026-08-01) :
+    # complétude, fraîcheur, cohérence des données d'enrichissement.
+    # Calculées à la demande via /metrics/db-quality (admin-only hors dev).
+    from gsie_api.metrics import collect_db_metrics
+
+    # POST et non GET : l'appel n'est pas une lecture. Il déclenche cinq
+    # agrégats sur toute la table `resource`, dont des `count(*) FILTER` sur
+    # `metadata_json`. En GET, un préchargement de navigateur, un retry de
+    # proxy ou un crawler suffisait à les rejouer. Le débit est plafonné dans
+    # tous les environnements — l'authentification, elle, ne s'applique pas en
+    # développement, où l'endpoint reste donc ouvert.
+    #
+    # À terme, une tâche périodique devrait alimenter les Gauges plutôt qu'un
+    # déclenchement par requête, comme l'annonce le docstring de
+    # `collect_db_metrics`.
+    @app.post(
+        "/metrics/db-quality",
+        tags=["metrics"],
+        include_in_schema=not is_production,
+        dependencies=metrics_dependencies,
+    )
+    @limiter.limit("6/minute")
+    async def _db_quality_metrics(request: Request, response: Response) -> dict[str, str]:
+        """Déclenche le calcul des métriques de qualité DB et retourne un ack."""
+        # Le calcul publie directement dans le registry Prometheus par défaut.
+        # Il est attendu : `collect_db_metrics` est une coroutine, la boucle
+        # asyncio du serveur est déjà en cours.
+        try:
+            await collect_db_metrics()
+        except Exception as exc:
+            # L'ack ne doit pas annoncer une collecte qui n'a pas eu lieu. Le
+            # motif reste generique — le texte du pilote est deja au journal
+            # (`collect_db_metrics` le trace avant de relayer).
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Collecte des metriques de qualite DB indisponible",
+            ) from exc
+        return {"status": "collected"}
 
     # Rate limiting (OWASP A07 — slowapi, middleware ASGI pour performance)
     app.state.limiter = limiter
@@ -246,10 +324,15 @@ def create_app() -> FastAPI:
 
     # Outermost : ajoute trace_id et headers de sécurité aux réponses CORS et 413.
     app.add_middleware(TraceIdMiddleware)
+    # P2-2 : bloque /status et /version des moteurs en production/staging
+    # (divulgation d'architecture). 404 pour ne pas confirmer l'existence.
+    app.add_middleware(StatusVersionGuardMiddleware)
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
+    app.include_router(audit_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(correlation_router, prefix=_settings.api_v1_prefix)
@@ -264,6 +347,9 @@ def create_app() -> FastAPI:
     app.include_router(validation_router, prefix=_settings.api_v1_prefix)
     app.include_router(simulation_router, prefix=_settings.api_v1_prefix)
     app.include_router(learning_router, prefix=_settings.api_v1_prefix)
+    # Enregistre apres les moteurs qu'il enchaine : l'orchestration ne fait
+    # que les brancher les uns sur les autres (GSIE-CON-007).
+    app.include_router(orchestration_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
     # 404 handler custom — RFC 7807 Problem Details (OWASP A05)

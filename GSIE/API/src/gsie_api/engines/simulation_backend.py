@@ -110,7 +110,9 @@ class LinearGrowthBackend(GrowthBackend):
         parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         initial_volume = initial_state.get("volume", 0.0)
-        # Taux d'accroissement arbitraire v1 (5% par an)
+        # Taux d'accroissement arbitraire v1 (5% par an) : aucune source ne le
+        # fonde, il ne depend pas de l'essence, et il ne vaut que pour comparer
+        # des ordres de grandeur.
         annual_rate = 0.05
         projected = initial_volume * (1 + annual_rate) ** horizon_years
         return {
@@ -118,7 +120,19 @@ class LinearGrowthBackend(GrowthBackend):
             "increment": projected - initial_volume,
             "annual_increment": initial_volume * annual_rate,
             "species": species,
+            # `sources()` renvoyait seule une reference documentaire — dont
+            # ADR-009, le garde-fou anti-invention. Un consommateur qui ne lit
+            # que cette charge utile prenait donc un taux invente pour une
+            # valeur sourcee. `assumptions()` portait l'aveu, mais rien
+            # n'obligeait a le lire : il accompagne desormais le resultat.
             "source": self.sources()[0],
+            "taux_annuel_arbitraire": annual_rate,
+            "avertissement": (
+                "Taux d'accroissement arbitraire, non sourcé et indépendant de "
+                "l'essence. Modèle de comparaison d'ordres de grandeur, pas de "
+                "prévision. Pour une projection fondée, utiliser "
+                "CalibratedGrowthBackend (accroissements IGN par essence)."
+            ),
             "capped": False,
         }
 

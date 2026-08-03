@@ -104,8 +104,16 @@ async def set_rls_context(session: AsyncSession, user_id: str, roles: str) -> No
         user_id: UUID de l'utilisateur authentifié (JWT ``sub``).
         roles: Liste CSV des rôles (ex. ``"admin,researcher"``).
     """
-    await session.execute(text("SET LOCAL app.current_user_id = :uid"), {"uid": user_id})
-    await session.execute(text("SET LOCAL app.current_user_roles = :roles"), {"roles": roles})
+    # set_config() est l'équivalent fonctionnel de SET LOCAL et accepte
+    # les paramètres liés — SET LOCAL est une commande utility qui ne les
+    # accepte pas (audit sécurité 2026-08-01). Le 3e argument `true` rend
+    # la configuration locale à la transaction courante.
+    await session.execute(
+        text("SELECT set_config('app.current_user_id', :uid, true)"), {"uid": user_id}
+    )
+    await session.execute(
+        text("SELECT set_config('app.current_user_roles', :roles, true)"), {"roles": roles}
+    )
 
 
 # Type alias pour l'annotation Annotated dans les routers

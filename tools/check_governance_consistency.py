@@ -22,6 +22,36 @@ Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
    CON-) dans les 5 lignes qui la précèdent. Détection best-effort — ne
    prouve pas l'absence de donnée inventée, attrape les cas évidents.
 
+4. Qualite du code livré : les fichiers Python **mis en scène** doivent passer
+   `ruff check` et `ruff format --check`, chacun sous la configuration de son
+   propre projet (`GSIE/API`, `GSIE/SDK/python`, tout projet à venir portant un
+   `pyproject.toml`). Le contrôle porte sur les fichiers du commit, jamais sur
+   le dépôt entier : on est bloqué par ses propres erreurs, pas par celles d'un
+   autre.
+
+   Ajoutée après qu'un commit soit passé avec trois `E501` et trois fichiers
+   non formatés. Une porte cassée coûte plus que les lignes qu'elle signale :
+   le prochain intervenant ne distingue plus ses erreurs de celles qui
+   étaient là, et cesse de la regarder.
+
+   Élargie ensuite : câblée sur `GSIE/API/`, elle laissait passer sans un mot
+   l'intégralité du SDK Python né hors de ce chemin. Une porte qui ne couvre
+   qu'un dossier donne l'assurance d'une porte sans en avoir la portée.
+
+5. Intégrité des quatre autres familles : la règle 1 ne couvre que
+   RFC/DEC/ADR. Les identifiants `GSIE-CON-XXX`, `GSIE-DIR-XXXX`,
+   `GSIE-FND-XXX` et `GSIE-PROMPT-XXXX` cités doivent eux aussi pointer vers
+   un document existant.
+
+   Ajoutée après mesure du corpus (2026-08-01) : 406 documents,
+   3 633 citations, 125 identifiants portés — et `GSIE-CON-005` cité par
+   90 documents distincts sans que rien ne vérifie qu'il résolve. L'intégrité
+   relevée était de 100 % ; la règle constate cet état plutôt qu'elle ne le
+   corrige, et empêche qu'il se dégrade.
+
+   Audit complémentaire du dépôt entier, avec le détail :
+   `GSIE/TOOLS/verifier_integrite_references.py`.
+
 Usage : python tools/check_governance_consistency.py
 Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
 """
@@ -29,6 +59,7 @@ Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,9 +68,18 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# Les formes feminines manquaient : l'accord francais impose « une RFC
+# validee », et RFC-0028 comme RFC-0029 emploient cette forme. Le garde-fou
+# les tenait donc pour non adoptees, bloquant toute implementation d'une RFC
+# pourtant validee et tracee par sa DEC.
+#
+# Ce n'est pas un assouplissement : « validee » signifie « valide ». Un statut
+# « proposee » ou « brouillon » reste refuse, et un test le verifie.
 ADOPTED_STATUSES = {
-    "validé", "valide", "validated", "adopté", "adopte", "adopted",
-    "accepté", "accepte", "accepted", "locked", "verrouillé", "verrouille",
+    "validé", "validée", "valide", "validee", "validated",
+    "adopté", "adoptée", "adopte", "adoptee", "adopted",
+    "accepté", "acceptée", "accepte", "acceptee", "accepted",
+    "locked", "verrouillé", "verrouillée", "verrouille", "verrouillee",
 }
 
 ID_PATTERN = re.compile(r"\b(RFC-\d{4}|DEC-\d{6}|ADR-\d{3,4})\b")
@@ -57,6 +97,51 @@ INLINE_DEF_PATTERN = re.compile(
 # est considéré comme tracé (traçabilité satisfaite), même sans fichier séparé —
 # c'est le cas des ADR-0008..0013 jamais rédigés, retirés avant adoption.
 SUPERSEDE_PATTERN = re.compile(r"remplac\w*|superséd\w*|supersed\w*", re.IGNORECASE)
+
+# --- Règle 5 : les quatre familles d'identifiants que la règle 1 ne voit pas ---
+#
+# `ID_PATTERN` ne couvre que RFC/DEC/ADR. Les quatre autres familles tracées de
+# CLAUDE.md §4 n'étaient vérifiées par rien, alors que `GSIE-CON-005` est
+# l'identifiant le plus cité du corpus (87 documents citants) : rien ne
+# garantissait qu'il pointe vers un article existant.
+#
+# Motif et règle séparés de `ID_PATTERN`, délibérément. Ce dernier pilote aussi
+# la règle 2 (implémentation avant décision adoptée) : l'élargir aurait rendu
+# bloquant tout fichier d'implémentation citant un `GSIE-PROMPT` encore « À
+# LANCER ». Une règle qui bloque des commits ne se modifie pas par effet de bord.
+FAMILLES_COMPLEMENTAIRES_PATTERN = re.compile(
+    r"\b(GSIE-DIR-\d{4}|GSIE-CON-\d{3}|GSIE-FND-\d{3}|GSIE-PROMPT-\d{4})\b"
+)
+
+# Élargir le motif sans élargir cette liste signalerait les 770 citations
+# constitutionnelles comme brisées : les deux vont ensemble.
+REFERENCE_DIRS = [
+    "00_CONSTITUTION",
+    "01_DIRECTIVES",
+    "02_RFC",
+    "03_DECISIONS",
+    "05_SPECIFICATIONS",
+    "GSIE/ARCHITECTURE",
+    "GSIE/PROMPTS",
+]
+
+# Travail structurant repris en interne, sans délégation à un agent : aucun
+# prompt versionné n'a été rédigé, et `GSIE/PROMPTS/REGISTER.md` le déclare
+# explicitement en note sous sa table. Les tracer sans fichier est le choix
+# documenté, pas un oubli.
+#
+# L'exemption est nominative, et non un motif « (interne) » générique : un
+# futur prompt sans fichier doit rester visible plutôt que d'hériter du
+# silence de ceux-ci.
+PROMPTS_INTERNES_SANS_FICHIER = frozenset(
+    {
+        "GSIE-PROMPT-0018",
+        "GSIE-PROMPT-0019",
+        "GSIE-PROMPT-0020",
+        "GSIE-PROMPT-0021",
+        "GSIE-PROMPT-0022",
+    }
+)
 
 GOVERNANCE_DIRS = ["02_RFC", "03_DECISIONS", "GSIE/ARCHITECTURE"]
 IMPLEMENTATION_GLOBS = [
@@ -147,6 +232,153 @@ def find_unsourced_numeric_constants(text: str) -> list[str]:
     return findings
 
 
+# Racine du projet Python : `ruff` doit y etre lance pour que sa configuration
+# (`pyproject.toml`) s'applique.
+API_ROOT = ROOT / "GSIE" / "API"
+
+
+def projet_python(chemin: Path) -> Path | None:
+    """Racine du projet Python contenant `chemin`, ou `None`.
+
+    C'est le premier ancêtre portant un `pyproject.toml`, sans jamais remonter
+    au-dessus du dépôt. Le contrôle était câblé sur `GSIE/API/` : le SDK Python
+    (`GSIE/SDK/python/`, autorisé par `RFC-0012` §6) est né hors de ce chemin et
+    échappait donc entièrement à la porte de lint — le défaut même que celle-ci
+    a été ajoutée pour fermer. Résoudre le projet depuis le fichier plutôt que
+    depuis une constante fait que le prochain projet est couvert sans qu'on ait
+    à y penser.
+
+    Un fichier sans `pyproject.toml` ancêtre — l'outillage de `tools/` et de
+    `GSIE/TOOLS/` — reste hors périmètre : aucune configuration ne dit à quelle
+    largeur il doit être formaté, et imposer le défaut de `ruff` reformaterait
+    du code aligné à la main. Le silence est ici un choix, pas un oubli.
+    """
+    for parent in chemin.parents:
+        if (parent / "pyproject.toml").is_file():
+            return parent
+        if parent == ROOT:
+            break
+    return None
+
+
+def _fichiers_python_en_scene() -> dict[Path, list[str]]:
+    """Fichiers `.py` mis en scène pour ce commit, groupés par projet Python.
+
+    Les chemins sont relatifs à la racine de leur projet, pour que `ruff` les
+    reçoive tels qu'il les attend et applique la configuration de ce projet —
+    la largeur de ligne du SDK n'est pas celle de l'API. Un fichier supprimé
+    est écarté : le linter ne peut rien en dire.
+    """
+    resultat = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+    if resultat.returncode != 0:
+        return {}
+
+    par_projet: dict[Path, list[str]] = {}
+    for ligne in resultat.stdout.splitlines():
+        if not ligne.endswith(".py"):
+            continue
+        chemin = ROOT / ligne
+        projet = projet_python(chemin)
+        if projet is None:
+            continue
+        relatif = chemin.relative_to(projet).as_posix()
+        par_projet.setdefault(projet, []).append(relatif)
+    return par_projet
+
+
+def verifier_qualite_python() -> list[str]:
+    """Lance `ruff check` et `ruff format --check` sur les fichiers en scène.
+
+    Ne bloque pas si `ruff` est absent : un outil manquant n'est pas une
+    incohérence de gouvernance, et empêcher de commiter pour cela punirait
+    quiconque n'a pas encore installé l'environnement. Le cas est signalé.
+    """
+    violations: list[str] = []
+
+    for projet, fichiers in sorted(_fichiers_python_en_scene().items()):
+        ruff = projet / ".venv" / "Scripts" / "ruff.exe"
+        if not ruff.exists():
+            print(
+                f"note : {ruff.name} introuvable sous "
+                f"{projet.relative_to(ROOT).as_posix()} — contrôle de qualité "
+                "Python non exécuté pour ce projet. Installer son environnement "
+                "pour l'activer."
+            )
+            continue
+
+        for arguments, libelle in (
+            (["check"], "ruff check"),
+            (["format", "--check"], "ruff format"),
+        ):
+            resultat = subprocess.run(
+                [str(ruff), *arguments, *fichiers],
+                capture_output=True,
+                text=True,
+                cwd=projet,
+                check=False,
+            )
+            if resultat.returncode != 0:
+                detail = (resultat.stdout + resultat.stderr).strip()
+                violations.append(
+                    f"[qualité du code] {libelle} échoue sur "
+                    f"{len(fichiers)} fichier(s) mis en scène dans "
+                    f"{projet.relative_to(ROOT).as_posix()} :\n"
+                    + "\n".join(f"      {ligne}" for ligne in detail.splitlines()[:12])
+                )
+    return violations
+
+
+def trouver_document_porteur(identifiant: str) -> Path | None:
+    """Cherche le fichier portant un identifiant, toutes familles confondues."""
+    for base in REFERENCE_DIRS:
+        racine = ROOT / base
+        if not racine.is_dir():
+            continue
+        for path in racine.rglob(f"{identifiant}*.md"):
+            return path
+    return None
+
+
+def verifier_familles_complementaires() -> list[str]:
+    """Règle 5 : `GSIE-CON`/`DIR`/`FND`/`PROMPT` cités doivent exister.
+
+    Mesuré à l'ajout : 408 documents, 3 508 citations, aucune cible manquante
+    hors les cinq prompts internes déclarés. La règle constate cet état plutôt
+    qu'elle ne le corrige — son objet est d'empêcher qu'il se dégrade.
+    """
+    violations: list[str] = []
+
+    documents: list[Path] = []
+    for base in REFERENCE_DIRS:
+        racine = ROOT / base
+        if racine.is_dir():
+            documents.extend(racine.rglob("*.md"))
+
+    connus: dict[str, bool] = {}
+    for path in sorted(documents):
+        texte = path.read_text(encoding="utf-8", errors="ignore")
+        propres = set(FAMILLES_COMPLEMENTAIRES_PATTERN.findall(path.stem))
+
+        for identifiant in sorted(set(FAMILLES_COMPLEMENTAIRES_PATTERN.findall(texte))):
+            if identifiant in propres or identifiant in PROMPTS_INTERNES_SANS_FICHIER:
+                continue
+            if identifiant not in connus:
+                connus[identifiant] = trouver_document_porteur(identifiant) is not None
+            if not connus[identifiant]:
+                violations.append(
+                    f"[réf. cassée] {path.relative_to(ROOT)} référence {identifiant}, "
+                    f"introuvable dans {', '.join(REFERENCE_DIRS)} — « aucune "
+                    f"décision perdue » (GSIE-CON-005)."
+                )
+    return violations
+
+
 def main() -> int:
     violations: list[str] = []
 
@@ -220,6 +452,11 @@ def main() -> int:
                 f"{_CITATION_LOOKBACK_LINES} lignes précédentes (ADR-009) — vérifier "
                 f"qu'elle est bien sourcée."
             )
+
+    # --- Règle 5 : intégrité des quatre autres familles d'identifiants ---
+    violations.extend(verifier_familles_complementaires())
+
+    violations.extend(verifier_qualite_python())
 
     if not violations:
         print("OK — aucune incohérence de gouvernance détectée.")

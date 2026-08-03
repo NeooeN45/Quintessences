@@ -27,7 +27,7 @@ Convention habituelle du dépôt (`CLAUDE.md` §10) : les apps clientes
 (GeoSylva, QGISIA) sont des repos git indépendants physiquement présents
 dans `apps/`. Le Hub déroge à cette convention pour la partie binaire —
 un projet Unreal génère des dizaines de Go de cache et de fichiers
-compilés, mal adaptés à la structure documentaire de `A:\Quintessences`.
+compilés, mal adaptés à la structure documentaire de `<RACINE_PROJET>`.
 Seule cette fiche de référence est versionnée ici ; le code et les assets
 vivent dans le dépôt GitHub `NeooeN45/Hub`, cloné sur E:.
 

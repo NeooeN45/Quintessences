@@ -296,10 +296,25 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Socle de fiabilité d'entreprise** — RFC-0021 / DEC-000031 | ✅ **Tranche critique contre-auditée (2026-07-22)** | Auth/RBAC moteurs/refresh/WebSocket RGPD, outbox transactionnel expurgé, migrations gardées, stockage et requêtes bornés ; build Linux reproductible non-root avec dépendances natives verrouillées ; CI bloquante (Python, Rust, intégration, Docker, sources de vérité, nouveaux Markdown stricts, documents Locked/RFC). Restent planifiés : migration mobile en clair, sauvegarde complète, egress réseau, stratégie LanceDB multi-hôtes, 63 exclusions historiques, réactivation progressive des règles Markdown en baseline, dette Kotlin et décision de licence GSIE. |
 | **Vague 3 — Reasoning + Diagnostic Engine** (tranches R1-R4) | ✅ **Exposés sur l'API (2026-07-26)** | Reasoning : moteur, schémas et routeur (`/reasoning/status`, `/version`, `/infer`), R1-R4 validées (`GSIE-PROMPT-0014` à `0017`). Diagnostic : moteur et schémas (R1-R3), routeur R4 repris en interne (`/diagnostic/status`, `/version`, `/diagnostiquer`). Les deux routeurs sont montés sur `app.py` et couverts par un test de montage qui échoue si un routeur présent devient inatteignable. 509 tests unitaires, 83 % de couverture, ruff et mypy `--strict` verts. **Persistance des diagnostics livrée (2026-07-26)** : type de resource `diagnostic` (registre 89 → 90), écriture transactionnelle dans `DiagnosticEngine.diagnostiquer`, intégrée à la baseline `20260726_0001` ; `diagnostic_id` est résolvable et la tranche R2 est débloquée. **Historique Alembic assaini (DEC-000036)** : l'ancienne lignée locale `0001`-`0013` est remplacée par une baseline autonome de 116 tables ; le cycle base vierge → `upgrade head` → `downgrade base` → `upgrade head` et le contrôle de dérive sont verts sur PostgreSQL/PostGIS/AGE. Les 12 tables legacy restent exclues et les anciennes bases locales doivent être recréées. Reste : le maillon Recommendation Engine (chargement par `diagnostic_id`, cas « diagnostic introuvable »). Le langage n'est plus un reste à faire : `DEC-000035` remplace l'attribution Rust *a priori* de la vague 3 par un critère de pertinence, les trois moteurs restant en Python. |
 | **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
+| **Couverture 100% + endpoints dashboard** — audit/gamification | ✅ **Complète (2026-08-02)** | 1859 tests unitaires passent, 63 skipped, 100% couverture (8831 stmts), score mutation 67/67. Endpoints `GET /audit-logs` + `GET /gamification/stats` (données statiques Phase 4). ruff + mypy OK. |
+| **Phase de stabilisation** — DEC-000043 | ✅ **Clôturée (2026-08-02)** | S1 restauration DB prouvée (127 tables, parité source ✓), S2 tranche verticale réelle (chaîne complète sur pilote Parelle 2007, 0.15s), S3 validation scientifique (3/3 scénarios, 18/18 checks, latence 32ms p95 34.68ms). Gates 4/5/6 rouvrables. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
 > intégration, sécurité, packaging et critères scientifiques sont satisfaits.
+
+### Phase de stabilisation (2026-08-02 — DEC-000043) — CLÔTURÉE ✅
+
+> **Diagnostic Fondateur** : le code est plus mature que le produit intégré.
+> Cette phase priorise la preuve sur l'extension.
+
+| Livrable | Description | Statut |
+|---|---|---|
+| **S1 — Restauration DB prouvée** | Backup → restore → vérification d'intégrité (127 tables, 327 FK, 475 index, parité source ✓). Scripts bash + Python CI. | ✅ Clôturé (`74b1b59`) |
+| **S2 — Tranche verticale réelle** | Chaîne complète Reasoning→Diagnostic→Recommendation→Validation sur pilote Parelle 2007 (Quercus), 0.15s, diagnostic persisté. | ✅ Clôturé (`b6b61f6`) |
+| **S3 — Validation scientifique + performance** | 3/3 scénarios ground truth (18/18 checks), latence 32ms p95 34.68ms, mémoire 0.25 MB. | ✅ Clôturé (`56d4ba5`) |
+
+**Gates 4/5/6 rouvrables** : la preuve de chaîne complète est faite.
 
 ### Tranche verticale prioritaire
 
@@ -313,9 +328,9 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
 2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. **CI 100% verte** (Docker build validé en CI avec rustc 1.85 + maturin 1.9.6).
 3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
-4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte.
-5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout.
-6. **Performance** — ❌ SLO mesurés et profiling avant toute migration de code.
+4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte. **S3 clôturé** : 3/3 scénarios ground truth validés (Parelle 2007), sources traçables, benchmark mesuré. Reste : multi-sources, terrain réel, validation humaine du forestier.
+5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout. **S2 clôturé** : chaîne Reasoning→Diagnostic→Recommendation→Validation prouvée sur données réelles. Reste : maillon amont (ingestion→evidence→knowledge) et validation humaine.
+6. **Performance** — ⚠️ SLO mesurés et profiling avant toute migration de code. **S3 clôturé** : latence 32ms p95 34.68ms, mémoire 0.25 MB, reproductible. Reste : benchmark charge concurrente, mémoire conteneur Docker, production.
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 
@@ -381,7 +396,44 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 ### API et SDK
 
 - API publique (lecture)
-- SDK Python / TypeScript
+- ✅ **SDK Python** (`GSIE/SDK/python/`) — client async httpx, JWT RS256
+  auto-refresh, wrappers moteurs (diagnostic, recommendation, validation,
+  simulation), tests respx + pytest-asyncio, ruff + mypy --strict OK
+  (2026-08-01)
+- SDK Kotlin pour GeoSylva — **à faire** (P0-3 2e moitié)
+- SDK TypeScript — différé
+
+### Outils de visualisation DB
+
+- ✅ **Metabase** (:3030) — BI self-service, déployé + **initialisé via
+  API** (compte admin depuis env vars, DB GSIE PostGIS connectée, sync
+  complète, PG 16.14) via `docker-compose.viz.yml` (2026-08-01)
+- ✅ **Apache Superset** (:8088) — BI avancée, initialisé
+  (compte admin depuis env vars, connexion DB pré-configurée) (2026-08-01)
+- ✅ **Dekart** (:8089) — carto Kepler.gl, datasource PostGIS (2026-08-01)
+- ✅ **Documentation du schéma DB** — `SCHEMA_DB.md` (120 tables, 2122
+  colonnes) générée par script SQL+Python (remplace SchemaSpy/tbls)
+- ✅ **Migration Alembic `20260801_0025`** — rôle `gsie_viz_lecture`,
+  barrière RGPD en base (REVOKE sur `gsie_rgpd` + `gsie_rgpd_identites`)
+- Voir `GSIE/DOCUMENTATION/VISUALISATION_DB_ACCES.md`
+
+### Tableau de contrôle admin
+
+- ✅ **Dashboard web** (`GSIE/ADMIN_WEB/`) — Astro 5 + React 19 Islands
+  + Tailwind 4, **design calqué sur Tabler** (sidebar + topbar + cards +
+  stat cards + badges), 4 pages (vue d'ensemble, moteurs, utilisateurs,
+  données), client API hybride (mock → API GSIE auto), build OK 0
+  erreur/0 warning/0 hint (2026-08-01)
+- Préparation version serveur : architecture découplée, bascule via
+  `GSIE_API_URL` dans `.env`
+
+### P0 restants (après session 2026-08-01)
+
+| ID | Description | Statut |
+|---|---|---|
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Applications
 
@@ -413,6 +465,80 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 - `20_PARTNERSHIPS/JUNN_VEILLE.md` — JUNN (Jumeau Numérique National,
   IGN/Cerema/Inria, France 2030, 25 M€). Veille stratégique, pas un
   partenariat actif.
+
+### Veille technologique exhaustive (2026-08-02)
+
+Document de synthèse : `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md`
+(niveau de preuve D per RFC-0014, statut Draft — **pas une feuille de route**).
+8 sous-agents en parallèle : DB, Moteurs AI/ML, API FastAPI, Géospatial,
+Observabilité/Sécurité, Concurrence, Infrastructure, Data pipelines.
+
+**Position concurrentielle** : GSIE occupe un positionnement unique
+(14 moteurs intégrés, multi-domaines, multi-applications, prescriptif).
+19 concurrents directs identifiés. Stratégie recommandée : partenariats
+intégratifs (IGN, INRAE, CIRAD, PlantNet, Arboreal, Dryad, CTrees, GFW).
+
+**Correction post-revue** : 5 écarts avec le dépôt corrigés dans le
+document (§13 Errata). Security headers, pg_stat_statements, Apache AGE,
+API versioning déjà en place. PgBouncer config présent mais non déployé.
+Chiffres non sourcés marqués comme impressions d'agent (niveau D).
+
+#### Actions Phase 1 — RFC-0031 (adopté 2026-08-02, DEC-000042)
+
+Les 8 actions Phase 1 du RFC-0031 sont **toutes implémentées** (2026-08-02).
+
+| # | Action | Domaine | Statut | Commit |
+|---|---|---|---|---|
+| 1 | orjson sérialisation JSON | API | ✅ Fait | `822933f` |
+| 2 | Trivy scan CI | Sécurité | ✅ Fait | — |
+| 3 | Bandit SAST CI | Sécurité | ✅ Fait | — |
+| 4 | Dependabot | Sécurité | ✅ Fait | — |
+| 5 | Tenacity dépendance | Résilience | ✅ Fait | `822933f` |
+| 6 | uvloop sur Linux | API | ✅ Fait | `d25179f` |
+| 7 | Uptime Kuma | Monitoring | ✅ Fait | `d25179f` |
+| 8 | API PlantNet dans Botanical Engine | Moteurs | ✅ Fait | `1062be0` |
+
+> Azure Key Vault est **différé** — transition depuis Fernet local pour
+> le déploiement Azure production, pas une action Phase 1 (RFC-0031 §2.3).
+
+#### Actions Phase 2 — RFC-0031 (court terme, 3-6 mois)
+
+Ces 12 actions nécessitent un effort d'intégration mais sont cohérentes
+avec l'architecture existante. Elles sont adoptées par DEC-000042 mais
+non encore implémentées.
+
+| # | Action | Domaine | Prérequis |
+|---|---|---|---|
+| 9 | pg_cron + pg_trgm + HypoPG | DB | Migration Alembic |
+| 10 | Index partiels + BRIN sur tables temporelles | DB | Audit index existants |
+| 11 | Cursor-based pagination sur endpoints list | API | Refactor endpoints |
+| 12 | SSE helper pour notifications/dashboards | API | `shared/sse.py` |
+| 13 | Backpressure middleware | API | `shared/middleware.py` |
+| 14 | Audit logging immutable (hash chain PostgreSQL) | Sécurité/RGPD | Migration + trigger |
+| 15 | Hypothesis + Schemathesis dev deps + tests | Testing | `pyproject.toml` |
+| 16 | Grafana Stack (Loki + Tempo) | Observabilité | Déploiement Docker |
+| 17 | Polars 1.x pour analytics | Data | Remplacement pandas (Forge) |
+| 18 | GeoPandas 1.0 + DuckDB Spatial | Géospatial | Upgrade |
+| 19 | BD Forêt v3 + Sentinel-2 | Données | Pipeline ingestion |
+| 20 | NeuralProphet dans Climate Engine | Moteurs | Intégration |
+
+> Sources vérifiées dans `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` §14.
+> Actions différées (Phase 3-4+) : voir RFC-0031 §2.4.
+
+#### Partenariats stratégiques recommandés
+
+| Partenaire | Type | Apport |
+|---|---|---|
+| IGN | Données | BD Forêt v3, LiDAR HD, Géoportail API |
+| INRAE | Science | Modèles croissance, CAPSIS, validation |
+| CIRAD | Science | CAPSIS, 25+ modèles, IN-SYLVA |
+| CNPF | Terrain | BioClimSol, ClimEssences, réseau propriétaires |
+| ONF | Terrain | Forêt 4.0, applications mobiles |
+| PlantNet | API | Identification 77k espèces |
+| Arboreal | Techno | AR measurements smartphone |
+| Dryad Networks | Techno | Capteurs incendie LoRaWAN |
+| CTrees | Données | Carbone global 1-hectare |
+| GFW (WRI) | Données | Alerts déforestation temps réel |
 
 ---
 

@@ -22,7 +22,7 @@ GSIE exige la traçabilité de toutes les actions structurantes. Cette skill exp
 
 ```bash
 # Session courante
-devin --export "A:\Quintessences\22_PROJECT_MEMORY\sessions\session_[date]_[sujet].atif"
+devin --export "<RACINE_PROJET>\22_PROJECT_MEMORY\sessions\session_[date]_[sujet].atif"
 
 # Session spécifique (via Devin MCP devin_session_interact)
 # Récupérer les messages et events de la session

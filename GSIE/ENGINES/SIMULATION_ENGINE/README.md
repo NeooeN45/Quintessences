@@ -19,3 +19,50 @@ Moteur de **simulation de scénarios**.
 - Chaque scénario est explicable (CON-004)
 
 > Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir
+
+## Contrat d'interface
+
+> Note : le code source (`GSIE/API/src/gsie_api/engines/simulation/`)
+> est livré et actif (`PROJECT_MEMORY.md`) ; cette section documente le
+> contrat effectif malgré la mention ci-dessus.
+
+### 1. Endpoints API
+
+Source : `GSIE/API/src/gsie_api/engines/simulation/router.py`
+
+| Méthode | Route | Auth | Rate limiting | Description |
+|---|---|---|---|---|
+| GET | `/simulation/status` | aucune | — | Statut du moteur (`router.py:32`) |
+| GET | `/simulation/version` | aucune | — | Version et backend (`router.py:43`) |
+| POST | `/simulation/run` | `engine:write` | `10/minute` | Simule un scénario d'intervention sur un horizon donné (`router.py:56`) |
+
+### 2. Schémas d'entrée/sortie
+
+Source : `GSIE/API/src/gsie_api/engines/simulation/schemas.py`
+
+| Schéma | Rôle | Champs clés |
+|---|---|---|
+| `ScenarioSimulation` | Entrée de `/simulation/run` | `source_diagnostic`, `intervention` (`InterventionSpec`), `horizon` (ex. 5y/10y/30y), `climate_scenario` (AROME/ERA5/RCP) |
+| `InterventionSpec` | Sous-objet | `type_intervention` (eclaircie/plantation/coupe_rase/protection), `parametres` |
+| `TimedProjection` | Élément de projection temporelle | état du système à un instant donné |
+| `SimulationResult` | Sortie de `/simulation/run` | `sources` (non vide — CON-005), `assumptions` (non vide — CON-004), `alternatives` (comparaison — CON-001), `confidence_level` (`ConfidenceLevel`, qualitatif en v1) |
+
+### 3. Exceptions
+
+Source : `GSIE/API/src/gsie_api/engines/simulation/engine.py`
+
+| Exception | Condition de levée | Traduction HTTP |
+|---|---|---|
+| `SimulationEngineError` | Horizon ou intervention invalide | 400 |
+
+### 4. Dépendances
+
+- **Amont (chaîne principale)** : `FOREST_DYNAMICS_ENGINE`,
+  `CLIMATE_ENGINE`, `RECOMMENDATION_ENGINE`.
+- **Aval** : le forestier/COS (aide à la décision) — les résultats sont
+  des scénarios, jamais des décisions (CON-001).
+- **Clients API externes** : aucun direct (référence à un scénario
+  climatique externe via `climate_scenario`, non résolu par le moteur).
+- **Persistance** : PostgreSQL.
+- **Évolution prévue** : quantification de `ConfidenceLevel` via
+  analyse de sensibilité (SALib — Sobol/Morris, §8).

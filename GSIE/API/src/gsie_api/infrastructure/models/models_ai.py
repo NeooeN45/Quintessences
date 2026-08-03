@@ -183,6 +183,22 @@ class DistributionModel(Base, TimestampMixin):
     rights_statement_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
+    # Resolution native de la source (NOMENCLATURE_SOURCES.md §8.1).
+    # `scale_context` porte deja `level`, `extent_m2` (couverture) et
+    # `grain_m2` (resolution) : le rattacher ici evite de dupliquer la
+    # resolution ailleurs, ce qui creerait deux sources de verite — faute
+    # ecartee par DEC-000038 pour les regles.
+    # Nullable : une distribution documentaire n'a pas de grain.
+    scale_context_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("resource.id"),
+        nullable=True,
+        index=True,
+        # `comment=` et non `doc=` : la migration pose un COMMENT ON COLUMN,
+        # que PostgreSQL stocke. `doc` reste cote Python et laisserait le
+        # modele diverger de la base.
+        comment="Resolution native de la source, via scale_context.grain_m2",
+    )
 
 
 @register_type("feature")

@@ -62,9 +62,10 @@
 
 | ID | Nom | Producteur | Résolution | Licence | Moteurs |
 |---|---|---|---|---|---|
-| **DS-022** | Prométhée (incendies méditerranéens) | Entente Forêt Méditerranéenne | Polygone | Accord | Ignis, Simulation, Diagnostic |
+| **DS-022** | ~~Prométhée~~ (obsolète — fusionné dans BDIFF janv. 2023) | ~~Entente Forêt Méditerranéenne~~ | ~~Polygone~~ | ~~Accord~~ | ~~Ignis, Simulation, Diagnostic~~ — **voir DS-022b BDIFF** |
 | **DS-023** | EFFIS (système européen feux) | JRC (Commission européenne) | 250 m-20 m | CC-BY 4.0 | Ignis, Simulation |
 | **DS-024** | MODIS/FIRMS (détection active fire) | NASA | 375 m-1 km / quasi temps réel | Domaine public | Ignis, Simulation |
+| **DS-022b** | BDIFF (Base de Données des Incendies de Forêts de France) | MTE-MFB | Polygone (1973-présent) | Open data (Licence Ouverte 2.0) | Ignis, Simulation, Diagnostic — **remplace Prométhée (DS-022) depuis janv. 2023** |
 
 ### Catégorie G — Biomasse spatiale
 
@@ -556,19 +557,198 @@
 |---|---|---|---|---|
 | **BD TOPO Express** (édition hebdomadaire) | IGN | Hebdomadaire (depuis mai 2025) | Licence Ouverte 2.0 | GIS, Ignis (enjeux temps réel) |
 
+### 6.9ter CONTRE-AUDIT DE L'AUDIT D'URL — Architecte, 30/07/2026
+
+> `GSIE-PROMPT-0026` a teste **232 URL** de l'inventaire existant. Le rapport
+> brut annonce 208 vivantes (89,7 %), 11 mortes, 7 indeterminees, 6 a verifier.
+> **Le taux de mortalite est surestime : neuf verdicts reposent sur des codes
+> HTTP qui ne signifient pas la mort d'une ressource.**
+
+| Code | Ce qu'il signifie reellement |
+|---|---|
+| `405 Method Not Allowed` | La methode employee — `HEAD` — n'est pas autorisee. **Une API STAC repond en `GET`** |
+| `401 Unauthorized` | La ressource existe et exige une authentification |
+| `403 Forbidden` | Refus anti-robot, souvent contournable par l'API du service |
+
+**Deux verifications independantes, les plus consequentes** — ce sont les
+catalogues sur lesquels repose le plan raster de `RFC-0029` §9.3 :
+
+| Ressource | Verdict de l'outil | Verdict verifie |
+|---|---|---|
+| `planetarycomputer.microsoft.com/api/stac/v1` | non vivante (405) | **VIVANTE** — STAC 1.0.0 valide, 9 liens, recherche `GET` et `POST` |
+| `stac.dataspace.copernicus.eu/v1/` | non vivante (405) | **VIVANTE** — STAC 1.0.0 valide, conformite OGC declaree |
+
+Les neuf entrees concernees sont : les quatre points STAC Copernicus, le STAC
+Planetary Computer, `data.geopf.fr/extraction` (401, authentification), et
+trois pages en 403 anti-robot dont `gbif.org` — dont l'API `api.gbif.org`
+fonctionne, verifiee.
+
+**Taux de peremption reel** : au plus **15 sur 232, soit 6,5 %**, et non 10,3 %.
+Les morts averees restent significatives — `tela-botanica.org/bdnff/` rend un
+`410 Gone` explicite, `gissol.fr/programme/bdat/bdat.php` un 404 — mais
+l'inventaire est plus sain que le rapport brut ne le laisse croire.
+
+**Lecon de methode, pour toute revrification future.** Un audit d'URL qui
+emploie `HEAD` classe morts des services parfaitement vivants. La verification
+doit employer la methode que le service attend, et **un code HTTP n'est pas un
+verdict** : `405`, `401` et `403` disent que la requete etait mal formee, non
+authentifiee ou refusee au robot — jamais que la ressource a disparu.
+
+---
+
+### 6.9bis CONTRE-AUDIT DES SIGNALEMENTS — Architecte, 30/07/2026
+
+> Neuf des treize signalements critiques de `GSIE-PROMPT-0025` ont été
+> revérifiés indépendamment. **Huit exacts, souvent à la date près. Un seul
+> défaut.**
+
+| # | Signalement | Verdict du contre-audit |
+|---|---|---|
+| 1 | ERA5T devient payant | **NON CORROBORÉ** — le CDS, l'ADS et l'EWDS sont passés sous CC-BY 4.0 le 02/07/2025, soit l'inverse d'un péage |
+| 2 | `donneespubliques.meteofrance.fr` en fermeture | Confirmé — le portail l'annonce, remplaçants exacts |
+| 3 | GIS Sol — arrêt bases 18/02/2026 | Confirmé, date exacte — 7 applications touchées, aucune date de retour |
+| 4 | Hub'Eau « Indicateurs » décommissionnée | Confirmé, date exacte — 10/09/2026, annoncé le 06/07/2026 |
+| 5 | INPN — cyberattaque MNHN | Confirmé, dates exactes — 26/07/2025 → 22/07/2026 |
+| 6 | GBIF web en 403 | Confirmé, **et contournement validé** — `api.gbif.org` répond en JSON |
+| 7 | Prométhée fusionnée dans BDIFF | Confirmé — janvier 2023 |
+| 9 | BD Haie — URL sans « s » | Confirmé — `bd-haie`, V2 mars 2024, Licence Ouverte 2.0 |
+| 10 | Gallica 403 anti-bot | Confirmé |
+| 8, 11, 12, 13 | Convention, SPA, couverture OM, hétérogénéité DROM | **Non vérifiés** — caractérisations, non des faits binaires ; aucun ne conditionne une ingestion immédiate |
+
+**Règle qui s'en dégage.** L'unique défaut porte sur une **licence** — le champ
+dont `NOMENCLATURE_SOURCES.md` dit que « l'oubli refuse, autoriser est un
+acte ». Une affirmation de licence ne s'accepte jamais sur parole, quelle que
+soit la fiabilité du reste du travail.
+
+**Point ouvert — écosystème INPN.** La cyberattaque a rendu indisponibles
+DEPOBIO, ZNIEFF, GINCO/Géonature, OpenObs, NatureFrance, DeterminObs et
+**TAXREF**, ainsi que toutes les API associées. Le MNHN a décidé de **ne pas
+restaurer l'ancien système**, une refonte étant engagée : les URL et API ont
+probablement changé.
+
+TAXREF v18 figure pourtant parmi les 26 sources vérifiées. À contrôler avant
+de le compter disponible — et cela concerne **toutes** les entrées existantes
+citant l'écosystème INPN, pas seulement celles signalées.
+
+---
+
+### 6.10 NOUVELLES SOURCES VÉRIFIÉES — GSIE-PROMPT-0025 (juillet 2026)
+
+> 26 nouvelles sources vérifiées par webfetch le 30/07/2026. Détails YAML dans `_staging_0025/`.
+> Types source RFC-0029 §11.3 : `sortie_de_modele`, `capteur_instrumente`, `capteur_participatif`, `donnee_synthetique`.
+
+#### 6.10.1 Climat — sources complémentaires
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **ECMWF Open Data** (IFS + AIFS) | ECMWF | sortie_de_modele | Open (CC-BY 4.0) | Climate, Simulation, Ignis | https://data.ecmwf.int/forecasts/ |
+| **meteo.data.gouv.fr** | Météo-France + data.gouv.fr | referentiel_officiel | Licence Ouverte 2.0 | Climate, Correlation, Forest Dynamics | https://meteo.data.gouv.fr/ |
+
+**Alertes climatiques** :
+- **ERA5T « devient payant »** — ⚠️ **NON CORROBORÉ, à vérifier avant de l'appliquer.**
+  Contre-audit Architecte du 30/07/2026 : aucune source ne confirme cette
+  annonce, et l'élément établi va dans le sens contraire — depuis le
+  **2 juillet 2025**, le Climate Data Store, l'Atmosphere Data Store et
+  l'EWDS sont passés sous **CC-BY 4.0**, remplaçant la « Licence to use
+  Copernicus Products ». C'est une libéralisation.
+  Ne pas budgéter ni écarter ERA5T sur cette base : demander confirmation
+  au forum ECMWF avant toute décision d'ingestion.
+- **donneespubliques.meteofrance.fr en fermeture** — migrer vers portail-api.meteofrance.fr ou meteo.data.gouv.fr.
+
+#### 6.10.2 Hydro — sources complémentaires
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **Hub'Eau** (13 APIs REST eau) | OFB + BRGM | referentiel_officiel | Licence Ouverte 2.0 | Hydro, GIS, Diagnostic, Knowledge | https://hubeau.eaufrance.fr/ |
+| **HydroPortail v3.5.4** | OFB + MTE | capteur_instrumente | Licence Ouverte 2.0 | Hydro, GIS, Simulation, Forest Dynamics | https://hydro.eaufrance.fr/ |
+
+**Alerte hydro** : API Indicateurs des services Hub'Eau décommissionnée 10/09/2026 — ne pas intégrer.
+
+#### 6.10.3 Biodiversité — référentiels et gateways européens
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **TAXREF v18** | PatriNat (OFB-CNRS-MNHN-IRD) | referentiel_officiel | Licence Ouverte 2.0 | Botanical, Knowledge, Correlation, Diagnostic | https://taxref.mnhn.fr/taxref-web/ |
+| **BISE** (Biodiversity IS Europe) | EEA + EC | referentiel_officiel | Open | Botanical, Knowledge, Correlation, Diagnostic | https://biodiversity.europa.eu/ |
+| **FISE** (Forest IS Europe) | EEA + EC | referentiel_officiel | Open | Forest Dynamics, Knowledge, GIS, Correlation | https://forest.eea.europa.eu/ |
+| **SINP** | PatriNat + MTE | referentiel_officiel | Licence Ouverte 2.0 | Botanical, Knowledge, Correlation, Diagnostic | https://sinp.naturefrance.fr/ |
+
+**Alerte biodiversité** : INPN — cyberattaque MNHN 26/07/2025 → 22/07/2026 (1 an hors service). Restauration partielle 21/07/2026. WMS/WFS à vérifier.
+
+#### 6.10.4 Télédétection — catalogues STAC alternatifs
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **Element84 Earth Search** (STAC AWS) | Element84 | capteur_instrumente | CC-BY 4.0 (Sentinel) / domaine public (Landsat) | GIS, Forest Dynamics, Diagnostic, Ignis | https://earth-search.aws.element84.com/v1 |
+| **Microsoft Planetary Computer** (STAC Azure) | Microsoft AI for Earth | capteur_instrumente | Variable par collection | GIS, Forest Dynamics, Climate, Diagnostic, Ignis | https://planetarycomputer.microsoft.com/api/stac/v1 |
+| **ESA Earth Online** | ESA | referentiel_officiel | Variable par mission | GIS, Forest Dynamics, Knowledge | https://earth.esa.int/eogateway |
+
+#### 6.10.5 Réglementaire, zonages, foncier
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **Géorisques** | BRGM + MTE | referentiel_officiel | Licence Ouverte 2.0 | GIS, Diagnostic, Ignis, Recommendation | https://georisques.gouv.fr/ |
+| **Géoportail de l'Urbanisme** (PLU/POS/CC/PSMV) | IGN + MTE | referentiel_officiel | Licence Ouverte 2.0 | GIS, Recommendation, Knowledge | https://www.geoportail-urbanisme.gouv.fr/ |
+| **Forêts de protection** (massifs classés) | IGN + MTE | referentiel_officiel | Licence Ouverte 2.0 | GIS, Knowledge, Recommendation, Forest Dynamics | https://www.data.gouv.fr/datasets/forets-de-protection |
+| **Forêts régime forestier** (soumises code forestier) | IGN + ONF | referentiel_officiel | Licence Ouverte 2.0 | GIS, Knowledge, Forest Dynamics, Recommendation | https://www.data.gouv.fr/datasets/forets-soumises-au-regime-forestier |
+| **BD Haie** (haies linéaires bocagières V2 mars 2024) | OFB + IGN | capteur_instrumente | Licence Ouverte 2.0 | GIS, Forest Dynamics, Diagnostic, Knowledge | https://www.data.gouv.fr/datasets/bd-haie |
+
+**Note BD Haie** : URL correcte = `bd-haie` (sans "s"). V2 mars 2024, mise à jour RPG + MNS corrélation images 2020-2022.
+
+#### 6.10.6 Archives historiques et cartographie ancienne
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **Remonter le Temps** (IGN) | IGN | referentiel_officiel | Licence Ouverte 2.0 | Knowledge, Correlation, Forest Dynamics, GIS | https://remonterletemps.ign.fr/ |
+| **Carte de Cassini** (XVIIIe siècle) | IGN (patrimonial) | referentiel_officiel | Licence Ouverte 2.0 | Knowledge, Correlation, Forest Dynamics | https://www.geoportail.gouv.fr/donnees/carte-cassini |
+| **Carte d'État-Major** (1820-1866) | IGN (patrimonial) | referentiel_officiel | Licence Ouverte 2.0 | Knowledge, Correlation, Forest Dynamics, GIS | https://www.data.gouv.fr/datasets/scan-etat-major-r-40k-1 |
+| **Gallica** (BnF) | BnF | referentiel_officiel | Domaine public + droits variables | Knowledge, Correlation | https://gallica.bnf.fr/ |
+
+**Note archives** : Gallica 403 anti-bot — utiliser API IIIF. Remonter le Temps SPA — WMS via `wxs.ign.fr` (clé API).
+
+#### 6.10.7 Outre-mer et transfrontalier
+
+| Source | Producteur | Type | Licence | Moteurs | URL |
+|---|---|---|---|---|---|
+| **GéoGuyane** (portail géographique) | DGTM + CTG | referentiel_officiel | Licence Ouverte 2.0 | GIS, Forest Dynamics, Diagnostic, Knowledge | https://www.geoguyane.fr/ |
+| **Guyane-SIG** (PTIG) | Guyane-SIG (association) | referentiel_officiel | Variable (majorité LO 2.0) | GIS, Forest Dynamics, Diagnostic, Knowledge | https://www.guyane-sig.fr/ |
+| **Parc amazonien de Guyane** (PAG) | PAG + OFB | capteur_instrumente | Variable (données publiques) | Forest Dynamics, Botanical, Knowledge, Diagnostic | https://www.parc-amazonien-guyane.fr/ |
+| **CARTOS VEGETATION DROM** | IGN | capteur_instrumente | Licence Ouverte 2.0 | Forest Dynamics, Botanical, Diagnostic, Knowledge | https://www.data.gouv.fr/datasets/cartos-vegetation-drom |
+
+**Note outre-mer** : BD Ortho ne couvre pas intérieur Guyane, Polynésie, NC, Wallis-et-Futuna. CARTOS VEGETATION : nomenclatures propres à chaque DROM, à harmoniser.
+
+#### 6.10.8 Sources à vérifier (34 entrées — non encore vérifiées)
+
+> 34 sources identifiées mais URL non testée ou statut incertain. Détail dans `_staging_0025/{A-I}_*.md` sections "À VÉRIFIER".
+
+| Domaine | Nombre | Exemples |
+|---|---|---|
+| A — Forestier | 3 | BD Forêt v3, ONF Open Data nouveau, RPG |
+| B — Climat | 3 | ADS, CEMS EWDS, SWI endpoint |
+| C — Sols/hydro | 4 | ADES, GlobalSoilMap, RMQS, cartes pédo départementales |
+| D — Biodiversité | 3 | HabRef, CardObs/OpenObs, EUNIS |
+| E — Télédétection | 4 | Sentinel Hub, PEPS/GEODES, USGS EarthExplorer, Google Earth Engine |
+| F — Incendie | 4 | Atlas DFCI, Météo des forêts, Copernicus EMS Rapid Mapping |
+| G — Réglementaire | 4 | PPRIF, RPG, BD Forêt v3, SER |
+| H — Archives | 4 | Archives nationales, SHOM cartes anciennes, photos 1945-1965, cadastre napoléonien |
+| I — Outre-mer | 5 | Portails SIG autres DROM, GeoNature Guyane, SEAS Guyane, NC/Polynésie, transfrontalier |
+| **Total à vérifier** | **34** | |
+
 ---
 
 ## 7. Synthèse — comptage total
 
 | Catégorie | Nombre de sources |
 |---|---|
-| Datasets catalogués (DS-001 à DS-029) | 29 |
+| Datasets catalogués (DS-001 à DS-029 + DS-022b BDIFF) | 30 |
 | Sources additionnelles Ignis (topographie, météo, satellite, feux, DFCI, capteurs, IA) | ~45 |
 | Sources scientifiques (Sourcing Plan, publications, ouvrages, référentiels) | ~64 |
 | Sources spécifiques apps (Hydro: BD TOPAGE, Sandre, SHOM ; Hub: Cesium, Google 3D Tiles ; BRGM) | ~7 |
 | Capteurs drone (RGB, thermique, atmosphériques, GPS/IMU) | 4 |
-| **NOUVELLES sources (recherche juillet 2026)** | **~30** |
-| **Total estimé** | **~179 sources distinctes** |
+| Nouvelles sources (recherche juillet 2026, §6.1-6.9) | ~30 |
+| **NOUVELLES sources vérifiées GSIE-PROMPT-0025 (§6.10.1-6.10.7)** | **+26** |
+| **Sources à vérifier (§6.10.8)** | **+34** |
+| **Total estimé** | **~205 sources vérifiées + 34 à vérifier = ~239 potentielles** |
 
 ### Détail des nouvelles sources par catégorie
 
@@ -582,6 +762,38 @@
 | Biodiversité (EuropaBON, FloraVeg.EU, EMODnet, LifeWatch/BMD, EVA, Euro+Med) | 6 |
 | Hydrographie (BD TOPAGE 2025, SHOM) | 2 |
 | Infrastructure (BD TOPO Express) | 1 |
+| **Sous-total §6.1-6.9** | **35** |
+
+### Détail des nouvelles sources vérifiées GSIE-PROMPT-0025 (§6.10)
+
+| Catégorie | Nombre |
+|---|---|
+| Climat (ECMWF Open Data, meteo.data.gouv.fr) | 2 |
+| Hydro (Hub'Eau, HydroPortail) | 2 |
+| Biodiversité (TAXREF v18, BISE, FISE, SINP) | 4 |
+| Télédétection (Element84, Planetary Computer, ESA Earth Online) | 3 |
+| Réglementaire (Géorisques, GPU, Forêts protection, Forêts régime, BD Haie) | 5 |
+| Archives (Remonter le Temps, Cassini, Etat-Major, Gallica) | 4 |
+| Outre-mer (GéoGuyane, Guyane-SIG, PAG, CARTOS VEGETATION DROM) | 4 |
+| Incendie (BDIFF — déjà DS-022b, confirmé) | 0 (déjà compté) |
+| Corrections (DS-022 Prométhée → BDIFF, INPN statut, ERA5T licence, CDSE STAC) | 0 (corrections) |
+| **Sous-total §6.10 vérifiées** | **26** (dont 1 déjà compté DS-022b) |
+| Sources à vérifier (34 entrées) | 34 |
+| **Total §6.10** | **60** |
+
+### Bilan GSIE-PROMPT-0025
+
+| Métrique | Valeur |
+|---|---|
+| Domaines traités | 9 (A-I) |
+| Entrées vérifiées (YAML) | 48 |
+| URLs testées | 68 (57 initiales + 11 retests Phase 6) |
+| Taux de succès URL | 82% (10 échecs, tous confirmés par recherche) |
+| Nouvelles sources ajoutées à l'inventaire | 26 |
+| Sources à vérifier identifiées | 34 |
+| Corrections critiques | 5 (Prométhée, INPN, ERA5T, donneespubliques, CDSE STAC) |
+| Signalements | 17 (13 critiques + 4 information) |
+| Gain net inventaire | +14,5% vérifiées, +33% potentiel |
 
 ---
 

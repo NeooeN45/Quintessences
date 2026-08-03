@@ -221,6 +221,7 @@ def _diagnostic(
         atouts=atouts,
         risques=risques,
         confiance=confiance,
+        etat_global_evidence_level=evidence_level_plancher,
         evidence_level_plancher=evidence_level_plancher,
         conclusions_source=conclusions_source,
         date_diagnostic=datetime(2026, 7, 25, 12, 0, 0, tzinfo=UTC),
@@ -385,6 +386,7 @@ class TestValidationCoherente:
             etat_global=EtatGlobal.sain,
             atouts=[_element()],
             confiance=0.75,
+            etat_global_evidence_level=EvidenceLevel.B,
             evidence_level_plancher=EvidenceLevel.B,
             conclusions_source=[uuid4()],
             date_diagnostic=datetime(2026, 7, 25, 12, 0, 0, tzinfo=UTC),
@@ -674,6 +676,14 @@ class TestPasDeChampDecision:
             "station_id",
             "type_diagnostic",
             "etat_global",
+            # Ajoute apres revue : le niveau de preuve de l'etat global etait
+            # exige a l'entree (`EtatGlobalDeclare`) puis jamais lu, et donc
+            # exclu du plancher. Un diagnostic pouvait annoncer un plancher B
+            # alors que son etat global — l'affirmation qui oriente la
+            # recommandation — reposait sur une observation isolee F. Ce champ
+            # ne prescrit aucune action : il qualifie une affirmation deja
+            # presente, ce que `GSIE-CON-002` demande.
+            "etat_global_evidence_level",
             "contraintes",
             "atouts",
             "risques",

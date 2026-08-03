@@ -81,6 +81,6 @@ async def validation_validate(
     Pydantic (par exemple une incohérence interne).
     """
     try:
-        return await ValidationEngine().validate(request_body)
+        return await ValidationEngine(session).validate(request_body)
     except ValidationEngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

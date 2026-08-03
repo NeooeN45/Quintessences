@@ -356,5 +356,5 @@ class TestStatsWithMock:
         stats = await engine.stats()
 
         assert stats["total_objects"] == 2
-        assert stats["type_concept"] == 1
-        assert stats["type_regle"] == 1
+        assert stats["types"]["concept"] == 1
+        assert stats["types"]["regle"] == 1

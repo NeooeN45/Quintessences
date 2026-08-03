@@ -1,0 +1,1341 @@
+{
+  "nodes": [
+    {
+      "id": "titre-GSIE-FND",
+      "type": "text",
+      "text": "## Fondation",
+      "x": -400,
+      "y": 20,
+      "width": 280,
+      "height": 70,
+      "color": "6"
+    },
+    {
+      "id": "GSIE-FND-001",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-FND-001.md",
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 110,
+      "color": "6"
+    },
+    {
+      "id": "GSIE-FND-002",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-FND-002.md",
+      "x": 340,
+      "y": 0,
+      "width": 300,
+      "height": 110,
+      "color": "6"
+    },
+    {
+      "id": "titre-GSIE-CON",
+      "type": "text",
+      "text": "## Constitution",
+      "x": -400,
+      "y": 320,
+      "width": 280,
+      "height": 70,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-005",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-005.md",
+      "x": 0,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-001",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-001.md",
+      "x": 340,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-002",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-002.md",
+      "x": 680,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-004",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-004.md",
+      "x": 1020,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-000",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-000.md",
+      "x": 1360,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-007",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-007.md",
+      "x": 1700,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-010",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-010.md",
+      "x": 2040,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "GSIE-CON-003",
+      "type": "file",
+      "file": "00_CONSTITUTION/GSIE-CON-003.md",
+      "x": 2380,
+      "y": 300,
+      "width": 300,
+      "height": 110,
+      "color": "1"
+    },
+    {
+      "id": "titre-RFC",
+      "type": "text",
+      "text": "## RFC — propositions d'evolution",
+      "x": -400,
+      "y": 620,
+      "width": 280,
+      "height": 70,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0004",
+      "type": "file",
+      "file": "02_RFC/RFC-0004.md",
+      "x": 0,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0003",
+      "type": "file",
+      "file": "02_RFC/RFC-0003.md",
+      "x": 340,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0024",
+      "type": "file",
+      "file": "02_RFC/RFC-0024-autonomie-graduee-selon-le-risque.md",
+      "x": 680,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0011",
+      "type": "file",
+      "file": "02_RFC/RFC-0011-metamodele-encyclopedie-v6.1.md",
+      "x": 1020,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0023",
+      "type": "file",
+      "file": "02_RFC/RFC-0023-alignement-identite-perimetre-propriete-intellectuelle.md",
+      "x": 1360,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0016",
+      "type": "file",
+      "file": "02_RFC/RFC-0016-schema-forestier-specialise.md",
+      "x": 1700,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0018",
+      "type": "file",
+      "file": "02_RFC/RFC-0018-identification-botanique-plantnet.md",
+      "x": 2040,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "RFC-0014",
+      "type": "file",
+      "file": "02_RFC/RFC-0014-gouvernance-scientifique-anti-invention.md",
+      "x": 2380,
+      "y": 600,
+      "width": 300,
+      "height": 110,
+      "color": "2"
+    },
+    {
+      "id": "titre-GSIE-DIR",
+      "type": "text",
+      "text": "## Directives",
+      "x": -400,
+      "y": 920,
+      "width": 280,
+      "height": 70,
+      "color": "3"
+    },
+    {
+      "id": "GSIE-DIR-0008",
+      "type": "file",
+      "file": "01_DIRECTIVES/ACTIVE/GSIE-DIR-0008.md",
+      "x": 0,
+      "y": 900,
+      "width": 300,
+      "height": 110,
+      "color": "3"
+    },
+    {
+      "id": "GSIE-DIR-0007",
+      "type": "file",
+      "file": "01_DIRECTIVES/ACTIVE/GSIE-DIR-0007.md",
+      "x": 340,
+      "y": 900,
+      "width": 300,
+      "height": 110,
+      "color": "3"
+    },
+    {
+      "id": "GSIE-DIR-0005",
+      "type": "file",
+      "file": "01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md",
+      "x": 680,
+      "y": 900,
+      "width": 300,
+      "height": 110,
+      "color": "3"
+    },
+    {
+      "id": "GSIE-DIR-0006",
+      "type": "file",
+      "file": "01_DIRECTIVES/ACTIVE/GSIE-DIR-0006.md",
+      "x": 1020,
+      "y": 900,
+      "width": 300,
+      "height": 110,
+      "color": "3"
+    },
+    {
+      "id": "titre-DEC",
+      "type": "text",
+      "text": "## Decisions tracees",
+      "x": -400,
+      "y": 1220,
+      "width": 280,
+      "height": 70,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000022",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000022.md",
+      "x": 0,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000003",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000003.md",
+      "x": 340,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000019",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000019.md",
+      "x": 680,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000010",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000010.md",
+      "x": 1020,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000012",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000012.md",
+      "x": 1360,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "DEC-000004",
+      "type": "file",
+      "file": "03_DECISIONS/DEC-000004.md",
+      "x": 1700,
+      "y": 1200,
+      "width": 300,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "titre-ADR",
+      "type": "text",
+      "text": "## Architecture",
+      "x": -400,
+      "y": 1520,
+      "width": 280,
+      "height": 70,
+      "color": "5"
+    },
+    {
+      "id": "ADR-001",
+      "type": "file",
+      "file": "GSIE/ARCHITECTURE/ADR-001-racine-resource.md",
+      "x": 0,
+      "y": 1500,
+      "width": 300,
+      "height": 110,
+      "color": "5"
+    },
+    {
+      "id": "ADR-009",
+      "type": "file",
+      "file": "GSIE/ARCHITECTURE/ADR-009-garde-fou-anti-invention.md",
+      "x": 340,
+      "y": 1500,
+      "width": 300,
+      "height": 110,
+      "color": "5"
+    },
+    {
+      "id": "ADR-002",
+      "type": "file",
+      "file": "GSIE/ARCHITECTURE/ADR-002-pg-temporal.md",
+      "x": 680,
+      "y": 1500,
+      "width": 300,
+      "height": 110,
+      "color": "5"
+    },
+    {
+      "id": "ADR-004",
+      "type": "file",
+      "file": "GSIE/ARCHITECTURE/ADR-004-migration-schema.md",
+      "x": 1020,
+      "y": 1500,
+      "width": 300,
+      "height": 110,
+      "color": "5"
+    },
+    {
+      "id": "ADR-006",
+      "type": "file",
+      "file": "GSIE/ARCHITECTURE/ADR-006-object-storage.md",
+      "x": 1360,
+      "y": 1500,
+      "width": 300,
+      "height": 110,
+      "color": "5"
+    }
+  ],
+  "edges": [
+    {
+      "id": "a0",
+      "fromNode": "ADR-001",
+      "fromSide": "top",
+      "toNode": "ADR-006",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a1",
+      "fromNode": "ADR-001",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a2",
+      "fromNode": "ADR-001",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a3",
+      "fromNode": "ADR-002",
+      "fromSide": "top",
+      "toNode": "ADR-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a5",
+      "fromNode": "ADR-002",
+      "fromSide": "top",
+      "toNode": "ADR-006",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a6",
+      "fromNode": "ADR-002",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a7",
+      "fromNode": "ADR-002",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a12",
+      "fromNode": "ADR-004",
+      "fromSide": "top",
+      "toNode": "ADR-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a13",
+      "fromNode": "ADR-004",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a15",
+      "fromNode": "ADR-004",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a21",
+      "fromNode": "ADR-006",
+      "fromSide": "top",
+      "toNode": "ADR-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a22",
+      "fromNode": "ADR-006",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a23",
+      "fromNode": "ADR-006",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a30",
+      "fromNode": "ADR-009",
+      "fromSide": "top",
+      "toNode": "ADR-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a31",
+      "fromNode": "ADR-009",
+      "fromSide": "top",
+      "toNode": "ADR-006",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a33",
+      "fromNode": "ADR-009",
+      "fromSide": "top",
+      "toNode": "RFC-0014",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a38",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a39",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a40",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a41",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a43",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "RFC-0003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a44",
+      "fromNode": "DEC-000003",
+      "fromSide": "top",
+      "toNode": "RFC-0004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a46",
+      "fromNode": "DEC-000004",
+      "fromSide": "top",
+      "toNode": "DEC-000003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a48",
+      "fromNode": "DEC-000004",
+      "fromSide": "top",
+      "toNode": "RFC-0004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a85",
+      "fromNode": "DEC-000010",
+      "fromSide": "bottom",
+      "toNode": "ADR-001",
+      "toSide": "top"
+    },
+    {
+      "id": "a86",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "DEC-000003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a89",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a90",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a91",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a92",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a93",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a94",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a95",
+      "fromNode": "DEC-000010",
+      "fromSide": "top",
+      "toNode": "RFC-0004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a104",
+      "fromNode": "DEC-000012",
+      "fromSide": "bottom",
+      "toNode": "ADR-001",
+      "toSide": "top"
+    },
+    {
+      "id": "a105",
+      "fromNode": "DEC-000012",
+      "fromSide": "bottom",
+      "toNode": "ADR-006",
+      "toSide": "top"
+    },
+    {
+      "id": "a108",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a109",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a110",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a111",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a112",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a113",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a114",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "GSIE-DIR-0008",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a115",
+      "fromNode": "DEC-000012",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a155",
+      "fromNode": "DEC-000019",
+      "fromSide": "top",
+      "toNode": "DEC-000004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a157",
+      "fromNode": "DEC-000019",
+      "fromSide": "top",
+      "toNode": "DEC-000022",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a159",
+      "fromNode": "DEC-000019",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a167",
+      "fromNode": "DEC-000022",
+      "fromSide": "bottom",
+      "toNode": "ADR-001",
+      "toSide": "top"
+    },
+    {
+      "id": "a168",
+      "fromNode": "DEC-000022",
+      "fromSide": "bottom",
+      "toNode": "ADR-002",
+      "toSide": "top"
+    },
+    {
+      "id": "a170",
+      "fromNode": "DEC-000022",
+      "fromSide": "bottom",
+      "toNode": "ADR-004",
+      "toSide": "top"
+    },
+    {
+      "id": "a172",
+      "fromNode": "DEC-000022",
+      "fromSide": "bottom",
+      "toNode": "ADR-006",
+      "toSide": "top"
+    },
+    {
+      "id": "a173",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "DEC-000012",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a174",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "DEC-000019",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a177",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a178",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a179",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a180",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a181",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a182",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "GSIE-DIR-0008",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a183",
+      "fromNode": "DEC-000022",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a248",
+      "fromNode": "GSIE-CON-001",
+      "fromSide": "top",
+      "toNode": "GSIE-FND-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a250",
+      "fromNode": "GSIE-CON-002",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a251",
+      "fromNode": "GSIE-CON-002",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a255",
+      "fromNode": "GSIE-CON-004",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a257",
+      "fromNode": "GSIE-CON-005",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a258",
+      "fromNode": "GSIE-CON-005",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a262",
+      "fromNode": "GSIE-CON-007",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a270",
+      "fromNode": "GSIE-CON-010",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a291",
+      "fromNode": "GSIE-DIR-0005",
+      "fromSide": "bottom",
+      "toNode": "DEC-000003",
+      "toSide": "top"
+    },
+    {
+      "id": "a293",
+      "fromNode": "GSIE-DIR-0005",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a294",
+      "fromNode": "GSIE-DIR-0005",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a295",
+      "fromNode": "GSIE-DIR-0005",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a296",
+      "fromNode": "GSIE-DIR-0005",
+      "fromSide": "top",
+      "toNode": "RFC-0004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a297",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "bottom",
+      "toNode": "DEC-000003",
+      "toSide": "top"
+    },
+    {
+      "id": "a301",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a302",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a303",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a304",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a305",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a306",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a307",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "GSIE-DIR-0005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a308",
+      "fromNode": "GSIE-DIR-0006",
+      "fromSide": "top",
+      "toNode": "RFC-0004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a309",
+      "fromNode": "GSIE-DIR-0007",
+      "fromSide": "bottom",
+      "toNode": "DEC-000012",
+      "toSide": "top"
+    },
+    {
+      "id": "a313",
+      "fromNode": "GSIE-DIR-0008",
+      "fromSide": "bottom",
+      "toNode": "DEC-000022",
+      "toSide": "top"
+    },
+    {
+      "id": "a314",
+      "fromNode": "GSIE-DIR-0008",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a327",
+      "fromNode": "RFC-0003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a328",
+      "fromNode": "RFC-0003",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a329",
+      "fromNode": "RFC-0004",
+      "fromSide": "bottom",
+      "toNode": "DEC-000003",
+      "toSide": "top"
+    },
+    {
+      "id": "a330",
+      "fromNode": "RFC-0004",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a331",
+      "fromNode": "RFC-0004",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a332",
+      "fromNode": "RFC-0004",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a333",
+      "fromNode": "RFC-0004",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-007",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a335",
+      "fromNode": "RFC-0004",
+      "fromSide": "top",
+      "toNode": "RFC-0003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a336",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "ADR-001",
+      "toSide": "top"
+    },
+    {
+      "id": "a337",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "ADR-002",
+      "toSide": "top"
+    },
+    {
+      "id": "a339",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "ADR-004",
+      "toSide": "top"
+    },
+    {
+      "id": "a341",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "ADR-006",
+      "toSide": "top"
+    },
+    {
+      "id": "a342",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "DEC-000012",
+      "toSide": "top"
+    },
+    {
+      "id": "a343",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "DEC-000019",
+      "toSide": "top"
+    },
+    {
+      "id": "a346",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "DEC-000022",
+      "toSide": "top"
+    },
+    {
+      "id": "a347",
+      "fromNode": "RFC-0011",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a348",
+      "fromNode": "RFC-0011",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a349",
+      "fromNode": "RFC-0011",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-003",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a350",
+      "fromNode": "RFC-0011",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a351",
+      "fromNode": "RFC-0011",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a352",
+      "fromNode": "RFC-0011",
+      "fromSide": "bottom",
+      "toNode": "GSIE-DIR-0008",
+      "toSide": "top"
+    },
+    {
+      "id": "a376",
+      "fromNode": "RFC-0014",
+      "fromSide": "bottom",
+      "toNode": "ADR-001",
+      "toSide": "top"
+    },
+    {
+      "id": "a377",
+      "fromNode": "RFC-0014",
+      "fromSide": "bottom",
+      "toNode": "ADR-002",
+      "toSide": "top"
+    },
+    {
+      "id": "a378",
+      "fromNode": "RFC-0014",
+      "fromSide": "bottom",
+      "toNode": "ADR-009",
+      "toSide": "top"
+    },
+    {
+      "id": "a380",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a381",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a382",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a383",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a384",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-010",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a385",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "RFC-0011",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a388",
+      "fromNode": "RFC-0014",
+      "fromSide": "top",
+      "toNode": "RFC-0016",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a400",
+      "fromNode": "RFC-0016",
+      "fromSide": "bottom",
+      "toNode": "ADR-009",
+      "toSide": "top"
+    },
+    {
+      "id": "a402",
+      "fromNode": "RFC-0016",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a403",
+      "fromNode": "RFC-0016",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a404",
+      "fromNode": "RFC-0016",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a405",
+      "fromNode": "RFC-0016",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a407",
+      "fromNode": "RFC-0016",
+      "fromSide": "top",
+      "toNode": "RFC-0014",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a421",
+      "fromNode": "RFC-0018",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a422",
+      "fromNode": "RFC-0018",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a423",
+      "fromNode": "RFC-0018",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a424",
+      "fromNode": "RFC-0018",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-005",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a426",
+      "fromNode": "RFC-0018",
+      "fromSide": "top",
+      "toNode": "RFC-0016",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a456",
+      "fromNode": "RFC-0023",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-000",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a459",
+      "fromNode": "RFC-0023",
+      "fromSide": "top",
+      "toNode": "GSIE-FND-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a460",
+      "fromNode": "RFC-0023",
+      "fromSide": "top",
+      "toNode": "GSIE-FND-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a461",
+      "fromNode": "RFC-0023",
+      "fromSide": "top",
+      "toNode": "RFC-0024",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a464",
+      "fromNode": "RFC-0024",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a465",
+      "fromNode": "RFC-0024",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-002",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a466",
+      "fromNode": "RFC-0024",
+      "fromSide": "top",
+      "toNode": "GSIE-CON-004",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a468",
+      "fromNode": "RFC-0024",
+      "fromSide": "top",
+      "toNode": "GSIE-FND-001",
+      "toSide": "bottom"
+    },
+    {
+      "id": "a469",
+      "fromNode": "RFC-0024",
+      "fromSide": "top",
+      "toNode": "RFC-0023",
+      "toSide": "bottom"
+    }
+  ]
+}

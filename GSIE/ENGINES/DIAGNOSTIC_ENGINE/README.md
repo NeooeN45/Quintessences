@@ -30,3 +30,44 @@ Reasoning Engine → Diagnostic Engine → Recommendation Engine
 ```
 
 > Statut : *implémentation en cours (Phase 4)* — code livré, voir DIAGNOSTIC_ENGINE.md et PROJECT_MEMORY.md
+
+## Contrat d'interface
+
+### 1. Endpoints API
+
+Source : `GSIE/API/src/gsie_api/engines/diagnostic/router.py`
+
+| Méthode | Route | Auth | Rate limiting | Description |
+|---|---|---|---|---|
+| GET | `/diagnostic/status` | aucune | — | Statut du moteur (`router.py:101`) |
+| GET | `/diagnostic/version` | aucune | — | Version et backend (`router.py:122`) |
+| POST | `/diagnostic/diagnostiquer` | `engine:write` | `30/minute` | Assemble les conclusions du Reasoning Engine en un diagnostic stationnel structuré (`router.py:139`) |
+
+### 2. Schémas d'entrée/sortie
+
+Source : `GSIE/API/src/gsie_api/engines/diagnostic/schemas.py`
+
+| Schéma | Rôle | Champs clés |
+|---|---|---|
+| `DiagnosticRequest` | Entrée de `/diagnostic/diagnostiquer` | `station_id`, `type_diagnostic`, `conclusions` (issues du Reasoning Engine), `qualifications` (rôle/domaine déclarés), `etat_global` |
+| `Diagnostic` | Sortie principale | `statut_validation` (`brouillon` par défaut — CON-001), contraintes/atouts/risques, `contradictions`, `confiance` (reprise des conclusions, jamais calculée) |
+| `ValidationHumaine` | Sous-objet obligatoire pour passer au statut `valide` | identité de la personne, date de validation |
+
+### 3. Exceptions
+
+Source : `GSIE/API/src/gsie_api/engines/diagnostic/engine.py`
+
+| Exception | Condition de levée | Traduction HTTP |
+|---|---|---|
+| `DiagnosticEngineError` | Requête indiagnosticable : chaîne d'inférence vide, aucun élément produit | 400 |
+| `DiagnosticConflitError` (hérite de `DiagnosticEngineError`) | Contradiction inconstructible (domaines identiques ou non comparables) | 400 |
+
+### 4. Dépendances
+
+- **Amont (chaîne principale)** : `REASONING_ENGINE` (conclusions
+  qualifiées), moteurs domaine `GIS`, `CLIMATE`, `PEDOLOGY`, `BOTANICAL`,
+  `FOREST_DYNAMICS` (contexte).
+- **Aval** : `RECOMMENDATION_ENGINE`.
+- **Clients API externes** : aucun.
+- **Persistance** : PostgreSQL. Le diagnostic sort toujours à l'état
+  `brouillon` — seul un humain le valide (CON-001).

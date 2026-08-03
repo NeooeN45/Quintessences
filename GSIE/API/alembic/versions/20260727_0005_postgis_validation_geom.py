@@ -78,9 +78,7 @@ def upgrade() -> None:
         f"ALTER TABLE {_TABLE} ADD COLUMN {_GEOM_4326_COLUMN} geometry(GEOMETRY, 4326) "
         f"GENERATED ALWAYS AS (ST_Transform(geometry, 4326)) STORED"
     )
-    op.execute(
-        f"CREATE INDEX {_GEOM_4326_INDEX} ON {_TABLE} USING GIST ({_GEOM_4326_COLUMN})"
-    )
+    op.execute(f"CREATE INDEX {_GEOM_4326_INDEX} ON {_TABLE} USING GIST ({_GEOM_4326_COLUMN})")
 
 
 def downgrade() -> None:

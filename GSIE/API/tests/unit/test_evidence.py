@@ -490,3 +490,246 @@ def should_return_200_when_metrics_requested():
     assert response.status_code == 200
     # Prometheus expose du texte, pas du JSON
     assert "http_request" in response.text or "python_info" in response.text
+
+
+# ===========================================================================
+# Couverture complémentaire — paths Rust (mock du module gsie_evidence)
+# ===========================================================================
+
+
+def _make_fake_rust_module():
+    """Crée un faux module gsie_evidence pour mocker les paths Rust."""
+    from types import ModuleType
+
+    fake = ModuleType("gsie_evidence")
+
+    class _FakeEngine:
+        @staticmethod
+        def version() -> str:
+            return "0.1.0-fake-rust"
+
+        @staticmethod
+        def evaluate_json(submission_json: str) -> str:
+            from uuid import uuid4
+
+            from gsie_api.engines.evidence.schemas import (
+                EvidenceLevel,
+                QualifiedKnowledge,
+            )
+
+            sub = RawKnowledgeSubmission.model_validate_json(submission_json)
+            qk = QualifiedKnowledge(
+                connaissance_id=uuid4(),
+                contenu_normalise=sub.contenu,
+                evidence_level=EvidenceLevel.B,
+                source=sub.source_candidate,
+                version=1,
+                date_qualification=datetime.now(UTC),
+                conflits=[],
+                statut=KnowledgeStatus.accepte,
+            )
+            return qk.model_dump_json()
+
+        @staticmethod
+        def evaluate_with_context(
+            submission_json: str, sources_json: str, parent_version: int | None
+        ) -> str:
+            from uuid import uuid4
+
+            from gsie_api.engines.evidence.schemas import (
+                EvidenceLevel,
+                QualifiedKnowledge,
+            )
+
+            sub = RawKnowledgeSubmission.model_validate_json(submission_json)
+            version = (parent_version or 0) + 1
+            qk = QualifiedKnowledge(
+                connaissance_id=uuid4(),
+                contenu_normalise=sub.contenu,
+                evidence_level=EvidenceLevel.B,
+                source=sub.source_candidate,
+                version=version,
+                date_qualification=datetime.now(UTC),
+                conflits=[],
+                statut=KnowledgeStatus.accepte,
+            )
+            return qk.model_dump_json()
+
+        @staticmethod
+        def detect_conflicts(candidate_json: str, existing_json: str) -> str:
+            import json
+
+            return json.dumps([])
+
+    fake.EvidenceEngine = _FakeEngine
+    return fake
+
+
+def should_use_rust_path_when_available():
+    """evaluate doit utiliser le path Rust quand _RUST_AVAILABLE=True."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate(sub)
+        assert result.evidence_level == EvidenceLevel.B
+        assert result.statut == KnowledgeStatus.accepte
+
+
+def should_use_rust_path_for_evaluate_with_context_when_available():
+    """evaluate_with_context doit utiliser le path Rust quand disponible."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate_with_context(sub, parent_version=3)
+        assert result.version == 4
+
+
+def should_use_rust_path_for_detect_conflicts_when_available():
+    """detect_conflicts doit utiliser le path Rust quand disponible."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        candidate = SourceReference(
+            type_source=SourceType.peer_reviewed,
+            auteur="Smith",
+            reference="DOI:10.1234/test",
+        )
+        conflits = wrapper_module.detect_conflicts(candidate, [])
+        assert conflits == []
+
+
+def should_fallback_to_python_when_rust_evaluate_raises():
+    """_evaluate_rust doit fallback vers Python si l'appel Rust lève une exception."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    fake_rust.EvidenceEngine.evaluate_json = staticmethod(
+        lambda _: (_ for _ in ()).throw(RuntimeError("Rust panic"))
+    )
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate(sub)
+        assert result.evidence_level == EvidenceLevel.B
+
+
+def should_fallback_to_python_when_rust_evaluate_with_context_raises():
+    """_evaluate_with_context_rust doit fallback vers Python si Rust lève."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    fake_rust.EvidenceEngine.evaluate_with_context = staticmethod(
+        lambda *args: (_ for _ in ()).throw(RuntimeError("Rust panic"))
+    )
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        result = wrapper_module.evaluate_with_context(sub, parent_version=1)
+        assert result.version == 2
+
+
+def should_fallback_to_python_when_rust_detect_conflicts_raises():
+    """_detect_conflicts_rust doit fallback vers Python si Rust lève."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    fake_rust.EvidenceEngine.detect_conflicts = staticmethod(
+        lambda *args: (_ for _ in ()).throw(RuntimeError("Rust panic"))
+    )
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        candidate = SourceReference(
+            type_source=SourceType.peer_reviewed,
+            auteur="Smith",
+            reference="DOI:10.1234/test",
+        )
+        existing = [
+            SourceReference(
+                type_source=SourceType.expert_identifie,
+                auteur="Jones",
+                reference="doi:10.1234/test",
+            )
+        ]
+        conflits = wrapper_module.detect_conflicts(candidate, existing)
+        # Le fallback Python détecte le conflit (même réf, type différent)
+        assert len(conflits) == 1
+
+
+def should_return_rust_version_when_available():
+    """engine_version doit retourner la version Rust quand disponible."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    fake_rust = _make_fake_rust_module()
+    with (
+        patch.object(wrapper_module, "_RUST_AVAILABLE", True),
+        patch.dict(wrapper_module.__dict__, {"_rust_engine": fake_rust}),
+    ):
+        version = wrapper_module.engine_version()
+        assert version == "0.1.0-fake-rust"
+
+
+def should_disable_conflict_detection_when_flag_off():
+    """evaluate_with_context doit désactiver les conflits quand le flag est off."""
+    from unittest.mock import patch
+
+    import gsie_api.engines.evidence.wrapper as wrapper_module
+
+    with patch.object(
+        wrapper_module._settings,
+        "evidence_experimental_conflicts_enabled",
+        False,
+    ):
+        sub = _make_submission(SourceType.peer_reviewed, ContentType.publication)
+        sub.source_candidate.reference = "DOI:10.1234/conflict"
+        existing = [
+            SourceReference(
+                type_source=SourceType.expert_identifie,
+                auteur="Other",
+                reference="DOI:10.1234/conflict",
+            )
+        ]
+        result = wrapper_module.evaluate_with_context(sub, existing_sources=existing)
+        # Conflits désactivés → pas de conflit détecté → statut accepte
+        assert result.statut == KnowledgeStatus.accepte
+        assert len(result.conflits) == 0
+
+
+def should_return_is_rust_available_status():
+    """is_rust_available doit retourner un booléen."""
+    from gsie_api.engines.evidence.wrapper import is_rust_available
+
+    assert isinstance(is_rust_available(), bool)

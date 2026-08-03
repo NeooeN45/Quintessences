@@ -70,6 +70,12 @@ class _EtapeBrute:
 
     regle_appliquee: str
     source_regle: SourceReference
+    # Niveaux de preuve des FAITS consommes par l'etape, distincts de celui de
+    # la regle. Une conclusion ne peut pas etre mieux etablie que le plus
+    # faible de ses maillons : un releve terrain isole (F) traverse par une
+    # regle de catalogue (B) donne F, jamais B. Sans cela le moteur annonce
+    # « etabli » sur une mesure unique non recoupee.
+    niveaux_des_faits: tuple[EvidenceLevel, ...]
     premisses: list[str]
     conclusion_locale: str
     evidence_level: EvidenceLevel
@@ -82,6 +88,23 @@ logger = get_logger("gsie_api.reasoning.engine")
 # conclusion à partir de la même règle et des mêmes prémisses génèrent le
 # même conclusion_id — exigence du déterminisme (§mission R2).
 _NAMESPACE_DETERMINISME = UUID("00000000-0000-4000-8000-000000000010")
+
+
+def conclusion_id_pour(requete_id: UUID, identifiant_regle: str) -> UUID:
+    """Identifiant de la conclusion que produirait une règle donnée.
+
+    Extrait du corps de `infer` pour qu'un appelant puisse rattacher une
+    conclusion à la règle dont elle est issue **sans redériver la formule**.
+    L'orchestration en a besoin : les qualifications de conclusions sont
+    déclarées par l'appelant — le moteur « ne le sait pas et ne doit pas le
+    deviner » — alors que les conclusions n'existent qu'après l'inférence.
+    L'appelant déclare donc par règle, et cette fonction fait le lien.
+
+    Recopier la dérivation ailleurs la ferait diverger au premier changement,
+    et le rattachement échouerait en silence : aucune qualification ne
+    correspondrait plus, sans que la formule paraisse fautive.
+    """
+    return uuid5(_NAMESPACE_DETERMINISME, f"{requete_id}|{identifiant_regle}")
 
 
 class ReasoningEngineError(Exception):
@@ -223,6 +246,55 @@ class ReasoningEngine:
         """Version du moteur."""
         return "0.1.0"
 
+    async def _regles_du_territoire(self, territoire_id: UUID) -> list[RegleInference]:
+        """Récupère les règles applicables au territoire depuis le Knowledge Engine.
+
+        Les règles écartées sont journalisées, jamais tues : une règle rejetée
+        parce qu'elle est mal formée doit pouvoir être corrigée, et le silence
+        laisserait croire à une absence de connaissance.
+
+        Un territoire inconnu n'est pas une erreur **ici**. `station_id` est
+        facultatif dans `ReasoningRequest` et n'est pas contractuellement une
+        `place` enregistrée : une station peut être décrite intégralement par le
+        contexte de la requête, sans exister en base — c'est la même raison qui
+        fait que `diagnostic.station_id` ne porte pas de clé étrangère. Faire
+        remonter l'erreur refuserait une requête légitime dont le contexte
+        suffit à raisonner.
+
+        L'exigence reste entière là où elle a un sens : `regles_applicables`,
+        interrogé directement, continue de lever. À cette question-là — « quelles
+        règles s'appliquent ici ? » — répondre « aucune » pour un territoire
+        introuvable serait une réponse fausse. Ici, l'appelant n'a pas posé cette
+        question ; la récupération est un complément, et son échec est
+        journalisé en avertissement plutôt que tu.
+        """
+        from gsie_api.engines.knowledge.engine import KnowledgeEngine, TerritoireInconnuError
+        from gsie_api.seeds.variables_mesurables_data import noms_de_faits_par_code
+
+        try:
+            regles, ecartees = await KnowledgeEngine(self._session).regles_applicables(
+                territoire_id,
+                variables_connues=noms_de_faits_par_code(),
+            )
+        except TerritoireInconnuError:
+            logger.warning(
+                "regles_du_territoire_indisponibles",
+                territoire_id=str(territoire_id),
+                motif=(
+                    "aucune `place` ne porte cet identifiant — le raisonnement "
+                    "se poursuit sur les seules règles fournies dans la requête"
+                ),
+            )
+            return []
+        if ecartees:
+            logger.info(
+                "regles_ecartees",
+                territoire_id=str(territoire_id),
+                nombre=len(ecartees),
+                motifs=ecartees,
+            )
+        return regles
+
     async def infer(
         self,
         request: ReasoningRequest,
@@ -248,11 +320,20 @@ class ReasoningEngine:
                 variable absente du contexte. L'erreur nomme la règle et
                 la variable concernée.
         """
-        # Cas trivial : aucune règle fournie → résultat vide, pas d'erreur.
-        # Note : en v1, les règles devraient être passées par le routeur.
-        # Si regles est None (appel sans règles), on retourne un résultat
-        # vide — conforme à la spec (« aucune règle → résultat honnête »).
+        # Les règles viennent de la requête, ou du Knowledge Engine à défaut
+        # (RFC-0028 §4.3, DEC-000038). Le branchement était annoncé « sans
+        # rupture de contrat » par GSIE-PROMPT-0017 : une requête qui porte ses
+        # règles continue de fonctionner à l'identique, la récupération
+        # s'ajoute et ne remplace pas.
+        #
+        # Sans elle, GeoSylva devrait embarquer la connaissance sylvicole, et
+        # réviser un seuil imposerait de mettre à jour l'application sur chaque
+        # téléphone — donc, en pratique, la connaissance ne serait jamais
+        # révisée.
         regles = list(request.regles)
+        if not regles and request.station_id is not None:
+            regles = await self._regles_du_territoire(request.station_id)
+
         if not regles:
             return InferenceResult(
                 resultat_id=uuid5(_NAMESPACE_DETERMINISME, f"{request.requete_id}|"),
@@ -321,10 +402,12 @@ class ReasoningEngine:
                 # condition qui sont réellement présentes dans les faits.
                 variables_condition = _extraire_variables(regle.condition)
                 premisses_effectives: list[str] = []
+                niveaux_des_faits: list[EvidenceLevel] = []
                 for var in sorted(variables_condition):
                     if var in faits_bruts:
                         valeur, bloc = faits_bruts[var]
                         source_auteur = bloc.source.auteur
+                        niveaux_des_faits.append(bloc.evidence_level)
                         premisses_effectives.append(f"{var} = {valeur} (source : {source_auteur})")
                     elif var in provenance_faits_derives:
                         regle_source = provenance_faits_derives[var]
@@ -348,7 +431,14 @@ class ReasoningEngine:
                     source_regle=regle.source,
                     premisses=premisses_effectives,
                     conclusion_locale=regle.enonce_conclusion,
-                    evidence_level=regle.evidence_level,
+                    # Plancher de l'etape : sa regle ET les faits qu'elle
+                    # consomme. Ne retenir que la regle annoncerait une etape
+                    # mieux etablie que la mesure qui la fonde — un releve
+                    # terrain isole (F) traverse par une regle de catalogue (B)
+                    # ressortait en B. Surestimation silencieuse, exactement ce
+                    # que ADR-009 previent.
+                    evidence_level=niveau_plancher([regle.evidence_level, *niveaux_des_faits]),
+                    niveaux_des_faits=tuple(niveaux_des_faits),
                 )
                 regles_appliquees.add(regle.identifiant)
                 conclusions_locales[regle.identifiant] = regle.enonce_conclusion
@@ -443,17 +533,21 @@ class ReasoningEngine:
             # Identifiant de conclusion déterministe : uuid5 dérivé de
             # l'identifiant de la règle et de la requête. Deux exécutions
             # sur les mêmes entrées produisent le même conclusion_id.
-            conclusion_id = uuid5(
-                _NAMESPACE_DETERMINISME,
-                f"{request.requete_id}|{identifiant}",
-            )
+            conclusion_id = conclusion_id_pour(request.requete_id, identifiant)
 
             conclusion = Conclusion(
                 conclusion_id=conclusion_id,
                 enonce=regle.enonce_conclusion,
                 niveau_confiance=regle.niveau_confiance,
                 methode_confiance=MethodeConfiance.fournie_par_regle,
-                evidence_level_plancher=niveau_plancher([e.evidence_level for e in chaine]),
+                # Le plancher couvre les regles ET les faits consommes. Ne
+                # retenir que les regles annoncerait une conclusion mieux
+                # etablie que la mesure qui la fonde — surestimation
+                # silencieuse, exactement ce que ADR-009 previent.
+                evidence_level_plancher=niveau_plancher(
+                    [e.evidence_level for e in chaine]
+                    + [niveau for brute in brutes for niveau in brute.niveaux_des_faits]
+                ),
                 chaine_inference=chaine,
                 sources_utilisees=sources_utilisees,
                 moteurs_solicites=moteurs_solicites,

@@ -26,6 +26,10 @@ __all__ = ["coercer_donnees", "serialiser_valeur"]
 # Préfixe EWKT (`SRID=2154;POINT(...)`) — shapely ne lit que le WKT nu.
 _SEPARATEUR_EWKT = ";"
 _PREFIXE_SRID = "SRID="
+# SRID autorisés — Lambert-93 (2154) et WGS 84 (4326). Un SRID arbitraire
+# peut causer des incohérences spatiales silencieuses dans les jointures
+# ST_Contains (audit sécurité P2-3).
+_SRID_AUTORISES = frozenset({2154, 4326})
 
 
 def _coercer_datetime(valeur: Any, avec_fuseau: bool) -> datetime:
@@ -93,6 +97,17 @@ def _coercer_geometrie(valeur: Any) -> str:
 
     corps = valeur
     if valeur.upper().startswith(_PREFIXE_SRID) and _SEPARATEUR_EWKT in valeur:
+        # Extraction et validation du SRID (audit sécurité P2-3)
+        srid_str = valeur.split(_SEPARATEUR_EWKT, 1)[0][len(_PREFIXE_SRID) :]
+        try:
+            srid = int(srid_str)
+        except ValueError as exc:
+            raise ValueError(f"SRID illisible : « {srid_str} »") from exc
+        if srid not in _SRID_AUTORISES:
+            raise ValueError(
+                f"SRID {srid} non autorisé — utiliser un des codes "
+                f"supportés : {sorted(_SRID_AUTORISES)} (2154=Lambert-93, 4326=WGS 84)"
+            )
         corps = valeur.split(_SEPARATEUR_EWKT, 1)[1]
 
     from shapely import wkt  # import local : shapely est lourd à charger

@@ -41,7 +41,7 @@ def should_have_engine_routes():
     assert "/api/v1/gis/status" in paths
 
 
-def should_trigger_lifecycle_when_started():
+def should_trigger_lifecycle_when_started(mock_lifespan: object):
     """Le lifespan doit démarrer et arrêter l'API avec logs."""
     app = create_app()
     with TestClient(app) as client:

@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import KnowledgePanel from "../components/KnowledgePanel.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Connaissances">
+  <div class="space-y-6">
+    <PageHeader
+      title="Connaissances"
+      description="Statistiques du graphe de connaissances — objets par type, ingestion, révisions."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <KnowledgePanel client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

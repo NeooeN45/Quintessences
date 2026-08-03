@@ -33,3 +33,55 @@ Recommendation Engine → Validation Engine → Utilisateur
 ```
 
 > Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir
+
+## Contrat d'interface
+
+> Note : le code source (`GSIE/API/src/gsie_api/engines/validation/`)
+> est livré et actif (`PROJECT_MEMORY.md`, DEC-000021 et suivants) ;
+> cette section documente le contrat effectif malgré la mention
+> ci-dessus, à faire converger lors d'une prochaine synchronisation
+> documentaire.
+
+### 1. Endpoints API
+
+Source : `GSIE/API/src/gsie_api/engines/validation/router.py`
+
+| Méthode | Route | Auth | Rate limiting | Description |
+|---|---|---|---|---|
+| GET | `/validation/status` | aucune | — | Statut du moteur (`router.py:32`) |
+| GET | `/validation/version` | aucune | — | Version et backend (`router.py:43`) |
+| POST | `/validation/validate` | `engine:write` | `60/minute` | Valide une sortie (diagnostic, recommandation ou ensemble complet) et bloque toute sortie non conforme (`router.py:56`) |
+
+### 2. Schémas d'entrée/sortie
+
+Source : `GSIE/API/src/gsie_api/engines/validation/schemas.py`
+
+| Schéma | Rôle | Champs clés |
+|---|---|---|
+| `ValidationRequest` | Entrée de `/validation/validate` | `type_sortie` (diagnostic/recommandation/ensemble_complet), `contenu` (structure libre typée), `chaines_inference`, `connaissances_utilisees` |
+| `ControleResultat` | Résultat d'un contrôle individuel | `nom_controle`, `resultat` (conforme/non_conforme/non_applicable), `details` |
+| `CauseBlocage` | Cause de blocage tracée | `type_cause` (8 causes, chacune liée à un article constitutionnel), `element_concerne`, `description` |
+| `ValidationResult` | Sortie de `/validation/validate` | `statut` (valide/bloque/partiellement_valide), liste de `ControleResultat`, liste de `CauseBlocage` |
+
+### 3. Exceptions
+
+Source : `GSIE/API/src/gsie_api/engines/validation/engine.py`
+
+| Exception | Condition de levée | Traduction HTTP |
+|---|---|---|
+| `ValidationEngineError` | Requête malformée au-delà du schéma Pydantic (incohérence interne) | 400 |
+
+Un blocage de sortie n'est **pas** une exception : `statut=bloque` est
+retourné en HTTP 200 avec les causes de blocage tracées
+(`router.py:69`).
+
+### 4. Dépendances
+
+- **Amont (chaîne principale)** : `RECOMMENDATION_ENGINE`,
+  `DIAGNOSTIC_ENGINE`.
+- **Aval** : l'utilisateur (forestier) — dernier rempart avant
+  présentation ; `LEARNING_ENGINE` (persistance de `ValidationResultModel`
+  pour les sorties `bloque`/`partiellement_valide`, RFC-0028).
+- **Clients API externes** : aucun.
+- **Persistance** : PostgreSQL (`validation_result`, migration
+  `20260801_0028_validation_result_table.py`).

@@ -1,0 +1,169 @@
+{
+  "date": "2026-08-02T23:49:00",
+  "validation_ground_truth": {
+    "n_scenarios": 3,
+    "n_succes": 3,
+    "succes_global": true,
+    "details": [
+      {
+        "scenario": "sol_acide_engorgement_quercus",
+        "succes": true,
+        "n_conclusions": 2,
+        "n_recommandations": 1,
+        "validation_statut": "valide",
+        "diagnostic_id": "90bca21e-bd9...",
+        "checks": [
+          {
+            "check": "nombre_conclusions",
+            "succes": true,
+            "attendu": 2,
+            "obtenu": 2
+          },
+          {
+            "check": "validation_statut",
+            "succes": true,
+            "attendu": "valide",
+            "obtenu": "valide"
+          },
+          {
+            "check": "recommandations_produites",
+            "succes": true,
+            "attendu": ">=1",
+            "obtenu": 1
+          },
+          {
+            "check": "sources_tracables",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "diagnostic_persiste",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "recommandation_liee_diagnostic",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          }
+        ]
+      },
+      {
+        "scenario": "sol_neutre_draine_quercus",
+        "succes": true,
+        "n_conclusions": 1,
+        "n_recommandations": 1,
+        "validation_statut": "valide",
+        "diagnostic_id": "57f2e83b-6a2...",
+        "checks": [
+          {
+            "check": "nombre_conclusions",
+            "succes": true,
+            "attendu": 1,
+            "obtenu": 1
+          },
+          {
+            "check": "validation_statut",
+            "succes": true,
+            "attendu": "valide",
+            "obtenu": "valide"
+          },
+          {
+            "check": "recommandations_produites",
+            "succes": true,
+            "attendu": ">=1",
+            "obtenu": 1
+          },
+          {
+            "check": "sources_tracables",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "diagnostic_persiste",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "recommandation_liee_diagnostic",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          }
+        ]
+      },
+      {
+        "scenario": "sol_tres_acide_quercus",
+        "succes": true,
+        "n_conclusions": 2,
+        "n_recommandations": 1,
+        "validation_statut": "valide",
+        "diagnostic_id": "434e251c-be2...",
+        "checks": [
+          {
+            "check": "nombre_conclusions",
+            "succes": true,
+            "attendu": 2,
+            "obtenu": 2
+          },
+          {
+            "check": "validation_statut",
+            "succes": true,
+            "attendu": "valide",
+            "obtenu": "valide"
+          },
+          {
+            "check": "recommandations_produites",
+            "succes": true,
+            "attendu": ">=1",
+            "obtenu": 1
+          },
+          {
+            "check": "sources_tracables",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "diagnostic_persiste",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          },
+          {
+            "check": "recommandation_liee_diagnostic",
+            "succes": true,
+            "attendu": true,
+            "obtenu": true
+          }
+        ]
+      }
+    ]
+  },
+  "benchmark": {
+    "iterations": 10,
+    "latence_ms": {
+      "min": 29.51,
+      "max": 34.68,
+      "mean": 32.05,
+      "median": 32.33,
+      "p50": 33.05,
+      "p95": 34.68,
+      "p99": 34.68,
+      "stdev": 1.96
+    },
+    "throughput": {
+      "total_seconds": 28.227,
+      "req_per_sec": 0.35
+    },
+    "memoire": {
+      "current_mb": 0.09,
+      "peak_mb": 0.25
+    }
+  }
+}

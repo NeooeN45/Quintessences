@@ -77,6 +77,7 @@ from gsie_api.seeds.autecology_rameau_data import (
     GBIF_TAXON_KEY_FAGUS_SYLVATICA,
     build_autecology_rameau_profiles,
 )
+from tests.unit.aide_recommendation import SessionDiagnosticFictif
 
 # Date d'inférence injectée pour le déterminisme (Reasoning/Diagnostic).
 _DATE_INFERENCE = datetime(2026, 7, 27, 12, 0, tzinfo=UTC)
@@ -271,7 +272,7 @@ async def should_run_full_geosylva_pipeline_e2e() -> None:
     assert 0.0 <= diagnostic.confiance <= 1.0
 
     # --- Étape 6 : recommandation ---
-    reco_engine = RecommendationEngine()
+    reco_engine = RecommendationEngine(SessionDiagnosticFictif())
     reco_request = RecommendationRequest(
         requete_id=uuid4(),
         diagnostic_id=diagnostic.diagnostic_id,

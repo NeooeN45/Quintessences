@@ -17,9 +17,18 @@ services:
       context: .
       dockerfile: Dockerfile.db
     environment:
+      # Compte d'ADMINISTRATION uniquement : l'image officielle le crée
+      # SUPERUSER et propriétaire de la base. Il sert aux migrations et à
+      # l'exploitation, jamais à l'exécution de l'API (audit 2026-08-01, A).
       POSTGRES_USER: ${GSIE_DB_USER:-gsie}
       POSTGRES_PASSWORD: ${GSIE_DB_PASSWORD:?GSIE_DB_PASSWORD requis dans .env}
       POSTGRES_DB: ${GSIE_DB_NAME:-gsie}
+      # Comptes de connexion créés à l'initdb par 04-comptes-de-connexion.sh.
+      # Leurs droits sont accordés par la migration 20260801_0025.
+      GSIE_API_DB_USER: ${GSIE_API_DB_USER:-gsie_api}
+      GSIE_API_DB_PASSWORD: ${GSIE_API_DB_PASSWORD:?GSIE_API_DB_PASSWORD requis dans .env}
+      GSIE_VIZ_DB_USER: ${GSIE_VIZ_DB_USER:-gsie_viz}
+      GSIE_VIZ_DB_PASSWORD: ${GSIE_VIZ_DB_PASSWORD:?GSIE_VIZ_DB_PASSWORD requis dans .env}
       # Apache AGE requiert shared_preload_libraries
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     command: >
@@ -37,8 +46,12 @@ services:
     volumes:
       - gsie_pgdata:/var/lib/postgresql/data
       - ./docker/init:/docker-entrypoint-initdb.d:ro
+      # Source unique du SQL de création des comptes — 04-comptes-de-connexion.sh
+      # lui passe les identifiants, que les fichiers .sql d'initdb ne reçoivent pas.
+      - ./docker/comptes-de-connexion.sql:/gsie/comptes-de-connexion.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gsie -d gsie"]
+      # Les noms étaient en dur : la sonde mentait dès que GSIE_DB_USER changeait.
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -102,10 +115,17 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     environment:
-      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:-development}
+      # Obligatoire : tout le durcissement de `validate_production_security`
+      # est conditionné à cette valeur. Un défaut silencieux à `development`
+      # désarmait TLS, le refus du dev login et le stockage distribué.
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
-      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      # Exécution sous le compte applicatif, pas sous le propriétaire de la base.
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      # Alembic seul emprunte le compte d'administration : `gsie_application`
+      # n'a délibérément ni CREATE ni ALTER.
+      GSIE_MIGRATION_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
       GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
@@ -114,9 +134,21 @@ services:
       # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
       GSIE_JWT_PRIVATE_KEY_PATH: /keys/private.pem
       GSIE_JWT_PUBLIC_KEY_PATH: /keys/public.pem
-      GSIE_AUTH_DEV_LOGIN_ENABLED: ${GSIE_AUTH_DEV_LOGIN_ENABLED:-true}
+      # Défaut `false` : `_get_dev_user` retourne roles=["admin"] et c'est le
+      # seul mécanisme d'authentification implémenté. Le compose l'activait
+      # par défaut, ce que `config.py` s'appliquait justement à éviter.
+      GSIE_AUTH_DEV_LOGIN_ENABLED: ${GSIE_AUTH_DEV_LOGIN_ENABLED:-false}
       GSIE_AUTH_DEV_USERNAME: ${GSIE_AUTH_DEV_USERNAME:-admin}
-      GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:?GSIE_AUTH_DEV_PASSWORD requis dans .env}
+      # Plus obligatoire : exiger un mot de passe pour un mécanisme désactivé
+      # poussait à recopier celui de `.env.example`. La configuration refuse
+      # désormais toute valeur de remplissage quand le dev login est actif.
+      GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:-}
+      # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
+      GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
+      # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)
+      # Lue par get_settings().meteofrance_api_key — sans elle, les endpoints
+      # /climate/danger-feux et /climate/vigilance retournent 502.
+      METEOFRANCE_API_KEY: ${METEOFRANCE_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy
@@ -154,9 +186,9 @@ services:
       dockerfile: GSIE/API/Dockerfile
     command: ["python", "-m", "gsie_api.outbox_worker"]
     environment:
-      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:-development}
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
-      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
       GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
@@ -181,6 +213,25 @@ services:
           cpus: "0.5"
           memory: 256M
 
+  # Uptime Kuma — monitoring uptime des services GSIE
+  # (veille techno 2026-08-02, RFC-0031 action 7)
+  # Interface web sur http://localhost:3001
+  # Surveille /health et /ready de l API + db + redis
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - gsie_kuma_data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
 networks:
   default:
     driver: bridge
@@ -188,3 +239,4 @@ networks:
 volumes:
   gsie_pgdata:
   gsie_redisdata:
+  gsie_kuma_data:

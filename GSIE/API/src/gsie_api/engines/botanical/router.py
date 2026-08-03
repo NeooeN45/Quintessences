@@ -9,21 +9,25 @@ Endpoints :
 - GET  /botanical/status   — statut du moteur
 - GET  /botanical/version  — version et backend
 - POST /botanical/query     — résout une essence vers son taxon GBIF
+- POST /botanical/identify  — identifie une plante par image (PlantNet, RFC-0031)
 """
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
     BotanicalQuery,
     IndigenatQuery,
     IndigenatResult,
+    PlantNetIdentificationResponse,
+    PlantNetIdentificationResult,
     TaxrefQuery,
     TaxrefResult,
 )
@@ -150,3 +154,67 @@ async def botanical_taxref(
         return await BotanicalEngine(session).resolve_taxref(request_body)
     except BotanicalEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/identify",
+    response_model=PlantNetIdentificationResponse | None,
+    status_code=status.HTTP_200_OK,
+    summary="Identifier une plante par image (API PlantNet, RFC-0031 action 8)",
+    description=(
+        "Soumet une image (JPG/PNG) à l'API PlantNet pour identification. "
+        "78 810 espèces identifiables. Retourne la meilleure correspondance "
+        "et les résultats classés par score de confiance. Retourne null si "
+        "aucune identification n'est possible — jamais d'espèce inventée (ADR-009)."
+    ),
+)
+@_limiter.limit("10/minute")
+async def botanical_identify(
+    request: Request,
+    response: Response,
+    file: Annotated[UploadFile, File(description="Image de la plante (JPG ou PNG)")],
+    _user: EngineReadUser,
+) -> PlantNetIdentificationResponse | None:
+    """Identifie une plante à partir d'une image via l'API PlantNet.
+
+    Raises:
+        502: Si l'API PlantNet est indisponible ou la clé API manquante.
+        400: Si le fichier est vide ou dans un format non supporté.
+    """
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Fichier image vide")
+    if file.content_type and file.content_type not in ("image/jpeg", "image/png"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Format non supporté : {file.content_type}. JPG ou PNG requis.",
+        )
+    try:
+        data = await PlantNetClient().identify(
+            image_bytes,
+            filename=file.filename or "image.jpg",
+        )
+    except PlantNetClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    if data is None:
+        return None
+    results: list[PlantNetIdentificationResult] = []
+    for r in data.get("results", []):
+        species = r.get("species", {})
+        genus = species.get("genus", {})
+        family = species.get("family", {})
+        results.append(
+            PlantNetIdentificationResult(
+                score=r.get("score", 0.0),
+                scientific_name=species.get("scientificName", ""),
+                scientific_name_without_author=species.get("scientificNameWithoutAuthor", ""),
+                genus=genus.get("scientificNameWithoutAuthor", genus.get("scientificName", "")),
+                family=family.get("scientificNameWithoutAuthor", family.get("scientificName", "")),
+                common_names=species.get("commonNames", []),
+                gbif_id=str(r.get("gbif", {}).get("id", "")) or None,
+            )
+        )
+    return PlantNetIdentificationResponse(
+        best_match=data.get("bestMatch"),
+        results=results,
+    )
