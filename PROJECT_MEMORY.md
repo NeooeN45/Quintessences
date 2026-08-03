@@ -8,6 +8,15 @@
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
 | **Dernière mise à jour** | 2026-08-03 — **La première synchronisation métier GeoSylva ↔ GSIE est livrée (DEC-000048) ✅** : parcelles poussées par file Room/SQLCipher et WorkManager, idempotence, version optimiste, tombstones, RLS par compte et diagnostic visible. L’activation exige une action explicite ; sans compte ou sans activation, le fonctionnement reste strictement local. La fusion serveur→mobile et l’écran de résolution des conflits restent à produire. |
 
+### Documentation GeoSylva 3.0 (GEOSYLVA-003)
+
+Le cahier fonctionnel et scientifique issu du brainstorming validé est disponible
+dans `apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (statut Draft,
+version 0.1.0). Il fixe la hiérarchie Projet → Forêt → Parcelle → Placette →
+Martelage, l’exigence de base locale transactionnelle et la doctrine de calcul
+scientifique : sources, unités, incertitudes, qualité du bois, état sanitaire et
+contexte des parcelles voisines doivent être modélisés et testés avant activation.
+
 ---
 
 ## État

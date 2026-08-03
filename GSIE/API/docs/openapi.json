@@ -1,6 +1,98 @@
 {
   "components": {
     "schemas": {
+      "AcceptedResponse": {
+        "additionalProperties": false,
+        "description": "Accusé générique, volontairement identique pour tous les comptes.",
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          }
+        },
+        "title": "AcceptedResponse",
+        "type": "object"
+      },
+      "AccountProfileResponse": {
+        "additionalProperties": false,
+        "description": "Profil du compte courant, sans jeton ni secret.",
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          },
+          "providers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Providers",
+            "type": "array"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "account_id",
+          "display_name",
+          "email",
+          "email_verified",
+          "providers",
+          "roles"
+        ],
+        "title": "AccountProfileResponse",
+        "type": "object"
+      },
+      "ActionCodeRequest": {
+        "additionalProperties": false,
+        "description": "Code court reçu exclusivement par e-mail.",
+        "properties": {
+          "code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ActionCodeRequest",
+        "type": "object"
+      },
       "AltitudeRequest": {
         "additionalProperties": false,
         "description": "Requête d'altitude pour un point (API de calcul altimétrique IGN).",
@@ -757,6 +849,19 @@
           "date_fin_periode"
         ],
         "title": "ClimatologieQuotidienneQuery",
+        "type": "object"
+      },
+      "CompletedResponse": {
+        "additionalProperties": false,
+        "description": "Confirmation d'une action de compte terminée.",
+        "properties": {
+          "completed": {
+            "default": true,
+            "title": "Completed",
+            "type": "boolean"
+          }
+        },
+        "title": "CompletedResponse",
         "type": "object"
       },
       "Conclusion-Input": {
@@ -1649,6 +1754,47 @@
         "title": "DomaineValidite",
         "type": "object"
       },
+      "DossierTelechargementResponse": {
+        "additionalProperties": false,
+        "description": "Un dossier (jeu de données) listé par GetResource.",
+        "properties": {
+          "date_edition": {
+            "title": "Date Edition",
+            "type": "string"
+          },
+          "date_maj": {
+            "title": "Date Maj",
+            "type": "string"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "nom": {
+            "title": "Nom",
+            "type": "string"
+          },
+          "url_subresource": {
+            "description": "URL GetSubResource du dossier",
+            "title": "Url Subresource",
+            "type": "string"
+          },
+          "zone": {
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nom",
+          "url_subresource",
+          "date_maj",
+          "zone",
+          "format",
+          "date_edition"
+        ],
+        "title": "DossierTelechargementResponse",
+        "type": "object"
+      },
       "ElementDiagnostic": {
         "additionalProperties": false,
         "description": "Une contrainte ou un atout de la station (§5).\n\n`ADR-009` : inconstructible sans source ni niveau de preuve.",
@@ -1992,6 +2138,39 @@
         "title": "EvidenceLevel",
         "type": "string"
       },
+      "FichierTelechargementResponse": {
+        "additionalProperties": false,
+        "description": "Un fichier téléchargeable listé par GetSubResource.",
+        "properties": {
+          "checksum_md5": {
+            "title": "Checksum Md5",
+            "type": "string"
+          },
+          "mime_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Mime Types",
+            "type": "array"
+          },
+          "taille_octets": {
+            "title": "Taille Octets",
+            "type": "integer"
+          },
+          "url_download": {
+            "description": "URL Download du fichier",
+            "title": "Url Download",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url_download",
+          "taille_octets",
+          "checksum_md5"
+        ],
+        "title": "FichierTelechargementResponse",
+        "type": "object"
+      },
       "ForestierDecision": {
         "additionalProperties": false,
         "description": "Suite donnée par le forestier — trace d'apprentissage (`GSIE-CON-005`).\n\nUn refus ou une modification sans justification reste accepté : exiger\nune explication du forestier reviendrait à lui demander de se justifier\ndevant l'outil. C'est lui qui décide (`GSIE-CON-001`).",
@@ -2172,6 +2351,504 @@
           "source"
         ],
         "title": "GeoLayer",
+        "type": "object"
+      },
+      "GeoSylvaDeleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Version"
+          },
+          "client_updated_at": {
+            "format": "date-time",
+            "title": "Client Updated At",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation_id",
+          "client_updated_at"
+        ],
+        "title": "GeoSylvaDeleteRequest",
+        "type": "object"
+      },
+      "GeoSylvaParcelPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GeoSylvaParcelResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "title": "GeoSylvaParcelPage",
+        "type": "object"
+      },
+      "GeoSylvaParcelPayload": {
+        "additionalProperties": false,
+        "description": "Projection réseau d'une parcelle locale GeoSylva 2.4.",
+        "properties": {
+          "access": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access"
+          },
+          "altitude_m": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": -500.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitude M"
+          },
+          "aspect": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aspect"
+          },
+          "cadastral_area_ha": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadastral Area Ha"
+          },
+          "cadastral_nature_code": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadastral Nature Code"
+          },
+          "cadastral_number": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadastral Number"
+          },
+          "cadastral_section": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadastral Section"
+          },
+          "created_at_ms": {
+            "minimum": 0.0,
+            "title": "Created At Ms",
+            "type": "integer"
+          },
+          "forest_id": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forest Id"
+          },
+          "forest_owner_id": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forest Owner Id"
+          },
+          "ign_geometry_wkt": {
+            "anyOf": [
+              {
+                "maxLength": 500000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ign Geometry Wkt"
+          },
+          "location_mode": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Mode"
+          },
+          "municipality_code": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Code"
+          },
+          "municipality_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Name"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "objective_type": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Type"
+          },
+          "objective_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Value"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          },
+          "sample_area_m2": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Area M2"
+          },
+          "sampling_mode": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sampling Mode"
+          },
+          "ser_code": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ser Code"
+          },
+          "ser_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ser Name"
+          },
+          "shape": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shape"
+          },
+          "slope_pct": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Pct"
+          },
+          "srid": {
+            "anyOf": [
+              {
+                "maximum": 999999.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Srid"
+          },
+          "surface_ha": {
+            "anyOf": [
+              {
+                "maximum": 10000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Ha"
+          },
+          "target_species_csv": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Species Csv"
+          },
+          "tolerance_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerance Pct"
+          },
+          "updated_at_ms": {
+            "minimum": 0.0,
+            "title": "Updated At Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "created_at_ms",
+          "updated_at_ms"
+        ],
+        "title": "GeoSylvaParcelPayload",
+        "type": "object"
+      },
+      "GeoSylvaParcelResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_updated_at": {
+            "format": "date-time",
+            "title": "Client Updated At",
+            "type": "string"
+          },
+          "parcel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoSylvaParcelPayload"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "server_updated_at": {
+            "format": "date-time",
+            "title": "Server Updated At",
+            "type": "string"
+          },
+          "server_version": {
+            "title": "Server Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deleted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "status",
+          "server_version",
+          "client_updated_at",
+          "server_updated_at",
+          "parcel"
+        ],
+        "title": "GeoSylvaParcelResponse",
+        "type": "object"
+      },
+      "GeoSylvaUpsertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Version"
+          },
+          "client_updated_at": {
+            "format": "date-time",
+            "title": "Client Updated At",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "parcel": {
+            "$ref": "#/components/schemas/GeoSylvaParcelPayload"
+          }
+        },
+        "required": [
+          "operation_id",
+          "client_updated_at",
+          "parcel"
+        ],
+        "title": "GeoSylvaUpsertRequest",
         "type": "object"
       },
       "GoogleLoginRequest": {
@@ -3111,6 +3788,72 @@
         "title": "LearningStatut",
         "type": "string"
       },
+      "ListeDossiersResponse": {
+        "additionalProperties": false,
+        "description": "Réponse de GetResource — dossiers paginés.",
+        "properties": {
+          "dossiers": {
+            "items": {
+              "$ref": "#/components/schemas/DossierTelechargementResponse"
+            },
+            "title": "Dossiers",
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PageTelechargementResponse"
+          }
+        },
+        "required": [
+          "dossiers",
+          "pagination"
+        ],
+        "title": "ListeDossiersResponse",
+        "type": "object"
+      },
+      "ListeFichiersResponse": {
+        "additionalProperties": false,
+        "description": "Réponse de GetSubResource — fichiers paginés.",
+        "properties": {
+          "fichiers": {
+            "items": {
+              "$ref": "#/components/schemas/FichierTelechargementResponse"
+            },
+            "title": "Fichiers",
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PageTelechargementResponse"
+          }
+        },
+        "required": [
+          "fichiers",
+          "pagination"
+        ],
+        "title": "ListeFichiersResponse",
+        "type": "object"
+      },
+      "ListeRessourcesResponse": {
+        "additionalProperties": false,
+        "description": "Réponse de GetCapabilities — ressources paginées.",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/PageTelechargementResponse"
+          },
+          "ressources": {
+            "items": {
+              "$ref": "#/components/schemas/RessourceTelechargementResponse"
+            },
+            "title": "Ressources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ressources",
+          "pagination"
+        ],
+        "title": "ListeRessourcesResponse",
+        "type": "object"
+      },
       "LocalLoginRequest": {
         "additionalProperties": false,
         "description": "Connexion par adresse e-mail et mot de passe.",
@@ -3534,6 +4277,36 @@
         "title": "ObservationHoraireDepartement",
         "type": "object"
       },
+      "PageTelechargementResponse": {
+        "additionalProperties": false,
+        "description": "Métadonnées de pagination d'une réponse Atom.",
+        "properties": {
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_count": {
+            "title": "Page Count",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total_entries": {
+            "title": "Total Entries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_entries",
+          "page",
+          "page_size",
+          "page_count"
+        ],
+        "title": "PageTelechargementResponse",
+        "type": "object"
+      },
       "ParametreCorrelation": {
         "additionalProperties": false,
         "description": "Une variable à corréler, avec ses valeurs observées (extension v1).",
@@ -3617,6 +4390,55 @@
           "numero"
         ],
         "title": "ParcelleCadastraleRequest",
+        "type": "object"
+      },
+      "PasswordResetConfirmRequest": {
+        "additionalProperties": false,
+        "description": "Preuve reçue par e-mail et nouveau mot de passe.",
+        "properties": {
+          "code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "new_password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "New Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "code",
+          "email",
+          "new_password"
+        ],
+        "title": "PasswordResetConfirmRequest",
+        "type": "object"
+      },
+      "PasswordResetRequest": {
+        "additionalProperties": false,
+        "description": "Demande publique qui répond toujours de façon générique.",
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "PasswordResetRequest",
         "type": "object"
       },
       "PedologyData": {
@@ -4781,6 +5603,51 @@
         "title": "ResourceUpdate",
         "type": "object"
       },
+      "RessourceTelechargementResponse": {
+        "additionalProperties": false,
+        "description": "Une ressource (produit IGN) listée par GetCapabilities.",
+        "properties": {
+          "date_maj": {
+            "title": "Date Maj",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Formats",
+            "type": "array"
+          },
+          "nom": {
+            "title": "Nom",
+            "type": "string"
+          },
+          "url_resource": {
+            "description": "URL GetResource de la ressource",
+            "title": "Url Resource",
+            "type": "string"
+          },
+          "zones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zones",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nom",
+          "url_resource",
+          "description",
+          "date_maj"
+        ],
+        "title": "RessourceTelechargementResponse",
+        "type": "object"
+      },
       "ResultatControle": {
         "description": "Résultat d'un contrôle individuel (`§5`).",
         "enum": [
@@ -5454,6 +6321,26 @@
         "title": "TypeSortie",
         "type": "string"
       },
+      "UpdateProfileRequest": {
+        "additionalProperties": false,
+        "description": "Champs personnels modifiables dans la première tranche.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "title": "UpdateProfileRequest",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -5816,6 +6703,78 @@
         ]
       }
     },
+    "/api/v1/auth/email/verification/confirm": {
+      "post": {
+        "operationId": "confirm_email_verification_api_v1_auth_email_verification_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirmer l'adresse avec le code reçu",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/verification/request": {
+      "post": {
+        "operationId": "request_email_verification_api_v1_auth_email_verification_request_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Envoyer un code de vérification de l'adresse",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/google/nonce": {
       "post": {
         "operationId": "create_google_nonce_api_v1_auth_google_nonce_post",
@@ -6045,6 +7004,158 @@
           }
         },
         "summary": "Déconnexion — révocation du refresh token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "get_account_profile_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Consulter le profil du compte courant",
+        "tags": [
+          "auth"
+        ]
+      },
+      "patch": {
+        "operationId": "update_account_profile_api_v1_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Modifier le profil du compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/reset/confirm": {
+      "post": {
+        "operationId": "confirm_password_reset_api_v1_auth_password_reset_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Choisir un nouveau mot de passe",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/reset/request": {
+      "post": {
+        "operationId": "request_password_reset_api_v1_auth_password_reset_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Demander une réinitialisation de mot de passe",
         "tags": [
           "auth"
         ]
@@ -7462,6 +8573,338 @@
         ]
       }
     },
+    "/api/v1/gis/telechargement/ressources": {
+      "get": {
+        "description": "Interroge l'API de téléchargement de la Géoplateforme IGN pour lister les produits disponibles (BD Forêt, BD TOPO Express, ADMIN-EXPRESS-COG, LiDAR HD, etc.). Résultats paginés.",
+        "operationId": "gis_telechargement_ressources_api_v1_gis_telechargement_ressources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "zone",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListeRessourcesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lister les ressources téléchargeables (GetCapabilities IGN)",
+        "tags": [
+          "gis"
+        ]
+      }
+    },
+    "/api/v1/gis/telechargement/ressources/{resource_name}": {
+      "get": {
+        "description": "Liste les jeux de données d'un produit IGN (ex. ADMIN-EXPRESS-COG). Chaque dossier correspond à une édition millésimée.",
+        "operationId": "gis_telechargement_dossiers_api_v1_gis_telechargement_ressources__resource_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "title": "Resource Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "zone",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListeDossiersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lister les dossiers d'une ressource (GetResource IGN)",
+        "tags": [
+          "gis"
+        ]
+      }
+    },
+    "/api/v1/gis/telechargement/ressources/{resource_name}/{subresource_name}": {
+      "get": {
+        "description": "Liste les fichiers téléchargeables d'un dossier de ressource IGN.",
+        "operationId": "gis_telechargement_fichiers_api_v1_gis_telechargement_ressources__resource_name___subresource_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "title": "Resource Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subresource_name",
+            "required": true,
+            "schema": {
+              "title": "Subresource Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListeFichiersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lister les fichiers d'un dossier (GetSubResource IGN)",
+        "tags": [
+          "gis"
+        ]
+      }
+    },
+    "/api/v1/gis/telechargement/telecharger/{resource_name}/{subresource_name}/{file_name}": {
+      "get": {
+        "description": "Télécharge un fichier binaire depuis l'API de téléchargement Géoplateforme IGN. Retourne le contenu binaire (ex. .7z, .shp).",
+        "operationId": "gis_telechargement_download_api_v1_gis_telechargement_telecharger__resource_name___subresource_name___file_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "title": "Resource Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subresource_name",
+            "required": true,
+            "schema": {
+              "title": "Subresource Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "file_name",
+            "required": true,
+            "schema": {
+              "title": "File Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Télécharger un fichier (Download IGN)",
+        "tags": [
+          "gis"
+        ]
+      }
+    },
     "/api/v1/gis/version": {
       "get": {
         "description": "Retourne la version du moteur et le backend utilisé.",
@@ -8770,6 +10213,185 @@
         ]
       }
     },
+    "/api/v1/sync/geosylva/parcelles": {
+      "get": {
+        "operationId": "list_parcels_api_v1_sync_geosylva_parcelles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoSylvaParcelPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Parcels",
+        "tags": [
+          "sync-geosylva"
+        ]
+      }
+    },
+    "/api/v1/sync/geosylva/parcelles/{client_id}": {
+      "delete": {
+        "operationId": "delete_parcel_api_v1_sync_geosylva_parcelles__client_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$",
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeoSylvaDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoSylvaParcelResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Parcel",
+        "tags": [
+          "sync-geosylva"
+        ]
+      },
+      "put": {
+        "operationId": "upsert_parcel_api_v1_sync_geosylva_parcelles__client_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$",
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeoSylvaUpsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoSylvaParcelResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upsert Parcel",
+        "tags": [
+          "sync-geosylva"
+        ]
+      }
+    },
     "/api/v1/validation/status": {
       "get": {
         "description": "Statut du moteur Validation.",
@@ -9015,6 +10637,10 @@
     {
       "description": "CRUD générique — types enregistrés du métamodèle",
       "name": "resources"
+    },
+    {
+      "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
+      "name": "sync-geosylva"
     },
     {
       "description": "Evidence Engine — collecte et validation de sources",

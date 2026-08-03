@@ -32,10 +32,25 @@ from gsie_api.engines.gis.ign_client import IGNClient, IGNClientError
 from gsie_api.engines.gis.schemas import (
     AltitudeRequest,
     CoucheGeo,
+    DossierTelechargementResponse,
+    FichierTelechargementResponse,
     GeoData,
     GeoLayer,
+    ListeDossiersResponse,
+    ListeFichiersResponse,
+    ListeRessourcesResponse,
+    PageTelechargementResponse,
     ParcelleCadastraleRequest,
+    RessourceTelechargementResponse,
     StationCharacteristics,
+)
+from gsie_api.engines.gis.telechargement_client import (
+    DossierTelechargement,
+    FichierTelechargement,
+    PageTelechargement,
+    RessourceTelechargement,
+    TelechargementClient,
+    TelechargementClientError,
 )
 from gsie_api.infrastructure.models import ResourceModel
 from gsie_api.infrastructure.models.spatial_temporal import PlaceModel
@@ -79,9 +94,15 @@ class GISEngine:
     (même schéma que KnowledgeEngine/CorrelationEngine).
     """
 
-    def __init__(self, session: AsyncSession, ign_client: IGNClient | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        ign_client: IGNClient | None = None,
+        telechargement_client: TelechargementClient | None = None,
+    ) -> None:
         self._session = session
         self._ign_client = ign_client or IGNClient()
+        self._telechargement_client = telechargement_client or TelechargementClient()
 
     @staticmethod
     def version() -> str:
@@ -176,3 +197,134 @@ class GISEngine:
             longitude=request.longitude,
             source=_ign_source("API de calcul altimétrique (RGE ALTI, data.geopf.fr)"),
         )
+
+    async def lister_ressources_telechargement(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 50,
+        zone: str | None = None,
+        format: str | None = None,
+    ) -> ListeRessourcesResponse:
+        """Liste les ressources téléchargeables (GetCapabilities Géoplateforme).
+
+        Raises:
+            GISEngineError: si l'API de téléchargement est indisponible.
+        """
+        try:
+            ressources, pagination = await self._telechargement_client.get_capabilities(
+                page=page, limit=limit, zone=zone, format=format
+            )
+        except TelechargementClientError as exc:
+            raise GISEngineError(str(exc)) from exc
+        return ListeRessourcesResponse(
+            ressources=[_ressource_to_schema(r) for r in ressources],
+            pagination=_page_to_schema(pagination),
+        )
+
+    async def lister_dossiers_telechargement(
+        self,
+        resource_name: str,
+        *,
+        page: int = 1,
+        limit: int = 50,
+        zone: str | None = None,
+        format: str | None = None,
+    ) -> ListeDossiersResponse:
+        """Liste les dossiers d'une ressource (GetResource Géoplateforme).
+
+        Raises:
+            GISEngineError: si l'API de téléchargement est indisponible.
+        """
+        try:
+            dossiers, pagination = await self._telechargement_client.get_resource(
+                resource_name, page=page, limit=limit, zone=zone, format=format
+            )
+        except TelechargementClientError as exc:
+            raise GISEngineError(str(exc)) from exc
+        return ListeDossiersResponse(
+            dossiers=[_dossier_to_schema(d) for d in dossiers],
+            pagination=_page_to_schema(pagination),
+        )
+
+    async def lister_fichiers_telechargement(
+        self,
+        resource_name: str,
+        subresource_name: str,
+        *,
+        page: int = 1,
+        limit: int = 50,
+    ) -> ListeFichiersResponse:
+        """Liste les fichiers d'un dossier (GetSubResource Géoplateforme).
+
+        Raises:
+            GISEngineError: si l'API de téléchargement est indisponible.
+        """
+        try:
+            fichiers, pagination = await self._telechargement_client.get_subresource(
+                resource_name, subresource_name, page=page, limit=limit
+            )
+        except TelechargementClientError as exc:
+            raise GISEngineError(str(exc)) from exc
+        return ListeFichiersResponse(
+            fichiers=[_fichier_to_schema(f) for f in fichiers],
+            pagination=_page_to_schema(pagination),
+        )
+
+    async def telecharger_fichier(
+        self,
+        resource_name: str,
+        subresource_name: str,
+        file_name: str,
+    ) -> bytes:
+        """Télécharge un fichier binaire (Download Géoplateforme).
+
+        Raises:
+            GISEngineError: si l'API de téléchargement est indisponible.
+        """
+        try:
+            return await self._telechargement_client.download_file(
+                resource_name, subresource_name, file_name
+            )
+        except TelechargementClientError as exc:
+            raise GISEngineError(str(exc)) from exc
+
+
+def _ressource_to_schema(r: RessourceTelechargement) -> RessourceTelechargementResponse:
+    return RessourceTelechargementResponse(
+        nom=r.nom,
+        url_resource=r.url_resource,
+        description=r.description,
+        date_maj=r.date_maj,
+        zones=r.zones,
+        formats=r.formats,
+    )
+
+
+def _dossier_to_schema(d: DossierTelechargement) -> DossierTelechargementResponse:
+    return DossierTelechargementResponse(
+        nom=d.nom,
+        url_subresource=d.url_subresource,
+        date_maj=d.date_maj,
+        zone=d.zone,
+        format=d.format,
+        date_edition=d.date_edition,
+    )
+
+
+def _fichier_to_schema(f: FichierTelechargement) -> FichierTelechargementResponse:
+    return FichierTelechargementResponse(
+        url_download=f.url_download,
+        taille_octets=f.taille_octets,
+        checksum_md5=f.checksum_md5,
+        mime_types=f.mime_types,
+    )
+
+
+def _page_to_schema(p: PageTelechargement) -> PageTelechargementResponse:
+    return PageTelechargementResponse(
+        total_entries=p.total_entries,
+        page=p.page,
+        page_size=p.page_size,
+        page_count=p.page_count,
+    )

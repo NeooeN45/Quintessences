@@ -24,6 +24,9 @@ from gsie_api.engines.gis.ign_client import IGNClientError
 from gsie_api.engines.gis.schemas import (
     AltitudeRequest,
     GeoData,
+    ListeDossiersResponse,
+    ListeFichiersResponse,
+    ListeRessourcesResponse,
     ParcelleCadastraleRequest,
     StationCharacteristics,
 )
@@ -118,3 +121,137 @@ async def gis_altitude(
         return await GISEngine(session).get_altitude(request_body)
     except GISEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+# --- API de téléchargement Géoplateforme IGN ---
+# GetCapabilities / GetResource / GetSubResource / Download
+
+
+@router.get(
+    "/telechargement/ressources",
+    response_model=ListeRessourcesResponse,
+    summary="Lister les ressources téléchargeables (GetCapabilities IGN)",
+    description=(
+        "Interroge l'API de téléchargement de la Géoplateforme IGN pour "
+        "lister les produits disponibles (BD Forêt, BD TOPO Express, "
+        "ADMIN-EXPRESS-COG, LiDAR HD, etc.). Résultats paginés."
+    ),
+)
+@_limiter.limit("10/minute")
+async def gis_telechargement_ressources(
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineReadUser,
+    page: int = 1,
+    limit: int = 50,
+    zone: str | None = None,
+    format: str | None = None,
+) -> ListeRessourcesResponse:
+    """Liste les ressources téléchargeables (GetCapabilities).
+
+    Raises:
+        502: Si l'API de téléchargement IGN est indisponible.
+    """
+    try:
+        return await GISEngine(session).lister_ressources_telechargement(
+            page=page, limit=limit, zone=zone, format=format
+        )
+    except GISEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get(
+    "/telechargement/ressources/{resource_name}",
+    response_model=ListeDossiersResponse,
+    summary="Lister les dossiers d'une ressource (GetResource IGN)",
+    description=(
+        "Liste les jeux de données d'un produit IGN (ex. ADMIN-EXPRESS-COG). "
+        "Chaque dossier correspond à une édition millésimée."
+    ),
+)
+@_limiter.limit("10/minute")
+async def gis_telechargement_dossiers(
+    resource_name: str,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineReadUser,
+    page: int = 1,
+    limit: int = 50,
+    zone: str | None = None,
+    format: str | None = None,
+) -> ListeDossiersResponse:
+    """Liste les dossiers d'une ressource (GetResource).
+
+    Raises:
+        502: Si l'API de téléchargement IGN est indisponible.
+    """
+    try:
+        return await GISEngine(session).lister_dossiers_telechargement(
+            resource_name, page=page, limit=limit, zone=zone, format=format
+        )
+    except GISEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get(
+    "/telechargement/ressources/{resource_name}/{subresource_name}",
+    response_model=ListeFichiersResponse,
+    summary="Lister les fichiers d'un dossier (GetSubResource IGN)",
+    description="Liste les fichiers téléchargeables d'un dossier de ressource IGN.",
+)
+@_limiter.limit("10/minute")
+async def gis_telechargement_fichiers(
+    resource_name: str,
+    subresource_name: str,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineReadUser,
+    page: int = 1,
+    limit: int = 50,
+) -> ListeFichiersResponse:
+    """Liste les fichiers d'un dossier (GetSubResource).
+
+    Raises:
+        502: Si l'API de téléchargement IGN est indisponible.
+    """
+    try:
+        return await GISEngine(session).lister_fichiers_telechargement(
+            resource_name, subresource_name, page=page, limit=limit
+        )
+    except GISEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get(
+    "/telechargement/telecharger/{resource_name}/{subresource_name}/{file_name:path}",
+    summary="Télécharger un fichier (Download IGN)",
+    description=(
+        "Télécharge un fichier binaire depuis l'API de téléchargement "
+        "Géoplateforme IGN. Retourne le contenu binaire (ex. .7z, .shp)."
+    ),
+)
+@_limiter.limit("5/minute")
+async def gis_telechargement_download(
+    resource_name: str,
+    subresource_name: str,
+    file_name: str,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> Response:
+    """Télécharge un fichier binaire (Download).
+
+    Raises:
+        502: Si l'API de téléchargement IGN est indisponible.
+    """
+    try:
+        content = await GISEngine(session).telecharger_fichier(
+            resource_name, subresource_name, file_name
+        )
+    except GISEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return Response(content=content, media_type="application/octet-stream")
