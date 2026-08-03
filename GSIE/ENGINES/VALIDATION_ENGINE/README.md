@@ -32,15 +32,13 @@ validation est le dernier rempart avant présentation.
 Recommendation Engine → Validation Engine → Utilisateur
 ```
 
-> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir
+> Statut : *implémentation livrée (Phase 4)* — code actif dans `GSIE/API/src/gsie_api/engines/validation/`
 
 ## Contrat d'interface
 
-> Note : le code source (`GSIE/API/src/gsie_api/engines/validation/`)
-> est livré et actif (`PROJECT_MEMORY.md`, DEC-000021 et suivants) ;
-> cette section documente le contrat effectif malgré la mention
-> ci-dessus, à faire converger lors d'une prochaine synchronisation
-> documentaire.
+> Le code source (`GSIE/API/src/gsie_api/engines/validation/`) est livré
+> et actif (`PROJECT_MEMORY.md`, DEC-000021 et suivants). Cette section
+> documente le contrat effectif.
 
 ### 1. Endpoints API
 

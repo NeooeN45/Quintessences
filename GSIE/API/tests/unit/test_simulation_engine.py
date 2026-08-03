@@ -184,3 +184,57 @@ def should_reject_simulation_result_without_projections() -> None:
             sources=[{"auteur": "test"}],
             assumptions=["test"],
         )
+
+
+# --- Tests version() ---
+
+
+def should_return_version_string() -> None:
+    """version() retourne la version du moteur."""
+    assert SimulationEngine.version() == "0.1.0"
+
+
+# --- Tests edge cases horizon ---
+
+
+@pytest.mark.asyncio
+async def should_generate_projection_for_min_horizon(engine: SimulationEngine) -> None:
+    """Un horizon de 1 an (minimum valide) génère au moins une projection."""
+    scenario = _make_scenario(horizon="1y")
+    result = await engine.simulate(scenario)
+    assert len(result.projections) >= 1
+    # La projection ne doit pas dépasser 1 an
+    for proj in result.projections:
+        assert proj.timestamp.year <= datetime.now(UTC).year + 1
+
+
+@pytest.mark.asyncio
+async def should_generate_projection_for_max_horizon(engine: SimulationEngine) -> None:
+    """Un horizon de 200 ans (maximum valide) génère des projections."""
+    scenario = _make_scenario(horizon="200y")
+    result = await engine.simulate(scenario)
+    assert len(result.projections) >= 1
+
+
+@pytest.mark.asyncio
+async def should_trim_whitespace_from_horizon(engine: SimulationEngine) -> None:
+    """Les espaces autour de l'horizon sont ignorés."""
+    scenario = _make_scenario(horizon="  10y  ")
+    result = await engine.simulate(scenario)
+    assert len(result.projections) >= 1
+
+
+@pytest.mark.asyncio
+async def should_parse_uppercase_horizon(engine: SimulationEngine) -> None:
+    """Le suffixe 'Y' majuscule est accepté."""
+    scenario = _make_scenario(horizon="10Y")
+    result = await engine.simulate(scenario)
+    assert len(result.projections) >= 1
+
+
+@pytest.mark.asyncio
+async def should_handle_intervention_without_parameters(engine: SimulationEngine) -> None:
+    """Une intervention avec parametres={} est acceptée."""
+    scenario = _make_scenario(parametres={})
+    result = await engine.simulate(scenario)
+    assert len(result.projections) >= 1
