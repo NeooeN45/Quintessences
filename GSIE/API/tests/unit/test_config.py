@@ -36,6 +36,8 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
+        "transactional_email_mode": "smtp",
+        "smtp_host": "smtp.example.com",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
     } | overrides
@@ -97,6 +99,50 @@ def should_accept_verify_full_tls_in_production():
     """Settings doit accepter verify-full comme mode TLS strict."""
     settings = Settings(**_production_kwargs(db_ssl_mode="verify-full"))
     assert settings.db_ssl_mode == "verify-full"
+
+
+def should_reject_local_registration_without_smtp_in_production():
+    """Un compte local sans canal de récupération ne doit pas être déployable."""
+    with pytest.raises(ValidationError, match="service SMTP"):
+        Settings(
+            **_production_kwargs(
+                transactional_email_mode="disabled",
+                smtp_host="",
+            )
+        )
+
+
+def should_reject_unencrypted_smtp_in_production():
+    """Le transport des codes sensibles doit être chiffré hors développement."""
+    with pytest.raises(ValidationError, match="SMTP doit être chiffré"):
+        Settings(
+            **_production_kwargs(
+                smtp_use_tls=False,
+                smtp_starttls=False,
+            )
+        )
+
+
+def should_reject_direct_tls_and_starttls_together() -> None:
+    """Les deux modes de négociation SMTP sont mutuellement exclusifs."""
+    with pytest.raises(ValidationError, match="ne peuvent pas être activés ensemble"):
+        Settings(
+            environment="development",
+            smtp_use_tls=True,
+            smtp_starttls=True,
+            _env_file=None,
+        )
+
+
+def should_reject_smtp_mode_without_relay() -> None:
+    """Activer SMTP sans hôte explicite doit échouer dès le démarrage."""
+    with pytest.raises(ValidationError, match="GSIE_SMTP_HOST"):
+        Settings(
+            environment="development",
+            transactional_email_mode="smtp",
+            smtp_host="",
+            _env_file=None,
+        )
 
 
 # ===========================================================================

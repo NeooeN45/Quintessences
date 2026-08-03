@@ -30,6 +30,8 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
+        "transactional_email_mode": "smtp",
+        "smtp_host": "smtp.example.com",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
     } | overrides

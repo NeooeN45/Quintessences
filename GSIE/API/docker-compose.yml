@@ -149,6 +149,17 @@ services:
       GSIE_GOOGLE_OAUTH_CLIENT_IDS: ${GSIE_GOOGLE_OAUTH_CLIENT_IDS:-[]}
       GSIE_GOOGLE_NONCE_STORAGE_URL: ${GSIE_GOOGLE_NONCE_STORAGE_URL:-}
       GSIE_GOOGLE_NONCE_EXPIRE_SECONDS: ${GSIE_GOOGLE_NONCE_EXPIRE_SECONDS:-300}
+      # Mailpit capture les messages uniquement en développement local. En
+      # staging/production, surcharger ces valeurs avec le relais réel.
+      GSIE_TRANSACTIONAL_EMAIL_MODE: ${GSIE_TRANSACTIONAL_EMAIL_MODE:-smtp}
+      GSIE_SMTP_HOST: ${GSIE_SMTP_HOST:-mailpit}
+      GSIE_SMTP_PORT: ${GSIE_SMTP_PORT:-1025}
+      GSIE_SMTP_USERNAME: ${GSIE_SMTP_USERNAME:-}
+      GSIE_SMTP_PASSWORD: ${GSIE_SMTP_PASSWORD:-}
+      GSIE_SMTP_USE_TLS: ${GSIE_SMTP_USE_TLS:-false}
+      GSIE_SMTP_STARTTLS: ${GSIE_SMTP_STARTTLS:-false}
+      GSIE_EMAIL_SENDER: ${GSIE_EMAIL_SENDER:-noreply@quintessences.local}
+      GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES: ${GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES:-15}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
       # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)
@@ -160,6 +171,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     volumes:
       # Clés JWT RS256 — montées en lecture seule depuis le host
       - ./keys:/keys:ro
@@ -218,6 +231,32 @@ services:
         limits:
           cpus: "0.5"
           memory: 256M
+
+  # Boîte SMTP locale pour tester vérification d'adresse et mot de passe oublié.
+  # Interface strictement locale : http://127.0.0.1:8025
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    ports:
+      - "127.0.0.1:8025:8025"
+    expose:
+      - "1025"
+    environment:
+      MP_MAX_MESSAGES: 200
+      MP_SMTP_AUTH_ACCEPT_ANY: "false"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "false"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
 
   # Uptime Kuma — monitoring uptime des services GSIE
   # (veille techno 2026-08-02, RFC-0031 action 7)

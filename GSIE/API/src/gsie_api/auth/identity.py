@@ -55,6 +55,7 @@ class AuthenticatedAccount:
     roles: tuple[str, ...]
     provider: str
     is_active: bool = True
+    session_version: int = 1
 
 
 @dataclass(frozen=True, slots=True)

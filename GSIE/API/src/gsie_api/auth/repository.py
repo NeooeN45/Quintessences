@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
+from gsie_api.auth.account_lifecycle import AccountActionCode, AccountProfile, ActionPurpose
 from gsie_api.auth.identity import (
     AccountAlreadyExistsError,
     AuthenticatedAccount,
@@ -18,6 +19,7 @@ from gsie_api.auth.identity import (
 )
 from gsie_api.infrastructure.models.accounts import (
     AccountRoleModel,
+    IdentityActionTokenModel,
     IdentityProviderLinkModel,
     LocalCredentialModel,
     UserAccountModel,
@@ -223,6 +225,174 @@ class SqlAlchemyIdentityRepository:
             raise ProviderAlreadyLinkedError from exc
         return self._account(account, await self._roles(account_id), "google")
 
+    async def get_profile(self, account_id: UUID) -> AccountProfile | None:
+        account = await self._session.get(UserAccountModel, account_id)
+        if account is None or account.deleted_at is not None or account.status != "active":
+            return None
+        links_statement = (
+            select(IdentityProviderLinkModel)
+            .where(
+                IdentityProviderLinkModel.account_id == account_id,
+                IdentityProviderLinkModel.revoked_at.is_(None),
+            )
+            .order_by(IdentityProviderLinkModel.provider)
+        )
+        links = list((await self._session.execute(links_statement)).scalars().all())
+        preferred_link = next((link for link in links if link.provider == "local"), None)
+        if preferred_link is None:
+            preferred_link = next((link for link in links if link.email_normalized), None)
+        return AccountProfile(
+            account_id=account.id,
+            display_name=account.display_name,
+            email=preferred_link.email_normalized if preferred_link is not None else None,
+            email_verified=preferred_link.email_verified if preferred_link is not None else False,
+            providers=tuple(dict.fromkeys(link.provider for link in links)),
+            roles=await self._roles(account_id),
+        )
+
+    async def update_display_name(
+        self,
+        account_id: UUID,
+        display_name: str | None,
+    ) -> AccountProfile | None:
+        account = await self._session.get(UserAccountModel, account_id)
+        if account is None or account.deleted_at is not None or account.status != "active":
+            return None
+        account.display_name = display_name
+        await self._session.flush()
+        return await self.get_profile(account_id)
+
+    async def find_local_account_id(self, email: str) -> UUID | None:
+        statement = (
+            select(IdentityProviderLinkModel.account_id)
+            .join(UserAccountModel, UserAccountModel.id == IdentityProviderLinkModel.account_id)
+            .where(
+                IdentityProviderLinkModel.provider == "local",
+                IdentityProviderLinkModel.issuer == "quintessences",
+                IdentityProviderLinkModel.subject == email,
+                IdentityProviderLinkModel.revoked_at.is_(None),
+                UserAccountModel.status == "active",
+                UserAccountModel.deleted_at.is_(None),
+            )
+            .limit(1)
+        )
+        return (await self._session.execute(statement)).scalar_one_or_none()
+
+    async def replace_action_code(
+        self,
+        account_id: UUID,
+        purpose: ActionPurpose,
+        code_hash: str,
+        expires_at: datetime,
+    ) -> str | None:
+        email_statement = select(IdentityProviderLinkModel.email_normalized).where(
+            IdentityProviderLinkModel.account_id == account_id,
+            IdentityProviderLinkModel.provider == "local",
+            IdentityProviderLinkModel.issuer == "quintessences",
+            IdentityProviderLinkModel.revoked_at.is_(None),
+        )
+        email = (await self._session.execute(email_statement)).scalar_one_or_none()
+        if email is None:
+            return None
+        now = datetime.now(UTC)
+        await self._session.execute(
+            update(IdentityActionTokenModel)
+            .where(
+                IdentityActionTokenModel.account_id == account_id,
+                IdentityActionTokenModel.purpose == purpose,
+                IdentityActionTokenModel.consumed_at.is_(None),
+            )
+            .values(consumed_at=now)
+        )
+        self._session.add(
+            IdentityActionTokenModel(
+                account_id=account_id,
+                purpose=purpose,
+                code_hash=code_hash,
+                expires_at=expires_at,
+            )
+        )
+        await self._session.flush()
+        return email
+
+    async def get_active_action_code(
+        self,
+        account_id: UUID,
+        purpose: ActionPurpose,
+    ) -> AccountActionCode | None:
+        statement = (
+            select(IdentityActionTokenModel)
+            .where(
+                IdentityActionTokenModel.account_id == account_id,
+                IdentityActionTokenModel.purpose == purpose,
+                IdentityActionTokenModel.consumed_at.is_(None),
+            )
+            .order_by(IdentityActionTokenModel.created_at.desc())
+            .limit(1)
+            .with_for_update()
+        )
+        token = (await self._session.execute(statement)).scalar_one_or_none()
+        if token is None:
+            return None
+        return AccountActionCode(
+            token_id=token.id,
+            account_id=token.account_id,
+            purpose=purpose,
+            code_hash=token.code_hash,
+            expires_at=token.expires_at,
+        )
+
+    async def consume_action_code(self, token_id: UUID) -> None:
+        token = await self._session.get(IdentityActionTokenModel, token_id)
+        if token is not None and token.consumed_at is None:
+            token.consumed_at = datetime.now(UTC)
+            await self._session.flush()
+
+    async def mark_email_verified(self, account_id: UUID) -> None:
+        await self._session.execute(
+            update(IdentityProviderLinkModel)
+            .where(
+                IdentityProviderLinkModel.account_id == account_id,
+                IdentityProviderLinkModel.provider == "local",
+                IdentityProviderLinkModel.issuer == "quintessences",
+                IdentityProviderLinkModel.revoked_at.is_(None),
+            )
+            .values(email_verified=True)
+        )
+        await self._session.flush()
+
+    async def update_local_password(self, account_id: UUID, password_hash: str) -> None:
+        statement = (
+            select(LocalCredentialModel)
+            .join(
+                IdentityProviderLinkModel,
+                IdentityProviderLinkModel.id == LocalCredentialModel.identity_link_id,
+            )
+            .where(
+                IdentityProviderLinkModel.account_id == account_id,
+                IdentityProviderLinkModel.provider == "local",
+                IdentityProviderLinkModel.revoked_at.is_(None),
+            )
+            .with_for_update()
+        )
+        credential = (await self._session.execute(statement)).scalar_one_or_none()
+        account = await self._session.get(UserAccountModel, account_id, with_for_update=True)
+        if credential is None or account is None or account.status != "active":
+            raise InvalidCredentialsError
+        credential.password_hash = password_hash
+        credential.password_changed_at = datetime.now(UTC)
+        account.session_version += 1
+        await self._session.flush()
+
+    async def is_session_version_current(self, account_id: UUID, version: int) -> bool:
+        statement = select(UserAccountModel.session_version).where(
+            UserAccountModel.id == account_id,
+            UserAccountModel.status == "active",
+            UserAccountModel.deleted_at.is_(None),
+        )
+        current_version = (await self._session.execute(statement)).scalar_one_or_none()
+        return current_version == version
+
     async def _roles(self, account_id: UUID) -> tuple[str, ...]:
         statement = (
             select(AccountRoleModel.role)
@@ -245,4 +415,5 @@ class SqlAlchemyIdentityRepository:
             roles=roles,
             provider=provider,
             is_active=account.status == "active" and account.deleted_at is None,
+            session_version=account.session_version,
         )

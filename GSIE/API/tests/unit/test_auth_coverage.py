@@ -12,7 +12,8 @@ Couvre les lignes manquantes :
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -31,6 +32,33 @@ auth_router._settings.auth_dev_password = "changeme"
 def client(mock_lifespan: object) -> Generator[TestClient, None, None]:
     with TestClient(create_app()) as test_client:
         yield test_client
+
+
+async def should_validate_session_version_with_a_lazy_database_session() -> None:
+    """Le validateur ouvre sa propre session uniquement quand il est sollicité."""
+    session = MagicMock()
+    context = MagicMock()
+    context.__aenter__ = AsyncMock(return_value=session)
+    context.__aexit__ = AsyncMock(return_value=None)
+    repository = MagicMock()
+    repository.is_session_version_current = AsyncMock(return_value=True)
+    account_id = uuid4()
+
+    with (
+        patch.object(
+            auth_router.database_infrastructure,
+            "async_session_factory",
+            return_value=context,
+        ),
+        patch.object(
+            auth_router,
+            "SqlAlchemyIdentityRepository",
+            return_value=repository,
+        ),
+    ):
+        assert await auth_router._is_session_version_current(account_id, 3) is True
+
+    repository.is_session_version_current.assert_awaited_once_with(account_id, 3)
 
 
 class TestGetDevUser:
@@ -192,11 +220,19 @@ class TestRefreshRolesEdgeCases:
 
         token = create_refresh_token(
             subject=str(auth_router.DEV_USER_ID),
-            claims={"roles": ["user"], "auth_provider": "google"},
+            claims={
+                "roles": ["user"],
+                "auth_provider": "google",
+                "session_version": 1,
+            },
         )
         mock_store = AsyncMock()
         mock_store.rotate = AsyncMock(return_value=True)
+        mock_session_version = AsyncMock(return_value=True)
         client.app.dependency_overrides[_get_store] = lambda: mock_store
+        client.app.dependency_overrides[auth_router.get_session_version_validator] = (
+            lambda: mock_session_version
+        )
         try:
             response = client.post(
                 "/api/v1/auth/refresh",
@@ -204,10 +240,15 @@ class TestRefreshRolesEdgeCases:
             )
         finally:
             client.app.dependency_overrides.pop(_get_store, None)
+            client.app.dependency_overrides.pop(
+                auth_router.get_session_version_validator,
+                None,
+            )
 
         payload = verify_token(response.json()["access_token"])
         assert response.status_code == 200
         assert payload["auth_provider"] == "google"
+        assert payload["session_version"] == 1
 
     def should_handle_missing_roles_claim(self, client: TestClient) -> None:
         """Un refresh token sans roles doit être accepté (roles=[])."""
@@ -257,6 +298,51 @@ class TestRefreshRolesEdgeCases:
             client.app.dependency_overrides.pop(_get_store, None)
         assert response.status_code == 200
 
+    def should_handle_non_list_roles_claim(self, client: TestClient) -> None:
+        """Une valeur de rôles non textuelle devient une liste vide."""
+        from gsie_api.auth.router import get_refresh_token_store as _get_store
+        from gsie_api.core.auth import create_refresh_token
+
+        token = create_refresh_token(
+            subject=str(auth_router.DEV_USER_ID),
+            claims={"roles": 42, "username": "admin"},
+        )
+        mock_store = AsyncMock()
+        mock_store.rotate = AsyncMock(return_value=True)
+        client.app.dependency_overrides[_get_store] = lambda: mock_store
+        try:
+            response = client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": token},
+            )
+        finally:
+            client.app.dependency_overrides.pop(_get_store, None)
+
+        assert response.status_code == 200
+
+    def should_reject_an_already_used_refresh_token(self, client: TestClient) -> None:
+        """La rotation atomique refuse tout rejeu du même refresh token."""
+        from gsie_api.auth.router import get_refresh_token_store as _get_store
+        from gsie_api.core.auth import create_refresh_token
+
+        token = create_refresh_token(
+            subject=str(auth_router.DEV_USER_ID),
+            claims={"roles": ["user"]},
+        )
+        mock_store = AsyncMock()
+        mock_store.rotate = AsyncMock(return_value=False)
+        client.app.dependency_overrides[_get_store] = lambda: mock_store
+        try:
+            response = client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": token},
+            )
+        finally:
+            client.app.dependency_overrides.pop(_get_store, None)
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Refresh token expired or already used"
+
     def should_return_401_when_subject_not_string(self, client: TestClient) -> None:
         """Un refresh token avec sub non-string doit être refusé."""
         from gsie_api.core.auth import create_refresh_token
@@ -301,6 +387,66 @@ class TestRefreshRolesEdgeCases:
             )
         assert response.status_code == 401
 
+    def should_return_401_when_identity_subject_is_not_a_uuid(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Une session d'identité doit toujours porter un UUID de compte."""
+        from gsie_api.auth.router import get_refresh_token_store as _get_store
+        from gsie_api.core.auth import create_refresh_token
+
+        token = create_refresh_token(
+            subject="identifiant-invalide",
+            claims={"auth_provider": "google", "session_version": 1},
+        )
+        mock_store = AsyncMock()
+        mock_store.rotate = AsyncMock(return_value=True)
+        client.app.dependency_overrides[_get_store] = lambda: mock_store
+        try:
+            response = client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": token},
+            )
+        finally:
+            client.app.dependency_overrides.pop(_get_store, None)
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid refresh token claims"
+
+    def should_return_401_when_identity_session_is_revoked(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Un changement sensible invalide les jetons de session antérieurs."""
+        from gsie_api.auth.router import get_refresh_token_store as _get_store
+        from gsie_api.core.auth import create_refresh_token
+
+        token = create_refresh_token(
+            subject=str(uuid4()),
+            claims={"auth_provider": "local", "session_version": 1},
+        )
+        mock_store = AsyncMock()
+        mock_store.rotate = AsyncMock(return_value=True)
+        validator = AsyncMock(return_value=False)
+        client.app.dependency_overrides[_get_store] = lambda: mock_store
+        client.app.dependency_overrides[auth_router.get_session_version_validator] = (
+            lambda: validator
+        )
+        try:
+            response = client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": token},
+            )
+        finally:
+            client.app.dependency_overrides.pop(_get_store, None)
+            client.app.dependency_overrides.pop(
+                auth_router.get_session_version_validator,
+                None,
+            )
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Session révoquée"
+
 
 class TestVerifyEndpoint:
     """Couverture lignes 242-249 — verify endpoint."""
@@ -342,6 +488,18 @@ class TestLogoutEndpoint:
             json={"refresh_token": token},
         )
         assert response.status_code == 401
+
+    def should_return_401_when_logout_jti_is_not_text(self, client: TestClient) -> None:
+        """Un jeton décodé sans JTI textuel reste inutilisable."""
+        with patch("gsie_api.auth.router.verify_token") as mock_verify:
+            mock_verify.return_value = {"jti": None, "type": "refresh"}
+            response = client.post(
+                "/api/v1/auth/logout",
+                json={"refresh_token": "jeton-simulé"},
+            )
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid refresh token claims"
 
     def should_return_revoked_false_when_logout_twice(self, client: TestClient) -> None:
         from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore

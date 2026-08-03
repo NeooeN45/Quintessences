@@ -124,3 +124,67 @@ class ProvidersResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     providers: list[ProviderCapability]
+
+
+class AccountProfileResponse(BaseModel):
+    """Profil du compte courant, sans jeton ni secret."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    account_id: str
+    display_name: str | None
+    email: EmailStr | None
+    email_verified: bool
+    providers: list[str]
+    roles: list[str]
+
+
+class UpdateProfileRequest(BaseModel):
+    """Champs personnels modifiables dans la première tranche."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    display_name: str | None = Field(default=None, max_length=200)
+
+
+class ActionCodeRequest(BaseModel):
+    """Code court reçu exclusivement par e-mail."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    code: str = Field(min_length=8, max_length=9, pattern=r"^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$")
+
+
+class PasswordResetRequest(BaseModel):
+    """Demande publique qui répond toujours de façon générique."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    email: EmailStr
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_input_email(cls, value: object) -> object:
+        return value.strip().casefold() if isinstance(value, str) else value
+
+
+class PasswordResetConfirmRequest(PasswordResetRequest, ActionCodeRequest):
+    """Preuve reçue par e-mail et nouveau mot de passe."""
+
+    new_password: SecretStr = Field(min_length=12, max_length=128)
+
+
+class AcceptedResponse(BaseModel):
+    """Accusé générique, volontairement identique pour tous les comptes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    accepted: bool = True
+
+
+class CompletedResponse(BaseModel):
+    """Confirmation d'une action de compte terminée."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    completed: bool = True

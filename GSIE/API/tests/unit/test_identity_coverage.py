@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 
 from gsie_api.app import create_app
 from gsie_api.auth import google_nonces
+from gsie_api.auth.account_lifecycle import AccountProfile
 from gsie_api.auth.google_identity import (
     GoogleTokenVerifier,
     InvalidGoogleTokenError,
@@ -39,6 +41,7 @@ from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore, get_refresh_to
 from gsie_api.auth.repository import SqlAlchemyIdentityRepository
 from gsie_api.core.auth import create_access_token
 from gsie_api.infrastructure.models.accounts import (
+    IdentityActionTokenModel,
     IdentityProviderLinkModel,
     LocalCredentialModel,
     UserAccountModel,
@@ -497,3 +500,140 @@ async def should_cover_google_repository_link_paths() -> None:
         await repository.link_google_identity(account_id, identity)
 
     assert SqlAlchemyIdentityRepository._account(account, ("user",), "local").is_active is False
+
+
+async def should_cover_account_profile_repository_paths() -> None:
+    account_id = uuid4()
+    account = UserAccountModel(id=account_id, status="active", display_name="Camille")
+    local_link = IdentityProviderLinkModel(
+        account_id=account_id,
+        provider="local",
+        issuer="quintessences",
+        subject="forestier@example.fr",
+        email_normalized="forestier@example.fr",
+        email_verified=True,
+    )
+    google_link = IdentityProviderLinkModel(
+        account_id=account_id,
+        provider="google",
+        issuer="https://accounts.google.com",
+        subject="google-subject",
+        email_normalized="google@example.fr",
+        email_verified=True,
+    )
+    session = _session()
+    session.get = AsyncMock(side_effect=[None, account, account])
+    session.execute = AsyncMock(
+        side_effect=[
+            _result(scalars=(local_link, google_link)),
+            _result(scalars=("user",)),
+            _result(scalars=(google_link,)),
+            _result(scalars=("user",)),
+        ]
+    )
+    repository = SqlAlchemyIdentityRepository(session)
+
+    assert await repository.get_profile(uuid4()) is None
+    local_profile = await repository.get_profile(account_id)
+    assert local_profile is not None
+    assert local_profile.email == "forestier@example.fr"
+    google_profile = await repository.get_profile(account_id)
+    assert google_profile is not None
+    assert google_profile.email == "google@example.fr"
+
+
+async def should_cover_profile_update_and_local_lookup_repository_paths() -> None:
+    account_id = uuid4()
+    account = UserAccountModel(id=account_id, status="active")
+    expected = AccountProfile(account_id, "Nouveau", None, False, (), ())
+    session = _session()
+    session.get = AsyncMock(side_effect=[None, account])
+    session.execute = AsyncMock(return_value=_result(scalar=account_id))
+    repository = SqlAlchemyIdentityRepository(session)
+    repository.get_profile = AsyncMock(return_value=expected)  # type: ignore[method-assign]
+
+    assert await repository.update_display_name(uuid4(), "Absent") is None
+    assert await repository.update_display_name(account_id, "Nouveau") == expected
+    assert account.display_name == "Nouveau"
+    assert await repository.find_local_account_id("forestier@example.fr") == account_id
+
+
+async def should_cover_action_code_repository_paths() -> None:
+    account_id = uuid4()
+    token_id = uuid4()
+    expires_at = datetime.now(UTC) + timedelta(minutes=15)
+    token = IdentityActionTokenModel(
+        id=token_id,
+        account_id=account_id,
+        purpose="verify_email",
+        code_hash="hash",
+        expires_at=expires_at,
+    )
+    consumed = IdentityActionTokenModel(
+        id=uuid4(),
+        account_id=account_id,
+        purpose="verify_email",
+        code_hash="hash",
+        expires_at=expires_at,
+        consumed_at=datetime.now(UTC),
+    )
+    session = _session()
+    repository = SqlAlchemyIdentityRepository(session)
+
+    session.execute = AsyncMock(return_value=_result(scalar=None))
+    assert (
+        await repository.replace_action_code(
+            account_id,
+            "verify_email",
+            "hash",
+            expires_at,
+        )
+        is None
+    )
+
+    session.execute = AsyncMock(side_effect=[_result(scalar="forestier@example.fr"), _result()])
+    assert (
+        await repository.replace_action_code(
+            account_id,
+            "verify_email",
+            "hash",
+            expires_at,
+        )
+        == "forestier@example.fr"
+    )
+    session.add.assert_called_once()
+
+    session.execute = AsyncMock(side_effect=[_result(scalar=None), _result(scalar=token)])
+    assert await repository.get_active_action_code(account_id, "verify_email") is None
+    action = await repository.get_active_action_code(account_id, "verify_email")
+    assert action is not None and action.token_id == token_id
+
+    session.get = AsyncMock(side_effect=[None, consumed, token])
+    await repository.consume_action_code(uuid4())
+    await repository.consume_action_code(consumed.id)
+    await repository.consume_action_code(token_id)
+    assert token.consumed_at is not None
+
+
+async def should_cover_sensitive_account_mutations_repository_paths() -> None:
+    account_id = uuid4()
+    link_id = uuid4()
+    credential = LocalCredentialModel(identity_link_id=link_id, password_hash="ancien")
+    account = UserAccountModel(id=account_id, status="active", session_version=1)
+    session = _session()
+    repository = SqlAlchemyIdentityRepository(session)
+
+    session.execute = AsyncMock(return_value=_result())
+    await repository.mark_email_verified(account_id)
+
+    session.execute = AsyncMock(side_effect=[_result(scalar=None), _result(scalar=credential)])
+    session.get = AsyncMock(side_effect=[None, account])
+    with pytest.raises(InvalidCredentialsError):
+        await repository.update_local_password(account_id, "nouveau")
+    await repository.update_local_password(account_id, "nouveau")
+    assert credential.password_hash == "nouveau"
+    assert account.session_version == 2
+
+    session.execute = AsyncMock(side_effect=[_result(scalar=2), _result(scalar=None)])
+    assert await repository.is_session_version_current(account_id, 2) is True
+    assert await repository.is_session_version_current(account_id, 2) is False

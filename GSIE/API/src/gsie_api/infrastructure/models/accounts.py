@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     UniqueConstraint,
     func,
@@ -31,6 +32,7 @@ class UserAccountModel(Base, TimestampMixin):
             "status IN ('active', 'disabled', 'pending_deletion')",
             name="ck_user_account_status",
         ),
+        CheckConstraint("session_version > 0", name="ck_user_account_session_version"),
         {"schema": IDENTITY_SCHEMA},
     )
 
@@ -42,6 +44,12 @@ class UserAccountModel(Base, TimestampMixin):
         server_default=text("'active'"),
     )
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    session_version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default=text("1"),
+    )
     disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -130,6 +138,41 @@ class AccountRoleModel(Base):
         server_default=text("'quintessences'"),
     )
     role: Mapped[str] = mapped_column(String(64), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class IdentityActionTokenModel(Base):
+    """Code à usage unique pour vérifier l'adresse ou restaurer le compte."""
+
+    __tablename__ = "identity_action_token"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('verify_email', 'reset_password')",
+            name="ck_identity_action_token_purpose",
+        ),
+        Index(
+            "idx_identity_action_token_active",
+            "account_id",
+            "purpose",
+            "consumed_at",
+        ),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    purpose: Mapped[str] = mapped_column(String(32), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

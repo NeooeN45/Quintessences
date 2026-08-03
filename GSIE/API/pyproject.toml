@@ -44,6 +44,8 @@ dependencies = [
     "argon2-cffi==25.1.0",
     "email-validator==2.3.0",
     "google-auth==2.56.0",
+    # Transport HTTP requis explicitement par google.auth.transport.requests.
+    "requests==2.34.2",
     # Sécurité — chiffrement .env (audit P1-1, tools/secure_env.py + core/config.py)
     # cryptography est tiré par pyjwt[crypto] mais importé directement → déclarer
     "cryptography==50.0.0",

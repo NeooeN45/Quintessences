@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-03 — **Socle d’identité Quintessences adopté et implémenté (RFC-0032 / DEC-000044) ✅** : compte canonique partagé par l’écosystème, inscription et connexion locales Argon2id, connexion et rattachement Google OIDC avec nonce à usage unique, jetons GSIE RS256, rôles applicatifs, migration réversible et isolement RGPD réel. Google reste inactif tant que ses identifiants OAuth ne sont pas configurés ; connexion entreprise affichée « En développement ». État structurel : 14 moteurs + orchestration, 29 migrations, 124 tables SQLAlchemy, 91 routes API, 1 915 tests unitaires passés (63 ignorés), couverture 100 % (9 338/9 338). La phase de stabilisation DEC-000043 demeure clôturée. |
+| **Dernière mise à jour** | 2026-08-03 — **Le cycle du compte local Quintessences est complet (DEC-000046) ✅** : profil modifiable, vérification e-mail, récupération anti-énumération, révocation des anciennes sessions et SMTP local reproductible. GeoSylva expose tout le parcours, conserve ses jetons chiffrés et reste hors ligne pour le métier. État mesuré : 14 moteurs + orchestration, 30 migrations, 125 tables SQLAlchemy, 97 routes FastAPI ; domaine identité 170 tests verts et composants ajoutés couverts à 100 % ; GeoSylva 513 tests verts et Lint sans erreur bloquante. La dernière campagne API globale terminée comptait 1 936 tests passés et 63 ignorés ; la relance actuelle a dépassé la fenêtre locale de dix minutes sans résultat final. |
 
 ---
 
@@ -389,6 +389,16 @@ brainstorming v5 n'est adoptée.
   de Commandement. Connexion locale et Google OIDC livrées côté serveur ;
   les fournisseurs professionnels OIDC/SAML restent explicitement
   « En développement ». Aucun rapprochement de comptes par e-mail seul.
+- **DEC-000045** — Parcours compte et diagnostic développeur GeoSylva
+  (Validé, 2026-08-03, RFC-0032). Trois surfaces Compose distinctes :
+  connexion, espace compte et diagnostic local en lecture seule. Huit
+  pressions sur la version activent les options développeur sans créer de
+  rôle ; toute future commande Fondateur devra être autorisée côté serveur.
+- **DEC-000046** — Cycle complet du compte local Quintessences (Validé,
+  2026-08-03, RFC-0032). Profil, vérification e-mail et récupération sont
+  livrés avec codes Argon2id à usage unique de quinze minutes, réponse
+  anti-énumération, SMTP chiffré en production et révocation des sessions
+  antérieures après changement de mot de passe.
 
 ## Documents structurants
 
@@ -924,9 +934,9 @@ a été corrigée sur deux P0 invalides :
 | ID | Description | Statut |
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
-| AUTH-2 | Vérification e-mail + récupération de mot de passe | **À faire avant ouverture publique** |
-| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **À faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — identité livrée, synchronisation métier à faire** |
+| AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
+| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
 
 ### Session 2026-08-02 (soir) — Consolidation + diagnostic Fondateur + DEC-000043
@@ -936,12 +946,14 @@ a été corrigée sur deux P0 invalides :
 | Métrique | Valeur | Source |
 |---|---|---|
 | Moteurs implémentés | 14 + orchestration | `src/gsie_api/engines/` (16 dirs) |
-| Migrations Alembic | 29 | `alembic/versions/` |
-| Tables SQLAlchemy | 124 | `Base.metadata.tables` |
+| Migrations Alembic | 30 | `alembic/versions/` |
+| Tables SQLAlchemy | 125 | `Base.metadata.tables` |
 | Schémas PostgreSQL | 6 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites |
-| Routes API | 91 | `create_app().routes` |
-| Tests unitaires | 1 915 passed, 63 skipped, 0 failed | `pytest tests/unit/` |
-| Couverture de code | 100 % (9 338/9 338 statements) | `pytest --cov=gsie_api` |
+| Routes API | 97 | `create_app().routes` |
+| Tests API — dernière campagne globale terminée | 1 936 passed, 63 skipped, 0 failed | `pytest` ; campagne suivante limitée à 10 min |
+| Couverture API — dernière campagne globale terminée | 99 % (9 580/9 702 statements) | `pytest --cov=gsie_api` |
+| Domaine identité actuel | 170 passed ; cycle, dépôt et e-mail à 100 % | campagne ciblée du 2026-08-03 |
+| GeoSylva Android | 513 passed, 0 skipped, 0 failed ; Lint 0 erreur | rapports Gradle |
 | Score mutation | 67/67 (100%) | `tests/mutation/harnais.py` |
 | Lint | ruff OK | `ruff check src/ tests/` |
 | Typage | mypy OK | `mypy src/gsie_api/` |

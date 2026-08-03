@@ -37,7 +37,7 @@ une ligne dans sa table spécifique (class-table inheritance).
 
 ## Endpoints
 
-### Identité Quintessences (RFC-0032 / DEC-000044)
+### Identité Quintessences (RFC-0032 / DEC-000044 à DEC-000046)
 
 | Méthode | Endpoint | Description |
 |---|---|---|
@@ -47,6 +47,12 @@ une ligne dans sa table spécifique (class-table inheritance).
 | POST | `/api/v1/auth/google/nonce` | Créer un nonce Google à usage unique |
 | POST | `/api/v1/auth/login/google` | Se connecter ou créer un compte avec Google |
 | POST | `/api/v1/auth/link/google` | Rattacher Google au compte GSIE courant |
+| GET | `/api/v1/auth/me` | Consulter le profil du compte courant |
+| PATCH | `/api/v1/auth/me` | Modifier le nom affiché |
+| POST | `/api/v1/auth/email/verification/request` | Demander un code de vérification |
+| POST | `/api/v1/auth/email/verification/confirm` | Confirmer l'adresse électronique |
+| POST | `/api/v1/auth/password/reset/request` | Demander une récupération anti-énumération |
+| POST | `/api/v1/auth/password/reset/confirm` | Définir un nouveau mot de passe et révoquer les anciennes sessions |
 | POST | `/api/v1/auth/refresh` | Rotation du refresh token, tous fournisseurs |
 | GET | `/api/v1/auth/verify` | Vérifier un access token GSIE |
 | POST | `/api/v1/auth/logout` | Révoquer un refresh token |
@@ -54,6 +60,12 @@ une ligne dans sa table spécifique (class-table inheritance).
 Les comptes persistés vivent dans `gsie_rgpd_identites`. Google est fermé
 tant que `GSIE_GOOGLE_OAUTH_CLIENT_IDS` est vide. Le login de développement
 historique `/auth/login` reste interdit en staging et production.
+
+En développement, `docker compose up -d mailpit` expose l'interface captive
+sur <http://localhost:8025> et le SMTP uniquement dans le réseau Compose.
+Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
+du relais et STARTTLS ou TLS direct ; Mailpit ne doit jamais recevoir de
+données réelles.
 
 ### CRUD générique (ADR-007)
 
@@ -101,8 +113,8 @@ docker compose run --rm \
   -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true \
   api true
 
-# 5. Démarrer l'API et le worker outbox
-docker compose up -d api outbox-worker
+# 5. Démarrer l'API, le worker outbox et le courrier local captif
+docker compose up -d api outbox-worker mailpit
 
 # 6. Vérifier l'API
 curl http://localhost:8000/health

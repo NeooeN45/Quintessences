@@ -9,13 +9,16 @@ Note : le modèle utilisateur (DB) sera implémenté en Phase 4 semaine 3.
 En attendant, un stub utilisateur est utilisé pour les tests.
 """
 
+from collections.abc import Awaitable, Callable
 from datetime import UTC
 from typing import Annotated, TypedDict
+from uuid import UUID
 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from gsie_api.auth.refresh_tokens import RefreshTokenStore, get_refresh_token_store
+from gsie_api.auth.repository import SqlAlchemyIdentityRepository
 from gsie_api.auth.schemas import (
     LoginRequest,
     LogoutRequest,
@@ -32,6 +35,7 @@ from gsie_api.core.auth import (
 )
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
+from gsie_api.infrastructure import database as database_infrastructure
 
 _settings = get_settings()
 logger = get_logger("gsie_api.auth.router")
@@ -56,6 +60,23 @@ class DevUser(TypedDict):
 
     password_hash: bytes
     roles: list[str]
+
+
+SessionVersionValidator = Callable[[UUID, int], Awaitable[bool]]
+
+
+async def _is_session_version_current(account_id: UUID, session_version: int) -> bool:
+    """Ouvre la base uniquement pour les sessions d'identité versionnées."""
+    async with database_infrastructure.async_session_factory() as session:
+        return await SqlAlchemyIdentityRepository(session).is_session_version_current(
+            account_id,
+            session_version,
+        )
+
+
+def get_session_version_validator() -> SessionVersionValidator:
+    """Dépendance paresseuse, surchargeable sans connexion DB dans les tests."""
+    return _is_session_version_current
 
 
 def _get_dev_user(username: str, password: str) -> DevUser | None:
@@ -179,6 +200,10 @@ async def refresh_token(
     response: Response,
     refresh_request: RefreshRequest,
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+    session_version_validator: Annotated[
+        SessionVersionValidator,
+        Depends(get_session_version_validator),
+    ],
 ) -> TokenResponse:
     """Échange un refresh token contre un nouveau access token."""
     payload = verify_token(refresh_request.refresh_token, expected_type="refresh")
@@ -204,6 +229,23 @@ async def refresh_token(
     auth_provider = payload.get("auth_provider")
     if isinstance(auth_provider, str):
         session_claims["auth_provider"] = auth_provider
+        session_version = payload.get("session_version")
+        try:
+            account_id = UUID(subject)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token claims",
+            ) from None
+        if type(session_version) is not int or not await session_version_validator(
+            account_id,
+            session_version,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session révoquée",
+            )
+        session_claims["session_version"] = session_version
 
     access_token = create_access_token(subject=subject, claims=session_claims)
     new_refresh_token = create_refresh_token(subject=subject, claims=session_claims)

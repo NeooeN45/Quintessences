@@ -4,6 +4,62 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-03 — CYCLE COMPLET DU COMPTE LOCAL] - 2026-08-03
+
+### DEC-000046 — profil, vérification et récupération
+
+- API du profil courant avec modification du nom affiché.
+- Vérification d'adresse et récupération de mot de passe par codes Argon2id
+  à usage unique, valables quinze minutes et jamais persistés en clair.
+- Réponses anti-énumération et révocation des anciennes sessions après
+  changement du mot de passe.
+- SMTP configurable avec chiffrement obligatoire en production ; Mailpit
+  captif sur `localhost:8025` pour le développement.
+- Migration `20260803_0030` ajoutant la table temporaire des actions
+  d'identité et la version de session.
+- GeoSylva complète désormais le profil, la vérification, la récupération et
+  le diagnostic développeur, sans dépendance du cœur forestier hors ligne.
+
+### Preuves
+
+- Cycle Docker réel validé de bout en bout : inscription, profil,
+  vérification, récupération, révocation de l'ancienne session et
+  reconnexion.
+- Domaine identité Python : 170 tests passés ; modules de cycle, dépôt et
+  courrier transactionnel couverts à 100 %, Ruff et mypy strict verts.
+- Suite API complète antérieure : 1 936 tests passés, 63 ignorés ; les
+  nouveaux tests de fermeture passent, mais la relance globale a dépassé la
+  fenêtre locale de dix minutes sans échec observé.
+- GeoSylva : 513 tests passés, 0 échec, 0 ignoré ; Lint 0 erreur bloquante ;
+  APK debug produit et parcours vérifié sur émulateur Android.
+
+## [SESSION 2026-08-03 — CLIENT IDENTITÉ GEOSYLVA] - 2026-08-03
+
+### DEC-000045 — première interface mobile Quintessences
+
+- Trois écrans Jetpack Compose distincts dans le repo externe GeoSylva :
+  connexion/création, gestion du compte et options développeur.
+- Client Retrofit du contrat GSIE, fournisseurs publiés dynamiquement,
+  connexion locale et Google Credential Manager avec nonce serveur.
+- Jetons GSIE conservés dans un coffre Android chiffré, jamais dans DataStore,
+  les logs ou l’interface.
+- Mode développeur persistant activable après huit pressions sur la version ;
+  diagnostic en lecture seule de `/health`, `/ready`, des fournisseurs, de la
+  session, du build et de l’appareil.
+- Le geste local n’accorde aucun rôle. Toute future commande réservée au
+  Fondateur devra être contrôlée côté serveur.
+- Cœur forestier hors-ligne préservé et aucune donnée de terrain synchronisée
+  par cette tranche.
+
+### Preuves
+
+- `:app:compileDebugKotlin` : succès.
+- `:app:assembleDebug` : APK de débogage produit.
+- `:app:lintDebug` : succès, 0 erreur (576 avertissements non bloquants).
+- 513 tests unitaires : 513 passés, 0 échec.
+- Documentation GeoSylva, politique de confidentialité, registre des
+  traitements, mémoire, roadmap et spécification d’identité synchronisés.
+
 ## [SESSION 2026-08-03 — IDENTITÉ QUINTESSENCES MULTI-FOURNISSEURS] - 2026-08-03
 
 ### RFC-0032 / DEC-000044 — socle serveur livré

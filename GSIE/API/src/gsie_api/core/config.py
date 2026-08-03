@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -254,6 +254,16 @@ class Settings(BaseSettings):
     # registre distribué des refresh tokens avec un préfixe de clés distinct.
     google_nonce_storage_url: str = ""
     google_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
+    # E-mails transactionnels : codes de vérification et de récupération.
+    transactional_email_mode: Literal["disabled", "smtp"] = "disabled"
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_use_tls: bool = False
+    smtp_starttls: bool = True
+    email_sender: str = "noreply@quintessences.local"
+    identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
 
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")
@@ -286,6 +296,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Valide que la configuration est sûre en production et staging."""
+        if self.smtp_use_tls and self.smtp_starttls:
+            raise ValueError("SMTP TLS direct et STARTTLS ne peuvent pas être activés ensemble")
+        if self.transactional_email_mode == "smtp" and not self.smtp_host.strip():
+            raise ValueError("GSIE_SMTP_HOST est requis lorsque les e-mails SMTP sont activés")
         # Cohérence pool vs max_connections (toujours vérifié, pas seulement en prod)
         max_app_connections = self.gunicorn_workers * (self.db_pool_size + self.db_max_overflow)
         # +1 pour outbox-worker, +5 reserve admin
@@ -342,6 +356,13 @@ class Settings(BaseSettings):
                     "TLS PostgreSQL requis en production/staging "
                     "(db_ssl_mode doit être 'require', 'verify-ca' ou 'verify-full')"
                 )
+            if self.auth_local_registration_enabled:
+                if self.transactional_email_mode != "smtp":
+                    raise ValueError(
+                        "La création de comptes locaux exige un service SMTP en staging/production"
+                    )
+                if not self.smtp_use_tls and not self.smtp_starttls:
+                    raise ValueError("Le transport SMTP doit être chiffré en staging/production")
         return self
 
 
