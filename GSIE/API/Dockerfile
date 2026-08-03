@@ -8,7 +8,7 @@
 
 FROM rust:1.85.0-slim-bookworm@sha256:1829c432be4a592f3021501334d3fcca24f238432b13306a4e62669dec538e52 AS rust-toolchain
 
-FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS builder
+FROM python:3.14-slim-bookworm@sha256:86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30 AS builder
 
 LABEL org.opencontainers.image.title="GSIE API"
 LABEL org.opencontainers.image.description="General System Intelligence Engine REST/WebSocket API"
@@ -64,7 +64,7 @@ RUN uv pip install --system --no-deps .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
 # --- Stage final ---
-FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS runtime
+FROM python:3.14-slim-bookworm@sha256:86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30 AS runtime
 
 WORKDIR /app
 
