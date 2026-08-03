@@ -2,7 +2,7 @@
 # Construit Apache AGE par-dessus l'image postgis/postgis officielle.
 # AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
 
-FROM postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
+FROM postgis/postgis:17-3.4@sha256:d0b5a6ecab18997637f55a83cb4a9467391de5645916cfa1b6f2a8d19eee7be5
 
 # Arguments de build pour la version d'Apache AGE
 ARG AGE_VERSION=1.5.0
