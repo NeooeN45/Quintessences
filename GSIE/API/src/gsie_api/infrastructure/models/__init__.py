@@ -30,6 +30,7 @@ from gsie_api.infrastructure.models import (
     provenance,  # noqa: F401
     reasoning,  # noqa: F401
     spatial_temporal,  # noqa: F401
+    sync,  # noqa: F401 — répliques privées des applications Quintessences
     temporal_engine,  # noqa: F401
 )
 from gsie_api.infrastructure.models.base import (  # noqa: F401

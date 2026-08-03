@@ -55,6 +55,7 @@ from gsie_api.shared.middleware import (
     StatusVersionGuardMiddleware,
     TraceIdMiddleware,
 )
+from gsie_api.sync.router import router as sync_router
 from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
@@ -74,6 +75,10 @@ _OPENAPI_TAGS = [
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
     {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
+    {
+        "name": "sync-geosylva",
+        "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
+    },
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -348,6 +353,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)

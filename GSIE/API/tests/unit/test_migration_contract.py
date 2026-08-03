@@ -11,7 +11,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260803_0030"
+_HEAD = "20260803_0031"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -67,9 +67,22 @@ def test_baseline_ne_depend_pas_des_modeles_applicatifs() -> None:
 
 
 def test_modeles_legacy_isoles_du_schema_courant() -> None:
-    assert len(Base.metadata.tables) == 125
+    assert len(Base.metadata.tables) == 126
     assert frozenset(LegacyBase.metadata.tables) == _LEGACY_TABLES
     assert frozenset(Base.metadata.tables).isdisjoint(_LEGACY_TABLES)
+
+
+def test_migration_sync_force_rls_et_interdit_la_suppression_physique() -> None:
+    source = Path("alembic/versions/20260803_0031_sync_parcelles_geosylva.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "ENABLE ROW LEVEL SECURITY" in source
+    assert "FORCE ROW LEVEL SECURITY" in source
+    assert "CREATE POLICY geosylva_parcels_owner" in source
+    assert "app.current_user_id" in source
+    assert "GRANT SELECT, INSERT, UPDATE" in source
+    assert "REVOKE DELETE" in source
 
 
 @pytest.mark.asyncio

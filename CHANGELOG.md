@@ -4,6 +4,34 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SESSION 2026-08-03 — SYNCHRONISATION PARCELLES GEOSYLVA] - 2026-08-03
+
+### DEC-000048 — première donnée métier connectée à GSIE
+
+- API privée `/api/v1/sync/geosylva/parcelles` authentifiée et isolée par
+  compte, avec liste paginée, validation stricte et quotas.
+- Migration Alembic `20260803_0031` : schéma `gsie_synchronisation`, table de
+  répliques, index propriétaire/date, RLS forcée et absence de droit `DELETE`
+  pour le rôle applicatif.
+- Écritures idempotentes par UUID d’opération, version optimiste et réponse
+  HTTP 409 contenant l’instantané courant sans écrasement automatique.
+- Suppressions conservées sous forme de tombstones.
+- GeoSylva Room v33 : file chiffrée, reprise WorkManager, refresh de session
+  sur 401, backoff réseau et états visibles dans les options développeur.
+- Réclamations et réponses de file conditionnées par UUID : une réponse réseau
+  ancienne ne peut pas écraser une modification locale plus récente ; les
+  lots supérieurs à 50 éléments déclenchent une continuation.
+- Première transmission soumise à une action explicite ; compte facultatif et
+  cœur forestier hors ligne préservés.
+
+### Preuves
+
+- API : 6 tests de service/contrat et 8 tests migration/PostgreSQL ciblés
+  passent ; Ruff et mypy strict sont verts.
+- Android : compilation debug réussie ; 5/5 tests de projection, politique de
+  reprise et migration Room passent, schéma v33 exporté ; campagne complète
+  de 518/518 tests et lint sans erreur.
+
 ## [SESSION 2026-08-03 — BORDURE CLOUDFLARE ZERO TRUST] - 2026-08-03
 
 ### DEC-000047 — protocole réseau GSIE

@@ -298,7 +298,8 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
 | **Couverture 100% + endpoints dashboard** — audit/gamification | ✅ **Complète (2026-08-02)** | 1859 tests unitaires passent, 63 skipped, 100% couverture (8831 stmts), score mutation 67/67. Endpoints `GET /audit-logs` + `GET /gamification/stats` (données statiques Phase 4). ruff + mypy OK. |
 | **Phase de stabilisation** — DEC-000043 | ✅ **Clôturée (2026-08-02)** | S1 restauration DB prouvée (127 tables, parité source ✓), S2 tranche verticale réelle (chaîne complète sur pilote Parelle 2007, 0.15s), S3 validation scientifique (3/3 scénarios, 18/18 checks, latence 32ms p95 34.68ms). Gates 4/5/6 rouvrables. |
-| **Identité Quintessences** — RFC-0032 / DEC-000044 à DEC-000046 | ✅ **Cycle local serveur + GeoSylva livrés (2026-08-03)** | Compte canonique, inscription/connexion Argon2id, Google OIDC, profil, vérification e-mail et récupération anti-énumération avec révocation des sessions. 5 tables dans `gsie_rgpd_identites`. GeoSylva fournit le parcours complet, coffre chiffré, Credential Manager et diagnostic API ; 513 tests et Lint sans erreur. Restent avant ouverture publique : relais SMTP et hébergement RGPD finaux, configuration/validation de marque OAuth Google et centre de comptes web. OIDC/SAML entreprise demeure « En développement ». |
+| **Identité Quintessences** — RFC-0032 / DEC-000044 à DEC-000046 | ✅ **Cycle local serveur + GeoSylva livrés (2026-08-03)** | Compte canonique, inscription/connexion Argon2id, Google OIDC, profil, vérification e-mail et récupération anti-énumération avec révocation des sessions. 5 tables dans `gsie_rgpd_identites`. GeoSylva fournit le parcours complet, coffre chiffré, Credential Manager et diagnostic API ; 518 tests et Lint sans erreur. Restent avant ouverture publique : relais SMTP et hébergement RGPD finaux, configuration/validation de marque OAuth Google et centre de comptes web. OIDC/SAML entreprise demeure « En développement ». |
+| **Synchronisation parcelles GeoSylva** — DEC-000048 | ✅ **Première tranche verticale livrée (2026-08-03)** | API dédiée et paginée, table RLS `gsie_synchronisation.geosylva_parcels`, version optimiste, idempotence et tombstones. GeoSylva v33 possède une file SQLCipher, WorkManager, reprise réseau et diagnostic. Activation explicite requise. Restent : pull serveur→mobile, comparaison/résolution des conflits et extension graduelle aux autres entités. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -433,11 +434,11 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | ID | Description | Statut |
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — identité livrée, synchronisation métier à faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — parcelles local→serveur livrées ; pull et résolution à faire** |
 | AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
 | AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
 | SEC-EDGE | Cloudflare Tunnel, protocole M2M et plan de contrôle | **Code et runbook terminés — activation avec domaine/token à faire** |
-| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **Partiel — GeoSylva parcelles livré ; QGISIA et SDK commun à faire** |
 
 ### Applications
 

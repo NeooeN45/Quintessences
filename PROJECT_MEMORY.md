@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-03 — **La bordure Cloudflare Zero Trust de GSIE est adoptée et préparée (DEC-000047) ✅** : tunnel sortant sans port Internet entrant, séparation public/M2M/contrôle, token hors Git, quotas par IP réelle et aucune identité Cloudflare embarquée dans les apps publiques. Le worker outbox possède désormais un battement de santé lié à ses cycles PostgreSQL/Redis. Le cycle de compte DEC-000046 reste complet ; l'activation publique attend uniquement les comptes, secrets fournisseurs et la recette sur matériel réel. |
+| **Dernière mise à jour** | 2026-08-03 — **La première synchronisation métier GeoSylva ↔ GSIE est livrée (DEC-000048) ✅** : parcelles poussées par file Room/SQLCipher et WorkManager, idempotence, version optimiste, tombstones, RLS par compte et diagnostic visible. L’activation exige une action explicite ; sans compte ou sans activation, le fonctionnement reste strictement local. La fusion serveur→mobile et l’écran de résolution des conflits restent à produire. |
 
 ---
 
@@ -403,6 +403,11 @@ brainstorming v5 n'est adoptée.
   2026-08-03). Tunnel sortant, origine non exposée, séparation des flux
   publics, M2M et contrôle. Cloudflare protège l'accès réseau ; JWT, rôles et
   révocation GSIE restent l'autorité métier.
+- **DEC-000048** — Synchronisation hors ligne des parcelles GeoSylva
+  (Validé, 2026-08-03, RFC-0032). File mobile chiffrée, WorkManager,
+  opérations idempotentes, versions optimistes, tombstones et RLS par compte.
+  La première transmission nécessite une action explicite ; aucun conflit ne
+  remplace silencieusement la donnée locale.
 
 ## Documents structurants
 
@@ -938,10 +943,10 @@ a été corrigée sur deux P0 invalides :
 | ID | Description | Statut |
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — identité livrée, synchronisation métier à faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — première tranche parcelles livrée ; pull et conflits à compléter** |
 | AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
 | AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
-| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **GeoSylva parcelles partiel ; QGISIA et SDK partagé à faire** |
 
 ### Session 2026-08-02 (soir) — Consolidation + diagnostic Fondateur + DEC-000043
 
@@ -950,14 +955,15 @@ a été corrigée sur deux P0 invalides :
 | Métrique | Valeur | Source |
 |---|---|---|
 | Moteurs implémentés | 14 + orchestration | `src/gsie_api/engines/` (16 dirs) |
-| Migrations Alembic | 30 | `alembic/versions/` |
-| Tables SQLAlchemy | 125 | `Base.metadata.tables` |
-| Schémas PostgreSQL | 6 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites |
+| Migrations Alembic | 31 | `alembic/versions/` |
+| Tables SQLAlchemy | 126 | `Base.metadata.tables` |
+| Schémas PostgreSQL | 7 | public, gsie_botanique, gsie_foret, gsie_gouvernance, gsie_rgpd, gsie_rgpd_identites, gsie_synchronisation |
 | Routes API | 97 | `create_app().routes` |
 | Tests API — dernière campagne globale terminée | 1 936 passed, 63 skipped, 0 failed | `pytest` ; campagne suivante limitée à 10 min |
 | Couverture API — dernière campagne globale terminée | 99 % (9 580/9 702 statements) | `pytest --cov=gsie_api` |
 | Domaine identité actuel | 170 passed ; cycle, dépôt et e-mail à 100 % | campagne ciblée du 2026-08-03 |
-| GeoSylva Android | 513 passed, 0 skipped, 0 failed ; Lint 0 erreur | rapports Gradle |
+| GeoSylva Android | 518 passed, 0 skipped, 0 failed ; Lint 0 erreur | rapports Gradle |
+| Synchronisation parcelles | 19 tests ciblés API/DB/Android ; compilation Android verte | campagnes du 2026-08-03 |
 | Score mutation | 67/67 (100%) | `tests/mutation/harnais.py` |
 | Lint | ruff OK | `ruff check src/ tests/` |
 | Typage | mypy OK | `mypy src/gsie_api/` |
