@@ -47,6 +47,17 @@ Format : `## [version] - YYYY-MM-DD`
   cascade, identification TFLite, assistant vocal, RGPD audio.
 - ROADMAP.md : références aux RFC-0033 et RFC-0034 dans les phases P4/P5.
 
+## [DÉCISIONS — DEC-000049, DEC-000050] - 2026-08-03
+
+- **DEC-000049** : contrats d'interface GeoSylva ↔ moteurs GSIE (RFC-0033
+  adoptée). Enveloppes communes, 8 endpoints moteurs + 2 orchestration +
+  1 pull, SDK Kotlin, cache local, résolution conflits. Phase P4.
+- **DEC-000050** : IA forestière on-device et multi-tier (RFC-0034 adoptée).
+  T1 SmolLM3 3B ONNX, T2 Mistral 7B edge, T3 serveur vLLM. RAG local
+  SQLite-vec, identification TFLite PureForest, assistant vocal Vosk FR,
+  banc GSIE-Eval-FR. Phase P5.
+- RFC-0033 et RFC-0034 passées en statut `Adopté`.
+
 ## [DOCUMENTATION — GEOSYLVA-003] - 2026-08-03
 
 - Création de la spécification fonctionnelle GeoSylva 3.0 : parcours

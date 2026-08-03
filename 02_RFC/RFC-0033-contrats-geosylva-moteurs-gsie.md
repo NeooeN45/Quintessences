@@ -3,10 +3,10 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0033 |
-| **Statut** | Proposé |
+| **Statut** | Adopté (2026-08-03, DEC-000049) |
 | **Auteur** | Direction technique (assistée par Devin CLI, GLM-5.2 High) |
 | **Date** | 2026-08-03 |
-| **Décision liée** | À valider par DEC (Phase P4) |
+| **Décision liée** | DEC-000049 |
 | **Périmètre** | Connexion canal 1 GeoSylva mobile ↔ moteurs GSIE serveur |
 | **Motivation** | Spécifier les contrats d'interface opérationnels entre l'app mobile et les moteurs GSIE pour permettre l'implémentation de la Phase P4 |
 
@@ -247,8 +247,8 @@ identique → ignorée. Si locale plus récente → 409, résolution explicite.
 
 ## 6. Statut et validation
 
-- **Statut** : Proposé. À valider par le Fondateur.
-- **Décision requise** : DEC (Phase P4) pour activer l'implémentation.
+- **Statut** : Adopté (2026-08-03, DEC-000049).
+- **Décision liée** : DEC-000049 (Phase P4) active l'implémentation.
 - **Dépendances** : P0 (corrections audits) + P3 (moteurs scientifiques
   locaux) terminés. SDK Kotlin peut démarrer en parallèle.
 

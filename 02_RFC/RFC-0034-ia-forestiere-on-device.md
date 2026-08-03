@@ -3,10 +3,10 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | RFC-0034 |
-| **Statut** | Proposé |
+| **Statut** | Adopté (2026-08-03, DEC-000050) |
 | **Auteur** | Direction technique (assistée par Devin CLI, GLM-5.2 High) |
 | **Date** | 2026-08-03 |
-| **Décision liée** | À valider par DEC (Phase P5) |
+| **Décision liée** | DEC-000050 |
 | **Périmètre** | LLM on-device (T1), edge (T2), serveur (T3) pour GeoSylva ; RAG scientifique ; identification essence ; assistant vocal |
 | **Motivation** | Spécifier l'architecture IA forestière opérationnelle pour GeoSylva 3.0 en consolidant les visions existantes sans les réinventer |
 
@@ -283,8 +283,8 @@ une recommandation opérationnelle sans consentement (§7.1 GEOSYLVA-003).
 
 ## 6. Statut et validation
 
-- **Statut** : Proposé. À valider par le Fondateur.
-- **Décision requise** : DEC (Phase P5) pour activer l'implémentation.
+- **Statut** : Adopté (2026-08-03, DEC-000050).
+- **Décision liée** : DEC-000050 (Phase P5) active l'implémentation.
 - **Dépendances** : P4 (connexion GSIE Serveur, RFC-0033) terminé.
   `gsie-ai-gateway` (RFC-0019) implémenté pour T3.
 - **Différé** : vLLM + Phi-4-reasoning 14B (RFC-0031) — T3 utilise
