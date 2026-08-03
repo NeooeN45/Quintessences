@@ -67,7 +67,7 @@ dependencies = [
     "orjson==3.10.11",
     # Boucle d'événements haute performance (Linux uniquement, veille techno 2026-08-02)
     "uvloop==0.21.0 ; sys_platform != 'win32'",
-    "eccodeslib==2.47.3.23 ; sys_platform != 'win32'",
+    "eccodeslib==2.48.0.26 ; sys_platform != 'win32'",
     "pgvector==0.5.0",
 ]
 
