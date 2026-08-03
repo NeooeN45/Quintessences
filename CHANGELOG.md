@@ -4,6 +4,35 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 ROADMAP] - 2026-08-03
+
+- Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.2.0) :
+  roadmap structurée §12 consolidant la documentation existante.
+- **Architecture cible** : trois axes distincts (cœur offline, canal 1 GSIE
+  Serveur, canaux 2-3 terrain) avec schéma et principes non négociables.
+- **Cascade LLM multi-tier** : T1 mobile (SmolLM3 3B), T2 edge (Mistral 7B),
+  T3 serveur (Phi-4-reasoning 14B). Règle : le LLM appelle les moteurs, ne
+  calcule jamais de mémoire (ADR-009).
+- **Connexion GSIE Serveur** : tableau des 8 moteurs appelés par GeoSylva
+  (Correlation, Reasoning, Diagnostic, Recommendation, Forest Dynamics,
+  Simulation, Botanical, Learning) avec rôle, déclencheur et statut.
+- **8 phases** (P0 fondations → P7 refonte visuelle) avec livrables,
+  dépendances et 6 décisions/RFC requises.
+- **Sources consolidées** (§12.7) : VOLUME_CALCULATION_NEXT_GEN §10/§16,
+  RESEARCH_OPPORTUNITIES §3, VISION_LLM_SPECIALISES, RFC-0003, RFC-0019,
+  RFC-0018, contrats 14 moteurs, GEO-001 à GEO-004, MASTER_PLAN.
+- ROADMAP.md racine : section GeoSylva 3.0 mise à jour avec architecture
+  cible, cascade LLM, phases et sources consolidées.
+
+## [DOCUMENTATION — GEOSYLVA-003] - 2026-08-03
+
+- Création de la spécification fonctionnelle GeoSylva 3.0 : parcours
+  Projet→Forêt→Parcelle→Placette→Martelage, onboarding, cartographie, packs,
+  échanges terrain et mode développeur.
+- Ajout de la doctrine scientifique imposant provenance, unités, incertitudes,
+  tests reproductibles et prise en compte explicite de la qualité du bois et des
+  observations sanitaires, y compris le contexte des parcelles voisines.
+
 ## [SESSION 2026-08-03 — SYNCHRONISATION PARCELLES GEOSYLVA] - 2026-08-03
 
 ### DEC-000048 — première donnée métier connectée à GSIE

@@ -1,5 +1,57 @@
 # ROADMAP — Quintessences / GSIE
 
+## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.2.0)
+
+Le périmètre de la prochaine évolution mobile est consigné dans
+`apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (GEOSYLVA-003).
+
+### Architecture cible
+
+GeoSylva 3.0 consolide trois axes d'intelligence distincts :
+
+1. **Cœur forestier offline** — calculs déterministes sourcés (tarifs, IBP,
+   Shannon), LLM on-device léger (SmolLM3 3B / Phi-3-mini) pour assistance
+   vocale et explication, jamais pour calculer.
+2. **Canal 1 — GSIE Serveur** — moteurs lourds (Correlation, Reasoning,
+   Diagnostic, Recommendation, Forest Dynamics, Simulation), LLM serveur
+   (Mistral 7B / Phi-4-reasoning via vLLM) pour RAG scientifique et
+   raisonnement profond, Knowledge Engine pour coefficients sourcés.
+3. **Canaux 2-3 — terrain** — Bluetooth (proximité immédiate) et LoRa mesh
+   (portée longue, bas débit) pour synchronisation d'équipe.
+
+### Cascade LLM multi-tier
+
+| Tier | Modèle cible | Rôle | Réseau |
+|---|---|---|---|
+| T1 Mobile | SmolLM3 3B (INT4) | Assistance vocale, explication, identification essence | Aucun |
+| T2 Edge | Mistral 7B (NIM/Jetson) | RAG documentation, raisonnement intermédiaire | Wi-Fi local |
+| T3 Serveur | Phi-4-reasoning 14B (vLLM) | Raisonnement profond via moteurs GSIE | 4G/Wi-Fi |
+
+Principe non négociable : le LLM appelle les moteurs, ne calcule jamais de
+mémoire (ADR-009, VISION_LLM_SPECIALISES §2.1).
+
+### Phases de réalisation
+
+| Phase | Livrables | Décisions requises |
+|---|---|---|
+| P0 Fondations | Corrections audits (Hdom, station, SQLCipher, pinning, RGPD) + contrat données (migration v34 amorcée) | DEC corrections |
+| P1 Création guidée | Forêt/parcelle/placette, questionnaires, contrôles surface, provenance | — |
+| P2 Martelage persistant | Session complète, modes classique/vocal/hybride, instantané immuable | DEC format session |
+| P3 Moteurs scientifiques locaux | Fiches méthodes versionnées, qualité, pathogènes, incertitudes | RFC fiches méthodes |
+| P4 Connexion GSIE Serveur | SDK Kotlin, contrats API moteurs, cache, pull, résolution conflits | RFC contrats GeoSylva ↔ moteurs |
+| P5 LLM on-device | Modèle T1 embarqué, RAG local, cascade T1→T2→T3, assistant vocal | RFC IA forestière on-device |
+| P6 Sync terrain | Bluetooth, QR team key, Meshtastic, paquets signés, journal fusion | RFC sync terrain |
+| P7 Refonte visuelle | Onboarding, animation, packs offline, batterie/accessibilité | — |
+
+P7 peut démarrer dès P1 et progresser en parallèle de P2-P6.
+
+### Sources consolidées
+
+La roadmap consolide sans réinventer : `VOLUME_CALCULATION_NEXT_GEN.md`
+§10/§16, `RESEARCH_OPPORTUNITIES.md` §3, `VISION_LLM_SPECIALISES`, RFC-0003,
+RFC-0019, RFC-0018, contrats des 14 moteurs `GSIE/ENGINES/`, GEO-001 à
+GEO-004, `MASTER_PLAN.md`. Voir GEOSYLVA-003 §12.7 pour la liste complète.
+
 ## Jalon P0 — Refondation constitutionnelle (EN_REVUE)
 
 | Élément | État |
