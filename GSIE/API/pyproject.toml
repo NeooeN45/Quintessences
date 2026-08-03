@@ -59,7 +59,7 @@ dependencies = [
     "xarray==2026.4.0",
     "defusedxml==0.7.1",
     # Utilitaires
-    "python-multipart==0.0.20",
+    "python-multipart==0.0.32",
     "httpx==0.28.1",
     # Retries avec backoff exponentiel — clients API externes (GSIE-PROMPT-0023)
     "tenacity==8.5.0",
