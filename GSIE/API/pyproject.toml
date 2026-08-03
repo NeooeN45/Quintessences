@@ -43,7 +43,7 @@ dependencies = [
     "bcrypt==4.2.1",
     # Sécurité — chiffrement .env (audit P1-1, tools/secure_env.py + core/config.py)
     # cryptography est tiré par pyjwt[crypto] mais importé directement → déclarer
-    "cryptography==49.0.0",
+    "cryptography==50.0.0",
     # Sécurité — rate limiting (OWASP A07)
     "slowapi==0.1.9",
     # OGC API — pygeoapi ajouté en semaine 5 (GIS Engine)
