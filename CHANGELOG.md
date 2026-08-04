@@ -4,6 +4,37 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 DEV PACK] - 2026-08-04
+
+- Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.4.0) :
+  intégration du GeoSylva Quintessences Dev Pack (brainstorming ChatGPT,
+  `21_EXPERIMENTS/GEOSYLVA_DEV_PACK_2026-08-04/`).
+- **§16 QPIS** — Quintessences Pack Intelligence System : 7 types de packs,
+  manifestes, états, téléchargement intelligent, Storage Budget Manager,
+  mise à jour différentielle. Le §9 existant est un sous-ensemble de QPIS.
+- **§17 Mission Engine et Protocol Engine** : 12 métiers, capabilities,
+  missions, protocoles déclaratifs versionnés (inspiré ODK/Open Foris),
+  formulaires contextuels, workflows de validation, tableaux de bord par
+  métier.
+- **§18 TreeVision** : mesure multimodale des arbres (caméra, profondeur,
+  IMU, GNSS, instruments), hiérarchie des sources, correction humaine,
+  position améliorée (Kalman, triangulation), indice de confiance, banc de
+  validation, boucle GSIE.
+- **§19 Métiers, capabilities et adaptation contextuelle** : 20 objets
+  communs Quintessences, unité territoriale partagée (7 modules), deep
+  links interapplications, architecture modulaire (platform/forest-core/
+  mission-engine/geo-engine/treevision), moteurs locaux/serveur/hybrides
+  avec parité, distance de débardage sur graphe.
+- **§20 Identité fédérée et organisations** : Keycloak, OIDC PKCE S256,
+  passkeys/WebAuthn, UUID Quintessences immuable, modèle
+  (QuintessencesUser, ExternalIdentity, Organization, Workspace, etc.),
+  flux Android, hors ligne, séparation identité/autorisation métier,
+  liaison de comptes.
+- **§12.8 Vision long terme (Dev Pack)** : 10 phases (0-9) du Dev Pack
+  comme complément de la roadmap P0-P7 existante.
+- **Renumérotation** : §16→§21 Références, §17→§22 Historique.
+- ROADMAP.md racine : section GeoSylva 3.0 mise à jour (v0.4.0).
+
 ## [DOCUMENTATION — GEOSYLVA-003 ROADMAP] - 2026-08-03
 
 - Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.2.0) :

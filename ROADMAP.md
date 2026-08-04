@@ -1,9 +1,14 @@
 # ROADMAP — Quintessences / GSIE
 
-## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.2.0)
+## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
 
 Le périmètre de la prochaine évolution mobile est consigné dans
 `apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (GEOSYLVA-003).
+La v0.4.0 intègre le GeoSylva Quintessences Dev Pack (brainstorming ChatGPT,
+`21_EXPERIMENTS/GEOSYLVA_DEV_PACK_2026-08-04/`) : QPIS (§16), Mission/Protocol
+Engine (§17), TreeVision (§18), métiers et architecture modulaire (§19),
+identité fédérée Keycloak/OIDC (§20). Vision long terme GeoSylva comme poste
+de travail numérique complet du technicien forestier.
 
 ### Architecture cible
 
