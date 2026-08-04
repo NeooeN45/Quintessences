@@ -4,6 +4,41 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.9.0] - 2026-08-04
+
+- **Candidate for Review** — 11 corrections structurantes du Fondateur.
+- **CORR 1** : hiérarchie territoriale — `⊇` remplacés par relations
+  nommées (graphe relationnel N-N, pas arbre rigide). Une forêt peut
+  couvrir plusieurs propriétés ; un peuplement peut chevaucher plusieurs
+  parcelles.
+- **CORR 2** : navigation contextuelle clarifiée comme **vue
+  utilisateur**, pas propriété des données. Les entités utilisent des
+  relations N-N (forêt dans plusieurs projets, mission sur plusieurs
+  forêts, etc.).
+- **CORR 3** : surcharge d'onglets réduite — fiche parcelle 13 onglets →
+  5 groupes (Aperçu/Terrain/Interventions/Analyse/Plus) avec
+  sous-navigation ; fiche placette 11 onglets → 5 groupes.
+- **CORR 4** : bottom nav — « Données » → « Explorer » (variante B
+  privilégiée) + variantes A/B à tester avec utilisateurs.
+- **CORR 5** : Compte — 16 sections regroupées en 4 groupes visuels
+  (Identité / Offre Quintessences / Application / Confidentialité).
+- **CORR 6** : permissions onboarding — pas toutes dès le départ,
+  demandées au premier usage de chaque fonction (localisation → carte,
+  caméra → scan, etc.).
+- **CORR 7** : fond vidéo connexion — ressource APK légère par défaut +
+  pack signé facultatif (avant la première installation de packs).
+- **CORR 8** : splash — séparation bloquant (base/migration/intégrité)
+  et non-bloquant (sync/packs/session), démarrage rapide.
+- **CORR 9** : contradiction roadmap — ancien P7 « Reporté » →
+  « Obsolète, refonte UI transversale à tous les lots ».
+- **CORR 10** : contradiction 12 métiers — « 12 métiers v1 » →
+  « 12 profils cible longue durée, 1 métier v1 (technicien forestier) ».
+- **CORR 11** : diagnostics — onglets fixes → **cartes conditionnelles**
+  (apparaissent selon protocoles installés, territoire, métier,
+  abonnement, mission, données disponibles).
+- GeoSylva spec passe en v0.9.0 — Candidate for Review (commit `684f185`
+  sur `fix/enterprise-reliability-2026-07-21`, +284/-68 lignes).
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.8.0] - 2026-08-04
 
 - **Section §29 — Architecture des écrans, navigation et refonte UI/UX**
