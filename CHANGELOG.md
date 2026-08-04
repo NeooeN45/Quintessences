@@ -4,6 +4,35 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.5.0] - 2026-08-04
+
+- Vérification section par section de la spec v0.4.0 face aux documents
+  sources du Dev Pack. Correction de 9 écarts et 3 tensions logiques.
+- **§4.2 amendé** : pointe vers §20 comme architecture cible (transition
+  Keycloak), les comptes entreprise ne sont plus « en développement ».
+- **§16.9 Droits et abonnements** : chaîne logique Subscription ↔ QPIS via
+  EntitlementResolver (comble la tension T3).
+- **§17.9 Catalogue de protocoles** : 4 sources (officiels, organisationnels,
+  pédagogiques, communautaires) + 11 métadonnées.
+- **§18.10 Modes TreeVision** : rapide, précis, calibration, placette
+  semi-automatique.
+- **§20.2 enrichi + §20.2.1** : justification Keycloak auto-hébergé, méthodes
+  connexion Quintessences (passkey principal, TOTP/codes récupération
+  secondaire, mot de passe compatibilité).
+- **§20.5 enrichi** : interdictions Android (WebView, secret APK, flux
+  implicite, flux mot de passe direct, jetons en clair).
+- **§20.9 Migration** : procédure de transition Google direct → Keycloak
+  (liaison automatique au premier login, période de transition, fallback).
+- **§20.10 Connexion entreprise** : petite structure (invitation) vs grande
+  structure (détection domaine → SSO entreprise → Keycloak broker).
+- **§20.11 Sécurité administrative** : passkey obligatoire, second facteur,
+  session réduite, journal, révocation appareils.
+- **§20.12 Gestion des jetons** : access 5-10min, refresh rotation, session
+  normale vs admin, vérifications API (signature, iss, aud, exp, session,
+  rôles, org active).
+- GeoSylva spec passe en v0.5.0 (commit `fe9be9d` sur
+  `fix/enterprise-reliability-2026-07-21`).
+
 ## [DOCUMENTATION — GEOSYLVA-003 DEV PACK] - 2026-08-04
 
 - Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.4.0) :
