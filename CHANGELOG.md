@@ -4,6 +4,30 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.9.1] - 2026-08-04
+
+- **Nettoyage** — 8 corrections résiduelles avant gel de la spec.
+- **CORR 1** : §3.1 — « parent » unique → relations
+  structurelles/contextuelles/workspace (pas de `parentId` universel).
+- **CORR 2** : 8 mentions résiduelles « Données » → « Explorer ».
+- **CORR 3** : §29.1 tableau de cadrage actualisé (Explorer, cartes
+  conditionnelles au lieu d'onglets).
+- **CORR 4** : « 16 sections » → « 4 domaines, 16 destinations
+  secondaires » (4 occurrences).
+- **CORR 5** : §12.8 — P0-P7 « plan d'exécution immédiat » →
+  « archivées pour traçabilité, lots 0-10 = plan actuel ».
+- **CORR 6** : §12.5 — déclencheurs P0/P2/P3/P4/P5/P6 →
+  Lot 0/3/2/5/9/10.
+- **CORR 7** : avertissement routes altérées (Devin doit relire le code
+  source, pas les chaînes Markdown).
+- **CORR 8** : §14 et §15 marqués **NON NORMATIF** (endpoints, tables,
+  JSON, WorkManager = exemples de cadrage, pas contrats avant RFC).
+- GeoSylva spec passe en v0.9.1 — Candidate for Review (commit `7c0ae53`
+  sur `fix/enterprise-reliability-2026-07-21`, +63/-32 lignes).
+- **Prochaines étapes** : gel de GEOSYLVA-003 comme spécification produit,
+  audit du code réel, extraction RFC-UI-001, extraction RFC-0001,
+  backlog du Lot 0.
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.9.0] - 2026-08-04
 
 - **Candidate for Review** — 11 corrections structurantes du Fondateur.
