@@ -4,6 +4,49 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.7.0] - 2026-08-04
+
+- **Cadrage** suite à la revue critique du Fondateur (10 corrections
+  critiques, roadmap refondue, structure territoriale, corrections de
+  forme).
+- **CORR 1** : avertissement monolithique en §3 + §28 Annexe listant 11
+  RFC à extraire (RFC-0001 à RFC-0008, RFC-IA-MODEL-SELECTION, RFC-0018,
+  RFC-0019).
+- **CORR 2** : modèles IA (SmolLM3, Phi-3, Mistral, Phi-4) remplacés par
+  profils T1-MICRO/STANDARD/T2-EDGE/T3-SERVER + RFC renouvelable
+  `RFC-IA-MODEL-SELECTION-YYYY-MM`. Latences → objectifs à mesurer (P50,
+  P95, tokens/s, RAM). Pack 500 Mo corrigé (3B INT4 = ~1,5 GB).
+- **CORR 3** : PureForest TFLite reformulé comme modèle à entraîner/adapter
+  + étape audit dataset 7 phases (audit licence, nettoyage, découpage,
+  benchmark, conversion, validation terrain).
+- **CORR 4** : TreeVision §18.10 colonne « Précision » → « Statut initial »
+  + seuils de passage (Prototype → expérimental → assistance → mesure
+  professionnelle validée).
+- **CORR 5** : GNSS exemples ±1,9 m → objectifs pédagogiques + covariance,
+  résidus, poids dynamiques (jamais constantes métier).
+- **CORR 6** : migration Google→Keycloak 3 cas (sub vérifié / adresse
+  vérifiée / identité ambiguë) + UUID Quintessences indépendant (pas
+  dérivé de Google).
+- **CORR 7** : identifiant appareil = UUID installation + paire clés
+  Keystore + clé publique enregistrée (pas Android ID hashé).
+- **CORR 8** : jetons = stockage chiffré + clé Keystore non exportable
+  (Keystore stocke des clés, pas des jetons).
+- **CORR 9** : séparation Entitlement / Feature module signé / Pack QPIS
+  (un pack QPIS ne doit jamais injecter du code exécutable non signé).
+- **CORR 10** : tableau licences enrichi (8 colonnes) + données
+  institutionnelles (IGN, INPN, BRGM, Copernicus, datasets IA).
+- **Roadmap refondue** : 11 lots (0-10) remplaçant P0-P7. Fondations
+  (audit, contrat données, noyau scientifique, Mission Engine, identité,
+  sync, QPIS, Geo Engine) avant TreeVision R&D, IA locale et Meshtastic.
+- **Structure territoriale** : 8 entités distinctes (Property, Forest,
+  CadastralParcel, ManagementUnit, ForestParcel, Stand, SamplingUnit,
+  Plot).
+- **Corrections de forme** : typo « contournée », « connaissances
+  cachées » → « disponibles localement », `source` → `entry_mode` +
+  `transport`, `auteur` → UUID, `session_id` optionnel.
+- GeoSylva spec passe en v0.7.0 (commit `99c6a2d` sur
+  `fix/enterprise-reliability-2026-07-21`, +321/-99 lignes).
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.6.0] - 2026-08-04
 
 - Intégration complète de la conversation ChatGPT source (155k caractères)
