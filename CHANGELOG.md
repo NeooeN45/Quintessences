@@ -4,6 +4,36 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.6.0] - 2026-08-04
+
+- Intégration complète de la conversation ChatGPT source (155k caractères)
+  : 23 recommandations issues de l'analyse comparative conversation vs Dev
+  Pack vs spec v0.5.0.
+- **§7 enrichi** (7 sous-sections) : système qualité données (6 états, 6
+  niveaux, exemples), campagnes multiannuelles (placettes permanentes),
+  architecture moteurs spécialisés (9 domaines, 30 composants), règles
+  déclaratives (exemple JSON + décision Kotlin dédié), chaîne valorisation
+  (exemple chiffré), versionnement méthodes (scénario migration), IA vs
+  moteurs déterministes.
+- **§10.1** Catégories de consentement (5 catégories).
+- **§16.10-16.12** GSIE usine de packs + Pack Store commun + intelligence
+  locale de recommandation.
+- **§17.10** Exemple de protocole déclaratif ODK YAML.
+- **§18.11-18.18** TreeVision (8 sous-sections) : philosophie coopérative,
+  méthodes A/B RANSAC, modèle de confiance, contrôles cohérence, GNSS
+  immobilisation, constellations, SpatialEvidence, calibration.
+- **§19.7-19.11** Services techniques GSIE + 14 technologies open source
+  + Meshtastic détaillé + décisions MapLibre/Room.
+- **§20.13-20.17** Droits basés sur capacités (10 exemples) + alternatives
+  rejetées (Firebase, Auth0, Clerk) + SCIM + 4 phases déploiement +
+  architecture finale recommandée.
+- **Nouvelles sections §21-§25** : Diagnostic de station, Scénarios
+  sylvicoles, Organisation travaux forestiers, Documents de gestion
+  durable, Références locales de marché.
+- Renumérotation : §21→§26 Références, §22→§27 Historique.
+- GeoSylva spec passe en v0.6.0 (commit `a01bdfc` sur
+  `fix/enterprise-reliability-2026-07-21`, +857 lignes).
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.5.0] - 2026-08-04
 
 - Vérification section par section de la spec v0.4.0 face aux documents
