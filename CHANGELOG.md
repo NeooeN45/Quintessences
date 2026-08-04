@@ -4,6 +4,27 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DOCUMENTATION — GEOSYLVA-003 V0.8.0] - 2026-08-04
+
+- **Section §29 — Architecture des écrans, navigation et refonte UI/UX**
+  (+750 lignes, 31 sous-sections).
+- **Audit des 27 écrans existants** (5 NavGraphs) classés en 3
+  catégories : conservés/enrichis (18), transformés (10), nouveaux (21).
+- **Décisions de cadrage UI** :
+  - Bottom nav 5 entrées (Accueil, Missions, Carte, Données, Compte)
+    remplace le démarrage direct sur Forets.
+  - Écran Martelage → **SynthèseMartelage** (s'ouvre auto après martelage,
+    plus écran de saisie).
+  - Carte : **refonte complète** (3ème entrée bottom nav, carte globale
+    workspace ; ancien Map par parcelle conservé depuis les fiches).
+  - Settings **supprimé** → tout dans Compte (16 sections).
+  - Diagnostics (stationnel/ripisylve/IBP) **déplacés** en onglets fiche
+    parcelle + protocoles Mission Engine (plus de NavGraphs séparés).
+- **Roadmap §12.4 enrichie** : colonne « Pages UI » par lot + Quality
+  Pass final. La refonte UI/UX accompagne chaque lot technique.
+- GeoSylva spec passe en v0.8.0 (commit `d23a9d0` sur
+  `fix/enterprise-reliability-2026-07-21`, +750/-14 lignes).
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.7.0] - 2026-08-04
 
 - **Cadrage** suite à la revue critique du Fondateur (10 corrections
