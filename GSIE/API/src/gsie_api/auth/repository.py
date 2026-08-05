@@ -17,11 +17,14 @@ from gsie_api.auth.identity import (
     LocalCredentialRecord,
     ProviderAlreadyLinkedError,
 )
+from gsie_api.auth.mfa import MfaSecretRecord
 from gsie_api.infrastructure.models.accounts import (
     AccountRoleModel,
     IdentityActionTokenModel,
     IdentityProviderLinkModel,
     LocalCredentialModel,
+    MfaRecoveryCodeModel,
+    MfaSecretModel,
     UserAccountModel,
 )
 
@@ -403,6 +406,86 @@ class SqlAlchemyIdentityRepository:
             .order_by(AccountRoleModel.role)
         )
         return tuple((await self._session.execute(statement)).scalars().all())
+
+    # --- MFA TOTP (implémente MfaRepositoryProtocol) ---
+
+    async def get_active_secret(self, account_id: UUID) -> MfaSecretRecord | None:
+        stmt = select(MfaSecretModel).where(
+            MfaSecretModel.account_id == account_id,
+            MfaSecretModel.disabled_at.is_(None),
+        )
+        model = (await self._session.execute(stmt)).scalar_one_or_none()
+        if model is None:
+            return None
+        return MfaSecretRecord(account_id=model.account_id, secret_cipher=model.secret_cipher)
+
+    async def save_secret(self, account_id: UUID, secret_cipher: str) -> None:
+        self._session.add(MfaSecretModel(account_id=account_id, secret_cipher=secret_cipher))
+        await self._session.flush()
+
+    async def disable_secret(self, account_id: UUID) -> None:
+        from datetime import UTC, datetime
+
+        stmt = (
+            update(MfaSecretModel)
+            .where(
+                MfaSecretModel.account_id == account_id,
+                MfaSecretModel.disabled_at.is_(None),
+            )
+            .values(disabled_at=datetime.now(UTC))
+        )
+        await self._session.execute(stmt)
+
+    async def save_recovery_codes(self, account_id: UUID, code_hashes: list[str]) -> None:
+        from sqlalchemy import delete as sa_delete
+
+        await self._session.execute(
+            sa_delete(MfaRecoveryCodeModel).where(
+                MfaRecoveryCodeModel.account_id == account_id,
+                MfaRecoveryCodeModel.consumed_at.is_(None),
+            )
+        )
+        for code_hash in code_hashes:
+            self._session.add(MfaRecoveryCodeModel(account_id=account_id, code_hash=code_hash))
+        await self._session.flush()
+
+    async def consume_recovery_code(self, account_id: UUID, code_hash: str) -> bool:
+        from datetime import UTC, datetime
+
+        stmt = select(MfaRecoveryCodeModel).where(
+            MfaRecoveryCodeModel.account_id == account_id,
+            MfaRecoveryCodeModel.consumed_at.is_(None),
+        )
+        models = (await self._session.execute(stmt)).scalars().all()
+        for model in models:
+            if self._password_service_verify(code_hash, model.code_hash):
+                model.consumed_at = datetime.now(UTC)
+                await self._session.flush()
+                return True
+        return False
+
+    async def has_recovery_codes(self, account_id: UUID) -> bool:
+        stmt = (
+            select(MfaRecoveryCodeModel.id)
+            .where(
+                MfaRecoveryCodeModel.account_id == account_id,
+                MfaRecoveryCodeModel.consumed_at.is_(None),
+            )
+            .limit(1)
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none() is not None
+
+    @staticmethod
+    def _password_service_verify(plain_hash: str, stored_hash: str) -> bool:
+        """Vérifie un hash Argon2 contre un autre hash (pour recovery codes)."""
+        from argon2 import PasswordHasher
+        from argon2.exceptions import InvalidHashError, VerificationError
+
+        hasher = PasswordHasher()
+        try:
+            return hasher.verify(stored_hash, plain_hash.replace("-", "").upper())
+        except (InvalidHashError, VerificationError):
+            return False
 
     @staticmethod
     def _account(

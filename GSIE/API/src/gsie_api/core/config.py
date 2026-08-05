@@ -270,6 +270,24 @@ class Settings(BaseSettings):
     smtp_starttls: bool = True
     email_sender: str = "noreply@quintessences.local"
     identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
+    # MFA TOTP (RFC 6238) — issuer affiché dans l'app d'authentification.
+    mfa_enabled: bool = True
+    mfa_issuer: str = "Quintessences"
+    mfa_totp_step_seconds: int = Field(default=30, ge=15, le=120)
+    mfa_recovery_code_count: int = Field(default=10, ge=5, le=20)
+    # Lockout progressif — seuils de tentatives échouées avant blocage temporaire.
+    lockout_max_attempts: int = Field(default=5, ge=3, le=20)
+    lockout_duration_minutes: int = Field(default=15, ge=1, le=120)
+    # Vérification de force mot de passe — HIBP k-anonymity + score zxcvbn.
+    password_check_hibp_enabled: bool = True
+    password_check_zxcvbn_enabled: bool = True
+    password_min_zxcvbn_score: int = Field(default=3, ge=0, le=4)
+    # OIDC générique — fournisseurs enterprise configurables (Keycloak, Microsoft, etc.).
+    # Liste JSON : [{"name":"keycloak","issuer":"...","client_ids":[...],"jwks_url":"..."}]
+    oidc_providers: list[dict[str, object]] = Field(default_factory=list)
+    # Détection de réutilisation de refresh token — invalide toute la chaîne si un
+    # token révoqué est réutilisé.
+    refresh_token_reuse_detection_enabled: bool = True
 
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")

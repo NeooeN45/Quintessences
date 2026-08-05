@@ -188,3 +188,111 @@ class CompletedResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     completed: bool = True
+
+
+# --- MFA TOTP (RFC 6238) ---
+
+
+class MfaSetupResponse(BaseModel):
+    """Résultat de l'initialisation MFA — secret + URI + codes de récupération."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    secret: str
+    otpauth_uri: str
+    recovery_codes: list[str]
+
+
+class MfaVerifyRequest(BaseModel):
+    """Vérification d'un code TOTP ou de récupération."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    code: str = Field(min_length=6, max_length=20)
+    is_recovery_code: bool = False
+
+
+class MfaChallengeRequest(BaseModel):
+    """Code TOTP requis pour finaliser une action sensible."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    totp_code: str = Field(min_length=6, max_length=8)
+
+
+class MfaStatusResponse(BaseModel):
+    """État MFA du compte courant."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool
+
+
+# --- Sessions actives ---
+
+
+class SessionResponse(BaseModel):
+    """Vue d'une session active."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    jti: str
+    device_name: str | None
+    user_agent: str | None
+    ip_address: str | None
+    issued_at: str
+    last_seen_at: str
+    is_current: bool = False
+
+
+class ListSessionsResponse(BaseModel):
+    """Liste des sessions actives du compte courant."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sessions: list[SessionResponse]
+    total: int
+
+
+class RevokeSessionRequest(BaseModel):
+    """Révocation d'une session par son ID."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str = Field(min_length=1, max_length=64)
+
+
+# --- OIDC générique ---
+
+
+class OidcLoginRequest(BaseModel):
+    """Connexion via un fournisseur OIDC enterprise."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    provider: str = Field(min_length=1, max_length=64)
+    id_token: SecretStr = Field(min_length=1, max_length=16_384)
+
+
+class OidcProvidersResponse(BaseModel):
+    """Liste des fournisseurs OIDC enterprise configurés."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    providers: list[str]
+
+
+# --- Force mot de passe ---
+
+
+class PasswordStrengthResponse(BaseModel):
+    """Rapport de force d'un mot de passe (sans lever d'exception)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    zxcvbn_score: int = Field(ge=0, le=4)
+    is_compromised: bool
+    compromise_count: int
+    suggestions: list[str]
+    meets_requirements: bool

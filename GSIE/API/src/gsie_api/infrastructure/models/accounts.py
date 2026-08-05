@@ -178,3 +178,127 @@ class IdentityActionTokenModel(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class MfaSecretModel(Base):
+    """Secret TOTP chiffré associé à un compte (RFC 6238)."""
+
+    __tablename__ = "mfa_secret"
+    __table_args__ = (
+        Index("idx_mfa_secret_account", "account_id"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    secret_cipher: Mapped[str] = mapped_column(String(500), nullable=False)
+    enabled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class MfaRecoveryCodeModel(Base):
+    """Code de récupération MFA à usage unique, hashé Argon2."""
+
+    __tablename__ = "mfa_recovery_code"
+    __table_args__ = (
+        UniqueConstraint("account_id", "code_hash", name="uq_mfa_recovery_code_account_hash"),
+        Index("idx_mfa_recovery_code_account", "account_id"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    code_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ActiveSessionModel(Base):
+    """Session JWT active traquée par appareil pour révocation sélective."""
+
+    __tablename__ = "active_session"
+    __table_args__ = (
+        Index("idx_active_session_account", "account_id"),
+        Index("idx_active_session_account_active", "account_id", "revoked_at"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    jti: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    refresh_jti: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
+    device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    issued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class FailedLoginAttemptModel(Base):
+    """Tentative de connexion échouée pour lockout progressif."""
+
+    __tablename__ = "failed_login_attempt"
+    __table_args__ = (
+        Index("idx_failed_login_email_time", "email_normalized", "attempted_at"),
+        Index("idx_failed_login_ip_time", "ip_address", "attempted_at"),
+        Index("idx_failed_login_account_time", "account_id", "attempted_at"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    email_normalized: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    attempted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class RevokedRefreshTokenModel(Base):
+    """Refresh token révoqué pour détection de réutilisation."""
+
+    __tablename__ = "revoked_refresh_token"
+    __table_args__ = (
+        Index("idx_revoked_refresh_account", "account_id"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    revoked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    reused_detected: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    reused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -74,6 +74,8 @@ dependencies = [
     "uvloop==0.21.0 ; sys_platform != 'win32'",
     "eccodeslib==2.47.3.23 ; sys_platform != 'win32'",
     "pgvector==0.5.0",
+    "pyotp==2.9.0",
+    "zxcvbn==4.4.28",
 ]
 
 [project.optional-dependencies]
@@ -166,6 +168,16 @@ ignore_missing_imports = true
 # google-auth ne distribue pas de stubs complets pour tous ses transports.
 [[tool.mypy.overrides]]
 module = ["google.auth.*"]
+ignore_missing_imports = true
+
+# zxcvbn n'a pas de stubs officiels — vérification de force mot de passe
+[[tool.mypy.overrides]]
+module = ["zxcvbn.*"]
+ignore_missing_imports = true
+
+# pyotp n'a pas de stubs officiels — MFA TOTP (RFC 6238)
+[[tool.mypy.overrides]]
+module = ["pyotp.*"]
 ignore_missing_imports = true
 
 # scipy-stubs existe mais n'est pas encore ajouté aux dépendances dev —

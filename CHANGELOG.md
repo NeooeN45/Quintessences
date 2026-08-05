@@ -4,6 +4,50 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE/API — HARDENING AUTH V1] - 2026-08-05
+
+- **7 lacunes d'authentification comblées** pour un système de connexion
+  très avancé :
+  1. **MFA TOTP** (RFC 6238) + codes de récupération à usage unique
+     (Argon2id, chiffrés Fernet côté serveur).
+  2. **Lockout progressif** — blocage temporaire après N tentatives échouées
+     (Redis distribué ou mémoire locale, fenêtre glissante).
+  3. **Sessions actives** — traçage par appareil, liste et révocation
+     sélective (logout par appareil, logout-all sauf session courante).
+  4. **OIDC générique** — vérificateur OIDC standard pour Keycloak,
+     Microsoft Entra ID, GitHub, etc. (découverte JWKS, validation
+     audience/issuer).
+  5. **Force mot de passe** — HIBP k-anonymity (préfixe SHA-1 uniquement)
+     + score zxcvbn avec seuil minimum configurable.
+  6. **Détection réutilisation refresh token** — log d'avertissement
+     quand un token déjà rotaté est réutilisé (vol détecté).
+  7. **Événements auth dans audit_log** — bridge fire-and-forget vers
+     le journal d'audit append-only (login, lockout, MFA, sessions).
+- **Migration 20260803_0034** : 5 nouvelles tables
+  (`mfa_secret`, `mfa_recovery_code`, `active_session`,
+  `failed_login_attempt`, `revoked_refresh_token`).
+- **Dépendances** : `pyotp` (TOTP), `zxcvbn` (force mot de passe).
+- **Configuration** : 11 nouvelles variables d'environnement documentées
+  dans `.env.example`.
+- **Tests** : 24 nouveaux tests unitaires (`test_auth_hardening.py`)
+  couvrant MFA, lockout, sessions, force mot de passe.
+
+## [GOUVERNANCE — SYSTÈME DE DÉVELOPPEMENT IA V1] - 2026-08-05
+
+- **DEC-000051 validée** : adoption du système de développement assisté par IA
+  Quintessences v1.
+- La hiérarchie documentaire existante reste la seule source de vérité ; aucun
+  second coffre d'idées, registre de prompts ou arborescence `docs/` parallèle
+  n'est créé.
+- La limite de travail en cours du Fondateur est fixée à `1+1+1` : une tranche
+  produit, une recherche et une correction urgente.
+- Ajout de `/ingestion-idee` et `/ingestion-ressource` en mode proposition par
+  défaut, ainsi que `/pilotage-wip` et `/audit-skills-devin`.
+- `IDEA-0003` enregistre IGNIS-FOLD comme hypothèse de recherche inspirée de
+  G-FOLD ; aucune classe de drone n'est choisie et aucun code n'est autorisé.
+- Le pilote de méthode est la synchronisation multi-client GeoSylva.
+- Passe qualité reprise le 2026-08-05 : caractère d'encodage corrompu retiré de `ROADMAP.md` et d'une analyse historique ; frontmatter rétabli pour les 36 skills Devin ; conventions `pytest-asyncio` auto documentées dans `/tests-gsie`.
+
 ## [DOCUMENTATION — GEOSYLVA-003 V0.9.1] - 2026-08-04
 
 - **Nettoyage** — 8 corrections résiduelles avant gel de la spec.

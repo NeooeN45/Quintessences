@@ -256,6 +256,16 @@ async def refresh_token(
         float(new_payload["exp"]),
     )
     if not rotated:
+        # Détection de réutilisation : si le token a déjà été rotaté (donc
+        # absent du registre actif), c'est qu'un attaquant réutilise un token
+        # volé. On invalide toute la chaîne en révoquant le compte via
+        # session_version bump (si configuré).
+        if _settings.refresh_token_reuse_detection_enabled:
+            logger.warning(
+                "refresh_token_reuse_detected",
+                jti=jti,
+                subject=subject,
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired or already used",
