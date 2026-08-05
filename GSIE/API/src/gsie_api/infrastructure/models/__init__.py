@@ -25,6 +25,7 @@ from gsie_api.infrastructure.models import (
     junctions,  # noqa: F401 — 17 tables de jonction n:m
     models_ai,  # noqa: F401
     observation,  # noqa: F401
+    organisations,  # noqa: F401 — multi-tenant enterprise (migration 20260803_0032)
     outbox,  # noqa: F401 — Outbox/Inbox (ADR-005)
     prov,  # noqa: F401
     provenance,  # noqa: F401

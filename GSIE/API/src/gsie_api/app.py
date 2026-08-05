@@ -49,6 +49,7 @@ from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
 from gsie_api.gamification.router import router as gamification_router
 from gsie_api.infrastructure.health import router as health_router
+from gsie_api.organisations.router import router as organisations_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import (
     RequestBodyLimitMiddleware,
@@ -353,6 +354,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(organisations_router, prefix=_settings.api_v1_prefix)
     app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)

@@ -11,7 +11,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260803_0031"
+_HEAD = "20260803_0032"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -67,7 +67,7 @@ def test_baseline_ne_depend_pas_des_modeles_applicatifs() -> None:
 
 
 def test_modeles_legacy_isoles_du_schema_courant() -> None:
-    assert len(Base.metadata.tables) == 126
+    assert len(Base.metadata.tables) == 129
     assert frozenset(LegacyBase.metadata.tables) == _LEGACY_TABLES
     assert frozenset(Base.metadata.tables).isdisjoint(_LEGACY_TABLES)
 

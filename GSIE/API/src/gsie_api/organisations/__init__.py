@@ -1,0 +1,53 @@
+"""Module organisations — multi-tenant enterprise (migration 20260803_0032)."""
+
+from gsie_api.organisations.schemas import (
+    MemberInviteRequest,
+    MemberPage,
+    MemberResponse,
+    OrganisationCreateRequest,
+    OrganisationPage,
+    OrganisationResponse,
+    WorkspaceCreateRequest,
+    WorkspacePage,
+    WorkspaceResponse,
+)
+from gsie_api.organisations.service import (
+    AlreadyMemberError,
+    InsufficientRoleError,
+    LastOwnerError,
+    MemberRecord,
+    NotMemberError,
+    OrganisationError,
+    OrganisationNotFoundError,
+    OrganisationRecord,
+    OrganisationRepositoryProtocol,
+    OrganisationService,
+    SlugAlreadyTakenError,
+    WorkspaceNotFoundError,
+    WorkspaceRecord,
+)
+
+__all__ = [
+    "AlreadyMemberError",
+    "InsufficientRoleError",
+    "LastOwnerError",
+    "MemberInviteRequest",
+    "MemberPage",
+    "MemberRecord",
+    "MemberResponse",
+    "NotMemberError",
+    "OrganisationCreateRequest",
+    "OrganisationError",
+    "OrganisationNotFoundError",
+    "OrganisationPage",
+    "OrganisationRecord",
+    "OrganisationRepositoryProtocol",
+    "OrganisationResponse",
+    "OrganisationService",
+    "SlugAlreadyTakenError",
+    "WorkspaceCreateRequest",
+    "WorkspaceNotFoundError",
+    "WorkspacePage",
+    "WorkspaceRecord",
+    "WorkspaceResponse",
+]

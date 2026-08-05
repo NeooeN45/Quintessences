@@ -90,11 +90,18 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-async def set_rls_context(session: AsyncSession, user_id: str, roles: str) -> None:
+async def set_rls_context(
+    session: AsyncSession,
+    user_id: str,
+    roles: str,
+    workspace_id: str | None = None,
+) -> None:
     """Injecte le contexte RLS dans la session PostgreSQL (DEC-000037).
 
     Pose ``app.current_user_id`` et ``app.current_user_roles`` via
     ``SET LOCAL`` — valable pour la transaction courante uniquement.
+    Si ``workspace_id`` est fourni (claim JWT optionnel), pose aussi
+    ``app.current_workspace_id`` pour les futures policies RLS workspace.
     À appeler **après** le début de transaction (premier query ou
     ``session.begin()`` explicite) et **avant** toute requête sur une
     table protégée par RLS.
@@ -103,6 +110,7 @@ async def set_rls_context(session: AsyncSession, user_id: str, roles: str) -> No
         session: Session SQLAlchemy async.
         user_id: UUID de l'utilisateur authentifié (JWT ``sub``).
         roles: Liste CSV des rôles (ex. ``"admin,researcher"``).
+        workspace_id: UUID du workspace courant (JWT ``workspace_id``), optionnel.
     """
     # set_config() est l'équivalent fonctionnel de SET LOCAL et accepte
     # les paramètres liés — SET LOCAL est une commande utility qui ne les
@@ -114,6 +122,11 @@ async def set_rls_context(session: AsyncSession, user_id: str, roles: str) -> No
     await session.execute(
         text("SELECT set_config('app.current_user_roles', :roles, true)"), {"roles": roles}
     )
+    if workspace_id:
+        await session.execute(
+            text("SELECT set_config('app.current_workspace_id', :wid, true)"),
+            {"wid": workspace_id},
+        )
 
 
 # Type alias pour l'annotation Annotated dans les routers
@@ -144,5 +157,11 @@ async def get_db_rls(
     async with async_session_factory() as session, session.begin():
         user_id = str(user.get("sub", ""))
         roles = ",".join(user.get("roles", []))
-        await set_rls_context(session, user_id, roles)
+        workspace_id = user.get("workspace_id")
+        await set_rls_context(
+            session,
+            user_id,
+            roles,
+            workspace_id=str(workspace_id) if workspace_id else None,
+        )
         yield session
