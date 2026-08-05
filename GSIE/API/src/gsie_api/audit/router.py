@@ -1,100 +1,91 @@
-"""Router Audit — journaux d'audit du dashboard.
+"""Router Audit — journal d'audit persistant avec filtrage et pagination.
 
-Endpoint :
-- GET /audit-logs — liste des entrées d'audit
+Endpoints :
+- ``GET /audit-logs`` — liste paginée avec filtres (actor_id, resource_type,
+  action, organisation_id, page, size).
 
-Sécurité : auth JWT obligatoire (lecture seule).
-
-Note : les données sont actuellement statiques. Un vrai système d'audit
-sera implémenté pendant la Phase 4 (middleware traçant les mutations
-ressources, diagnostics, recommandations).
+Sécurité : auth JWT obligatoire. RLS limite la visibilité à l'acteur
+lui-même ou aux admins.
 """
 
-from typing import Any
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from gsie_api.audit.schemas import AuditLog
+from gsie_api.audit.repository import SqlAlchemyAuditRepository
+from gsie_api.audit.schemas import AuditLogPage, AuditLogResponse
+from gsie_api.audit.service import AuditService
+from gsie_api.core.auth import get_current_user
 from gsie_api.core.limiter import limiter as _limiter
-from gsie_api.core.rbac import EngineReadUser
+from gsie_api.infrastructure.database import get_db_rls
 
 router = APIRouter(prefix="/audit-logs", tags=["audit"])
 
-# Données statiques — remplacées par une source réelle quand le
-# middleware d'audit sera implémenté (mutations ressources, moteurs).
-_LOGS: list[dict[str, Any]] = [
-    {
-        "id": "aud-001",
-        "timestamp": "2026-08-02T18:42:11Z",
-        "user": "admin",
-        "action": "create",
-        "resource": "resource:forest-stand-075",
-        "ip": "127.0.0.1",
-        "details": {"type": "forest_stand", "source": "dashboard"},
-    },
-    {
-        "id": "aud-002",
-        "timestamp": "2026-08-02T18:35:02Z",
-        "user": "admin",
-        "action": "update",
-        "resource": "knowledge:knb-0042",
-        "ip": "127.0.0.1",
-        "details": {"field": "confidence", "old": 0.78, "new": 0.85},
-    },
-    {
-        "id": "aud-003",
-        "timestamp": "2026-08-02T17:58:44Z",
-        "user": "admin",
-        "action": "export",
-        "resource": "resources:bulk",
-        "ip": "127.0.0.1",
-        "details": {"format": "csv", "count": 42},
-    },
-    {
-        "id": "aud-004",
-        "timestamp": "2026-08-02T17:12:30Z",
-        "user": "admin",
-        "action": "delete",
-        "resource": "resource:dataset-old-13",
-        "ip": "127.0.0.1",
-        "details": {"reason": "obsolescence", "soft_delete": True},
-    },
-    {
-        "id": "aud-005",
-        "timestamp": "2026-08-02T16:40:18Z",
-        "user": "admin",
-        "action": "create",
-        "resource": "knowledge:knb-0043",
-        "ip": "127.0.0.1",
-        "details": {"domain": "pedology", "source": "ingestion"},
-    },
-    {
-        "id": "aud-006",
-        "timestamp": "2026-08-02T15:22:07Z",
-        "user": "admin",
-        "action": "update",
-        "resource": "resource:climate-station-31",
-        "ip": "127.0.0.1",
-        "details": {"field": "status", "old": "draft", "new": "validated"},
-    },
-]
+
+async def get_audit_service(
+    session: Annotated[AsyncSession, Depends(get_db_rls)],
+) -> AuditService:
+    return AuditService(SqlAlchemyAuditRepository(session))
+
+
+def _response(entry: object) -> AuditLogResponse:
+    return AuditLogResponse(
+        id=entry.id,  # type: ignore[attr-defined]
+        timestamp=entry.timestamp,  # type: ignore[attr-defined]
+        actor_id=entry.actor_id,  # type: ignore[attr-defined]
+        actor_email=entry.actor_email,  # type: ignore[attr-defined]
+        action=entry.action,  # type: ignore[attr-defined]
+        resource_type=entry.resource_type,  # type: ignore[attr-defined]
+        resource_id=entry.resource_id,  # type: ignore[attr-defined]
+        ip_address=entry.ip_address,  # type: ignore[attr-defined]
+        user_agent=entry.user_agent,  # type: ignore[attr-defined]
+        organisation_id=entry.organisation_id,  # type: ignore[attr-defined]
+        workspace_id=entry.workspace_id,  # type: ignore[attr-defined]
+        status_code=entry.status_code,  # type: ignore[attr-defined]
+        method=entry.method,  # type: ignore[attr-defined]
+        path=entry.path,  # type: ignore[attr-defined]
+        details=entry.details,  # type: ignore[attr-defined]
+        trace_id=entry.trace_id,  # type: ignore[attr-defined]
+    )
 
 
 @router.get(
     "",
-    response_model=list[AuditLog],
-    summary="Liste des entrées du journal d'audit",
+    response_model=AuditLogPage,
+    summary="Journal d'audit paginé avec filtrage",
     description=(
-        "Retourne les entrées d'audit (actions create/update/delete/export). "
-        "Données actuellement statiques — seront alimentées par le "
-        "middleware d'audit quand il sera implémenté (Phase 4)."
+        "Retourne les entrées d'audit avec filtres optionnels : "
+        "actor_id, resource_type, action, organisation_id. "
+        "RLS limite la visibilité à l'acteur lui-même ou aux admins."
     ),
 )
 @_limiter.limit("30/minute")
 async def list_audit_logs(
     request: Request,
     response: Response,
-    _user: EngineReadUser,
-) -> list[AuditLog]:
-    """Liste des entrées du journal d'audit."""
-    return [AuditLog(**log) for log in _LOGS]
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    service: Annotated[AuditService, Depends(get_audit_service)],
+    actor_id: Annotated[UUID | None, Query(description="Filtrer par acteur")] = None,
+    resource_type: Annotated[str | None, Query(description="Filtrer par type de ressource")] = None,
+    action: Annotated[str | None, Query(description="Filtrer par action")] = None,
+    organisation_id: Annotated[UUID | None, Query(description="Filtrer par organisation")] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> AuditLogPage:
+    del request, response, current_user
+    entries, total = await service.list(
+        actor_id=actor_id,
+        resource_type=resource_type,
+        action=action,
+        organisation_id=organisation_id,
+        page=page,
+        size=size,
+    )
+    return AuditLogPage(
+        items=[_response(e) for e in entries],
+        page=page,
+        size=size,
+        total=total,
+    )
