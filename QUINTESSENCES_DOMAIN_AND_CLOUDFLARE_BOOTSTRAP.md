@@ -61,7 +61,7 @@
 
 ### 1.6 Points de vigilance — nettoyage effectué
 
-- ℹ️ L’API tourne sur le **host Windows** et non dans le conteneur Docker `api-api-1`. Le service `cloudflared` avec le profil Docker `edge` est déjà prévu dans `docker-compose.yml` pour une migration future.
+- ✅ L’API tourne désormais dans le **conteneur Docker** `api-api-1` (port 127.0.0.1:8000).
 - ✅ DNSSEC activé dans le dashboard Cloudflare.
 - ✅ SSL/TLS configuré en `Full` dans le dashboard (passer à `Full (Strict)` dès que l’origine a un certificat TLS valide).
 - ✅ Landing page déployée sur Cloudflare Pages : `https://quintessences-platform.com` et `https://www.quintessences-platform.com`.
