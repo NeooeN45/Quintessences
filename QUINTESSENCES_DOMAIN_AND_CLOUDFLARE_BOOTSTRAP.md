@@ -62,11 +62,11 @@
 ### 1.6 Points de vigilance non corrigés
 
 - L’API tourne sur le **host Windows** et non dans le conteneur Docker `api-api-1`. Le service `cloudflared` avec le profil Docker `edge` est déjà prévu dans `docker-compose.yml` ; il nécessite un token de tunnel géré à distance, distinct du tunnel nommé actuel.
-- Le mode SSL/TLS Cloudflare n’est pas vérifié (potentiellement `Flexible` au lieu de `Full (Strict)`).
-- Le DNSSEC n’est pas activé dans Cloudflare.
+- ✅ DNSSEC activé dans le dashboard Cloudflare.
+- ✅ SSL/TLS configuré en `Full` dans le dashboard (passer à `Full (Strict)` dès que l’origine a un certificat TLS valide).
 - ✅ Landing page créée dans `landing-quintessences/` ; déploiement sur Cloudflare Pages à finaliser via `landing-quintessences\deploy-landing.ps1`.
 - ✅ L’adresse e-mail `GSIE_EMAIL_SENDER` est mise à jour vers `noreply@quintessences-platform.com` dans `.env`, `.env.example`, `docker-compose.yml` et `core/config.py`.
-- Aucune politique WAF, rate limiting Cloudflare ou cache n’est configurée côté dashboard.
+- Aucune politique WAF, rate limiting Cloudflare ou cache n’est configurée côté dashboard. Le token API actuel ne dispose pas des permissions suffisantes ; configuration possible manuellement ou après roulage du token.
 - Cloudflare Access n’est pas activé pour les interfaces d’administration.
 - ✅ Script `cloudflared\check-update.ps1` créé pour vérifier les mises à jour manuelles de `cloudflared`.
 
