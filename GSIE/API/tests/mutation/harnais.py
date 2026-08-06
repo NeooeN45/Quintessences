@@ -1094,6 +1094,21 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_telechargement_client.py",),
     ),
+    # --- Bot protection : Turnstile (OWASP A07)
+    Mutation(
+        cle="turnstile_non_verifie_login",
+        fichier="gsie_api/auth/router.py",
+        ancien=(
+            "    turnstile = TurnstileClient(_settings)\n"
+            "    if not await turnstile.verify(credentials.turnstile_token, client_ip):"
+        ),
+        nouveau="    # garde Turnstile désactivée temporairement\n    if False:",
+        defaut_reproduit=(
+            "un login avec un token Turnstile rejeté passe quand même "
+            "— la bot protection est inactive"
+        ),
+        tests=("tests/unit/test_auth.py",),
+    ),
 )
 
 

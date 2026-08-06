@@ -72,6 +72,10 @@
 - ✅ Always Use HTTPS, HSTS, TLS 1.2 minimum activés.
 - ✅ DNS records `www` et `status` créés.
 - ✅ Script `cloudflared\check-update.ps1` créé.
+- ✅ Page de statut créée dans `status-quintessences/` (prête pour déploiement Cloudflare Pages).
+- ✅ Turnstile intégré : service `shared/turnstile.py`, endpoint `POST /auth/turnstile/verify`, guard login, widget landing page.
+- ✅ SMTP transactionnel : port Mailpit `127.0.0.1:1025` exposé, variables `.env` prêtes, tests `test_transactional_email.py`.
+- ℹ️ Migration Docker API : `docker-compose.override.yml` et `cloudflared\migrate-to-docker.ps1` créés ; build en cours.
 - ⏸️ Cloudflare Access réservé aux interfaces d’administration (`control`, `dev`, `staging`) quand ces services existeront.
 - ✅ Nettoyage des tokens : `Wrangler-Pages-Temp` supprimé via l’API ; `Quintessences-Devin-Setup` et Global API Key à révoquer côté dashboard par le Fondateur.
 - ✅ Fichiers secrets locaux supprimés (`E:\.cloudflare_credentials`, `E:\.cloudflare_api_token`, `E:\.cloudflare_zone_id`).

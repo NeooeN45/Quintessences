@@ -4,7 +4,10 @@ from collections.abc import Generator
 from time import time
 
 import pytest
+import respx
 from fastapi.testclient import TestClient
+from httpx import Response
+from pydantic import SecretStr
 
 from gsie_api.app import create_app
 from gsie_api.auth import router as auth_router
@@ -12,6 +15,18 @@ from gsie_api.auth import router as auth_router
 # Configure a dev account for tests (env-var based, not hardcoded in app code)
 auth_router._settings.auth_dev_login_enabled = True
 auth_router._settings.auth_dev_password = "changeme"
+
+
+@pytest.fixture(autouse=True)
+def _reset_turnstile_settings() -> Generator[None, None, None]:
+    """Isole la configuration Turnstile entre les tests."""
+    previous_enabled = auth_router._settings.turnstile_enabled
+    previous_secret = auth_router._settings.turnstile_secret_key
+    auth_router._settings.turnstile_enabled = False
+    auth_router._settings.turnstile_secret_key = SecretStr("")
+    yield
+    auth_router._settings.turnstile_enabled = previous_enabled
+    auth_router._settings.turnstile_secret_key = previous_secret
 
 
 @pytest.fixture
@@ -55,6 +70,22 @@ def should_return_401_when_login_invalid(client: TestClient):
     response = client.post(
         "/api/v1/auth/login",
         json={"username": "admin", "password": "wrong-password"},
+    )
+    assert response.status_code == 401
+
+
+@respx.mock
+def should_return_401_when_turnstile_rejected(client: TestClient):
+    """POST /auth/login doit refuser un token Turnstile rejeté."""
+    auth_router._settings.turnstile_enabled = True
+    auth_router._settings.turnstile_secret_key = SecretStr("test-secret")
+    respx.post("https://challenges.cloudflare.com/turnstile/v0/siteverify").mock(
+        return_value=Response(200, json={"success": False, "error-codes": ["timeout-or-duplicate"]})
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin", "password": "changeme"},
     )
     assert response.status_code == 401
 

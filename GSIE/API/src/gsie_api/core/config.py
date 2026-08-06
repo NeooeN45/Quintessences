@@ -282,6 +282,11 @@ class Settings(BaseSettings):
     # Lockout progressif — seuils de tentatives échouées avant blocage temporaire.
     lockout_max_attempts: int = Field(default=5, ge=3, le=20)
     lockout_duration_minutes: int = Field(default=15, ge=1, le=120)
+    # Cloudflare Turnstile — bot protection (OWASP A07).
+    # Le site key est public (widget), le secret key reste en SecretStr.
+    turnstile_enabled: bool = False
+    turnstile_site_key: str = ""
+    turnstile_secret_key: SecretStr = SecretStr("")
     # Vérification de force mot de passe — HIBP k-anonymity + score zxcvbn.
     password_check_hibp_enabled: bool = True
     password_check_zxcvbn_enabled: bool = True

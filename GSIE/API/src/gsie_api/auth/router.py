@@ -26,6 +26,7 @@ from gsie_api.auth.schemas import (
     LogoutResponse,
     RefreshRequest,
     TokenResponse,
+    TurnstileVerifyRequest,
     VerifyResponse,
 )
 from gsie_api.auth.sessions import SessionService, SqlAlchemySessionRepository
@@ -39,6 +40,7 @@ from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure import database as database_infrastructure
 from gsie_api.infrastructure.database import get_db
+from gsie_api.shared.turnstile import TurnstileClient
 
 _settings = get_settings()
 
@@ -179,6 +181,20 @@ async def login(
     # Audit — IP et User-Agent pour traçabilité (CON-005, OWASP A09)
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("User-Agent", "unknown")
+
+    turnstile = TurnstileClient(_settings)
+    if not await turnstile.verify(credentials.turnstile_token, client_ip):
+        logger.warning(
+            "login_turnstile_rejected",
+            username=credentials.username,
+            client_ip=client_ip,
+            user_agent=user_agent,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Turnstile challenge failed",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = _authenticate_user(credentials.username, credentials.password)
     if user is None:
@@ -395,3 +411,29 @@ async def logout(
     revoked = await refresh_store.consume(jti)
     logger.info("logout", jti=jti, revoked=revoked)
     return LogoutResponse(revoked=revoked)
+
+
+class TurnstileVerifyResponse(TypedDict):
+    """Résultat d'une vérification Turnstile."""
+
+    valid: bool
+
+
+@router.post(
+    "/turnstile/verify",
+    response_model=TurnstileVerifyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Vérifier un token Turnstile",
+    description="Vérifie un token Cloudflare Turnstile sans authentification.",
+)
+@_limiter.limit("20/minute")
+async def verify_turnstile_token(
+    request: Request,
+    response: Response,
+    payload: TurnstileVerifyRequest,
+) -> TurnstileVerifyResponse:
+    """Valide un token Turnstile pour les formulaires front-end."""
+    client_ip = request.client.host if request.client else None
+    turnstile = TurnstileClient(_settings)
+    is_valid = await turnstile.verify(payload.token, client_ip)
+    return TurnstileVerifyResponse(valid=is_valid)

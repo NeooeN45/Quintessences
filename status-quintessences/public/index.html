@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statut — Quintessences</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="https://status.quintessences-platform.com/">
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <h1>Statut des services Quintessences</h1>
+      <p class="tagline">Disponibilité de l’écosystème GSIE en temps réel.</p>
+      <div id="global-status" class="status-badge unknown">Vérification en cours…</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <h2>Services</h2>
+      <div class="services" id="services">
+        <!-- Les cartes sont générées par JS -->
+      </div>
+      <p class="refresh">Dernière vérification : <span id="last-check">—</span></p>
+      <button id="refresh" class="button">Vérifier maintenant</button>
+    </section>
+
+    <section class="section alternate">
+      <h2>Incidents historiques</h2>
+      <p>Aucun incident déclaré. Cette section sera alimentée par le pipeline GSIE.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 Quintessences. <a href="https://quintessences-platform.com">Retour au site</a>.</p>
+    </div>
+  </footer>
+
+  <script src="/js/status.js"></script>
+</body>
+</html>

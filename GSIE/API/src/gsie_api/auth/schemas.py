@@ -5,13 +5,26 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
 
 
+class TurnstileVerifyRequest(BaseModel):
+    """Token Cloudflare Turnstile à valider côté serveur."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    token: str = Field(min_length=1, max_length=4096, description="Token Turnstile")
+
+
 class LoginRequest(BaseModel):
-    """Requête de login — username + password."""
+    """Requête de login — username + password + token Turnstile."""
 
     model_config = ConfigDict(extra="forbid")
 
     username: str = Field(min_length=1, max_length=255, description="Nom d'utilisateur")
     password: str = Field(min_length=1, max_length=500, description="Mot de passe")
+    turnstile_token: str = Field(
+        default="",
+        max_length=4096,
+        description="Token Cloudflare Turnstile",
+    )
 
 
 class TokenResponse(BaseModel):

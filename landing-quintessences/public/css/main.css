@@ -140,6 +140,43 @@ footer .small {
   margin-top: 0.5rem;
 }
 
+.contact-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 500px;
+  margin-top: 1.5rem;
+}
+
+.contact-form label {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font: inherit;
+}
+
+.contact-form textarea {
+  resize: vertical;
+}
+
+.contact-form .cf-turnstile {
+  margin: 0.5rem 0;
+}
+
+.form-feedback {
+  margin-top: 0.5rem;
+  font-weight: 500;
+  min-height: 1.5rem;
+}
+
+.form-feedback.success { color: #15803d; }
+.form-feedback.error { color: #b91c1c; }
+
 @media (max-width: 600px) {
   .hero h1 {
     font-size: 2rem;

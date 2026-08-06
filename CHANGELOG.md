@@ -41,6 +41,13 @@ Format : `## [version] - YYYY-MM-DD`
 - **Email Routing** activé sur `quintessences-platform.com`.
 - **Nettoyage securite** : suppression des tokens API temporaires (`Wrangler-Pages-Temp`) et des
   fichiers secrets locaux (`.cloudflare_credentials`, `.cloudflare_api_token`, `.cloudflare_zone_id`).
+- **Page de statut** : creation de `status-quintessences/` (HTML/CSS/JS).
+- **Turnstile** : service `gsie_api.shared.turnstile`, endpoint `POST /auth/turnstile/verify`,
+  verification du challenge sur `POST /auth/login`, widget sur la landing page.
+- **SMTP transactionnel** : port Mailpit `127.0.0.1:1025` mappe, variables d'environnement `.env`
+  pretes, tests unitaires `test_transactional_email.py`.
+- **Migration Docker API** : `docker-compose.override.yml` et `cloudflared\migrate-to-docker.ps1`
+  pour basculer l'API du host vers le conteneur.
 - **Fichiers de configuration ajoutes** :
   - `GSIE/API/cloudflared/config.yml`
   - `GSIE/API/cloudflared/setup-tunnel.ps1`
