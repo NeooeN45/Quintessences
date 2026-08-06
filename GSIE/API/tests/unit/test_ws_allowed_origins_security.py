@@ -34,6 +34,7 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "smtp_host": "smtp.example.com",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
+        "mfa_encryption_key": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
     } | overrides
 
 

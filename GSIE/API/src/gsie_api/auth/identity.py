@@ -104,6 +104,10 @@ class IdentityRepositoryProtocol(Protocol):
 
     async def create_google_account(self, identity: GoogleIdentity) -> AuthenticatedAccount: ...
 
+    async def create_oidc_account(
+        self, identity: GoogleIdentity, provider: str
+    ) -> AuthenticatedAccount: ...
+
     async def link_google_identity(
         self,
         account_id: UUID,

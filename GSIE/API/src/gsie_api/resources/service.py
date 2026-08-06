@@ -353,6 +353,8 @@ class ResourceService:
             id=resource.id,
             type=resource.type,
             gsie_id=resource.gsie_id,
+            organisation_id=resource.organisation_id,
+            workspace_id=resource.workspace_id,
             created_at=resource.created_at,
             updated_at=resource.updated_at,
             metadata_json=resource.metadata_json,
@@ -366,6 +368,8 @@ class ResourceService:
             id=resource.id,
             type=resource.type,
             gsie_id=resource.gsie_id,
+            organisation_id=resource.organisation_id,
+            workspace_id=resource.workspace_id,
             created_at=resource.created_at,
             updated_at=resource.updated_at,
             metadata_json=resource.metadata_json,
@@ -439,7 +443,12 @@ class ResourceService:
         self, type_name: str, gsie_id: str, model_cls: type, safe_data: dict[str, Any]
     ) -> ResourceModel:
         """Insère la ligne racine resource + la ligne dans la table du type."""
-        resource = ResourceModel(type=type_name, gsie_id=gsie_id)
+        resource = ResourceModel(
+            type=type_name,
+            gsie_id=gsie_id,
+            organisation_id=self._session.info.get("organisation_id"),
+            workspace_id=self._session.info.get("workspace_id"),
+        )
         self._session.add(resource)
         await self._session.flush()
         type_instance = model_cls(id=resource.id, **safe_data)

@@ -24,7 +24,7 @@ from gsie_api.core.rbac import (
     can_access_resource,
     check_permission,
 )
-from gsie_api.infrastructure.database import get_db as get_db_session
+from gsie_api.infrastructure.database import get_db_resource
 from gsie_api.resources.schemas import (
     BulkIngestRequest,
     ResourceCreate,
@@ -69,7 +69,7 @@ _settings = _get_settings()
 
 # Type aliases pour lisibilité
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
-DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+DbSession = Annotated[AsyncSession, Depends(get_db_resource)]
 
 # Note : tout endpoint décoré par `@_limiter.limit` doit déclarer
 # `response: Response`. Le limiter est configuré avec `headers_enabled=True`

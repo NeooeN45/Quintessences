@@ -87,6 +87,45 @@ class WorkspaceModel(Base, TimestampMixin):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class OrganisationInvitationModel(Base):
+    """Invitation e-mail à usage unique vers une organisation."""
+
+    __tablename__ = "organisation_invitation"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('admin', 'member')",
+            name="ck_organisation_invitation_role",
+        ),
+        UniqueConstraint("token_hash", name="uq_organisation_invitation_token_hash"),
+        Index("idx_organisation_invitation_org", "organisation_id", "created_at"),
+        Index("idx_organisation_invitation_email", "email_normalized", "expires_at"),
+        {"schema": ORGANISATIONS_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    organisation_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{ORGANISATIONS_SCHEMA}.organisation.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    email_normalized: Mapped[str] = mapped_column(String(320), nullable=False)
+    role: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="member", server_default=text("'member'")
+    )
+    invited_by: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_rgpd_identites.user_account.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class OrganisationMemberModel(Base):
     """Appartenance compte ↔ organisation avec rôle (owner/admin/member)."""
 

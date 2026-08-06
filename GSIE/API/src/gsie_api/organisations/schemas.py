@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 SlugPattern = r"^[a-z0-9][a-z0-9-]{1,98}[a-z0-9]$"
 
@@ -74,6 +74,34 @@ class MemberInviteRequest(BaseModel):
 
     account_id: UUID
     role: MemberRole = "member"
+
+
+class EmailInvitationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    email: EmailStr
+    role: Literal["admin", "member"] = "member"
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        return value.strip().casefold() if isinstance(value, str) else value
+
+
+class InvitationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    organisation_id: UUID
+    email: EmailStr
+    role: Literal["admin", "member"]
+    expires_at: datetime
+
+
+class InvitationAcceptRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    token: str = Field(min_length=20, max_length=256)
 
 
 class MemberResponse(BaseModel):

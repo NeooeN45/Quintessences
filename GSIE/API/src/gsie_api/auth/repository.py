@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Select, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
-from gsie_api.auth.account_lifecycle import AccountActionCode, AccountProfile, ActionPurpose
+from gsie_api.auth.account_lifecycle import (
+    AccountActionCode,
+    AccountProfile,
+    ActionPurpose,
+    EmailChangeChannel,
+    EmailChangeRequest,
+)
 from gsie_api.auth.identity import (
     AccountAlreadyExistsError,
     AuthenticatedAccount,
@@ -20,6 +26,7 @@ from gsie_api.auth.identity import (
 from gsie_api.auth.mfa import MfaSecretRecord
 from gsie_api.infrastructure.models.accounts import (
     AccountRoleModel,
+    EmailChangeRequestModel,
     IdentityActionTokenModel,
     IdentityProviderLinkModel,
     LocalCredentialModel,
@@ -175,12 +182,17 @@ class SqlAlchemyIdentityRepository:
         return (await self._session.execute(statement)).scalar_one_or_none() is not None
 
     async def create_google_account(self, identity: GoogleIdentity) -> AuthenticatedAccount:
+        return await self.create_oidc_account(identity, "google")
+
+    async def create_oidc_account(
+        self, identity: GoogleIdentity, provider: str
+    ) -> AuthenticatedAccount:
         account = UserAccountModel(display_name=identity.display_name)
         self._session.add(account)
         await self._session.flush()
         link = IdentityProviderLinkModel(
             account_id=account.id,
-            provider="google",
+            provider=provider,
             issuer=identity.issuer,
             subject=identity.subject,
             email_normalized=identity.email,
@@ -201,7 +213,7 @@ class SqlAlchemyIdentityRepository:
             await self._session.flush()
         except IntegrityError as exc:
             raise ProviderAlreadyLinkedError from exc
-        return self._account(account, ("user",), "google")
+        return self._account(account, ("user",), provider)
 
     async def link_google_identity(
         self,
@@ -264,6 +276,22 @@ class SqlAlchemyIdentityRepository:
         account.display_name = display_name
         await self._session.flush()
         return await self.get_profile(account_id)
+
+    async def find_account_id_for_email(self, email: str) -> UUID | None:
+        statement = (
+            select(IdentityProviderLinkModel.account_id)
+            .join(UserAccountModel, UserAccountModel.id == IdentityProviderLinkModel.account_id)
+            .where(
+                IdentityProviderLinkModel.provider == "local",
+                IdentityProviderLinkModel.issuer == "quintessences",
+                IdentityProviderLinkModel.email_normalized == email,
+                IdentityProviderLinkModel.revoked_at.is_(None),
+                UserAccountModel.deleted_at.is_(None),
+                UserAccountModel.status.in_(("active", "pending_deletion")),
+            )
+            .limit(1)
+        )
+        return (await self._session.execute(statement)).scalar_one_or_none()
 
     async def find_local_account_id(self, email: str) -> UUID | None:
         statement = (
@@ -364,6 +392,147 @@ class SqlAlchemyIdentityRepository:
         )
         await self._session.flush()
 
+    async def mark_deletion_requested(
+        self, account_id: UUID, requested_at: datetime, scheduled_at: datetime
+    ) -> None:
+        account = await self._session.get(UserAccountModel, account_id, with_for_update=True)
+        if account is None or account.deleted_at is not None or account.status != "active":
+            raise InvalidCredentialsError
+        account.status = "pending_deletion"
+        account.deletion_requested_at = requested_at
+        account.deletion_scheduled_at = scheduled_at
+        account.session_version += 1
+        await self._session.flush()
+
+    async def cancel_deletion(self, account_id: UUID) -> None:
+        account = await self._session.get(UserAccountModel, account_id, with_for_update=True)
+        if account is None or account.deleted_at is not None:
+            raise InvalidCredentialsError
+        if account.status != "pending_deletion":
+            return
+        account.status = "active"
+        account.deletion_requested_at = None
+        account.deletion_scheduled_at = None
+        account.session_version += 1
+        await self._session.flush()
+
+    async def get_local_password_hash(self, account_id: UUID) -> str | None:
+        statement = (
+            select(LocalCredentialModel.password_hash)
+            .join(
+                IdentityProviderLinkModel,
+                IdentityProviderLinkModel.id == LocalCredentialModel.identity_link_id,
+            )
+            .where(
+                IdentityProviderLinkModel.account_id == account_id,
+                IdentityProviderLinkModel.provider == "local",
+                IdentityProviderLinkModel.revoked_at.is_(None),
+            )
+        )
+        return (await self._session.execute(statement)).scalar_one_or_none()
+
+    async def replace_email_change_request(
+        self,
+        account_id: UUID,
+        current_email: str,
+        new_email: str,
+        current_code_hash: str,
+        new_code_hash: str,
+        expires_at: datetime,
+    ) -> EmailChangeRequest:
+        from sqlalchemy import delete
+
+        await self._session.execute(
+            delete(EmailChangeRequestModel).where(
+                EmailChangeRequestModel.account_id == account_id,
+                EmailChangeRequestModel.completed_at.is_(None),
+            )
+        )
+        model = EmailChangeRequestModel(
+            account_id=account_id,
+            current_email_normalized=current_email,
+            new_email_normalized=new_email,
+            current_code_hash=current_code_hash,
+            new_code_hash=new_code_hash,
+            expires_at=expires_at,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        return self._email_change_request(model)
+
+    async def get_active_email_change_request(self, account_id: UUID) -> EmailChangeRequest | None:
+        statement = (
+            select(EmailChangeRequestModel)
+            .where(
+                EmailChangeRequestModel.account_id == account_id,
+                EmailChangeRequestModel.completed_at.is_(None),
+            )
+            .order_by(EmailChangeRequestModel.created_at.desc())
+            .limit(1)
+            .with_for_update()
+        )
+        model = (await self._session.execute(statement)).scalar_one_or_none()
+        return self._email_change_request(model) if model is not None else None
+
+    async def confirm_email_change_code(
+        self,
+        request_id: UUID,
+        channel: EmailChangeChannel,
+        code: str,
+    ) -> EmailChangeRequest | None:
+        from datetime import UTC, datetime
+
+        model = await self._session.get(EmailChangeRequestModel, request_id, with_for_update=True)
+        if model is None or model.completed_at is not None or model.expires_at <= datetime.now(UTC):
+            return None
+        stored_hash = model.current_code_hash if channel == "current" else model.new_code_hash
+        if not self._password_service_verify(stored_hash, code):
+            return None
+        if channel == "current":
+            model.current_confirmed_at = datetime.now(UTC)
+        else:
+            model.new_confirmed_at = datetime.now(UTC)
+        await self._session.flush()
+        return self._email_change_request(model)
+
+    async def complete_email_change(self, request_id: UUID) -> None:
+        from datetime import UTC, datetime
+
+        model = await self._session.get(EmailChangeRequestModel, request_id, with_for_update=True)
+        if model is None or model.current_confirmed_at is None or model.new_confirmed_at is None:
+            raise InvalidCredentialsError
+        link = (
+            await self._session.execute(
+                select(IdentityProviderLinkModel)
+                .where(
+                    IdentityProviderLinkModel.account_id == model.account_id,
+                    IdentityProviderLinkModel.provider == "local",
+                    IdentityProviderLinkModel.revoked_at.is_(None),
+                )
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        account = await self._session.get(UserAccountModel, model.account_id, with_for_update=True)
+        if link is None or account is None:
+            raise InvalidCredentialsError
+        link.subject = model.new_email_normalized
+        link.email_normalized = model.new_email_normalized
+        link.email_verified = True
+        model.completed_at = datetime.now(UTC)
+        account.session_version += 1
+        await self._session.flush()
+
+    @staticmethod
+    def _email_change_request(model: EmailChangeRequestModel) -> EmailChangeRequest:
+        return EmailChangeRequest(
+            request_id=model.id,
+            current_email=model.current_email_normalized,
+            new_email=model.new_email_normalized,
+            current_confirmed=model.current_confirmed_at is not None,
+            new_confirmed=model.new_confirmed_at is not None,
+            expires_at=model.expires_at,
+        )
+
     async def update_local_password(self, account_id: UUID, password_hash: str) -> None:
         statement = (
             select(LocalCredentialModel)
@@ -449,16 +618,20 @@ class SqlAlchemyIdentityRepository:
             self._session.add(MfaRecoveryCodeModel(account_id=account_id, code_hash=code_hash))
         await self._session.flush()
 
-    async def consume_recovery_code(self, account_id: UUID, code_hash: str) -> bool:
+    async def consume_recovery_code(self, account_id: UUID, code: str) -> bool:
         from datetime import UTC, datetime
 
-        stmt = select(MfaRecoveryCodeModel).where(
-            MfaRecoveryCodeModel.account_id == account_id,
-            MfaRecoveryCodeModel.consumed_at.is_(None),
+        stmt = (
+            select(MfaRecoveryCodeModel)
+            .where(
+                MfaRecoveryCodeModel.account_id == account_id,
+                MfaRecoveryCodeModel.consumed_at.is_(None),
+            )
+            .with_for_update()
         )
         models = (await self._session.execute(stmt)).scalars().all()
         for model in models:
-            if self._password_service_verify(code_hash, model.code_hash):
+            if self._password_service_verify(model.code_hash, code):
                 model.consumed_at = datetime.now(UTC)
                 await self._session.flush()
                 return True
@@ -476,14 +649,14 @@ class SqlAlchemyIdentityRepository:
         return (await self._session.execute(stmt)).scalar_one_or_none() is not None
 
     @staticmethod
-    def _password_service_verify(plain_hash: str, stored_hash: str) -> bool:
-        """Vérifie un hash Argon2 contre un autre hash (pour recovery codes)."""
+    def _password_service_verify(stored_hash: str, plain_code: str) -> bool:
+        """Vérifie un code de récupération Argon2id contre son hash."""
         from argon2 import PasswordHasher
         from argon2.exceptions import InvalidHashError, VerificationError
 
         hasher = PasswordHasher()
         try:
-            return hasher.verify(stored_hash, plain_hash.replace("-", "").upper())
+            return hasher.verify(stored_hash, plain_code)
         except (InvalidHashError, VerificationError):
             return False
 

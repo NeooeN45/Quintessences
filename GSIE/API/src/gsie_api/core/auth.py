@@ -163,6 +163,27 @@ def create_refresh_token(subject: str, claims: dict[str, Any] | None = None) -> 
     return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
 
 
+def create_mfa_challenge_token(subject: str, claims: dict[str, Any] | None = None) -> str:
+    """Crée un jeton court, non utilisable comme access token, pour le MFA."""
+    now = datetime.now(UTC)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iss": _settings.jwt_issuer,
+        "aud": _settings.jwt_audience,
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+        "jti": str(uuid4()),
+        "type": "mfa_challenge",
+    }
+    if claims:
+        reserved_claims = payload.keys() & claims.keys()
+        if reserved_claims:
+            names = ", ".join(sorted(reserved_claims))
+            raise ValueError(f"Reserved JWT claims cannot be overridden: {names}")
+        payload.update(claims)
+    return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
+
+
 def verify_token(token: str, expected_type: str = "access") -> dict[str, Any]:
     """Vérifie un token JWT (signature + expiration + type).
 

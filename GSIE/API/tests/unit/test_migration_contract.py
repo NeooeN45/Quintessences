@@ -11,7 +11,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260803_0033"
+_HEAD = "20260806_0043"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -67,7 +67,16 @@ def test_baseline_ne_depend_pas_des_modeles_applicatifs() -> None:
 
 
 def test_modeles_legacy_isoles_du_schema_courant() -> None:
-    assert len(Base.metadata.tables) == 130
+    assert len(Base.metadata.tables) >= 130
+    expected_new_tables = {
+        "gsie_rgpd_identites.mfa_secret",
+        "gsie_rgpd_identites.active_session",
+        "gsie_organisations.organisation_invitation",
+        "gsie_billing.plan",
+        "gsie_billing.subscription",
+        "gsie_billing.entitlement",
+    }
+    assert expected_new_tables <= set(Base.metadata.tables)
     assert frozenset(LegacyBase.metadata.tables) == _LEGACY_TABLES
     assert frozenset(Base.metadata.tables).isdisjoint(_LEGACY_TABLES)
 

@@ -1,17 +1,23 @@
 """Endpoints du compte Quintessences multi-fournisseurs (DEC-000044)."""
 
+from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.auth.account_export import AccountExportService
 from gsie_api.auth.account_lifecycle import (
     AccountLifecycleService,
     AccountNotFoundError,
     AccountProfile,
+    EmailAlreadyUsedError,
     InvalidActionCodeError,
+    InvalidCurrentPasswordError,
+    InvalidEmailChangeCodeError,
 )
 from gsie_api.auth.auth_events import log_auth_event
 from gsie_api.auth.google_identity import GoogleTokenVerifier, InvalidGoogleTokenError
@@ -31,7 +37,6 @@ from gsie_api.auth.mfa import (
     InvalidRecoveryCodeError,
     InvalidTotpCodeError,
     MfaAlreadyEnabledError,
-    MfaError,
     MfaNotEnabledError,
     MfaService,
 )
@@ -50,14 +55,24 @@ from gsie_api.auth.schemas import (
     AcceptedResponse,
     AccountProfileResponse,
     ActionCodeRequest,
+    CancelDeletionRequest,
+    ChangeEmailRequest,
+    ChangePasswordRequest,
     CompletedResponse,
+    ConfirmEmailChangeRequest,
+    ConsentListResponse,
+    ConsentRequest,
+    ConsentResponse,
     GoogleLoginRequest,
     GoogleNonceResponse,
     ListSessionsResponse,
     LocalLoginRequest,
+    MfaChallengeResponse,
+    MfaChallengeVerifyRequest,
     MfaSetupResponse,
     MfaStatusResponse,
     MfaVerifyRequest,
+    OidcAuthorizationUrlResponse,
     OidcLoginRequest,
     OidcProvidersResponse,
     PasswordResetConfirmRequest,
@@ -66,6 +81,7 @@ from gsie_api.auth.schemas import (
     ProviderCapability,
     ProvidersResponse,
     RegistrationRequest,
+    RequestDeletionRequest,
     RevokeSessionRequest,
     SessionResponse,
     TokenResponse,
@@ -76,8 +92,10 @@ from gsie_api.auth.transactional_email import (
     TransactionalEmailSender,
     get_transactional_email_sender,
 )
+from gsie_api.billing.service import BillingService, SqlAlchemyBillingRepository
 from gsie_api.core.auth import (
     create_access_token,
+    create_mfa_challenge_token,
     create_refresh_token,
     get_current_user,
     verify_token,
@@ -85,7 +103,10 @@ from gsie_api.core.auth import (
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.logging import get_logger
-from gsie_api.infrastructure.database import get_db
+from gsie_api.infrastructure.database import get_db, set_rls_context
+from gsie_api.infrastructure.models.accounts import AccountConsentModel
+from gsie_api.organisations.repository import SqlAlchemyOrganisationRepository
+from gsie_api.organisations.service import OrganisationService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 _settings = get_settings()
@@ -143,6 +164,20 @@ async def get_session_service(
     return SessionService(SqlAlchemySessionRepository(session))
 
 
+async def get_personal_organisation_service(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> OrganisationService:
+    """Service d'onboarding partageant la transaction d'inscription."""
+    return OrganisationService(SqlAlchemyOrganisationRepository(session))
+
+
+async def get_onboarding_billing_service(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> BillingService:
+    """Service billing partageant la transaction d'inscription."""
+    return BillingService(SqlAlchemyBillingRepository(session))
+
+
 def get_lockout_service() -> AccountLockoutService:
     """Dependency du service de lockout progressif."""
     return AccountLockoutService(get_lockout_store())
@@ -190,8 +225,9 @@ async def _issue_tokens(
     }
     subject = str(account.account_id)
     access_token = create_access_token(subject=subject, claims=claims)
-    refresh_token = create_refresh_token(subject=subject, claims=claims)
     access_payload = verify_token(access_token, expected_type="access")
+    refresh_claims = {**claims, "session_jti": str(access_payload["jti"])}
+    refresh_token = create_refresh_token(subject=subject, claims=refresh_claims)
     refresh_payload = verify_token(refresh_token, expected_type="refresh")
     await refresh_store.register(
         str(refresh_payload["jti"]),
@@ -262,6 +298,10 @@ async def register_local(
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
     password_strength: Annotated[PasswordStrengthService, Depends(get_password_strength_service)],
+    personal_organisation_service: Annotated[
+        OrganisationService, Depends(get_personal_organisation_service)
+    ],
+    billing_service: Annotated[BillingService, Depends(get_onboarding_billing_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
     """Crée le compte canonique et son premier moyen de connexion."""
@@ -314,6 +354,18 @@ async def register_local(
             status_code=status.HTTP_409_CONFLICT,
             detail="ACCOUNT_ALREADY_EXISTS",
         ) from None
+
+    await set_rls_context(
+        db_session,
+        str(account.account_id),
+        ",".join(account.roles),
+    )
+    await personal_organisation_service.create_personal_space(
+        account_id=account.account_id,
+        email=str(registration.email),
+        display_name=registration.display_name,
+    )
+    await billing_service.ensure_free_account(account.account_id)
     await log_auth_event(
         db_session,
         action="register_success",
@@ -330,7 +382,7 @@ async def register_local(
 
 @router.post(
     "/login/password",
-    response_model=TokenResponse,
+    response_model=TokenResponse | MfaChallengeResponse,
     summary="Se connecter par adresse e-mail",
 )
 @_limiter.limit("10/minute")
@@ -344,7 +396,7 @@ async def login_local(
     mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> TokenResponse | MfaChallengeResponse:
     """Authentifie sans distinguer compte absent et mot de passe erroné."""
     del response
     client_ip = request.client.host if request.client else None
@@ -391,28 +443,27 @@ async def login_local(
             headers={"WWW-Authenticate": "Bearer"},
         ) from None
 
-    # Vérification MFA si activée pour ce compte
-    if _settings.mfa_enabled:
-        try:
-            has_mfa = await mfa_service._repository.get_active_secret(account.account_id)
-            if has_mfa is not None:
-                # Le MFA est activé — le client doit fournir un code TOTP séparément
-                # via /auth/mfa/challenge. On retourne un challenge au lieu des tokens.
-                await log_auth_event(
-                    db_session,
-                    action="login_mfa_challenge",
-                    actor_id=account.account_id,
-                    ip_address=client_ip,
-                    user_agent=user_agent,
-                    status_code=200,
-                    details={"provider": "local"},
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_200_OK,
-                    detail="MFA_REQUIRED",
-                ) from None
-        except MfaError:
-            pass  # Si la vérif MFA échoue pour une raison technique, on continue
+    # Le mot de passe est valide, mais un second facteur peut être requis.
+    if _settings.mfa_enabled and await mfa_service.is_enabled(account.account_id):
+        challenge_token = create_mfa_challenge_token(
+            subject=str(account.account_id),
+            claims={
+                "auth_provider": account.provider,
+                "session_version": account.session_version,
+                "roles": list(account.roles),
+                "login_key": str(credentials.email),
+            },
+        )
+        await log_auth_event(
+            db_session,
+            action="login_mfa_challenge",
+            actor_id=account.account_id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            status_code=200,
+            details={"provider": account.provider},
+        )
+        return MfaChallengeResponse(challenge_token=challenge_token, expires_in=300)
 
     await lockout_service.record_success(str(credentials.email), client_ip)
     await log_auth_event(
@@ -425,6 +476,81 @@ async def login_local(
         details={"provider": "local"},
     )
     logger.info("identity_login_success", provider="local", account_id=str(account.account_id))
+    return await _issue_tokens(account, refresh_store, request, session_service)
+
+
+@router.post(
+    "/login/mfa",
+    response_model=TokenResponse,
+    summary="Terminer une connexion avec MFA TOTP ou code de récupération",
+)
+@_limiter.limit("20/minute")
+async def complete_mfa_login(
+    request: Request,
+    response: Response,
+    verification: MfaChallengeVerifyRequest,
+    mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+    session_service: Annotated[SessionService, Depends(get_session_service)],
+    lockout_service: Annotated[AccountLockoutService, Depends(get_lockout_service)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> TokenResponse:
+    """Vérifie le challenge signé et émet enfin la session complète."""
+    del response
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("User-Agent")
+    payload = verify_token(
+        verification.challenge_token.get_secret_value(), expected_type="mfa_challenge"
+    )
+    try:
+        account_id = UUID(str(payload["sub"]))
+        login_key = str(payload["login_key"])
+        provider = str(payload.get("auth_provider", "local"))
+        session_version = int(payload["session_version"])
+        roles_claim = payload.get("roles", [])
+        roles = tuple(role for role in roles_claim if isinstance(role, str))
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Challenge MFA invalide",
+        ) from None
+
+    try:
+        if verification.is_recovery_code:
+            await mfa_service.verify_recovery_code(account_id, verification.code)
+        elif not await mfa_service.verify_totp(account_id, verification.code):
+            raise InvalidTotpCodeError
+    except (InvalidTotpCodeError, InvalidRecoveryCodeError):
+        await lockout_service.record_failure(login_key, client_ip)
+        await log_auth_event(
+            db_session,
+            action="mfa_login_failed",
+            actor_id=account_id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            status_code=401,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Code MFA invalide",
+        ) from None
+
+    await lockout_service.record_success(login_key, client_ip)
+    account = AuthenticatedAccount(
+        account_id=account_id,
+        roles=roles,
+        provider=provider,
+        session_version=session_version,
+    )
+    await log_auth_event(
+        db_session,
+        action="login_success",
+        actor_id=account_id,
+        ip_address=client_ip,
+        user_agent=user_agent,
+        status_code=200,
+        details={"provider": provider, "mfa": True},
+    )
     return await _issue_tokens(account, refresh_store, request, session_service)
 
 
@@ -469,8 +595,9 @@ async def login_google(
     identity_service: Annotated[IdentityService, Depends(get_identity_service)],
     nonce_store: Annotated[GoogleNonceStore, Depends(get_google_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+    session_service: Annotated[SessionService, Depends(get_session_service)],
 ) -> TokenResponse:
-    del request, response
+    del response
     nonce = credentials.nonce.get_secret_value()
     await _consume_google_nonce(nonce_store, nonce)
     try:
@@ -494,7 +621,7 @@ async def login_google(
             detail="Preuve Google invalide",
         ) from None
     logger.info("identity_login_success", provider="google", account_id=str(account.account_id))
-    return await _issue_tokens(account, refresh_store)
+    return await _issue_tokens(account, refresh_store, request, session_service)
 
 
 @router.post(
@@ -511,8 +638,9 @@ async def link_google(
     identity_service: Annotated[IdentityService, Depends(get_identity_service)],
     nonce_store: Annotated[GoogleNonceStore, Depends(get_google_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
+    session_service: Annotated[SessionService, Depends(get_session_service)],
 ) -> TokenResponse:
-    del request, response
+    del response
     try:
         account_id = UUID(str(current_user.get("sub", "")))
     except ValueError:
@@ -544,7 +672,7 @@ async def link_google(
             detail="Preuve Google invalide",
         ) from None
     logger.info("identity_linked", provider="google", account_id=str(account.account_id))
-    return await _issue_tokens(account, refresh_store)
+    return await _issue_tokens(account, refresh_store, request, session_service)
 
 
 @router.get(
@@ -595,6 +723,333 @@ async def update_account_profile(
             detail="Compte introuvable",
         ) from None
     logger.info("identity_profile_updated", account_id=str(profile.account_id))
+    return _profile_response(profile)
+
+
+@router.post(
+    "/password/change",
+    response_model=CompletedResponse,
+    summary="Changer le mot de passe du compte courant",
+)
+@_limiter.limit("5/minute")
+async def change_password(
+    request: Request,
+    response: Response,
+    body: ChangePasswordRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+    password_strength: Annotated[PasswordStrengthService, Depends(get_password_strength_service)],
+    session_service: Annotated[SessionService, Depends(get_session_service)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> CompletedResponse:
+    del response
+    account_id = _account_id(current_user)
+    try:
+        await password_strength.validate(body.new_password.get_secret_value())
+        await lifecycle.change_password(
+            account_id,
+            body.current_password.get_secret_value(),
+            body.new_password.get_secret_value(),
+        )
+    except InvalidCurrentPasswordError:
+        await log_auth_event(
+            db_session,
+            action="login",
+            actor_id=account_id,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("User-Agent"),
+            status_code=401,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Mot de passe actuel invalide",
+        ) from None
+    except (CompromisedPasswordError, WeakPasswordError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="PASSWORD_TOO_WEAK_OR_COMPROMISED",
+        ) from exc
+    await session_service.revoke_all_sessions(account_id)
+    await log_auth_event(
+        db_session,
+        action="update",
+        actor_id=account_id,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent"),
+        status_code=200,
+    )
+    return CompletedResponse()
+
+
+@router.get(
+    "/me/export",
+    summary="Exporter les données personnelles du compte courant",
+)
+@_limiter.limit("2/day")
+async def export_account_data(
+    request: Request,
+    response: Response,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, object]:
+    del request, response
+    export = await AccountExportService(db_session).export(_account_id(current_user))
+    return export
+
+
+@router.get("/me/consents", response_model=ConsentListResponse)
+@_limiter.limit("30/minute")
+async def list_consents(
+    request: Request,
+    response: Response,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> ConsentListResponse:
+    del request, response
+    rows = (
+        (
+            await db_session.execute(
+                select(AccountConsentModel)
+                .where(AccountConsentModel.account_id == _account_id(current_user))
+                .order_by(AccountConsentModel.accepted_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return ConsentListResponse(
+        consents=[
+            ConsentResponse(
+                consent_type=row.consent_type,
+                document_version=row.document_version,
+                accepted_at=row.accepted_at.isoformat(),
+                revoked_at=row.revoked_at.isoformat() if row.revoked_at else None,
+            )
+            for row in rows
+        ]
+    )
+
+
+@router.post("/me/consents", response_model=ConsentResponse, status_code=status.HTTP_201_CREATED)
+@_limiter.limit("20/minute")
+async def accept_consent(
+    request: Request,
+    response: Response,
+    body: ConsentRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> ConsentResponse:
+    del response
+    account_id = _account_id(current_user)
+    await db_session.execute(
+        update(AccountConsentModel)
+        .where(
+            AccountConsentModel.account_id == account_id,
+            AccountConsentModel.consent_type == body.consent_type,
+            AccountConsentModel.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.now(UTC))
+    )
+    consent = AccountConsentModel(
+        account_id=account_id,
+        consent_type=body.consent_type,
+        document_version=body.document_version,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent"),
+    )
+    db_session.add(consent)
+    await db_session.flush()
+    return ConsentResponse(
+        consent_type=consent.consent_type,
+        document_version=consent.document_version,
+        accepted_at=consent.accepted_at.isoformat(),
+        revoked_at=None,
+    )
+
+
+@router.delete("/me/consents/{consent_type}", response_model=CompletedResponse)
+@_limiter.limit("20/minute")
+async def revoke_consent(
+    request: Request,
+    response: Response,
+    consent_type: str,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> CompletedResponse:
+    del request, response
+    if consent_type not in {"terms", "privacy", "marketing"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Consentement invalide")
+    await db_session.execute(
+        update(AccountConsentModel)
+        .where(
+            AccountConsentModel.account_id == _account_id(current_user),
+            AccountConsentModel.consent_type == consent_type,
+            AccountConsentModel.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.now(UTC))
+    )
+    return CompletedResponse()
+
+
+@router.post(
+    "/me/deletion/request",
+    response_model=AcceptedResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Demander la suppression différée du compte",
+)
+@_limiter.limit("2/month")
+async def request_account_deletion(
+    request: Request,
+    response: Response,
+    body: RequestDeletionRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+    email_sender: Annotated[TransactionalEmailSender, Depends(get_transactional_email_sender)],
+) -> AcceptedResponse:
+    del response
+    if not email_sender.is_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service de messagerie non configuré",
+        )
+    account_id = _account_id(current_user)
+    try:
+        delivery = await lifecycle.request_account_deletion(
+            account_id,
+            body.current_password.get_secret_value(),
+        )
+    except (InvalidCurrentPasswordError, AccountNotFoundError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossible de planifier la suppression du compte",
+        ) from exc
+    if not await email_sender.send_deletion_cancellation_code(
+        delivery.email,
+        delivery.code,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Envoi temporairement indisponible",
+        )
+    logger.info(
+        "account_deletion_requested",
+        account_id=str(account_id),
+        client_ip=request.client.host if request.client else None,
+    )
+    return AcceptedResponse()
+
+
+@router.post(
+    "/deletion/cancel",
+    response_model=CompletedResponse,
+    summary="Annuler une suppression de compte en attente",
+)
+@_limiter.limit("10/hour")
+async def cancel_account_deletion(
+    request: Request,
+    response: Response,
+    body: CancelDeletionRequest,
+    lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+) -> CompletedResponse:
+    del request, response
+    try:
+        await lifecycle.cancel_account_deletion(str(body.email), body.code)
+    except InvalidActionCodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CODE_INVALIDE_OU_EXPIRE",
+        ) from exc
+    return CompletedResponse()
+
+
+@router.post(
+    "/email/change/request",
+    response_model=AcceptedResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Demander un changement d'adresse e-mail",
+)
+@_limiter.limit("3/hour")
+async def request_email_change(
+    request: Request,
+    response: Response,
+    body: ChangeEmailRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+    email_sender: Annotated[TransactionalEmailSender, Depends(get_transactional_email_sender)],
+) -> AcceptedResponse:
+    del response
+    if not email_sender.is_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service de messagerie non configuré",
+        )
+    try:
+        delivery = await lifecycle.request_email_change(
+            _account_id(current_user),
+            body.current_password.get_secret_value(),
+            str(body.new_email),
+        )
+    except (InvalidCurrentPasswordError, EmailAlreadyUsedError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossible de préparer le changement d'adresse",
+        ) from exc
+    current_sent = await email_sender.send_email_change_code(
+        delivery.current_email,
+        delivery.current_code,
+        False,
+    )
+    new_sent = await email_sender.send_email_change_code(
+        delivery.new_email,
+        delivery.new_code,
+        True,
+    )
+    if not current_sent or not new_sent:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Envoi temporairement indisponible",
+        )
+    logger.info("identity_email_change_requested", account_id=str(_account_id(current_user)))
+    return AcceptedResponse()
+
+
+@router.post(
+    "/email/change/confirm",
+    response_model=AccountProfileResponse,
+    summary="Confirmer un code de changement d'adresse",
+)
+@_limiter.limit("10/hour")
+async def confirm_email_change(
+    request: Request,
+    response: Response,
+    body: ConfirmEmailChangeRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+    session_service: Annotated[SessionService, Depends(get_session_service)],
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+) -> AccountProfileResponse:
+    del response
+    account_id = _account_id(current_user)
+    try:
+        profile, completed = await lifecycle.confirm_email_change(
+            account_id, body.channel, body.code
+        )
+    except InvalidEmailChangeCodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CODE_INVALIDE_OU_EXPIRE",
+        ) from exc
+    if completed:
+        await session_service.revoke_all_sessions(account_id)
+        await log_auth_event(
+            db_session,
+            action="update",
+            actor_id=account_id,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("User-Agent"),
+            status_code=200,
+            details={"email_changed": True},
+        )
     return _profile_response(profile)
 
 
@@ -912,12 +1367,16 @@ async def revoke_all_sessions(
     response: Response,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> CompletedResponse:
     del request, response
     account_id = _account_id(current_user)
     current_jti = str(current_user.get("jti", ""))
+    refresh_jtis = await session_service.list_refresh_jtis(account_id, except_jti=current_jti)
     count = await session_service.revoke_all_sessions(account_id, except_jti=current_jti)
+    for refresh_jti in refresh_jtis:
+        await refresh_store.revoke(refresh_jti)
     await log_auth_event(
         db_session,
         action="sessions_revoked_all",
@@ -940,6 +1399,7 @@ async def revoke_session(
     revoke_request: RevokeSessionRequest,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
+    refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> CompletedResponse:
     del request, response
@@ -951,12 +1411,14 @@ async def revoke_session(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="ID session invalide",
         ) from None
+    refresh_jti = await session_service.get_refresh_jti(account_id, session_id)
     revoked = await session_service.revoke_session(account_id, session_id)
-    if not revoked:
+    if not revoked or refresh_jti is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session introuvable ou déjà révoquée",
         )
+    await refresh_store.revoke(refresh_jti)
     await log_auth_event(
         db_session,
         action="session_revoked",
@@ -985,6 +1447,41 @@ async def list_oidc_providers(
     del request, response
     verifier = get_generic_oidc_verifier()
     return OidcProvidersResponse(providers=verifier.get_provider_names())
+
+
+@router.get(
+    "/oidc/{provider}/authorize",
+    response_model=OidcAuthorizationUrlResponse,
+    summary="Construire une autorisation OIDC avec PKCE S256",
+)
+@_limiter.limit("30/minute")
+async def oidc_authorize(
+    request: Request,
+    response: Response,
+    provider: str,
+    redirect_uri: Annotated[str, Query(min_length=1, max_length=2048)],
+    state: Annotated[str, Query(min_length=16, max_length=512)],
+    code_challenge: Annotated[str, Query(min_length=43, max_length=128)],
+    client_id: Annotated[str | None, Query(max_length=255)] = None,
+) -> OidcAuthorizationUrlResponse:
+    del request, response
+    try:
+        authorization_url = get_generic_oidc_verifier().build_authorization_url(
+            provider,
+            redirect_uri,
+            state,
+            code_challenge,
+            client_id,
+        )
+    except InvalidOidcTokenError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    return OidcAuthorizationUrlResponse(
+        authorization_url=authorization_url,
+        provider=provider,
+    )
 
 
 @router.post(
@@ -1050,7 +1547,10 @@ async def login_oidc(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="ACCOUNT_LINK_REQUIRED",
             )
-        account = await identity_service._repository.create_google_account(identity)
+        account = await identity_service._repository.create_oidc_account(
+            identity,
+            credentials.provider,
+        )
 
     await log_auth_event(
         db_session,

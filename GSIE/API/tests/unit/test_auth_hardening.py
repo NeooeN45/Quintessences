@@ -62,10 +62,11 @@ class FakeMfaRepository:
     async def save_recovery_codes(self, account_id: UUID, code_hashes: list[str]) -> None:
         self._recovery_codes[account_id] = list(code_hashes)
 
-    async def consume_recovery_code(self, account_id: UUID, code_hash: str) -> bool:
+    async def consume_recovery_code(self, account_id: UUID, code: str) -> bool:
         codes = self._recovery_codes.get(account_id, [])
-        if code_hash in codes:
-            codes.remove(code_hash)
+        stored_hash = f"hash:{code}"
+        if stored_hash in codes:
+            codes.remove(stored_hash)
             return True
         return False
 

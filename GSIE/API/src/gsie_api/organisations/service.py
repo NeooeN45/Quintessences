@@ -14,11 +14,15 @@ Invariants :
 
 from __future__ import annotations
 
+import hashlib
+import secrets
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Protocol
 
+from gsie_api.auth.identity import normalize_email
+
 if TYPE_CHECKING:
-    from datetime import datetime
     from uuid import UUID
 
 
@@ -52,6 +56,14 @@ class LastOwnerError(OrganisationError):
 
 class InsufficientRoleError(OrganisationError):
     """Le compte n'a pas le rôle requis pour cette action."""
+
+
+class InvitationInvalidError(OrganisationError):
+    """L'invitation est inconnue, expirée, révoquée ou déjà consommée."""
+
+
+class InvitationEmailMismatchError(OrganisationError):
+    """L'invitation ne correspond pas à une adresse vérifiée du compte."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +103,29 @@ class MemberRecord:
     invited_by: UUID
     joined_at: datetime
     revoked_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
+class InvitationRecord:
+    """Invitation e-mail persistée sans exposer le token brut."""
+
+    id: UUID
+    organisation_id: UUID
+    email_normalized: str
+    role: str
+    invited_by: UUID
+    token_hash: str
+    expires_at: datetime
+    accepted_at: datetime | None
+    revoked_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
+class InvitationDelivery:
+    """Invitation et token brut destiné uniquement au service d'e-mail."""
+
+    invitation: InvitationRecord
+    token: str
 
 
 class OrganisationRepositoryProtocol(Protocol):
@@ -166,6 +201,22 @@ class OrganisationRepositoryProtocol(Protocol):
 
     async def count_owners(self, organisation_id: UUID) -> int: ...
 
+    async def create_invitation(
+        self,
+        organisation_id: UUID,
+        email_normalized: str,
+        role: str,
+        invited_by: UUID,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> InvitationRecord: ...
+
+    async def get_pending_invitation(self, token_hash: str) -> InvitationRecord | None: ...
+
+    async def get_verified_emails(self, account_id: UUID) -> tuple[str, ...]: ...
+
+    async def mark_invitation_accepted(self, invitation_id: UUID) -> None: ...
+
 
 class OrganisationService:
     """Orchestre les organisations, workspaces et appartenances."""
@@ -210,6 +261,24 @@ class OrganisationService:
             offset=(page - 1) * size,
             limit=size,
         )
+
+    async def create_personal_space(
+        self,
+        account_id: UUID,
+        email: str,
+        display_name: str | None,
+    ) -> tuple[OrganisationRecord, WorkspaceRecord]:
+        """Crée l'organisation personnelle et son workspace initial."""
+        slug = f"personal-{account_id.hex[:12]}"
+        label = display_name or email.split("@", 1)[0]
+        organisation = await self.create_organisation(slug, label, account_id)
+        workspace = await self.create_workspace(
+            organisation.id,
+            "personal",
+            "Espace personnel",
+            account_id,
+        )
+        return organisation, workspace
 
     async def create_workspace(
         self,
@@ -264,6 +333,51 @@ class OrganisationService:
             offset=(page - 1) * size,
             limit=size,
         )
+
+    async def invite_by_email(
+        self,
+        organisation_id: UUID,
+        email: str,
+        role: str,
+        invited_by: UUID,
+        expires_in_hours: int,
+    ) -> InvitationDelivery:
+        """Crée une invitation signée par un token aléatoire à usage unique."""
+        await self._require_role(organisation_id, invited_by, {"owner", "admin"})
+        if role not in {"admin", "member"}:
+            raise ValueError("Rôle d'invitation invalide")
+        normalized_email = normalize_email(email)
+        token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        invitation = await self._repository.create_invitation(
+            organisation_id,
+            normalized_email,
+            role,
+            invited_by,
+            token_hash,
+            datetime.now(UTC) + timedelta(hours=expires_in_hours),
+        )
+        return InvitationDelivery(invitation=invitation, token=token)
+
+    async def accept_invitation(self, token: str, account_id: UUID) -> MemberRecord:
+        """Accepte une invitation après vérification de l'e-mail du compte."""
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        invitation = await self._repository.get_pending_invitation(token_hash)
+        if invitation is None or invitation.expires_at <= datetime.now(UTC):
+            raise InvitationInvalidError
+        if invitation.accepted_at is not None or invitation.revoked_at is not None:
+            raise InvitationInvalidError
+        verified_emails = await self._repository.get_verified_emails(account_id)
+        if invitation.email_normalized not in verified_emails:
+            raise InvitationEmailMismatchError
+        member = await self._repository.add_member(
+            invitation.organisation_id,
+            account_id,
+            invitation.role,
+            invitation.invited_by,
+        )
+        await self._repository.mark_invitation_accepted(invitation.id)
+        return member
 
     async def revoke_member(
         self,

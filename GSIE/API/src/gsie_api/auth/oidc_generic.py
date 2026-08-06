@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, cast
+from urllib.parse import urlencode
 
 import jwt
 from jwt import PyJWKClient
@@ -39,6 +40,9 @@ class OidcProviderConfig:
     issuer: str
     client_ids: tuple[str, ...]
     jwks_url: str
+    authorization_url: str | None = None
+    allowed_redirect_uris: tuple[str, ...] = ()
+    scopes: tuple[str, ...] = ("openid", "profile", "email")
 
 
 class OidcVerifierProtocol(Protocol):
@@ -66,6 +70,41 @@ class GenericOidcVerifier:
 
     def get_provider_names(self) -> list[str]:
         return list(self._providers.keys())
+
+    def build_authorization_url(
+        self,
+        provider_name: str,
+        redirect_uri: str,
+        state: str,
+        code_challenge: str,
+        client_id: str | None = None,
+    ) -> str:
+        """Construit une URL Authorization Code + PKCE S256."""
+        provider = self._providers.get(provider_name)
+        if provider is None or not provider.authorization_url:
+            raise InvalidOidcTokenError("Fournisseur OIDC sans endpoint authorization")
+        if redirect_uri not in provider.allowed_redirect_uris:
+            raise InvalidOidcTokenError("redirect_uri OIDC non autorisée")
+        if len(state) < 16 or len(code_challenge) < 43:
+            raise InvalidOidcTokenError("Paramètres PKCE insuffisants")
+        selected_client = client_id or (
+            provider.client_ids[0] if len(provider.client_ids) == 1 else ""
+        )
+        if selected_client not in provider.client_ids:
+            raise InvalidOidcTokenError("client_id OIDC non autorisé")
+        query = urlencode(
+            {
+                "client_id": selected_client,
+                "redirect_uri": redirect_uri,
+                "response_type": "code",
+                "scope": " ".join(provider.scopes),
+                "state": state,
+                "code_challenge": code_challenge,
+                "code_challenge_method": "S256",
+            }
+        )
+        separator = "&" if "?" in provider.authorization_url else "?"
+        return f"{provider.authorization_url}{separator}{query}"
 
     async def verify(self, token: str, provider_name: str) -> GoogleIdentity:
         provider = self._providers.get(provider_name)
@@ -148,12 +187,29 @@ def load_oidc_providers() -> tuple[OidcProviderConfig, ...]:
             client_ids = tuple(str(c) for c in client_ids_raw if isinstance(c, str) and c)
             if not client_ids:
                 continue
+            redirects_raw = raw.get("allowed_redirect_uris", [])
+            scopes_raw = raw.get("scopes", ["openid", "profile", "email"])
+            redirects = (
+                tuple(str(uri) for uri in redirects_raw if isinstance(uri, str) and uri)
+                if isinstance(redirects_raw, list)
+                else ()
+            )
+            scopes = (
+                tuple(str(scope) for scope in scopes_raw if isinstance(scope, str) and scope)
+                if isinstance(scopes_raw, list)
+                else ()
+            )
             providers.append(
                 OidcProviderConfig(
                     name=name,
                     issuer=issuer,
                     client_ids=client_ids,
                     jwks_url=jwks_url,
+                    authorization_url=str(raw.get("authorization_url"))
+                    if raw.get("authorization_url")
+                    else None,
+                    allowed_redirect_uris=redirects,
+                    scopes=scopes or ("openid", "profile", "email"),
                 )
             )
         except (KeyError, TypeError):

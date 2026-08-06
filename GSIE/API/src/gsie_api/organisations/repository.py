@@ -3,17 +3,20 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.infrastructure.models.accounts import IdentityProviderLinkModel
 from gsie_api.infrastructure.models.organisations import (
+    OrganisationInvitationModel,
     OrganisationMemberModel,
     OrganisationModel,
     WorkspaceModel,
 )
 from gsie_api.organisations.service import (
     AlreadyMemberError,
+    InvitationRecord,
     MemberRecord,
     NotMemberError,
     OrganisationRecord,
@@ -166,6 +169,22 @@ class SqlAlchemyOrganisationRepository:
         role: str,
         invited_by: UUID,
     ) -> MemberRecord:
+        existing = await self._session.get(
+            OrganisationMemberModel,
+            (organisation_id, account_id),
+            with_for_update=True,
+        )
+        if existing is not None:
+            if existing.revoked_at is None:
+                raise AlreadyMemberError(str(account_id))
+            existing.role = role
+            existing.invited_by = invited_by
+            existing.joined_at = datetime.now(UTC)
+            existing.revoked_at = None
+            await self._session.flush()
+            await self._session.refresh(existing)
+            return self._member_record(existing)
+
         model = OrganisationMemberModel(
             organisation_id=organisation_id,
             account_id=account_id,
@@ -245,6 +264,83 @@ class SqlAlchemyOrganisationRepository:
             )
         )
         return int((await self._session.scalar(statement)) or 0)
+
+    async def create_invitation(
+        self,
+        organisation_id: UUID,
+        email_normalized: str,
+        role: str,
+        invited_by: UUID,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> InvitationRecord:
+        model = OrganisationInvitationModel(
+            organisation_id=organisation_id,
+            email_normalized=email_normalized,
+            role=role,
+            invited_by=invited_by,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return self._invitation_record(model)
+
+    async def get_pending_invitation(self, token_hash: str) -> InvitationRecord | None:
+        statement = (
+            select(OrganisationInvitationModel)
+            .where(
+                OrganisationInvitationModel.token_hash == token_hash,
+                OrganisationInvitationModel.accepted_at.is_(None),
+                OrganisationInvitationModel.revoked_at.is_(None),
+            )
+            .with_for_update()
+        )
+        model = (await self._session.execute(statement)).scalar_one_or_none()
+        return self._invitation_record(model) if model is not None else None
+
+    async def mark_invitation_accepted(self, invitation_id: UUID) -> None:
+        statement = (
+            update(OrganisationInvitationModel)
+            .where(
+                OrganisationInvitationModel.id == invitation_id,
+                OrganisationInvitationModel.accepted_at.is_(None),
+                OrganisationInvitationModel.revoked_at.is_(None),
+            )
+            .values(accepted_at=datetime.now(UTC))
+        )
+        result = await self._session.execute(statement)
+        if result.rowcount != 1:
+            raise AlreadyMemberError("Invitation déjà consommée")
+        await self._session.flush()
+
+    async def get_verified_emails(self, account_id: UUID) -> tuple[str, ...]:
+        statement = select(IdentityProviderLinkModel.email_normalized).where(
+            IdentityProviderLinkModel.account_id == account_id,
+            IdentityProviderLinkModel.revoked_at.is_(None),
+            IdentityProviderLinkModel.email_normalized.is_not(None),
+            IdentityProviderLinkModel.email_verified.is_(True),
+        )
+        return tuple(
+            email
+            for email in (await self._session.execute(statement)).scalars().all()
+            if email is not None
+        )
+
+    @staticmethod
+    def _invitation_record(model: OrganisationInvitationModel) -> InvitationRecord:
+        return InvitationRecord(
+            id=model.id,
+            organisation_id=model.organisation_id,
+            email_normalized=model.email_normalized,
+            role=model.role,
+            invited_by=model.invited_by,
+            token_hash=model.token_hash,
+            expires_at=model.expires_at,
+            accepted_at=model.accepted_at,
+            revoked_at=model.revoked_at,
+        )
 
     @staticmethod
     def _org_record(model: OrganisationModel) -> OrganisationRecord:

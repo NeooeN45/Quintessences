@@ -36,6 +36,7 @@ pytestmark = requires_docker
 
 _SCHEMA_RGPD = "gsie_rgpd"
 _SCHEMA_IDENTITES = "gsie_rgpd_identites"
+_SCHEMA_ORGANISATIONS = "gsie_organisations"
 
 # Role de connexion cree pour ces tests, jouant un moteur de domaine ordinaire.
 _MOTEUR = "moteur_domaine_test"
@@ -176,7 +177,60 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
         f"{_SCHEMA_IDENTITES}.identity_provider_link",
         f"{_SCHEMA_IDENTITES}.local_credential",
         f"{_SCHEMA_IDENTITES}.user_account",
+        f"{_SCHEMA_IDENTITES}.identity_action_token",
+        f"{_SCHEMA_IDENTITES}.email_change_request",
+        f"{_SCHEMA_IDENTITES}.account_consent",
+        f"{_SCHEMA_IDENTITES}.mfa_secret",
+        f"{_SCHEMA_IDENTITES}.mfa_recovery_code",
+        f"{_SCHEMA_IDENTITES}.active_session",
+        f"{_SCHEMA_IDENTITES}.failed_login_attempt",
+        f"{_SCHEMA_IDENTITES}.revoked_refresh_token",
     }
+
+
+def test_table_invitations_organisation_isolee(base_migree: str) -> None:
+    """Les tokens d'invitation restent dans le schéma multi-tenant."""
+    tables = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT schemaname || '.' || tablename FROM pg_tables "
+            "WHERE schemaname = 'gsie_organisations' "
+            "AND tablename = 'organisation_invitation'",
+        )
+    )
+    assert tables == ["gsie_organisations.organisation_invitation"]
+
+
+def test_catalogue_billing_initial_est_present(base_migree: str) -> None:
+    """Les plans initiaux sont présents sans dépendre d'un fournisseur de paiement."""
+    plans = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT code FROM gsie_billing.plan ORDER BY code",
+        )
+    )
+    assert plans == ["enterprise", "free", "geosylva_pro", "quintessences_pro"]
+
+
+def test_resource_porte_le_perimetre_et_sa_policy(base_migree: str) -> None:
+    """La racine resource est isolable par organisation active."""
+    columns = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = 'resource' "
+            "AND column_name IN ('organisation_id', 'workspace_id') ORDER BY 1",
+        )
+    )
+    policies = asyncio.run(
+        _lire(
+            base_migree,
+            "SELECT policyname FROM pg_policies "
+            "WHERE schemaname = 'public' AND tablename = 'resource'",
+        )
+    )
+    assert columns == ["organisation_id", "workspace_id"]
+    assert policies == ["resource_scope_visible"]
 
 
 def test_aucune_table_personnelle_ne_subsiste_dans_public(base_migree: str) -> None:
@@ -375,9 +429,17 @@ def test_le_role_applicatif_accede_uniquement_aux_tables_techniques_d_identite(
         f"{table}:{privilege}"
         for table in (
             "account_role",
+            "identity_action_token",
+            "email_change_request",
+            "account_consent",
             "identity_provider_link",
             "local_credential",
             "user_account",
+            "mfa_secret",
+            "mfa_recovery_code",
+            "active_session",
+            "failed_login_attempt",
+            "revoked_refresh_token",
         )
         for privilege in ("INSERT", "SELECT", "UPDATE")
     }

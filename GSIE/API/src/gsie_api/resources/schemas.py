@@ -19,6 +19,8 @@ class ResourceBase(BaseModel):
     id: UUID
     type: str
     gsie_id: str | None = None
+    organisation_id: UUID | None = None
+    workspace_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 

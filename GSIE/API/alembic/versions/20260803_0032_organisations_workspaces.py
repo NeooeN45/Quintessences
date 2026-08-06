@@ -42,27 +42,6 @@ def _current_user_uuid_expr() -> str:
 def upgrade() -> None:
     op.execute(f"CREATE SCHEMA IF NOT EXISTS {_SCHEMA}")
 
-    # --- Fonction SECURITY DEFINER pour éviter la récursion RLS ---
-    # is_member(org_uuid) → true si le compte courant est membre de l'org.
-    # SECURITY DEFINER : bypass RLS sur organisation_member (pas de récursion).
-    op.execute(
-        f"""
-        CREATE OR REPLACE FUNCTION {_SCHEMA}.is_member(org_uuid uuid)
-        RETURNS boolean
-        LANGUAGE sql
-        SECURITY DEFINER
-        STABLE
-        AS $$
-            SELECT EXISTS (
-                SELECT 1 FROM {_SCHEMA}.organisation_member
-                WHERE organisation_id = org_uuid
-                AND account_id = {_current_user_uuid_expr()}
-                AND revoked_at IS NULL
-            )
-        $$;
-        """
-    )
-
     # --- Table organisation ---
     op.create_table(
         "organisation",
@@ -183,6 +162,27 @@ def upgrade() -> None:
         "organisation_member",
         ["account_id"],
         schema=_SCHEMA,
+    )
+
+    # La fonction doit être créée après la table référencée : PostgreSQL
+    # valide la relation au moment de la création d'une fonction SQL.
+    op.execute(
+        f"""
+        CREATE OR REPLACE FUNCTION {_SCHEMA}.is_member(org_uuid uuid)
+        RETURNS boolean
+        LANGUAGE sql
+        SECURITY DEFINER
+        STABLE
+        SET search_path = {_SCHEMA}, pg_catalog
+        AS $$
+            SELECT EXISTS (
+                SELECT 1 FROM {_SCHEMA}.organisation_member
+                WHERE organisation_id = org_uuid
+                AND account_id = {_current_user_uuid_expr()}
+                AND revoked_at IS NULL
+            )
+        $$;
+        """
     )
 
     # --- Row Level Security ---

@@ -270,9 +270,13 @@ class Settings(BaseSettings):
     smtp_starttls: bool = True
     email_sender: str = "noreply@quintessences.local"
     identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
+    organisation_invitation_base_url: str = "http://localhost:4000/invitations/accept"
+    organisation_invitation_expire_hours: int = Field(default=72, ge=1, le=168)
     # MFA TOTP (RFC 6238) — issuer affiché dans l'app d'authentification.
     mfa_enabled: bool = True
     mfa_issuer: str = "Quintessences"
+    # Clé Fernet base64-url 32 bytes, fournie par secret manager en staging/prod.
+    mfa_encryption_key: SecretStr = SecretStr("")
     mfa_totp_step_seconds: int = Field(default=30, ge=15, le=120)
     mfa_recovery_code_count: int = Field(default=10, ge=5, le=20)
     # Lockout progressif — seuils de tentatives échouées avant blocage temporaire.
@@ -288,6 +292,29 @@ class Settings(BaseSettings):
     # Détection de réutilisation de refresh token — invalide toute la chaîne si un
     # token révoqué est réutilisé.
     refresh_token_reuse_detection_enabled: bool = True
+    # Stripe Billing — secrets uniquement via secret manager.
+    stripe_enabled: bool = False
+    stripe_secret_key: SecretStr = SecretStr("")
+    stripe_webhook_secret: SecretStr = SecretStr("")
+    stripe_checkout_success_url: str = "http://localhost:4000/billing/success"
+    stripe_checkout_cancel_url: str = "http://localhost:4000/billing/cancel"
+    stripe_portal_return_url: str = "http://localhost:4000/billing"
+    # Identifiants de prix Stripe : les prix restent créés et versionnés côté Stripe.
+    stripe_price_geosylva_pro_monthly: str = ""
+    stripe_price_quintessences_pro_monthly: str = ""
+    # Validation des achats mobiles — désactivée tant que les comptes stores ne sont pas configurés.
+    google_play_enabled: bool = False
+    google_play_package_name: str = ""
+    google_play_service_account_json_path: str = ""
+    google_play_product_geosylva_pro: str = ""
+    google_play_product_quintessences_pro: str = ""
+    apple_store_enabled: bool = False
+    apple_store_bundle_id: str = ""
+    apple_store_issuer_id: str = ""
+    apple_store_key_id: str = ""
+    apple_store_private_key_path: str = ""
+    apple_store_root_certificates_path: list[str] = Field(default_factory=list)
+    apple_store_environment: Literal["sandbox", "production"] = "sandbox"
 
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")
@@ -371,6 +398,8 @@ class Settings(BaseSettings):
                 raise ValueError("Distributed refresh-token storage required in production")
             if self.auth_dev_login_enabled:
                 raise ValueError("Development login must be disabled in production")
+            if self.mfa_enabled and not self.mfa_encryption_key.get_secret_value().strip():
+                raise ValueError("MFA encryption key required in production")
             if not self.require_rust_backend:
                 raise ValueError("Rust Evidence backend must be required in production")
             if "*" in self.ws_allowed_origins:

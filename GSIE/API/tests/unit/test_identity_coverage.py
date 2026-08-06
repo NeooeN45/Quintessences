@@ -36,10 +36,17 @@ from gsie_api.auth.identity import (
     ProviderAlreadyLinkedError,
     ProviderNotConfiguredError,
 )
-from gsie_api.auth.identity_router import get_identity_service
+from gsie_api.auth.identity_router import (
+    get_identity_service,
+    get_mfa_service,
+    get_onboarding_billing_service,
+    get_personal_organisation_service,
+    get_session_service,
+)
 from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore, get_refresh_token_store
 from gsie_api.auth.repository import SqlAlchemyIdentityRepository
 from gsie_api.core.auth import create_access_token
+from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.models.accounts import (
     IdentityActionTokenModel,
     IdentityProviderLinkModel,
@@ -94,6 +101,15 @@ def client_identite(mock_lifespan: object) -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_refresh_token_store] = lambda: refresh_store
     app.dependency_overrides[get_google_nonce_store] = lambda: nonce_store
     app.dependency_overrides[get_identity_service] = lambda: AsyncMock()
+    app.dependency_overrides[get_session_service] = lambda: AsyncMock()
+    mfa_service = AsyncMock()
+    mfa_service.is_enabled = AsyncMock(return_value=False)
+    app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    app.dependency_overrides[get_personal_organisation_service] = lambda: AsyncMock()
+    app.dependency_overrides[get_onboarding_billing_service] = lambda: AsyncMock()
+    db_session = MagicMock()
+    db_session.execute = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as client:
         yield client
 

@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Index, String, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -53,6 +53,18 @@ class ResourceModel(Base, TimestampMixin):
         PGUUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
+    )
+    organisation_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_organisations.organisation.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    workspace_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("gsie_organisations.workspace.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
     type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     gsie_id: Mapped[str | None] = mapped_column(

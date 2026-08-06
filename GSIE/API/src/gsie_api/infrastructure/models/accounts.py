@@ -52,6 +52,12 @@ class UserAccountModel(Base, TimestampMixin):
     )
     disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deletion_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deletion_scheduled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class IdentityProviderLinkModel(Base, TimestampMixin):
@@ -177,6 +183,70 @@ class IdentityActionTokenModel(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+
+
+class AccountConsentModel(Base):
+    """Consentement juridique versionné et révocable."""
+
+    __tablename__ = "account_consent"
+    __table_args__ = (
+        UniqueConstraint(
+            "account_id",
+            "consent_type",
+            "document_version",
+            name="uq_account_consent_version",
+        ),
+        Index("idx_account_consent_active", "account_id", "consent_type", "revoked_at"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    consent_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    document_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class EmailChangeRequestModel(Base):
+    """Demande de changement e-mail nécessitant deux confirmations."""
+
+    __tablename__ = "email_change_request"
+    __table_args__ = (
+        Index("idx_email_change_request_active", "account_id", "completed_at", "expires_at"),
+        Index("idx_email_change_request_new_email", "new_email_normalized", "completed_at"),
+        {"schema": IDENTITY_SCHEMA},
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(f"{IDENTITY_SCHEMA}.user_account.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    current_email_normalized: Mapped[str] = mapped_column(String(320), nullable=False)
+    new_email_normalized: Mapped[str] = mapped_column(String(320), nullable=False)
+    current_code_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    new_code_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    current_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    new_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
 

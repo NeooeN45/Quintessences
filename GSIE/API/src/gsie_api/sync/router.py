@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gsie_api.core.auth import get_current_user
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger
-from gsie_api.infrastructure.database import get_db_rls
+from gsie_api.infrastructure.database import get_db_user_rls
 from gsie_api.sync.geosylva import (
     GeoSylvaParcelMutation,
     GeoSylvaParcelRecord,
@@ -31,7 +31,7 @@ logger = get_logger("gsie_api.sync.geosylva")
 
 
 async def get_geosylva_sync_service(
-    session: Annotated[AsyncSession, Depends(get_db_rls)],
+    session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> GeoSylvaSyncService:
     return GeoSylvaSyncService(SqlAlchemyGeoSylvaParcelRepository(session))
 

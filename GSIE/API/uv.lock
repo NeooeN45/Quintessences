@@ -59,6 +59,24 @@ wheels = [
 ]
 
 [[package]]
+name = "app-store-server-library"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asn1" },
+    { name = "attrs" },
+    { name = "cattrs" },
+    { name = "cryptography" },
+    { name = "pyjwt" },
+    { name = "pyopenssl" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2c/61/6a1b210aa810e788f6beb0b16151bd8995366aa92e31844511a03ce51579/app_store_server_library-1.5.0.tar.gz", hash = "sha256:bfc2ed94133c8facd77eeaaedaa18ec74d554618de38a3909ab6807395fae8b7", size = 53097, upload-time = "2024-09-18T00:17:39.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/31/4f6cf70327d2394d1834a3d076a56dc1bcd956d078bfd87a799af8c6eb46/app_store_server_library-1.5.0-py3-none-any.whl", hash = "sha256:23a215df5509e24ca5a5300c2bccc051a8153191fa8f7fcba3f684df418bd2fb", size = 65049, upload-time = "2024-09-18T00:17:38.212Z" },
+]
+
+[[package]]
 name = "argon2-cffi"
 version = "25.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -108,6 +126,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e6/26/3b59f2bdae5f640389becb1f673cded775287f5fc4f816309d9ca9a3f93d/asgiref-3.12.1.tar.gz", hash = "sha256:59dcb51c272ad209d59bed5708a64a333083e86017d7fcdd67498eeab7784340", size = 42378, upload-time = "2026-07-14T09:56:18.087Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c0/1b/54f4ad77cd8a584fa70746c47df988e002cf1ee1eba43364d46f87803647/asgiref-3.12.1-py3-none-any.whl", hash = "sha256:fe386d1c2bff7259ea95929266d12a8cf9a8b5a1c2598402967d8792e7a7c094", size = 25478, upload-time = "2026-07-14T09:56:16.926Z" },
+]
+
+[[package]]
+name = "asn1"
+version = "2.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "enum-compat" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2a/9f/9a45cbf77edbf85006bbd6d0067cc87b6a9291e12b2c958d818132e7e04d/asn1-2.7.0.tar.gz", hash = "sha256:44c0fc3d28c6a926e4d4959ffbc1bccf37faf4dca07520ba2e9b1b5b36fe0bda", size = 28975, upload-time = "2023-01-17T12:02:35.148Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/b9/983c341cff02fb09a32be5635bf13030e02917d81499900815dae26b738e/asn1-2.7.0-py2.py3-none-any.whl", hash = "sha256:feb01dee1f485ecc1b1c0b66762196baaad22c0e1c89861159413b28393fba33", size = 10008, upload-time = "2023-01-17T12:02:29.045Z" },
 ]
 
 [[package]]
@@ -171,6 +201,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5d/ab/a6c0da5c2cf86600f74402a72b06dfe365e1a1d30783b1bbeec460fd57d1/bcrypt-4.2.1-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:807261df60a8b1ccd13e6599c779014a362ae4e795f5c59747f60208daddd96d", size = 339836, upload-time = "2024-11-19T20:07:57.834Z" },
     { url = "https://files.pythonhosted.org/packages/b4/b4/e75b6e9a72a030a04362034022ebe317c5b735d04db6ad79237101ae4a5c/bcrypt-4.2.1-cp39-abi3-win32.whl", hash = "sha256:b588af02b89d9fad33e5f98f7838bf590d6d692df7153647724a7f20c186f6bf", size = 160911, upload-time = "2024-11-19T20:08:00.002Z" },
     { url = "https://files.pythonhosted.org/packages/76/b9/d51d34e6cd6d887adddb28a8680a1d34235cc45b9d6e238ce39b98199ca0/bcrypt-4.2.1-cp39-abi3-win_amd64.whl", hash = "sha256:e84e0e6f8e40a242b11bce56c313edc2be121cec3e0ec2d76fce01f6af33c07c", size = 153078, upload-time = "2024-11-19T20:08:01.436Z" },
+]
+
+[[package]]
+name = "cattrs"
+version = "26.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a0/ec/ba18945e7d6e55a58364d9fb2e46049c1c2998b3d805f19b703f14e81057/cattrs-26.1.0.tar.gz", hash = "sha256:fa239e0f0ec0715ba34852ce813986dfed1e12117e209b816ab87401271cdd40", size = 495672, upload-time = "2026-02-18T22:15:19.406Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/56/60547f7801b97c67e97491dc3d9ade9fbccbd0325058fd3dfcb2f5d98d90/cattrs-26.1.0-py3-none-any.whl", hash = "sha256:d1e0804c42639494d469d08d4f26d6b9de9b8ab26b446db7b5f8c2e97f7c3096", size = 73054, upload-time = "2026-02-18T22:15:17.958Z" },
 ]
 
 [[package]]
@@ -599,6 +642,15 @@ wheels = [
 ]
 
 [[package]]
+name = "enum-compat"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/46/8ed2368976d934652d8f33f1fdd86f5580fab45e890c90a848e83097a093/enum-compat-0.0.3.tar.gz", hash = "sha256:3677daabed56a6f724451d585662253d8fb4e5569845aafa8bb0da36b1a8751e", size = 1389, upload-time = "2019-10-14T18:48:35.264Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/ae/467bc4509246283bb59746e21a1a2f5a8aecbef56b1fa6eaca78cd438c8b/enum_compat-0.0.3-py3-none-any.whl", hash = "sha256:88091b617c7fc3bbbceae50db5958023c48dc40b50520005aa3bf27f8f7ea157", size = 1322, upload-time = "2019-10-14T18:48:37.663Z" },
+]
+
+[[package]]
 name = "execnet"
 version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -794,6 +846,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
+    { name = "app-store-server-library" },
     { name = "argon2-cffi" },
     { name = "asyncpg" },
     { name = "bcrypt" },
@@ -830,6 +883,7 @@ dependencies = [
     { name = "shapely" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "stripe" },
     { name = "structlog" },
     { name = "tenacity" },
     { name = "uvicorn", extra = ["standard"] },
@@ -861,6 +915,7 @@ dev = [
 requires-dist = [
     { name = "aiosqlite", marker = "extra == 'dev'", specifier = "==0.20.0" },
     { name = "alembic", specifier = "==1.14.0" },
+    { name = "app-store-server-library", specifier = "==1.5.0" },
     { name = "argon2-cffi", specifier = "==25.1.0" },
     { name = "asyncpg", specifier = "==0.30.0" },
     { name = "bcrypt", specifier = "==4.2.1" },
@@ -904,6 +959,7 @@ requires-dist = [
     { name = "shapely", specifier = "==2.0.6" },
     { name = "slowapi", specifier = "==0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "==2.0.36" },
+    { name = "stripe", specifier = "==11.6.0" },
     { name = "structlog", specifier = "==24.4.0" },
     { name = "tenacity", specifier = "==8.5.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'dev'", specifier = "==4.10.0" },
@@ -1740,6 +1796,19 @@ crypto = [
 ]
 
 [[package]]
+name = "pyopenssl"
+version = "26.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3f/e8/7325d258199b159eb2c03fe32107533e2832e70e63f4fb88a6aa00023201/pyopenssl-26.4.0.tar.gz", hash = "sha256:28dfcce0162b9211413e26dfbfdf1d24317fbeba18fc93c12400a1856b2a0bc7", size = 182046, upload-time = "2026-08-01T19:50:50.512Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/ad/2cf6d3fa2fae5c79e1ed9960c0d42badd0f94d81dd12b50604cdc839e648/pyopenssl-26.4.0-py3-none-any.whl", hash = "sha256:f0eb0cb2d581d3ad2b9c489468485e7f2ab6727d08401bcf9d824c3caddf3c1c", size = 56026, upload-time = "2026-08-01T19:50:48.94Z" },
+]
+
+[[package]]
 name = "pyotp"
 version = "2.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2111,6 +2180,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/4c/9b5764bd22eec91c4039ef4c55334e9187085da2d8a2df7bd570869aae18/starlette-0.41.3.tar.gz", hash = "sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835", size = 2574159, upload-time = "2024-11-18T19:45:04.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/00/2b325970b3060c7cecebab6d295afe763365822b1306a12eeab198f74323/starlette-0.41.3-py3-none-any.whl", hash = "sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7", size = 73225, upload-time = "2024-11-18T19:45:02.027Z" },
+]
+
+[[package]]
+name = "stripe"
+version = "11.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/30/a4/7e16668d7adfb45229f4b67c04c79f53fe78335a6d0625303b32024d831c/stripe-11.6.0.tar.gz", hash = "sha256:0ced7cce23a6cb1a393c86a1f7f9435c9d83ae7cbd556362868caf62cb44a92c", size = 1390405, upload-time = "2025-02-24T22:39:46.962Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d8/67/e320a11da2049dfd50fd1726952093b173332563f32d1a94cc3758932147/stripe-11.6.0-py2.py3-none-any.whl", hash = "sha256:6e6cf09ebb6d5fc2d708401cb8868fd7bff987a6d09a0433caaa92c62f97dbc5", size = 1636766, upload-time = "2025-02-24T22:39:44.629Z" },
 ]
 
 [[package]]

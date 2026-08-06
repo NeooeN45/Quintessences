@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -16,9 +16,15 @@ from gsie_api.auth.identity import (
     AuthenticatedAccount,
     InvalidCredentialsError,
 )
-from gsie_api.auth.identity_router import get_identity_service
+from gsie_api.auth.identity_router import (
+    get_identity_service,
+    get_onboarding_billing_service,
+    get_personal_organisation_service,
+    get_session_service,
+)
 from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore, get_refresh_token_store
 from gsie_api.core.auth import create_access_token, verify_token
+from gsie_api.infrastructure.database import get_db
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -30,8 +36,21 @@ def client(mock_lifespan: object) -> Generator[TestClient, None, None]:
     app = create_app()
     refresh_store = MemoryRefreshTokenStore()
     nonce_store = MemoryGoogleNonceStore()
+    session_service = AsyncMock()
+    session_service.register_session = AsyncMock()
+    personal_organisation_service = AsyncMock()
+    billing_service = AsyncMock()
+    db_session = MagicMock()
+    db_session.execute = AsyncMock()
+    db_session.flush = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: db_session
+    app.dependency_overrides[get_personal_organisation_service] = (
+        lambda: personal_organisation_service
+    )
+    app.dependency_overrides[get_onboarding_billing_service] = lambda: billing_service
     app.dependency_overrides[get_refresh_token_store] = lambda: refresh_store
     app.dependency_overrides[get_google_nonce_store] = lambda: nonce_store
+    app.dependency_overrides[get_session_service] = lambda: session_service
     with TestClient(app) as test_client:
         yield test_client
 
@@ -163,3 +182,31 @@ def should_link_google_to_subject_of_current_gsie_session(client: TestClient) ->
     called_account_id = service.link_google.await_args.kwargs["account_id"]
     assert isinstance(called_account_id, UUID)
     assert called_account_id == account.account_id
+
+
+def test_should_build_pkce_authorization_url_for_registered_redirect() -> None:
+    from gsie_api.auth.oidc_generic import GenericOidcVerifier, OidcProviderConfig
+
+    verifier = GenericOidcVerifier(
+        (
+            OidcProviderConfig(
+                name="keycloak",
+                issuer="https://auth.example.test/realms/quintessences",
+                client_ids=("geosylva-android",),
+                jwks_url="https://auth.example.test/certs",
+                authorization_url="https://auth.example.test/authorize",
+                allowed_redirect_uris=("com.quintessences.geosylva:/oauth2redirect",),
+            ),
+        )
+    )
+
+    url = verifier.build_authorization_url(
+        "keycloak",
+        "com.quintessences.geosylva:/oauth2redirect",
+        "state-value-123456",
+        "a" * 43,
+    )
+
+    assert "code_challenge_method=S256" in url
+    assert "response_type=code" in url
+    assert "client_id=geosylva-android" in url

@@ -16,6 +16,7 @@ from uuid import UUID
 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.auth.refresh_tokens import RefreshTokenStore, get_refresh_token_store
 from gsie_api.auth.repository import SqlAlchemyIdentityRepository
@@ -27,6 +28,7 @@ from gsie_api.auth.schemas import (
     TokenResponse,
     VerifyResponse,
 )
+from gsie_api.auth.sessions import SessionService, SqlAlchemySessionRepository
 from gsie_api.core.auth import (
     create_access_token,
     create_refresh_token,
@@ -36,13 +38,53 @@ from gsie_api.core.auth import (
 from gsie_api.core.config import get_settings
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure import database as database_infrastructure
+from gsie_api.infrastructure.database import get_db
 
 _settings = get_settings()
+
+
+async def get_session_service(session: Annotated[AsyncSession, Depends(get_db)]) -> SessionService:
+    """Dependency du suivi des sessions pendant la rotation des tokens."""
+    return SessionService(SqlAlchemySessionRepository(session))
+
+
 logger = get_logger("gsie_api.auth.router")
 
 from gsie_api.core.limiter import limiter as _limiter  # noqa: E402
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+async def _revoke_account_sessions(
+    subject: str,
+    refresh_store: RefreshTokenStore,
+) -> None:
+    """Révoque toutes les sessions après réutilisation d'un refresh token."""
+    try:
+        account_id = UUID(subject)
+    except ValueError:
+        return
+    async with database_infrastructure.async_session_factory() as session:
+        service = SessionService(SqlAlchemySessionRepository(session))
+        refresh_jtis = await service.list_refresh_jtis(account_id)
+        await service.revoke_all_sessions(account_id)
+        await session.commit()
+    for refresh_jti in refresh_jtis:
+        await refresh_store.revoke(refresh_jti)
+
+
+async def _rotate_active_session(
+    current_jti: str,
+    new_jti: str,
+    new_refresh_jti: str,
+) -> bool:
+    """Met à jour la session DB uniquement pour les refresh tokens canoniques."""
+    async with database_infrastructure.async_session_factory() as session:
+        service = SessionService(SqlAlchemySessionRepository(session))
+        updated = await service.rotate_session(current_jti, new_jti, new_refresh_jti)
+        await session.commit()
+        return updated
+
 
 # UUID fixe pour l'utilisateur de développement (stub — DB en Phase 4 semaine 3).
 # BUG CORRIGÉ : le JWT émettait auparavant `sub=credentials.username` (ex.
@@ -247,8 +289,11 @@ async def refresh_token(
             )
         session_claims["session_version"] = session_version
 
+    current_session_jti = payload.get("session_jti")
     access_token = create_access_token(subject=subject, claims=session_claims)
-    new_refresh_token = create_refresh_token(subject=subject, claims=session_claims)
+    access_payload = verify_token(access_token, expected_type="access")
+    refresh_claims = {**session_claims, "session_jti": str(access_payload["jti"])}
+    new_refresh_token = create_refresh_token(subject=subject, claims=refresh_claims)
     new_payload = verify_token(new_refresh_token, expected_type="refresh")
     rotated = await refresh_store.rotate(
         jti,
@@ -256,11 +301,9 @@ async def refresh_token(
         float(new_payload["exp"]),
     )
     if not rotated:
-        # Détection de réutilisation : si le token a déjà été rotaté (donc
-        # absent du registre actif), c'est qu'un attaquant réutilise un token
-        # volé. On invalide toute la chaîne en révoquant le compte via
-        # session_version bump (si configuré).
         if _settings.refresh_token_reuse_detection_enabled:
+            if isinstance(current_session_jti, str):
+                await _revoke_account_sessions(subject, refresh_store)
             logger.warning(
                 "refresh_token_reuse_detected",
                 jti=jti,
@@ -270,6 +313,19 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired or already used",
         )
+
+    if isinstance(current_session_jti, str):
+        updated = await _rotate_active_session(
+            current_session_jti,
+            str(access_payload["jti"]),
+            str(new_payload["jti"]),
+        )
+        if not updated:
+            await refresh_store.revoke(str(new_payload["jti"]))
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session révoquée",
+            )
 
     logger.info("token_refreshed", username=username or subject, jti=jti)
 

@@ -28,6 +28,7 @@ from slowapi.middleware import SlowAPIASGIMiddleware
 from gsie_api.audit.router import router as audit_router
 from gsie_api.auth.identity_router import router as identity_router
 from gsie_api.auth.router import router as auth_router
+from gsie_api.billing.router import router as billing_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
@@ -358,6 +359,7 @@ def create_app() -> FastAPI:
     app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)
+    app.include_router(billing_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(correlation_router, prefix=_settings.api_v1_prefix)

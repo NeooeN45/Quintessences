@@ -19,6 +19,8 @@ import pytest
 from gsie_api.organisations.service import (
     AlreadyMemberError,
     InsufficientRoleError,
+    InvitationEmailMismatchError,
+    InvitationRecord,
     LastOwnerError,
     MemberRecord,
     NotMemberError,
@@ -39,6 +41,8 @@ class FakeOrganisationRepository:
         self._organisations: dict[UUID, OrganisationRecord] = {}
         self._workspaces: dict[UUID, WorkspaceRecord] = {}
         self._members: dict[tuple[UUID, UUID], MemberRecord] = {}
+        self._invitations: dict[str, InvitationRecord] = {}
+        self._verified_emails: dict[UUID, tuple[str, ...]] = {}
         self._slugs: set[str] = set()
         self._ws_slugs: dict[UUID, set[str]] = {}
 
@@ -210,6 +214,51 @@ class FakeOrganisationRepository:
         self._members[key] = revoked
         return revoked
 
+    async def create_invitation(
+        self,
+        organisation_id: UUID,
+        email_normalized: str,
+        role: str,
+        invited_by: UUID,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> InvitationRecord:
+        invitation = InvitationRecord(
+            id=uuid4(),
+            organisation_id=organisation_id,
+            email_normalized=email_normalized,
+            role=role,
+            invited_by=invited_by,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            accepted_at=None,
+            revoked_at=None,
+        )
+        self._invitations[token_hash] = invitation
+        return invitation
+
+    async def get_pending_invitation(self, token_hash: str) -> InvitationRecord | None:
+        return self._invitations.get(token_hash)
+
+    async def get_verified_emails(self, account_id: UUID) -> tuple[str, ...]:
+        return self._verified_emails.get(account_id, ())
+
+    async def mark_invitation_accepted(self, invitation_id: UUID) -> None:
+        for token_hash, invitation in self._invitations.items():
+            if invitation.id == invitation_id:
+                self._invitations[token_hash] = InvitationRecord(
+                    id=invitation.id,
+                    organisation_id=invitation.organisation_id,
+                    email_normalized=invitation.email_normalized,
+                    role=invitation.role,
+                    invited_by=invitation.invited_by,
+                    token_hash=invitation.token_hash,
+                    expires_at=invitation.expires_at,
+                    accepted_at=datetime.now(UTC),
+                    revoked_at=invitation.revoked_at,
+                )
+                return
+
     async def count_owners(self, organisation_id: UUID) -> int:
         return sum(
             1
@@ -245,6 +294,70 @@ async def test_create_organisation_makes_creator_owner(
     member = await repo.get_member(org.id, created_by)
     assert member is not None
     assert member.role == "owner"
+
+
+@pytest.mark.asyncio
+async def test_create_personal_space_creates_org_and_workspace(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    account_id = uuid4()
+
+    organisation, workspace = await service.create_personal_space(
+        account_id,
+        "forestier@example.fr",
+        "Forestier",
+    )
+
+    assert organisation.slug.startswith("personal-")
+    assert workspace.slug == "personal"
+    member = await repo.get_member(organisation.id, account_id)
+    assert member is not None
+    assert member.role == "owner"
+
+
+@pytest.mark.asyncio
+async def test_invitation_is_accepted_only_by_verified_email(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    owner = uuid4()
+    member = uuid4()
+    repo._verified_emails[member] = ("member@example.fr",)
+    organisation = await service.create_organisation("onf", "ONF", owner)
+
+    delivery = await service.invite_by_email(
+        organisation.id,
+        "member@example.fr",
+        "member",
+        owner,
+        expires_in_hours=72,
+    )
+    accepted = await service.accept_invitation(delivery.token, member)
+
+    assert accepted.account_id == member
+    assert accepted.role == "member"
+
+
+@pytest.mark.asyncio
+async def test_invitation_rejects_unverified_or_wrong_email(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    owner = uuid4()
+    member = uuid4()
+    repo._verified_emails[member] = ("other@example.fr",)
+    organisation = await service.create_organisation("onf", "ONF", owner)
+
+    delivery = await service.invite_by_email(
+        organisation.id,
+        "member@example.fr",
+        "member",
+        owner,
+        expires_in_hours=72,
+    )
+    with pytest.raises(InvitationEmailMismatchError):
+        await service.accept_invitation(delivery.token, member)
 
 
 @pytest.mark.asyncio

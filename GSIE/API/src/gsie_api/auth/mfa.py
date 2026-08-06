@@ -70,7 +70,7 @@ class MfaRepositoryProtocol(Protocol):
 
     async def save_recovery_codes(self, account_id: UUID, code_hashes: list[str]) -> None: ...
 
-    async def consume_recovery_code(self, account_id: UUID, code_hash: str) -> bool: ...
+    async def consume_recovery_code(self, account_id: UUID, code: str) -> bool: ...
 
     async def has_recovery_codes(self, account_id: UUID) -> bool: ...
 
@@ -79,25 +79,27 @@ _fernet_instance: Fernet | None = None
 
 
 def _get_fernet() -> Fernet:
-    """Dérive une clé Fernet depuis la clé JWT privée de l'application.
-
-    En développement, utilise une clé fixe dérivée d'un seed constant.
-    En production, la clé JWT privée est unique par déploiement.
-    L'instance est cachée pour garantir que la même clé est utilisée
-    tout au long du cycle de vie du processus.
-    """
+    """Construit Fernet depuis la clé dédiée de configuration."""
     global _fernet_instance
     if _fernet_instance is not None:
         return _fernet_instance
 
     settings = get_settings()
-    key_material = settings.jwt_private_key_path.encode("utf-8")
-    # Dérivation déterministe — Fernet exige 32 bytes base64-url (44 chars)
-    import base64
-    import hashlib
+    raw_key = settings.mfa_encryption_key.get_secret_value().strip()
+    if not raw_key:
+        if settings.environment != "development":
+            raise MfaError("Clé de chiffrement MFA absente")
+        # Développement uniquement : clé déterministe non utilisable en production.
+        import base64
+        import hashlib
 
-    derived = hashlib.sha256(key_material).digest()
-    _fernet_instance = Fernet(base64.urlsafe_b64encode(derived))
+        raw_key = base64.urlsafe_b64encode(
+            hashlib.sha256(b"gsie-development-mfa-key").digest()
+        ).decode("ascii")
+    try:
+        _fernet_instance = Fernet(raw_key.encode("ascii"))
+    except (ValueError, TypeError) as exc:
+        raise MfaError("Clé de chiffrement MFA invalide") from exc
     return _fernet_instance
 
 
@@ -114,6 +116,10 @@ class MfaService:
         self._password_service = password_service
         self._settings = get_settings()
         self._now = now
+
+    async def is_enabled(self, account_id: UUID) -> bool:
+        """Indique si le compte possède un MFA TOTP actif."""
+        return await self._repository.get_active_secret(account_id) is not None
 
     async def setup(self, account_id: UUID) -> MfaSetupResult:
         """Génère un secret TOTP + codes de récupération pour le compte."""
@@ -161,9 +167,7 @@ class MfaService:
         if not normalized:
             raise InvalidRecoveryCodeError
 
-        # Le hash est calculé côté service pour que le dépôt ne voie que des hashes.
-        code_hash = self._password_service.hash(normalized)
-        consumed = await self._repository.consume_recovery_code(account_id, code_hash)
+        consumed = await self._repository.consume_recovery_code(account_id, normalized)
         if not consumed:
             raise InvalidRecoveryCodeError
         return True

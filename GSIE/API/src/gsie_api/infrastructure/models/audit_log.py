@@ -83,6 +83,6 @@ class AuditLogModel(Base):
     details: Mapped[dict[str, object]] = mapped_column(
         PGJSONB,
         nullable=False,
-        server_default=text("'{}'::jsonb"),
+        server_default=text("'{}'"),
     )
     trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)

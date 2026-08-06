@@ -13,7 +13,10 @@ from gsie_api.auth.account_lifecycle import (
     AccountLifecycleService,
     AccountNotFoundError,
     AccountProfile,
+    EmailChangeRequest,
     InvalidActionCodeError,
+    InvalidCurrentPasswordError,
+    InvalidEmailChangeCodeError,
 )
 from gsie_api.auth.identity import PasswordService
 
@@ -32,7 +35,9 @@ class FakeAccountLifecycleRepository:
             roles=("user",),
         )
         self.action: AccountActionCode | None = None
-        self.password_hash: str | None = None
+        self.email_change: EmailChangeRequest | None = None
+        self.email_codes: dict[str, str] = {}
+        self.password_hash: str | None = PasswordService().hash("ancien-mot-de-passe-solide")
         self.session_version = 1
 
     async def get_profile(self, account_id: UUID) -> AccountProfile | None:
@@ -50,6 +55,59 @@ class FakeAccountLifecycleRepository:
 
     async def find_local_account_id(self, email: str) -> UUID | None:
         return self.account_id if email == self.profile.email else None
+
+    async def get_local_password_hash(self, account_id: UUID) -> str | None:
+        return self.password_hash if account_id == self.account_id else None
+
+    async def replace_email_change_request(
+        self,
+        account_id: UUID,
+        current_email: str,
+        new_email: str,
+        current_code_hash: str,
+        new_code_hash: str,
+        expires_at: datetime,
+    ) -> EmailChangeRequest:
+        self.email_codes = {
+            "current": current_code_hash,
+            "new": new_code_hash,
+        }
+        self.email_change = EmailChangeRequest(
+            request_id=uuid4(),
+            current_email=current_email,
+            new_email=new_email,
+            current_confirmed=False,
+            new_confirmed=False,
+            expires_at=expires_at,
+        )
+        return self.email_change
+
+    async def get_active_email_change_request(self, account_id: UUID) -> EmailChangeRequest | None:
+        return self.email_change if account_id == self.account_id else None
+
+    async def confirm_email_change_code(
+        self, request_id: UUID, channel: str, code: str
+    ) -> EmailChangeRequest | None:
+        if self.email_change is None or request_id != self.email_change.request_id:
+            return None
+        if not PasswordService().verify(self.email_codes[channel], code):
+            return None
+        self.email_change = replace(
+            self.email_change,
+            current_confirmed=self.email_change.current_confirmed or channel == "current",
+            new_confirmed=self.email_change.new_confirmed or channel == "new",
+        )
+        return self.email_change
+
+    async def complete_email_change(self, request_id: UUID) -> None:
+        if self.email_change is None or request_id != self.email_change.request_id:
+            raise InvalidEmailChangeCodeError
+        self.profile = replace(
+            self.profile,
+            email=self.email_change.new_email,
+            email_verified=True,
+        )
+        self.session_version += 1
 
     async def replace_action_code(
         self,
@@ -165,6 +223,59 @@ async def should_reset_password_and_increment_session_version_when_code_is_valid
     assert repository.password_hash is not None
     assert repository.password_hash.startswith("$argon2id$")
     assert repository.session_version == 2
+
+
+async def should_change_password_when_current_password_is_valid() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    await service.change_password(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+        "nouveau-mot-de-passe-solide",
+    )
+
+    assert repository.session_version == 2
+    assert PasswordService().verify(repository.password_hash or "", "nouveau-mot-de-passe-solide")
+
+
+async def should_change_email_only_after_both_codes_are_confirmed() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+    delivery = await service.request_email_change(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+        "nouvelle@example.fr",
+    )
+
+    profile, completed = await service.confirm_email_change(
+        repository.account_id,
+        "current",
+        delivery.current_code,
+    )
+    assert completed is False
+    assert profile.email == "forestier@example.fr"
+
+    profile, completed = await service.confirm_email_change(
+        repository.account_id,
+        "new",
+        delivery.new_code,
+    )
+    assert completed is True
+    assert profile.email == "nouvelle@example.fr"
+    assert profile.email_verified is True
+
+
+async def should_reject_email_change_with_wrong_current_password() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    with pytest.raises(InvalidCurrentPasswordError):
+        await service.request_email_change(
+            repository.account_id,
+            "mauvais-mot-de-passe",
+            "nouvelle@example.fr",
+        )
 
 
 async def should_trim_display_name_when_profile_is_updated() -> None:

@@ -50,6 +50,16 @@ class SessionRepositoryProtocol(Protocol):
 
     async def list_active_sessions(self, account_id: UUID) -> list[SessionInfo]: ...
 
+    async def rotate_session(
+        self, current_jti: str, new_jti: str, new_refresh_jti: str
+    ) -> bool: ...
+
+    async def get_refresh_jti(self, account_id: UUID, session_id: UUID) -> str | None: ...
+
+    async def list_refresh_jtis(
+        self, account_id: UUID, except_jti: str | None = None
+    ) -> list[str]: ...
+
     async def revoke_session(self, account_id: UUID, session_id: UUID) -> bool: ...
 
     async def revoke_all_sessions(self, account_id: UUID, except_jti: str | None = None) -> int: ...
@@ -97,6 +107,37 @@ class SqlAlchemySessionRepository:
         )
         rows = (await self._session.execute(stmt)).scalars().all()
         return [self._to_info(m) for m in rows]
+
+    async def rotate_session(self, current_jti: str, new_jti: str, new_refresh_jti: str) -> bool:
+        stmt = (
+            update(ActiveSessionModel)
+            .where(
+                ActiveSessionModel.jti == current_jti,
+                ActiveSessionModel.revoked_at.is_(None),
+            )
+            .values(jti=new_jti, refresh_jti=new_refresh_jti, last_seen_at=datetime.now(UTC))
+        )
+        result = await self._session.execute(stmt)
+        return result.rowcount > 0
+
+    async def get_refresh_jti(self, account_id: UUID, session_id: UUID) -> str | None:
+        stmt = select(ActiveSessionModel.refresh_jti).where(
+            ActiveSessionModel.account_id == account_id,
+            ActiveSessionModel.id == session_id,
+            ActiveSessionModel.revoked_at.is_(None),
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
+    async def list_refresh_jtis(self, account_id: UUID, except_jti: str | None = None) -> list[str]:
+        conditions = [
+            ActiveSessionModel.account_id == account_id,
+            ActiveSessionModel.revoked_at.is_(None),
+            ActiveSessionModel.refresh_jti.is_not(None),
+        ]
+        if except_jti is not None:
+            conditions.append(ActiveSessionModel.jti != except_jti)
+        stmt = select(ActiveSessionModel.refresh_jti).where(*conditions)
+        return [jti for jti in (await self._session.execute(stmt)).scalars().all() if jti]
 
     async def revoke_session(self, account_id: UUID, session_id: UUID) -> bool:
         stmt = (
@@ -179,6 +220,15 @@ class SessionService:
 
     async def list_sessions(self, account_id: UUID) -> list[SessionInfo]:
         return await self._repository.list_active_sessions(account_id)
+
+    async def rotate_session(self, current_jti: str, new_jti: str, new_refresh_jti: str) -> bool:
+        return await self._repository.rotate_session(current_jti, new_jti, new_refresh_jti)
+
+    async def get_refresh_jti(self, account_id: UUID, session_id: UUID) -> str | None:
+        return await self._repository.get_refresh_jti(account_id, session_id)
+
+    async def list_refresh_jtis(self, account_id: UUID, except_jti: str | None = None) -> list[str]:
+        return await self._repository.list_refresh_jtis(account_id, except_jti)
 
     async def revoke_session(self, account_id: UUID, session_id: UUID) -> bool:
         return await self._repository.revoke_session(account_id, session_id)

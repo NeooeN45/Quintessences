@@ -86,6 +86,11 @@ services:
       --appendfsync everysec
     expose:
       - "6379"
+    # Accès depuis l'API lancée sur le host en dev local (dev-only).
+    # En production, l'API tourne dans le réseau Docker et n'a pas besoin
+    # de ce mapping.
+    ports:
+      - "127.0.0.1:6379:6379"
     environment:
       REDISCLI_AUTH: ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
     volumes:

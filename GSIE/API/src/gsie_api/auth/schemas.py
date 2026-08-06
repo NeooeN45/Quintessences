@@ -25,6 +25,26 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(description="Durée de vie du access token en secondes")
 
 
+class MfaChallengeResponse(BaseModel):
+    """Réponse intermédiaire lorsque le compte exige un second facteur."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mfa_required: bool = True
+    challenge_token: str
+    expires_in: int = Field(gt=0)
+
+
+class MfaChallengeVerifyRequest(BaseModel):
+    """Preuve MFA permettant de terminer une connexion."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    challenge_token: SecretStr = Field(min_length=1, max_length=16_384)
+    code: str = Field(min_length=6, max_length=20)
+    is_recovery_code: bool = False
+
+
 class RefreshRequest(BaseModel):
     """Requête de refresh — refresh token."""
 
@@ -174,6 +194,81 @@ class PasswordResetConfirmRequest(PasswordResetRequest, ActionCodeRequest):
     new_password: SecretStr = Field(min_length=12, max_length=128)
 
 
+class ChangePasswordRequest(BaseModel):
+    """Changement authentifié du mot de passe local."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+    new_password: SecretStr = Field(min_length=12, max_length=128)
+
+
+class ChangeEmailRequest(BaseModel):
+    """Demande de changement d'adresse avec preuve du mot de passe actuel."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+    new_email: EmailStr
+
+    @field_validator("new_email", mode="before")
+    @classmethod
+    def normalize_new_email(cls, value: object) -> object:
+        return value.strip().casefold() if isinstance(value, str) else value
+
+
+class ConfirmEmailChangeRequest(BaseModel):
+    """Confirmation d'un code reçu sur l'ancienne ou la nouvelle adresse."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    channel: Literal["current", "new"]
+    code: str = Field(min_length=8, max_length=9, pattern=r"^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$")
+
+
+class RequestDeletionRequest(BaseModel):
+    """Demande authentifiée de suppression différée."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+
+
+class CancelDeletionRequest(BaseModel):
+    """Preuve e-mail pour annuler une suppression en attente."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    email: EmailStr
+    code: str = Field(min_length=8, max_length=9, pattern=r"^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$")
+
+
+class ConsentRequest(BaseModel):
+    """Acceptation d'une version précise d'un document juridique."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    consent_type: Literal["terms", "privacy", "marketing"]
+    document_version: str = Field(min_length=1, max_length=32)
+
+
+class ConsentResponse(BaseModel):
+    """Consentement courant sans donnée sensible inutile."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    consent_type: str
+    document_version: str
+    accepted_at: str
+    revoked_at: str | None
+
+
+class ConsentListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    consents: list[ConsentResponse]
+
+
 class AcceptedResponse(BaseModel):
     """Accusé générique, volontairement identique pour tous les comptes."""
 
@@ -281,6 +376,15 @@ class OidcProvidersResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     providers: list[str]
+
+
+class OidcAuthorizationUrlResponse(BaseModel):
+    """URL Keycloak/OIDC à ouvrir dans le navigateur système."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    authorization_url: str
+    provider: str
 
 
 # --- Force mot de passe ---

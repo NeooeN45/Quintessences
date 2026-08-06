@@ -16,8 +16,9 @@ Row Level Security (DEC-000037, migration 20260727_0004) :
 
 from collections.abc import AsyncGenerator
 from typing import Annotated, Any
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -95,6 +96,7 @@ async def set_rls_context(
     user_id: str,
     roles: str,
     workspace_id: str | None = None,
+    organisation_id: str | None = None,
 ) -> None:
     """Injecte le contexte RLS dans la session PostgreSQL (DEC-000037).
 
@@ -112,6 +114,14 @@ async def set_rls_context(
         roles: Liste CSV des rôles (ex. ``"admin,researcher"``).
         workspace_id: UUID du workspace courant (JWT ``workspace_id``), optionnel.
     """
+    dialect_name = session.bind.dialect.name if session.bind is not None else ""
+    if dialect_name == "sqlite":
+        session.info["user_id"] = user_id
+        session.info["roles"] = roles
+        session.info["organisation_id"] = organisation_id
+        session.info["workspace_id"] = workspace_id
+        return
+
     # set_config() est l'équivalent fonctionnel de SET LOCAL et accepte
     # les paramètres liés — SET LOCAL est une commande utility qui ne les
     # accepte pas (audit sécurité 2026-08-01). Le 3e argument `true` rend
@@ -127,41 +137,167 @@ async def set_rls_context(
             text("SELECT set_config('app.current_workspace_id', :wid, true)"),
             {"wid": workspace_id},
         )
+    if organisation_id:
+        await session.execute(
+            text("SELECT set_config('app.current_organisation_id', :oid, true)"),
+            {"oid": organisation_id},
+        )
+    session.info["organisation_id"] = organisation_id
+    session.info["workspace_id"] = workspace_id
+
+
+async def _resolve_active_organisation(
+    session: AsyncSession,
+    user_id: str,
+    request: Request,
+) -> str | None:
+    """Résout le contexte d'organisation explicite ou unique du compte."""
+    requested = request.headers.get("X-Organisation-Id")
+    if requested:
+        try:
+            organisation_id = UUID(requested)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="X-Organisation-Id invalide",
+            ) from None
+        exists = await session.scalar(
+            text(
+                "SELECT 1 FROM gsie_organisations.organisation_member "
+                "WHERE organisation_id = :oid AND account_id = :uid "
+                "AND revoked_at IS NULL"
+            ),
+            {"oid": str(organisation_id), "uid": user_id},
+        )
+        if exists is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Compte non membre de cette organisation",
+            )
+        return str(organisation_id)
+
+    rows = (
+        (
+            await session.execute(
+                text(
+                    "SELECT id FROM gsie_organisations.organisation "
+                    "WHERE created_by = :uid OR id IN ("
+                    "SELECT organisation_id FROM gsie_organisations.organisation_member "
+                    "WHERE account_id = :uid AND revoked_at IS NULL) "
+                    "ORDER BY created_at LIMIT 2"
+                ),
+                {"uid": user_id},
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if len(rows) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Contexte organisation requis via X-Organisation-Id",
+        )
+    return str(rows[0]) if rows else None
+
+
+async def _resolve_active_workspace(
+    session: AsyncSession,
+    organisation_id: str | None,
+    request: Request,
+    token_workspace_id: object,
+) -> str | None:
+    """Valide le workspace demandé dans l'organisation active."""
+    requested = request.headers.get("X-Workspace-Id")
+    candidate = requested or (str(token_workspace_id) if token_workspace_id else None)
+    if candidate is None or organisation_id is None:
+        return None
+    try:
+        workspace_id = UUID(candidate)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X-Workspace-Id invalide",
+        ) from None
+    exists = await session.scalar(
+        text(
+            "SELECT 1 FROM gsie_organisations.workspace "
+            "WHERE id = :wid AND organisation_id = :oid AND deleted_at IS NULL"
+        ),
+        {"wid": str(workspace_id), "oid": organisation_id},
+    )
+    if exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Workspace inexistant dans cette organisation",
+        )
+    return str(workspace_id)
 
 
 # Type alias pour l'annotation Annotated dans les routers
 CurrentUser = dict[str, Any]
 
 
-async def get_db_rls(
+async def get_db_user_rls(
     user: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> AsyncGenerator[AsyncSession, None]:
-    """Dependency FastAPI — session DB avec contexte RLS injecté.
-
-    Combine ``get_db`` + ``get_current_user`` : injecte
-    ``app.current_user_id`` et ``app.current_user_roles`` avant de
-    fournir la session. À utiliser sur les routers qui touchent les
-    tables sensibles (consent, data_subject, sensitivity_classification,
-    access_policy, sample, observation).
-
-    Usage ::
-        from gsie_api.infrastructure.database import get_db_rls
-
-        @router.get("/consent")
-        async def list_consent(session: Annotated[AsyncSession, Depends(get_db_rls)]):
-            ...
-    """
-    # Injection du contexte RLS avant toute requête — SET LOCAL requiert
-    # une transaction active. Le bloc ``session.begin()`` garantit le
-    # commit en sortie nominale et le rollback en cas d'exception.
+    """Session RLS limitée au compte, sans sélection d'organisation."""
     async with async_session_factory() as session, session.begin():
         user_id = str(user.get("sub", ""))
         roles = ",".join(user.get("roles", []))
-        workspace_id = user.get("workspace_id")
         await set_rls_context(
             session,
             user_id,
             roles,
-            workspace_id=str(workspace_id) if workspace_id else None,
+            workspace_id=str(user["workspace_id"]) if user.get("workspace_id") else None,
+        )
+        yield session
+
+
+async def get_db_resource(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> AsyncGenerator[AsyncSession, None]:
+    """Session ressource avec contexte organisation/workspace et DB injectable."""
+    user_id = str(user.get("sub", ""))
+    roles = ",".join(user.get("roles", []))
+    token_workspace_id = user.get("workspace_id")
+    await set_rls_context(session, user_id, roles)
+    if session.bind is not None and session.bind.dialect.name == "postgresql":
+        organisation_id = await _resolve_active_organisation(session, user_id, request)
+        workspace_id = await _resolve_active_workspace(
+            session,
+            organisation_id,
+            request,
+            token_workspace_id,
+        )
+    else:
+        organisation_id = request.headers.get("X-Organisation-Id")
+        workspace_id = request.headers.get("X-Workspace-Id") or (
+            str(token_workspace_id) if token_workspace_id else None
+        )
+    if organisation_id:
+        await set_rls_context(
+            session,
+            user_id,
+            roles,
+            workspace_id=workspace_id,
+            organisation_id=organisation_id,
+        )
+    yield session
+
+
+async def get_db_rls(
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> AsyncGenerator[AsyncSession, None]:
+    """Session RLS par compte, compatible avec les endpoints historiques."""
+    async with async_session_factory() as session, session.begin():
+        user_id = str(user.get("sub", ""))
+        roles = ",".join(user.get("roles", []))
+        await set_rls_context(
+            session,
+            user_id,
+            roles,
+            workspace_id=str(user["workspace_id"]) if user.get("workspace_id") else None,
         )
         yield session

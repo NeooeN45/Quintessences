@@ -14,6 +14,7 @@ from gsie_api.infrastructure.models import (
     accounts,  # noqa: F401 — comptes Quintessences multi-fournisseurs (RFC-0032)
     assertion,  # noqa: F401
     audit_log,  # noqa: F401 — journal d'audit append-only (migration 20260803_0033)
+    billing,  # noqa: F401 — catalogue plans, abonnements et entitlements
     business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
     diagnostic,  # noqa: F401 — diagnostic stationnel persisté (Diagnostic Engine)
     dynamics,  # noqa: F401

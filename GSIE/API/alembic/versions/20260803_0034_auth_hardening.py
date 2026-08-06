@@ -44,7 +44,7 @@ def upgrade() -> None:
         ),
         sa.Column("disabled_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        {"schema": _SCHEMA},
+        schema=_SCHEMA,
     )
     op.create_index(
         "idx_mfa_secret_account",
@@ -70,7 +70,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("account_id", "code_hash", name="uq_mfa_recovery_code_account_hash"),
-        {"schema": _SCHEMA},
+        schema=_SCHEMA,
     )
     op.create_index(
         "idx_mfa_recovery_code_account",
@@ -102,7 +102,7 @@ def upgrade() -> None:
         ),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        {"schema": _SCHEMA},
+        schema=_SCHEMA,
     )
     op.create_index(
         "idx_active_session_account",
@@ -133,7 +133,7 @@ def upgrade() -> None:
             "attempted_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
         ),
         sa.PrimaryKeyConstraint("id"),
-        {"schema": _SCHEMA},
+        schema=_SCHEMA,
     )
     op.create_index(
         "idx_failed_login_email_time",
@@ -170,7 +170,7 @@ def upgrade() -> None:
         sa.Column("reused_detected", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("reused_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("jti"),
-        {"schema": _SCHEMA},
+        schema=_SCHEMA,
     )
     op.create_index(
         "idx_revoked_refresh_account",
@@ -178,6 +178,18 @@ def upgrade() -> None:
         ["account_id"],
         schema=_SCHEMA,
     )
+
+    # Le rôle applicatif peut gérer les lignes nécessaires à l'authentification,
+    # sans obtenir de privilège DELETE sur les données de sécurité.
+    for table in (
+        "mfa_secret",
+        "mfa_recovery_code",
+        "active_session",
+        "failed_login_attempt",
+        "revoked_refresh_token",
+    ):
+        op.execute(f"GRANT SELECT, INSERT, UPDATE ON TABLE {_SCHEMA}.{table} TO gsie_application")
+        op.execute(f"REVOKE DELETE ON TABLE {_SCHEMA}.{table} FROM gsie_application")
 
 
 def downgrade() -> None:

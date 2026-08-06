@@ -17,12 +17,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.auth.transactional_email import (
+    TransactionalEmailSender,
+    get_transactional_email_sender,
+)
 from gsie_api.core.auth import get_current_user
+from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger
-from gsie_api.infrastructure.database import get_db_rls
+from gsie_api.infrastructure.database import get_db_user_rls
 from gsie_api.organisations.repository import SqlAlchemyOrganisationRepository
 from gsie_api.organisations.schemas import (
+    EmailInvitationRequest,
+    InvitationAcceptRequest,
+    InvitationResponse,
     MemberInviteRequest,
     MemberPage,
     MemberResponse,
@@ -36,6 +44,8 @@ from gsie_api.organisations.schemas import (
 from gsie_api.organisations.service import (
     AlreadyMemberError,
     InsufficientRoleError,
+    InvitationEmailMismatchError,
+    InvitationInvalidError,
     LastOwnerError,
     NotMemberError,
     OrganisationNotFoundError,
@@ -44,11 +54,12 @@ from gsie_api.organisations.service import (
 )
 
 router = APIRouter(prefix="/orgs", tags=["organisations"])
+_settings = get_settings()
 logger = get_logger("gsie_api.organisations")
 
 
 async def get_organisation_service(
-    session: Annotated[AsyncSession, Depends(get_db_rls)],
+    session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> OrganisationService:
     return OrganisationService(SqlAlchemyOrganisationRepository(session))
 
@@ -93,6 +104,16 @@ def _member_response(record: object) -> MemberResponse:
         invited_by=record.invited_by,  # type: ignore[attr-defined]
         joined_at=record.joined_at,  # type: ignore[attr-defined]
         revoked_at=record.revoked_at,  # type: ignore[attr-defined]
+    )
+
+
+def _invitation_response(record: object) -> InvitationResponse:
+    return InvitationResponse(
+        id=record.id,  # type: ignore[attr-defined]
+        organisation_id=record.organisation_id,  # type: ignore[attr-defined]
+        email=record.email_normalized,  # type: ignore[attr-defined]
+        role=record.role,  # type: ignore[attr-defined]
+        expires_at=record.expires_at,  # type: ignore[attr-defined]
     )
 
 
@@ -239,6 +260,98 @@ async def invite_member(
         account_id=str(body.account_id),
         role=body.role,
         invited_by=str(account_id),
+    )
+    return _member_response(member)
+
+
+@router.post(
+    "/{org_id}/invitations",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+@limiter.limit("10/minute")
+async def create_email_invitation(
+    request: Request,
+    response: Response,
+    org_id: UUID,
+    body: EmailInvitationRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    service: Annotated[OrganisationService, Depends(get_organisation_service)],
+    email_sender: Annotated[TransactionalEmailSender, Depends(get_transactional_email_sender)],
+) -> InvitationResponse:
+    del request, response
+    if not email_sender.is_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service de messagerie non configuré",
+        )
+    actor_id = _account_id(current_user)
+    try:
+        organisation = await service.get_organisation(org_id)
+        delivery = await service.invite_by_email(
+            organisation_id=org_id,
+            email=str(body.email),
+            role=body.role,
+            invited_by=actor_id,
+            expires_in_hours=_settings.organisation_invitation_expire_hours,
+        )
+    except (InsufficientRoleError, OrganisationNotFoundError) as exc:
+        raise _map_error(exc) from exc
+    from urllib.parse import quote
+
+    invite_url = f"{_settings.organisation_invitation_base_url}?token={quote(delivery.token)}"
+    delivered = await email_sender.send_organisation_invitation(
+        email=delivery.invitation.email_normalized,
+        organisation_name=organisation.display_name,
+        invite_url=invite_url,
+        role=delivery.invitation.role,
+    )
+    if not delivered:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Envoi temporairement indisponible",
+        )
+    logger.info(
+        "organisation_invitation_created",
+        org_id=str(org_id),
+        invited_by=str(actor_id),
+        role=body.role,
+    )
+    return _invitation_response(delivery.invitation)
+
+
+@router.post(
+    "/invitations/accept",
+    response_model=MemberResponse,
+)
+@limiter.limit("20/minute")
+async def accept_email_invitation(
+    request: Request,
+    response: Response,
+    body: InvitationAcceptRequest,
+    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    service: Annotated[OrganisationService, Depends(get_organisation_service)],
+) -> MemberResponse:
+    del request, response
+    account_id = _account_id(current_user)
+    try:
+        member = await service.accept_invitation(body.token, account_id)
+    except InvitationInvalidError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation introuvable ou expirée",
+        ) from exc
+    except InvitationEmailMismatchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="L'adresse vérifiée du compte ne correspond pas à l'invitation",
+        ) from exc
+    except AlreadyMemberError as exc:
+        raise _map_error(exc) from exc
+    logger.info(
+        "organisation_invitation_accepted",
+        account_id=str(account_id),
+        org_id=str(member.organisation_id),
     )
     return _member_response(member)
 

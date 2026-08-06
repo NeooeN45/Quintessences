@@ -24,6 +24,23 @@ class TransactionalEmailSender(Protocol):
 
     async def send_password_reset(self, email: str, code: str) -> bool: ...
 
+    async def send_organisation_invitation(
+        self,
+        email: str,
+        organisation_name: str,
+        invite_url: str,
+        role: str,
+    ) -> bool: ...
+
+    async def send_email_change_code(
+        self,
+        email: str,
+        code: str,
+        is_new_address: bool,
+    ) -> bool: ...
+
+    async def send_deletion_cancellation_code(self, email: str, code: str) -> bool: ...
+
 
 class DisabledTransactionalEmailSender:
     """Expéditeur fermé explicitement, utilisé hors environnement configuré."""
@@ -35,6 +52,29 @@ class DisabledTransactionalEmailSender:
         return False
 
     async def send_password_reset(self, email: str, code: str) -> bool:
+        del email, code
+        return False
+
+    async def send_organisation_invitation(
+        self,
+        email: str,
+        organisation_name: str,
+        invite_url: str,
+        role: str,
+    ) -> bool:
+        del email, organisation_name, invite_url, role
+        return False
+
+    async def send_email_change_code(
+        self,
+        email: str,
+        code: str,
+        is_new_address: bool,
+    ) -> bool:
+        del email, code, is_new_address
+        return False
+
+    async def send_deletion_cancellation_code(self, email: str, code: str) -> bool:
         del email, code
         return False
 
@@ -70,6 +110,57 @@ class SmtpTransactionalEmailSender:
                 "Si vous n'êtes pas à l'origine de cette demande, ne transmettez pas ce code."
             ),
             purpose="reset_password",
+        )
+
+    async def send_organisation_invitation(
+        self,
+        email: str,
+        organisation_name: str,
+        invite_url: str,
+        role: str,
+    ) -> bool:
+        return await self._send(
+            email=email,
+            subject=f"Invitation à rejoindre {organisation_name}",
+            body=(
+                f"Vous êtes invité à rejoindre l'organisation {organisation_name}.\n\n"
+                f"Rôle proposé : {role}.\n\n"
+                f"Acceptez l'invitation ici : {invite_url}\n\n"
+                f"Le lien expire dans {self._settings.organisation_invitation_expire_hours} heures."
+            ),
+            purpose="organisation_invitation",
+        )
+
+    async def send_email_change_code(
+        self,
+        email: str,
+        code: str,
+        is_new_address: bool,
+    ) -> bool:
+        return await self._send(
+            email=email,
+            subject="Confirmation de changement d'adresse Quintessences",
+            body=(
+                "Confirmez votre nouvelle adresse e-mail avec ce code : "
+                if is_new_address
+                else "Confirmez la demande de changement d'adresse avec ce code : "
+            )
+            + (
+                f"{code}\n\nCe code expire dans "
+                f"{self._settings.identity_action_code_expire_minutes} minutes."
+            ),
+            purpose="email_change",
+        )
+
+    async def send_deletion_cancellation_code(self, email: str, code: str) -> bool:
+        return await self._send(
+            email=email,
+            subject="Annulation de la suppression de votre compte Quintessences",
+            body=(
+                f"Votre code d'annulation de suppression est : {code}\n\n"
+                f"Il expire dans {self._settings.identity_action_code_expire_minutes} minutes."
+            ),
+            purpose="cancel_deletion",
         )
 
     async def _send(self, email: str, subject: str, body: str, purpose: str) -> bool:
