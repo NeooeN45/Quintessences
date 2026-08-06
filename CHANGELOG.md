@@ -26,12 +26,19 @@ Format : `## [version] - YYYY-MM-DD`
   avec arborescence des sous-domaines, strategie free-first, offres gratuites,
   couts, securite, permissions API token et procedure de retour arriere.
 - **Landing page statique** : creation de `landing-quintessences/` (HTML/CSS,
-  `wrangler.toml`, script de deploiement Cloudflare Pages).
+  `wrangler.toml`, script de deploiement Cloudflare Pages). Déployée sur
+  `https://quintessences-platform.com` et `https://www.quintessences-platform.com`.
 - **Adresse e-mail transactionnelle** : `GSIE_EMAIL_SENDER` mis a jour vers
   `noreply@quintessences-platform.com` dans `.env`, `.env.example`,
   `docker-compose.yml` et `src/gsie_api/core/config.py`.
 - **Verification des mises a jour cloudflared** : script
   `GSIE/API/cloudflared/check-update.ps1`.
+- **DNSSEC + SSL/TLS Full + HSTS + Always Use HTTPS + TLS 1.2** actifs via Cloudflare.
+- **WAF Managed Free Ruleset + custom firewall ruleset** pour bloquer les scanners
+  et challenger les user-agents vides sur `/auth/`.
+- **DNS records** : `www.quintessences-platform.com` et `status.quintessences-platform.com`
+  créés, apex en CNAME flattening vers Cloudflare Pages.
+- **Email Routing** activé sur `quintessences-platform.com`.
 - **Fichiers de configuration ajoutes** :
   - `GSIE/API/cloudflared/config.yml`
   - `GSIE/API/cloudflared/setup-tunnel.ps1`

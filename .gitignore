@@ -31,6 +31,8 @@ CLAUDE.md
 .cloudflare_api_token
 .cloudflare_zone_id
 .cloudflare_credentials
+.cloudflare_wrangler_token
+landing-quintessences/.wrangler/
 !.env.example
 **/.env
 **/.env.*

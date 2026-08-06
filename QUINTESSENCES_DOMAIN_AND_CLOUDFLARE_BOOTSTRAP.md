@@ -61,14 +61,18 @@
 
 ### 1.6 Points de vigilance non corrigés
 
-- L’API tourne sur le **host Windows** et non dans le conteneur Docker `api-api-1`. Le service `cloudflared` avec le profil Docker `edge` est déjà prévu dans `docker-compose.yml` ; il nécessite un token de tunnel géré à distance, distinct du tunnel nommé actuel.
+- ℹ️ L’API tourne sur le **host Windows** et non dans le conteneur Docker `api-api-1`. Le service `cloudflared` avec le profil Docker `edge` est déjà prévu dans `docker-compose.yml` pour une migration future.
 - ✅ DNSSEC activé dans le dashboard Cloudflare.
 - ✅ SSL/TLS configuré en `Full` dans le dashboard (passer à `Full (Strict)` dès que l’origine a un certificat TLS valide).
-- ✅ Landing page créée dans `landing-quintessences/` ; déploiement sur Cloudflare Pages à finaliser via `landing-quintessences\deploy-landing.ps1`.
-- ✅ L’adresse e-mail `GSIE_EMAIL_SENDER` est mise à jour vers `noreply@quintessences-platform.com` dans `.env`, `.env.example`, `docker-compose.yml` et `core/config.py`.
-- Aucune politique WAF, rate limiting Cloudflare ou cache n’est configurée côté dashboard. Le token API actuel ne dispose pas des permissions suffisantes ; configuration possible manuellement ou après roulage du token.
-- Cloudflare Access n’est pas activé pour les interfaces d’administration.
-- ✅ Script `cloudflared\check-update.ps1` créé pour vérifier les mises à jour manuelles de `cloudflared`.
+- ✅ Landing page déployée sur Cloudflare Pages : `https://quintessences-platform.com` et `https://www.quintessences-platform.com`.
+- ✅ `status.quintessences-platform.com` configuré (pointe vers la landing temporairement en attendant une page de statut dédiée).
+- ✅ L’adresse e-mail `GSIE_EMAIL_SENDER` est mise à jour vers `noreply@quintessences-platform.com`.
+- ✅ WAF Managed Free Ruleset activé, custom firewall ruleset (scanners / auth) créé.
+- ✅ Email Routing activé (règles à créer dans le dashboard une fois l’adresse de destination vérifiée).
+- ✅ Always Use HTTPS, HSTS, TLS 1.2 minimum activés.
+- ✅ DNS records `www` et `status` créés.
+- ✅ Script `cloudflared\check-update.ps1` créé.
+- ⏸️ Cloudflare Access réservé aux interfaces d’administration (`control`, `dev`, `staging`) quand ces services existeront.
 
 ---
 
@@ -163,8 +167,8 @@ quintessences-platform.com
 
 | Type | Nom | Cible | Proxy Cloudflare | TTL | Proxy | Note |
 |---|---|---|---|---|---|---|
-| CNAME | `www` | `quintessences-platform.com` | Activé | Auto | Orange | Redirection page d’atterrissage |
-| CNAME | `status` | `<tunnel-id>.cfargotunnel.com` | Activé | Auto | Orange | Statut des services via tunnel ou Pages |
+| CNAME | `www` | `quintessences-landing.pages.dev` | Activé | Auto | Orange | Landing page Cloudflare Pages |
+| CNAME | `status` | `quintessences-landing.pages.dev` | Activé | Auto | Orange | Landing page temporaire (status à venir) |
 
 ### 5.2 Création avec le tunnel existant
 
@@ -194,7 +198,7 @@ quintessences-platform.com
 
 | Type | Nom | Cible | Note |
 |---|---|---|---|
-| A/AAAA | `quintessences-platform.com` | Cloudflare Pages / Tunnel / Redirection | Cloudflare autorise l’apex avec CNAME flattening si besoin. La solution privilégiée est **Cloudflare Pages** (gratuit) pour la landing. |
+| CNAME | `quintessences-platform.com` | `quintessences-landing.pages.dev` | Cloudflare CNAME flattening sur l’apex pour la landing page Pages. |
 
 ---
 
