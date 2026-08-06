@@ -4,26 +4,31 @@
 |---|---|
 | **Document** | HUB-002 |
 | **Dossier** | 05_SPECIFICATIONS/HUB/ |
-| **Phase** | 3 — Connaissance (préparation Phase 4) |
+| **Phase** | 4 — Implémentation (contrat produit Draft) |
 | **Statut** | Draft |
 | **Date de création** | 2026-07-13 |
+| **Date de révision** | 2026-08-06 |
 | **Lois fondatrices** | GSIE-CON-005 (traçabilité), GSIE-CON-007 (modularité) |
 | **Constitutions liées** | Technique (T-2 interchangeabilité, T-8 traçabilité) |
 | **Documents connexes** | `HUB_001_SPECIFICATION.md`, `HUB_AND_APPS_PLAN.md`, `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211), `GSIE/ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` (livrable 203) |
 
 > Ce document définit le **contrat d'interface** entre le Centre de
-> Commandement (Hub) et les applications clientes. Toute app qui souhaite
+> Commandement (Hub) et les projections métier. Toute app qui souhaite
 > exposer ses données dans le Hub doit respecter ce contrat. Aucun code
-> métier (CON-003, Phase 3).
+> métier n'est produit dans ce document.
 
 ---
 
 ## 1. Principe
 
-Le Hub est un **consommateur passif** : il ne demande pas de données,
-il **s'abonne** aux flux publiés par les apps via l'API GSIE. Chaque app
-publie ses sorties sous forme de **couches** géoréférencées. Le Hub
-décide quelles couches afficher, à quelle opacité, dans quel ordre.
+Le Hub est passif pour le **calcul scientifique et l'état canonique**,
+mais interactif pour l'exploration et les workflows autorisés. Il
+s'abonne aux flux publiés par GSIE, demande des snapshots ou des
+scénarios via les contrats API, et peut créer une `ActionRequest`
+versionnée soumise au contrôle d'autorité et à la validation humaine.
+Chaque app publie ses sorties sous forme de couches ou de ressources
+géoréférencées. Le Hub décide quelles couches afficher, à quelle opacité,
+dans quel ordre et dans quel mode métier.
 
 ```
 App (GeoSylva/Ignis/...) → API GSIE (livrable 207) → WebSocket/JSON → Hub
@@ -127,6 +132,12 @@ Chaque message WebSocket est un objet JSON avec les champs suivants :
 | `metadata.source_engine` | string | Moteur GSIE producteur |
 | `metadata.version` | ISO 8601 | Version de la donnée (CON-010) |
 | `metadata.knowledge_id` | string | Identifiant GSIE-K si applicable |
+| `metadata.state_kind` | enum | `real` / `derived` / `forecast` / `simulated` / `proposed` / `decided` |
+| `metadata.scenario_id` | UUID? | Branche de simulation, obligatoire si `state_kind=simulated` |
+| `metadata.valid_time` | intervalle ISO 8601 | Période représentée |
+| `metadata.transaction_time` | ISO 8601 | Date d'entrée dans GSIE |
+| `metadata.freshness` | durée | Âge maximal ou fraîcheur attendue |
+| `metadata.trace_id` | UUID v7 | Corrélation d'audit inter-domaines |
 
 ### 3.2 Canal volumineux / statique (HTTP REST → 3D Tiles)
 
@@ -242,11 +253,54 @@ Exemple : `ignis.front_de_feu` (réel) vs `simulated.ignis.front_de_feu`
 
 ---
 
-## 8. Versionnement du contrat
+## 8. Interopérabilité multi-domaines
+
+Les couches restent le mécanisme de rendu, mais elles sont alimentées par
+les ressources fédérées de RFC-0037. Une couche doit indiquer :
+
+- `state_kind` : `real`, `derived`, `forecast`, `simulated`, `proposed` ou `decided` ;
+- `scenario_id` si elle n'appartient pas à l'état réel ;
+- `valid_time` et `transaction_time` ;
+- `source_domain` et `producer_engine` ;
+- `confidence` et `freshness` ;
+- `provenance` et `trace_id`.
+
+Une application consommatrice ne doit jamais accéder à la base interne
+d'une autre application. Les échanges passent par l'API GSIE, le State
+Fabric ou les événements versionnés.
+
+### 8.1 Demande d'action contrôlée
+
+```json
+{
+  "action_request_id": "uuid-v7",
+  "domain": "ignis",
+  "action_type": "request_drone_observation",
+  "territory_scope": "uuid",
+  "scenario_id": null,
+  "parameters": {},
+  "requested_by": "uuid-v7",
+  "approval": {
+    "required": true,
+    "status": "pending"
+  },
+  "trace_id": "uuid-v7"
+}
+```
+
+Le Hub peut créer cette demande, mais l'adaptateur opérationnel ne peut
+l'exécuter qu'après vérification RBAC, autorité territoriale, validation
+humaine et accusé de réception. Ce contrat ne commande pas directement
+un drone, un véhicule ou un aéronef.
+
+---
+
+## 9. Versionnement du contrat
 
 | Version | Date | Changement |
 |---|---|---|
 | 1.0.0 | 2026-07-13 | Version initiale (Draft) |
+| 1.1.0 | 2026-08-06 | Alignement RFC-0037 : projections multi-domaines, scénarios et ActionRequest contrôlée (Draft) |
 
 > Toute modification du contrat (ajout de champ, changement de format)
 > est versionnée ici et tracée dans `CHANGELOG.md`. Les apps doivent
@@ -254,7 +308,7 @@ Exemple : `ignis.front_de_feu` (réel) vs `simulated.ignis.front_de_feu`
 
 ---
 
-## 9. Critères d'acceptation
+## 10. Critères d'acceptation
 
 - [x] Identifiant de couche défini et registre initial établi (22 couches)
 - [x] Format de payload temps réel (WebSocket/JSON) spécifié
@@ -268,5 +322,6 @@ Exemple : `ignis.front_de_feu` (réel) vs `simulated.ignis.front_de_feu`
 
 ---
 
-> Statut : *Draft — contrat d'interface Phase 3 (préparation Phase 4).
-> À valider par le Fondateur. Aucun code métier produit (CON-003).*
+> Statut : *Draft — contrat d'interface Hub ↔ projections métier, aligné
+> sur RFC-0037. À valider par le Fondateur. Aucun contrat de commande
+> physique n'est défini ici.*

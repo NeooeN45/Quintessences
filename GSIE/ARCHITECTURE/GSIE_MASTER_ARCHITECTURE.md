@@ -5,10 +5,10 @@
 | **Livrable** | 201 — Architecture globale GSIE |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-12 (correction audit) |
+| **Date de révision** | 2026-08-06 (alignement RFC-0037) |
 | **Lois fondatrices** | GSIE-CON-001, GSIE-CON-002, GSIE-CON-003, GSIE-CON-004, GSIE-CON-005, GSIE-CON-007, GSIE-CON-010 |
 | **Constitutions liées** | Technique (T-1 à T-10), Scientifique (S-1 à S-7) |
-| **RFC de référence** | RFC-0003 (GSIE-Net) |
+| **RFC de référence** | RFC-0003 (GSIE-Net), RFC-0037 (plateforme de jumeau numérique fédéré) |
 | **Décision d'ouverture** | DEC-000004 |
 
 ---
@@ -30,12 +30,26 @@ contient et les contraint.
 
 ## 2. Vue d'ensemble du système
 
-GSIE est un **moteur d'intelligence environnementale** modulaire,
-traçable et explicable. Il n'est pas une application : les applications
-(GeoSylva, Ignis, Artemis, Hydro, Flora, QGISIA) sont des **clients** du
-moteur.
+GSIE est une **plateforme de jumeau numérique environnemental fédéré**,
+modulaire, traçable et explicable. Son cœur comprend les moteurs de
+connaissance, de raisonnement et de simulation ; ses applications sont
+des **projections métier spécialisées** du même jumeau : GeoSylva,
+Ignis, Hydro, Flora, Artemis et QGISIA. Les Hubs Unreal sont les
+expériences immersives d'exploration, de simulation et d'interaction
+contrôlée. Voir `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` et RFC-0037.
 
-Le système se décompose en trois axes :
+Le système se décompose en quatre axes :
+
+1. **Jumeau numérique fédéré** — état environnemental spatio-temporel,
+   observations, scénarios, simulations, provenance et historique.
+2. **Projections métier** — GeoSylva, Ignis, Hydro, Flora, Artemis et
+   QGISIA, chacune responsable de son domaine.
+3. **Hubs et interfaces** — Unreal, mobile, web, desktop et API pour
+   explorer, analyser et interagir sous contrôle humain.
+4. **Fédération technique** — State Fabric, GSIE-Net, Territorial Mesh
+   et Server Meshing.
+
+Vue historique des couches :
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -110,7 +124,7 @@ Evidence → Knowledge → Correlation → Reasoning → Diagnostic
 | Moteur | Responsabilité |
 |---|---|
 | Learning Engine | Amélioration continue des modèles à partir des retours terrain. *Réf. : `GSIE/ENGINES/LEARNING_ENGINE/LEARNING_ENGINE.md`, `AI_CONSTITUTION.md` art. IA-4 (apprentissage encadré)* |
-| Simulation Engine | Projection de scénarios sylvicoles long terme. *Réf. : `GSIE/ENGINES/SIMULATION_ENGINE/SIMULATION_ENGINE.md`* |
+| Simulation Engine | Projection de scénarios environnementaux multi-domaines (forêt, feu, eau, végétation, faune), avec branches réel/simulé séparées. *Réf. : `GSIE/ENGINES/SIMULATION_ENGINE/SIMULATION_ENGINE.md`, RFC-0037* |
 
 ### 2.2 Spécialisations (applications clientes)
 

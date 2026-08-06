@@ -4,19 +4,20 @@
 |---|---|
 | **Document** | HUB-001 |
 | **Dossier** | 05_SPECIFICATIONS/HUB/ |
-| **Phase** | 3 — Connaissance (préparation Phase 4) |
+| **Phase** | 4 — Implémentation (spécification produit) |
 | **Statut** | Draft |
 | **Date de création** | 2026-07-13 |
+| **Date de révision** | 2026-08-06 |
 | **Lois fondatrices** | GSIE-CON-001 (décideur humain), GSIE-CON-003 (connaissance avant code), GSIE-CON-007 (modularité) |
 | **Constitutions liées** | Technique (T-2 interchangeabilité, T-8 traçabilité, T-10 offline) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0009 (restructuration écosystème) |
 | **Décisions liées** | DEC-000010 (UE 5.8 + Cesium), DEC-000013 (Centre de Commandement) |
 | **Architecture de référence** | `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (livrable 211) |
-| **Documents connexes** | `HUB_002_INTERFACE_CONTRACT.md`, `HUB_AND_APPS_PLAN.md`, `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212) |
+| **Documents connexes** | `HUB_002_INTERFACE_CONTRACT.md`, `HUB_003_LAYER_SHEETS.md`, `HUB_AND_APPS_PLAN.md`, `RFC-0037`, `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`, `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (livrable 212) |
 
 > Cette spécification décrit **ce que le Centre de Commandement doit
-> faire**, pas comment (rôle de l'architecture, livrable 211). Aucun
-> code métier n'est produit ici (CON-003, Phase 3).
+> faire**, pas comment (rôle de l'architecture, livrable 211). Aucun code
+> métier n'est produit ici ; l'implémentation suit les contrats validés.
 
 ---
 
@@ -24,11 +25,12 @@
 
 ### 1.1 Définition
 
-Le **Centre de Commandement GSIE** est la couche de visualisation
-immersive de l'écosystème Quintessences. Construit sur Unreal Engine
-5.8 + Cesium for Unreal, il affiche dans une scène 3D géoréférencée
-unique les données produites par les 14 moteurs GSIE et exposées par
-les applications clientes (GeoSylva, Ignis, Artemis, Hydro, Flora).
+Le **Centre de Commandement GSIE** est l'environnement immersif de la
+plateforme de jumeau numérique environnemental fédéré. Construit sur
+Unreal Engine 5.8 + Cesium for Unreal, il propose plusieurs projections
+métier — Ignis, GeoSylva, Hydro, Flora, Artemis — dans des modes
+spécialisés partageant le même territoire, les mêmes ressources
+versionnées et les mêmes scénarios.
 
 ### 1.2 Principe fondamental
 
@@ -51,6 +53,9 @@ validées via l'API GSIE (livrable 207).
 - Génération procédurale de végétation pilotée par la science (PCG)
 - Navigation immersive (orbite, vol, marche)
 - Séparation état réel / état simulé (scénarios)
+- Comparaison multi-domaines (forêt, feu, eau, flore, faune)
+- Préparation de demandes d'action auditées, sans commande physique directe
+- Affichage de la provenance, de la fraîcheur et de l'incertitude de chaque donnée
 
 ### 1.4 Périmètre exclu
 
@@ -142,6 +147,8 @@ validées via l'API GSIE (livrable 207).
 | HUB-F-24 | Le Hub ne doit jamais commander une action critique sans validation humaine explicite (COS/forestier) | P0 | RFC-0004 §8, CON-001 |
 | HUB-F-25 | Le Hub doit distinguer visuellement les données validées (source officielle) des données en quarantaine (non vérifiées) | P1 | CON-005, DS quarantaine |
 | HUB-F-26 | Le Hub doit journaliser toutes les actions de l'opérateur (activation couche, lancement scénario, export) pour traçabilité | P1 | CON-004 (explicabilité) |
+| HUB-F-27 | Le Hub doit pouvoir créer une `ActionRequest` versionnée et la soumettre à un adaptateur autorisé après contrôle RBAC et validation humaine | P0 | RFC-0037, CON-001 |
+| HUB-F-28 | Le Hub doit afficher séparément observation réelle, prévision, résultat simulé, recommandation et décision | P0 | RFC-0037, CON-010 |
 
 ---
 
@@ -162,6 +169,9 @@ validées via l'API GSIE (livrable 207).
 | HUB-NF-11 | Résilience | Reconnexion auto WebSocket, buffer dernières données, pas de crash sur perte de flux | T-10 (offline) |
 | HUB-NF-12 | Accessibilité | Contrastes suffisants, tailles de texte configurables, navigation clavier | Standard accessibilité |
 | HUB-NF-13 | Portabilité | Windows 11 (priorité), Linux (si UE 5.8 le supporte en production) | DEC-000010 |
+| HUB-NF-14 | Interopérabilité | Ressources et événements conformes à RFC-0037, sans accès direct aux bases d'une autre app | RFC-0037 |
+| HUB-NF-15 | Performance | Aucun calcul lourd ne bloque le thread de rendu ; flux classés P0/P1/P2/P3 et chargement par tuiles | RFC-0037 |
+| HUB-NF-16 | Résilience | Dernier état cohérent connu affiché avec indicateur de fraîcheur après perte réseau | RFC-0037, T-10 |
 
 ---
 
@@ -207,11 +217,23 @@ validées via l'API GSIE (livrable 207).
    d'espèces, type de peuplement et régime hydrique.
 3. Il exporte les données visualisées (JSON, GeoJSON) pour publication.
 
+### 5.4 CU-04 — Scénario inter-domaines forêt → feu → eau
+
+**Acteur :** Opérateur environnemental habilité
+**Scénario :**
+1. L'opérateur affiche un peuplement GeoSylva et ses caractéristiques
+   de combustible.
+2. Il consulte un scénario Ignis de propagation du feu sur ce secteur.
+3. Il active la simulation Hydro du ruissellement post-incendie.
+4. Le Hub affiche séparément les observations, prévisions et résultats
+   simulés, avec provenance et incertitude.
+5. L'opérateur exporte le scénario sans modifier l'état réel canonique.
+
 ---
 
 ## 6. Couches du Hub (vue d'ensemble)
 
-> Détail dans `HUB_003_LAYER_SHEETS.md` (à créer)
+> Détail dans `HUB_003_LAYER_SHEETS.md`.
 
 | Couche | App source | Type de géométrie | Fréquence | Mode de rendu |
 |---|---|---|---|---|
@@ -256,8 +278,9 @@ La spécification HUB-001 est considérée **complète** quand :
 - [x] Les cas d'usage prioritaires couvrent Ignis (P1) et GeoSylva (P1).
 - [x] Les garde-fous constitutionnels sont respectés (CON-001, CON-005,
   CON-007, CON-010, RFC-0004 §8).
-- [ ] Le contrat d'interface (HUB-002) est défini — **à produire**.
-- [ ] Les fiches couches (HUB-003) sont définies — **à produire**.
+- [x] Le contrat d'interface (HUB-002) est défini en version Draft.
+- [x] Les fiches couches (HUB-003) sont définies en version Draft.
+- [ ] Le contrat inter-domaines RFC-0037 est validé par le Fondateur.
 
 ---
 
@@ -277,6 +300,6 @@ La spécification HUB-001 est considérée **complète** quand :
 
 ---
 
-> Statut : *Draft — spécification fonctionnelle Phase 3 (préparation
-> Phase 4). À valider par le Fondateur. Aucun code métier produit
-> (CON-003).*
+> Statut : *Draft — spécification fonctionnelle de la plateforme
+> multi-domaines RFC-0037. À valider par le Fondateur. Aucun contrat de
+> commande physique n'est défini ici.*

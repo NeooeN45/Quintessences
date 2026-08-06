@@ -4,11 +4,12 @@
 |---|---|
 | **Document** | HUB-003 |
 | **Dossier** | 05_SPECIFICATIONS/HUB/ |
-| **Phase** | 3 — Connaissance (préparation Phase 4) |
+| **Phase** | 4 — Implémentation (fiches de projection) |
 | **Statut** | Draft |
 | **Date de création** | 2026-07-13 |
+| **Date de révision** | 2026-08-06 |
 | **Lois fondatrices** | CON-005 (traçabilité), CON-007 (modularité) |
-| **Documents connexes** | `HUB_001_SPECIFICATION.md`, `HUB_002_INTERFACE_CONTRACT.md`, `IGNIS_001_SPECIFICATION.md`, `GEO_001_SPECIFICATION.md` |
+| **Documents connexes** | `HUB_001_SPECIFICATION.md`, `HUB_002_INTERFACE_CONTRACT.md`, `RFC-0037`, `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`, `IGNIS_001_SPECIFICATION.md`, `GEO_001_SPECIFICATION.md` |
 
 ---
 
@@ -38,7 +39,9 @@ Chaque fiche contient les champs suivants :
 | `mode_rendu` | Mode de rendu Hub (HUB-002 §4) |
 | `datasets_sources` | DS-xxx consommés (CON-005) |
 | `moteur_producteur` | Moteur GSIE |
-| `état` | réel / simulé / mixte |
+| `état` | réel / dérivé / prévision / simulé / proposé / décidé |
+| `scenario_id` | Identifiant de branche si la donnée est simulée |
+| `fraîcheur` | Âge maximum acceptable et dernière réception |
 | `priorité_P4` | P0 (critique) / P1 (haute) / P2 (standard) |
 
 ---
@@ -593,5 +596,5 @@ Chaque fiche contient les champs suivants :
 
 ---
 
-> Statut : *Draft — fiches couches Phase 3 (préparation Phase 4).
-> À valider par le Fondateur. Aucun code métier (CON-003).*
+> Statut : *Draft — fiches de projection multi-domaines alignées sur
+> HUB-002 1.1.0 et RFC-0037. À valider par le Fondateur.*

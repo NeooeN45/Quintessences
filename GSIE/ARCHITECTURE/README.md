@@ -25,4 +25,5 @@ Décrire l'architecture logicielle, modulaire et scientifique de GSIE.
 
 - **09_ENGINES** : implémente l'architecture
 - **05_SPECIFICATIONS** : précise ce que l'architecture doit réaliser
+- `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` : architecture fédératrice multi-domaines (RFC-0037)
 - **02_RFC** : toute décision architecturale passe par un RFC
