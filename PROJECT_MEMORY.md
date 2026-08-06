@@ -6,13 +6,27 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-03 — **La première synchronisation métier GeoSylva ↔ GSIE est livrée (DEC-000048) ✅** : parcelles poussées par file Room/SQLCipher et WorkManager, idempotence, version optimiste, tombstones, RLS par compte et diagnostic visible. L’activation exige une action explicite ; sans compte ou sans activation, le fonctionnement reste strictement local. La fusion serveur→mobile et l’écran de résolution des conflits restent à produire. |
+| **Dernière mise à jour** | 2026-08-06 — **GSIE Territorial Mesh (RFC-0036 / GSIE-DIR-0013 / DEC-000054)** : chantier annexe complémentaire au Server Meshing, ouvrant une couche logique de gouvernance territoriale (France → Région → Département → Territoire Opérationnel → Cellule Spatiale → Sous-cellule) superposée à l'exécution technique du Server Meshing. 20 livrables dédiés produits (RFC-0036 et 17 documents d'architecture/cadrage Draft, GSIE-DIR-0013 Active, DEC-000054 Validé), complétés par un lot de synchronisation des trois fichiers racine (RFC, directive, décision, 9 documents d'architecture — cible, NCP, RCH, DOD, cellules dynamiques, State Fabric fédéré, bus d'événements fédéré, matrices, diagrammes — et 8 documents de cadrage — roadmap dédiée, backlog phasé, registre ADR-020 à ADR-028, registre de risques 16 entrées, critères d'acceptation, stratégie de test, prototype v0 Nouvelle-Aquitaine, estimation complexité). Orthogonalité actée avec le Server Meshing (ADR-021) ; réutilisation encadrée des ADR-005/008/011/013/015/017 du Server Meshing, avec ADR-008 encore au statut Proposé. Prototype v0 restreint à la Nouvelle-Aquitaine (Charente 16, Deux-Sèvres 79), 2 DOD, 2 cellules, 1 drone edge, simulation IGNIS simplifiée. N'interrompt pas la Phase 4 ; Phase 5 (prototype Nouvelle-Aquitaine) requiert validation préalable des documents par le Fondateur. **2026-08-05 — DEC-000051 validée : système de développement assisté par IA Quintessences v1** ✅ : hiérarchie documentaire existante conservée, limite WIP `1+1+1`, intake contrôlé des idées et ressources, gating adaptatif et pilote de méthode sur la synchronisation GeoSylva. Passe qualité reprise : encodage corrompu retiré des documents repérés, frontmatter homogénéisé sur les 36 skills Devin, convention `pytest-asyncio` auto documentée. `IDEA-0003` enregistre IGNIS-FOLD comme hypothèse de recherche ; la classe de drone reste à définir et aucun code n'est autorisé à ce stade. **2026-08-03 — GSIE Server Meshing (RFC-0035 / GSIE-DIR-0012 / DEC-000053)** : chantier annexe d'architecture distribuée (inspiration Star Citizen Server Meshing) ouvert par décision Fondateur. 17 documents Draft produits (architecture cible, prototype v0 Landiras, roadmap dédiée, ADR-010 à ADR-019, registre de risques, diagrammes, backlog phasé, critères d'acceptation, stratégie de test, migration UE6, features expérimentales, estimation complexité). N'interrompt pas la Phase 4 ; Phase 5 (prototype Landiras) requiert validation préalable des documents par le Fondateur. |
+
+### GSIE Environmental Digital Twin Platform — cadrage fédérateur (2026-08-06)
+
+**RFC-0037** et `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`
+formalisent GSIE comme un **jumeau numérique environnemental fédéré**.
+GeoSylva, Ignis, Hydro, Flora et Artemis sont des projections métier
+spécialisées du même jumeau ; QGISIA fournit une projection SIG et
+analytique ; les Hubs Unreal sont les environnements immersifs permettant
+d'explorer, simuler et interagir sous contrôle humain. Le contrat HUB-002
+est étendu en version Draft 1.1.0 avec les états réel/dérivé/prévision/
+simulé/proposé/décidé, les scénarios branchés, la provenance, la fraîcheur
+et les `ActionRequest` contrôlées. Aucun contrat de commande physique,
+migration de schéma ou décision d'adoption n'est créé par RFC-0037 à ce
+stade.
 
 ### Documentation GeoSylva 3.0 (GEOSYLVA-003)
 
 Le cahier fonctionnel et scientifique issu du brainstorming validé est disponible
-dans `apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (statut Draft,
-version 0.1.0). Il fixe la hiérarchie Projet → Forêt → Parcelle → Placette →
+dans `apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (statut Frozen,
+version 0.9.1). Il fixe la hiérarchie Projet → Forêt → Parcelle → Placette →
 Martelage, l’exigence de base locale transactionnelle et la doctrine de calcul
 scientifique : sources, unités, incertitudes, qualité du bois, état sanitaire et
 contexte des parcelles voisines doivent être modélisés et testés avant activation.
@@ -188,7 +202,8 @@ brainstorming v5 n'est adoptée.
 
 ### Documents d'architecture rédigés
 
-- `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale
+- `GSIE/ARCHITECTURE/GSIE_MASTER_ARCHITECTURE.md` — Architecture globale, alignée sur RFC-0037
+- `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` — Architecture fédératrice des projections métier et Hubs spécialisés (RFC-0037)
 - `GSIE/ARCHITECTURE/GSIE_CORE_BLUEPRINT.md` — Blueprint du cœur système (Evidence Engine repositionné en amont)
 - `GSIE/ARCHITECTURE/GSIE_DATA_FLOW.md` — Flux de données officiel (Evidence Engine repositionné en amont)
 - `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` — Centre de Commandement UE 5.8 (livrable 211, v2.2.0 — Gaussian Splatting validé (DEC-000010) + §9 compléments de recherche : UE5.8, Cesium post-avril 2026, précédents multi-domaines, plugin Unreal MCP, publications 2026)
@@ -417,6 +432,27 @@ brainstorming v5 n'est adoptée.
   opérations idempotentes, versions optimistes, tombstones et RLS par compte.
   La première transmission nécessite une action explicite ; aucun conflit ne
   remplace silencieusement la donnée locale.
+- **DEC-000049** — Contrats d'interface GeoSylva ↔ moteurs GSIE (Validé,
+  2026-08-03, RFC-0033).
+- **DEC-000050** — IA forestière on-device et multi-tier (Validé, 2026-08-03,
+  RFC-0034).
+- **DEC-000051** — Système de développement assisté par IA Quintessences v1
+  (Validé, 2026-08-05). Les idées et ressources sont capturées dans les
+  registres canoniques, le WIP Fondateur est limité à `1+1+1`, et les skills
+  Devin d'intake restent propositionnelles par défaut. Le pilote est la
+  synchronisation multi-client GeoSylva. `IDEA-0003` consigne IGNIS-FOLD comme
+  recherche future, sans autoriser son implémentation.
+
+## Système de développement assisté par IA v1
+
+- **Idées** : `/ingestion-idee` → `22_PROJECT_MEMORY/IDEA_BACKLOG.md`.
+- **Ressources** : `/ingestion-ressource` → `GSIE/RESEARCH/`,
+  `GSIE/DATASETS/`, `GSIE/KNOWLEDGE/`, `21_EXPERIMENTS/` ou `19_LEGAL/`.
+- **Pilotage** : `/pilotage-wip`, sans registre parallèle.
+- **Qualité de l'outillage** : `/audit-skills-devin`.
+- **Limite WIP** : une tranche produit, une recherche et une correction urgente.
+- **Pilote** : parcours de synchronisation GeoSylva jusqu'au second client,
+  aux conflits et à l'audit.
 
 ## Documents structurants
 

@@ -57,6 +57,10 @@ Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, 
 | Audit Phase 4 complet (orchestrateur) | `/audit-phase4` |
 | Déléguer un moteur au Devin Cloud | `/handoff-moteur` |
 | Veille technologique | `/veille-techno` |
+| Ingestion et qualification d'une idée | `/ingestion-idee` |
+| Ingestion et qualification d'une ressource | `/ingestion-ressource` |
+| Pilotage de la limite WIP | `/pilotage-wip` |
+| Audit de l'outillage Devin | `/audit-skills-devin` |
 | Déploiement (Docker, CI/CD) | `/deploiement` |
 | Refactoring sécurisé d'un moteur | `/refactor-moteur` |
 | Créer / gérer une RFC | `/rfc-gsie` |

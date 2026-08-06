@@ -4,6 +4,130 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE ENVIRONMENTAL DIGITAL TWIN PLATFORM — CADRAGE FÉDÉRATEUR] - 2026-08-06
+
+- **RFC-0037 ouverte en Draft** : GSIE est formalisé comme un jumeau
+  numérique environnemental fédéré. GeoSylva, Ignis, Hydro, Flora et
+  Artemis sont des projections métier spécialisées du même jumeau ;
+  QGISIA fournit la projection SIG et analytique ; les Hubs Unreal sont
+  les environnements immersifs permettant d'explorer, simuler et
+  interagir sous contrôle humain.
+- **Architecture de référence ajoutée** :
+  `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
+  Elle définit les ressources communes, les scénarios branchés, la
+  séparation réel/dérivé/prévision/simulé/proposé/décidé, les flux
+  GeoSylva ↔ Ignis ↔ Hydro, les classes de performance et les règles
+  d'action contrôlée.
+- **HUB-002 étendu en Draft 1.1.0** : ressources multi-domaines,
+  provenance, fraîcheur, `scenario_id` et `ActionRequest` auditées ; le
+  Hub reste passif pour les calculs et ne commande pas directement un
+  système physique.
+- **Documentation des projections ajoutée** dans GeoSylva, Ignis, Hydro,
+  Flora, Artemis et QGISIA. Ces documents ne modifient aucun contrat
+  applicatif existant et n'autorisent aucune commande opérationnelle.
+- La RFC-0037 ne crée pas encore de décision d'adoption, de migration de
+  schéma ou de nouvelle dépendance technique.
+
+## [GSIE TERRITORIAL MESH — CADRAGE ARCHITECTURAL] - 2026-08-06
+
+- **Chantier annexe complémentaire au Server Meshing** ouvert par décision
+  Fondateur (DEC-000054, GSIE-DIR-0013, RFC-0036). Couche logique de
+  gouvernance territoriale superposée à l'exécution technique du Server
+  Meshing (RFC-0035) : là où le Server Meshing organise l'exécution
+  (serveurs de zone, autorité de rendu, streaming), le Territorial Mesh
+  organise la hiérarchie administrative et opérationnelle
+  (France → Région → Département → Territoire Opérationnel → Cellule
+  Spatiale → Sous-cellule) et ses états (Froid, Chaud, Opérationnel,
+  Crise).
+- **Périmètre prototype v0** : Nouvelle-Aquitaine (Charente 16,
+  Deux-Sèvres 79), 1 RCH, 2 DOD, 2 cellules spatiales, 1 drone edge
+  traversant, simulation IGNIS simplifiée. NCP optionnel/simulé.
+- **20 livrables dédiés produits** (RFC-0036 et 17 documents
+  d'architecture/cadrage en Draft, GSIE-DIR-0013 Active, DEC-000054 Validé),
+  complétés par un lot de synchronisation des trois fichiers racine, dans `GSIE/ARCHITECTURE/` et
+  `02_RFC/`, `01_DIRECTIVES/`, `03_DECISIONS/` :
+  1. RFC-0036 (vision + 10 principes P-TERR-01 à P-TERR-10)
+  2. GSIE-DIR-0013 (directive fondatrice)
+  3. DEC-000054 (décision d'ouverture)
+  4. `TERRITORIAL_MESH_TARGET.md` (architecture cible long terme)
+  5. `TERRITORIAL_MESH_NATIONAL_CONTROL_PLANE.md` (NCP)
+  6. `TERRITORIAL_MESH_REGIONAL_HUB.md` (RCH)
+  7. `TERRITORIAL_MESH_DEPARTMENTAL_DOMAIN.md` (DOD)
+  8. `TERRITORIAL_MESH_DYNAMIC_CELLS.md` (cellules spatiales dynamiques)
+  9. `TERRITORIAL_MESH_STATE_FABRIC.md` (State Fabric fédéré)
+  10. `TERRITORIAL_MESH_EVENT_BUS.md` (bus d'événements fédéré)
+  11. `TERRITORIAL_MESH_MATRICES.md` (matrices responsabilités/autorités/réplication)
+  12. `TERRITORIAL_MESH_DIAGRAMS.md` (10 diagrammes ASCII)
+  13. `TERRITORIAL_MESH_ROADMAP.md` (phasage Phases 5-9)
+  14. `TERRITORIAL_MESH_BACKLOG.md` (backlog phasé TERR-T/TERR-P5/P6/P7/P8)
+  15. `TERRITORIAL_MESH_ADR.md` (registre ADR-020 à ADR-028)
+  16. `TERRITORIAL_MESH_RISKS.md` (16 risques, 2 Critiques, 4 Élevés)
+  17. `TERRITORIAL_MESH_ACCEPTANCE.md` (critères d'acceptation par phase)
+  18. `TERRITORIAL_MESH_TEST_STRATEGY.md` (stratégie de test)
+  19. `TERRITORIAL_MESH_PROTOTYPE_V0.md` (prototype Nouvelle-Aquitaine)
+  20. `TERRITORIAL_MESH_COMPLEXITY.md` (estimation complexité/chemin critique)
+- **10 principes fondateurs** (P-TERR-01 à P-TERR-10) : hiérarchie
+  configurable, orthogonalité avec le Server Meshing, concentration
+  dynamique par la demande, états opérationnels explicites, PostgreSQL
+  source de vérité sans consensus distribué, offline-first territorial,
+  autorité unique par périmètre, frontières scientifiques réconciliées,
+  subordination à la connaissance, traçabilité multi-niveaux.
+- **9 ADR** (ADR-020 à ADR-028) : hiérarchie configurable, orthogonalité
+  Territorial/Server Meshing, réplication logique PostgreSQL cross-région,
+  Redis Pub/Sub fédéré multi-niveaux, capsules territoriales pour edge,
+  états opérationnels comme signal de gouvernance, RBAC territorial,
+  autorité unique par périmètre, frontières scientifiques réconciliées.
+- **Orthogonalité actée avec le Server Meshing** (ADR-021) : les deux
+  chantiers restent indépendants, la jonction se fait par interfaces
+  abstraites (ADR-015 réutilisée). Réutilisation encadrée des ADR-005 (Outbox),
+  ADR-008 (capsules signées, encore Proposé), ADR-011 (PostgreSQL source de vérité),
+  ADR-013 (Redis Pub/Sub), ADR-017 (mTLS).
+- **N'interrompt pas la Phase 4** — préparation par interfaces abstraites
+  et réutilisation des briques existantes. Phase 5 (prototype
+  Nouvelle-Aquitaine) requiert validation préalable des documents par
+  le Fondateur.
+- **Roadmap générale mise à jour** : section Territorial Mesh ajoutée
+  à la Phase 4 de `ROADMAP.md`.
+
+## [GSIE SERVER MESHING — CADRAGE ARCHITECTURAL] - 2026-08-03
+
+- **Chantier annexe d'architecture distribuée ouvert** par décision
+  Fondateur (DEC-000053, GSIE-DIR-0012, RFC-0035). Inspiration :
+  Server Meshing de Star Citizen, adapté à un jumeau numérique
+  environnemental persistant et distribué.
+- **Périmètre prototype v0** : mono-région Landiras, autorité hybride
+  zone + type, compatibilité UE6 anticipée par interfaces abstraites
+  (pas de dépendance hard).
+- **17 documents Draft produits** dans `GSIE/ARCHITECTURE/` :
+  1. RFC-0035 (vision + 8 principes P-MESH-01 à P-MESH-08)
+  2. GSIE-DIR-0012 (directive fondatrice)
+  3. DEC-000053 (décision d'ouverture)
+  4. `SERVER_MESHING_TARGET.md` (architecture cible long terme)
+  5. `SERVER_MESHING_PROTOTYPE_V0.md` (prototype Landiras)
+  6. `SERVER_MESHING_ROADMAP.md` (phasage Phases 5-7)
+  7. `SERVER_MESHING_ADR.md` (registre ADR-010 à ADR-019)
+  8. `SERVER_MESHING_RISKS.md` (16 risques, 1 Critique, 4 Élevés)
+  9. `SERVER_MESHING_DIAGRAMS.md` (8 diagrammes ASCII)
+  10. `SERVER_MESHING_BACKLOG.md` (backlog phasé MESH-PREP/P5/P6/P7)
+  11. `SERVER_MESHING_ACCEPTANCE.md` (critères d'acceptation par phase)
+  12. `SERVER_MESHING_TEST_STRATEGY.md` (stratégie de test)
+  13. `SERVER_MESHING_UE6_MIGRATION.md` (stratégie migration UE6)
+  14. `SERVER_MESHING_EXPERIMENTAL.md` (features expérimentales gated)
+  15. `SERVER_MESHING_COMPLEXITY.md` (estimation complexité/chemin critique)
+- **8 principes fondateurs** (P-MESH-01 à P-MESH-08) : continuité
+  spatiale, persistance externe obligatoire, autorité hybride,
+  concentration dynamique, offline-first, traçabilité, modularité,
+  subordination à la connaissance.
+- **10 ADR** (ADR-010 à ADR-019) : autorité hybride, persistance
+  PostgreSQL, réplication par pertinence, Redis Pub/Sub, bitemporalité,
+  interfaces abstraites UE6, orchestrateur centralisé, mTLS, grille
+  adaptative, mode dégradé offline-first.
+- **N'interrompt pas la Phase 4** — préparation par interfaces
+  abstraites et persistance externe. Phase 5 (prototype Landiras)
+  requiert validation préalable des documents par le Fondateur.
+- **Roadmap générale mise à jour** : section Server Meshing ajoutée
+  à la Phase 4 de `ROADMAP.md`.
+
 ## [GSIE/API — HARDENING AUTH V1] - 2026-08-05
 
 - **7 lacunes d'authentification comblées** pour un système de connexion

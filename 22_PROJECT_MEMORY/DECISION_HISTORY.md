@@ -121,4 +121,19 @@
 
 ---
 
+## 2026-08-03
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000049 | Contrats d'interface GeoSylva ↔ moteurs GSIE | RFC-0033 | VALIDATED |
+| DEC-000050 | IA forestière on-device et multi-tier | RFC-0034 | VALIDATED |
+
+## 2026-08-05
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000051 | Système de développement assisté par IA Quintessences v1 ; intake contrôlé, WIP `1+1+1`, gating adaptatif et pilote GeoSylva | Fondateur | VALIDATED |
+
+---
+
 > Chaque nouvelle décision ajoute une ligne datée ci-dessus.

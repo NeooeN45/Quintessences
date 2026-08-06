@@ -6,9 +6,17 @@
 
 **Un moteur. Des spécialisations. Zéro décision opaque.**
 
-GSIE (General System Intelligence Engine) est un moteur d'aide à la
-décision modulaire, traçable et explicable — conçu pour la forêt, le feu,
-le climat et les territoires.
+GSIE (General System Intelligence Engine) est une plateforme de jumeau
+numérique environnemental fédéré, construite autour d'un moteur d'aide à
+la décision modulaire, traçable et explicable — conçue pour la forêt, le
+feu, l'eau, la végétation, la faune, le climat et les territoires.
+
+**GSIE est le jumeau numérique environnemental fédéré. GeoSylva, Ignis,
+Hydro, Flora et Artemis sont des projections métier spécialisées de ce
+jumeau. Les Hubs Unreal sont les environnements immersifs permettant
+d'explorer, simuler et, sous contrôle humain, interagir avec les domaines
+concernés.** Voir RFC-0037 et
+`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
 
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
@@ -16,7 +24,7 @@ le climat et les territoires.
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
 [![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-44%20DEC-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-32-lightgrey)](02_RFC/)
+[![RFC](https://img.shields.io/badge/RFC-37-lightgrey)](02_RFC/)
 [![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
@@ -273,12 +281,12 @@ du moteur GSIE pour les professionnels SIG.
 
 ### Centre de Commandement GSIE — Unreal Engine 5.8
 
-Poste de pilotage immersif où **toutes les données de l'écosystème
-convergent**. Construit sur Unreal Engine 5.8 + Cesium for Unreal, le
-Centre de Commandement offre une visualisation 3D temps réel du
-territoire : forêt (GeoSylva), incendies (Ignis), faune (Artemis), eau
-(Hydro) et végétation (Flora). Les données affluent via l'API GSIE
-(WebSocket/JSON) et sont rendues dans une scène géoréférencée unique.
+Ensemble de Hubs immersifs où **toutes les projections métier de GSIE
+peuvent explorer et simuler le même territoire**. Construits sur Unreal
+Engine 5.8 + Cesium for Unreal, ils proposent des modes Ignis, GeoSylva,
+Hydro, Flora et Artemis. Les données affluent via les contrats GSIE
+versionnés ; les scénarios sont séparés de l'état réel et les actions
+critiques restent soumises à validation humaine.
 
 - **Lien GSIE** : consomme les sorties validées de tous les moteurs via
   l'API GSIE (livrable 207).

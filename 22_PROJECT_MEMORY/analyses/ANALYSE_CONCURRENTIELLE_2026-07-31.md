@@ -224,7 +224,7 @@ Tout est Docker local. Pas de Kubernetes, pas de cloud, pas de managed PostgreSQ
 | **Volume de connaissances** | 15% | 🔴 Très en retard vs Treekipedia (25 vs 67k) |
 | **Apps clientes** | 70% | 🟡 Mature mais 0 intégration GSIE |
 | **Intégration apps↔GSIE** | 0% | 🔴 Inexistante (SDK vide) |
-| **Moteurs complétés** | 100% (14/14) | � Tous implémentés (vérifié 2026-07-31) |
+| **Moteurs complétés** | 100% (14/14) | Tous implémentés (vérifié 2026-07-31) |
 | **Déploiement** | 30% | 🔴 Docker local uniquement |
 | **Recherche/datasets** | 80% | 🟢 29 datasets, 8 domaines sourcés |
 | **CI/CD** | 80% | 🟢 6 jobs GitHub Actions |
