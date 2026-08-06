@@ -1,4 +1,4 @@
-const API_VERIFY_URL = "https://api.quintessences-platform.com/auth/turnstile/verify";
+const API_VERIFY_URL = "https://api.quintessences-platform.com/api/v1/auth/turnstile/verify";
 
 function getTurnstileToken() {
   const input = document.querySelector('input[name="cf-turnstile-response"]');

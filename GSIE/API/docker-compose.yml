@@ -166,6 +166,10 @@ services:
       GSIE_SMTP_STARTTLS: ${GSIE_SMTP_STARTTLS:-false}
       GSIE_EMAIL_SENDER: ${GSIE_EMAIL_SENDER:-noreply@quintessences-platform.com}
       GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES: ${GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES:-15}
+      # Cloudflare Turnstile — bot protection (OWASP A07).
+      GSIE_TURNSTILE_ENABLED: ${GSIE_TURNSTILE_ENABLED:-false}
+      GSIE_TURNSTILE_SITE_KEY: ${GSIE_TURNSTILE_SITE_KEY:-}
+      GSIE_TURNSTILE_SECRET_KEY: ${GSIE_TURNSTILE_SECRET_KEY:-}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
       # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)

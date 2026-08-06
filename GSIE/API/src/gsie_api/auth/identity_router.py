@@ -107,6 +107,7 @@ from gsie_api.infrastructure.database import get_db, set_rls_context
 from gsie_api.infrastructure.models.accounts import AccountConsentModel
 from gsie_api.organisations.repository import SqlAlchemyOrganisationRepository
 from gsie_api.organisations.service import OrganisationService
+from gsie_api.shared.turnstile import TurnstileClient
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 _settings = get_settings()
@@ -401,6 +402,21 @@ async def login_local(
     del response
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("User-Agent")
+
+    # Vérification Turnstile avant toute authentification
+    turnstile = TurnstileClient(_settings)
+    if not await turnstile.verify(credentials.turnstile_token, client_ip):
+        logger.warning(
+            "login_turnstile_rejected",
+            provider="local",
+            email=str(credentials.email),
+            client_ip=client_ip,
+            user_agent=user_agent,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Challenge anti-robot non résolu.",
+        )
 
     # Vérification du lockout avant toute authentification
     try:

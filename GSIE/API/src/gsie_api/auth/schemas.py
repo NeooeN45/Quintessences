@@ -116,6 +116,11 @@ class LocalLoginRequest(BaseModel):
 
     email: EmailStr
     password: SecretStr = Field(min_length=1, max_length=128)
+    turnstile_token: str = Field(
+        default="",
+        max_length=4096,
+        description="Token Cloudflare Turnstile",
+    )
 
     @field_validator("email", mode="before")
     @classmethod

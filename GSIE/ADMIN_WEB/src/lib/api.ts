@@ -242,10 +242,11 @@ async function request<T>(
 export async function login(
   email: string,
   password: string,
+  turnstileToken: string,
 ): Promise<LoginResult> {
   return request<LoginResult>("/auth/login/password", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
   });
 }
 

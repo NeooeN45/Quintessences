@@ -8,7 +8,9 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
+import gsie_api.auth.identity_router as identity_router
 from gsie_api.app import create_app
 from gsie_api.auth.google_nonces import MemoryGoogleNonceStore, get_google_nonce_store
 from gsie_api.auth.identity import (
@@ -28,6 +30,18 @@ from gsie_api.infrastructure.database import get_db
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
+
+@pytest.fixture(autouse=True)
+def _reset_turnstile_settings() -> Generator[None, None, None]:
+    """Isole la configuration Turnstile entre les tests."""
+    previous_enabled = identity_router._settings.turnstile_enabled
+    previous_secret = identity_router._settings.turnstile_secret_key
+    identity_router._settings.turnstile_enabled = False
+    identity_router._settings.turnstile_secret_key = SecretStr("")
+    yield
+    identity_router._settings.turnstile_enabled = previous_enabled
+    identity_router._settings.turnstile_secret_key = previous_secret
 
 
 @pytest.fixture

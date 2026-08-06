@@ -3,6 +3,7 @@ import AdminLayout from "../layouts/AdminLayout.astro";
 ---
 
 <AdminLayout title="Connexion">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <div class="flex min-h-screen items-center justify-center bg-bg-000 px-4">
     <div class="w-full max-w-sm">
       <!-- Logo -->
@@ -71,6 +72,8 @@ import AdminLayout from "../layouts/AdminLayout.astro";
             </label>
           </div>
 
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAEIpP0qaRpOz5IdW"></div>
+
           <div id="error-msg" class="hidden rounded-md border border-error/30 bg-error-bg px-3 py-2 text-[13px] text-error">
           </div>
 
@@ -112,11 +115,14 @@ import AdminLayout from "../layouts/AdminLayout.astro";
     const code = String(formData.get("mfa-code") ?? "").trim();
     const isRecoveryCode = formData.get("mfa-recovery") === "on";
 
+    const turnstileInput = document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement | null;
+    const turnstileToken = turnstileInput?.value ?? "";
+
     try {
       if (challengeToken) {
         await completeMfaLogin(challengeToken, code, isRecoveryCode);
       } else {
-        const result = await login(email, password);
+        const result = await login(email, password, turnstileToken);
         if ("mfa_required" in result) {
           challengeToken = result.challenge_token;
           mfaField.classList.remove("hidden");
