@@ -1,3 +1,11 @@
+---
+name: subagent-guard
+description: Protège le quota Devin Hub en exigeant une confirmation avant tout lancement de sous-agent
+triggers:
+  - user
+  - model
+---
+
 # Subagent Guard — protéger le quota payant Devin Hub
 
 > **CRITIQUE.** Ce skill se déclenche à CHAQUE fois qu'une demande

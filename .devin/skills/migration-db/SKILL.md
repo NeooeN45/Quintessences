@@ -20,7 +20,7 @@ triggers:
 ### 1. Créer la migration
 
 ```bash
-cd GSIE/
+cd GSIE/API
 alembic revision -m "description_courte_en_snake_case"
 ```
 
@@ -75,7 +75,7 @@ alembic upgrade head
 
 ### 4. Règles PostGIS
 
-- SRID 4326 (WGS84) par défaut pour toutes les colonnes geom
+- SRID défini par le contrat de la donnée ; 4326 pour les coordonnées géographiques, 2154 pour les géométries françaises en Lambert-93
 - Index GIST sur toutes les colonnes geom
 - `ST_DWithin` pour proximité (pas `ST_Distance` + comparaison)
 - `::geography` pour les calculs en mètres (pas en degrés)
@@ -84,6 +84,7 @@ alembic upgrade head
 
 - **Une migration = un changement conceptuel** (pas grouper plusieurs features)
 - **Toujours implémenter downgrade** (sauf si impossible — alors documenter pourquoi)
+- **Ne jamais exécuter un downgrade en production sans sauvegarde, fenêtre de maintenance et autorisation explicite**
 - **Jamais DROP TABLE** sans vérifier qu'aucune FK ne référence
 - **Jamais ALTER COLUMN** qui casse les données existantes sans migration de données
 - **Tester sur un dump de prod** avant de déployer
@@ -99,7 +100,7 @@ psql -c "SELECT postgis_full_version();"
 psql -c "SELECT count(*) FROM forest_plots;"  # données préservées
 
 # Tests applicatifs
-pytest GSIE/tests/test_db/ -v
+.\.venv\Scripts\python.exe -m pytest tests/integration/ -q
 ```
 
 ### 7. Documentation

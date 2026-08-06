@@ -20,10 +20,12 @@ triggers:
 ### 1. État initial (baseline)
 ```bash
 # Capturer l'état actuel
-pytest GSIE/ENGINES/[NOM]_ENGINE/tests/ -v --tb=short > /tmp/before.txt
-mypy GSIE/ENGINES/[NOM]_ENGINE/ --strict > /tmp/mypy_before.txt
-ruff check GSIE/ENGINES/[NOM]_ENGINE/ > /tmp/ruff_before.txt
-git stash  # sauvegarder tout changement non committé
+cd GSIE/API
+.\.venv\Scripts\python.exe -m pytest tests/unit/ -q -k [nom] --tb=short > before-tests.txt
+.\.venv\Scripts\python.exe -m mypy src/gsie_api/ > before-mypy.txt
+.\.venv\Scripts\python.exe -m ruff check src/ tests/ > before-ruff.txt
+# Si le working tree est sale : arrêter et demander l'arbitrage du Fondateur.
+# Ne jamais masquer automatiquement des changements locaux avec git stash.
 ```
 
 ### 2. Analyse du code
@@ -45,17 +47,17 @@ Lister les transformations prévues :
 
 Pour CHAQUE transformation :
 1. Faire la transformation
-2. `pytest GSIE/ENGINES/[NOM]_ENGINE/tests/ -v` → doit passer
-3. `mypy GSIE/ENGINES/[NOM]_ENGINE/ --strict` → doit passer
-4. `ruff check GSIE/ENGINES/[NOM]_ENGINE/` → doit passer
+2. `.\.venv\Scripts\python.exe -m pytest tests/unit/ -q -k [nom]` → doit passer
+3. `.\.venv\Scripts\python.exe -m mypy src/gsie_api/` → doit passer
+4. `.\.venv\Scripts\python.exe -m ruff check src/ tests/` → doit passer
 5. Si échec → revert cette transformation, analyser, réessayer
 
 ### 5. Vérification finale
 ```bash
-pytest GSIE/ENGINES/[NOM]_ENGINE/tests/ -v --tb=short > /tmp/after.txt
-diff /tmp/before.txt /tmp/after.txt  # tests identiques
-mypy GSIE/ENGINES/[NOM]_ENGINE/ --strict  # 0 erreur
-ruff check GSIE/ENGINES/[NOM]_ENGINE/  # 0 erreur
+.\.venv\Scripts\python.exe -m pytest tests/unit/ -q -k [nom] --tb=short > after-tests.txt
+diff before-tests.txt after-tests.txt  # comparer le résultat de référence
+.\.venv\Scripts\python.exe -m mypy src/gsie_api/  # 0 erreur
+.\.venv\Scripts\python.exe -m ruff check src/ tests/  # 0 erreur
 ```
 
 ### 6. Documentation
@@ -68,5 +70,5 @@ ruff check GSIE/ENGINES/[NOM]_ENGINE/  # 0 erreur
 - **Jamais** changer la signature publique d'une fonction sans RFC
 - **Jamais** supprimer un test existant (sauf s'il testait un bug maintenant corrigé)
 - **Jamais** refactoring + nouvelle fonctionnalité en même temps
-- **Toujours** un commit par transformation (git est ton undo)
+- **Toujours** un checkpoint vérifiable par transformation ; commit uniquement si autorisé
 - **Toujours** tests verts entre chaque transformation

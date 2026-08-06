@@ -48,7 +48,7 @@ GSIE/ENGINES/<NOM>_ENGINE/
 ## API GSIE — conventions
 
 - FastAPI + Pydantic v2
-- Endpoints : `/v1/engines/{engine_name}/process`
+- Endpoints : `/api/v1/{engine_name}/...`, selon le routeur et le contrat du moteur
 - Auth : JWT Bearer (voir TECHNICAL_CONSTITUTION.md)
 - Réponses : `{"data": ..., "confidence": float, "trace_id": "DEC-xxxxxx", "engine": "..."}`
 

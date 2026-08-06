@@ -18,8 +18,9 @@ triggers:
 import jwt  # PyJWT
 from datetime import datetime, timedelta, timezone
 
-SECRET_KEY: str = settings.JWT_SECRET_KEY  # depuis env, jamais hardcodé
-ALGORITHM = "HS256"
+PRIVATE_KEY_PATH: str = settings.jwt_private_key_path  # chemin configuré, jamais une clé en dur
+PUBLIC_KEY_PATH: str = settings.jwt_public_key_path
+ALGORITHM = "RS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15   # court — renouveler via refresh token
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
@@ -27,14 +28,14 @@ def create_access_token(user_id: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(
         {"sub": user_id, "exp": expire, "iat": datetime.now(timezone.utc)},
-        SECRET_KEY,
+        load_key(PRIVATE_KEY_PATH),
         algorithm=ALGORITHM
     )
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         # algorithms= est OBLIGATOIRE — empêche l'attaque "alg: none"
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, load_key(PUBLIC_KEY_PATH), algorithms=["RS256"], audience=settings.jwt_audience, issuer=settings.jwt_issuer)
         user_id: str | None = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Token invalide")
@@ -46,7 +47,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     return await user_repository.get(user_id)
 ```
 
-**Note :** En production avec plusieurs services, préférer RS256 (clé asymétrique) : le service d'auth signe avec la clé privée, les autres services vérifient avec la clé publique uniquement.
+**Note :** GSIE utilise RS256 : le service d'authentification signe avec la clé
+privée et les autres composants vérifient avec la clé publique uniquement. Les
+chemins `jwt_private_key_path` et `jwt_public_key_path` viennent de la
+configuration ; les clés ne sont jamais copiées dans le code ou les logs.
 
 ## Taille maximale des payloads
 
@@ -92,7 +96,7 @@ from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
-@router.post("/v1/engines/evidence/process")
+@router.post("/api/v1/evidence/evaluate")
 @limiter.limit("60/minute")
 async def process_evidence(request: Request, ...):
     ...
@@ -123,7 +127,7 @@ async def add_security_headers(request: Request, call_next):
 ## Checklist sécurité avant déploiement
 
 - [ ] `PyJWT >= 2.8.0` utilisé (pas `python-jose`)
-- [ ] `algorithms=["HS256"]` explicite dans `jwt.decode()` — jamais de liste vide
+- [ ] `algorithms=["RS256"]` explicite dans `jwt.decode()` avec audience et issuer vérifiés — jamais de liste vide
 - [ ] Aucun secret dans le code ou git (`git log -S "SECRET"` propre)
 - [ ] Variables d'environnement documentées dans `.env.example` (valeurs factices)
 - [ ] Taille max payload configurée (1 Mo par défaut)

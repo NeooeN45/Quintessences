@@ -11,9 +11,9 @@ triggers:
 ## Pré-déploiement (obligatoire)
 
 ### Code
-- [ ] Tous les tests passent : `pytest GSIE/ --cov=GSIE --cov-fail-under=80`
-- [ ] Mypy strict : `mypy GSIE/ --strict` — 0 erreur
-- [ ] Ruff : `ruff check GSIE/` — 0 erreur
+- [ ] Depuis `GSIE/API`, tests : `.\.venv\Scripts\python.exe -m pytest tests/ -q`
+- [ ] Depuis `GSIE/API`, mypy : `.\.venv\Scripts\python.exe -m mypy src/gsie_api/` — 0 erreur
+- [ ] Depuis `GSIE/API`, ruff : `.\.venv\Scripts\python.exe -m ruff check src/ tests/` — 0 erreur
 - [ ] Aucun TODO/FIXME dans le code à déployer
 - [ ] Aucun secret dans le code (`git log -S "SECRET" --oneline`)
 
@@ -40,59 +40,22 @@ triggers:
 
 ## Docker
 
-```dockerfile
-# Base image Debian Bookworm (pas slim — PostGIS nécessite des deps)
-FROM python:3.12-bookworm
+Le Dockerfile canonique est `GSIE/API/Dockerfile`. Il doit rester la source de
+vérité pour les stages Rust/Python, les dépendances natives, l'utilisateur non
+root, l'entrypoint de migration explicite et le worker Gunicorn.
 
-WORKDIR /app
+Depuis `GSIE/API`, utiliser le Compose existant :
 
-# Dépendances système
-RUN apt-get update && apt-get install -y \
-    libpq-dev gdal-bin libgdal-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Dépendances Python
-COPY pyproject.toml uv.lock ./
-RUN pip install uv && uv sync --frozen --no-dev
-
-# Code applicatif
-COPY GSIE/ ./GSIE/
-
-# Non-root user
-RUN useradd -m gsie
-USER gsie
-
-CMD ["uvicorn", "GSIE.API.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```powershell
+docker compose config
+docker compose build api
+docker compose up -d db redis api
+docker compose ps
 ```
 
-### Docker Compose
-```yaml
-services:
-  api:
-    build: .
-    ports: ["8000:8000"]
-    env_file: .env
-    depends_on: [db, redis]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  db:
-    image: postgis/postgis:16-3.4
-    volumes: ["pgdata:/var/lib/postgresql/data"]
-    env_file: .env
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-
-volumes:
-  pgdata:
-```
+Le fichier `GSIE/API/docker-compose.yml` est la source de vérité pour les
+services, les comptes DB, les secrets, les profils et les sondes. Ne recopier
+aucun Compose minimal dans une nouvelle documentation.
 
 ## CI/CD (GitHub Actions)
 
@@ -113,10 +76,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install uv && uv sync --frozen
-      - run: ruff check GSIE/
-      - run: mypy GSIE/ --strict
-      - run: pytest GSIE/ --cov=GSIE --cov-fail-under=80
+      - run: cd GSIE/API && uv sync --frozen
+      - run: cd GSIE/API && python -m ruff check src/ tests/
+      - run: cd GSIE/API && python -m mypy src/gsie_api/
+      - run: cd GSIE/API && python -m pytest tests/ -q --cov=gsie_api --cov-fail-under=80
 ```
 
 ## Déploiement
@@ -125,12 +88,12 @@ jobs:
 2. `docker compose up -d`
 3. Vérifier `/health` → 200
 4. Vérifier `/docs` → Swagger accessible
-5. Smoke test : `curl -X POST /v1/engines/evidence/process ...`
+5. Smoke test : `curl -X POST http://localhost:8000/api/v1/evidence/evaluate ...`
 
 ## Rollback
 
 1. `docker compose down`
 2. `docker compose pull <previous-version>`
 3. `docker compose up -d`
-4. `alembic downgrade -1` si migration problématique
+4. Préparer un `alembic downgrade -1` uniquement après sauvegarde, validation du plan de rollback et autorisation explicite
 5. Restaurer backup DB si nécessaire

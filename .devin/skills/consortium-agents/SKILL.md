@@ -6,12 +6,9 @@ description: |
   (architecte / implémenteur / testeur / reviewer). Intègre et étend
   AI_AGENT_ORCHESTRATION.md sans le dupliquer. Conçu pour GLM 5.2 High
   (contexte 1M, tokens illimités, sous-agents parallèles massifs).
-trigger: |
-  Tâche GSIE complexe (migration DB, API publique, architecture, sécurité,
-  >10 fichiers) OU demande explicite du Fondateur « consortium » /
-  « boucle poussée » / « best in class » / « 4 agents » / « revue
-  indépendante ». Ne PAS déclencher pour les tâches simples (<5 fichiers,
-  pas de migration, pas d'API publique) — utiliser la micro-boucle.
+triggers:
+  - user
+  - model
 ---
 
 # Consortium d'agents GSIE — boucle poussée adaptative
@@ -53,7 +50,7 @@ phases + 4 agents à un fix one-line.
 | Architecture | Non |
 | Sécurité | Non |
 
-**Process** : fix → test ciblé → inspection diff → commit.
+**Process** : fix → test ciblé → inspection du diff (commit seulement si autorisé).
 **Agents** : 1 (implémenteur seul).
 **Pas de revue indépendante** — l'agent s'auto-vérifie via tests.
 
@@ -323,7 +320,7 @@ Vague 5 (corrections éventuelles) :
 ### Boucle micro (minutes)
 
 ```
-petite modification → test ciblé → inspection diff → commit
+petite modification → test ciblé → inspection du diff (commit seulement si autorisé)
 ```
 
 ### Boucle tâche (heures)

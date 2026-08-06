@@ -10,12 +10,12 @@ triggers:
 
 ## Schéma référence
 
-Voir `GSIE/ARCHITECTURE/ENCYCLOPEDIA_DATABASE_SCHEMA.md` pour le schéma complet (PostgreSQL + Neo4j + ElasticSearch + Jena).
+Voir `GSIE/API/README.md`, `GSIE/API/src/gsie_api/infrastructure/models/` et `GSIE/DOCUMENTATION/SCHEMA_DB.md` pour le schéma courant PostgreSQL/PostGIS. Neo4j, Elasticsearch et Jena restent des projections différées tant qu'une décision ne les active pas.
 
 ## Conventions de nommage
 
 - Tables : `snake_case` pluriel (`forest_plots`, `evidence_records`)
-- Colonnes géométriques : `geom` (SRID 4326 par défaut)
+- Colonnes géométriques : `geom` avec le SRID défini par le contrat de la donnée ; utiliser 4326 pour les coordonnées géographiques et 2154 pour les géométries françaises en Lambert-93
 - Index géographiques : `idx_{table}_{colonne}_geom`
 - Foreign keys : `fk_{table}_{ref_table}`
 - Timestamps : `created_at`, `updated_at` (UTC, `TIMESTAMPTZ`)
@@ -53,18 +53,20 @@ SELECT ST_Area(geom::geography) / 10000 AS surface_ha FROM forest_zones;
 **Ne jamais connecter l'agent IA ou le MCP avec un compte superuser ou propriétaire du schéma.**
 
 ```sql
--- Utilisateur lecture seule pour le MCP Devin et les outils IA
-CREATE USER gsie_readonly WITH PASSWORD 'mot_de_passe_fort';
+-- Utilisateur lecture seule pour le MCP Devin et les outils IA.
+-- Le secret est injecté par l'exploitation ; ne jamais l'écrire dans ce fichier.
+CREATE USER gsie_readonly;
 GRANT CONNECT ON DATABASE gsie TO gsie_readonly;
 GRANT USAGE ON SCHEMA public TO gsie_readonly;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO gsie_readonly;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO gsie_readonly;
 
--- Utilisateur applicatif (API GSIE uniquement) — lecture + écriture, jamais DDL
-CREATE USER gsie_app WITH PASSWORD 'mot_de_passe_fort';
+-- Utilisateur applicatif (API GSIE uniquement) — lecture + écriture, jamais DDL.
+-- Les suppressions métier passent par le soft delete CON-010.
+CREATE USER gsie_app;
 GRANT CONNECT ON DATABASE gsie TO gsie_app;
 GRANT USAGE ON SCHEMA public TO gsie_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gsie_app;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO gsie_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO gsie_app;
 
 -- Jamais : GRANT ALL PRIVILEGES, SUPERUSER, CREATEDB sur gsie_app ou gsie_readonly
