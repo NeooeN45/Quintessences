@@ -22,17 +22,17 @@ import AdminLayout from "../layouts/AdminLayout.astro";
 
         <form id="login-form" class="mt-6 space-y-4">
           <div>
-            <label for="username" class="mb-1.5 block text-[13px] font-medium text-fg-200">
-              Nom d'utilisateur
+            <label for="email" class="mb-1.5 block text-[13px] font-medium text-fg-200">
+              Adresse e-mail
             </label>
             <input
-              type="text"
-              id="username"
-              name="username"
+              type="email"
+              id="email"
+              name="email"
               required
-              autocomplete="username"
+              autocomplete="email"
               class="w-full rounded-md border border-border bg-bg-000 px-3 py-2 text-[14px] text-fg-100 placeholder-fg-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              placeholder="admin"
+              placeholder="vous@exemple.fr"
             />
           </div>
 
@@ -49,6 +49,26 @@ import AdminLayout from "../layouts/AdminLayout.astro";
               class="w-full rounded-md border border-border bg-bg-000 px-3 py-2 text-[14px] text-fg-100 placeholder-fg-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               placeholder="••••••••"
             />
+          </div>
+
+          <div id="mfa-field" class="hidden">
+            <label for="mfa-code" class="mb-1.5 block text-[13px] font-medium text-fg-200">
+              Code MFA
+            </label>
+            <input
+              type="text"
+              id="mfa-code"
+              name="mfa-code"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="20"
+              class="w-full rounded-md border border-border bg-bg-000 px-3 py-2 text-[14px] text-fg-100 placeholder-fg-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              placeholder="123456"
+            />
+            <label class="mt-2 flex items-center gap-2 text-xs text-fg-400">
+              <input type="checkbox" id="mfa-recovery" name="mfa-recovery" />
+              Utiliser un code de récupération
+            </label>
           </div>
 
           <div id="error-msg" class="hidden rounded-md border border-error/30 bg-error-bg px-3 py-2 text-[13px] text-error">
@@ -72,56 +92,47 @@ import AdminLayout from "../layouts/AdminLayout.astro";
 </AdminLayout>
 
 <script>
-  import { API_URL, API_PREFIX } from "../lib/api";
+  import { completeMfaLogin, login } from "../lib/api";
 
   const form = document.getElementById("login-form") as HTMLFormElement;
-  const errorMsg = document.getElementById("error-msg");
+  const errorMsg = document.getElementById("error-msg") as HTMLDivElement;
+  const mfaField = document.getElementById("mfa-field") as HTMLDivElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  let challengeToken: string | null = null;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
     errorMsg.classList.add("hidden");
     submitBtn.disabled = true;
-    submitBtn.textContent = "Connexion…";
+    submitBtn.textContent = challengeToken ? "Vérification…" : "Connexion…";
 
     const formData = new FormData(form);
-    const username = formData.get("username") as string;
-    const password = formData.get("password") as string;
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+    const code = String(formData.get("mfa-code") ?? "").trim();
+    const isRecoveryCode = formData.get("mfa-recovery") === "on";
 
     try {
-      const resp = await fetch(`${API_URL}${API_PREFIX}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!resp.ok) {
-        let detail = "Identifiants invalides";
-        try {
-          const body = await resp.json();
-          detail = body.detail ?? detail;
-        } catch {}
-        throw new Error(detail);
-      }
-
-      const data = await resp.json();
-      const session = {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        expiresAt: Date.now() + data.expires_in * 1000,
-      };
-      sessionStorage.setItem("gsie_admin_session", JSON.stringify(session));
-      window.location.href = "/";
-    } catch (err) {
-      // Erreur réseau (API down) — TypeError: Failed to fetch
-      if (err instanceof TypeError) {
-        errorMsg.textContent = "API indisponible";
+      if (challengeToken) {
+        await completeMfaLogin(challengeToken, code, isRecoveryCode);
       } else {
-        errorMsg.textContent = err instanceof Error ? err.message : "Erreur de connexion";
+        const result = await login(email, password);
+        if ("mfa_required" in result) {
+          challengeToken = result.challenge_token;
+          mfaField.classList.remove("hidden");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Vérifier le code MFA";
+          return;
+        }
       }
+      window.location.href = "/";
+    } catch (error) {
+      errorMsg.textContent = error instanceof TypeError
+        ? "API indisponible"
+        : error instanceof Error ? error.message : "Erreur de connexion";
       errorMsg.classList.remove("hidden");
       submitBtn.disabled = false;
-      submitBtn.textContent = "Se connecter";
+      submitBtn.textContent = challengeToken ? "Vérifier le code MFA" : "Se connecter";
     }
   });
 </script>

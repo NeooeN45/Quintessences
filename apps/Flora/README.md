@@ -22,6 +22,15 @@ Botanical, Knowledge, GIS, Climate
 
 GBIF, Tela Botanica, BDNFF, INPN
 
+## Intégration GSIE
+
+Flora est la projection métier végétation du jumeau numérique fédéré GSIE.
+Elle échange avec GeoSylva, Ignis, Hydro et Artemis par des ressources GSIE
+versionnées, en conservant la provenance des observations et la séparation
+entre état réel, prévision et simulation.
+
+Voir [GSIE_INTEGRATION.md](GSIE_INTEGRATION.md).
+
 ## Voir aussi
 
 - `GSIE/ARCHITECTURE/` — architecture du moteur

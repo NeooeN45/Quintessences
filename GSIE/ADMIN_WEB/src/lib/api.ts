@@ -4,8 +4,8 @@
  * Pas de mock, pas de fallback. Si l'API est indisponible, l'UI affiche
  * un message d'erreur clair. Aucune donnée inventée.
  *
- * Auth : JWT RS256 via /api/v1/auth/login. Tokens stockés en
- * sessionStorage (effacés à la fermeture de l'onglet).
+ * Auth : identité persistante via /api/v1/auth/login/password. Tokens stockés
+ * temporairement en sessionStorage jusqu'à l'intégration Keycloak/PKCE.
  */
 
 const API_URL = import.meta.env.PUBLIC_GSIE_API_URL ?? "http://localhost:8000";
@@ -22,6 +22,14 @@ export interface LoginResponse {
   token_type: string;
   expires_in: number;
 }
+
+export interface MfaChallengeResponse {
+  mfa_required: true;
+  challenge_token: string;
+  expires_in: number;
+}
+
+export type LoginResult = LoginResponse | MfaChallengeResponse;
 
 export interface HealthResponse {
   status: string;
@@ -232,15 +240,30 @@ async function request<T>(
 // --- Auth ---
 
 export async function login(
-  username: string,
+  email: string,
   password: string,
-): Promise<LoginResponse> {
-  const resp = await request<LoginResponse>("/auth/login", {
+): Promise<LoginResult> {
+  return request<LoginResult>("/auth/login/password", {
     method: "POST",
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
   });
-  setSession(resp);
-  return resp;
+}
+
+export async function completeMfaLogin(
+  challengeToken: string,
+  code: string,
+  isRecoveryCode = false,
+): Promise<LoginResponse> {
+  const response = await request<LoginResponse>("/auth/login/mfa", {
+    method: "POST",
+    body: JSON.stringify({
+      challenge_token: challengeToken,
+      code,
+      is_recovery_code: isRecoveryCode,
+    }),
+  });
+  setSession(response);
+  return response;
 }
 
 export function logout(): void {

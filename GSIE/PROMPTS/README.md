@@ -39,6 +39,19 @@ autorisation de fusion.
 Le choix reste fondé sur le risque et le résultat attendu, pas sur une
 présomption d'infaillibilité du modèle.
 
+## Intake avant mission
+
+Une idée ou une ressource n'est pas encore une mission de développement :
+
+1. `/ingestion-idee` ou `/ingestion-ressource` qualifie la demande ;
+2. `/pilotage-wip` vérifie la capacité et les dépendances ;
+3. `TEMPLATE_TASK.md` formalise le contrat ;
+4. `REGISTER.md` trace la mission seulement lorsqu'elle est prête.
+
+Les skills d'intake sont propositionnelles par défaut. Le Fondateur garde la
+validation finale et aucune skill ne crée automatiquement une RFC, une DEC ou
+du code métier.
+
 ## Fichiers
 
 - `REGISTER.md` : registre humain des missions.

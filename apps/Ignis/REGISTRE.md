@@ -1,6 +1,7 @@
 # Ignis — Registre d'idées
 
 > Document vivant. Chaque idée est capturée, rattachée à un module, évaluée (maturité, priorité), et reliée aux idées connexes.
+> La projection Ignis s'inscrit désormais dans RFC-0037 : le jumeau incendie échange avec GeoSylva, Hydro, Flora et Artemis par les contrats GSIE, tandis que le Hub Unreal reste une interface d'exploration, de simulation et d'action contrôlée. Voir `GSIE_INTEGRATION.md` et `Quintessences/GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
 > Statuts : 💡 idée brute · 🔍 à étudier · ✅ principe accepté (intégration prévue en Phase 2+) · ⏸️ reportée · ❌ écartée (avec raison)
 > Version : 0.7.3 — 2026-07-12
 

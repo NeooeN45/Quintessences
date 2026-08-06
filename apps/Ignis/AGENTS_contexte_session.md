@@ -26,6 +26,8 @@ Tu travailles avec **Camille Perraudeau**, 19 ans, Ligugé (86, France) :
 
 **La brique cœur, notre propriété intellectuelle** : la boucle d'assimilation prédiction → observation drone → recalage (~5 min). Tout le reste s'assemble autour.
 
+**Fédération multi-domaines** : Ignis est la projection incendie du jumeau numérique environnemental fédéré défini par RFC-0037. GeoSylva fournit notamment le contexte forestier et le combustible ; Hydro peut consommer les impacts post-incendie ; Flora et Artemis peuvent exploiter les effets écologiques. Les échanges passent par GSIE et non par des accès directs entre bases. Le Hub Unreal explore, simule et prépare des demandes contrôlées ; il ne commande pas directement les systèmes physiques.
+
 **Séquençage business critique (règle S-08)** : le MVP vendable n'est PAS le drone. C'est le jumeau numérique + analyse d'enjeux sur données existantes. Le drone est la phase 2. Toute décision de code doit servir d'abord le MVP sans drone.
 
 **Jalon en cours (Phase 2 du plan)** : le banc de simulation sur le PC de Camille —
