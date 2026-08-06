@@ -164,7 +164,7 @@ services:
       GSIE_SMTP_PASSWORD: ${GSIE_SMTP_PASSWORD:-}
       GSIE_SMTP_USE_TLS: ${GSIE_SMTP_USE_TLS:-false}
       GSIE_SMTP_STARTTLS: ${GSIE_SMTP_STARTTLS:-false}
-      GSIE_EMAIL_SENDER: ${GSIE_EMAIL_SENDER:-noreply@quintessences.local}
+      GSIE_EMAIL_SENDER: ${GSIE_EMAIL_SENDER:-noreply@quintessences-platform.com}
       GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES: ${GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES:-15}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}

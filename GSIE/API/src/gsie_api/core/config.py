@@ -268,7 +268,7 @@ class Settings(BaseSettings):
     smtp_password: SecretStr = SecretStr("")
     smtp_use_tls: bool = False
     smtp_starttls: bool = True
-    email_sender: str = "noreply@quintessences.local"
+    email_sender: str = "noreply@quintessences-platform.com"
     identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
     organisation_invitation_base_url: str = "http://localhost:4000/invitations/accept"
     organisation_invitation_expire_hours: int = Field(default=72, ge=1, le=168)

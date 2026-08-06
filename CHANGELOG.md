@@ -4,6 +4,46 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE API v0.1.0 — DEPLOIEMENT CLOUDFLARE + DOMAINE PERMANENT] - 2026-08-06
+
+- **Domaine permanent acquis** : `quintessences-platform.com` via
+  Cloudflare Registrar (prix coutant, 10,46 $/an, WHOIS privacy gratuit).
+- **Tunnel Cloudflare nomme** : `gsie-api` (ID `07e329c5-7e1f-4bdd-898f-bc38a10ad287`)
+  deploye avec 2 connexions QUIC HA vers les PoP CDG07/CDG14.
+- **DNS configure** : `api.quintessences-platform.com` en CNAME vers le tunnel.
+- **HTTPS actif** : certificat SSL/Cloudflare, HSTS, headers de securite
+  (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy).
+- **API GSIE exposee publiquement** : endpoints `/health`, `/docs`, `/redoc`,
+  `/api/v1/openapi.json` accessibles en `https://api.quintessences-platform.com`.
+- **Mode proxy Cloudflare active** : `GSIE_EDGE_PROXY_MODE=cloudflare_tunnel`,
+  rate-limiting base sur `CF-Connecting-IP`, CORS autorises pour
+  `https://api.quintessences-platform.com` et `https://quintessences-platform.com`.
+- **Fix logging colorama** : fallback JSON renderer quand `stderr` n'est pas un TTY
+  (evite `OSError: [Errno 22] Invalid argument` sur Windows avec Docker/pipe).
+- **Redis expose pour le dev host** : port `127.0.0.1:6379` ajoute a
+  `docker-compose.yml` pour l'API lancee localement.
+- **Document d'architecture Cloudflare** : `QUINTESSENCES_DOMAIN_AND_CLOUDFLARE_BOOTSTRAP.md`
+  avec arborescence des sous-domaines, strategie free-first, offres gratuites,
+  couts, securite et procedure de retour arriere.
+- **Landing page statique** : creation de `landing-quintessences/` (HTML/CSS,
+  `wrangler.toml`, script de deploiement Cloudflare Pages).
+- **Adresse e-mail transactionnelle** : `GSIE_EMAIL_SENDER` mis a jour vers
+  `noreply@quintessences-platform.com` dans `.env`, `.env.example`,
+  `docker-compose.yml` et `src/gsie_api/core/config.py`.
+- **Verification des mises a jour cloudflared** : script
+  `GSIE/API/cloudflared/check-update.ps1`.
+- **Fichiers de configuration ajoutes** :
+  - `GSIE/API/cloudflared/config.yml`
+  - `GSIE/API/cloudflared/setup-tunnel.ps1`
+  - `GSIE/API/cloudflared/start-tunnel.ps1`
+- **Audit final valide** :
+  - endpoints publics 200 OK,
+  - 2080 tests unitaires passes, 63 skipped, 4 warnings non bloquantes,
+  - `ruff` et `mypy` OK,
+  - migrations DB a jour (`20260806_0043`),
+  - services Docker `healthy`,
+  - SSL/TLS valide via Cloudflare.
+
 ## [GSIE ENVIRONMENTAL DIGITAL TWIN PLATFORM — CADRAGE FÉDÉRATEUR] - 2026-08-06
 
 - **RFC-0037 ouverte en Draft** : GSIE est formalisé comme un jumeau

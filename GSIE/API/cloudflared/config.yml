@@ -1,0 +1,33 @@
+# Configuration du tunnel Cloudflare nommé — GSIE API
+# DEC-000028 : exposition publique sécurisée via Cloudflare Tunnel
+#
+# Ce fichier est utilisé par cloudflared après authentification (`tunnel login`)
+# et création du tunnel nommé (`tunnel create gsie-api`).
+#
+# Usage :
+#   cloudflared --config "E:\Projets\Quintessences\GSIE\API\cloudflared\config.yml" tunnel run gsie-api
+
+tunnel: gsie-api
+credentials-file: C:\Users\camil\.cloudflared\07e329c5-7e1f-4bdd-898f-bc38a10ad287.json
+
+# Origine locale — l'API FastAPI sur le host
+ingress:
+  # Route principale : api.quintessences-platform.com -> API GSIE
+  - hostname: api.quintessences-platform.com
+    service: http://127.0.0.1:8000
+  # Route catch-all : refuse tout le reste (principe du moindre privilège)
+  - service: http_status:404
+
+# Logs
+loglevel: info
+transport-loglevel: warn
+metrics: 127.0.0.1:20241
+
+# Haute disponibilité — 2 connexions pour la redondance
+ha-connections: 2
+
+# Protocole QUIC (UDP, plus performant que HTTP/2)
+protocol: quic
+
+# Désactive la mise à jour automatique (Windows)
+no-autoupdate: true

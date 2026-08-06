@@ -1,0 +1,156 @@
+:root {
+  --color-primary: #1a472a;
+  --color-secondary: #2f7d46;
+  --color-accent: #4caf50;
+  --color-bg: #f8faf9;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-light: #e8f5e9;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --max-width: 800px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  opacity: 0.95;
+}
+
+.cta {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-accent);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.button:hover {
+  background-color: #43a047;
+}
+
+.button.secondary {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.button.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.section {
+  padding: 3rem 0;
+}
+
+.section h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.section p {
+  margin-bottom: 1rem;
+}
+
+.alternate {
+  background-color: var(--color-light);
+}
+
+.apps,
+.principles {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.apps li,
+.principles li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.apps li:last-child,
+.principles li:last-child {
+  border-bottom: none;
+}
+
+.contact a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.contact a:hover {
+  text-decoration: underline;
+}
+
+footer {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+footer .small {
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .tagline {
+    font-size: 1rem;
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: center;
+  }
+}
