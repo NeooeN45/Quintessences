@@ -52,6 +52,7 @@ def _kwargs_production(**overrides: object) -> dict[str, object]:
         "auth_dev_login_enabled": False,
         "transactional_email_mode": "smtp",
         "smtp_host": "smtp.example.com",
+        "smtp_starttls": True,
         "require_rust_backend": True,
         "db_ssl_mode": "require",
         "mfa_encryption_key": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
