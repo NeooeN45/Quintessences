@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-06 — **Cloudflare Turnstile, SMTP transactionnel et migration Docker de l'API** (DEC-000055). Protection bot sur le login et formulaires via `gsie_api.shared.turnstile.py` + endpoint `POST /auth/turnstile/verify`. Landing page avec widget Turnstile sur le formulaire de contact. Page de statut `status-quintessences/` créée. Mailpit exposé sur `127.0.0.1:1025` pour le host et `mailpit:1025` pour le conteneur. API exécutée dans le conteneur Docker `api-api-1` (port `127.0.0.1:8000`) ; tunnel `cloudflared` maintenu. Suite unitaire : 2085 passed, 63 skipped. `.env` re-chiffré dans `.env.enc`. Reste à déployer landing/status avec un token Cloudflare renouvelé et configurer les clés Turnstile. |
+| **Dernière mise à jour** | 2026-08-06 — **Cloudflare Turnstile, SMTP transactionnel, migration Docker et deploiement Pages** (DEC-000055). Protection bot sur `POST /api/v1/auth/login`, `POST /api/v1/auth/login/password` et `POST /api/v1/auth/turnstile/verify`. Landing page deployee sur `quintessences-platform.com` avec widget Turnstile. Page de statut deployee sur `status.quintessences-platform.com`. Admin web mis a jour avec le widget Turnstile sur la page de connexion. Mailpit expose sur `127.0.0.1:1025` pour le host et `mailpit:1025` pour le conteneur. API dans Docker `api-api-1` healthy. Clés Turnstile configurees dans `.env` et re-chiffrees dans `.env.enc`. Suite unitaire : 2085 passed, 63 skipped. |
 
 ### GSIE Environmental Digital Twin Platform — cadrage fédérateur (2026-08-06)
 
