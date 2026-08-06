@@ -28,6 +28,9 @@ CLAUDE.md
 # Secrets — fichiers d'environnement réels (ne jamais committer)
 .env
 .env.*
+.cloudflare_api_token
+.cloudflare_zone_id
+.cloudflare_credentials
 !.env.example
 **/.env
 **/.env.*

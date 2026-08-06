@@ -352,6 +352,37 @@ Le SMTP transactionnel reste externe (Mailgun, SendGrid, AWS SES, ou relais du F
 
 ## 9. Règles de sécurité
 
+### 9.0 Permissions du token API Cloudflare
+
+Lors de la création d’un token `Quintessences-Devin-Setup` (ou équivalent), activer **au minimum** les permissions suivantes pour permettre la configuration automatisée via l’API. Les numéros correspondent aux libellés affichés dans le dashboard Cloudflare pour le compte `eeae29da23faaa394198aec9f6d0d0b6`.
+
+| Périmètre | Permission | # | Utilité |
+|---|---|---|---|
+| **DNS zone** | DNS View Read | 109 | Lire les enregistrements DNS |
+| **DNS zone** | DNS View Write | 108 | Créer/modifier les enregistrements DNS |
+| **DNS zone** | Account DNS Settings Read | 119 | Lire DNSSEC et autres paramètres DNS du compte |
+| **DNS zone** | Account DNS Settings Write | 118 | Modifier DNSSEC |
+| **SSL/TLS** | Account: SSL and Certificates Read | 176 | Lire les paramètres SSL |
+| **SSL/TLS** | Account: SSL and Certificates Write | 177 | Modifier SSL/TLS, HSTS, Always Use HTTPS |
+| **WAF** | Account WAF Read | 215 | Lire les règles WAF gérées |
+| **WAF** | Account WAF Write | 214 | Activer les Managed Rules |
+| **Rate limiting** | Account Rulesets Read | 226 | Lire les rulesets |
+| **Rate limiting** | Account Rulesets Write | 227 | Créer/modifier les rulesets WAF/rate limiting |
+| **Rate limiting** | Account Rule Lists Read | 248 | Lire les listes de règles |
+| **Rate limiting** | Account Rule Lists Write | 247 | Gérer les listes de règles |
+| **E-mail** | Email Routing Addresses Read | 201 | Lire les routes e-mail |
+| **E-mail** | Email Routing Addresses Write | 200 | Créer les routes e-mail |
+| **Pages** | Pages Read | 202 | Lire les projets Pages |
+| **Pages** | Pages Write | 203 | Déployer les projets Pages |
+| **Tunnel** (optionnel) | Cloudflare Tunnel Read | 233 | Lire la configuration tunnel |
+| **Tunnel** (optionnel) | Cloudflare Tunnel Write | 232 | Modifier les tunnels |
+| **Turnstile** (optionnel) | Turnstile Sites Read | 198 | Lire les sites Turnstile |
+| **Turnstile** (optionnel) | Turnstile Sites Write | 197 | Créer/mettre à jour Turnstile |
+
+**Ressources :** dans le token, inclure le compte `eeae29da23faaa394198aec9f6d0d0b6` avec `*` (accès à toutes les zones du compte) ou spécifier `quintessences-platform.com` si l’interface le permet.
+
+> **Important :** le token précédent a été roulé car il manquait `DNS View Write` et `Account: SSL and Certificates Write`. Sans ces deux permissions, les appels API sur `/zones/{zone_id}/dns_records` et `/zones/{zone_id}/settings/ssl` retournent `Authentication error` ou `Unauthorized`.
+
 ### 9.1 DNSSEC
 
 - Activer DNSSEC dans le dashboard Cloudflare :

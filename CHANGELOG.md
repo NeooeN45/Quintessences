@@ -24,7 +24,7 @@ Format : `## [version] - YYYY-MM-DD`
   `docker-compose.yml` pour l'API lancee localement.
 - **Document d'architecture Cloudflare** : `QUINTESSENCES_DOMAIN_AND_CLOUDFLARE_BOOTSTRAP.md`
   avec arborescence des sous-domaines, strategie free-first, offres gratuites,
-  couts, securite et procedure de retour arriere.
+  couts, securite, permissions API token et procedure de retour arriere.
 - **Landing page statique** : creation de `landing-quintessences/` (HTML/CSS,
   `wrangler.toml`, script de deploiement Cloudflare Pages).
 - **Adresse e-mail transactionnelle** : `GSIE_EMAIL_SENDER` mis a jour vers
