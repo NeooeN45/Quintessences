@@ -318,7 +318,7 @@ leurs dépôts ou leurs bases internes.
 
 ### P1 — Tranche Ignis
 
-- replay d'un incendie historique ;
+- replay d'un incendie historique (voir `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md`, UC-001 et UC-003) ;
 - front simulé ;
 - météo et enjeux ;
 - drone simulé ;
@@ -335,7 +335,8 @@ leurs dépôts ou leurs bases internes.
 ### P3 — Hydro et impacts croisés
 
 - écoulement et bassins versants ;
-- ruissellement post-incendie ;
+- ruissellement post-incendie (UC-001) ;
+- crues éclair et karst (UC-004) ;
 - crues et zones vulnérables ;
 - affichage multi-domaines dans le Hub.
 

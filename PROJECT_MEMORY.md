@@ -20,7 +20,10 @@ est étendu en version Draft 1.1.0 avec les états réel/dérivé/prévision/
 simulé/proposé/décidé, les scénarios branchés, la provenance, la fraîcheur
 et les `ActionRequest` contrôlées. Aucun contrat de commande physique,
 migration de schéma ou décision d'adoption n'est créé par RFC-0037 à ce
-stade.
+stade. Le catalogue `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md`
+recense six cas d'usage réels (post-incendie, scolytes, SITAC, crues,
+biodiversité, tempêtes) pour valider la fédération et prioriser les tranches
+verticales.
 
 ### Documentation GeoSylva 3.0 (GEOSYLVA-003)
 

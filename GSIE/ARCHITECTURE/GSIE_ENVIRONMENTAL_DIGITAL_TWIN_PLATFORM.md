@@ -299,13 +299,13 @@ tracée et une opération d'intégration contrôlée.
 ## 11. Plan de réalisation
 
 1. Contrat de ressource fédéré et enveloppe d'événement ;
-2. Tranche verticale Ignis en replay historique ;
+2. Tranche verticale Ignis en replay historique (`GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md`, UC-001 et UC-003) ;
 3. Projection GeoSylva ↔ Ignis ;
-4. Projection Hydro et impacts post-incendie ;
+4. Projection Hydro et impacts post-incendie (UC-001, UC-004) ;
 5. Hub multi-mode et scénarios comparables ;
 6. Observations edge et synchronisation offline ;
 7. Territorial Mesh et Server Meshing à l'échelle du prototype ;
-8. Extension progressive aux domaines Flora, Artemis et QGISIA.
+8. Extension progressive aux domaines Flora, Artemis et QGISIA (UC-002, UC-005, UC-006).
 
 ## 12. Statut
 

@@ -84,6 +84,20 @@ Format : `## [version] - YYYY-MM-DD`
 - La RFC-0037 ne crée pas encore de décision d'adoption, de migration de
   schéma ou de nouvelle dépendance technique.
 
+## [GSIE ENVIRONMENTAL DIGITAL TWIN — CAS D'USAGE RÉELS] - 2026-08-06
+
+- **Catalogue de cas d'usage réels ajouté** :
+  `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md`. Six cas
+  fédérés sourcés : ruissellement post-incendie (Maures, Landiras),
+  crise scolytes du sapin pectiné (Grand-Est, Vosges), SITAC multi-moyens
+  (Haute-Corse, NexSIS), crues éclair et karst (Gard 2002, Larzac),
+  biodiversité forestière et corridors (BioDT, Forest DTC, SenseForest),
+  tempêtes et récupération forestière (Lothar, Klaus, DestinE Finland).
+- **Références croisées** ajoutées dans `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`
+  et `02_RFC/RFC-0037-gsie-environmental-digital-twin-platform.md`. Le
+  catalogue oriente le phasage P1 (tranche Ignis), P3 (Hydro) et P4-P5
+  (Flora, Artemis).
+
 ## [GSIE TERRITORIAL MESH — CADRAGE ARCHITECTURAL] - 2026-08-06
 
 - **Chantier annexe complémentaire au Server Meshing** ouvert par décision
