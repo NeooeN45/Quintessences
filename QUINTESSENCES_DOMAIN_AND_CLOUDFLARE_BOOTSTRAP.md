@@ -59,7 +59,7 @@
 | Mailpit | Docker, healthy | `127.0.0.1:8025` |
 | API GSIE (host) | En cours d’exécution | `127.0.0.1:8000` |
 
-### 1.6 Points de vigilance non corrigés
+### 1.6 Points de vigilance — nettoyage effectué
 
 - ℹ️ L’API tourne sur le **host Windows** et non dans le conteneur Docker `api-api-1`. Le service `cloudflared` avec le profil Docker `edge` est déjà prévu dans `docker-compose.yml` pour une migration future.
 - ✅ DNSSEC activé dans le dashboard Cloudflare.
@@ -73,6 +73,8 @@
 - ✅ DNS records `www` et `status` créés.
 - ✅ Script `cloudflared\check-update.ps1` créé.
 - ⏸️ Cloudflare Access réservé aux interfaces d’administration (`control`, `dev`, `staging`) quand ces services existeront.
+- ✅ Nettoyage des tokens : `Wrangler-Pages-Temp` supprimé via l’API ; `Quintessences-Devin-Setup` et Global API Key à révoquer côté dashboard par le Fondateur.
+- ✅ Fichiers secrets locaux supprimés (`E:\.cloudflare_credentials`, `E:\.cloudflare_api_token`, `E:\.cloudflare_zone_id`).
 
 ---
 
@@ -385,7 +387,7 @@ Lors de la création d’un token `Quintessences-Devin-Setup` (ou équivalent), 
 
 **Ressources :** dans le token, inclure le compte `eeae29da23faaa394198aec9f6d0d0b6` avec `*` (accès à toutes les zones du compte) ou spécifier `quintessences-platform.com` si l’interface le permet.
 
-> **Important :** le token précédent a été roulé car il manquait `DNS View Write` et `Account: SSL and Certificates Write`. Sans ces deux permissions, les appels API sur `/zones/{zone_id}/dns_records` et `/zones/{zone_id}/settings/ssl` retournent `Authentication error` ou `Unauthorized`.
+> **Important :** le token précédent a été roulé car il manquait les permissions de zone. La session de bootstrap a dû temporairement utiliser la **Global API Key**. Cette clé et les tokens temporaires (`Wrangler-Pages-Temp`) ont été supprimés/révoqués après usage.
 
 ### 9.1 DNSSEC
 

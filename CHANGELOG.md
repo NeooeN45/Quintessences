@@ -39,6 +39,8 @@ Format : `## [version] - YYYY-MM-DD`
 - **DNS records** : `www.quintessences-platform.com` et `status.quintessences-platform.com`
   créés, apex en CNAME flattening vers Cloudflare Pages.
 - **Email Routing** activé sur `quintessences-platform.com`.
+- **Nettoyage securite** : suppression des tokens API temporaires (`Wrangler-Pages-Temp`) et des
+  fichiers secrets locaux (`.cloudflare_credentials`, `.cloudflare_api_token`, `.cloudflare_zone_id`).
 - **Fichiers de configuration ajoutes** :
   - `GSIE/API/cloudflared/config.yml`
   - `GSIE/API/cloudflared/setup-tunnel.ps1`
