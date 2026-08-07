@@ -418,10 +418,25 @@ def create_app() -> FastAPI:
     app.include_router(orchestration_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
-    # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
+    # 404 handler custom — RFC 7807 Problem Details (OWASP A05).
+    # Les HTTPException(404) levees intentionnellement par le code metier
+    # (ex. MFA_NON_ACTIVE, AccountNotFoundError) doivent preserver leur
+    # detail — on n'ecrase que les 404 de routing (route inexistante).
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc: Exception) -> JSONResponse:
         trace_id = request.headers.get("X-Trace-Id", "")
+        if isinstance(exc, HTTPException):
+            return JSONResponse(
+                status_code=404,
+                content=_build_problem_detail(
+                    status_code=404,
+                    title="Not Found",
+                    detail=str(exc.detail),
+                    error_code=exc.detail if isinstance(exc.detail, str) else "NOT_FOUND",
+                    trace_id=trace_id,
+                    request=request,
+                ),
+            )
         return JSONResponse(
             status_code=404,
             content=_build_problem_detail(

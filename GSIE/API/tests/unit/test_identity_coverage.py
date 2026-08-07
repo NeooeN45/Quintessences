@@ -10,11 +10,20 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 from sqlalchemy.exc import IntegrityError
 
 from gsie_api.app import create_app
-from gsie_api.auth import google_nonces
-from gsie_api.auth.account_lifecycle import AccountProfile
+from gsie_api.auth import google_nonces, identity_router
+from gsie_api.auth.account_lifecycle import (
+    AccountProfile,
+    ActionCodeDelivery,
+    EmailAlreadyUsedError,
+    EmailChangeDelivery,
+    InvalidActionCodeError,
+    InvalidCurrentPasswordError,
+    InvalidEmailChangeCodeError,
+)
 from gsie_api.auth.google_identity import (
     GoogleTokenVerifier,
     InvalidGoogleTokenError,
@@ -37,15 +46,35 @@ from gsie_api.auth.identity import (
     ProviderNotConfiguredError,
 )
 from gsie_api.auth.identity_router import (
+    get_account_lifecycle_service,
     get_identity_service,
+    get_lockout_service,
     get_mfa_service,
     get_onboarding_billing_service,
+    get_password_strength_service,
     get_personal_organisation_service,
     get_session_service,
 )
+from gsie_api.auth.lockout import AccountLockedError
+from gsie_api.auth.mfa import (
+    InvalidRecoveryCodeError,
+    MfaAlreadyEnabledError,
+    MfaNotEnabledError,
+    MfaSetupResult,
+)
+from gsie_api.auth.oidc_generic import InvalidOidcTokenError
+from gsie_api.auth.oidc_nonces import get_oidc_nonce_store
+from gsie_api.auth.password_strength import (
+    CompromisedPasswordError,
+    PasswordStrengthReport,
+    WeakPasswordError,
+)
 from gsie_api.auth.refresh_tokens import MemoryRefreshTokenStore, get_refresh_token_store
 from gsie_api.auth.repository import SqlAlchemyIdentityRepository
-from gsie_api.core.auth import create_access_token
+from gsie_api.auth.sessions import SessionInfo, SessionService
+from gsie_api.auth.transactional_email import get_transactional_email_sender
+from gsie_api.billing.service import BillingService
+from gsie_api.core.auth import create_access_token, create_mfa_challenge_token
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.models.accounts import (
     IdentityActionTokenModel,
@@ -53,6 +82,7 @@ from gsie_api.infrastructure.models.accounts import (
     LocalCredentialModel,
     UserAccountModel,
 )
+from gsie_api.organisations.service import OrganisationService
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
@@ -653,3 +683,943 @@ async def should_cover_sensitive_account_mutations_repository_paths() -> None:
     session.execute = AsyncMock(side_effect=[_result(scalar=2), _result(scalar=None)])
     assert await repository.is_session_version_current(account_id, 2) is True
     assert await repository.is_session_version_current(account_id, 2) is False
+
+
+# ============================================================================
+# Compléments de couverture du 2026-08-07 — router identity_router.py
+# ============================================================================
+
+
+def _bearer(
+    account_id: object | None = None, *, jti: str | None = None, **claims: object
+) -> dict[str, str]:
+    """Crée un header Authorization Bearer avec un token d'accès.
+
+    Le paramètre ``jti`` force l'identifiant de session du token (claim JWT
+    réservé) en patchant ``uuid4`` dans ``core.auth`` — ``create_access_token``
+    refuse sinon les claims réservés.
+    """
+    extra_claims = {"roles": ["user"], **claims}
+    if jti is not None:
+        with patch(
+            "gsie_api.core.auth.uuid4",
+            return_value=type("FakeUUID", (), {"__str__": lambda self: jti})(),
+        ):
+            token = create_access_token(subject=str(account_id or uuid4()), claims=extra_claims)
+    else:
+        token = create_access_token(subject=str(account_id or uuid4()), claims=extra_claims)
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def should_construct_session_organisation_and_billing_dependencies_directly() -> None:
+    """Couvre les fabriques Depends jamais appelées quand elles sont surchargées."""
+    session = _session()
+    session_service = await get_session_service(session)
+    assert isinstance(session_service, SessionService)
+    organisation_service = await get_personal_organisation_service(session)
+    assert isinstance(organisation_service, OrganisationService)
+    billing_service = await get_onboarding_billing_service(session)
+    assert isinstance(billing_service, BillingService)
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_detail"),
+    [
+        (CompromisedPasswordError(), "PASSWORD_COMPROMISED"),
+        (WeakPasswordError(score=1, minimum=3, suggestions=[]), "PASSWORD_TOO_WEAK"),
+    ],
+)
+def should_reject_registration_when_password_strength_check_fails(
+    client_identite: TestClient, error: Exception, expected_detail: str
+) -> None:
+    strength_service = AsyncMock()
+    strength_service.validate = AsyncMock(side_effect=error)
+    client_identite.app.dependency_overrides[get_password_strength_service] = (
+        lambda: strength_service
+    )
+    response = client_identite.post(
+        "/api/v1/auth/register",
+        json={"email": "forestier@example.fr", "password": "mot-de-passe-long"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == expected_detail
+
+
+def should_reject_local_login_when_turnstile_challenge_unresolved(
+    client_identite: TestClient,
+) -> None:
+    with (
+        patch.object(identity_router._settings, "turnstile_enabled", True),
+        patch.object(identity_router._settings, "turnstile_secret_key", SecretStr("secret")),
+    ):
+        response = client_identite.post(
+            "/api/v1/auth/login/password",
+            json={
+                "email": "forestier@example.fr",
+                "password": "mot-de-passe-long",
+                "turnstile_token": "",
+            },
+        )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Challenge anti-robot non résolu."
+
+
+def should_lock_local_login_when_lockout_service_raises(client_identite: TestClient) -> None:
+    lockout_service = AsyncMock()
+    lockout_service.check_and_raise = AsyncMock(
+        side_effect=AccountLockedError(remaining_seconds=42)
+    )
+    client_identite.app.dependency_overrides[get_lockout_service] = lambda: lockout_service
+    response = client_identite.post(
+        "/api/v1/auth/login/password",
+        json={"email": "forestier@example.fr", "password": "mot-de-passe-long"},
+    )
+    assert response.status_code == 423
+    assert response.json()["detail"] == "COMPTE_VERROUILLE"
+    assert response.headers["Retry-After"] == "42"
+
+
+def should_return_mfa_challenge_when_local_login_requires_second_factor(
+    client_identite: TestClient,
+) -> None:
+    account = AuthenticatedAccount(uuid4(), ("user",), "local")
+    service = AsyncMock()
+    service.authenticate_local = AsyncMock(return_value=account)
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: service
+    mfa_service = AsyncMock()
+    mfa_service.is_enabled = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post(
+        "/api/v1/auth/login/password",
+        json={"email": "forestier@example.fr", "password": "mot-de-passe-long"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mfa_required"] is True
+    assert body["challenge_token"]
+
+
+def should_reject_mfa_completion_with_malformed_challenge_payload(
+    client_identite: TestClient,
+) -> None:
+    # Le challenge ne porte pas la clé "login_key" attendue par l'endpoint.
+    challenge_token = create_mfa_challenge_token(
+        subject=str(uuid4()), claims={"session_version": 1}
+    )
+    response = client_identite.post(
+        "/api/v1/auth/login/mfa",
+        json={"challenge_token": challenge_token, "code": "123456"},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Challenge MFA invalide"
+
+
+def _mfa_challenge_token(login_key: str = "forestier@example.fr") -> str:
+    return create_mfa_challenge_token(
+        subject=str(uuid4()),
+        claims={
+            "auth_provider": "local",
+            "session_version": 1,
+            "roles": ["user"],
+            "login_key": login_key,
+        },
+    )
+
+
+@pytest.mark.parametrize("is_recovery", [False, True])
+def should_reject_mfa_completion_with_invalid_code(
+    client_identite: TestClient, is_recovery: bool
+) -> None:
+    mfa_service = AsyncMock()
+    if is_recovery:
+        mfa_service.verify_recovery_code = AsyncMock(side_effect=InvalidRecoveryCodeError)
+    else:
+        mfa_service.verify_totp = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    lockout_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_lockout_service] = lambda: lockout_service
+    response = client_identite.post(
+        "/api/v1/auth/login/mfa",
+        json={
+            "challenge_token": _mfa_challenge_token(),
+            "code": "123456",
+            "is_recovery_code": is_recovery,
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Code MFA invalide"
+    lockout_service.record_failure.assert_awaited_once()
+
+
+@pytest.mark.parametrize("is_recovery", [False, True])
+def should_complete_mfa_login_and_issue_tokens(
+    client_identite: TestClient, is_recovery: bool
+) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(return_value=True)
+    mfa_service.verify_recovery_code = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    lockout_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_lockout_service] = lambda: lockout_service
+    response = client_identite.post(
+        "/api/v1/auth/login/mfa",
+        json={
+            "challenge_token": _mfa_challenge_token(),
+            "code": "123456",
+            "is_recovery_code": is_recovery,
+        },
+    )
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+    lockout_service.record_success.assert_awaited_once()
+
+
+def should_reject_change_password_with_invalid_current_password(
+    client_identite: TestClient,
+) -> None:
+    lifecycle = AsyncMock()
+    lifecycle.change_password = AsyncMock(side_effect=InvalidCurrentPasswordError)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/password/change",
+        headers=_bearer(),
+        json={"current_password": "ancien-mdp", "new_password": "nouveau-mot-de-passe"},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Mot de passe actuel invalide"
+
+
+@pytest.mark.parametrize(
+    "error", [CompromisedPasswordError(), WeakPasswordError(score=0, minimum=3, suggestions=[])]
+)
+def should_reject_change_password_when_new_password_too_weak(
+    client_identite: TestClient, error: Exception
+) -> None:
+    strength_service = AsyncMock()
+    strength_service.validate = AsyncMock(side_effect=error)
+    client_identite.app.dependency_overrides[get_password_strength_service] = (
+        lambda: strength_service
+    )
+    response = client_identite.post(
+        "/api/v1/auth/password/change",
+        headers=_bearer(),
+        json={"current_password": "ancien-mdp", "new_password": "nouveau-mot-de-passe"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "PASSWORD_TOO_WEAK_OR_COMPROMISED"
+
+
+def should_change_password_and_revoke_all_sessions(client_identite: TestClient) -> None:
+    lifecycle = AsyncMock()
+    lifecycle.change_password = AsyncMock(return_value=None)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    session_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.post(
+        "/api/v1/auth/password/change",
+        headers=_bearer(),
+        json={"current_password": "ancien-mdp", "new_password": "nouveau-mot-de-passe"},
+    )
+    assert response.status_code == 200
+    session_service.revoke_all_sessions.assert_awaited_once()
+
+
+def should_export_current_account_data(client_identite: TestClient) -> None:
+    with patch("gsie_api.auth.identity_router.AccountExportService") as export_cls:
+        export_cls.return_value.export = AsyncMock(return_value={"account_id": "abc"})
+        response = client_identite.get("/api/v1/auth/me/export", headers=_bearer())
+    assert response.status_code == 200
+    assert response.json() == {"account_id": "abc"}
+
+
+def should_list_account_consents(client_identite: TestClient) -> None:
+    row = SimpleNamespace(
+        consent_type="terms",
+        document_version="v1",
+        accepted_at=datetime.now(UTC),
+        revoked_at=None,
+    )
+    session = _session()
+    session.execute.return_value = _result(scalars=(row,))
+    client_identite.app.dependency_overrides[get_db] = lambda: session
+    response = client_identite.get("/api/v1/auth/me/consents", headers=_bearer())
+    assert response.status_code == 200
+    consents = response.json()["consents"]
+    assert consents[0]["consent_type"] == "terms"
+    assert consents[0]["revoked_at"] is None
+
+
+def should_accept_new_consent_and_supersede_previous_version(client_identite: TestClient) -> None:
+    captured: dict[str, object] = {}
+    session = _session()
+    session.execute.return_value = _result()
+    session.add = MagicMock(side_effect=lambda obj: captured.__setitem__("consent", obj))
+
+    async def _flush() -> None:
+        captured["consent"].accepted_at = datetime.now(UTC)  # type: ignore[union-attr]
+
+    session.flush = AsyncMock(side_effect=_flush)
+    client_identite.app.dependency_overrides[get_db] = lambda: session
+    response = client_identite.post(
+        "/api/v1/auth/me/consents",
+        headers=_bearer(),
+        json={"consent_type": "terms", "document_version": "v2"},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["consent_type"] == "terms"
+    assert body["document_version"] == "v2"
+    assert body["revoked_at"] is None
+
+
+def should_reject_revoke_consent_with_unknown_type(client_identite: TestClient) -> None:
+    response = client_identite.delete("/api/v1/auth/me/consents/unknown-type", headers=_bearer())
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Consentement invalide"
+
+
+def should_revoke_known_consent_type(client_identite: TestClient) -> None:
+    response = client_identite.delete("/api/v1/auth/me/consents/marketing", headers=_bearer())
+    assert response.status_code == 200
+    assert response.json()["completed"] is True
+
+
+def should_reject_deletion_request_when_email_sender_unconfigured(
+    client_identite: TestClient,
+) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = False
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    response = client_identite.post(
+        "/api/v1/auth/me/deletion/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel"},
+    )
+    assert response.status_code == 503
+
+
+def should_reject_deletion_request_with_invalid_current_password(
+    client_identite: TestClient,
+) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_account_deletion = AsyncMock(side_effect=InvalidCurrentPasswordError)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/me/deletion/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-invalide"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Impossible de planifier la suppression du compte"
+
+
+def should_fail_deletion_request_when_cancellation_email_unsent(
+    client_identite: TestClient,
+) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    email_sender.send_deletion_cancellation_code = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_account_deletion = AsyncMock(
+        return_value=ActionCodeDelivery(email="forestier@example.fr", code="ABCD1234")
+    )
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/me/deletion/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel"},
+    )
+    assert response.status_code == 503
+
+
+def should_accept_account_deletion_request(client_identite: TestClient) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    email_sender.send_deletion_cancellation_code = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_account_deletion = AsyncMock(
+        return_value=ActionCodeDelivery(email="forestier@example.fr", code="ABCD1234")
+    )
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/me/deletion/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel"},
+    )
+    assert response.status_code == 202
+
+
+def should_reject_cancel_deletion_with_invalid_code(client_identite: TestClient) -> None:
+    lifecycle = AsyncMock()
+    lifecycle.cancel_account_deletion = AsyncMock(side_effect=InvalidActionCodeError)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/deletion/cancel",
+        json={"email": "forestier@example.fr", "code": "ABCD1234"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "CODE_INVALIDE_OU_EXPIRE"
+
+
+def should_cancel_account_deletion(client_identite: TestClient) -> None:
+    lifecycle = AsyncMock()
+    lifecycle.cancel_account_deletion = AsyncMock(return_value=None)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/deletion/cancel",
+        json={"email": "forestier@example.fr", "code": "ABCD1234"},
+    )
+    assert response.status_code == 200
+
+
+def should_reject_email_change_request_when_sender_unconfigured(
+    client_identite: TestClient,
+) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = False
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    response = client_identite.post(
+        "/api/v1/auth/email/change/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel", "new_email": "nouveau@example.fr"},
+    )
+    assert response.status_code == 503
+
+
+@pytest.mark.parametrize("error", [InvalidCurrentPasswordError(), EmailAlreadyUsedError()])
+def should_reject_email_change_request_on_invalid_password_or_used_email(
+    client_identite: TestClient, error: Exception
+) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_email_change = AsyncMock(side_effect=error)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/email/change/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel", "new_email": "nouveau@example.fr"},
+    )
+    assert response.status_code == 400
+
+
+def should_fail_email_change_request_when_delivery_unsent(client_identite: TestClient) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    email_sender.send_email_change_code = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_email_change = AsyncMock(
+        return_value=EmailChangeDelivery(
+            current_email="forestier@example.fr",
+            current_code="AAAA1111",
+            new_email="nouveau@example.fr",
+            new_code="BBBB2222",
+        )
+    )
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/email/change/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel", "new_email": "nouveau@example.fr"},
+    )
+    assert response.status_code == 503
+
+
+def should_accept_email_change_request(client_identite: TestClient) -> None:
+    email_sender = AsyncMock()
+    email_sender.is_configured = True
+    email_sender.send_email_change_code = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_transactional_email_sender] = lambda: email_sender
+    lifecycle = AsyncMock()
+    lifecycle.request_email_change = AsyncMock(
+        return_value=EmailChangeDelivery(
+            current_email="forestier@example.fr",
+            current_code="AAAA1111",
+            new_email="nouveau@example.fr",
+            new_code="BBBB2222",
+        )
+    )
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/email/change/request",
+        headers=_bearer(),
+        json={"current_password": "mot-de-passe-actuel", "new_email": "nouveau@example.fr"},
+    )
+    assert response.status_code == 202
+
+
+def should_reject_confirm_email_change_with_invalid_code(client_identite: TestClient) -> None:
+    lifecycle = AsyncMock()
+    lifecycle.confirm_email_change = AsyncMock(side_effect=InvalidEmailChangeCodeError)
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    response = client_identite.post(
+        "/api/v1/auth/email/change/confirm",
+        headers=_bearer(),
+        json={"channel": "current", "code": "ABCD1234"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "CODE_INVALIDE_OU_EXPIRE"
+
+
+def should_confirm_email_change_and_revoke_sessions_when_both_sides_confirmed(
+    client_identite: TestClient,
+) -> None:
+    profile = AccountProfile(uuid4(), "Forestier", "nouveau@example.fr", True, ("local",), ())
+    lifecycle = AsyncMock()
+    lifecycle.confirm_email_change = AsyncMock(return_value=(profile, True))
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    session_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.post(
+        "/api/v1/auth/email/change/confirm",
+        headers=_bearer(),
+        json={"channel": "new", "code": "ABCD1234"},
+    )
+    assert response.status_code == 200
+    assert response.json()["email"] == "nouveau@example.fr"
+    session_service.revoke_all_sessions.assert_awaited_once()
+
+
+def should_confirm_email_change_without_revoking_when_second_side_pending(
+    client_identite: TestClient,
+) -> None:
+    profile = AccountProfile(uuid4(), "Forestier", "forestier@example.fr", True, ("local",), ())
+    lifecycle = AsyncMock()
+    lifecycle.confirm_email_change = AsyncMock(return_value=(profile, False))
+    client_identite.app.dependency_overrides[get_account_lifecycle_service] = lambda: lifecycle
+    session_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.post(
+        "/api/v1/auth/email/change/confirm",
+        headers=_bearer(),
+        json={"channel": "current", "code": "ABCD1234"},
+    )
+    assert response.status_code == 200
+    session_service.revoke_all_sessions.assert_not_awaited()
+
+
+def should_reject_mfa_setup_when_already_enabled(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.setup = AsyncMock(side_effect=MfaAlreadyEnabledError)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post("/api/v1/auth/mfa/setup", headers=_bearer())
+    assert response.status_code == 409
+    assert response.json()["detail"] == "MFA_DEJA_ACTIVE"
+
+
+def should_setup_mfa_and_return_recovery_codes(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.setup = AsyncMock(
+        return_value=MfaSetupResult(
+            secret="SECRET", otpauth_uri="otpauth://totp/x", recovery_codes=("a1", "b2")
+        )
+    )
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post("/api/v1/auth/mfa/setup", headers=_bearer())
+    assert response.status_code == 201
+    body = response.json()
+    assert body["secret"] == "SECRET"
+    assert body["recovery_codes"] == ["a1", "b2"]
+
+
+@pytest.mark.parametrize("is_recovery", [False, True])
+def should_verify_mfa_successfully(client_identite: TestClient, is_recovery: bool) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(return_value=True)
+    mfa_service.verify_recovery_code = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post(
+        "/api/v1/auth/mfa/verify",
+        headers=_bearer(),
+        json={"code": "123456", "is_recovery_code": is_recovery},
+    )
+    assert response.status_code == 200
+    assert response.json()["enabled"] is True
+
+
+def should_reject_mfa_verification_with_invalid_totp_code(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post(
+        "/api/v1/auth/mfa/verify",
+        headers=_bearer(),
+        json={"code": "000000", "is_recovery_code": False},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "CODE_TOTP_INVALIDE"
+
+
+def should_reject_mfa_verification_with_invalid_recovery_code(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_recovery_code = AsyncMock(side_effect=InvalidRecoveryCodeError)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post(
+        "/api/v1/auth/mfa/verify",
+        headers=_bearer(),
+        json={"code": "000000", "is_recovery_code": True},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "CODE_RECUPERATION_INVALIDE"
+
+
+def should_reject_mfa_verification_when_not_enabled(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(side_effect=MfaNotEnabledError)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.post(
+        "/api/v1/auth/mfa/verify",
+        headers=_bearer(),
+        json={"code": "000000", "is_recovery_code": False},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "MFA_NON_ACTIVE"
+
+
+def should_reject_mfa_disable_when_not_enabled(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.disable = AsyncMock(side_effect=MfaNotEnabledError)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.delete("/api/v1/auth/mfa", headers=_bearer())
+    assert response.status_code == 404
+    assert response.json()["detail"] == "MFA_NON_ACTIVE"
+
+
+def should_disable_mfa_successfully(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.disable = AsyncMock(return_value=None)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.delete("/api/v1/auth/mfa", headers=_bearer())
+    assert response.status_code == 200
+    assert response.json()["enabled"] is False
+
+
+@pytest.mark.parametrize(("record", "expected"), [(None, False), (SimpleNamespace(), True)])
+def should_report_mfa_status(client_identite: TestClient, record: object, expected: bool) -> None:
+    mfa_service = AsyncMock()
+    mfa_service._repository.get_active_secret = AsyncMock(return_value=record)  # noqa: SLF001
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+    response = client_identite.get("/api/v1/auth/mfa/status", headers=_bearer())
+    assert response.status_code == 200
+    assert response.json()["enabled"] is expected
+
+
+def should_list_active_sessions_with_current_flag(client_identite: TestClient) -> None:
+    now = datetime.now(UTC)
+    session_id = uuid4()
+    info = SessionInfo(
+        id=session_id,
+        jti="jti-actuel",
+        device_name="Pixel",
+        user_agent="okhttp",
+        ip_address="203.0.113.5",
+        issued_at=now,
+        last_seen_at=now,
+        is_current=False,
+    )
+    session_service = AsyncMock()
+    session_service.list_sessions = AsyncMock(return_value=[info])
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.get("/api/v1/auth/sessions", headers=_bearer(jti="jti-actuel"))
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["sessions"][0]["is_current"] is True
+
+
+def should_revoke_all_sessions_except_current(client_identite: TestClient) -> None:
+    session_service = AsyncMock()
+    session_service.list_refresh_jtis = AsyncMock(return_value=["refresh-1", "refresh-2"])
+    session_service.revoke_all_sessions = AsyncMock(return_value=2)
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.delete("/api/v1/auth/sessions", headers=_bearer(jti="jti-actuel"))
+    assert response.status_code == 200
+    assert session_service.revoke_all_sessions.await_args.kwargs["except_jti"] == "jti-actuel"
+
+
+def should_reject_session_revocation_with_non_uuid_id(client_identite: TestClient) -> None:
+    response = client_identite.post(
+        "/api/v1/auth/sessions/revoke",
+        headers=_bearer(),
+        json={"session_id": "pas-un-uuid"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "ID session invalide"
+
+
+def should_reject_session_revocation_when_absent_or_already_revoked(
+    client_identite: TestClient,
+) -> None:
+    session_service = AsyncMock()
+    session_service.get_refresh_jti = AsyncMock(return_value=None)
+    session_service.revoke_session = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.post(
+        "/api/v1/auth/sessions/revoke",
+        headers=_bearer(),
+        json={"session_id": str(uuid4())},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Session introuvable ou déjà révoquée"
+
+
+def should_revoke_specific_session_and_its_refresh_token(client_identite: TestClient) -> None:
+    session_service = AsyncMock()
+    session_service.get_refresh_jti = AsyncMock(return_value="refresh-jti")
+    session_service.revoke_session = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_session_service] = lambda: session_service
+    response = client_identite.post(
+        "/api/v1/auth/sessions/revoke",
+        headers=_bearer(),
+        json={"session_id": str(uuid4())},
+    )
+    assert response.status_code == 200
+
+
+class _FakeOidcVerifier:
+    def __init__(
+        self,
+        *,
+        configured: bool = True,
+        providers: tuple[str, ...] = ("keycloak",),
+    ) -> None:
+        self.is_configured = configured
+        self._providers = providers
+        self.build_authorization_url = MagicMock(
+            return_value="https://auth.example.test/authorize?state=x"
+        )
+        self.verify = AsyncMock()
+
+    def get_provider_names(self) -> list[str]:
+        return list(self._providers)
+
+
+def should_list_configured_oidc_providers(client_identite: TestClient) -> None:
+    with patch(
+        "gsie_api.auth.identity_router.get_generic_oidc_verifier",
+        return_value=_FakeOidcVerifier(providers=("keycloak", "azure-ad")),
+    ):
+        response = client_identite.get("/api/v1/auth/oidc/providers")
+    assert response.status_code == 200
+    assert response.json()["providers"] == ["keycloak", "azure-ad"]
+
+
+def should_reject_oidc_authorize_when_verifier_rejects_parameters(
+    client_identite: TestClient,
+) -> None:
+    verifier = _FakeOidcVerifier()
+    verifier.build_authorization_url = MagicMock(
+        side_effect=InvalidOidcTokenError("redirect_uri OIDC non autorisée")
+    )
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.get(
+            "/api/v1/auth/oidc/keycloak/authorize",
+            params={
+                "redirect_uri": "https://app.example.test/callback",
+                "state": "s" * 20,
+                "code_challenge": "c" * 43,
+            },
+        )
+    assert response.status_code == 400
+
+
+def should_build_oidc_authorization_url_and_return_nonce(client_identite: TestClient) -> None:
+    verifier = _FakeOidcVerifier()
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.get(
+            "/api/v1/auth/oidc/keycloak/authorize",
+            params={
+                "redirect_uri": "https://app.example.test/callback",
+                "state": "s" * 20,
+                "code_challenge": "c" * 43,
+                "client_id": "geosylva-android",
+            },
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["provider"] == "keycloak"
+    assert body["nonce"]
+    verifier.build_authorization_url.assert_called_once()
+
+
+def should_reject_oidc_login_when_no_provider_configured(client_identite: TestClient) -> None:
+    verifier = _FakeOidcVerifier(configured=False)
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 503
+
+
+def should_reject_oidc_login_with_already_consumed_nonce(client_identite: TestClient) -> None:
+    verifier = _FakeOidcVerifier()
+    nonce_store = AsyncMock()
+    nonce_store.consume = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_oidc_nonce_store] = lambda: nonce_store
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Preuve OIDC invalide"
+
+
+def should_reject_oidc_login_with_invalid_token(client_identite: TestClient) -> None:
+    verifier = _FakeOidcVerifier()
+    verifier.verify = AsyncMock(side_effect=InvalidOidcTokenError("jeton invalide"))
+    nonce_store = AsyncMock()
+    nonce_store.consume = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_oidc_nonce_store] = lambda: nonce_store
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Preuve OIDC invalide"
+
+
+def should_require_explicit_link_when_oidc_email_matches_existing_account(
+    client_identite: TestClient,
+) -> None:
+    identity = GoogleIdentity(
+        issuer="https://auth.example.test/realms/quintessences",
+        subject="sujet-oidc",
+        email="forestier@example.fr",
+        display_name="Forestier",
+    )
+    verifier = _FakeOidcVerifier()
+    verifier.verify = AsyncMock(return_value=identity)
+    nonce_store = AsyncMock()
+    nonce_store.consume = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_oidc_nonce_store] = lambda: nonce_store
+    identity_service = AsyncMock()
+    identity_service._repository.find_provider_account = AsyncMock(return_value=None)  # noqa: SLF001
+    identity_service._repository.has_account_with_verified_email = AsyncMock(  # noqa: SLF001
+        return_value=True
+    )
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: identity_service
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "ACCOUNT_LINK_REQUIRED"
+
+
+def should_create_oidc_account_on_first_login(client_identite: TestClient) -> None:
+    identity = GoogleIdentity(
+        issuer="https://auth.example.test/realms/quintessences",
+        subject="sujet-oidc-nouveau",
+        email="nouveau@example.fr",
+        display_name="Nouveau",
+    )
+    verifier = _FakeOidcVerifier()
+    verifier.verify = AsyncMock(return_value=identity)
+    nonce_store = AsyncMock()
+    nonce_store.consume = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_oidc_nonce_store] = lambda: nonce_store
+    account = AuthenticatedAccount(uuid4(), ("user",), "keycloak")
+    identity_service = AsyncMock()
+    identity_service._repository.find_provider_account = AsyncMock(return_value=None)  # noqa: SLF001
+    identity_service._repository.has_account_with_verified_email = AsyncMock(  # noqa: SLF001
+        return_value=False
+    )
+    identity_service._repository.create_oidc_account = AsyncMock(return_value=account)  # noqa: SLF001
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: identity_service
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 200
+    identity_service._repository.create_oidc_account.assert_awaited_once()  # noqa: SLF001
+
+
+def should_login_existing_oidc_account_without_recreating_it(
+    client_identite: TestClient,
+) -> None:
+    identity = GoogleIdentity(
+        issuer="https://auth.example.test/realms/quintessences",
+        subject="sujet-oidc-existant",
+        email="existant@example.fr",
+        display_name="Existant",
+    )
+    verifier = _FakeOidcVerifier()
+    verifier.verify = AsyncMock(return_value=identity)
+    nonce_store = AsyncMock()
+    nonce_store.consume = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_oidc_nonce_store] = lambda: nonce_store
+    account = AuthenticatedAccount(uuid4(), ("user",), "keycloak")
+    identity_service = AsyncMock()
+    identity_service._repository.find_provider_account = AsyncMock(return_value=account)  # noqa: SLF001
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: identity_service
+    with patch("gsie_api.auth.identity_router.get_generic_oidc_verifier", return_value=verifier):
+        response = client_identite.post(
+            "/api/v1/auth/login/oidc",
+            json={
+                "provider": "keycloak",
+                "id_token": "jeton-oidc",
+                "nonce": "n" * 32,
+            },
+        )
+    assert response.status_code == 200
+    identity_service._repository.create_oidc_account.assert_not_awaited()  # noqa: SLF001
+
+
+def should_reject_password_strength_check_without_password(client_identite: TestClient) -> None:
+    response = client_identite.post("/api/v1/auth/password/strength", json={})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Mot de passe requis"
+
+
+def should_report_password_strength_meeting_requirements(client_identite: TestClient) -> None:
+    strength_service = AsyncMock()
+    strength_service.check = AsyncMock(
+        return_value=PasswordStrengthReport(
+            zxcvbn_score=4,
+            is_compromised=False,
+            compromise_count=0,
+            suggestions=(),
+        )
+    )
+    client_identite.app.dependency_overrides[get_password_strength_service] = (
+        lambda: strength_service
+    )
+    response = client_identite.post(
+        "/api/v1/auth/password/strength", json={"password": "un-mot-de-passe-robuste"}
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["meets_requirements"] is True
+    assert body["zxcvbn_score"] == 4
