@@ -327,54 +327,209 @@
         "title": "AromeTemperatureResult",
         "type": "object"
       },
-      "AuditLog": {
-        "description": "Une entrée de journal d'audit.",
+      "AuditLogPage": {
+        "additionalProperties": false,
+        "description": "Réponse paginée du journal d'audit.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLogResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "title": "AuditLogPage",
+        "type": "object"
+      },
+      "AuditLogResponse": {
+        "additionalProperties": false,
+        "description": "Une entrée de journal d'audit — réponse API.",
         "properties": {
           "action": {
-            "description": "Type d'action : create | update | delete | export",
+            "enum": [
+              "create",
+              "read",
+              "update",
+              "delete",
+              "export",
+              "login",
+              "logout",
+              "invite",
+              "revoke",
+              "sync"
+            ],
             "title": "Action",
             "type": "string"
           },
+          "actor_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Email"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
           "details": {
-            "description": "Détails contextuels supplémentaires",
             "title": "Details",
             "type": "object"
           },
           "id": {
-            "description": "Identifiant unique de l'entrée",
+            "format": "uuid",
             "title": "Id",
             "type": "string"
           },
-          "ip": {
-            "description": "Adresse IP d'origine",
-            "title": "Ip",
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "organisation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation Id"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "resource_type": {
+            "title": "Resource Type",
             "type": "string"
           },
-          "resource": {
-            "description": "Ressource concernée (type + id)",
-            "title": "Resource",
-            "type": "string"
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code"
           },
           "timestamp": {
-            "description": "ISO 8601 — moment de l'action",
+            "format": "date-time",
             "title": "Timestamp",
             "type": "string"
           },
-          "user": {
-            "description": "Utilisateur ayant effectué l'action",
-            "title": "User",
-            "type": "string"
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
           }
         },
         "required": [
           "id",
           "timestamp",
-          "user",
           "action",
-          "resource",
-          "ip"
+          "resource_type"
         ],
-        "title": "AuditLog",
+        "title": "AuditLogResponse",
         "type": "object"
       },
       "Badge": {
@@ -414,6 +569,62 @@
           "unlocked"
         ],
         "title": "Badge",
+        "type": "object"
+      },
+      "BillingContextResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "entitlements": {
+            "items": {
+              "$ref": "#/components/schemas/EntitlementResponse"
+            },
+            "title": "Entitlements",
+            "type": "array"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "organisation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation Id"
+          }
+        },
+        "required": [
+          "account_id",
+          "organisation_id",
+          "features",
+          "entitlements"
+        ],
+        "title": "BillingContextResponse",
+        "type": "object"
+      },
+      "BillingOperationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          }
+        },
+        "title": "BillingOperationResponse",
         "type": "object"
       },
       "BlocContexte": {
@@ -735,6 +946,30 @@
         "title": "BulkItemResult",
         "type": "object"
       },
+      "CancelDeletionRequest": {
+        "additionalProperties": false,
+        "description": "Preuve e-mail pour annuler une suppression en attente.",
+        "properties": {
+          "code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "CancelDeletionRequest",
+        "type": "object"
+      },
       "CaracteristiqueDendrometrique": {
         "additionalProperties": false,
         "description": "Une caractéristique dendrométrique calculée géométriquement.",
@@ -792,6 +1027,92 @@
           "description"
         ],
         "title": "CauseBlocage",
+        "type": "object"
+      },
+      "ChangeEmailRequest": {
+        "additionalProperties": false,
+        "description": "Demande de changement d'adresse avec preuve du mot de passe actuel.",
+        "properties": {
+          "current_password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "new_email": {
+            "format": "email",
+            "title": "New Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_email"
+        ],
+        "title": "ChangeEmailRequest",
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "additionalProperties": false,
+        "description": "Changement authentifié du mot de passe local.",
+        "properties": {
+          "current_password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "new_password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "New Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "CheckoutRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "owner_type": {
+            "default": "account",
+            "title": "Owner Type",
+            "type": "string"
+          },
+          "plan_code": {
+            "title": "Plan Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_code"
+        ],
+        "title": "CheckoutRequest",
+        "type": "object"
+      },
+      "CheckoutResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "checkout_url": {
+            "title": "Checkout Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkout_url"
+        ],
+        "title": "CheckoutResponse",
         "type": "object"
       },
       "ClimateQuery": {
@@ -1020,6 +1341,33 @@
         "title": "ConfidenceLevel",
         "type": "string"
       },
+      "ConfirmEmailChangeRequest": {
+        "additionalProperties": false,
+        "description": "Confirmation d'un code reçu sur l'ancienne ou la nouvelle adresse.",
+        "properties": {
+          "channel": {
+            "enum": [
+              "current",
+              "new"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "code"
+        ],
+        "title": "ConfirmEmailChangeRequest",
+        "type": "object"
+      },
       "ConflitBibliographique-Input": {
         "additionalProperties": false,
         "description": "Conflit entre deux sources (CON-002).",
@@ -1068,6 +1416,87 @@
           "description"
         ],
         "title": "ConflitBibliographique",
+        "type": "object"
+      },
+      "ConsentListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "consents": {
+            "items": {
+              "$ref": "#/components/schemas/ConsentResponse"
+            },
+            "title": "Consents",
+            "type": "array"
+          }
+        },
+        "required": [
+          "consents"
+        ],
+        "title": "ConsentListResponse",
+        "type": "object"
+      },
+      "ConsentRequest": {
+        "additionalProperties": false,
+        "description": "Acceptation d'une version précise d'un document juridique.",
+        "properties": {
+          "consent_type": {
+            "enum": [
+              "terms",
+              "privacy",
+              "marketing"
+            ],
+            "title": "Consent Type",
+            "type": "string"
+          },
+          "document_version": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Document Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_type",
+          "document_version"
+        ],
+        "title": "ConsentRequest",
+        "type": "object"
+      },
+      "ConsentResponse": {
+        "additionalProperties": false,
+        "description": "Consentement courant sans donnée sensible inutile.",
+        "properties": {
+          "accepted_at": {
+            "title": "Accepted At",
+            "type": "string"
+          },
+          "consent_type": {
+            "title": "Consent Type",
+            "type": "string"
+          },
+          "document_version": {
+            "title": "Document Version",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "consent_type",
+          "document_version",
+          "accepted_at",
+          "revoked_at"
+        ],
+        "title": "ConsentResponse",
         "type": "object"
       },
       "ContentType": {
@@ -1824,6 +2253,30 @@
         "title": "ElementDiagnostic",
         "type": "object"
       },
+      "EmailInvitationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "role": {
+            "default": "member",
+            "enum": [
+              "admin",
+              "member"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "EmailInvitationRequest",
+        "type": "object"
+      },
       "EngineStatusResponse": {
         "additionalProperties": false,
         "description": "Réponse standardisée pour le statut d'un moteur.",
@@ -1876,6 +2329,49 @@
           "backend"
         ],
         "title": "EngineVersionResponse",
+        "type": "object"
+      },
+      "EntitlementResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "feature_code": {
+            "title": "Feature Code",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_type": {
+            "title": "Subject Type",
+            "type": "string"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "feature_code",
+          "subject_type",
+          "subject_id",
+          "status",
+          "valid_until"
+        ],
+        "title": "EntitlementResponse",
         "type": "object"
       },
       "EspeceData": {
@@ -3152,6 +3648,64 @@
         "title": "InterventionSpec",
         "type": "object"
       },
+      "InvitationAcceptRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "maxLength": 256,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "InvitationAcceptRequest",
+        "type": "object"
+      },
+      "InvitationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "organisation_id": {
+            "format": "uuid",
+            "title": "Organisation Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "admin",
+              "member"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organisation_id",
+          "email",
+          "role",
+          "expires_at"
+        ],
+        "title": "InvitationResponse",
+        "type": "object"
+      },
       "JustificationRecommandation": {
         "additionalProperties": false,
         "description": "Fondement d'une recommandation — jamais optionnel (`GSIE-CON-004`).\n\n`facteurs_limitants` est obligatoire et non vide. Une recommandation\nprésentée sans limite connue se lit comme une certitude ; or il en\nexiste toujours au moins une, ne serait-ce que le périmètre du\ndiagnostic dont elle provient. La déclarer force à l'expliciter plutôt\nqu'à la taire.",
@@ -3788,6 +4342,29 @@
         "title": "LearningStatut",
         "type": "string"
       },
+      "ListSessionsResponse": {
+        "additionalProperties": false,
+        "description": "Liste des sessions actives du compte courant.",
+        "properties": {
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionResponse"
+            },
+            "title": "Sessions",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sessions",
+          "total"
+        ],
+        "title": "ListSessionsResponse",
+        "type": "object"
+      },
       "ListeDossiersResponse": {
         "additionalProperties": false,
         "description": "Réponse de GetResource — dossiers paginés.",
@@ -3870,6 +4447,13 @@
             "title": "Password",
             "type": "string",
             "writeOnly": true
+          },
+          "turnstile_token": {
+            "default": "",
+            "description": "Token Cloudflare Turnstile",
+            "maxLength": 4096,
+            "title": "Turnstile Token",
+            "type": "string"
           }
         },
         "required": [
@@ -3881,13 +4465,20 @@
       },
       "LoginRequest": {
         "additionalProperties": false,
-        "description": "Requête de login — username + password.",
+        "description": "Requête de login — username + password + token Turnstile.",
         "properties": {
           "password": {
             "description": "Mot de passe",
             "maxLength": 500,
             "minLength": 1,
             "title": "Password",
+            "type": "string"
+          },
+          "turnstile_token": {
+            "default": "",
+            "description": "Token Cloudflare Turnstile",
+            "maxLength": 4096,
+            "title": "Turnstile Token",
             "type": "string"
           },
           "username": {
@@ -3937,6 +4528,118 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "MemberInviteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "role": {
+            "default": "member",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "title": "MemberInviteRequest",
+        "type": "object"
+      },
+      "MemberPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MemberResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "title": "MemberPage",
+        "type": "object"
+      },
+      "MemberResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "invited_by": {
+            "format": "uuid",
+            "title": "Invited By",
+            "type": "string"
+          },
+          "joined_at": {
+            "format": "date-time",
+            "title": "Joined At",
+            "type": "string"
+          },
+          "organisation_id": {
+            "format": "uuid",
+            "title": "Organisation Id",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "organisation_id",
+          "account_id",
+          "role",
+          "invited_by",
+          "joined_at"
+        ],
+        "title": "MemberResponse",
+        "type": "object"
+      },
       "MethodeConfiance": {
         "description": "Origine de `niveau_confiance` — jamais une invention du moteur.",
         "enum": [
@@ -3945,6 +4648,128 @@
         ],
         "title": "MethodeConfiance",
         "type": "string"
+      },
+      "MfaChallengeResponse": {
+        "additionalProperties": false,
+        "description": "Réponse intermédiaire lorsque le compte exige un second facteur.",
+        "properties": {
+          "challenge_token": {
+            "title": "Challenge Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "exclusiveMinimum": 0.0,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "mfa_required": {
+            "default": true,
+            "title": "Mfa Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "challenge_token",
+          "expires_in"
+        ],
+        "title": "MfaChallengeResponse",
+        "type": "object"
+      },
+      "MfaChallengeVerifyRequest": {
+        "additionalProperties": false,
+        "description": "Preuve MFA permettant de terminer une connexion.",
+        "properties": {
+          "challenge_token": {
+            "format": "password",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Challenge Token",
+            "type": "string",
+            "writeOnly": true
+          },
+          "code": {
+            "maxLength": 20,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string"
+          },
+          "is_recovery_code": {
+            "default": false,
+            "title": "Is Recovery Code",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "challenge_token",
+          "code"
+        ],
+        "title": "MfaChallengeVerifyRequest",
+        "type": "object"
+      },
+      "MfaSetupResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de l'initialisation MFA — secret + URI + codes de récupération.",
+        "properties": {
+          "otpauth_uri": {
+            "title": "Otpauth Uri",
+            "type": "string"
+          },
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          },
+          "secret": {
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret",
+          "otpauth_uri",
+          "recovery_codes"
+        ],
+        "title": "MfaSetupResponse",
+        "type": "object"
+      },
+      "MfaStatusResponse": {
+        "additionalProperties": false,
+        "description": "État MFA du compte courant.",
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "MfaStatusResponse",
+        "type": "object"
+      },
+      "MfaVerifyRequest": {
+        "additionalProperties": false,
+        "description": "Vérification d'un code TOTP ou de récupération.",
+        "properties": {
+          "code": {
+            "maxLength": 20,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string"
+          },
+          "is_recovery_code": {
+            "default": false,
+            "title": "Is Recovery Code",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "MfaVerifyRequest",
+        "type": "object"
       },
       "ObjectifForestier": {
         "description": "Objectif poursuivi par le forestier (`RECOMMENDATION_ENGINE.md` §5).",
@@ -4277,6 +5102,192 @@
         "title": "ObservationHoraireDepartement",
         "type": "object"
       },
+      "OidcAuthorizationUrlResponse": {
+        "additionalProperties": false,
+        "description": "URL Keycloak/OIDC à ouvrir dans le navigateur système.",
+        "properties": {
+          "authorization_url": {
+            "title": "Authorization Url",
+            "type": "string"
+          },
+          "nonce": {
+            "title": "Nonce",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorization_url",
+          "provider",
+          "nonce"
+        ],
+        "title": "OidcAuthorizationUrlResponse",
+        "type": "object"
+      },
+      "OidcLoginRequest": {
+        "additionalProperties": false,
+        "description": "Connexion via un fournisseur OIDC enterprise, liée à un nonce serveur.",
+        "properties": {
+          "id_token": {
+            "format": "password",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Id Token",
+            "type": "string",
+            "writeOnly": true
+          },
+          "nonce": {
+            "format": "password",
+            "maxLength": 256,
+            "minLength": 16,
+            "title": "Nonce",
+            "type": "string",
+            "writeOnly": true
+          },
+          "provider": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "id_token",
+          "nonce"
+        ],
+        "title": "OidcLoginRequest",
+        "type": "object"
+      },
+      "OidcProvidersResponse": {
+        "additionalProperties": false,
+        "description": "Liste des fournisseurs OIDC enterprise configurés.",
+        "properties": {
+          "providers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Providers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "title": "OidcProvidersResponse",
+        "type": "object"
+      },
+      "OrganisationCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 100,
+            "minLength": 3,
+            "pattern": "^[a-z0-9][a-z0-9-]{1,98}[a-z0-9]$",
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name"
+        ],
+        "title": "OrganisationCreateRequest",
+        "type": "object"
+      },
+      "OrganisationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrganisationResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "title": "OrganisationPage",
+        "type": "object"
+      },
+      "OrganisationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "status",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrganisationResponse",
+        "type": "object"
+      },
       "PageTelechargementResponse": {
         "additionalProperties": false,
         "description": "Métadonnées de pagination d'une réponse Atom.",
@@ -4441,6 +5452,46 @@
         "title": "PasswordResetRequest",
         "type": "object"
       },
+      "PasswordStrengthResponse": {
+        "additionalProperties": false,
+        "description": "Rapport de force d'un mot de passe (sans lever d'exception).",
+        "properties": {
+          "compromise_count": {
+            "title": "Compromise Count",
+            "type": "integer"
+          },
+          "is_compromised": {
+            "title": "Is Compromised",
+            "type": "boolean"
+          },
+          "meets_requirements": {
+            "title": "Meets Requirements",
+            "type": "boolean"
+          },
+          "suggestions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "zxcvbn_score": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Zxcvbn Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "zxcvbn_score",
+          "is_compromised",
+          "compromise_count",
+          "suggestions",
+          "meets_requirements"
+        ],
+        "title": "PasswordStrengthResponse",
+        "type": "object"
+      },
       "PedologyData": {
         "additionalProperties": false,
         "description": "Résultat d'une requête pédologique (PEDOLOGY_ENGINE.md §5).\n\nv1 : sans profil de sol ni classification (voir docstring module).",
@@ -4577,6 +5628,84 @@
           "source_inventaire"
         ],
         "title": "PeuplementState",
+        "type": "object"
+      },
+      "PlanListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanResponse"
+            },
+            "title": "Plans",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plans"
+        ],
+        "title": "PlanListResponse",
+        "type": "object"
+      },
+      "PlanResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "annual_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Amount Cents"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "monthly_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Amount Cents"
+          },
+          "product_scope": {
+            "title": "Product Scope",
+            "type": "string"
+          },
+          "trial_days": {
+            "title": "Trial Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "display_name",
+          "product_scope",
+          "monthly_amount_cents",
+          "annual_amount_cents",
+          "trial_days",
+          "features"
+        ],
+        "title": "PlanResponse",
         "type": "object"
       },
       "PlantNetIdentificationResponse": {
@@ -5430,6 +6559,25 @@
         "title": "RelationRef",
         "type": "object"
       },
+      "RequestDeletionRequest": {
+        "additionalProperties": false,
+        "description": "Demande authentifiée de suppression différée.",
+        "properties": {
+          "current_password": {
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "current_password"
+        ],
+        "title": "RequestDeletionRequest",
+        "type": "object"
+      },
       "ResourceCreate": {
         "additionalProperties": false,
         "description": "Création d'une resource — type + champs spécifiques en JSON.",
@@ -5540,6 +6688,18 @@
             "title": "Metadata Json",
             "type": "object"
           },
+          "organisation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation Id"
+          },
           "type": {
             "title": "Type",
             "type": "string"
@@ -5548,6 +6708,18 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
           }
         },
         "required": [
@@ -5730,6 +6902,23 @@
         "title": "RevisionRead",
         "type": "object"
       },
+      "RevokeSessionRequest": {
+        "additionalProperties": false,
+        "description": "Révocation d'une session par son ID.",
+        "properties": {
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "RevokeSessionRequest",
+        "type": "object"
+      },
       "RoleDiagnostic": {
         "description": "Rôle d'une conclusion dans le diagnostic.\n\nDéclaré par l'appelant, jamais déduit. Décider qu'une conclusion est une\ncontrainte plutôt qu'un atout est un jugement scientifique ; l'inférer du\ntexte français de son énoncé serait de l'invention (`GSIE-CON-002`).",
         "enum": [
@@ -5791,6 +6980,77 @@
           "horizon"
         ],
         "title": "ScenarioSimulation",
+        "type": "object"
+      },
+      "SessionResponse": {
+        "additionalProperties": false,
+        "description": "Vue d'une session active.",
+        "properties": {
+          "device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "is_current": {
+            "default": false,
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "issued_at": {
+            "title": "Issued At",
+            "type": "string"
+          },
+          "jti": {
+            "title": "Jti",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "title": "Last Seen At",
+            "type": "string"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "id",
+          "jti",
+          "device_name",
+          "user_agent",
+          "ip_address",
+          "issued_at",
+          "last_seen_at"
+        ],
+        "title": "SessionResponse",
         "type": "object"
       },
       "SimulationResult": {
@@ -6103,6 +7363,57 @@
         "title": "StatutIndigenatRegion",
         "type": "string"
       },
+      "StorePurchaseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "purchase_token": {
+            "title": "Purchase Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purchase_token"
+        ],
+        "title": "StorePurchaseRequest",
+        "type": "object"
+      },
+      "StorePurchaseResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "plan_code": {
+            "title": "Plan Code",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "plan_code",
+          "status",
+          "expires_at"
+        ],
+        "title": "StorePurchaseResponse",
+        "type": "object"
+      },
       "StructurePeuplement": {
         "description": "Structure du peuplement (FOREST_DYNAMICS_ENGINE.md §5).",
         "enum": [
@@ -6272,6 +7583,38 @@
         "title": "TokenResponse",
         "type": "object"
       },
+      "TurnstileVerifyRequest": {
+        "additionalProperties": false,
+        "description": "Token Cloudflare Turnstile à valider côté serveur.",
+        "properties": {
+          "token": {
+            "description": "Token Turnstile",
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "TurnstileVerifyRequest",
+        "type": "object"
+      },
+      "TurnstileVerifyResponse": {
+        "description": "Résultat d'une vérification Turnstile.",
+        "properties": {
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid"
+        ],
+        "title": "TurnstileVerifyResponse",
+        "type": "object"
+      },
       "TypeAction": {
         "description": "Nature de l'action sylvicole proposée (`RECOMMENDATION_ENGINE.md` §5).\n\n`ATTENTE_SURVEILLANCE` est une recommandation à part entière : lorsque\nles connaissances disponibles ne permettent pas de proposer une\nintervention, ne rien faire et observer est un conseil honnête, pas une\nabsence de réponse.",
         "enum": [
@@ -6339,6 +7682,20 @@
           }
         },
         "title": "UpdateProfileRequest",
+        "type": "object"
+      },
+      "UpgradeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "target_plan_code": {
+            "title": "Target Plan Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_plan_code"
+        ],
+        "title": "UpgradeRequest",
         "type": "object"
       },
       "ValidationError": {
@@ -6656,6 +8013,105 @@
         ],
         "title": "VigilancePhenomene",
         "type": "object"
+      },
+      "WorkspaceCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 100,
+            "minLength": 3,
+            "pattern": "^[a-z0-9][a-z0-9-]{1,98}[a-z0-9]$",
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name"
+        ],
+        "title": "WorkspaceCreateRequest",
+        "type": "object"
+      },
+      "WorkspacePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "title": "WorkspacePage",
+        "type": "object"
+      },
+      "WorkspaceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "organisation_id": {
+            "format": "uuid",
+            "title": "Organisation Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organisation_id",
+          "slug",
+          "display_name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkspaceResponse",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -6674,22 +8130,127 @@
   "paths": {
     "/api/v1/audit-logs": {
       "get": {
-        "description": "Retourne les entrées d'audit (actions create/update/delete/export). Données actuellement statiques — seront alimentées par le middleware d'audit quand il sera implémenté (Phase 4).",
+        "description": "Retourne les entrées d'audit avec filtres optionnels : actor_id, resource_type, action, organisation_id. RLS limite la visibilité à l'acteur lui-même ou aux admins.",
         "operationId": "list_audit_logs_api_v1_audit_logs_get",
+        "parameters": [
+          {
+            "description": "Filtrer par acteur",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrer par acteur",
+              "title": "Actor Id"
+            }
+          },
+          {
+            "description": "Filtrer par type de ressource",
+            "in": "query",
+            "name": "resource_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrer par type de ressource",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "description": "Filtrer par action",
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrer par action",
+              "title": "Action"
+            }
+          },
+          {
+            "description": "Filtrer par organisation",
+            "in": "query",
+            "name": "organisation_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrer par organisation",
+              "title": "Organisation Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AuditLog"
-                  },
-                  "title": "Response List Audit Logs Api V1 Audit Logs Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/AuditLogPage"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -6697,9 +8258,142 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Liste des entrées du journal d'audit",
+        "summary": "Journal d'audit paginé avec filtrage",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/auth/deletion/cancel": {
+      "post": {
+        "operationId": "cancel_account_deletion_api_v1_auth_deletion_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelDeletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Annuler une suppression de compte en attente",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/change/confirm": {
+      "post": {
+        "operationId": "confirm_email_change_api_v1_auth_email_change_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirmer un code de changement d'adresse",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/change/request": {
+      "post": {
+        "operationId": "request_email_change_api_v1_auth_email_change_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demander un changement d'adresse e-mail",
+        "tags": [
+          "auth"
         ]
       }
     },
@@ -6925,6 +8619,89 @@
         ]
       }
     },
+    "/api/v1/auth/login/mfa": {
+      "post": {
+        "description": "Vérifie le challenge signé et émet enfin la session complète.",
+        "operationId": "complete_mfa_login_api_v1_auth_login_mfa_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaChallengeVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Terminer une connexion avec MFA TOTP ou code de récupération",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login/oidc": {
+      "post": {
+        "operationId": "login_oidc_api_v1_auth_login_oidc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Se connecter avec un fournisseur OIDC enterprise",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/login/password": {
       "post": {
         "description": "Authentifie sans distinguer compte absent et mot de passe erroné.",
@@ -6944,7 +8721,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaChallengeResponse"
+                    }
+                  ],
+                  "title": "Response Login Local Api V1 Auth Login Password Post"
                 }
               }
             },
@@ -7079,6 +8864,479 @@
         ]
       }
     },
+    "/api/v1/auth/me/consents": {
+      "get": {
+        "operationId": "list_consents_api_v1_auth_me_consents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Consents",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "accept_consent_api_v1_auth_me_consents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Accept Consent",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me/consents/{consent_type}": {
+      "delete": {
+        "operationId": "revoke_consent_api_v1_auth_me_consents__consent_type__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "consent_type",
+            "required": true,
+            "schema": {
+              "title": "Consent Type",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Consent",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me/deletion/request": {
+      "post": {
+        "operationId": "request_account_deletion_api_v1_auth_me_deletion_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestDeletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demander la suppression différée du compte",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me/export": {
+      "get": {
+        "operationId": "export_account_data_api_v1_auth_me_export_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Export Account Data Api V1 Auth Me Export Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Exporter les données personnelles du compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa": {
+      "delete": {
+        "operationId": "disable_mfa_api_v1_auth_mfa_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Désactiver le MFA pour le compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/setup": {
+      "post": {
+        "operationId": "setup_mfa_api_v1_auth_mfa_setup_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Activer le MFA TOTP pour le compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/status": {
+      "get": {
+        "operationId": "get_mfa_status_api_v1_auth_mfa_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Consulter l'état MFA du compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "operationId": "verify_mfa_api_v1_auth_mfa_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Vérifier un code TOTP ou de récupération",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oidc/providers": {
+      "get": {
+        "operationId": "list_oidc_providers_api_v1_auth_oidc_providers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcProvidersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Lister les fournisseurs OIDC enterprise configurés",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oidc/{provider}/authorize": {
+      "get": {
+        "operationId": "oidc_authorize_api_v1_auth_oidc__provider__authorize_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "maxLength": 2048,
+              "minLength": 1,
+              "title": "Redirect Uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "maxLength": 512,
+              "minLength": 16,
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code_challenge",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 43,
+              "title": "Code Challenge",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 255,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcAuthorizationUrlResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Construire une autorisation OIDC avec PKCE S256",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/change": {
+      "post": {
+        "operationId": "change_password_api_v1_auth_password_change_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Changer le mot de passe du compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/password/reset/confirm": {
       "post": {
         "operationId": "confirm_password_reset_api_v1_auth_password_reset_confirm_post",
@@ -7156,6 +9414,28 @@
           }
         },
         "summary": "Demander une réinitialisation de mot de passe",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/strength": {
+      "post": {
+        "description": "Vérifie la force d'un mot de passe sans lever d'exception.",
+        "operationId": "check_password_strength_api_v1_auth_password_strength_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordStrengthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Vérifier la force d'un mot de passe sans créer de compte",
         "tags": [
           "auth"
         ]
@@ -7267,6 +9547,144 @@
         ]
       }
     },
+    "/api/v1/auth/sessions": {
+      "delete": {
+        "operationId": "revoke_all_sessions_api_v1_auth_sessions_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Révoquer toutes les sessions sauf la courante",
+        "tags": [
+          "auth"
+        ]
+      },
+      "get": {
+        "operationId": "list_sessions_api_v1_auth_sessions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSessionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lister les sessions actives du compte courant",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/revoke": {
+      "post": {
+        "operationId": "revoke_session_api_v1_auth_sessions_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Révoquer une session spécifique par son ID",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/turnstile/verify": {
+      "post": {
+        "description": "Vérifie un token Cloudflare Turnstile sans authentification.",
+        "operationId": "verify_turnstile_token_api_v1_auth_turnstile_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TurnstileVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnstileVerifyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vérifier un token Turnstile",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/verify": {
       "get": {
         "description": "Vérifie la validité du token d'accès fourni dans le header Authorization.",
@@ -7291,6 +9709,277 @@
         "summary": "Vérifier un token",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/billing/checkout": {
+      "post": {
+        "operationId": "create_checkout_api_v1_billing_checkout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Checkout",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/context": {
+      "get": {
+        "operationId": "get_billing_context_api_v1_billing_context_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingContextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Billing Context",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/plans": {
+      "get": {
+        "operationId": "list_plans_api_v1_billing_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Plans",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/portal": {
+      "post": {
+        "operationId": "create_billing_portal_api_v1_billing_portal_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Billing Portal",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/purchases/apple": {
+      "post": {
+        "operationId": "validate_apple_purchase_api_v1_billing_purchases_apple_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorePurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePurchaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Apple Purchase",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/purchases/google-play": {
+      "post": {
+        "operationId": "validate_google_play_purchase_api_v1_billing_purchases_google_play_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorePurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePurchaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Google Play Purchase",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/upgrade": {
+      "post": {
+        "operationId": "upgrade_billing_plan_api_v1_billing_upgrade_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpgradeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingOperationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upgrade Billing Plan",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/webhooks/stripe": {
+      "post": {
+        "operationId": "stripe_webhook_api_v1_billing_webhooks_stripe_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stripe Webhook",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -9319,6 +12008,575 @@
         "summary": "Orchestration Version",
         "tags": [
           "orchestration"
+        ]
+      }
+    },
+    "/api/v1/orgs": {
+      "get": {
+        "operationId": "list_organisations_api_v1_orgs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Organisations",
+        "tags": [
+          "organisations"
+        ]
+      },
+      "post": {
+        "operationId": "create_organisation_api_v1_orgs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganisationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Organisation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/invitations/accept": {
+      "post": {
+        "operationId": "accept_email_invitation_api_v1_orgs_invitations_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationAcceptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Accept Email Invitation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/{org_id}": {
+      "get": {
+        "operationId": "get_organisation_api_v1_orgs__org_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Organisation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations": {
+      "post": {
+        "operationId": "create_email_invitation_api_v1_orgs__org_id__invitations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Email Invitation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/{org_id}/members": {
+      "get": {
+        "operationId": "list_members_api_v1_orgs__org_id__members_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Members",
+        "tags": [
+          "organisations"
+        ]
+      },
+      "post": {
+        "operationId": "invite_member_api_v1_orgs__org_id__members_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Invite Member",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/{org_id}/members/{account_id}": {
+      "delete": {
+        "operationId": "revoke_member_api_v1_orgs__org_id__members__account_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Member",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/orgs/{org_id}/workspaces": {
+      "get": {
+        "operationId": "list_workspaces_api_v1_orgs__org_id__workspaces_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspacePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Workspaces",
+        "tags": [
+          "organisations"
+        ]
+      },
+      "post": {
+        "operationId": "create_workspace_api_v1_orgs__org_id__workspaces_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Workspace",
+        "tags": [
+          "organisations"
         ]
       }
     },
