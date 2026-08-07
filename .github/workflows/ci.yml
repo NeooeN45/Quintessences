@@ -172,6 +172,14 @@ jobs:
             exit 1
           fi
 
+      # Tests JWT RS256 — certaines suites ont besoin de clés localement.
+      # En CI, elles ne sont pas versionnées ; on les génère à la volée.
+      - name: Generate JWT keys for tests
+        run: |
+          if [ ! -f keys/private.pem ]; then
+            sh docker/generate-jwt-keys.sh
+          fi
+
       - name: Test with pytest
         run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=100
 
@@ -197,6 +205,13 @@ jobs:
 
       - name: Install locked dependencies
         run: uv sync --locked --extra dev
+
+      # JWT RS256 — requis par les tests unitaires quand le harnais les lance.
+      - name: Generate JWT keys for tests
+        run: |
+          if [ ! -f keys/private.pem ]; then
+            sh docker/generate-jwt-keys.sh
+          fi
 
       # La couverture dit quelles lignes ont tourné, jamais si un comportement
       # faux aurait été détecté. Le harnais casse volontairement chaque garde
@@ -227,6 +242,13 @@ jobs:
 
       - name: Build PostgreSQL 16 + PostGIS + AGE test image
         run: docker build --file Dockerfile.db --tag gsie-db:supply-chain-hardened .
+
+      # JWT RS256 — requis par les tests E2E qui signent des tokens.
+      - name: Generate JWT keys for tests
+        run: |
+          if [ ! -f keys/private.pem ]; then
+            sh docker/generate-jwt-keys.sh
+          fi
 
       - name: Run integration tests (testcontainers — Docker requis)
         run: uv run pytest tests/integration -q --tb=short -v
