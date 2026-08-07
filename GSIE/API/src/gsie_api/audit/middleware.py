@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from starlette.responses import Response
 
 from gsie_api.audit.service import AuditEntry, AuditService
+from gsie_api.core.limiter import get_client_address
 from gsie_api.core.logging import get_logger
 
 logger = get_logger("gsie_api.audit.middleware")
@@ -133,14 +134,9 @@ class AuditMiddleware(BaseHTTPMiddleware):
         resource_type, resource_id = _extract_resource(request)
         action = _deduce_action(method, path)
 
-        # IP d'origine — respecte Cloudflare (CF-Connecting-IP)
-        ip_address = (
-            request.headers.get("CF-Connecting-IP")
-            or request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-            or request.client.host
-            if request.client
-            else None
-        )
+        # IP d'origine — n'accorde confiance à CF-Connecting-IP que si
+        # GSIE_EDGE_PROXY_MODE=cloudflare_tunnel est actif (cf. core/limiter.py).
+        ip_address = get_client_address(request)
         user_agent = request.headers.get("User-Agent")
         trace_id = getattr(request.state, "trace_id", None)
 

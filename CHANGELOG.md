@@ -4,6 +4,29 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PENTEST — AUTHENTIFICATION ET CONNEXION] - 2026-08-07
+
+- **Rapport** : `PENTEST_AUTH_CONNEXION_2026-08-07.md`. Revue statique
+  complémentaire à `SECURITY_AUDIT_2026-08-07.md`, centrée sur le code des
+  flux d'authentification, d'identité fédérée et de RBAC (3 revues ciblées
+  indépendantes).
+- **Corrections appliquées** :
+  - `auth/identity_router.py`, `auth/router.py`, `audit/middleware.py` :
+    remplacement de `request.client.host` par `core.limiter.get_client_address()`
+    partout — l'audit trail et le lockout utilisaient l'IP interne du tunnel
+    Cloudflare au lieu de l'IP réelle du client, faussant la traçabilité
+    (`GSIE-CON-005`) et le score anti-robot Turnstile.
+  - `auth/lockout.py` : `AccountLockoutService` verrouille désormais aussi
+    sur une clé par compte seul (en plus de la clé composite email+IP) —
+    la clé composite seule permettait de contourner le lockout par rotation
+    d'IP (proxys rotatifs / botnet).
+- **Recommandation ouverte (non corrigée)** : `auth/oidc_generic.py` ne
+  valide pas de `nonce` (contrairement au flux Google), exposant le flux
+  OIDC générique à un rejeu d'ID token. Aucun fournisseur OIDC générique
+  n'est activé en production ; à traiter avant activation.
+- **Validation** : 192 tests unitaires auth/identité/RBAC passants après
+  correctifs, aucune régression.
+
 ## [VEILLE — BEAM/OTP ET VÉRIFICATION FORMELLE] - 2026-08-07
 
 - **Document** : `GSIE/RESEARCH/VEILLE_BEAM_OTP_SERVER_MESHING_2026-08-07.md`

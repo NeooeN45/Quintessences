@@ -38,6 +38,7 @@ from gsie_api.core.auth import (
     verify_token,
 )
 from gsie_api.core.config import get_settings
+from gsie_api.core.limiter import get_client_address
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure import database as database_infrastructure
 from gsie_api.infrastructure.database import get_db
@@ -186,7 +187,7 @@ async def login(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
     # Audit — IP et User-Agent pour traçabilité (CON-005, OWASP A09)
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_address(request)
     user_agent = request.headers.get("User-Agent", "unknown")
 
     turnstile = TurnstileClient(_settings)
@@ -440,7 +441,7 @@ async def verify_turnstile_token(
     payload: TurnstileVerifyRequest,
 ) -> TurnstileVerifyResponse:
     """Valide un token Turnstile pour les formulaires front-end."""
-    client_ip = request.client.host if request.client else None
+    client_ip = get_client_address(request)
     turnstile = TurnstileClient(_settings)
     is_valid = await turnstile.verify(payload.token, client_ip)
     return TurnstileVerifyResponse(valid=is_valid)

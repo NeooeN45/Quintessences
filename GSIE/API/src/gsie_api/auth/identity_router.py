@@ -101,6 +101,7 @@ from gsie_api.core.auth import (
     verify_token,
 )
 from gsie_api.core.config import get_settings
+from gsie_api.core.limiter import get_client_address
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.logging import get_logger
 from gsie_api.infrastructure.database import get_db, set_rls_context
@@ -237,7 +238,7 @@ async def _issue_tokens(
     # Tracker la session active pour révocation sélective
     if session_service is not None and request is not None:
         user_agent = request.headers.get("User-Agent")
-        client_ip = request.client.host if request.client else None
+        client_ip = get_client_address(request)
         device_name = request.headers.get("X-Device-Name")
         await session_service.register_session(
             account_id=account.account_id,
@@ -322,7 +323,7 @@ async def register_local(
             db_session,
             action="register_password_compromised",
             actor_email=str(registration.email),
-            ip_address=request.client.host if request.client else None,
+            ip_address=get_client_address(request),
             user_agent=request.headers.get("User-Agent"),
             status_code=422,
         )
@@ -335,7 +336,7 @@ async def register_local(
             db_session,
             action="register_password_weak",
             actor_email=str(registration.email),
-            ip_address=request.client.host if request.client else None,
+            ip_address=get_client_address(request),
             user_agent=request.headers.get("User-Agent"),
             status_code=422,
             details={"score": exc.score, "minimum": exc.minimum},
@@ -372,7 +373,7 @@ async def register_local(
         action="register_success",
         actor_id=account.account_id,
         actor_email=str(registration.email),
-        ip_address=request.client.host if request.client else None,
+        ip_address=get_client_address(request),
         user_agent=request.headers.get("User-Agent"),
         status_code=201,
         details={"provider": "local"},
@@ -400,7 +401,7 @@ async def login_local(
 ) -> TokenResponse | MfaChallengeResponse:
     """Authentifie sans distinguer compte absent et mot de passe erroné."""
     del response
-    client_ip = request.client.host if request.client else None
+    client_ip = get_client_address(request)
     user_agent = request.headers.get("User-Agent")
 
     # Vérification Turnstile avant toute authentification
@@ -513,7 +514,7 @@ async def complete_mfa_login(
 ) -> TokenResponse:
     """Vérifie le challenge signé et émet enfin la session complète."""
     del response
-    client_ip = request.client.host if request.client else None
+    client_ip = get_client_address(request)
     user_agent = request.headers.get("User-Agent")
     payload = verify_token(
         verification.challenge_token.get_secret_value(), expected_type="mfa_challenge"
@@ -772,7 +773,7 @@ async def change_password(
             db_session,
             action="login",
             actor_id=account_id,
-            ip_address=request.client.host if request.client else None,
+            ip_address=get_client_address(request),
             user_agent=request.headers.get("User-Agent"),
             status_code=401,
         )
@@ -790,7 +791,7 @@ async def change_password(
         db_session,
         action="update",
         actor_id=account_id,
-        ip_address=request.client.host if request.client else None,
+        ip_address=get_client_address(request),
         user_agent=request.headers.get("User-Agent"),
         status_code=200,
     )
@@ -870,7 +871,7 @@ async def accept_consent(
         account_id=account_id,
         consent_type=body.consent_type,
         document_version=body.document_version,
-        ip_address=request.client.host if request.client else None,
+        ip_address=get_client_address(request),
         user_agent=request.headers.get("User-Agent"),
     )
     db_session.add(consent)
@@ -950,7 +951,7 @@ async def request_account_deletion(
     logger.info(
         "account_deletion_requested",
         account_id=str(account_id),
-        client_ip=request.client.host if request.client else None,
+        client_ip=get_client_address(request),
     )
     return AcceptedResponse()
 
@@ -1061,7 +1062,7 @@ async def confirm_email_change(
             db_session,
             action="update",
             actor_id=account_id,
-            ip_address=request.client.host if request.client else None,
+            ip_address=get_client_address(request),
             user_agent=request.headers.get("User-Agent"),
             status_code=200,
             details={"email_changed": True},
@@ -1516,7 +1517,7 @@ async def login_oidc(
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
     del response
-    client_ip = request.client.host if request.client else None
+    client_ip = get_client_address(request)
     user_agent = request.headers.get("User-Agent")
     verifier = get_generic_oidc_verifier()
     if not verifier.is_configured:

@@ -166,29 +166,41 @@ async def close_lockout_store() -> None:
 
 
 class AccountLockoutService:
-    """Service de lockout — clé composite email + IP."""
+    """Service de lockout — clé par compte (email seul) + clé composite email+IP.
+
+    La clé par compte seul est la garante réelle : un attaquant disposant de
+    plusieurs IP (proxys rotatifs, botnet) ne peut pas la contourner en
+    changeant d'adresse source, contrairement à une clé purement composite
+    email+IP dont le compteur repart à zéro à chaque nouvelle IP. La clé
+    composite est conservée en complément pour un throttling plus fin par IP.
+    """
 
     def __init__(self, store: LockoutStore) -> None:
         self._store = store
         self._settings = get_settings()
 
-    def _key(self, email: str, ip_address: str | None) -> str:
+    def _account_key(self, email: str) -> str:
+        return f"account:{email}"
+
+    def _composite_key(self, email: str, ip_address: str | None) -> str:
         return f"{email}:{ip_address or 'unknown'}"
 
     async def check_and_raise(self, email: str, ip_address: str | None) -> None:
-        """Lève une exception si le compte est verrouillé."""
-        key = self._key(email, ip_address)
-        if await self._store.is_locked(key):
-            remaining = await self._store.remaining_lock_seconds(key)
-            raise AccountLockedError(remaining_seconds=remaining)
+        """Lève une exception si le compte est verrouillé (par compte ou par IP)."""
+        account_key = self._account_key(email)
+        composite_key = self._composite_key(email, ip_address)
+        for key in (account_key, composite_key):
+            if await self._store.is_locked(key):
+                remaining = await self._store.remaining_lock_seconds(key)
+                raise AccountLockedError(remaining_seconds=remaining)
 
     async def record_failure(self, email: str, ip_address: str | None) -> None:
-        key = self._key(email, ip_address)
-        await self._store.record_failure(key)
+        await self._store.record_failure(self._account_key(email))
+        await self._store.record_failure(self._composite_key(email, ip_address))
 
     async def record_success(self, email: str, ip_address: str | None) -> None:
-        key = self._key(email, ip_address)
-        await self._store.record_success(key)
+        await self._store.record_success(self._account_key(email))
+        await self._store.record_success(self._composite_key(email, ip_address))
 
 
 class AccountLockedError(Exception):
