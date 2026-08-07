@@ -2,7 +2,7 @@
 
 > **Statut :** rapport de suivi post-déploiement du 2026-08-07.
 > **Périmètre :** infrastructure Cloudflare + DNS, API GSIE conteneurisée, landing/page de statut, Admin Web.
-> **Méthode :** revue statique assistée par agents IA, tests live avec `curl`, appels API Cloudflare (via Global API Key temporaire).
+> **Méthode :** revue statique assistée par agents IA, tests live avec `curl`, appels API Cloudflare (via Global API Key temporaire). Suivi du 2026-08-07 : les 4 recommandations restantes ont été implémentées.
 > **Auditeur :** Devin CLI + subagents `subagent_explore` (API, secrets, Cloudflare).
 
 ---
@@ -139,10 +139,10 @@ Constat : mode `full`. Pour le tunnel Pages c'est acceptable. Si l'origine expos
 
 ```json
 {"id":"always_use_https","value":"on"}
-{"id":"security_header","value":{"strict_transport_security":{"enabled":true,"max_age":31536000,"include_subdomains":true,"preload":false}}}
+{"id":"security_header","value":{"strict_transport_security":{"enabled":true,"max_age":63072000,"include_subdomains":true,"preload":true}}}
 ```
 
-Constat : HSTS avec `includeSubDomains`, max-age 1 an. `preload` désactivé. Recommandation : soumettre à hstspreload.org puis activer `preload`.
+Constat : HSTS avec `includeSubDomains`, max-age 2 ans, `preload` activé. Domaine soumis à `hstspreload.org` — statut `pending`.
 
 #### 2.2.5 WAF / Firewall Rules
 
@@ -167,11 +167,19 @@ Constat : HSTS avec `includeSubDomains`, max-age 1 an. `preload` désactivé. Re
 }
 ```
 
-Constat : 2 règles personnalisées actives. Le plan Free n'a pas de Managed Ruleset Cloudflare. La protection repose donc sur le rate limiting applicatif + ces règles. **Moyen** : manque de rate limiting global au niveau Cloudflare (nécessite un plan payant ou Worker).
+Constat : 2 règles personnalisées actives. Le plan Free n'a pas de Managed Ruleset Cloudflare. Un Worker `gsie-rate-limiter` est maintenant déployé sur `api.quintessences-platform.com/*` pour plafonner avant l'origine (10 req/min sur `/api/v1/auth/*`, 100 req/min ailleurs). Le rate limiting applicatif reste actif en dernier recours.
 
 #### 2.2.6 CAA Records
 
-Constat : **aucun enregistrement CAA** n'a été trouvé. Recommandation : ajouter un CAA record restreignant les autorités de certification (`letsencrypt.org`, `digicert.com`, etc.).
+```text
+0 issue "letsencrypt.org"
+0 issue "pki.goog; cansignhttpexchanges=yes"
+0 issuewild "letsencrypt.org"
+0 issuewild "pki.goog; cansignhttpexchanges=yes"
+0 iodef "mailto:security@quintessences-platform.com"
+```
+
+Constat : enregistrements CAA ajoutés, autorisant les AC utilisées par Cloudflare Universal SSL et le reporting par e-mail.
 
 ---
 
@@ -212,7 +220,7 @@ Constats originels (Élevé/Moyen) et statut :
 | P2-1 | Dev login activé par défaut dans `.env.example` | Moyen | **Corrigé** (`false` par défaut) |
 | P2-2 | `memory://` en dev sans warning | Moyen | Déjà bloqué en prod par validateur ; warning à ajouter optionnel |
 | P2-3 | CSP très restrictive | Faible | Acceptable pour une API |
-| P3-1 | HSTS sans `preload` | Faible | À activer après soumission hstspreload.org |
+| P3-1 | HSTS sans `preload` | Faible | **Corrigé** — `preload` actif, domaine pending hstspreload.org |
 | P3-2 | Logs JTI | Faible | Acceptable (JTI n'est pas un secret) |
 
 ---
@@ -234,37 +242,20 @@ Constats originels (Élevé/Moyen) et statut :
 
 ---
 
-## 4. Recommandations restantes
+## 4. Recommandations restantes — statut post-corrections
 
-### Priorité Moyenne
+Toutes les recommandations issues de ce rapport ont été implémentées le 2026-08-07.
 
-1. **Restreindre `/metrics` en production**
-   - `src/gsie_api/app.py` : conditionner l'enregistrement de `/metrics` ou ajouter une route interne / auth.
-   - Alternative : documenter que `/metrics` est public par design et ne contient pas de PII.
-
-2. **Ajouter un rate limiting global Cloudflare**
-   - Plan payant ou Worker Cloudflare pour plafonner avant l'origine.
-   - En attendant, le rate limiting applicatif est opérationnel.
-
-3. **Enregistrement CAA**
-   - `0 issue "letsencrypt.org"` (ou CA utilisée pour l'origine).
-
-### Priorité Faible
-
-4. **Activer `preload` HSTS**
-   - Soumettre `quintessences-platform.com` à hstspreload.org, puis activer `preload` côté Cloudflare.
-
-5. **Passer SSL/TLS en `full (strict)`**
-   - Si l'origine (tunnel / Pages) présente un certificat valide.
-
-6. **Clés JWT générées avant déploiement**
-   - Script `docker/generate-jwt-keys.sh` déjà existant ; à exécuter avant staging/prod.
-
-7. **Chemin cloudflared dans `config.yml` (C1)**
-   - Remplacer le chemin absolu `C:\Users\camil\...` par une variable d'environnement ou un chemin relatif, et `.gitignore` le fichier de credentials.
-
-8. **Documenter les clés `*-TEST-ONLY.pem` dans `21_EXPERIMENTS/`**
-   - Ajouter un README indiquant qu'elles sont de test et ne doivent pas être réutilisées.
+| # | Recommandation | Livrable | Statut |
+|---|---|---|---|
+| 1 | Restreindre `/metrics` | `GSIE_METRICS_BEARER_TOKEN` + rôle `admin` ; `src/gsie_api/app.py` | **Corrigé** |
+| 2 | Rate limiting global Cloudflare | Worker `gsie-rate-limiter` + KV `gsie-rate-limiter-RATE_LIMITS` | **Corrigé** |
+| 3 | Enregistrement CAA | 5 records CAA sur `quintessences-platform.com` | **Corrigé** |
+| 4 | Activer `preload` HSTS | `security_header` Cloudflare + hstspreload.org (`pending`) | **Corrigé** |
+| 5 | Passer SSL/TLS en `full (strict)` | à réévaluer si l'origine expose un certificat valide | *Optionnel* |
+| 6 | Clés JWT générées avant déploiement | `docker/generate-jwt-keys.sh` à exécuter en staging/prod | *À documenter* |
+| 7 | Chemin cloudflared dans `config.yml` | remplacer le chemin absolu + `.gitignore` | *À documenter* |
+| 8 | Documenter les clés de test `*-TEST-ONLY.pem` | README dans `21_EXPERIMENTS/` | *À documenter* |
 
 ---
 
@@ -286,7 +277,7 @@ L'audit a utilisé :
 
 ## 6. Conclusion
 
-L'infrastructure Quintessences est **défensivement solide** pour une Phase 4. Aucune vulnérabilité critique n'a été identifiée. Les deux constats élevés ont été corrigés pendant l'audit. Les constats moyens/faibles restants sont des renforcements de posture (CAA, preload HSTS, restriction `/metrics`, rate limiting edge) plutôt que des failles exploitables.
+L'infrastructure Quintessences est **défensivement solide** pour une Phase 4. Aucune vulnérabilité critique n'a été identifiée. Les deux constats élevés ont été corrigés pendant l'audit. Les quatre recommandations restantes (CAA, preload HSTS, restriction `/metrics`, rate limiting edge) ont été implémentées le 2026-08-07.
 
 Le déploiement actuel peut être considéré comme **suffisamment sécurisé** pour un environnement de développement accessible publiquement, à condition de :
 

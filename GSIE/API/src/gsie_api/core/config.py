@@ -287,6 +287,9 @@ class Settings(BaseSettings):
     turnstile_enabled: bool = False
     turnstile_site_key: str = ""
     turnstile_secret_key: SecretStr = SecretStr("")
+    # Métriques Prometheus — token statique optionnel pour les scrapers.
+    # S'il est vide et que l'environnement != development, le role `admin` est requis.
+    metrics_bearer_token: SecretStr = SecretStr("")
     # Vérification de force mot de passe — HIBP k-anonymity + score zxcvbn.
     password_check_hibp_enabled: bool = True
     password_check_zxcvbn_enabled: bool = True

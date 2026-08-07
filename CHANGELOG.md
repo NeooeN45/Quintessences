@@ -4,6 +4,24 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PENTEST — CORRECTIFS RESTANTS] - 2026-08-07
+
+- **DNS** : enregistrements CAA ajoutés sur `quintessences-platform.com`
+  (`issue letsencrypt.org`, `issue pki.goog; cansignhttpexchanges=yes`,
+  `issuewild` pour les deux, `iodef` mailto security).
+- **HSTS preload** : paramètre Cloudflare `preload: true` + `max-age: 63072000`
+  activé. Domaine soumis à `hstspreload.org` (statut `pending`).
+- **Worker edge rate limiter** : `cloudflare-workers/rate-limiter/` déployé
+  sous `gsie-rate-limiter`, route `api.quintessences-platform.com/*`.
+  Seuils : 10 req/min pour `/api/v1/auth/*`, 100 req/min pour le reste.
+  KV `gsie-rate-limiter-RATE_LIMITS` créé. Script + `deploy.ps1` versionnés.
+- **Protection `/metrics`** : token Bearer optionnel `GSIE_METRICS_BEARER_TOKEN`.
+  Si défini, exigé partout ; sinon, rôle `admin` requis hors développement.
+  Tests ajoutés dans `tests/unit/test_metrics.py`.
+- **Prompt Claude pentest** : `PROMPT_PENTEST_CLAUDE.md` à la racine,
+  prêt pour audit défensif ciblé.
+- **Validation** : ruff, mypy et tests unitaires passants.
+
 ## [PENTEST — AUTHENTIFICATION ET CONNEXION] - 2026-08-07
 
 - **Rapport** : `PENTEST_AUTH_CONNEXION_2026-08-07.md`. Revue statique

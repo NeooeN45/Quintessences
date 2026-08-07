@@ -15,6 +15,8 @@ Architecture (DEC-000019) :
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from hmac import compare_digest
+from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,7 +65,37 @@ from gsie_api.websocket.router import router as ws_router
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
-# Le limiter est défini dans core/limiter.py (storage_uri Redis configuré)
+
+def _metrics_auth_dependency() -> list[Any]:
+    """Construit les garde-fous pour `/metrics` et `/metrics/db-quality`.
+
+    - Si `GSIE_METRICS_BEARER_TOKEN` est défini : exige
+      `Authorization: Bearer <token>` (tous environnements).
+    - Sinon, en dehors du développement : exige le rôle `admin`.
+    - En développement sans token : public.
+    """
+    token = _settings.metrics_bearer_token.get_secret_value().strip()
+
+    if token:
+
+        async def _require_metrics_token(request: Request) -> None:
+            auth = request.headers.get("Authorization", "")
+            scheme, _, value = auth.partition(" ")
+            if not (
+                compare_digest(scheme, "Bearer")
+                and compare_digest(value, token)
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid metrics bearer token",
+                )
+
+        return [Depends(_require_metrics_token)]
+
+    if _settings.environment == "development":
+        return []
+
+    return [Depends(require_roles("admin"))]
 # — importé ci-dessus pour éviter les imports circulaires
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
@@ -269,9 +301,7 @@ def create_app() -> FastAPI:
     # par type d'agrégat (`data_subject`, `consent`), donc la cadence des
     # traitements RGPD devenait publique. Hors développement, il faut le rôle
     # `admin` — un scraper Prometheus porte un jeton comme un autre appelant.
-    metrics_dependencies = (
-        [] if _settings.environment == "development" else [Depends(require_roles("admin"))]
-    )
+    metrics_dependencies = _metrics_auth_dependency()
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/metrics",
