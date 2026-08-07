@@ -81,10 +81,7 @@ def _metrics_auth_dependency() -> list[Any]:
         async def _require_metrics_token(request: Request) -> None:
             auth = request.headers.get("Authorization", "")
             scheme, _, value = auth.partition(" ")
-            if not (
-                compare_digest(scheme, "Bearer")
-                and compare_digest(value, token)
-            ):
+            if not (compare_digest(scheme, "Bearer") and compare_digest(value, token)):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid metrics bearer token",
@@ -96,6 +93,8 @@ def _metrics_auth_dependency() -> list[Any]:
         return []
 
     return [Depends(require_roles("admin"))]
+
+
 # — importé ci-dessus pour éviter les imports circulaires
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
@@ -215,6 +214,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "google_nonce_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.auth.oidc_nonces import close_oidc_nonce_store
+
+        await close_oidc_nonce_store()
+    except Exception as exc:
+        logger.error(
+            "oidc_nonce_store_shutdown_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )

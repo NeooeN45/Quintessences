@@ -11,6 +11,7 @@ Chaque fournisseur : {"name", "issuer", "client_ids", "jwks_url"}.
 from __future__ import annotations
 
 import asyncio
+import hmac
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, cast
 from urllib.parse import urlencode
@@ -77,6 +78,7 @@ class GenericOidcVerifier:
         redirect_uri: str,
         state: str,
         code_challenge: str,
+        nonce: str,
         client_id: str | None = None,
     ) -> str:
         """Construit une URL Authorization Code + PKCE S256."""
@@ -87,6 +89,8 @@ class GenericOidcVerifier:
             raise InvalidOidcTokenError("redirect_uri OIDC non autorisée")
         if len(state) < 16 or len(code_challenge) < 43:
             raise InvalidOidcTokenError("Paramètres PKCE insuffisants")
+        if len(nonce) < 16:
+            raise InvalidOidcTokenError("Nonce OIDC insuffisant")
         selected_client = client_id or (
             provider.client_ids[0] if len(provider.client_ids) == 1 else ""
         )
@@ -99,6 +103,7 @@ class GenericOidcVerifier:
                 "response_type": "code",
                 "scope": " ".join(provider.scopes),
                 "state": state,
+                "nonce": nonce,
                 "code_challenge": code_challenge,
                 "code_challenge_method": "S256",
             }
@@ -106,13 +111,13 @@ class GenericOidcVerifier:
         separator = "&" if "?" in provider.authorization_url else "?"
         return f"{provider.authorization_url}{separator}{query}"
 
-    async def verify(self, token: str, provider_name: str) -> GoogleIdentity:
+    async def verify(self, token: str, provider_name: str, expected_nonce: str) -> GoogleIdentity:
         provider = self._providers.get(provider_name)
         if provider is None:
             raise InvalidOidcTokenError(f"Fournisseur OIDC inconnu : {provider_name}")
 
         claims = await self._verify_token(token, provider)
-        return self._identity_from_claims(claims, provider)
+        return self._identity_from_claims(claims, provider, expected_nonce)
 
     async def _verify_token(self, token: str, provider: OidcProviderConfig) -> Mapping[str, object]:
         """Valide la signature via JWKS et les claims standards OIDC."""
@@ -128,7 +133,7 @@ class GenericOidcVerifier:
                         algorithms=["RS256"],
                         audience=client_id,
                         issuer=provider.issuer,
-                        options={"require": ["sub", "iss", "aud", "iat", "exp"]},
+                        options={"require": ["sub", "iss", "aud", "iat", "exp", "nonce"]},
                     )
                     return cast("Mapping[str, object]", payload)
                 except jwt.InvalidTokenError:
@@ -141,15 +146,19 @@ class GenericOidcVerifier:
         self,
         claims: Mapping[str, object],
         provider: OidcProviderConfig,
+        expected_nonce: str,
     ) -> GoogleIdentity:
         subject = claims.get("sub")
         email = claims.get("email")
         email_verified = claims.get("email_verified")
+        nonce = claims.get("nonce")
 
         if not isinstance(subject, str) or not subject or len(subject) > 255:
             raise InvalidOidcTokenError("Sujet OIDC invalide")
         if not isinstance(email, str) or email_verified is not True:
             raise InvalidOidcTokenError("Adresse OIDC non vérifiée")
+        if not isinstance(nonce, str) or not hmac.compare_digest(nonce, expected_nonce):
+            raise InvalidOidcTokenError("Nonce OIDC invalide")
 
         display_name_claim: Any = claims.get("name") or claims.get("preferred_username")
         display_name = (

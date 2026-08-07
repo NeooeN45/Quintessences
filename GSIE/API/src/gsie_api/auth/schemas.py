@@ -380,12 +380,13 @@ class RevokeSessionRequest(BaseModel):
 
 
 class OidcLoginRequest(BaseModel):
-    """Connexion via un fournisseur OIDC enterprise."""
+    """Connexion via un fournisseur OIDC enterprise, liée à un nonce serveur."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     provider: str = Field(min_length=1, max_length=64)
     id_token: SecretStr = Field(min_length=1, max_length=16_384)
+    nonce: SecretStr = Field(min_length=16, max_length=256)
 
 
 class OidcProvidersResponse(BaseModel):
@@ -403,6 +404,7 @@ class OidcAuthorizationUrlResponse(BaseModel):
 
     authorization_url: str
     provider: str
+    nonce: str
 
 
 # --- Force mot de passe ---

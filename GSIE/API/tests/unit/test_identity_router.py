@@ -219,8 +219,10 @@ def test_should_build_pkce_authorization_url_for_registered_redirect() -> None:
         "com.quintessences.geosylva:/oauth2redirect",
         "state-value-123456",
         "a" * 43,
+        "n" * 16,
     )
 
     assert "code_challenge_method=S256" in url
     assert "response_type=code" in url
     assert "client_id=geosylva-android" in url
+    assert "nonce=" + "n" * 16 in url

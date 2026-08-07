@@ -260,6 +260,11 @@ class Settings(BaseSettings):
     # registre distribué des refresh tokens avec un préfixe de clés distinct.
     google_nonce_storage_url: str = ""
     google_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
+    # Même principe que Google : nonce serveur à usage unique lié au flux
+    # OIDC générique (Keycloak, Entra ID, etc.), pour empêcher le rejeu d'un
+    # ID token intercepté (PENTEST_AUTH_CONNEXION_2026-08-07.md §2.1).
+    oidc_nonce_storage_url: str = ""
+    oidc_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
     # E-mails transactionnels : codes de vérification et de récupération.
     transactional_email_mode: Literal["disabled", "smtp"] = "disabled"
     smtp_host: str = ""

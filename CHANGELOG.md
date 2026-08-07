@@ -38,12 +38,24 @@ Format : `## [version] - YYYY-MM-DD`
     sur une clé par compte seul (en plus de la clé composite email+IP) —
     la clé composite seule permettait de contourner le lockout par rotation
     d'IP (proxys rotatifs / botnet).
-- **Recommandation ouverte (non corrigée)** : `auth/oidc_generic.py` ne
-  valide pas de `nonce` (contrairement au flux Google), exposant le flux
-  OIDC générique à un rejeu d'ID token. Aucun fournisseur OIDC générique
-  n'est activé en production ; à traiter avant activation.
 - **Validation** : 192 tests unitaires auth/identité/RBAC passants après
   correctifs, aucune régression.
+
+## [PENTEST — NONCE OIDC GÉNÉRIQUE] - 2026-08-07
+
+- Correction du troisième constat (Moyen) du pentest ci-dessus : le flux
+  OIDC générique (`auth/oidc_generic.py`) ne validait pas de `nonce`,
+  contrairement au flux Google, exposant un ID token intercepté à un rejeu.
+- Nouveau module `auth/oidc_nonces.py` (miroir de `google_nonces.py`,
+  store mémoire/Redis, GETDEL atomique, préfixe `gsie:auth:oidc-nonce:`).
+- `oidc_authorize` génère et retourne un nonce serveur, inclus dans l'URL
+  d'autorisation ; `login_oidc` l'exige, le consomme à usage unique et le
+  fait vérifier par `GenericOidcVerifier` (claim `nonce` requis, comparaison
+  `hmac.compare_digest`).
+- Nouveaux réglages `GSIE_OIDC_NONCE_STORAGE_URL` / `GSIE_OIDC_NONCE_EXPIRE_SECONDS`.
+- `PENTEST_AUTH_CONNEXION_2026-08-07.md` mis à jour : les 3 constats Moyens
+  identifiés sont désormais tous corrigés, aucun constat ouvert.
+- 117 tests unitaires auth/identité re-exécutés, aucune régression.
 
 ## [VEILLE — BEAM/OTP ET VÉRIFICATION FORMELLE] - 2026-08-07
 

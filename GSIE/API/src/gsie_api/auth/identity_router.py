@@ -44,6 +44,10 @@ from gsie_api.auth.oidc_generic import (
     InvalidOidcTokenError,
     get_generic_oidc_verifier,
 )
+from gsie_api.auth.oidc_nonces import (
+    OidcNonceStore,
+    get_oidc_nonce_store,
+)
 from gsie_api.auth.password_strength import (
     CompromisedPasswordError,
     PasswordStrengthService,
@@ -1479,15 +1483,18 @@ async def oidc_authorize(
     redirect_uri: Annotated[str, Query(min_length=1, max_length=2048)],
     state: Annotated[str, Query(min_length=16, max_length=512)],
     code_challenge: Annotated[str, Query(min_length=43, max_length=128)],
+    nonce_store: Annotated[OidcNonceStore, Depends(get_oidc_nonce_store)],
     client_id: Annotated[str | None, Query(max_length=255)] = None,
 ) -> OidcAuthorizationUrlResponse:
     del request, response
+    nonce = await nonce_store.create()
     try:
         authorization_url = get_generic_oidc_verifier().build_authorization_url(
             provider,
             redirect_uri,
             state,
             code_challenge,
+            nonce,
             client_id,
         )
     except InvalidOidcTokenError as exc:
@@ -1498,6 +1505,7 @@ async def oidc_authorize(
     return OidcAuthorizationUrlResponse(
         authorization_url=authorization_url,
         provider=provider,
+        nonce=nonce,
     )
 
 
@@ -1512,6 +1520,7 @@ async def login_oidc(
     response: Response,
     credentials: OidcLoginRequest,
     identity_service: Annotated[IdentityService, Depends(get_identity_service)],
+    nonce_store: Annotated[OidcNonceStore, Depends(get_oidc_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
@@ -1525,10 +1534,17 @@ async def login_oidc(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Aucun fournisseur OIDC configuré",
         )
+    nonce = credentials.nonce.get_secret_value()
+    if not await nonce_store.consume(nonce):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Preuve OIDC invalide",
+        )
     try:
         identity = await verifier.verify(
             credentials.id_token.get_secret_value(),
             credentials.provider,
+            nonce,
         )
     except InvalidOidcTokenError:
         await log_auth_event(
