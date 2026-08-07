@@ -10,6 +10,7 @@ import asyncio
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+import httpx
 import pyotp
 import pytest
 
@@ -380,3 +381,15 @@ class TestPasswordStrengthService:
         service = self._service()
         report = await service.validate("Tr0ub4dour&3$skY!waffles")
         assert report.zxcvbn_score >= 3
+
+    async def test_check_tolerates_hibp_unavailability(self) -> None:
+        class FailingHibpClient:
+            async def fetch_suffixes(self, prefix: str) -> dict[str, int]:
+                del prefix
+                raise httpx.ConnectError("HIBP indisponible")
+
+        service = self._service(FailingHibpClient())  # type: ignore[arg-type]
+        report = await service.check("un-mot-de-passe-quelconque")
+
+        assert report.is_compromised is False
+        assert report.compromise_count == 0

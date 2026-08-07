@@ -13,6 +13,7 @@ from gsie_api.auth.account_lifecycle import (
     AccountLifecycleService,
     AccountNotFoundError,
     AccountProfile,
+    EmailAlreadyUsedError,
     EmailChangeRequest,
     InvalidActionCodeError,
     InvalidCurrentPasswordError,
@@ -39,6 +40,12 @@ class FakeAccountLifecycleRepository:
         self.email_codes: dict[str, str] = {}
         self.password_hash: str | None = PasswordService().hash("ancien-mot-de-passe-solide")
         self.session_version = 1
+        self.deletion_requested_at: datetime | None = None
+        self.deletion_scheduled_at: datetime | None = None
+        self.deletion_cancelled = False
+        self.replace_action_code_returns_none = False
+        self.other_account_id = uuid4()
+        self.other_account_email: str | None = None
 
     async def get_profile(self, account_id: UUID) -> AccountProfile | None:
         return self.profile if account_id == self.account_id else None
@@ -54,6 +61,8 @@ class FakeAccountLifecycleRepository:
         return self.profile
 
     async def find_local_account_id(self, email: str) -> UUID | None:
+        if email == self.other_account_email:
+            return self.other_account_id
         return self.account_id if email == self.profile.email else None
 
     async def get_local_password_hash(self, account_id: UUID) -> str | None:
@@ -116,7 +125,7 @@ class FakeAccountLifecycleRepository:
         code_hash: str,
         expires_at: datetime,
     ) -> str | None:
-        if account_id != self.account_id:
+        if account_id != self.account_id or self.replace_action_code_returns_none:
             return None
         self.action = AccountActionCode(
             token_id=uuid4(),
@@ -149,6 +158,20 @@ class FakeAccountLifecycleRepository:
         if account_id == self.account_id:
             self.password_hash = password_hash
             self.session_version += 1
+
+    async def find_account_id_for_email(self, email: str) -> UUID | None:
+        return self.account_id if email == self.profile.email else None
+
+    async def mark_deletion_requested(
+        self, account_id: UUID, requested_at: datetime, scheduled_at: datetime
+    ) -> None:
+        if account_id == self.account_id:
+            self.deletion_requested_at = requested_at
+            self.deletion_scheduled_at = scheduled_at
+
+    async def cancel_deletion(self, account_id: UUID) -> None:
+        if account_id == self.account_id:
+            self.deletion_cancelled = True
 
 
 def _service(
@@ -329,3 +352,159 @@ async def should_reject_incorrect_action_code() -> None:
 
     with pytest.raises(InvalidActionCodeError):
         await service.confirm_email_verification(repository.account_id, "ZZZZ-ZZZZ")
+
+
+async def should_reject_password_change_with_wrong_current_password() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    with pytest.raises(InvalidCurrentPasswordError):
+        await service.change_password(
+            repository.account_id,
+            "mauvais-mot-de-passe",
+            "nouveau-mot-de-passe-solide",
+        )
+
+
+async def should_reject_email_change_when_profile_has_no_email() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.profile = replace(repository.profile, email=None)
+    service = _service(repository)
+
+    with pytest.raises(AccountNotFoundError):
+        await service.request_email_change(
+            repository.account_id,
+            "ancien-mot-de-passe-solide",
+            "nouvelle@example.fr",
+        )
+
+
+async def should_reject_email_change_to_same_current_address() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    with pytest.raises(EmailAlreadyUsedError):
+        await service.request_email_change(
+            repository.account_id,
+            "ancien-mot-de-passe-solide",
+            "forestier@example.fr",
+        )
+
+
+async def should_reject_email_change_to_address_used_by_another_account() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.other_account_email = "occupee@example.fr"
+    service = _service(repository)
+
+    with pytest.raises(EmailAlreadyUsedError):
+        await service.request_email_change(
+            repository.account_id,
+            "ancien-mot-de-passe-solide",
+            "occupee@example.fr",
+        )
+
+
+async def should_reject_confirm_email_change_when_request_is_expired() -> None:
+    repository = FakeAccountLifecycleRepository()
+    issued_at = datetime(2026, 8, 3, 12, 0, tzinfo=UTC)
+    delivery = await _service(repository, now=issued_at).request_email_change(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+        "nouvelle@example.fr",
+    )
+    assert delivery is not None
+
+    with pytest.raises(InvalidEmailChangeCodeError):
+        await _service(
+            repository,
+            now=issued_at + timedelta(minutes=16),
+        ).confirm_email_change(repository.account_id, "current", delivery.current_code)
+
+
+async def should_reject_confirm_email_change_with_wrong_code() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+    delivery = await service.request_email_change(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+        "nouvelle@example.fr",
+    )
+    assert delivery is not None
+
+    with pytest.raises(InvalidEmailChangeCodeError):
+        await service.confirm_email_change(repository.account_id, "current", "ZZZZ-ZZZZ")
+
+
+async def should_reject_account_deletion_with_wrong_current_password() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.profile = replace(repository.profile, email_verified=True)
+    service = _service(repository)
+
+    with pytest.raises(InvalidCurrentPasswordError):
+        await service.request_account_deletion(
+            repository.account_id,
+            "mauvais-mot-de-passe",
+        )
+
+
+async def should_reject_account_deletion_when_email_is_unverified() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    with pytest.raises(AccountNotFoundError):
+        await service.request_account_deletion(
+            repository.account_id,
+            "ancien-mot-de-passe-solide",
+        )
+
+
+async def should_reject_account_deletion_when_delivery_cannot_be_created() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.profile = replace(repository.profile, email_verified=True)
+    repository.replace_action_code_returns_none = True
+    service = _service(repository)
+
+    with pytest.raises(AccountNotFoundError):
+        await service.request_account_deletion(
+            repository.account_id,
+            "ancien-mot-de-passe-solide",
+        )
+
+
+async def should_request_account_deletion_and_schedule_grace_period() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.profile = replace(repository.profile, email_verified=True)
+    now = datetime(2026, 8, 3, 12, 0, tzinfo=UTC)
+    service = _service(repository, now=now)
+
+    delivery = await service.request_account_deletion(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+        grace_period_days=30,
+    )
+
+    assert delivery.email == "forestier@example.fr"
+    assert repository.deletion_requested_at == now
+    assert repository.deletion_scheduled_at == now + timedelta(days=30)
+
+
+async def should_reject_cancel_deletion_for_unknown_email() -> None:
+    repository = FakeAccountLifecycleRepository()
+    service = _service(repository)
+
+    with pytest.raises(InvalidActionCodeError):
+        await service.cancel_account_deletion("inconnu@example.fr", "ABCD-EFGH")
+
+
+async def should_cancel_account_deletion_when_code_is_valid() -> None:
+    repository = FakeAccountLifecycleRepository()
+    repository.profile = replace(repository.profile, email_verified=True)
+    service = _service(repository)
+    delivery = await service.request_account_deletion(
+        repository.account_id,
+        "ancien-mot-de-passe-solide",
+    )
+
+    await service.cancel_account_deletion("forestier@example.fr", delivery.code)
+
+    assert repository.deletion_cancelled is True

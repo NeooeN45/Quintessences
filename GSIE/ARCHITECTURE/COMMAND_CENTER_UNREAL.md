@@ -11,7 +11,7 @@
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif), GSIE-DIR-0009 (restructuration écosystème) |
 | **RFC de référence** | RFC-0004 (Ignis, §8 garde-fous), RFC-0037 (plateforme de jumeau numérique fédéré) |
 | **Décision d'adoption** | DEC-000010 (adoption UE 5.8 + Cesium), DEC-000013 (restructuration GSIE) |
-| **Documents connexes** | `GSIE_MASTER_ARCHITECTURE.md` (livrable 201), `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` (RFC-0037), `ENGINE_DATA_SOCLE.md` (historique du livrable 310), `GSIE_IGNIS_ARCHITECTURE.md` (livrable 208), `GSIE_IGNIS_DATA_PIPELINE.md` (livrable 209), `GSIE_IGNIS_DRONE_ARCHITECTURE.md` (livrable 210) |
+| **Documents connexes** | `GSIE_MASTER_ARCHITECTURE.md` (livrable 201), `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` (RFC-0037), `ENGINE_DATA_SOCLE.md` (historique du livrable 310), `GSIE_IGNIS_ARCHITECTURE.md` (livrable 208), `GSIE_IGNIS_DATA_PIPELINE.md` (livrable 209), `GSIE_IGNIS_DRONE_ARCHITECTURE.md` (livrable 210), `HUB_UNREAL_TECHNOLOGY_STACK.md` (langages et technologies) |
 
 > Version 2.0.0 — 2026-07-13
 > Repositionne le livrable 211 : ce n'est plus seulement le GCS-Cinéma d'Ignis, c'est le **Centre de Commandement GSIE** — un ensemble de Hubs Unreal spécialisés où les projections GeoSylva, Ignis, Hydro, Flora et Artemis explorent et simulent le même jumeau numérique environnemental fédéré. Le contenu technique (Cesium, Niagara, WebSocket) est conservé et relié au contrat de plateforme défini par RFC-0037.

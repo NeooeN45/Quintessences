@@ -156,6 +156,18 @@ class TestGetResource:
         with pytest.raises(TelechargementClientError, match="parsing XML"):
             await client.get_resource("BDFORET")
 
+    @respx.mock
+    async def should_pass_filters_when_zone_and_format_given(self) -> None:
+        route = respx.get(
+            f"{_TELECHARGEMENT_BASE_URL}/resource/BDFORET",
+            params={"page": "1", "limit": "50", "zone": "D033", "format": "SHP"},
+        ).mock(return_value=Response(200, text=_RESOURCE_XML))
+        client = TelechargementClient()
+
+        await client.get_resource("BDFORET", zone="D033", format="SHP")
+
+        assert route.called
+
 
 class TestGetSubResource:
     """get_subresource() — liste des fichiers d'un dossier."""
@@ -177,6 +189,30 @@ class TestGetSubResource:
         assert fichiers[0].checksum_md5 == "147a219d1998f990677ba1984085f7dc"
         assert "application/x-shapefile" in fichiers[0].mime_types
         assert fichiers[0].url_download.endswith(".7z")
+
+    @respx.mock
+    async def should_default_taille_octets_to_zero_when_length_malformed(self) -> None:
+        malformed_xml = _SUBRESOURCE_XML.replace(
+            'gpf_dl:length="50721560"', 'gpf_dl:length="not-a-number"'
+        )
+        respx.get(f"{_TELECHARGEMENT_BASE_URL}/resource/ADMIN-EXPRESS-COG/DOSSIER-X").mock(
+            return_value=Response(200, text=malformed_xml)
+        )
+        client = TelechargementClient()
+
+        fichiers, _page = await client.get_subresource("ADMIN-EXPRESS-COG", "DOSSIER-X")
+
+        assert fichiers[0].taille_octets == 0
+
+    @respx.mock
+    async def should_raise_when_xml_malformed(self) -> None:
+        respx.get(f"{_TELECHARGEMENT_BASE_URL}/resource/ADMIN-EXPRESS-COG/DOSSIER-Y").mock(
+            return_value=Response(200, text="<<< not XML >>>")
+        )
+        client = TelechargementClient()
+
+        with pytest.raises(TelechargementClientError, match="parsing XML"):
+            await client.get_subresource("ADMIN-EXPRESS-COG", "DOSSIER-Y")
 
 
 class TestDownloadFile:

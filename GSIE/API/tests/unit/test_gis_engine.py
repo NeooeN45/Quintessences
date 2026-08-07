@@ -20,6 +20,13 @@ from gsie_api.engines.gis.schemas import (
     CoucheGeo,
     ParcelleCadastraleRequest,
 )
+from gsie_api.engines.gis.telechargement_client import (
+    DossierTelechargement,
+    FichierTelechargement,
+    PageTelechargement,
+    RessourceTelechargement,
+    TelechargementClientError,
+)
 
 
 def _valid_parcelle_feature() -> dict[str, object]:
@@ -221,3 +228,136 @@ def test_validate_geometry_repairs_self_intersecting_polygon() -> None:
 
     repaired = _validate_geometry(bowtie)
     assert repaired.is_valid
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Tests API de téléchargement Géoplateforme (délégation vers TelechargementClient)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+def _mock_telechargement_client() -> MagicMock:
+    client = MagicMock()
+    client.get_capabilities = AsyncMock()
+    client.get_resource = AsyncMock()
+    client.get_subresource = AsyncMock()
+    client.download_file = AsyncMock()
+    return client
+
+
+_PAGE = PageTelechargement(total_entries=1, page=1, page_size=50, page_count=1)
+
+
+class TestListerRessourcesTelechargement:
+    async def should_return_liste_ressources_when_client_succeeds(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        ressource = RessourceTelechargement(
+            nom="BDFORET",
+            url_resource="https://data.geopf.fr/telechargement/resource/BDFORET",
+            description="BD Forêt",
+            date_maj="2026-01-15",
+            zones=["D033"],
+            formats=["SHP"],
+        )
+        telechargement.get_capabilities.return_value = ([ressource], _PAGE)
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        result = await engine.lister_ressources_telechargement(page=1, limit=50)
+
+        assert len(result.ressources) == 1
+        assert result.ressources[0].nom == "BDFORET"
+        assert result.pagination.total_entries == 1
+
+    async def should_raise_gis_engine_error_when_client_fails(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        telechargement.get_capabilities.side_effect = TelechargementClientError("indisponible")
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        with pytest.raises(GISEngineError, match="indisponible"):
+            await engine.lister_ressources_telechargement()
+
+
+class TestListerDossiersTelechargement:
+    async def should_return_liste_dossiers_when_client_succeeds(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        dossier = DossierTelechargement(
+            nom="BDFORET_2026",
+            url_subresource="https://data.geopf.fr/telechargement/resource/BDFORET/BDFORET_2026",
+            date_maj="2026-01-15",
+            zone="D033",
+            format="SHP",
+            date_edition="2026-01-15",
+        )
+        telechargement.get_resource.return_value = ([dossier], _PAGE)
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        result = await engine.lister_dossiers_telechargement("BDFORET", page=1, limit=50)
+
+        assert len(result.dossiers) == 1
+        assert result.dossiers[0].nom == "BDFORET_2026"
+
+    async def should_raise_gis_engine_error_when_client_fails(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        telechargement.get_resource.side_effect = TelechargementClientError("indisponible")
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        with pytest.raises(GISEngineError, match="indisponible"):
+            await engine.lister_dossiers_telechargement("BDFORET")
+
+
+class TestListerFichiersTelechargement:
+    async def should_return_liste_fichiers_when_client_succeeds(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        fichier = FichierTelechargement(
+            url_download="https://data.geopf.fr/telechargement/download/BDFORET/BDFORET_2026/f.7z",
+            taille_octets=1024,
+            checksum_md5="abc123",
+            mime_types=["application/x-7z-compressed"],
+        )
+        telechargement.get_subresource.return_value = ([fichier], _PAGE)
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        result = await engine.lister_fichiers_telechargement("BDFORET", "BDFORET_2026")
+
+        assert len(result.fichiers) == 1
+        assert result.fichiers[0].taille_octets == 1024
+
+    async def should_raise_gis_engine_error_when_client_fails(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        telechargement.get_subresource.side_effect = TelechargementClientError("indisponible")
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        with pytest.raises(GISEngineError, match="indisponible"):
+            await engine.lister_fichiers_telechargement("BDFORET", "BDFORET_2026")
+
+
+class TestTelechargerFichier:
+    async def should_return_bytes_when_client_succeeds(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        telechargement.download_file.return_value = b"\x37\x7a\xbc\xaf"
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        result = await engine.telecharger_fichier("BDFORET", "BDFORET_2026", "f.7z")
+
+        assert result == b"\x37\x7a\xbc\xaf"
+
+    async def should_raise_gis_engine_error_when_client_fails(self) -> None:
+        session = _mock_session()
+        telechargement = _mock_telechargement_client()
+        telechargement.download_file.side_effect = TelechargementClientError("indisponible")
+        engine = GISEngine(session=session, telechargement_client=telechargement)
+
+        with pytest.raises(GISEngineError, match="indisponible"):
+            await engine.telecharger_fichier("BDFORET", "BDFORET_2026", "f.7z")
+
+
+def should_use_default_telechargement_client_when_none_provided() -> None:
+    session = _mock_session()
+    engine = GISEngine(session=session)
+    assert engine._telechargement_client is not None

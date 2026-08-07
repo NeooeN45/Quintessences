@@ -25,6 +25,17 @@ recense six cas d'usage réels (post-incendie, scolytes, SITAC, crues,
 biodiversité, tempêtes) pour valider la fédération et prioriser les tranches
 verticales.
 
+### Hub Unreal — stack technologique (2026-08-07)
+
+`GSIE/ARCHITECTURE/HUB_UNREAL_TECHNOLOGY_STACK.md` (Draft) dresse une
+présentation architecturale des langages et technologies autour du Hub Unreal.
+Quatre catégories : fondamentaux (C++, Rust, Python, Kotlin, PostGIS),
+stratégiques (Elixir, Julia, WebAssembly), accélérateurs spécialisés
+(Futhark, Taichi, Mojo) et recherche/validation (P, Dafny, Pony, Unison,
+MoonBit, Zig). Le document respecte les décisions validées (DEC-000010,
+DEC-000019, DEC-000053), définit les frontières entre Unreal, les moteurs et
+les services, et conserve le principe : **GSIE State ≠ Unreal World**.
+
 ### Documentation GeoSylva 3.0 (GEOSYLVA-003)
 
 Le cahier fonctionnel et scientifique issu du brainstorming validé est disponible

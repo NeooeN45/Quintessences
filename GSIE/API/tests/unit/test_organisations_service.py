@@ -11,7 +11,7 @@ ni FastAPI. Valide les invariants métier :
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -20,6 +20,7 @@ from gsie_api.organisations.service import (
     AlreadyMemberError,
     InsufficientRoleError,
     InvitationEmailMismatchError,
+    InvitationInvalidError,
     InvitationRecord,
     LastOwnerError,
     MemberRecord,
@@ -523,3 +524,117 @@ async def test_list_members_for_organisation(
 
     assert total == 3  # owner + m1 + m2
     assert len(members) == 3
+
+
+@pytest.mark.asyncio
+async def test_get_organisation_returns_record_when_found(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    owner = uuid4()
+    org = await service.create_organisation("onf", "ONF", owner)
+
+    fetched = await service.get_organisation(org.id)
+
+    assert fetched.id == org.id
+    assert fetched.slug == "onf"
+
+
+@pytest.mark.asyncio
+async def test_invite_by_email_rejects_invalid_role(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    owner = uuid4()
+    org = await service.create_organisation("onf", "ONF", owner)
+
+    with pytest.raises(ValueError, match="Rôle d'invitation invalide"):
+        await service.invite_by_email(
+            org.id,
+            "membre@example.fr",
+            "owner",
+            owner,
+            expires_in_hours=72,
+        )
+
+
+@pytest.mark.asyncio
+async def test_accept_invitation_rejects_unknown_token(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+
+    with pytest.raises(InvitationInvalidError):
+        await service.accept_invitation("token-inconnu", uuid4())
+
+
+@pytest.mark.asyncio
+async def test_accept_invitation_rejects_expired_invitation(
+    repo: FakeOrganisationRepository,
+) -> None:
+    service = OrganisationService(repo)
+    owner = uuid4()
+    org = await service.create_organisation("onf", "ONF", owner)
+
+    delivery = await service.invite_by_email(
+        org.id,
+        "membre@example.fr",
+        "member",
+        owner,
+        expires_in_hours=72,
+    )
+    # Force l'expiration de l'invitation en manipulant directement le fake repo.
+    token_hash = next(iter(repo._invitations))
+    expired = repo._invitations[token_hash]
+    repo._invitations[token_hash] = InvitationRecord(
+        id=expired.id,
+        organisation_id=expired.organisation_id,
+        email_normalized=expired.email_normalized,
+        role=expired.role,
+        invited_by=expired.invited_by,
+        token_hash=expired.token_hash,
+        expires_at=datetime.now(UTC) - timedelta(seconds=1),
+        accepted_at=None,
+        revoked_at=None,
+    )
+
+    with pytest.raises(InvitationInvalidError):
+        await service.accept_invitation(delivery.token, uuid4())
+
+
+@pytest.mark.asyncio
+async def test_accept_invitation_rejects_already_accepted_invitation(
+    repo: FakeOrganisationRepository,
+) -> None:
+    """Le dépôt mémoire (contrairement au dépôt SQL) ne filtre pas les
+    invitations déjà acceptées dans ``get_pending_invitation`` — ce test
+    exerce donc la garde applicative du service lui-même."""
+    service = OrganisationService(repo)
+    owner = uuid4()
+    member = uuid4()
+    repo._verified_emails[member] = ("membre@example.fr",)
+    org = await service.create_organisation("onf", "ONF", owner)
+
+    delivery = await service.invite_by_email(
+        org.id,
+        "membre@example.fr",
+        "member",
+        owner,
+        expires_in_hours=72,
+    )
+    token_hash = next(iter(repo._invitations))
+    accepted = repo._invitations[token_hash]
+    repo._invitations[token_hash] = InvitationRecord(
+        id=accepted.id,
+        organisation_id=accepted.organisation_id,
+        email_normalized=accepted.email_normalized,
+        role=accepted.role,
+        invited_by=accepted.invited_by,
+        token_hash=accepted.token_hash,
+        expires_at=accepted.expires_at,
+        accepted_at=datetime.now(UTC),
+        revoked_at=None,
+    )
+
+    with pytest.raises(InvitationInvalidError):
+        await service.accept_invitation(delivery.token, member)

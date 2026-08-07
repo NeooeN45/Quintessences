@@ -4,6 +4,23 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [HUB UNREAL — STACK TECHNOLOGIQUE] - 2026-08-07
+
+- **Document architectural ajouté** :
+  `GSIE/ARCHITECTURE/HUB_UNREAL_TECHNOLOGY_STACK.md` (Draft). Présentation
+  des langages et technologies autour du Centre de Commandement Unreal,
+  organisée en quatre catégories : fondamentaux (C++, Rust, Python,
+  Kotlin, PostGIS), stratégiques (Elixir, Julia, WebAssembly),
+  accélérateurs spécialisés (Futhark, Taichi, Mojo) et recherche/validation
+  (P, Dafny, Pony, Unison, MoonBit, Zig).
+- **Respect des décisions validées** : DEC-000010 (UE 5.8 + Cesium),
+  DEC-000019 (Python + Rust + Go + TypeScript), DEC-000053 (Server Meshing).
+- **Principes affermis** : le Hub Unreal est une projection interactive du
+  `State Fabric` ; GSIE State ≠ Unreal World ; chaque langage doit apporter
+  un avantage structurel mesurable pour être adopté.
+- **Références croisées** : `GSIE/ARCHITECTURE/README.md` et
+  `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` mis à jour.
+
 ## [PENTEST — CORRECTIFS RESTANTS] - 2026-08-07
 
 - **DNS** : enregistrements CAA ajoutés sur `quintessences-platform.com`
