@@ -4,6 +4,27 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [VEILLE — BEAM/OTP ET VÉRIFICATION FORMELLE] - 2026-08-07
+
+- **Document** : `GSIE/RESEARCH/VEILLE_BEAM_OTP_SERVER_MESHING_2026-08-07.md`
+  (Draft). Synthèse d'une discussion externe (ChatGPT, non sourcée
+  indépendamment) sur Erlang/OTP/Elixir/Gleam et langages émergents pour GSIE.
+- **Constat** : ne modifie pas le verdict déjà tracé dans
+  `EMERGING_LANGUAGES_STUDY.md` (DEC-000019, stack Python+Rust+Go+TypeScript
+  validée ; Elixir à surveiller, Gleam ignoré).
+- **Apports retenus pour mémoire** (aucune décision, aucun code) :
+  - Patron OTP « supervision par isolation de panne » comme critère de
+    conception si/quand le futur GSIE Server Meshing est spécifié
+    (indépendant du langage retenu).
+  - **P** (machines à états, Microsoft Research) et **Dafny** (preuve
+    d'invariants) ajoutés au plan de surveillance comme outils de
+    vérification formelle pour le protocole de transfert d'autorité
+    (drones/cellules) du Server Meshing.
+- **Sécurité** : durcissement `Strict-Transport-Security` en
+  `max-age=63072000; includeSubDomains; preload` dans
+  `src/gsie_api/shared/middleware.py` (recommandation restante du pentest du
+  2026-08-07).
+
 ## [PENTEST DÉFENSIF POST-DÉPLOIEMENT] - 2026-08-07
 
 - **Rapport d'audit** : `SECURITY_AUDIT_2026-08-07.md` couvre Cloudflare, DNS,

@@ -25,7 +25,7 @@ _TRACE_ID_PATTERN = re.compile(r"^[A-Za-z0-9\-]{1,64}$")
 _SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
-    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'self'",
