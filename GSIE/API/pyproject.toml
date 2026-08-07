@@ -129,6 +129,15 @@ markers = [
     "xdist_group(name): groupe de tests à exécuter sur le même worker xdist",
 ]
 
+[tool.coverage.run]
+source = ["src/gsie_api"]
+branch = false
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = false
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100

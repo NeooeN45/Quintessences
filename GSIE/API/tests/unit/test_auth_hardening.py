@@ -8,12 +8,16 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from types import SimpleNamespace
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import httpx
 import pyotp
 import pytest
+from pydantic import SecretStr
 
+import gsie_api.auth.mfa as mfa_module
 from gsie_api.auth.lockout import (
     AccountLockedError,
     AccountLockoutService,
@@ -22,6 +26,7 @@ from gsie_api.auth.lockout import (
 from gsie_api.auth.mfa import (
     InvalidRecoveryCodeError,
     MfaAlreadyEnabledError,
+    MfaError,
     MfaNotEnabledError,
     MfaSecretRecord,
     MfaService,
@@ -89,6 +94,14 @@ class FakePasswordService:
 def mfa_service() -> MfaService:
     repo = FakeMfaRepository()
     return MfaService(repository=repo, password_service=FakePasswordService())  # type: ignore[arg-type]
+
+
+@pytest.fixture(autouse=True)
+def _reset_fernet_instance() -> None:
+    """Isole l'instance Fernet globale entre chaque test MFA."""
+    mfa_module._fernet_instance = None
+    yield
+    mfa_module._fernet_instance = None
 
 
 class TestMfaSetup:
@@ -164,6 +177,67 @@ class TestMfaDisable:
         account_id = uuid4()
         with pytest.raises(MfaNotEnabledError):
             await mfa_service.disable(account_id)
+
+
+class TestMfaStatus:
+    async def test_is_enabled_returns_true_when_secret_exists(
+        self, mfa_service: MfaService
+    ) -> None:
+        account_id = uuid4()
+        await mfa_service.setup(account_id)
+        assert await mfa_service.is_enabled(account_id) is True
+
+    async def test_is_enabled_returns_false_when_no_secret(self, mfa_service: MfaService) -> None:
+        account_id = uuid4()
+        assert await mfa_service.is_enabled(account_id) is False
+
+
+class TestMfaFernetAndEdgeCases:
+    def _fake_settings(
+        self,
+        *,
+        environment: str = "development",
+        mfa_encryption_key: str = "",
+    ) -> object:
+        return SimpleNamespace(
+            mfa_encryption_key=SecretStr(mfa_encryption_key),
+            environment=environment,
+            mfa_issuer="Quintessences",
+            mfa_totp_step_seconds=30,
+        )
+
+    def test_fernet_rejects_empty_key_in_production(self) -> None:
+        fake = self._fake_settings(environment="production", mfa_encryption_key="")
+        with (
+            patch("gsie_api.auth.mfa.get_settings", return_value=fake),
+            pytest.raises(MfaError, match="Clé de chiffrement MFA absente"),
+        ):
+            mfa_module._get_fernet()
+
+    def test_fernet_rejects_invalid_key(self) -> None:
+        fake = self._fake_settings(mfa_encryption_key="invalid-key")
+        with (
+            patch("gsie_api.auth.mfa.get_settings", return_value=fake),
+            pytest.raises(MfaError, match="Clé de chiffrement MFA invalide"),
+        ):
+            mfa_module._get_fernet()
+
+    async def test_verify_totp_raises_when_secret_cannot_be_decrypted(
+        self, mfa_service: MfaService
+    ) -> None:
+        account_id = uuid4()
+        await mfa_service.setup(account_id)
+        # Remplace le secret chiffré par une chaîne invalide pour Fernet.
+        mfa_service._repository._secrets[account_id] = "not-a-fernet-token"
+
+        with pytest.raises(MfaError, match="Secret MFA illisible"):
+            await mfa_service.verify_totp(account_id, "123456")
+
+    async def test_verify_recovery_code_empty_raises(self, mfa_service: MfaService) -> None:
+        account_id = uuid4()
+        await mfa_service.setup(account_id)
+        with pytest.raises(InvalidRecoveryCodeError):
+            await mfa_service.verify_recovery_code(account_id, "   ")
 
 
 # ---------------------------------------------------------------------------

@@ -173,7 +173,7 @@ jobs:
           fi
 
       - name: Test with pytest
-        run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=80
+        run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=100
 
   # Le harnais de mutation est séparé du job python-quality pour paralléliser :
   # il lance 67 mutations en subprocess, chacune exécutant un sous-ensemble de

@@ -17,7 +17,9 @@
 | `.\.venv\Scripts\python.exe -m mypy src/gsie_api/` | Typage |
 | `.\.venv\Scripts\python.exe -m pytest tests/unit -q --no-cov` | Tests unitaires |
 | `.\.venv\Scripts\python.exe -m pytest tests/ -q` | Tests complets |
+| `.\.venv\Scripts\python.exe -m pytest tests/unit -q --cov=src/gsie_api --cov-report=term-missing` | Tests + couverture 100 % |
 | `.\.venv\Scripts\python.exe tests/mutation/harnais.py` | Harnais de mutation |
+| `.\scripts\run-master-tests.ps1` | Master test local (lint + type + tests 100 % + mutation) |
 
 ## Conventions tests
 

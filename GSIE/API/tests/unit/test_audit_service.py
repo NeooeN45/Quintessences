@@ -6,10 +6,12 @@ Testé avec un dépôt mémoire — aucune dépendance SQLAlchemy ni FastAPI.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
 import pytest
 
+from gsie_api.audit.router import get_audit_service
 from gsie_api.audit.service import AuditEntry, AuditService
 
 # --- Fake repository ---
@@ -193,3 +195,13 @@ async def test_list_filters_by_organisation(
 
     assert total == 2
     assert all(e.organisation_id == org1 for e in entries)
+
+
+@pytest.mark.asyncio
+async def test_get_audit_service_dependency_returns_service() -> None:
+    """La dépendance FastAPI doit retourner un AuditService encapsulant la session."""
+    session = AsyncMock()
+    service = await get_audit_service(session)  # type: ignore[arg-type]
+
+    assert isinstance(service, AuditService)
+    assert service._repository._session is session

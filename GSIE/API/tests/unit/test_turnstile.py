@@ -74,6 +74,12 @@ async def test_should_raise_turnstile_error_when_network_fails() -> None:
             await client.verify("valid-token")
 
 
+async def test_should_return_site_key() -> None:
+    """TurnstileClient expose la site key publique du widget."""
+    client = TurnstileClient(_settings())
+    assert client.get_site_key() == "test-site"
+
+
 async def test_should_send_remote_ip_when_provided() -> None:
     """Le remote IP est transmis à Cloudflare."""
     request: respx.Request | None = None

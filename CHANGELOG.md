@@ -4,6 +4,21 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [TESTS — 100% COVERAGE ET MASTER TEST] - 2026-08-07
+
+- **Couverture** : la suite unitaire atteint **100 % de couverture** sur
+  `src/gsie_api` (13 170 statements). Les 14 dernières lignes non couvertes
+  l'ont été par des tests ciblés dans `test_app.py`, `test_audit_service.py`,
+  `test_auth_hardening.py`, `test_auth_type_jeton.py`, `test_config.py` et
+  `test_turnstile.py`.
+- **Garde-fous** :
+  - `tool.coverage.report.fail_under = 100` dans `pyproject.toml`.
+  - `scripts/run-master-tests.ps1` et `scripts/run-master-tests.sh` pour
+    exécuter en une commande : ruff, ruff format, mypy, tests unitaires à
+    100 % et (optionnel) harnais de mutation.
+  - `.github/workflows/ci.yml` : `cov-fail-under` porté à 100.
+- **Harnais de mutation** : 67 mutations, score maintenu.
+
 ## [HUB UNREAL — STACK TECHNOLOGIQUE] - 2026-08-07
 
 - **Document architectural ajouté** :

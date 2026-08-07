@@ -114,6 +114,17 @@ def should_accept_verify_full_tls_in_production():
     assert settings.db_ssl_mode == "verify-full"
 
 
+def should_reject_mfa_without_encryption_key_in_production():
+    """La MFA en production exige une clé de chiffrement Fernet."""
+    with pytest.raises(ValidationError, match="MFA encryption key required"):
+        Settings(
+            **_production_kwargs(
+                mfa_enabled=True,
+                mfa_encryption_key="",
+            )
+        )
+
+
 def should_reject_local_registration_without_smtp_in_production():
     """Un compte local sans canal de récupération ne doit pas être déployable."""
     with pytest.raises(ValidationError, match="service SMTP"):

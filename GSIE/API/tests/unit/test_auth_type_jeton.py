@@ -12,7 +12,18 @@ from __future__ import annotations
 import pytest
 from fastapi import HTTPException
 
-from gsie_api.core.auth import create_access_token, create_refresh_token, verify_token
+from gsie_api.core.auth import (
+    create_access_token,
+    create_mfa_challenge_token,
+    create_refresh_token,
+    verify_token,
+)
+
+
+def test_should_reject_reserved_claims_in_mfa_challenge_token() -> None:
+    """create_mfa_challenge_token ne doit pas laisser écraser ses claims réservés."""
+    with pytest.raises(ValueError, match="Reserved JWT claims cannot be overridden"):
+        create_mfa_challenge_token(subject="forestier", claims={"type": "access"})
 
 
 def test_un_jeton_de_rafraichissement_est_refuse_comme_acces() -> None:
