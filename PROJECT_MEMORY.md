@@ -6,7 +6,7 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-06 — **Cloudflare Turnstile, SMTP transactionnel, migration Docker et deploiement Pages** (DEC-000055). Protection bot sur `POST /api/v1/auth/login`, `POST /api/v1/auth/login/password` et `POST /api/v1/auth/turnstile/verify`. Landing page deployee sur `quintessences-platform.com` avec widget Turnstile. Page de statut deployee sur `status.quintessences-platform.com`. Admin web mis a jour avec le widget Turnstile sur la page de connexion. Mailpit expose sur `127.0.0.1:1025` pour le host et `mailpit:1025` pour le conteneur. API dans Docker `api-api-1` healthy. Clés Turnstile configurees dans `.env` et re-chiffrees dans `.env.enc`. Suite unitaire : 2085 passed, 63 skipped. |
+| **Dernière mise à jour** | 2026-08-07 — **Pentest défensif post-déploiement** (`SECURITY_AUDIT_2026-08-07.md`). Audite Cloudflare/DNS, API, landing, admin, Docker et secrets. 2 findings Élevés corriges en live : comparaison dev login en `hmac.compare_digest` et refus des clés JWT auto-générées en staging/production. Dev login désactivé par défaut dans `.env.example`. Score global 8.2/10. Recommandations restantes : CAA, HSTS preload, restriction `/metrics`, rate limiting edge Cloudflare. La Global API Key utilisée doit être révoquée. |
 
 ### GSIE Environmental Digital Twin Platform — cadrage fédérateur (2026-08-06)
 

@@ -4,6 +4,20 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PENTEST DÉFENSIF POST-DÉPLOIEMENT] - 2026-08-07
+
+- **Rapport d'audit** : `SECURITY_AUDIT_2026-08-07.md` couvre Cloudflare, DNS,
+  API, landing, admin web, Docker et secrets. Score global 8.2/10.
+- **Tests live** : headers, CORS, rate limiting, DNSSEC, WAF, SSL/TLS, firewall rules.
+- **Corrections immédiates** :
+  - `src/gsie_api/auth/router.py` : comparaison dev login en `hmac.compare_digest`.
+  - `src/gsie_api/core/auth.py` : refus des clés JWT auto-générées en staging et prod.
+  - `.env.example` : `GSIE_AUTH_DEV_LOGIN_ENABLED=false` par défaut.
+- **Recommandations restantes** : CAA record, HSTS preload, restriction `/metrics`, rate
+  limiting edge Cloudflare (plan payant/Worker).
+- **Nettoyage sécurité** : révoquer la Global API Key utilisée pour l'audit ; regénérer
+  le secret Turnstile si nécessaire.
+
 ## [GSIE API v0.1.0 — DEPLOIEMENT CLOUDFLARE + DOMAINE PERMANENT] - 2026-08-06
 
 - **Domaine permanent acquis** : `quintessences-platform.com` via
