@@ -9,6 +9,7 @@ Note : le modèle utilisateur (DB) sera implémenté en Phase 4 semaine 3.
 En attendant, un stub utilisateur est utilisé pour les tests.
 """
 
+import hmac
 from collections.abc import Awaitable, Callable
 from datetime import UTC
 from typing import Annotated, TypedDict
@@ -133,11 +134,17 @@ def _get_dev_user(username: str, password: str) -> DevUser | None:
         return None
     if not _settings.auth_dev_username or not _settings.auth_dev_password:
         return None
-    if username != _settings.auth_dev_username:
+    # Comparaison en temps constant (OWASP A02/A07) — évite les attaques
+    # par timing même en dev. Les secrets restent en mémoire, jamais loggués.
+    if not hmac.compare_digest(
+        username.encode("utf-8"),
+        _settings.auth_dev_username.encode("utf-8"),
+    ):
         return None
-    # Comparaison directe en dev (le password de config n'est pas hashé)
-    # En production, les utilisateurs seront en DB avec un hash bcrypt.
-    if password != _settings.auth_dev_password:
+    if not hmac.compare_digest(
+        password.encode("utf-8"),
+        _settings.auth_dev_password.encode("utf-8"),
+    ):
         return None
     # Générer un hash pour le token (pas pour la vérification)
     password_hash = bcrypt.hashpw(

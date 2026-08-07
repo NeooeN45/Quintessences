@@ -42,8 +42,11 @@ def _load_private_key() -> str:
     key_path = Path(_settings.jwt_private_key_path)
     if key_path.exists():
         return key_path.read_text(encoding="utf-8")
-    if _settings.environment == "production":
-        raise RuntimeError(f"JWT private key not found: {key_path}")
+    if _settings.environment in ("staging", "production"):
+        raise RuntimeError(
+            f"JWT private key not found: {key_path}. "
+            "Générez les clés avec docker/generate-jwt-keys.sh."
+        )
 
     logger.warning("jwt_private_key_not_found_using_dev_key", path=str(key_path))
     return _generate_dev_private_key()
@@ -54,8 +57,11 @@ def _load_public_key() -> str:
     key_path = Path(_settings.jwt_public_key_path)
     if key_path.exists():
         return key_path.read_text(encoding="utf-8")
-    if _settings.environment == "production":
-        raise RuntimeError(f"JWT public key not found: {key_path}")
+    if _settings.environment in ("staging", "production"):
+        raise RuntimeError(
+            f"JWT public key not found: {key_path}. "
+            "Générez les clés avec docker/generate-jwt-keys.sh."
+        )
 
     logger.warning("jwt_public_key_not_found_using_dev_key", path=str(key_path))
     return _generate_dev_public_key()
