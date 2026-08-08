@@ -1117,6 +1117,70 @@ async def should_return_200_when_botanical_query_success(botanical_client: Async
     assert response.status_code == 200
 
 
+async def should_return_401_when_botanical_query_and_ingest_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/query-and-ingest",
+        json={"essence": "Quercus petraea"},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_botanical_query_and_ingest_gbif_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest — GBIF down retourne 502."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+
+    with patch.object(
+        BotanicalEngine,
+        "query_and_ingest",
+        new=AsyncMock(side_effect=BotanicalEngineError("GBIF down")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/query-and-ingest",
+            json={"essence": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_query_and_ingest_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import BotanicalIngestResponse, BotanicalIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = BotanicalIngestResponse(
+        requete_id=uuid4(),
+        resultats=[
+            BotanicalIngestResult(
+                nom_scientifique="Quercus petraea",
+                statut="ingested",
+                evidence_level=EvidenceLevel.B,
+                connaissance_id=uuid4(),
+                version=1,
+            )
+        ],
+    )
+    with patch.object(
+        BotanicalEngine, "query_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/query-and-ingest",
+            json={"essence": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom_scientifique"] == "Quercus petraea"
+    assert body["resultats"][0]["statut"] == "ingested"
+
+
 async def should_return_502_when_botanical_indigenat_error(botanical_client: AsyncClient):
     """POST /botanical/indigenat — BotanicalEngineError retourne 502."""
     from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
@@ -1205,6 +1269,89 @@ async def should_return_200_when_botanical_taxref_success(botanical_client: Asyn
             headers=_auth_headers(["reader"]),
         )
     assert response.status_code == 200
+
+
+async def should_return_401_when_botanical_taxref_and_ingest_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/taxref-and-ingest",
+        json={"nom_scientifique": "Quercus petraea"},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_botanical_taxref_and_ingest_taxref_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest — TAXREF down retourne 502."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+
+    with patch.object(
+        BotanicalEngine,
+        "resolve_taxref_and_ingest",
+        new=AsyncMock(side_effect=BotanicalEngineError("TAXREF down")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_taxref_and_ingest_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest avec succes retourne le resultat d'ingestion."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import TaxrefIngestResponse, TaxrefIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = TaxrefIngestResponse(
+        requete_id=uuid4(),
+        resultat=TaxrefIngestResult(
+            cd_nom=135,
+            nom_scientifique="Quercus petraea",
+            statut="ingested",
+            evidence_level=EvidenceLevel.B,
+            connaissance_id=uuid4(),
+            version=1,
+        ),
+    )
+    with patch.object(
+        BotanicalEngine, "resolve_taxref_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultat"]["cd_nom"] == 135
+    assert body["resultat"]["statut"] == "ingested"
+
+
+async def should_return_200_when_botanical_taxref_and_ingest_finds_nothing(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest retourne resultat=null quand TAXREF ne trouve rien."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import TaxrefIngestResponse
+
+    mock_response = TaxrefIngestResponse(requete_id=uuid4(), resultat=None)
+    with patch.object(
+        BotanicalEngine, "resolve_taxref_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Taxon inexistant"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    assert response.json()["resultat"] is None
 
 
 async def should_return_401_when_botanical_identify_and_ingest_without_token(

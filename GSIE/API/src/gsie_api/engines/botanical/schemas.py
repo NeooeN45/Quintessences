@@ -168,6 +168,59 @@ class TaxrefResult(BaseModel):
     source: SourceReference
 
 
+class BotanicalIngestResult(BaseModel):
+    """Résultat d'ingestion d'un taxon GBIF dans le Knowledge Engine."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom_scientifique: str
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: PipelineEvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class BotanicalIngestResponse(BaseModel):
+    """Résultat de `POST /botanical/query-and-ingest` — vide si GBIF ne trouve rien."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    resultats: list[BotanicalIngestResult] = Field(default_factory=list, max_length=1)
+
+
+class TaxrefIngestResult(BaseModel):
+    """Résultat d'ingestion d'une entrée TAXREF dans le Knowledge Engine."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    cd_nom: int
+    nom_scientifique: str
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: PipelineEvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class TaxrefIngestResponse(BaseModel):
+    """Résultat de `POST /botanical/taxref-and-ingest` — null si TAXREF ne trouve rien."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    resultat: TaxrefIngestResult | None = None
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # RFC-0016 — Schéma forestier spécialisé, tranche 1/10 (AutecologyProfile).
 # Lève partiellement la restriction documentée en tête de ce module :

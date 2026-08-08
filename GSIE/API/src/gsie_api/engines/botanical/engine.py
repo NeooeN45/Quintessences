@@ -30,6 +30,8 @@ from gsie_api.engines.botanical.indigenat_loader import IndigenatLoader, Indigen
 from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
+    BotanicalIngestResponse,
+    BotanicalIngestResult,
     BotanicalQuery,
     EspeceData,
     IndigenatQuery,
@@ -40,6 +42,8 @@ from gsie_api.engines.botanical.schemas import (
     StatutIndigenatFrance,
     StatutIndigenatRegion,
     TaxonStatus,
+    TaxrefIngestResponse,
+    TaxrefIngestResult,
     TaxrefQuery,
     TaxrefResult,
 )
@@ -181,6 +185,84 @@ class BotanicalEngine:
             especes=[espece],
             source=_GBIF_SOURCE,
         )
+
+    async def query_and_ingest(
+        self, request: BotanicalQuery, knowledge_engine: KnowledgeEngine
+    ) -> BotanicalIngestResponse:
+        """Résout une essence vers son taxon GBIF et l'ingère dans le Knowledge Engine.
+
+        Réutilise `query()` (même persistance `entity`/`entity_alias`,
+        aucune double requête GBIF) puis fait passer le taxon résolu par
+        `EvidenceKnowledgePipeline` (Gate 5 — maillon amont
+        ingestion→Evidence→Knowledge, ROADMAP.md).
+
+        GBIF Backbone Taxonomy est un référentiel taxonomique officiel
+        consulté directement (pas une inférence ni une mesure brute) :
+        `ContentType.referentiel` + `SourceType.referentiel_officiel`
+        plafonnent à `evidence_level=B` dans la matrice de décision —
+        statut `accepte`, ingestion automatique, comme SoilGrids.
+
+        Returns:
+            `resultats` vide si GBIF ne trouve aucune correspondance —
+            jamais un taxon inventé (ADR-009).
+
+        Raises:
+            BotanicalEngineError: si l'API GBIF est indisponible.
+        """
+        donnees = await self.query(request)
+        pipeline = EvidenceKnowledgePipeline(knowledge_engine)
+
+        resultats: list[BotanicalIngestResult] = []
+        for espece in donnees.especes:
+            submission = RawKnowledgeSubmission(
+                soumission_id=uuid4(),
+                type_contenu=ContentType.referentiel,
+                contenu={
+                    "nom_scientifique": espece.nom_scientifique,
+                    "nom_vernaculaire": espece.nom_vernaculaire,
+                    "famille": espece.famille,
+                    "statut": espece.statut.value,
+                    "synonymes": espece.synonymes,
+                    "gbif_taxon_key": espece.gbif_taxon_key,
+                },
+                source_candidate=_GBIF_SOURCE,
+                date_soumission=datetime.now(UTC),
+                soumetteur="botanical_engine.gbif",
+            )
+            resultat = await pipeline.process(
+                submission,
+                type_=KnowledgeType.concept,
+                titre=f"Taxonomie GBIF — {espece.nom_scientifique}",
+                description=(
+                    f"Taxon accepté {espece.nom_scientifique} "
+                    f"(clé GBIF {espece.gbif_taxon_key}), famille "
+                    f"{espece.famille}, statut {espece.statut.value} "
+                    f"(GBIF Backbone Taxonomy)."
+                ),
+                domaine_scientifique=DomaineScientifique.botanique,
+                mots_cles=["botanique", "gbif", "taxonomie", espece.nom_scientifique],
+                moteurs_consommateurs=["botanical", "correlation", "diagnostic"],
+            )
+            resultats.append(
+                BotanicalIngestResult(
+                    nom_scientifique=espece.nom_scientifique,
+                    statut=resultat.status,
+                    evidence_level=resultat.qualified.evidence_level,
+                    connaissance_id=resultat.qualified.connaissance_id,
+                    version=resultat.knowledge_object.version
+                    if resultat.knowledge_object
+                    else None,
+                    raison=resultat.reason,
+                )
+            )
+            logger.info(
+                "botanical_gbif_ingest",
+                nom_scientifique=espece.nom_scientifique,
+                statut=resultat.status,
+                connaissance_id=str(resultat.qualified.connaissance_id),
+            )
+
+        return BotanicalIngestResponse(requete_id=request.requete_id, resultats=resultats)
 
     async def _get_or_create_taxon(self, gbif_taxon_key: int) -> UUID:
         """Retrouve la resource `entity` existante pour ce taxon GBIF, ou la crée.
@@ -350,6 +432,82 @@ class BotanicalEngine:
             famille=result.get("family"),
             statut=statut,
             source=_TAXREF_SOURCE,
+        )
+
+    async def resolve_taxref_and_ingest(
+        self, request: TaxrefQuery, knowledge_engine: KnowledgeEngine
+    ) -> TaxrefIngestResponse:
+        """Résout une entrée TAXREF et l'ingère dans le Knowledge Engine.
+
+        Réutilise `resolve_taxref()` (aucune double requête) puis fait
+        passer l'entrée résolue par `EvidenceKnowledgePipeline` (Gate 5 —
+        maillon amont ingestion→Evidence→Knowledge, ROADMAP.md).
+
+        TAXREF (MNHN) est un référentiel taxonomique officiel consulté
+        directement : `ContentType.referentiel` +
+        `SourceType.referentiel_officiel` plafonnent à
+        `evidence_level=B` dans la matrice de décision — statut
+        `accepte`, ingestion automatique, comme GBIF et SoilGrids.
+
+        Returns:
+            `resultat=None` si aucune entrée TAXREF ne correspond —
+            jamais un cd_nom inventé (ADR-009).
+
+        Raises:
+            BotanicalEngineError: si le miroir GBIF de TAXREF est indisponible.
+        """
+        taxref = await self.resolve_taxref(request)
+        if taxref is None:
+            return TaxrefIngestResponse(requete_id=request.requete_id, resultat=None)
+
+        pipeline = EvidenceKnowledgePipeline(knowledge_engine)
+        submission = RawKnowledgeSubmission(
+            soumission_id=uuid4(),
+            type_contenu=ContentType.referentiel,
+            contenu={
+                "cd_nom": taxref.cd_nom,
+                "nom_scientifique": taxref.nom_scientifique,
+                "nom_scientifique_complet": taxref.nom_scientifique_complet,
+                "nom_vernaculaire": taxref.nom_vernaculaire,
+                "famille": taxref.famille,
+                "statut": taxref.statut.value,
+            },
+            source_candidate=_TAXREF_SOURCE,
+            date_soumission=datetime.now(UTC),
+            soumetteur="botanical_engine.taxref",
+        )
+        resultat = await pipeline.process(
+            submission,
+            type_=KnowledgeType.concept,
+            titre=f"Taxonomie TAXREF — {taxref.nom_scientifique_complet}",
+            description=(
+                f"Entrée TAXREF cd_nom={taxref.cd_nom}, "
+                f"{taxref.nom_scientifique_complet}, famille "
+                f"{taxref.famille}, statut {taxref.statut.value} "
+                f"(MNHN, via miroir GBIF)."
+            ),
+            domaine_scientifique=DomaineScientifique.botanique,
+            mots_cles=["botanique", "taxref", "taxonomie", taxref.nom_scientifique],
+            moteurs_consommateurs=["botanical", "correlation", "diagnostic"],
+        )
+        logger.info(
+            "botanical_taxref_ingest",
+            cd_nom=taxref.cd_nom,
+            statut=resultat.status,
+            connaissance_id=str(resultat.qualified.connaissance_id),
+        )
+
+        return TaxrefIngestResponse(
+            requete_id=request.requete_id,
+            resultat=TaxrefIngestResult(
+                cd_nom=taxref.cd_nom,
+                nom_scientifique=taxref.nom_scientifique,
+                statut=resultat.status,
+                evidence_level=resultat.qualified.evidence_level,
+                connaissance_id=resultat.qualified.connaissance_id,
+                version=resultat.knowledge_object.version if resultat.knowledge_object else None,
+                raison=resultat.reason,
+            ),
         )
 
     async def identify_and_ingest(

@@ -9,6 +9,11 @@ Endpoints :
 - GET  /botanical/status              — statut du moteur
 - GET  /botanical/version             — version et backend
 - POST /botanical/query                — résout une essence vers son taxon GBIF
+- POST /botanical/query-and-ingest     — idem, puis fait entrer le taxon dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
+- POST /botanical/taxref                — résout une entrée TAXREF réelle
+- POST /botanical/taxref-and-ingest     — idem, puis fait entrer l'entrée dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
 - POST /botanical/identify             — identifie une plante par image (PlantNet, RFC-0031)
 - POST /botanical/identify-and-ingest  — idem, puis fait entrer les candidats dans le
   Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
@@ -29,11 +34,13 @@ from gsie_api.engines.botanical.engine import (
 from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
+    BotanicalIngestResponse,
     BotanicalQuery,
     IndigenatQuery,
     IndigenatResult,
     PlantNetIdentificationResponse,
     PlantNetIngestResponse,
+    TaxrefIngestResponse,
     TaxrefQuery,
     TaxrefResult,
 )
@@ -102,6 +109,41 @@ async def botanical_query(
 
 
 @router.post(
+    "/query-and-ingest",
+    response_model=BotanicalIngestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Résoudre une essence vers son taxon GBIF, ingéré dans le Knowledge Engine",
+    description=(
+        "Résout un nom scientifique comme /query, puis fait passer le "
+        "taxon accepté par l'Evidence Engine et l'ingère dans le "
+        "Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→"
+        "Knowledge, ROADMAP.md). GBIF Backbone Taxonomy est un "
+        "référentiel officiel : plafond evidence_level=B, statut "
+        "accepte, ingestion automatique — comme SoilGrids."
+    ),
+)
+@_limiter.limit("30/minute")
+async def botanical_query_and_ingest(
+    request_body: BotanicalQuery,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> BotanicalIngestResponse:
+    """Résout une essence vers son taxon GBIF et l'ingère.
+
+    Raises:
+        502: Si l'API GBIF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).query_and_ingest(
+            request_body, KnowledgeEngine(session)
+        )
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
     "/indigenat",
     response_model=IndigenatResult | None,
     status_code=status.HTTP_200_OK,
@@ -159,6 +201,41 @@ async def botanical_taxref(
     """
     try:
         return await BotanicalEngine(session).resolve_taxref(request_body)
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/taxref-and-ingest",
+    response_model=TaxrefIngestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Résoudre une entrée TAXREF réelle, ingérée dans le Knowledge Engine",
+    description=(
+        "Résout une entrée TAXREF comme /taxref, puis fait passer le "
+        "résultat par l'Evidence Engine et l'ingère dans le Knowledge "
+        "Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, "
+        "ROADMAP.md). TAXREF (MNHN) est un référentiel officiel : "
+        "plafond evidence_level=B, statut accepte, ingestion automatique "
+        "— comme GBIF et SoilGrids."
+    ),
+)
+@_limiter.limit("30/minute")
+async def botanical_taxref_and_ingest(
+    request_body: TaxrefQuery,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> TaxrefIngestResponse:
+    """Résout une entrée TAXREF réelle et l'ingère.
+
+    Raises:
+        502: Si le miroir GBIF de TAXREF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).resolve_taxref_and_ingest(
+            request_body, KnowledgeEngine(session)
+        )
     except BotanicalEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
