@@ -496,7 +496,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | ID | Description | Statut |
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **Implémenté et validé en direct (2026-08-08)** — reste : rebuild `Dockerfile.db` (bloqué ponctuellement par un problème réseau sans lien avec pgBackRest) + repo2 S3. Voir `GSIE/API/docs/BACKUP_RESTORE.md` |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **En cours — parcelles local→serveur livrées ; pull et résolution à faire** |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **Livré (2026-08-08)** — `ParcelSyncRepository.pull()` (`apps/GeoSylva`, commit `705967e`) : pagine `GET /parcelles`, fusionne en local via `decideMergeOutcome()` (fonction pure testée). Règle de résolution : une modification locale non encore synchronisée n'est jamais écrasée par le pull (le local gagne) ; un tombstone serveur déclenche une suppression douce locale sous la même garde. Bouton « Récupérer depuis le serveur » ajouté aux options développeur. Suite de tests du module verte. Commit local uniquement — push vers le repo externe GeoSylva à confirmer. |
 | AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
 | AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
 | SEC-EDGE | Cloudflare Tunnel, protocole M2M et plan de contrôle | **Code et runbook terminés — activation avec domaine/token à faire** |
