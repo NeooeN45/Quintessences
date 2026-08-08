@@ -40,6 +40,51 @@ Format : `## [version] - YYYY-MM-DD`
   capturée à l'intérieur du pipeline, ne remonte jamais jusqu'au router).
 
 
+## [GATE 5 INTÉGRATION — MAILLON AMONT PLANTNET/MÉTÉO-FRANCE→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Suite du connecteur SoilGrids** (voir entrée précédente) : même
+  pattern répliqué sur les deux autres sources externes déjà clientes
+  (PlantNet, Météo-France SYNOP) — `EvidenceKnowledgePipeline` a
+  désormais trois appelants réels en production.
+- **PlantNet** : `BotanicalEngine.identify_and_ingest()` (nouveau
+  paramètre injectable `plantnet_client`, même schéma que
+  `gbif_client`/`taxref_client`) + endpoint
+  `POST /botanical/identify-and-ingest` (`EngineWriteUser`). Réutilise
+  le même client que `/botanical/identify` (aucune double requête) —
+  la logique de parsing de la réponse brute PlantNet est factorisée
+  dans `parse_plantnet_results()` (`botanical/engine.py`), appelée par
+  les deux endpoints. Chaque espèce candidate devient une soumission
+  distincte. **Différence assumée avec SoilGrids** : une identification
+  PlantNet est une inférence par apprentissage automatique sur une
+  photo précise, pas un produit peer-reviewed — `ContentType.observation`
+  + `SourceType.referentiel_officiel` plafonnent à `evidence_level=D`
+  dans la matrice de décision, donc statut `quarantine` systématique
+  (validation humaine requise, CON-001), jamais d'ingestion automatique.
+  C'est la matrice de l'Evidence Engine qui en décide, aucun code
+  spécifique n'a été ajouté pour forcer ce comportement.
+- **Météo-France** : `ClimateEngine.query_and_ingest()` (réutilise
+  `query()` existant) + endpoint `POST /climate/query-and-ingest`
+  (`EngineWriteUser`). Chaque paramètre mesuré présent (température,
+  humidité, pression, vent, précipitations — un champ CSV vide reste
+  omis, jamais soumis, ADR-009) devient une soumission distincte. Même
+  plafond D/`quarantine` que PlantNet : une observation SYNOP est une
+  mesure brute instantanée, pas un produit modélisé avec incertitude
+  quantifiée comme SoilGrids.
+- **Nouveaux schémas** : `PlantNetIngestResult`/`PlantNetIngestResponse`
+  (`botanical/schemas.py`), `ClimateIngestResult`/`ClimateIngestResponse`
+  (`climate/schemas.py`) — même forme que `PedologyIngestResult` (un
+  résultat par candidat/paramètre, `statut`/`evidence_level`/
+  `connaissance_id`/`version`/`raison`).
+- **Tests** : `test_botanical_identify_and_ingest.py`,
+  `test_climate_query_and_ingest.py` (succès, absence de résultat,
+  échec de la source amont, confirmation qu'`ingest()` n'est jamais
+  appelé puisque D/`quarantine` ne déclenche jamais l'ingestion),
+  `test_routers_coverage.py` (401/400/502/200 sur les deux nouveaux
+  endpoints). 100% de couverture sur `botanical/engine.py`,
+  `botanical/router.py`, `botanical/schemas.py`, `climate/engine.py`,
+  `climate/router.py`, `climate/schemas.py`.
+
+
 ## [FIX — LIMITE MÉMOIRE CONTENEUR API 768M → 2G] - 2026-08-08
 
 - **Correction** de la trouvaille du benchmark de charge concurrente

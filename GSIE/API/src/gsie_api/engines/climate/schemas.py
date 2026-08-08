@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from gsie_api.engines.evidence.schemas import SourceReference
+from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference
 
 # Zéro absolu — borne définitionnelle, pas un seuil météorologique.
 #
@@ -80,6 +80,40 @@ class ObservationClimatique(BaseModel):
     vent_vitesse_ms: float | None = Field(default=None, ge=0.0)
     precipitations_1h_mm: float | None = Field(default=None, ge=0.0)
     source: SourceReference
+
+
+class ClimateIngestResult(BaseModel):
+    """Résultat d'ingestion d'une mesure SYNOP dans le Knowledge Engine.
+
+    Une mesure par résultat (température, humidité, pression, vent,
+    précipitations) : chaque paramètre devient une connaissance atomique
+    distincte, interrogeable indépendamment (`par_concept`, `par_domaine`).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom: str = Field(description="Ex. « temperature_c », « humidite_pct »")
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: EvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class ClimateIngestResponse(BaseModel):
+    """Résultat de `POST /climate/query-and-ingest` — une entrée par paramètre mesuré."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    station_id: str
+    nom_station: str
+    date_observation: datetime
+    resultats: list[ClimateIngestResult] = Field(default_factory=list, max_length=10)
 
 
 class DangerFeuxDepartement(BaseModel):

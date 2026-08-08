@@ -5,21 +5,25 @@ requise) — voir docstring engine.py. Pas de projection climatique
 (DRIAS/RCP), qui nécessitera la clé du portail API Météo-France.
 
 Endpoints :
-- GET  /climate/status   — statut du moteur
-- GET  /climate/version  — version et backend
-- POST /climate/query     — dernière observation réelle d'une station
+- GET  /climate/status              — statut du moteur
+- GET  /climate/version             — version et backend
+- POST /climate/query                — dernière observation réelle d'une station
+- POST /climate/query-and-ingest     — idem, puis fait entrer le résultat dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
 """
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.limiter import limiter as _limiter
-from gsie_api.core.rbac import EngineReadUser
+from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
 from gsie_api.engines.climate.schemas import (
     AromeTemperatureQuery,
     AromeTemperatureResult,
+    ClimateIngestResponse,
     ClimateQuery,
     ClimatologieQuotidienneQuery,
     DangerFeuxDepartement,
@@ -28,9 +32,12 @@ from gsie_api.engines.climate.schemas import (
     ObservationHoraireDepartement,
     VigilanceBulletin,
 )
+from gsie_api.engines.knowledge.engine import KnowledgeEngine
+from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
 router = APIRouter(prefix="/climate", tags=["climate"])
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 @router.get("/status", response_model=EngineStatusResponse)
@@ -83,6 +90,41 @@ async def climate_query(
     """
     try:
         return await ClimateEngine().query(request_body)
+    except ClimateEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/query-and-ingest",
+    response_model=ClimateIngestResponse | None,
+    status_code=status.HTTP_200_OK,
+    summary="Dernière observation SYNOP, ingérée dans le Knowledge Engine",
+    description=(
+        "Interroge SYNOP comme /query, puis fait passer chaque paramètre "
+        "mesuré par l'Evidence Engine et l'ingère dans le Knowledge "
+        "Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, "
+        "ROADMAP.md). Une observation SYNOP plafonne à evidence_level=D "
+        "(quarantaine, validation humaine requise, CON-001) — "
+        "contrairement à SoilGrids, ce n'est jamais ingéré automatiquement. "
+        "Retourne null si la station est introuvable — jamais une "
+        "observation approximée (ADR-009)."
+    ),
+)
+@_limiter.limit("10/minute")
+async def climate_query_and_ingest(
+    request_body: ClimateQuery,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> ClimateIngestResponse | None:
+    """Récupère la dernière observation d'une station SYNOP et l'ingère.
+
+    Raises:
+        502: Si les données SYNOP sont indisponibles.
+    """
+    try:
+        return await ClimateEngine().query_and_ingest(request_body, KnowledgeEngine(session))
     except ClimateEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

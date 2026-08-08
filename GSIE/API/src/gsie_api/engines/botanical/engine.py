@@ -16,6 +16,8 @@ Garantie : un nom introuvable dans GBIF (`matchType: NONE`) retourne
 une liste d'espèces vide, jamais un taxon inventé.
 """
 
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -25,12 +27,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.botanical.gbif_client import GBIFClient, GBIFClientError
 from gsie_api.engines.botanical.indigenat_loader import IndigenatLoader, IndigenatLoaderError
+from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
     BotanicalQuery,
     EspeceData,
     IndigenatQuery,
     IndigenatResult,
+    PlantNetIdentificationResult,
+    PlantNetIngestResponse,
+    PlantNetIngestResult,
     StatutIndigenatFrance,
     StatutIndigenatRegion,
     TaxonStatus,
@@ -38,7 +44,15 @@ from gsie_api.engines.botanical.schemas import (
     TaxrefResult,
 )
 from gsie_api.engines.botanical.taxref_client import TaxrefClient, TaxrefClientError
-from gsie_api.engines.evidence.schemas import SourceReference, SourceType
+from gsie_api.engines.evidence.schemas import (
+    ContentType,
+    RawKnowledgeSubmission,
+    SourceReference,
+    SourceType,
+)
+from gsie_api.engines.knowledge.engine import KnowledgeEngine
+from gsie_api.engines.knowledge.schemas import DomaineScientifique, KnowledgeType
+from gsie_api.engines.pipeline import EvidenceKnowledgePipeline
 from gsie_api.infrastructure.models import ResourceModel
 from gsie_api.infrastructure.models.provenance import EntityAliasModel, EntityModel
 
@@ -59,6 +73,12 @@ _INDIGENAT_SOURCE = SourceReference(
         "sylvoécorégions, Journal de Botanique de la Société Botanique "
         "de France, 124(002) — dataset DOI 10.57745/DHJHGS"
     ),
+)
+
+_PLANTNET_SOURCE = SourceReference(
+    type_source=SourceType.referentiel_officiel,
+    auteur="PlantNet",
+    reference="https://my.plantnet.org/ — identification par image (78 810 espèces)",
 )
 
 _TAXREF_SOURCE = SourceReference(
@@ -89,11 +109,13 @@ class BotanicalEngine:
         gbif_client: GBIFClient | None = None,
         indigenat_loader: IndigenatLoader | None = None,
         taxref_client: TaxrefClient | None = None,
+        plantnet_client: PlantNetClient | None = None,
     ) -> None:
         self._session = session
         self._gbif_client = gbif_client or GBIFClient()
         self._indigenat_loader = indigenat_loader or IndigenatLoader()
         self._taxref_client = taxref_client or TaxrefClient()
+        self._plantnet_client = plantnet_client or PlantNetClient()
 
     @staticmethod
     def version() -> str:
@@ -329,3 +351,121 @@ class BotanicalEngine:
             statut=statut,
             source=_TAXREF_SOURCE,
         )
+
+    async def identify_and_ingest(
+        self, image_bytes: bytes, filename: str, knowledge_engine: KnowledgeEngine
+    ) -> PlantNetIngestResponse | None:
+        """Identifie une plante par image (PlantNet) et ingère les candidats.
+
+        Réutilise le même client que `/botanical/identify` (aucune double
+        requête PlantNet) puis fait passer chaque espèce candidate par
+        `EvidenceKnowledgePipeline` (Gate 5 — maillon amont
+        ingestion→Evidence→Knowledge, ROADMAP.md).
+
+        Contrairement à SoilGrids (produit modélisé peer-reviewed), une
+        identification PlantNet est une inférence par apprentissage
+        automatique sur une photo précise : `ContentType.observation` +
+        `SourceType.referentiel_officiel` plafonnent à `evidence_level=D`
+        dans la matrice de décision — statut `quarantine`, validation
+        humaine requise (CON-001) avant réutilisation par les autres
+        moteurs. C'est la matrice de l'Evidence Engine qui en décide, pas
+        ce module.
+
+        Returns:
+            None si PlantNet ne retourne aucune identification — jamais
+            une espèce inventée (ADR-009).
+
+        Raises:
+            BotanicalEngineError: si l'API PlantNet est indisponible ou
+                la clé API manquante.
+        """
+        try:
+            data = await self._plantnet_client.identify(image_bytes, filename=filename)
+        except PlantNetClientError as exc:
+            raise BotanicalEngineError(str(exc)) from exc
+
+        if data is None:
+            return None
+
+        candidats = parse_plantnet_results(data)
+        pipeline = EvidenceKnowledgePipeline(knowledge_engine)
+
+        resultats: list[PlantNetIngestResult] = []
+        for candidat in candidats:
+            submission = RawKnowledgeSubmission(
+                soumission_id=uuid4(),
+                type_contenu=ContentType.observation,
+                contenu={
+                    "nom_scientifique": candidat.scientific_name_without_author,
+                    "score": candidat.score,
+                    "genre": candidat.genus,
+                    "famille": candidat.family,
+                    "noms_vernaculaires": candidat.common_names,
+                    "gbif_id": candidat.gbif_id,
+                },
+                source_candidate=_PLANTNET_SOURCE,
+                date_soumission=datetime.now(UTC),
+                soumetteur="botanical_engine.plantnet",
+            )
+            resultat = await pipeline.process(
+                submission,
+                type_=KnowledgeType.concept,
+                titre=f"Identification PlantNet — {candidat.scientific_name_without_author}",
+                description=(
+                    f"Score de confiance {candidat.score:.2f}, genre "
+                    f"{candidat.genus}, famille {candidat.family} (PlantNet)."
+                ),
+                domaine_scientifique=DomaineScientifique.botanique,
+                mots_cles=["botanique", "plantnet", candidat.scientific_name_without_author],
+                moteurs_consommateurs=["botanical", "correlation", "diagnostic"],
+            )
+            resultats.append(
+                PlantNetIngestResult(
+                    nom_scientifique=candidat.scientific_name_without_author,
+                    score=candidat.score,
+                    statut=resultat.status,
+                    evidence_level=resultat.qualified.evidence_level,
+                    connaissance_id=resultat.qualified.connaissance_id,
+                    version=resultat.knowledge_object.version
+                    if resultat.knowledge_object
+                    else None,
+                    raison=resultat.reason,
+                )
+            )
+            logger.info(
+                "botanical_plantnet_ingest",
+                nom_scientifique=candidat.scientific_name_without_author,
+                statut=resultat.status,
+                connaissance_id=str(resultat.qualified.connaissance_id),
+            )
+
+        return PlantNetIngestResponse(
+            best_match=data.get("bestMatch"),
+            resultats=resultats,
+        )
+
+
+def parse_plantnet_results(data: dict[str, Any]) -> list[PlantNetIdentificationResult]:
+    """Convertit la réponse brute PlantNet en résultats typés.
+
+    Factorisé entre `/botanical/identify` (routeur) et
+    `identify_and_ingest` (ci-dessus) — un seul endroit qui sait lire le
+    format de réponse PlantNet.
+    """
+    results: list[PlantNetIdentificationResult] = []
+    for r in data.get("results", []):
+        species = r.get("species", {})
+        genus = species.get("genus", {})
+        family = species.get("family", {})
+        results.append(
+            PlantNetIdentificationResult(
+                score=r.get("score", 0.0),
+                scientific_name=species.get("scientificName", ""),
+                scientific_name_without_author=species.get("scientificNameWithoutAuthor", ""),
+                genus=genus.get("scientificNameWithoutAuthor", genus.get("scientificName", "")),
+                family=family.get("scientificNameWithoutAuthor", family.get("scientificName", "")),
+                common_names=species.get("commonNames", []),
+                gbif_id=str(r.get("gbif", {}).get("id", "")) or None,
+            )
+        )
+    return results

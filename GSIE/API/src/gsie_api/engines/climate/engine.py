@@ -20,7 +20,7 @@ valeur par défaut (ADR-009).
 import csv
 import io
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -39,6 +39,8 @@ from gsie_api.engines.climate.paquet_observation_client import (
 from gsie_api.engines.climate.schemas import (
     AromeTemperatureQuery,
     AromeTemperatureResult,
+    ClimateIngestResponse,
+    ClimateIngestResult,
     ClimateQuery,
     ClimatologieQuotidienneQuery,
     DangerFeuxDepartement,
@@ -51,7 +53,15 @@ from gsie_api.engines.climate.schemas import (
 )
 from gsie_api.engines.climate.synop_client import SynopClient, SynopClientError
 from gsie_api.engines.climate.vigilance_client import VigilanceClient, VigilanceClientError
-from gsie_api.engines.evidence.schemas import SourceReference, SourceType
+from gsie_api.engines.evidence.schemas import (
+    ContentType,
+    RawKnowledgeSubmission,
+    SourceReference,
+    SourceType,
+)
+from gsie_api.engines.knowledge.engine import KnowledgeEngine
+from gsie_api.engines.knowledge.schemas import DomaineScientifique, KnowledgeType
+from gsie_api.engines.pipeline import EvidenceKnowledgePipeline
 
 logger = get_logger("gsie_api.climate.engine")
 
@@ -226,6 +236,108 @@ class ClimateEngine:
         )
 
         return observation
+
+    async def query_and_ingest(
+        self, request: ClimateQuery, knowledge_engine: KnowledgeEngine
+    ) -> ClimateIngestResponse | None:
+        """Récupère la dernière observation SYNOP et l'ingère dans le Knowledge Engine.
+
+        Réutilise `query()` (aucune double requête SYNOP) puis fait
+        passer chaque paramètre mesuré par `EvidenceKnowledgePipeline`
+        (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md).
+
+        Une observation SYNOP est une mesure instantanée brute (pas un
+        produit modélisé comme SoilGrids) : `ContentType.observation` +
+        `SourceType.referentiel_officiel` plafonnent à
+        `evidence_level=D` dans la matrice de décision — statut
+        `quarantine`, validation humaine requise (CON-001) avant
+        réutilisation par les autres moteurs. C'est la matrice de
+        l'Evidence Engine qui en décide, pas ce module.
+
+        Returns:
+            None si la station est introuvable — jamais une observation
+            approximée (ADR-009).
+
+        Raises:
+            ClimateEngineError: si les données SYNOP sont indisponibles.
+        """
+        observation = await self.query(request)
+        if observation is None:
+            return None
+
+        pipeline = EvidenceKnowledgePipeline(knowledge_engine)
+        parametres: list[tuple[str, float, str]] = [
+            (nom, valeur, unite)
+            for nom, valeur, unite in (
+                ("temperature_c", observation.temperature_c, "°C"),
+                ("humidite_pct", observation.humidite_pct, "%"),
+                ("pression_hpa", observation.pression_hpa, "hPa"),
+                ("vent_direction_deg", observation.vent_direction_deg, "°"),
+                ("vent_vitesse_ms", observation.vent_vitesse_ms, "m/s"),
+                ("precipitations_1h_mm", observation.precipitations_1h_mm, "mm"),
+            )
+            if valeur is not None
+        ]
+
+        resultats: list[ClimateIngestResult] = []
+        for nom, valeur, unite in parametres:
+            submission = RawKnowledgeSubmission(
+                soumission_id=uuid4(),
+                type_contenu=ContentType.observation,
+                contenu={
+                    "parametre": nom,
+                    "valeur": valeur,
+                    "unite": unite,
+                    "station_id": observation.station_id,
+                    "nom_station": observation.nom_station,
+                    "latitude": observation.latitude,
+                    "longitude": observation.longitude,
+                    "date_observation": observation.date_observation.isoformat(),
+                },
+                source_candidate=_SYNOP_SOURCE,
+                date_soumission=datetime.now(UTC),
+                soumetteur="climate_engine.synop",
+            )
+            resultat = await pipeline.process(
+                submission,
+                type_=KnowledgeType.concept,
+                titre=f"Météo — {nom} à la station {observation.nom_station}",
+                description=(
+                    f"{nom} = {valeur} {unite}, station SYNOP "
+                    f"{observation.station_id} ({observation.nom_station}), "
+                    f"observée le {observation.date_observation.isoformat()} "
+                    f"(Météo-France)."
+                ),
+                domaine_scientifique=DomaineScientifique.climatologie,
+                mots_cles=["climatologie", "synop", nom],
+                moteurs_consommateurs=["climate", "correlation", "diagnostic"],
+            )
+            resultats.append(
+                ClimateIngestResult(
+                    nom=nom,
+                    statut=resultat.status,
+                    evidence_level=resultat.qualified.evidence_level,
+                    connaissance_id=resultat.qualified.connaissance_id,
+                    version=resultat.knowledge_object.version
+                    if resultat.knowledge_object
+                    else None,
+                    raison=resultat.reason,
+                )
+            )
+            logger.info(
+                "climate_ingest",
+                parametre=nom,
+                statut=resultat.status,
+                connaissance_id=str(resultat.qualified.connaissance_id),
+            )
+
+        return ClimateIngestResponse(
+            requete_id=request.requete_id,
+            station_id=observation.station_id,
+            nom_station=observation.nom_station,
+            date_observation=observation.date_observation,
+            resultats=resultats,
+        )
 
     async def get_danger_feux(self) -> list[DangerFeuxDepartement]:
         """Récupère le niveau de danger de feux de forêt réel, tous départements.
