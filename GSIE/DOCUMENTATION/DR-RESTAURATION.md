@@ -103,16 +103,26 @@ shell que `pgbackrest.conf` n'interprète pas) a également été corrigée —
 la passphrase n'est jamais écrite dans le fichier de config, seulement lue
 depuis l'environnement du conteneur.
 
-**Limite connue** : la validation ci-dessus a été faite en reconfigurant
-en direct le conteneur `db` déjà en service (sans reconstruire son image),
-car le rebuild Docker de `Dockerfile.db` (qui installe `pgbackrest` de façon
-permanente) était bloqué par un problème réseau/certificat sur la machine
-au moment de la validation (échec du téléchargement de la source Apache
-AGE — sans rapport avec pgBackRest). La combinaison finale (chiffrement
-+ archivage automatique + dépôt sur volume Docker nommé persistant) sera
-active dès `docker compose build db && docker compose up -d db` une fois
-le réseau rétabli ; il faudra alors relancer `stanza-create` une fois
-contre le nouveau volume `gsie_pgbackrest_repo`.
+**Mise à jour (2026-08-08, suite)** : `docker compose up -d db` (recréation
+déclenchée par un changement de config non lié — ajout des Client IDs
+Google OAuth) a activé la configuration finale de `docker-compose.yml`
+(volumes nommés `gsie_pgbackrest_repo`/`gsie_pgbackrest_log`,
+`PGBACKREST_REPO1_CIPHER_PASS` réellement définie) **sans reconstruire
+l'image** — Docker Compose ne rebuild pas automatiquement sur un simple
+`up` sans `--build`, donc le conteneur recréé n'avait pas `pgbackrest`
+(toujours absent de l'image figée, rebuild toujours bloqué par le même
+problème réseau/certificat sans rapport avec pgBackRest). `pgbackrest` a
+été réinstallé en direct une seconde fois sur ce nouveau conteneur, puis
+`stanza-create` relancé contre le volume persistant neuf — cette fois
+**avec le chiffrement réellement actif** (`cipher: aes-256-cbc` confirmé
+par `pgbackrest info`, passphrase lue depuis l'environnement du
+conteneur) et une sauvegarde complète réussie sur le volume nommé
+persistant (52 MB → 5,9 MB). Le dépôt et l'archivage tournent donc
+désormais en conditions réelles (chiffré, volume persistant), seule
+l'installation de `pgbackrest` dans l'image reste à figer définitivement
+via `docker compose build db` — sans quoi une future recréation du
+conteneur (`docker compose up` sans `--build`, ou perte du conteneur)
+nécessitera de le réinstaller en direct une troisième fois.
 
 ## 4. Procédure de restauration
 
