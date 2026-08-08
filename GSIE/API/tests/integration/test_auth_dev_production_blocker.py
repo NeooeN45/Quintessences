@@ -45,6 +45,11 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         # MFA est active par défaut (mfa_enabled=True), la production exige
         # une clé de chiffrement pour les secrets TOTP (DEC-000052).
         "mfa_encryption_key": "test-integration-mfa-key-32bytes-min!!",
+        # La création de comptes locaux est active par défaut, la production
+        # exige un service SMTP configuré avec chiffrement.
+        "transactional_email_mode": "smtp",
+        "smtp_host": "smtp.example.com",
+        "smtp_starttls": True,
     } | overrides
 
 
