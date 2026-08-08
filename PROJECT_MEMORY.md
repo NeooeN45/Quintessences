@@ -56,6 +56,10 @@ Hydro (eau), Flora (végétation), QGISIA (plugin QGIS). Centre de
 Commandement GSIE (Unreal Engine 5.8) — poste de pilotage immersif où
 toutes les données convergent.
 
+Applications mobiles : GeoSylva (Android, en cours), Artemis (Android,
+Phase 4), Ignis (mobile terrain, Phase 4) — chacune conçue pour
+l'observation terrain et la synchronisation offline.
+
 Repos externes intégrés : `apps/GeoSylva/` (GitHub: NeooeN45/GeoSylva),
 `apps/QGISIA/` (GitHub: NeooeN45/QGISIAPRO), `Forge/`
 (GitHub: NeooeN45/Forge). Ces repos ont leur propre `.git` et sont ignorés par le
@@ -276,7 +280,9 @@ brainstorming v5 n'est adoptée.
 - **RFC-0004** — Ignis : Système autonome de surveillance et d'analyse
   des incendies (**ADOPTÉ** — 2026-07-12, DEC-000003) : nouvelle branche
   fonctionnelle dédiée au risque incendie, positionnée comme application
-  cliente de GSIE. Registre d'idées dans `apps/Ignis/REGISTRE.md` ;
+  cliente de GSIE. **Un applicatif mobile terrain est désormais prévu**
+  en complément du Centre de Commandement GSIE, voir `README.md` et
+  `CLAUDE.md` §10. Registre d'idées dans `apps/Ignis/REGISTRE.md` ;
   livrables Jalon 0 dans `apps/Ignis/`. Aucun développement
   métier en Phase 1. Voir `02_RFC/RFC-0004.md`.
 - **RFC-0015** — Environmental Model Fabric (**ADOPTÉ** — 2026-07-18,

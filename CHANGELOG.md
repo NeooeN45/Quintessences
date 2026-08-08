@@ -4,6 +4,18 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [APPLICATIONS CLIENTES — IGNIS MOBILE] - 2026-08-08
+
+- **Ignis** : ajout d'une **application mobile terrain** dans le périmètre
+  de la branche fonctionnelle Ignis (RFC-0004, ADOPTÉ). L'application
+  mobile complète le Centre de Commandement GSIE (Unreal Engine 5.8) et
+  l'intégration API : prise de terrain, remontée d'observations, suivi de
+  sinistre, accès offline aux simulations et aux ressources locales.
+- **Documentation** : mise à jour de `README.md` (table des interfaces
+  Ignis), `CLAUDE.md` §10 (colonne « Type / interfaces » indiquant le
+  mobile pour GeoSylva, Artemis et Ignis), `PROJECT_MEMORY.md`
+  (applications mobiles reconnues et lien RFC-0004).
+
 ## [GATE 5 INTÉGRATION — MAILLON AMONT GBIF/TAXREF→EVIDENCE→KNOWLEDGE] - 2026-08-08
 
 - **Suite des connecteurs SoilGrids/PlantNet/Météo-France** (voir entrées
