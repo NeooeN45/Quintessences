@@ -78,7 +78,7 @@ dev = [
     "pytest-cov==6.0.0",
     # Parallélisation de la suite pytest (P2-1) — version stable, publiée
     # depuis plusieurs mois, compatible pytest 8.3.x
-    "pytest-xdist==3.6.1",
+    "pytest-xdist==3.8.0",
     "testcontainers[postgres]==4.10.0",
     "ruff==0.8.4",
     "mypy==1.14.0",
