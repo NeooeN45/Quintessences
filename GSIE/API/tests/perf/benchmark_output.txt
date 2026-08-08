@@ -1,0 +1,21 @@
+# Benchmark Correlation Engine ù scipy vs numpy (CPU baseline)
+# Matrices: [(10, 100), (10, 1000), (10, 10000), (50, 1000), (50, 10000), (120, 1000), (120, 10000)]
+
+  10 vars x     100 obs |       45 paires | scipy=     15.14 ms | numpy=      0.24 ms | speedup=  64.3x
+  10 vars x    1000 obs |       45 paires | scipy=     24.40 ms | numpy=      0.33 ms | speedup=  73.4x
+  10 vars x   10000 obs |       45 paires | scipy=     20.52 ms | numpy=      0.68 ms | speedup=  30.1x
+  50 vars x    1000 obs |     1225 paires | scipy=    461.84 ms | numpy=      0.54 ms | speedup= 849.6x
+  50 vars x   10000 obs |     1225 paires | scipy=    622.05 ms | numpy=      3.75 ms | speedup= 165.7x
+ 120 vars x    1000 obs |     7140 paires | scipy=   2406.70 ms | numpy=      1.58 ms | speedup=1521.0x
+ 120 vars x   10000 obs |     7140 paires | scipy=   3410.47 ms | numpy=     10.45 ms | speedup= 326.4x
+
+## Resume
+| Vars x Obs | Paires | scipy (ms) | numpy (ms) | Speedup |
+|---|---|---|---|---|
+| 10 x 100 | 45 | 15.14 | 0.24 | 64.3x |
+| 10 x 1000 | 45 | 24.4 | 0.33 | 73.4x |
+| 10 x 10000 | 45 | 20.52 | 0.68 | 30.1x |
+| 50 x 1000 | 1225 | 461.84 | 0.54 | 849.6x |
+| 50 x 10000 | 1225 | 622.05 | 3.75 | 165.7x |
+| 120 x 1000 | 7140 | 2406.7 | 1.58 | 1521.0x |
+| 120 x 10000 | 7140 | 3410.47 | 10.45 | 326.4x |
