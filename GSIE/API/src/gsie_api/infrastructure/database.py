@@ -151,7 +151,14 @@ async def _resolve_active_organisation(
     user_id: str,
     request: Request,
 ) -> str | None:
-    """Résout le contexte d'organisation explicite ou unique du compte."""
+    """Résout le contexte d'organisation explicite ou unique du compte.
+
+    Un ``user_id`` non-UUID (ex. token de test avec un username comme subject)
+    ne peut correspondre à aucune organisation en base — on court-circuite
+    l'auto-résolution (sans header) pour éviter une erreur de typage asyncpg
+    sur les colonnes UUID. La validation du header ``X-Organisation-Id``
+    reste appliquée dans tous les cas.
+    """
     requested = request.headers.get("X-Organisation-Id")
     if requested:
         try:
@@ -175,6 +182,13 @@ async def _resolve_active_organisation(
                 detail="Compte non membre de cette organisation",
             )
         return str(organisation_id)
+
+    # Un user_id non-UUID (ex. token de test) ne peut avoir d'organisation
+    # en base — on évite la requête SQL qui échouerait sur le cast UUID.
+    try:
+        UUID(user_id)
+    except (ValueError, TypeError):
+        return None
 
     rows = (
         (

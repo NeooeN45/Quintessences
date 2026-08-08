@@ -279,13 +279,15 @@ class _FakeRequest:
 
 
 class TestResolveActiveOrganisation:
+    _USER_ID = str(uuid4())
+
     @pytest.mark.asyncio
     async def should_raise_400_when_header_is_not_a_uuid(self) -> None:
         session = AsyncMock()
         request = _FakeRequest({"X-Organisation-Id": "not-a-uuid"})
 
         with pytest.raises(HTTPException) as captured:
-            await _resolve_active_organisation(session, "user-1", request)
+            await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert captured.value.status_code == 400
 
@@ -297,7 +299,7 @@ class TestResolveActiveOrganisation:
         request = _FakeRequest({"X-Organisation-Id": str(org_id)})
 
         with pytest.raises(HTTPException) as captured:
-            await _resolve_active_organisation(session, "user-1", request)
+            await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert captured.value.status_code == 403
 
@@ -308,7 +310,7 @@ class TestResolveActiveOrganisation:
         org_id = uuid4()
         request = _FakeRequest({"X-Organisation-Id": str(org_id)})
 
-        result = await _resolve_active_organisation(session, "user-1", request)
+        result = await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert result == str(org_id)
 
@@ -321,7 +323,7 @@ class TestResolveActiveOrganisation:
         request = _FakeRequest()
 
         with pytest.raises(HTTPException) as captured:
-            await _resolve_active_organisation(session, "user-1", request)
+            await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert captured.value.status_code == 409
 
@@ -333,7 +335,7 @@ class TestResolveActiveOrganisation:
         session.execute = AsyncMock(return_value=execute_result)
         request = _FakeRequest()
 
-        result = await _resolve_active_organisation(session, "user-1", request)
+        result = await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert result is None
 
@@ -346,9 +348,21 @@ class TestResolveActiveOrganisation:
         session.execute = AsyncMock(return_value=execute_result)
         request = _FakeRequest()
 
-        result = await _resolve_active_organisation(session, "user-1", request)
+        result = await _resolve_active_organisation(session, self._USER_ID, request)
 
         assert result == str(org_id)
+
+    @pytest.mark.asyncio
+    async def should_return_none_when_user_id_is_not_a_uuid_and_no_header(self) -> None:
+        """Un user_id non-UUID (ex. token de test) ne peut avoir d'organisation
+        en base — on évite la requête SQL qui échouerait sur le cast UUID."""
+        session = AsyncMock()
+        request = _FakeRequest()
+
+        result = await _resolve_active_organisation(session, "non-uuid-subject", request)
+
+        assert result is None
+        session.execute.assert_not_called()
 
 
 # ─────────────────────────────────────────────────────────────────────────

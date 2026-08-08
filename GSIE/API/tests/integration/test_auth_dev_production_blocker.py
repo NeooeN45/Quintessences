@@ -42,6 +42,9 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "auth_dev_password": "mot_de_passe_reel_pour_tests_integration",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
+        # MFA est active par défaut (mfa_enabled=True), la production exige
+        # une clé de chiffrement pour les secrets TOTP (DEC-000052).
+        "mfa_encryption_key": "test-integration-mfa-key-32bytes-min!!",
     } | overrides
 
 

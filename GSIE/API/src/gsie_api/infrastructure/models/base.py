@@ -58,13 +58,11 @@ class ResourceModel(Base, TimestampMixin):
         PGUUID(as_uuid=True),
         ForeignKey("gsie_organisations.organisation.id", ondelete="SET NULL"),
         nullable=True,
-        index=True,
     )
     workspace_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("gsie_organisations.workspace.id", ondelete="SET NULL"),
         nullable=True,
-        index=True,
     )
     type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     gsie_id: Mapped[str | None] = mapped_column(
@@ -86,6 +84,9 @@ class ResourceModel(Base, TimestampMixin):
     )
 
     __table_args__ = (
+        # Index composite aligné sur la migration 20260805_0037 et la policy
+        # RLS resource_scope_visible (filtre conjoint organisation + workspace).
+        Index("idx_resource_organisation_workspace", "organisation_id", "workspace_id"),
         # Index GIN sur metadata_json pour la recherche par clé JSONB.
         # Créé par la migration 20260801_0027 ; déclaré ici pour éviter la
         # dérive registre/base détectée par test_migration_baseline.
