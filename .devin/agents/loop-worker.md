@@ -3,8 +3,8 @@ name: loop-worker
 description: |
   Worker pour loops spécialisées (sécurité, QA, veille). Exécute
   un cycle spécifique et retourne les findings à l'orchestrateur.
-  Modèle SWE-1.6 pour la rapidité et l'économie (illimité).
-model: swe-1-6
+  Modèle SWE 1.7 max pour la rapidité et l'économie (illimité).
+model: swe-1-7
 allowed-tools:
   - read
   - write

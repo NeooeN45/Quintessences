@@ -233,6 +233,12 @@ de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
 données temps réel par drone, détection par vision embarquée. Positionné
 comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
 
+| Interface | Rôle |
+|---|---|
+| Ignis Mobile | Application terrain pour le suivi de sinistre, la remontée d'observations et la consultation des simulations en mode offline |
+| Ignis Commandement | Poste fixe / Centre de Commandement GSIE (Unreal Engine 5.8) |
+| API GSIE | Intégration dans des workflows tiers (SDIS, DDT, etc.) |
+
 **Garde-fous non négociables** : outil d'aide à la décision du COS/CODIS,
 jamais un système de commandement. Aucune alerte directe à la population
 (prérogative régale FR-Alert). La sortie « cause probable » reste une

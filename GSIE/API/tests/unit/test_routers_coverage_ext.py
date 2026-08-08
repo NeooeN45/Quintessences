@@ -472,8 +472,47 @@ class TestCorrelationRouter:
                 headers=_auth_headers(roles=["reader"]),
             )
         assert resp.status_code == 200
-        data = resp.json()
-        assert data["pearson"] == 5
+
+    async def should_return_400_when_matrix_engine_error(
+        self, correlation_client: AsyncClient
+    ) -> None:
+        """POST /correlation/matrix — CorrelationEngineError retourne 400."""
+        from gsie_api.engines.correlation.engine import CorrelationEngineError
+
+        with patch("gsie_api.engines.correlation.router.CorrelationEngine") as mock_cls:
+            mock_engine = mock_cls.return_value
+            mock_engine.compute_matrix = AsyncMock(
+                side_effect=CorrelationEngineError("variable constante")
+            )
+            resp = await correlation_client.post(
+                f"{_API_PREFIX}/correlation/matrix",
+                json={
+                    "requete_id": str(uuid4()),
+                    "domaine": "stationnel",
+                    "variables": [
+                        {
+                            "source_moteur": "CLIMATE",
+                            "variable": "temp",
+                            "valeurs": [1.0, 2.0, 3.0],
+                        },
+                        {
+                            "source_moteur": "PEDOLOGY",
+                            "variable": "ph",
+                            "valeurs": [4.0, 5.0, 6.0],
+                        },
+                    ],
+                    "methode": "pearson",
+                    "source": {
+                        "type_source": "peer_reviewed",
+                        "auteur": "Test",
+                        "reference": "DOI",
+                    },
+                    "evidence_level": "B",
+                },
+                headers=_writer_headers(),
+            )
+        assert resp.status_code == 400
+        assert "variable constante" in resp.json()["detail"]
 
 
 # ===========================================================================

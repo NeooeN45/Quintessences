@@ -204,6 +204,176 @@ Cycle 5: Revue secrets (code + git history)
 
 ---
 
+### Cycle 2 — Audit dépendances CVE (2026-08-08)
+
+- **Statut** : TERMINÉ
+- **Action** : Audit complet des vulnérabilités connues (CVE) sur toutes les dépendances de l'API GSIE
+- **Périmètre** : `pyproject.toml` (40+ dépendances directes + 10 dev), `uv.lock` (138 packages résolus), environnement `.venv`
+- **Trust score** : 0.62 → 0.71 (audit rigoureux avec pip-audit, 24 CVE trouvées sur 7 packages, recommandations précises)
+
+#### Méthode utilisée
+
+**pip-audit 2.10.1** (via wrapper Python contournant le proxy SSL de l'environnement).
+Audit croisé avec recherches manuelles sur OSV (osv.dev), NVD (nvd.nist.gov), GitHub Advisory Database (GHSA) et cybersecurity-help.cz pour confirmer les versions affectées et les sévérités.
+
+- pip-audit installé via `uv pip install pip-audit --system-certs`
+- Exécution avec `--format json` pour sortie structurée
+- Le proxy SSL de l'environnement (`self-signed certificate in certificate chain`) a nécessité un monkey-patch de `requests.Session.request` (verify=False)
+- `--strict` non utilisé car `gsie-api` (package local) n'est pas sur PyPI → exit code 1 immédiat
+
+#### Dépendances auditées
+
+- **Total packages installés** : 138 (résolus via `uv.lock`)
+- **Packages audités par pip-audit** : 137 (1 skipped : `gsie-api` — package local non publié sur PyPI)
+- **Dépendances directes (pyproject.toml)** : 40 (production) + 10 (dev) + 1 (dependency-group) = 51
+- **uv.lock** : présent, hashes SHA256 vérifiés sur tous les packages (`--require-hashes` dans Dockerfile)
+
+#### CVE trouvées — 24 CVE uniques sur 7 packages
+
+##### 1. starlette 0.41.3 (transitive de fastapi 0.115.6) — 7 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2026-48710 | GHSA-86qp-5c8j-p5mr | MODERATE (6.5) | 1.0.1 | **Host header validation bypass** — `request.url.path` peut être empoisonné via le header Host, contournant les checks de sécurité basés sur `request.url` (auth bypass potentiel) |
+| CVE-2026-54282 | GHSA-jp82-jpqv-5vv3 | MODERATE | 1.3.0 | **request.url authority poisoning** — un path ne commençant pas par `/` (ex: `@google.com`) déplace l'autorité de `request.url` |
+| CVE-2026-54283 | GHSA-82w8-qh3p-5jfq | MODERATE | 1.3.1 | **DoS form() urlencoded** — les limites `max_fields`/`max_part_size` sont ignorées pour `application/x-www-form-urlencoded` (uniquement appliquées au multipart) |
+| CVE-2025-62727 | GHSA-7f5h-v6xp-fcq8 | **HIGH (7.5)** | 0.49.1 | **DoS O(n²) via Range header** — `FileResponse` parsing/merging des Range headers en temps quadratique → épuisement CPU |
+| CVE-2025-54121 | GHSA-2c2j-9gv5-cj73 | MODERATE (5.3) | 0.47.2 | **DoS multipart fichiers larges** — blocage du thread principal lors du spooling disque de fichiers > max spool size |
+| CVE-2026-48818 | GHSA-wqp7-x3pw-xc5r | MODERATE | 1.1.0 | **SSRF StaticFiles Windows** — un chemin UNC (`\\attacker.com\share`) initie une connexion SMB exposant le hash NTLMv2 du compte de service |
+| CVE-2026-48817 | GHSA-x746-7m8f-x49c | MODERATE | 1.1.0 | **HTTPEndpoint méthode arbitraire** — `getattr` sur méthode HTTP non restreinte aux verbes connus → exécution de handlers inattendus |
+
+> **Note** : starlette 0.41.3 est une dépendance transitive de `fastapi==0.115.6`. FastAPI 0.115.6 impose `starlette>=0.40.0,<0.42.0`. La mise à jour de starlette nécessite donc une mise à jour de fastapi.
+
+##### 2. pyjwt 2.10.1 (direct) — 7 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2026-32597 | GHSA-752w-5fwx-jx9f | MODERATE | 2.12.0 | **Header `crit` non validé** — PyJWT accepte les tokens avec extensions `crit` inconnues au lieu de les rejeter (violation RFC 7515 §4.1.11) |
+| CVE-2025-45768 | — | HIGH (7.0, **disputé**) | — | **Chiffrement faible** — la longueur de clé est choisie par l'application. Disputé par le fournisseur : la bibliothèque ne choisit pas la clé. Aucun fix prévu. |
+| CVE-2026-48526 | GHSA-xgmm-8j9v-c9wx | HIGH | 2.13.0 | **Clé publique utilisée comme secret HMAC** — quand le vérifieur supporte asymétrique + HMAC, un attaquant peut utiliser la clé publique de l'émetteur comme secret HMAC |
+| CVE-2026-48522 | GHSA-993g-76c3-p5m4 | HIGH | 2.13.0 | **SSRF PyJWKClient** — l'argument `uri` de `PyJWKClient` passé directement à `urllib.request.urlopen()` (file://, ftp:// non restreints) |
+| CVE-2026-48524 | GHSA-fhv5-28vv-h8m8 | MODERATE | 2.13.0 | **DoS JWKS endpoint** — `PyJWKClient.get_signing_key()` force une requête HTTP pour chaque JWT avec un `kid` inconnu, sans rate limiting |
+| CVE-2026-48525 | GHSA-w7vc-732c-9m39 | MODERATE | 2.13.0 | **Bypass detached JWS** — décodage Base64URL du payload avant l'application des règles detached-payload (`b64: false`) |
+| CVE-2026-48523 | GHSA-jq35-7prp-9v3f | HIGH | 2.12.1 | **Bypass allow-list algorithmes** — avec une clé PyJWK, le header `alg` du token est vérifié contre l'allow-list, mais la signature est vérifiée avec l'algorithme de la clé JWK (bypass possible) |
+
+> **Note** : CVE-2026-48523 et CVE-2026-48526 sont particulièrement critiques pour GSIE car l'API utilise JWT RS256 pour l'authentification. Le bypass d'allow-list d'algorithmes pourrait permettre une attaque algorithm confusion (RS256 → HS256 avec clé publique).
+
+##### 3. python-multipart 0.0.20 (direct) — 6 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2026-24486 | GHSA-wp53-j4wj-2cfg | HIGH | 0.0.22 | **Path Traversal** — avec `UPLOAD_DIR` + `UPLOAD_KEEP_FILENAME=True`, un nom de fichier malveillant permet d'écrire à des emplacements arbitraires |
+| CVE-2026-40347 | GHSA-mj87-hwqh-73pj | MODERATE | 0.0.26 | **DoS preamble/epilogue multipart** — parsing inefficace des sections preamble/epilogue larges |
+| CVE-2026-53538 | GHSA-6jv3-5f52-599m | MODERATE | 0.0.30 | **Séparateur `;` inattendu** — `QuerystringParser` traite `;` comme séparateur de champs dans `urlencoded` (incohérent avec navigateurs/urllib) |
+| CVE-2026-53539 | GHSA-5rvq-cxj2-64vf | MODERATE | 0.0.30 | **DoS scanning `;` fallback** — recherche en deux étapes (`&` puis `;`) causant un comportement O(n²) sur bodies sans `&` |
+| CVE-2026-53540 | GHSA-v9pg-7xvm-68hf | MODERATE | 0.0.31 | **Content-Length négatif** — un `Content-Length` négatif transforme la lecture bornée en read-until-EOF → toute la body en mémoire |
+| CVE-2026-42561 | GHSA-pp6c-gr5w-3c5g | MODERATE | 0.0.27 | **DoS part headers illimités** — pas de limite sur le nombre/taille des headers de parts multipart |
+
+##### 4. cryptography 49.0.0 (direct) — 1 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2026-69247 | GHSA-g6cj-pr64-35w5 | **HIGH** | 50.0.0 | **Oracle Bleichenbacher PKCS#7** — `pkcs7_decrypt_der/pem/smime` expose un oracle Bleichenbacher via erreurs distinguables et timing sur le déchiffrement `EnvelopedData`. Exploitation nécessite un service qui auto-décrypte des `EnvelopedData` non fiables (ex: passerelle S/MIME). Faible risque pour GSIE (pas de S/MIME), mais mise à jour recommandée. |
+
+> **Note** : cryptography 49.0.0 corrige déjà CVE-2026-69248 et CVE-2026-69249 (affectaient <= 48.0.0). La CVE-2026-69247 est la seule restante, corrigée dans 50.0.0.
+
+##### 5. orjson 3.10.11 (direct) — 1 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2025-67221 | GHSA-hx9q-6w63-j58v | MODERATE | 3.11.6 | **DoS récursion profonde** — `orjson.dumps` ne limite pas la récursion pour les documents JSON profondément imbriqués → épuisement de la stack |
+
+##### 6. app-store-server-library 1.5.0 (direct) — 1 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| (pas de CVE ID) | GHSA-8f6j-263m-g72x | MODERATE | 3.1.2 | **Rejeu OCSP stale** — `SignedDataVerifier` accepte indéfiniment des réponses OCSP `GOOD` expirées quand `enable_online_checks=True`. Un certificat révoqué peut continuer à être accepté. |
+
+##### 7. pytest 8.3.4 (dev) — 1 CVE
+
+| CVE ID | GHSA | Sévérité | Fix | Description |
+|---|---|---|---|---|
+| CVE-2025-71176 | GHSA-6w46-j5rx-g56g | LOW | 9.0.3 | **DoS/escalade tmpdir UNIX** — `pytest` utilise des répertoires `/tmp/pytest-of-{user}` prévisibles. Impact : dev only, UNIX only, faible risque sur Windows. |
+
+#### Dépendances à jour (sans CVE) — 130/137
+
+Les dépendances clés suivantes sont **confirmées sans CVE** sur leurs versions épinglées :
+
+| Package | Version | Statut |
+|---|---|---|
+| fastapi | 0.115.6 | OK (les CVE sont sur starlette, pas fastapi directement) |
+| pydantic | 2.10.4 | OK (CVE-2024-3772 affecte < 2.4.0, non applicable) |
+| pydantic-core | 2.27.2 | OK |
+| httpx | 0.28.1 | OK (CVE-2021-41945 affecte < 0.23.0, non applicable) |
+| sqlalchemy | 2.0.36 | OK (aucune CVE pour cette version) |
+| mako | 1.3.12 | OK (CVE-2026-41205 affecte < 1.3.11, non applicable) |
+| redis-py | 5.2.1 | OK (CVE-2023-28859 affecte <= 4.5.3, non applicable) |
+| argon2-cffi | 25.1.0 | OK (aucune CVE) |
+| structlog | 24.4.0 | OK (aucune CVE) |
+| bcrypt | 4.2.1 | OK (aucune CVE) |
+| uvicorn | 0.34.0 | OK (aucune CVE) |
+| gunicorn | 23.0.0 | OK (aucune CVE) |
+| asyncpg | 0.30.0 | OK (aucune CVE) |
+| alembic | 1.14.0 | OK (aucune CVE) |
+| geoalchemy2 | 0.16.0 | OK (aucune CVE) |
+| shapely | 2.0.6 | OK (aucune CVE) |
+| pyproj | 3.7.0 | OK (aucune CVE) |
+| scipy | 1.15.3 | OK (aucune CVE) |
+| google-auth | 2.56.0 | OK (aucune CVE) |
+| stripe | 11.6.0 | OK (aucune CVE) |
+| slowapi | 0.1.9 | OK (aucune CVE) |
+| ruff | 0.8.4 | OK (aucune CVE) |
+| mypy | 1.14.0 | OK (aucune CVE) |
+| pytest-asyncio | 0.25.0 | OK (aucune CVE) |
+| tenacity | 8.5.0 | OK (aucune CVE) |
+| pyotp | 2.9.0 | OK (aucune CVE) |
+| zxcvbn | 4.4.28 | OK (aucune CVE) |
+| defusedxml | 0.7.1 | OK (aucune CVE) |
+
+#### Recommandations
+
+**Priorité 1 — Haute (mise à jour immédiate recommandée)** :
+
+1. **pyjwt 2.10.1 → 2.13.0** (minimum 2.12.1) — 7 CVE dont 3 HIGH. CVE-2026-48523 (bypass allow-list algorithmes) et CVE-2026-48526 (clé publique comme secret HMAC) sont des risques directs pour l'authentification JWT RS256 de GSIE. **Recommandation : épingler `pyjwt[crypto]==2.13.0`** (vérifier publication > 7 jours selon règle global_rules).
+
+2. **python-multipart 0.0.20 → 0.0.31** — 6 CVE dont 1 HIGH (path traversal). python-multipart est utilisé par FastAPI pour le parsing des formulaires et multipart. **Recommandation : épingler `python-multipart==0.0.31`**.
+
+3. **fastapi 0.115.6 → version récente** (ex: 0.115.14+ ou 1.x) — pour bénéficier d'une version de starlette ≥ 1.3.1 qui corrige les 7 CVE starlette. **Vérifier compatibilité breaking changes**. La fastapi 0.115.x la plus récente pin starlette >= 0.40.0 — il faut fastapi >= 0.116.0 ou 1.x pour starlette >= 1.0.1. À évaluer dans un RFC dédié si breaking.
+
+4. **cryptography 49.0.0 → 50.0.0** — 1 CVE HIGH (Bleichenbacher oracle). Faible risque pratique pour GSIE (pas de S/MIME), mais mise à jour simple et sans breaking change connu. **Recommandation : épingler `cryptography==50.0.0`**.
+
+**Priorité 2 — Moyenne** :
+
+5. **orjson 3.10.11 → 3.11.6** — 1 CVE MODERATE (DoS récursion). Mise à jour simple. **Recommandation : épingler `orjson==3.11.6`**.
+
+6. **app-store-server-library 1.5.0 → 3.1.2** — 1 CVE MODERATE (OCSP stale). Vérifier breaking changes (saut de version majeure 1.x → 3.x). À évaluer si l'App Store integration est active en production.
+
+**Priorité 3 — Basse (dev only)** :
+
+7. **pytest 8.3.4 → 9.0.3** — 1 CVE LOW (tmpdir UNIX). Dev only, faible risque. Mettre à jour quand compatible avec pytest-asyncio et pytest-xdist.
+
+**Note sur starlette** : La mise à jour de starlette nécessite une mise à jour de fastapi (contrainte `starlette>=0.40.0,<0.42.0` dans fastapi 0.115.6). C'est la mise à jour la plus complexe car elle peut introduire des breaking changes. Recommandation : créer un RFC dédié pour évaluer la migration fastapi 0.115.6 → 1.x.
+
+#### Score
+
+- **Dépendances sans CVE** : 130/137 (94.9%)
+- **Dépendances avec CVE** : 7/137 (5.1%)
+- **CVE totales (uniques)** : 24
+  - HIGH : 6 (starlette CVE-2025-62727, pyjwt CVE-2025-45768/CVE-2026-48526/CVE-2026-48522/CVE-2026-48523, python-multipart CVE-2026-24486, cryptography CVE-2026-69247)
+  - MODERATE : 16
+  - LOW : 1 (pytest, dev only)
+- **CVE CRITIQUE (CVSS ≥ 9.0)** : 0 — aucune escalade critique requise
+- **Escalade** : Aucune escalade CRITIQUE créée (aucune CVE CVSS ≥ 9.0). Les 6 CVE HIGH sont suivies dans les recommandations Priorité 1.
+
+#### Leçons
+
+1. **pip-audit fonctionne** dans cet environnement avec un workaround SSL (monkey-patch `requests`). Le proxy local utilise un certificat auto-signé. Pour les cycles futurs : utiliser le wrapper `_pip_audit_wrapper.py` ou configurer `REQUESTS_CA_BUNDLE` avec le certificat du proxy.
+2. **starlette est le maillon faible** — 7 CVE sur une dépendance transitive de fastapi. La politique d'épinglage de fastapi contraint la version de starlette. Envisager une veille sur les advisories starlette indépendamment de fastapi.
+3. **pyjwt 2.10.1 a un backlog de CVE important** (7 CVE en quelques mois). La mise à jour vers 2.13.0 est la priorité 1 absolue pour la sécurité JWT de GSIE.
+4. **Le Cycle 1 (A06) avait anticipé** cette vérification — la recommandation d'exécuter pip-audit au Cycle 2 est maintenant exécutée et confirme le WARN avec 24 CVE concrètes.
+
+---
+
 ## Baseline de performance
 
 > Métriques de référence pour détecter les régressions.
@@ -219,7 +389,15 @@ Cycle 5: Revue secrets (code + git history)
 
 | ID | Date | Sévérité | Description | Statut |
 |---|---|---|---|---|
-| — | — | — | — | Aucune connue |
+| CVE-2026-48523 | 2026-08-08 | HIGH | pyjwt 2.10.1 — bypass allow-list algorithmes avec PyJWK | Ouvert — fix: pyjwt 2.12.1+ |
+| CVE-2026-48526 | 2026-08-08 | HIGH | pyjwt 2.10.1 — clé publique utilisée comme secret HMAC | Ouvert — fix: pyjwt 2.13.0 |
+| CVE-2026-48522 | 2026-08-08 | HIGH | pyjwt 2.10.1 — SSRF PyJWKClient (urllib.urlopen) | Ouvert — fix: pyjwt 2.13.0 |
+| CVE-2025-62727 | 2026-08-08 | HIGH (7.5) | starlette 0.41.3 — DoS O(n²) Range header FileResponse | Ouvert — fix: starlette 0.49.1 (via fastapi upgrade) |
+| CVE-2026-24486 | 2026-08-08 | HIGH | python-multipart 0.0.20 — path traversal upload | Ouvert — fix: python-multipart 0.0.22 |
+| CVE-2026-69247 | 2026-08-08 | HIGH | cryptography 49.0.0 — oracle Bleichenbacher PKCS#7 | Ouvert — fix: cryptography 50.0.0 |
+| CVE-2026-48710 | 2026-08-08 | MODERATE (6.5) | starlette 0.41.3 — Host header bypass auth | Ouvert — fix: starlette 1.0.1 (via fastapi upgrade) |
+| CVE-2025-67221 | 2026-08-08 | MODERATE | orjson 3.10.11 — DoS récursion JSON profonde | Ouvert — fix: orjson 3.11.6 |
+| CVE-2025-71176 | 2026-08-08 | LOW | pytest 8.3.4 — DoS/escalade tmpdir UNIX (dev only) | Ouvert — fix: pytest 9.0.3 |
 
 ## Dépendances à surveiller
 
@@ -227,4 +405,10 @@ Cycle 5: Revue secrets (code + git history)
 
 | Package | Version | CVE | Statut | Date |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| pyjwt | 2.10.1 | 7 CVE (3 HIGH, 4 MODERATE) | À mettre à jour → 2.13.0 | 2026-08-08 |
+| starlette | 0.41.3 | 7 CVE (1 HIGH, 6 MODERATE) | À mettre à jour via fastapi upgrade | 2026-08-08 |
+| python-multipart | 0.0.20 | 6 CVE (1 HIGH, 5 MODERATE) | À mettre à jour → 0.0.31 | 2026-08-08 |
+| cryptography | 49.0.0 | 1 CVE HIGH | À mettre à jour → 50.0.0 | 2026-08-08 |
+| orjson | 3.10.11 | 1 CVE MODERATE | À mettre à jour → 3.11.6 | 2026-08-08 |
+| app-store-server-library | 1.5.0 | 1 CVE MODERATE | À évaluer → 3.1.2 (breaking) | 2026-08-08 |
+| pytest | 8.3.4 | 1 CVE LOW (dev) | À mettre à jour → 9.0.3 (quand compatible) | 2026-08-08 |

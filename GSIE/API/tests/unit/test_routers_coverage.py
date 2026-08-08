@@ -1459,6 +1459,111 @@ async def should_return_200_when_botanical_identify_and_ingest_finds_nothing(
     assert response.json() is None
 
 
+# --- /botanical/identify (sans ingest) ---
+
+
+async def should_return_401_when_botanical_identify_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_400_when_botanical_identify_empty_file(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec un fichier vide retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.jpg", b"", "image/jpeg")},
+        headers=_auth_headers(["reader"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_400_when_botanical_identify_format_unsupported(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec un format non supporté retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.gif", b"GIF89a", "image/gif")},
+        headers=_auth_headers(["reader"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_502_when_botanical_identify_plantnet_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify — PlantNet down retourne 502."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
+
+    with patch.object(
+        PlantNetClient,
+        "identify",
+        new=AsyncMock(side_effect=PlantNetClientError("API indisponible")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_identify_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec succès retourne la meilleure correspondance."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient
+
+    fake_response = {
+        "bestMatch": "Quercus robur L.",
+        "results": [
+            {
+                "score": 0.85,
+                "species": {
+                    "scientificName": "Quercus robur L.",
+                    "scientificNameWithoutAuthor": "Quercus robur",
+                    "genus": {"scientificNameWithoutAuthor": "Quercus"},
+                    "family": {"scientificNameWithoutAuthor": "Fagaceae"},
+                    "commonNames": ["Chêne pédonculé"],
+                },
+                "gbif": {"id": "2878688"},
+            }
+        ],
+    }
+    with patch.object(PlantNetClient, "identify", new=AsyncMock(return_value=fake_response)):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 200
+    assert response.json()["best_match"] == "Quercus robur L."
+
+
+async def should_return_200_when_botanical_identify_finds_nothing(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify retourne null quand PlantNet ne trouve rien."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient
+
+    with patch.object(PlantNetClient, "identify", new=AsyncMock(return_value=None)):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 200
+    assert response.json() is None
+
+
 # ===========================================================================
 # 4. GIS Router — cadastre + altitude IGN
 # ===========================================================================

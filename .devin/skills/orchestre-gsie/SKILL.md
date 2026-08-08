@@ -5,7 +5,7 @@ description: |
   avec loops spécialisées parallèles, consensus entre agents, mémoire
   persistante typée, auto-évolution par genome versionné, et escalade
   humaine pour les décisions critiques. Conçu pour GLM 5.2 High
-  (orchestrateur) + SWE-1.6 (workers), tous deux illimités.
+  (orchestrateur) + SWE 1.7 max (workers), tous deux illimités.
 triggers:
   - user
   - model

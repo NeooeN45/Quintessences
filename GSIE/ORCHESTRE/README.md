@@ -88,7 +88,7 @@ GSIE/ORCHESTRE/
 | Rôle | Modèle | Raison |
 |---|---|---|
 | Méta-orchestrateur | GLM 5.2 High | Contexte 1M, tokens illimités, raisonnement profond |
-| Loop workers | SWE-1.6 | Rapide, économique, illimité, bon pour tâches ciblées |
+| Loop workers | SWE 1.7 max | Rapide, économique, illimité, bon pour tâches ciblées |
 | Agent consensus | GLM 5.2 High | Nécessite raisonnement multi-perspectives |
 
 ## 7. Sources d'inspiration
