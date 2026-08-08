@@ -4,6 +4,42 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GATE 5 INTÉGRATION — MAILLON AMONT SOILGRIDS→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Constat** : `EvidenceKnowledgePipeline` (`engines/pipeline.py`) connecte
+  déjà Evidence Engine → Knowledge Engine, testé (unitaire + intégration),
+  mais n'avait **aucun appelant en production** — aucune source externe
+  réelle ne le traversait jamais. C'est le « maillon amont » que
+  ROADMAP.md donnait comme reste du Gate 5.
+- **Connecteur livré** : `PedologyEngine.query_and_ingest()` (réutilise
+  `query()` existant, aucune double requête SoilGrids) + endpoint
+  `POST /pedology/query-and-ingest` (`EngineWriteUser`). Chaque
+  caractéristique de sol (pH, argile, sable, limon) devient une
+  soumission `RawKnowledgeSubmission` distincte, passe par l'Evidence
+  Engine (SoilGrids = peer-reviewed + référentiel → plafond B → statut
+  `accepte` dans la matrice de décision, sans changement de code), puis
+  s'ingère comme connaissance atomique versionnée dans le Knowledge
+  Engine — réutilisable par Correlation/Diagnostic au lieu de rester une
+  valeur jetable renvoyée au seul appelant HTTP.
+- **Nouveaux schémas** : `PedologyIngestResult`/`PedologyIngestResponse`
+  (`pedology/schemas.py`) — un résultat par caractéristique, échec de
+  l'une n'empêche pas l'ingestion des autres.
+- **`query()` existant inchangé** — reste transitoire, comportement
+  historique préservé ; `query_and_ingest()` est un chemin additionnel.
+- **Limite connue, non traitée** : pas de déduplication — requêter deux
+  fois le même point crée deux connaissances distinctes plutôt qu'une
+  révision (`KnowledgeEngine.revise()` existe mais suppose un
+  `connaissance_id` déjà connu ; identifier « le même fait » exigerait
+  une clé stable point+propriété+source, hors périmètre de cette tranche).
+- **Tests** : `test_pedology_engine_coverage.py` (succès, échec partiel
+  d'une caractéristique, propagation de l'échec SoilGrids),
+  `test_routers_coverage.py` (401/502/200 sur le nouvel endpoint).
+  100% de couverture sur `engine.py`, `router.py`, `schemas.py`,
+  `pipeline.py`. Un branch mort détecté et supprimé en cours de route
+  (`except KnowledgeEngineError` au niveau router — l'exception est déjà
+  capturée à l'intérieur du pipeline, ne remonte jamais jusqu'au router).
+
+
 ## [FIX — LIMITE MÉMOIRE CONTENEUR API 768M → 2G] - 2026-08-08
 
 - **Correction** de la trouvaille du benchmark de charge concurrente

@@ -160,11 +160,18 @@ async def gis_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 async def pedology_client() -> AsyncGenerator[AsyncClient, None]:
-    """Client AsyncClient pour le router pedology (pas de DB)."""
-    app = _build_engine_app(pedology_router)
+    """Client AsyncClient pour le router pedology.
+
+    DB mockée : /query n'en a pas besoin (inchangé), mais
+    /query-and-ingest en a besoin pour construire un KnowledgeEngine
+    (Gate 5 — maillon amont ingestion→Evidence→Knowledge).
+    """
+    mock_db = AsyncMock()
+    app = _build_engine_app(pedology_router, mock_db)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -1291,6 +1298,73 @@ async def should_return_200_when_pedology_query_success(pedology_client: AsyncCl
             headers=_auth_headers(["reader"]),
         )
     assert response.status_code == 200
+
+
+async def should_return_401_when_pedology_query_and_ingest_without_token(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest sans token retourne 401."""
+    response = await pedology_client.post(
+        f"{_API_PREFIX}/pedology/query-and-ingest",
+        json={"latitude": 43.6, "longitude": 1.4},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_pedology_query_and_ingest_soilgrids_fails(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest — SoilGrids down retourne 502."""
+    from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
+
+    with patch.object(
+        PedologyEngine,
+        "query_and_ingest",
+        new=AsyncMock(side_effect=PedologyEngineError("SoilGrids down")),
+    ):
+        response = await pedology_client.post(
+            f"{_API_PREFIX}/pedology/query-and-ingest",
+            json={"latitude": 43.6, "longitude": 1.4},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_pedology_query_and_ingest_success(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+    from gsie_api.engines.pedology.engine import PedologyEngine
+    from gsie_api.engines.pedology.schemas import PedologyIngestResponse, PedologyIngestResult
+
+    mock_response = PedologyIngestResponse(
+        requete_id=uuid4(),
+        latitude=43.6,
+        longitude=1.4,
+        profondeur="0-5cm",
+        resultats=[
+            PedologyIngestResult(
+                nom="ph",
+                statut="ingested",
+                evidence_level=EvidenceLevel.B,
+                connaissance_id=uuid4(),
+                version=1,
+            )
+        ],
+    )
+    with patch.object(
+        PedologyEngine, "query_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await pedology_client.post(
+            f"{_API_PREFIX}/pedology/query-and-ingest",
+            json={"latitude": 43.6, "longitude": 1.4},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom"] == "ph"
+    assert body["resultats"][0]["statut"] == "ingested"
 
 
 # ===========================================================================

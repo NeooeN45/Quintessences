@@ -14,10 +14,28 @@ Garantie : une propriété sans donnée disponible au point demandé
 remplacée par une valeur par défaut.
 """
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from gsie_api.core.logging import get_logger
-from gsie_api.engines.evidence.schemas import EvidenceLevel, SourceReference, SourceType
-from gsie_api.engines.pedology.schemas import PedologyData, PedologyQuery, SolCaracteristique
+from gsie_api.engines.evidence.schemas import (
+    ContentType,
+    EvidenceLevel,
+    RawKnowledgeSubmission,
+    SourceReference,
+    SourceType,
+)
+from gsie_api.engines.knowledge.engine import KnowledgeEngine
+from gsie_api.engines.knowledge.schemas import DomaineScientifique, KnowledgeType
+from gsie_api.engines.pedology.schemas import (
+    PedologyData,
+    PedologyIngestResponse,
+    PedologyIngestResult,
+    PedologyQuery,
+    SolCaracteristique,
+)
 from gsie_api.engines.pedology.soilgrids_client import SoilGridsClient, SoilGridsClientError
+from gsie_api.engines.pipeline import EvidenceKnowledgePipeline
 
 logger = get_logger("gsie_api.pedology.engine")
 
@@ -50,13 +68,19 @@ class PedologyEngineError(Exception):
 
 
 class PedologyEngine:
-    """Moteur Pedology — pas de persistance en v1 (données ponctuelles, non versionnées).
+    """Moteur Pedology — `query()` ne persiste pas ; `query_and_ingest()` si.
 
-    Contrairement à GIS/Botanical, les propriétés SoilGrids ne sont pas
-    persistées comme resource en v1 — ce sont des estimations globales
-    modélisées (pas d'identité stable comme une parcelle ou un taxon).
-    Une future version pourra les rattacher à un `SolCaracteristique`
-    versionné si un usage répété au même point le justifie.
+    Contrairement à GIS/Botanical, les propriétés SoilGrids n'ont pas
+    d'identité stable comme une parcelle ou un taxon — ce sont des
+    estimations ponctuelles d'un produit modélisé. `query()` reste donc
+    transitoire (comportement historique, inchangé).
+
+    `query_and_ingest()` (Gate 5 — maillon amont ingestion→Evidence→
+    Knowledge, ROADMAP.md) fait passer le même résultat par
+    `EvidenceKnowledgePipeline` : chaque caractéristique devient une
+    connaissance qualifiée, sourcée et versionnée dans le Knowledge
+    Engine, réutilisable par les autres moteurs (Correlation, Diagnostic)
+    au lieu de rester une valeur jetable renvoyée au seul appelant HTTP.
     """
 
     def __init__(self, soilgrids_client: SoilGridsClient | None = None) -> None:
@@ -107,4 +131,90 @@ class PedologyEngine:
             profondeur=request.profondeur,
             caracteristiques=caracteristiques,
             source=_SOILGRIDS_SOURCE,
+        )
+
+    async def query_and_ingest(
+        self, request: PedologyQuery, knowledge_engine: KnowledgeEngine
+    ) -> PedologyIngestResponse:
+        """Récupère les propriétés de sol et les fait entrer dans le Knowledge Engine.
+
+        Réutilise `query()` (aucune double requête SoilGrids, aucune
+        logique de fetch dupliquée) puis fait passer chaque
+        caractéristique par `EvidenceKnowledgePipeline` — la même chaîne
+        Evidence→Knowledge déjà éprouvée (tests unitaires et
+        d'intégration existants), jamais appelée en production jusqu'ici
+        avec une source externe réelle.
+
+        SoilGrids est un produit peer-reviewed (Poggio et al. 2021) :
+        `ContentType.referentiel` + `SourceType.peer_reviewed` plafonnent
+        à `evidence_level=B` dans la matrice de décision — statut
+        `accepte`, ingestion automatique. Un changement de source future
+        vers une donnée moins établie (ex. observation terrain) referait
+        naturellement plafonner plus bas, sans code supplémentaire :
+        c'est la matrice de l'Evidence Engine qui décide, pas ce module.
+
+        Une caractéristique par soumission (pas un lot fourre-tout) :
+        chaque propriété reste interrogeable indépendamment dans le
+        graphe (`par_concept`), et l'échec de l'une n'empêche pas
+        l'ingestion des autres.
+        """
+        donnees = await self.query(request)
+        pipeline = EvidenceKnowledgePipeline(knowledge_engine)
+
+        resultats: list[PedologyIngestResult] = []
+        for caracteristique in donnees.caracteristiques:
+            submission = RawKnowledgeSubmission(
+                soumission_id=uuid4(),
+                type_contenu=ContentType.referentiel,
+                contenu={
+                    "propriete": caracteristique.nom,
+                    "valeur": caracteristique.valeur,
+                    "unite": caracteristique.unite,
+                    "latitude": request.latitude,
+                    "longitude": request.longitude,
+                    "profondeur": request.profondeur,
+                },
+                source_candidate=caracteristique.source,
+                date_soumission=datetime.now(UTC),
+                soumetteur="pedology_engine.soilgrids",
+            )
+            resultat = await pipeline.process(
+                submission,
+                type_=KnowledgeType.concept,
+                titre=f"Sol — {caracteristique.nom} au point "
+                f"({request.latitude:.4f}, {request.longitude:.4f})",
+                description=(
+                    f"{caracteristique.nom} = {caracteristique.valeur} "
+                    f"{caracteristique.unite}, profondeur {request.profondeur}, "
+                    f"SoilGrids (ISRIC)."
+                ),
+                domaine_scientifique=DomaineScientifique.pedologie,
+                mots_cles=["pedologie", "soilgrids", caracteristique.nom],
+                moteurs_consommateurs=["pedology", "correlation", "diagnostic"],
+            )
+            resultats.append(
+                PedologyIngestResult(
+                    nom=caracteristique.nom,
+                    statut=resultat.status,
+                    evidence_level=resultat.qualified.evidence_level,
+                    connaissance_id=resultat.qualified.connaissance_id,
+                    version=resultat.knowledge_object.version
+                    if resultat.knowledge_object
+                    else None,
+                    raison=resultat.reason,
+                )
+            )
+            logger.info(
+                "pedology_ingest",
+                propriete=caracteristique.nom,
+                statut=resultat.status,
+                connaissance_id=str(resultat.qualified.connaissance_id),
+            )
+
+        return PedologyIngestResponse(
+            requete_id=request.requete_id,
+            latitude=request.latitude,
+            longitude=request.longitude,
+            profondeur=request.profondeur,
+            resultats=resultats,
         )
