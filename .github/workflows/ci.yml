@@ -251,7 +251,11 @@ jobs:
           fi
 
       - name: Run integration tests (testcontainers — Docker requis)
-        run: uv run pytest tests/integration -q --tb=short -v
+        # --no-cov : la couverture 100% est vérifiée par le job python-quality
+        # sur les tests unitaires. Les tests d'intégration ne couvrent qu'une
+        # partie du code (67%) — le seuil fail_under=100 de pyproject.toml
+        # ferait échouer ce job systématiquement.
+        run: uv run pytest tests/integration -q --tb=short -v --no-cov
         env:
           # testcontainers utilise le socket Docker de l'hôte (déjà disponible sur ubuntu-latest)
           TESTCONTAINERS_RYUK_DISABLED: "true"
