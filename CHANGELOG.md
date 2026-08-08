@@ -4,6 +4,22 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [FIX — LIMITE MÉMOIRE CONTENEUR API 768M → 2G] - 2026-08-08
+
+- **Correction** de la trouvaille du benchmark de charge concurrente
+  (voir entrée suivante) : `docker-compose.yml`, service `api`,
+  `deploy.resources.limits.memory` passé de `768M` à `2G`.
+- **Appliqué et vérifié en direct** : conteneur recréé
+  (`docker compose up -d api`), healthcheck vert, `/health` et
+  `/api/v1/auth/providers` répondent normalement.
+- **Mémoire au repos avant/après** : 725,8 MiB / 768M (94,5%, quasi-OOM)
+  → ~1,36 GiB / 2 GiB (68%, marge réelle rétablie).
+- **Reste à surveiller** : la consommation de base reste élevée
+  (~270 MB/worker × 5 workers gunicorn, dépendances scientifiques
+  lourdes — scipy/xarray/cfgrib/geopandas/bindings Rust). Si la marge se
+  resserre à nouveau sous charge de production réelle,
+  `GSIE_GUNICORN_WORKERS` (actuellement 5) est le levier à ajuster.
+
 ## [GATE 6 PERFORMANCE — BENCHMARK CHARGE CONCURRENTE] - 2026-08-08
 
 - **Nouveau** : `scripts/load_test_concurrent.py`, complète

@@ -215,12 +215,18 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Limites ressources (recommandation stress test)
+    # Limites ressources. 768M relevé à 2G le 2026-08-08 : le benchmark de
+    # charge concurrente (GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md)
+    # a mesuré 725,8 MiB (94,5%) au repos, sans charge — empreinte de base
+    # des 5 workers gunicorn avec dépendances scientifiques lourdes
+    # (scipy/xarray/cfgrib/geopandas/bindings Rust), pas un effet de la
+    # charge. À 768M, le conteneur était à un pas d'un OOM-kill sous
+    # trafic réel.
     deploy:
       resources:
         limits:
           cpus: "2.0"
-          memory: 768M
+          memory: 2G
 
   # Worker outbox — livraison au moins une fois vers Redis/WebSocket.
   outbox-worker:
