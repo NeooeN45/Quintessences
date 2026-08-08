@@ -73,8 +73,46 @@ docker exec api-db-1 pg_dump \
 0 3 * * * find /backups -name "gsie_*.dump" -mtime +30 -delete
 ```
 
-**TODO (P0-1)** : pgBackRest + WAL archiving pour PITR (Point-In-Time
-Recovery). Le backup pg_dump est un snapshot — pas un PITR.
+**P0-1 implémenté (2026-08-08)** : pgBackRest + WAL archiving pour PITR
+(Point-In-Time Recovery), en complément du snapshot pg_dump ci-dessus.
+Voir `docs/BACKUP_RESTORE.md` §3 pour la configuration complète,
+`scripts/pgbackrest_backup.sh` pour la sauvegarde planifiée, et §3.5
+ci-dessous pour le résultat de la validation live.
+
+### 3.5. pgBackRest — validation live (2026-08-08)
+
+Le mécanisme complet a été testé en conditions réelles sur la base de
+développement (52 MB, 151 tables, 9h+ d'activité) :
+
+| Étape | Résultat |
+|---|---|
+| `pgbackrest stanza-create` (online, contre le cluster réel) | ✅ |
+| Archivage WAL manuel + automatique (`archive_command`) | ✅ — vérifié via `pgbackrest info` |
+| Sauvegarde complète (`--type=full backup`) | ✅ — 52 MB → 5,8 MB compressé |
+| Chiffrement AES-256-CBC (stanza-create + archive-push chiffrés) | ✅ — passphrase lue depuis `PGBACKREST_REPO1_CIPHER_PASS` (variable d'environnement, jamais dans `pgbackrest.conf`) |
+| Restauration dans un répertoire isolé (sans toucher la base live) | ✅ — recovery jusqu'à cohérence, nouvelle timeline (2), promotion automatique |
+| Parité post-restauration | ✅ — 151 tables = 151 tables, PostGIS 3.4 fonctionnel |
+
+**Bug corrigé pendant la validation** : `docker/pgbackrest.conf` utilisait
+`pg1-host=/var/run/postgresql` (hérité du template DEC-000037), une option
+réservée à un accès SSH distant — elle faisait échouer `stanza-create` en
+erreur `[056] unable to find primary cluster`. Corrigé en `pg1-socket-path`
+(connexion locale, le conteneur `db` exécute pgbackrest lui-même). Une
+seconde erreur (`repo1-cipher-pass=${VAR}`, une syntaxe d'interpolation
+shell que `pgbackrest.conf` n'interprète pas) a également été corrigée —
+la passphrase n'est jamais écrite dans le fichier de config, seulement lue
+depuis l'environnement du conteneur.
+
+**Limite connue** : la validation ci-dessus a été faite en reconfigurant
+en direct le conteneur `db` déjà en service (sans reconstruire son image),
+car le rebuild Docker de `Dockerfile.db` (qui installe `pgbackrest` de façon
+permanente) était bloqué par un problème réseau/certificat sur la machine
+au moment de la validation (échec du téléchargement de la source Apache
+AGE — sans rapport avec pgBackRest). La combinaison finale (chiffrement
++ archivage automatique + dépôt sur volume Docker nommé persistant) sera
+active dès `docker compose build db && docker compose up -d db` une fois
+le réseau rétabli ; il faudra alors relancer `stanza-create` une fois
+contre le nouveau volume `gsie_pgbackrest_repo`.
 
 ## 4. Procédure de restauration
 
@@ -192,10 +230,18 @@ restauration devra vérifier :
 |---|---|
 | `scripts/test_restauration_db.sh` | Script bash de test (quick check) |
 | `tests/integration/test_restauration_db.py` | Test Python (CI, testcontainers) |
+| `scripts/pgbackrest_backup.sh` | Sauvegarde pgBackRest planifiée (full/diff/incr) |
+| `docker/pgbackrest.conf` | Configuration pgBackRest (repo1 local chiffré ; repo2 S3 en option) |
+| `docs/BACKUP_RESTORE.md` | Procédure complète pgBackRest (PITR, standby) |
 | `GSIE/DOCUMENTATION/DR-RESTAURATION.md` | Ce document |
 
 ## 9. Prochaines étapes
 
-- **P0-1** : pgBackRest + WAL archiving pour PITR
+- **P0-1** : ✅ pgBackRest + WAL archiving implémenté et validé en direct
+  (2026-08-08, voir §3.5). Reste : rebuild `Dockerfile.db` pour figer
+  pgbackrest dans l'image (bloqué par un problème réseau ponctuel au
+  moment de la validation — sans lien avec pgBackRest) et activer le
+  repo2 S3 cross-région pour la DR long terme (actuellement en commentaire
+  dans `docker/pgbackrest.conf`, nécessite des identifiants cloud).
 - **S2** : Tranche verticale réelle avec données → retest avec row counts
 - **CI** : Ajouter `test_restauration_db.py` au pipeline CI

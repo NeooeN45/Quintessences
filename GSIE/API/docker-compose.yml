@@ -31,12 +31,22 @@ services:
       GSIE_VIZ_DB_PASSWORD: ${GSIE_VIZ_DB_PASSWORD:?GSIE_VIZ_DB_PASSWORD requis dans .env}
       # Apache AGE requiert shared_preload_libraries
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      # Sauvegarde pgBackRest (DEC-000037 P0-1, docs/BACKUP_RESTORE.md) —
+      # pgbackrest lit PGBACKREST_<OPTION> depuis l'environnement du process
+      # qui l'invoque (ici : archive_command exécuté par postgres, ou un
+      # `docker exec` déclenché par scripts/pgbackrest_backup.sh). La
+      # passphrase ne figure jamais dans docker/pgbackrest.conf.
+      PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS:?PGBACKREST_REPO1_CIPHER_PASS requis dans .env, generer avec openssl rand -base64 48}
     command: >
       postgres
       -c shared_preload_libraries=age,pg_stat_statements,pgaudit
       -c search_path=ag_catalog,public,tiger
       -c max_connections=100
       -c wal_level=replica
+      -c archive_mode=on
+      -c "archive_command=pgbackrest --stanza=gsie archive-push %p"
+      -c archive_timeout=300
+      -c max_wal_senders=6
       -c pg_stat_statements.track=all
       -c pg_stat_statements.max=5000
       -c pgaudit.log=ddl,write,role
@@ -49,6 +59,10 @@ services:
       # Source unique du SQL de création des comptes — 04-comptes-de-connexion.sh
       # lui passe les identifiants, que les fichiers .sql d'initdb ne reçoivent pas.
       - ./docker/comptes-de-connexion.sql:/gsie/comptes-de-connexion.sql:ro
+      # pgBackRest — config statique (sans secret) + repos persistants.
+      - ./docker/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+      - gsie_pgbackrest_repo:/var/lib/pgbackrest
+      - gsie_pgbackrest_log:/var/log/pgbackrest
     healthcheck:
       # Les noms étaient en dur : la sonde mentait dès que GSIE_DB_USER changeait.
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
@@ -343,6 +357,8 @@ volumes:
   gsie_pgdata:
   gsie_redisdata:
   gsie_kuma_data:
+  gsie_pgbackrest_repo:
+  gsie_pgbackrest_log:
 
 secrets:
   cloudflare_tunnel_token:

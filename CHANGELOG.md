@@ -4,6 +4,40 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [P0-1 — SAUVEGARDES DB PGBACKREST + WAL ARCHIVING] - 2026-08-08
+
+- **Implémentation** : `pgbackrest` installé dans `Dockerfile.db`,
+  `archive_mode=on` + `archive_command` + `max_wal_senders=6` sur le
+  service `db` (`docker-compose.yml`), dépôt persistant sur volumes
+  Docker nommés (`gsie_pgbackrest_repo`, `gsie_pgbackrest_log`),
+  chiffrement AES-256-CBC via `PGBACKREST_REPO1_CIPHER_PASS` (jamais dans
+  `docker/pgbackrest.conf` — lu nativement depuis l'environnement).
+- **2 bugs corrigés dans le template DEC-000037 avant mise en service** :
+  `pg1-host=/var/run/postgresql` (option réservée à SSH distant, faisait
+  échouer `stanza-create`) remplacé par `pg1-socket-path` ; rôle
+  `pg1-user=gsie_migrator` (jamais câblé dans l'initdb réel) remplacé par
+  `gsie` (le rôle superuser effectivement déployé) ; `repo1-cipher-pass=${VAR}`
+  (interpolation shell non supportée par `pgbackrest.conf`) supprimé au
+  profit de la lecture d'environnement native.
+- **Validation live (2026-08-08)** sur la base de dev réelle (52 MB, 151
+  tables) : `stanza-create` online, archivage WAL manuel + automatique,
+  sauvegarde complète chiffrée (52 MB → 5,8 MB), restauration dans un
+  répertoire isolé avec promotion automatique — 151 = 151 tables, PostGIS
+  fonctionnel. Base de dev live non affectée, laissée dans un état
+  fonctionnel (archivage + backup actifs, non chiffrés en attendant le
+  rebuild d'image).
+- **Nouveaux fichiers** : `scripts/pgbackrest_backup.sh` (wrapper
+  `docker exec`, cron full/diff/incr), `.env.example`
+  (`PGBACKREST_REPO1_CIPHER_PASS`).
+- **Documentation** : `GSIE/API/docs/BACKUP_RESTORE.md` passé de Draft à
+  Implémenté (§3.5/3.6) ; `GSIE/DOCUMENTATION/DR-RESTAURATION.md` §3.5 ;
+  `ROADMAP.md` P0-1.
+- **Reste** : `docker compose build db` pour figer pgbackrest dans l'image
+  de façon permanente (bloqué au moment de la validation par un problème
+  réseau/certificat sans rapport avec pgBackRest — échec du téléchargement
+  de la source Apache AGE) ; repo2 S3 cross-région (identifiants cloud à
+  provisionner).
+
 ## [TESTS — 100% COVERAGE ET MASTER TEST] - 2026-08-07
 
 - **Couverture** : la suite unitaire atteint **100 % de couverture** sur

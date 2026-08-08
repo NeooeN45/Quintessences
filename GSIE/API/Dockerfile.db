@@ -11,6 +11,7 @@ ARG AGE_SHA256=b41abaf5fc89d6a5bcb62a63a6b2fc4b7d0d1530869879b6cc85df931b333b5d
 
 # Installation des dépendances de compilation + pgAudit (audit trail DDL/DML — P0-4)
 # + pgvector (recherche sémantique — migration 20260731_0024, débloque Treekipedia)
+# + pgbackrest (sauvegarde PITR — DEC-000037 P0-1, docs/BACKUP_RESTORE.md)
 # Le dépôt PGDG (apt.postgresql.org) est déjà configuré par l'image de base postgres:16.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -21,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-server-dev-16 \
     postgresql-16-pgaudit \
     postgresql-16-pgvector \
+    pgbackrest \
     && rm -rf /var/lib/apt/lists/*
 
 # Téléchargement et compilation d'Apache AGE
@@ -40,3 +42,10 @@ RUN apt-get purge -y bison build-essential flex postgresql-server-dev-16 curl \
 # Configuration PostgreSQL pour Apache AGE + pgAudit
 # shared_preload_libraries est requis pour AGE et pgAudit (chargement au démarrage)
 RUN echo "shared_preload_libraries = 'age,pg_stat_statements,pgaudit'" >> /usr/share/postgresql/postgresql.conf.sample
+
+# Répertoires pgBackRest — créés et chownés à l'image pour que le volume
+# Docker nommé hérite de la bonne propriété au premier montage (Docker
+# initialise un volume vide avec le contenu/permissions du chemin monté
+# dans l'image, comme /var/lib/postgresql/data le fait déjà nativement).
+RUN mkdir -p /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest \
+    && chown -R postgres:postgres /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest
