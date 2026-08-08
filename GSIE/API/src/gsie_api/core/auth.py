@@ -17,7 +17,7 @@ En attendant, un stub utilisateur est utilisé pour les tests.
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 from uuid import uuid4
 
 import jwt
@@ -234,16 +234,13 @@ def verify_token(token: str, expected_type: str = "access") -> dict[str, Any]:
         HTTPException 401 si le token est invalide, expiré ou mauvais type.
     """
     try:
-        payload = cast(
-            "dict[str, Any]",
-            jwt.decode(
-                token,
-                _load_public_key(),
-                algorithms=[_settings.jwt_algorithm],
-                audience=_settings.jwt_audience,
-                issuer=_settings.jwt_issuer,
-                options={"require": ["sub", "iss", "aud", "iat", "exp", "jti", "type"]},
-            ),
+        payload = jwt.decode(
+            token,
+            _load_public_key(),
+            algorithms=[_settings.jwt_algorithm],
+            audience=_settings.jwt_audience,
+            issuer=_settings.jwt_issuer,
+            options={"require": ["sub", "iss", "aud", "iat", "exp", "jti", "type"]},
         )
     except jwt.ExpiredSignatureError:
         raise HTTPException(
