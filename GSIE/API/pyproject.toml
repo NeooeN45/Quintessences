@@ -27,7 +27,7 @@ dependencies = [
     "websockets==14.1",
     # Géospatial — shapely/pyproj dès la semaine 1 (léger)
     # rasterio + geopandas ajoutés en semaine 5 (GIS Engine, nécessite GDAL)
-    "shapely==2.0.6",
+    "shapely==2.1.2",
     "pyproj==3.7.0",
     # Observabilité
     "structlog==24.4.0",
