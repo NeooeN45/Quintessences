@@ -20,6 +20,23 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
+    # Grouper les paquets opentelemetry pour éviter les PRs incompatibles
+    # (instrumentation 0.65b0 exige sdk 1.44.0 — bump coordonné obligatoire)
+    groups:
+      opentelemetry:
+        patterns:
+          - "opentelemetry-api"
+          - "opentelemetry-sdk"
+          - "opentelemetry-exporter-otlp-proto-grpc"
+          - "opentelemetry-instrumentation-fastapi"
+          - "opentelemetry-instrumentation-sqlalchemy"
+          - "opentelemetry-instrumentation-redis"
+    # eccodeslib doit partager la version majeure.mineure d'eccodes
+    # (règle check_build_consistency.py). eccodes 2.48.0 n'existe pas
+    # sur PyPI — ignorer eccodeslib > 2.47.x jusqu'à publication d'eccodes 2.48.
+    ignore:
+      - dependency-name: "eccodeslib"
+        update-types: ["version-update:semver-minor"]
 
   # Images Docker de base
   - package-ecosystem: "docker"
