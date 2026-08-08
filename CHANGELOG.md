@@ -4,6 +4,42 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GATE 6 PERFORMANCE — BENCHMARK CHARGE CONCURRENTE] - 2026-08-08
+
+- **Nouveau** : `scripts/load_test_concurrent.py`, complète
+  `validation_benchmark.py` (S3, séquentiel) avec 3 volets concurrents :
+  capacité HTTP brute (`/health`), rate limiting sous rafale
+  (`/api/v1/resources`), pool de connexions DB (bypass HTTP, sessions
+  SQLAlchemy directes).
+- **Pool DB validé empiriquement pour la première fois** : `DEC-000037`
+  fixait la formule `workers × (pool_size + max_overflow) ≤ max_connections`
+  sur le papier seulement. 24 sessions concurrentes contre une capacité de
+  14 (pool_size=4 + max_overflow=10) → dégradation gracieuse confirmée via
+  `engine.pool.checkedout()`, zéro erreur.
+  - Piège méthodologique corrigé en cours de route : une première mesure
+    comptait la concurrence à l'ouverture du context manager
+    (`async with async_session_factory()`), qui n'acquiert pas de
+    connexion physique (checkout paresseux) — pic mesuré à 24 au lieu de
+    14 alors que la latence trahissait une file d'attente invisible au
+    compteur. Corrigé via l'introspection directe du pool SQLAlchemy.
+- **Rate limiting confirmé sous rafale concurrente** (pas seulement
+  séquentielle comme le pentest du 2026-08-07) : 60 requêtes simultanées,
+  toutes dans le budget 120/min, aucune dérive du compteur Redis.
+- **Trouvaille critique** : le conteneur `api` (limite Docker 768M) tourne
+  à **94,5 % de sa mémoire au repos, sans aucune charge** (725,8 MiB).
+  Sous charge légère (60 requêtes `/health` concurrentes), pic à 99,9 %
+  (767,1 MiB) — à un pas d'un OOM-kill par le cgroup Docker. Ce n'est pas
+  un effet de charge : c'est l'empreinte de base des 5 workers gunicorn
+  avec dépendances scientifiques lourdes (scipy, xarray, cfgrib,
+  geopandas, bindings Rust). Décision d'infrastructure non prise dans ce
+  rapport : augmenter la limite mémoire ou réduire `GSIE_GUNICORN_WORKERS`.
+- **Limite méthodologique documentée** : les latences absolues varient de
+  5 à 10× selon que le trafic traverse le port-forwarding Docker
+  Desktop/Windows ou non (207ms p50 en interne vs 1382ms via l'hôte) — un
+  artefact de l'environnement de dev local, à ne pas citer comme
+  représentatif de la production.
+- **Rapport complet** : `GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md`.
+
 ## [SÉCURITÉ — MFA ADMINISTRATEUR OBLIGATOIRE + GUIDE OAUTH GOOGLE] - 2026-08-08
 
 - **MFA obligatoire pour le rôle `admin`** : un compte avec le rôle le plus
