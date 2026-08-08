@@ -74,7 +74,11 @@ from gsie_api.auth.repository import SqlAlchemyIdentityRepository
 from gsie_api.auth.sessions import SessionInfo, SessionService
 from gsie_api.auth.transactional_email import get_transactional_email_sender
 from gsie_api.billing.service import BillingService
-from gsie_api.core.auth import create_access_token, create_mfa_challenge_token
+from gsie_api.core.auth import (
+    create_access_token,
+    create_mfa_challenge_token,
+    create_mfa_setup_token,
+)
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.models.accounts import (
     IdentityActionTokenModel,
@@ -379,6 +383,108 @@ def should_cover_successful_local_login(client_identite: TestClient) -> None:
         json={"email": "forestier@example.fr", "password": "mot-de-passe-long"},
     )
     assert response.status_code == 200
+
+
+def should_require_mfa_setup_when_admin_account_has_no_second_factor(
+    client_identite: TestClient,
+) -> None:
+    """Le rôle admin sans MFA ne reçoit jamais de token complet (ROADMAP —
+    MFA administrateur). Il reçoit un jeton restreint utilisable uniquement
+    sur /mfa/setup et /mfa/verify — jamais bloqué, jamais de token complet
+    tant que le second facteur n'est pas actif."""
+    account = AuthenticatedAccount(uuid4(), ("admin",), "local")
+    service = AsyncMock()
+    service.authenticate_local = AsyncMock(return_value=account)
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: service
+    # mfa_service.is_enabled=False par défaut dans client_identite (ligne 136)
+
+    response = client_identite.post(
+        "/api/v1/auth/login/password",
+        json={"email": "admin@example.fr", "password": "mot-de-passe-long"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mfa_setup_required"] is True
+    assert "setup_token" in body
+    assert "access_token" not in body
+
+
+def should_issue_full_tokens_when_admin_account_already_has_mfa(
+    client_identite: TestClient,
+) -> None:
+    """Témoin : un admin AVEC MFA actif suit le flux MFA normal existant
+    (challenge puis /login/mfa) plutôt que le bootstrap — pas de régression
+    sur le cas déjà couvert par ailleurs."""
+    account = AuthenticatedAccount(uuid4(), ("admin",), "local")
+    service = AsyncMock()
+    service.authenticate_local = AsyncMock(return_value=account)
+    client_identite.app.dependency_overrides[get_identity_service] = lambda: service
+    mfa_service = AsyncMock()
+    mfa_service.is_enabled = AsyncMock(return_value=True)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client_identite.post(
+        "/api/v1/auth/login/password",
+        json={"email": "admin@example.fr", "password": "mot-de-passe-long"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("mfa_required") is True
+    assert "challenge_token" in body
+    assert "mfa_setup_required" not in body
+
+
+def should_accept_mfa_bootstrap_token_on_setup_and_verify_endpoints(
+    client_identite: TestClient,
+) -> None:
+    """Le jeton restreint émis par _issue_tokens pour un admin sans MFA doit
+    fonctionner sur /mfa/setup et /mfa/verify — c'est tout son intérêt : sans
+    ça, un admin sans MFA serait définitivement bloqué (pas de régression sur
+    le bootstrap lui-même)."""
+    account_id = uuid4()
+    setup_token = create_mfa_setup_token(subject=str(account_id))
+    headers = {"Authorization": f"Bearer {setup_token}"}
+
+    mfa_service = AsyncMock()
+    mfa_service.setup = AsyncMock(
+        return_value=MfaSetupResult(
+            secret="SECRET234",
+            otpauth_uri="otpauth://totp/Quintessences:admin?secret=SECRET234",
+            recovery_codes=("code-1", "code-2"),
+        )
+    )
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    setup_response = client_identite.post("/api/v1/auth/mfa/setup", headers=headers)
+    assert setup_response.status_code == 201
+    mfa_service.setup.assert_awaited_once_with(account_id)
+
+    mfa_service.verify_totp = AsyncMock(return_value=True)
+    verify_response = client_identite.post(
+        "/api/v1/auth/mfa/verify",
+        headers=headers,
+        json={"code": "123456", "is_recovery_code": False},
+    )
+    assert verify_response.status_code == 200
+    assert verify_response.json()["enabled"] is True
+
+
+def should_reject_mfa_bootstrap_token_on_unrelated_protected_route(
+    client_identite: TestClient,
+) -> None:
+    """Le jeton restreint ne doit ouvrir AUCUNE autre route protégée — c'est
+    la garantie centrale de l'obligation MFA admin. /me exige toujours
+    get_current_user (type=access strict)."""
+    setup_token = create_mfa_setup_token(subject=str(uuid4()))
+
+    response = client_identite.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {setup_token}"},
+    )
+
+    assert response.status_code == 401
 
 
 @pytest.mark.parametrize(

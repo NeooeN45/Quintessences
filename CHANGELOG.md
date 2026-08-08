@@ -4,6 +4,40 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SÉCURITÉ — MFA ADMINISTRATEUR OBLIGATOIRE + GUIDE OAUTH GOOGLE] - 2026-08-08
+
+- **MFA obligatoire pour le rôle `admin`** : un compte avec le rôle le plus
+  privilégié de la plateforme ne reçoit plus jamais de token complet tant
+  que son second facteur n'est pas actif — corrige la lacune restante du
+  gate Sécurité (ROADMAP §3).
+  - Nouveau type de jeton restreint `mfa_setup_required`
+    (`core/auth.py::create_mfa_setup_token`, 15 min) : rejeté par
+    `get_current_user`/RBAC comme n'importe quel jeton non-`access` (même
+    garde déjà utilisée pour le jeton de challenge MFA), donc inutilisable
+    hors de `/mfa/setup` et `/mfa/verify` (nouvelle dependency
+    `get_current_user_or_mfa_setup`, seule à l'accepter en plus du token
+    d'accès normal).
+  - `_issue_tokens` (choke point unique d'émission de session, tous
+    fournisseurs confondus — local, Google, OIDC, MFA) renvoie
+    `AdminMfaSetupRequiredResponse` au lieu de tokens si le compte a le
+    rôle `admin` sans MFA actif. Le compte n'est jamais bloqué : chaque
+    connexion réémet un nouveau jeton de bootstrap.
+  - `@overload` sur `_issue_tokens` pour que `register_local` (comptes
+    neufs, jamais admin par défaut) garde un type de retour exact
+    `TokenResponse`, vérifié par mypy --strict.
+  - Nouveaux tests : `test_auth_type_jeton.py` (jeton de bootstrap rejeté
+    comme accès, `get_current_user_or_mfa_setup` accepte les deux types,
+    claims réservés), `test_identity_coverage.py` (admin sans MFA reçoit
+    le bootstrap, admin avec MFA suit le flux normal existant, le bootstrap
+    fonctionne sur `/mfa/setup`+`/mfa/verify` et est rejeté sur `/me`).
+  - 100% de couverture maintenue (13 194 statements), 2555 tests passants,
+    ruff et mypy --strict verts.
+- **Guide OAuth Google production** : `GSIE/API/docs/GOOGLE_OAUTH_PRODUCTION_SETUP.md`
+  — étapes Google Cloud Console (écran de consentement, Client IDs Web +
+  Android `com.forestry.counter`, soumission à vérification). Aucune étape
+  automatisable (compte Google, vérification humaine par Google).
+- `docs/openapi.json` resynchronisé (nouveaux schémas de réponse).
+
 ## [P0-1 — SAUVEGARDES DB PGBACKREST + WAL ARCHIVING] - 2026-08-08
 
 - **Implémentation** : `pgbackrest` installé dans `Dockerfile.db`,

@@ -93,6 +93,32 @@
         "title": "ActionCodeRequest",
         "type": "object"
       },
+      "AdminMfaSetupRequiredResponse": {
+        "additionalProperties": false,
+        "description": "Réponse intermédiaire lorsqu'un compte admin n'a pas encore de MFA.\n\nLe rôle admin exige un second facteur (ROADMAP §\"P0 restants\" — MFA\nadministrateur). ``setup_token`` n'est utilisable que sur\n``POST /mfa/setup`` et ``POST /mfa/verify`` — aucune autre route ne\nl'accepte (voir ``core/auth.py::create_mfa_setup_token``), donc aucune\naction privilégiée n'est possible tant que le second facteur n'est pas\nactivé. Le compte n'est jamais bloqué : une nouvelle connexion émet un\nnouveau ``setup_token`` si celui-ci expire avant la fin de la procédure.",
+        "properties": {
+          "expires_in": {
+            "exclusiveMinimum": 0.0,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "mfa_setup_required": {
+            "default": true,
+            "title": "Mfa Setup Required",
+            "type": "boolean"
+          },
+          "setup_token": {
+            "title": "Setup Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "setup_token",
+          "expires_in"
+        ],
+        "title": "AdminMfaSetupRequiredResponse",
+        "type": "object"
+      },
       "AltitudeRequest": {
         "additionalProperties": false,
         "description": "Requête d'altitude pour un point (API de calcul altimétrique IGN).",
@@ -8508,7 +8534,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaSetupRequiredResponse"
+                    }
+                  ],
+                  "title": "Response Link Google Api V1 Auth Link Google Post"
                 }
               }
             },
@@ -8596,7 +8630,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaSetupRequiredResponse"
+                    }
+                  ],
+                  "title": "Response Login Google Api V1 Auth Login Google Post"
                 }
               }
             },
@@ -8638,7 +8680,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaSetupRequiredResponse"
+                    }
+                  ],
+                  "title": "Response Complete Mfa Login Api V1 Auth Login Mfa Post"
                 }
               }
             },
@@ -8679,7 +8729,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaSetupRequiredResponse"
+                    }
+                  ],
+                  "title": "Response Login Oidc Api V1 Auth Login Oidc Post"
                 }
               }
             },
@@ -8727,6 +8785,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/MfaChallengeResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaSetupRequiredResponse"
                     }
                   ],
                   "title": "Response Login Local Api V1 Auth Login Password Post"

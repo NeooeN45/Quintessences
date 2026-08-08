@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, overload
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -59,6 +59,7 @@ from gsie_api.auth.schemas import (
     AcceptedResponse,
     AccountProfileResponse,
     ActionCodeRequest,
+    AdminMfaSetupRequiredResponse,
     CancelDeletionRequest,
     ChangeEmailRequest,
     ChangePasswordRequest,
@@ -100,8 +101,10 @@ from gsie_api.billing.service import BillingService, SqlAlchemyBillingRepository
 from gsie_api.core.auth import (
     create_access_token,
     create_mfa_challenge_token,
+    create_mfa_setup_token,
     create_refresh_token,
     get_current_user,
+    get_current_user_or_mfa_setup,
     verify_token,
 )
 from gsie_api.core.config import get_settings
@@ -217,13 +220,50 @@ def _profile_response(profile: AccountProfile) -> AccountProfileResponse:
     )
 
 
+@overload
 async def _issue_tokens(
     account: AuthenticatedAccount,
     refresh_store: RefreshTokenStore,
     request: Request | None = None,
     session_service: SessionService | None = None,
-) -> TokenResponse:
-    """Émet une session GSIE indépendante du fournisseur d'origine."""
+    mfa_service: None = None,
+) -> TokenResponse: ...
+
+
+@overload
+async def _issue_tokens(
+    account: AuthenticatedAccount,
+    refresh_store: RefreshTokenStore,
+    request: Request | None,
+    session_service: SessionService | None,
+    mfa_service: MfaService,
+) -> TokenResponse | AdminMfaSetupRequiredResponse: ...
+
+
+async def _issue_tokens(
+    account: AuthenticatedAccount,
+    refresh_store: RefreshTokenStore,
+    request: Request | None = None,
+    session_service: SessionService | None = None,
+    mfa_service: MfaService | None = None,
+) -> TokenResponse | AdminMfaSetupRequiredResponse:
+    """Émet une session GSIE indépendante du fournisseur d'origine.
+
+    Un compte avec le rôle ``admin`` sans MFA actif ne reçoit jamais de
+    token d'accès complet : le rôle le plus privilégié de la plateforme ne
+    doit pas rester protégé par un facteur unique (ROADMAP — P0 restants,
+    MFA administrateur). ``mfa_service`` est optionnel uniquement parce que
+    certains appelants n'ont pas encore de compte admin possible à ce stade
+    (ex. inscription locale) ; partout ailleurs il est toujours fourni.
+    """
+    if (
+        mfa_service is not None
+        and "admin" in account.roles
+        and not await mfa_service.is_enabled(account.account_id)
+    ):
+        setup_token = create_mfa_setup_token(subject=str(account.account_id))
+        return AdminMfaSetupRequiredResponse(setup_token=setup_token, expires_in=900)
+
     claims: dict[str, object] = {
         "roles": list(account.roles),
         "auth_provider": account.provider,
@@ -388,7 +428,7 @@ async def register_local(
 
 @router.post(
     "/login/password",
-    response_model=TokenResponse | MfaChallengeResponse,
+    response_model=TokenResponse | MfaChallengeResponse | AdminMfaSetupRequiredResponse,
     summary="Se connecter par adresse e-mail",
 )
 @_limiter.limit("10/minute")
@@ -402,7 +442,7 @@ async def login_local(
     mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse | MfaChallengeResponse:
+) -> TokenResponse | MfaChallengeResponse | AdminMfaSetupRequiredResponse:
     """Authentifie sans distinguer compte absent et mot de passe erroné."""
     del response
     client_ip = get_client_address(request)
@@ -497,12 +537,12 @@ async def login_local(
         details={"provider": "local"},
     )
     logger.info("identity_login_success", provider="local", account_id=str(account.account_id))
-    return await _issue_tokens(account, refresh_store, request, session_service)
+    return await _issue_tokens(account, refresh_store, request, session_service, mfa_service)
 
 
 @router.post(
     "/login/mfa",
-    response_model=TokenResponse,
+    response_model=TokenResponse | AdminMfaSetupRequiredResponse,
     summary="Terminer une connexion avec MFA TOTP ou code de récupération",
 )
 @_limiter.limit("20/minute")
@@ -515,7 +555,7 @@ async def complete_mfa_login(
     session_service: Annotated[SessionService, Depends(get_session_service)],
     lockout_service: Annotated[AccountLockoutService, Depends(get_lockout_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> TokenResponse | AdminMfaSetupRequiredResponse:
     """Vérifie le challenge signé et émet enfin la session complète."""
     del response
     client_ip = get_client_address(request)
@@ -572,7 +612,7 @@ async def complete_mfa_login(
         status_code=200,
         details={"provider": provider, "mfa": True},
     )
-    return await _issue_tokens(account, refresh_store, request, session_service)
+    return await _issue_tokens(account, refresh_store, request, session_service, mfa_service)
 
 
 @router.post(
@@ -605,7 +645,7 @@ async def _consume_google_nonce(
 
 @router.post(
     "/login/google",
-    response_model=TokenResponse,
+    response_model=TokenResponse | AdminMfaSetupRequiredResponse,
     summary="Se connecter avec Google",
 )
 @_limiter.limit("10/minute")
@@ -617,7 +657,8 @@ async def login_google(
     nonce_store: Annotated[GoogleNonceStore, Depends(get_google_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
-) -> TokenResponse:
+    mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
+) -> TokenResponse | AdminMfaSetupRequiredResponse:
     del response
     nonce = credentials.nonce.get_secret_value()
     await _consume_google_nonce(nonce_store, nonce)
@@ -642,12 +683,12 @@ async def login_google(
             detail="Preuve Google invalide",
         ) from None
     logger.info("identity_login_success", provider="google", account_id=str(account.account_id))
-    return await _issue_tokens(account, refresh_store, request, session_service)
+    return await _issue_tokens(account, refresh_store, request, session_service, mfa_service)
 
 
 @router.post(
     "/link/google",
-    response_model=TokenResponse,
+    response_model=TokenResponse | AdminMfaSetupRequiredResponse,
     summary="Rattacher Google au compte courant",
 )
 @_limiter.limit("10/minute")
@@ -660,7 +701,8 @@ async def link_google(
     nonce_store: Annotated[GoogleNonceStore, Depends(get_google_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
-) -> TokenResponse:
+    mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
+) -> TokenResponse | AdminMfaSetupRequiredResponse:
     del response
     try:
         account_id = UUID(str(current_user.get("sub", "")))
@@ -693,7 +735,7 @@ async def link_google(
             detail="Preuve Google invalide",
         ) from None
     logger.info("identity_linked", provider="google", account_id=str(account.account_id))
-    return await _issue_tokens(account, refresh_store, request, session_service)
+    return await _issue_tokens(account, refresh_store, request, session_service, mfa_service)
 
 
 @router.get(
@@ -1206,7 +1248,7 @@ async def confirm_password_reset(
 async def setup_mfa(
     request: Request,
     response: Response,
-    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    current_user: Annotated[dict[str, object], Depends(get_current_user_or_mfa_setup)],
     mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> MfaSetupResponse:
@@ -1242,7 +1284,7 @@ async def verify_mfa(
     request: Request,
     response: Response,
     verification: MfaVerifyRequest,
-    current_user: Annotated[dict[str, object], Depends(get_current_user)],
+    current_user: Annotated[dict[str, object], Depends(get_current_user_or_mfa_setup)],
     mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
 ) -> MfaStatusResponse:
@@ -1511,7 +1553,7 @@ async def oidc_authorize(
 
 @router.post(
     "/login/oidc",
-    response_model=TokenResponse,
+    response_model=TokenResponse | AdminMfaSetupRequiredResponse,
     summary="Se connecter avec un fournisseur OIDC enterprise",
 )
 @_limiter.limit("10/minute")
@@ -1523,8 +1565,9 @@ async def login_oidc(
     nonce_store: Annotated[OidcNonceStore, Depends(get_oidc_nonce_store)],
     refresh_store: Annotated[RefreshTokenStore, Depends(get_refresh_token_store)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
+    mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> TokenResponse | AdminMfaSetupRequiredResponse:
     del response
     client_ip = get_client_address(request)
     user_agent = request.headers.get("User-Agent")
@@ -1599,7 +1642,7 @@ async def login_oidc(
         provider=credentials.provider,
         account_id=str(account.account_id),
     )
-    return await _issue_tokens(account, refresh_store, request, session_service)
+    return await _issue_tokens(account, refresh_store, request, session_service, mfa_service)
 
 
 # ============================================================================

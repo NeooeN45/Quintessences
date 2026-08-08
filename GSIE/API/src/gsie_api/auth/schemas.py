@@ -48,6 +48,25 @@ class MfaChallengeResponse(BaseModel):
     expires_in: int = Field(gt=0)
 
 
+class AdminMfaSetupRequiredResponse(BaseModel):
+    """Réponse intermédiaire lorsqu'un compte admin n'a pas encore de MFA.
+
+    Le rôle admin exige un second facteur (ROADMAP §"P0 restants" — MFA
+    administrateur). ``setup_token`` n'est utilisable que sur
+    ``POST /mfa/setup`` et ``POST /mfa/verify`` — aucune autre route ne
+    l'accepte (voir ``core/auth.py::create_mfa_setup_token``), donc aucune
+    action privilégiée n'est possible tant que le second facteur n'est pas
+    activé. Le compte n'est jamais bloqué : une nouvelle connexion émet un
+    nouveau ``setup_token`` si celui-ci expire avant la fin de la procédure.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mfa_setup_required: bool = True
+    setup_token: str
+    expires_in: int = Field(gt=0)
+
+
 class MfaChallengeVerifyRequest(BaseModel):
     """Preuve MFA permettant de terminer une connexion."""
 
