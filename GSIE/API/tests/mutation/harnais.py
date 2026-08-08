@@ -1109,6 +1109,23 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_auth.py",),
     ),
+    # --- Protection SSRF egress (RFC-0021 §4.3)
+    Mutation(
+        cle="ssrf_egress_desactive",
+        fichier="gsie_api/shared/http_client.py",
+        ancien=(
+            "        try:\n"
+            "            valider_url_egress(url)\n"
+            "        except ValueError as exc:\n"
+            '            raise self.exception_class(f"Échec {label} : {exc}") from exc'
+        ),
+        nouveau=("        # protection SSRF désactivée\n" "        pass"),
+        defaut_reproduit=(
+            "une requête vers http://169.254.169.254/ (metadata AWS) passe "
+            "sans blocage — un client compromis peut accéder aux services internes"
+        ),
+        tests=("tests/unit/test_ssrf_egress.py",),
+    ),
 )
 
 

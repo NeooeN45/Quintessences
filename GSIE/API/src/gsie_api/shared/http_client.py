@@ -52,11 +52,17 @@ from __future__ import annotations
 import asyncio
 import csv
 import io
+import ipaddress
 import json
+import socket
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 import httpx
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _DEFAULT_TIMEOUT = 30.0
 _MAX_RETRIES = 3
@@ -69,6 +75,75 @@ _RETRYABLE_EXCEPTIONS = (
     httpx.ReadTimeout,
     httpx.RemoteProtocolError,
 )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Protection SSRF (RFC-0021 §4.3 — egress réseau applicatif)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+def _default_dns_resolver(hostname: str) -> list[str]:
+    """Résout un hostname en liste d'IPs (string).
+
+    Retourne une liste vide si la résolution échoue (fail-open DNS) :
+    si le hostname ne résout pas, la requête HTTP échouera aussi —
+    pas de risque SSRF. Le risque DNS rebinding (résolution différente
+    entre le check et la requête) exige une protection infrastructure
+    (résolveur/proxy contrôlé), reconnu par RFC-0021 §4.3.
+    """
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+        return [info[4][0] for info in infos]
+    except (socket.gaierror, socket.herror):
+        return []
+
+
+# Résolveur DNS injectable pour les tests. Par défaut, utilise socket.getaddrinfo.
+# Les tests monkeypatchent cette variable pour éviter la résolution réelle.
+_dns_resolver: Callable[[str], list[str]] = _default_dns_resolver
+
+
+def valider_url_egress(url: str) -> None:
+    """Valide qu'une URL ne pointe pas vers une IP interne.
+
+    Prévention SSRF (RFC-0021 §4.3) : bloque les requêtes vers
+    - Loopback : 127.0.0.0/8, ::1
+    - Link-local : 169.254.0.0/16 (metadata AWS/GCP), fe80::/10
+    - Privé : 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7
+    - Unspecified : 0.0.0.0, ::
+    - Multicast/broadcast
+
+    Lève ``ValueError`` si l'URL pointe vers une IP bloquée.
+    """
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+    if not hostname:
+        return  # URL relative ou sans hostname — pas de risque SSRF
+
+    # Collecter toutes les IPs à vérifier : littéral IP + résolution DNS
+    ips: list[str] = []
+    try:
+        ipaddress.ip_address(hostname)
+        ips.append(hostname)  # littéral IP direct
+    except ValueError:
+        pass  # hostname, pas un littéral IP — résoudre ci-dessous
+
+    ips.extend(_dns_resolver(hostname))
+
+    for ip_str in ips:
+        ip = ipaddress.ip_address(ip_str)
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_unspecified
+            or ip.is_multicast
+            or ip.is_reserved
+        ):
+            raise ValueError(
+                f"URL bloquée par la protection SSRF (egress) : "
+                f"{hostname} résout vers {ip_str} ({ip.__class__.__name__})"
+            )
 
 
 class ResilientHttpClient(ABC):
@@ -135,6 +210,15 @@ class ResilientHttpClient(ABC):
         label = error_label or f"de l'appel API {method} {path}"
         merged_headers = {**self.auth_headers(), **(headers or {})}
         url = path if path.startswith("http") else f"{self.base_url}{path}"
+
+        # Protection SSRF (RFC-0021 §4.3) : bloquer les URLs pointant
+        # vers une IP interne avant toute requête. Le check est hors
+        # boucle de retry — une URL bloquée ne mérite pas de retry.
+        try:
+            valider_url_egress(url)
+        except ValueError as exc:
+            raise self.exception_class(f"Échec {label} : {exc}") from exc
+
         last_exc: Exception | None = None
         for tentative in range(self._max_retries + 1):
             try:
