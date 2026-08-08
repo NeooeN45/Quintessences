@@ -1,0 +1,54 @@
+# Régénère uv.lock automatiquement après qu'une PR Dependabot a modifié
+# pyproject.toml. Dependabot ne supporte pas nativement `uv lock`, donc
+# ce workflow se déclenche sur les PRs ouvertes par Dependabot, exécute
+# `uv lock`, et commit + push le lockfile mis à jour.
+#
+# Sans ce workflow, chaque PR pip Dependabot échoue au CI car
+# `uv lock --check` détecte que le lockfile est désynchronisé.
+
+name: Dependabot — régénérer uv.lock
+
+on:
+  pull_request:
+    paths:
+      - "GSIE/API/pyproject.toml"
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  uv-lock:
+    # Ne s'exécute que pour les PRs ouvertes par Dependabot
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout la PR
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Régénérer uv.lock
+        working-directory: GSIE/API
+        run: uv lock
+
+      - name: Commit et push le lockfile
+        working-directory: GSIE/API
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          if git diff --cached --quiet; then
+            echo "uv.lock déjà à jour — rien à faire."
+          else
+            git commit -m "chore(deps): régénérer uv.lock pour Dependabot"
+            git push
+          fi
