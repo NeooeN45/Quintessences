@@ -874,8 +874,8 @@ MUTATIONS: tuple[Mutation, ...] = (
         # Bornes definitionnelles, jamais empiriques : une humidite relative de
         # 250 % n'est pas un record, c'est un pourcentage de saturation
         # depassant la saturation.
-        ancien="    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)\n    pression_hpa: float | None = Field(default=None, gt=0.0)\n    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)\n    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)\n    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
-        nouveau="    humidite_pct: float | None = None\n    pression_hpa: float | None = None\n    vent_direction_deg: float | None = None\n    vent_vitesse_ms: float | None = None\n    precipitations_1h_mm: float | None = None\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
+        ancien="    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)\n    pression_hpa: float | None = Field(default=None, gt=0.0)\n    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)\n    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)\n    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)\n    source: SourceReference\n\n\nclass ClimateIngestResult",  # noqa: E501
+        nouveau="    humidite_pct: float | None = None\n    pression_hpa: float | None = None\n    vent_direction_deg: float | None = None\n    vent_vitesse_ms: float | None = None\n    precipitations_1h_mm: float | None = None\n    source: SourceReference\n\n\nclass ClimateIngestResult",  # noqa: E501
         defaut_reproduit=(
             "une humidite de 250 %, un azimut de 999 degres ou une vitesse de "
             "vent negative alimentent un diagnostic sans objection"
