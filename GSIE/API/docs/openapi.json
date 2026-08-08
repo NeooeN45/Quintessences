@@ -711,6 +711,21 @@
         "title": "BlocContexte",
         "type": "object"
       },
+      "Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post": {
+        "properties": {
+          "file": {
+            "description": "Image de la plante (JPG ou PNG)",
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post",
+        "type": "object"
+      },
       "Body_botanical_identify_api_v1_botanical_identify_post": {
         "properties": {
           "file": {
@@ -757,6 +772,85 @@
           "source"
         ],
         "title": "BotanicalData",
+        "type": "object"
+      },
+      "BotanicalIngestResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de `POST /botanical/query-and-ingest` — vide si GBIF ne trouve rien.",
+        "properties": {
+          "requete_id": {
+            "format": "uuid",
+            "title": "Requete Id",
+            "type": "string"
+          },
+          "resultats": {
+            "items": {
+              "$ref": "#/components/schemas/BotanicalIngestResult"
+            },
+            "maxItems": 1,
+            "title": "Resultats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requete_id"
+        ],
+        "title": "BotanicalIngestResponse",
+        "type": "object"
+      },
+      "BotanicalIngestResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'ingestion d'un taxon GBIF dans le Knowledge Engine.",
+        "properties": {
+          "connaissance_id": {
+            "format": "uuid",
+            "title": "Connaissance Id",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "nom_scientifique": {
+            "title": "Nom Scientifique",
+            "type": "string"
+          },
+          "raison": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motif si non ingérée (quarantaine ou refus)",
+            "title": "Raison"
+          },
+          "statut": {
+            "description": "ingested | quarantined | refused (EvidenceKnowledgePipeline)",
+            "title": "Statut",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Version dans le graphe si ingérée (None sinon)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "nom_scientifique",
+          "statut",
+          "evidence_level",
+          "connaissance_id"
+        ],
+        "title": "BotanicalIngestResult",
         "type": "object"
       },
       "BotanicalQuery": {
@@ -1139,6 +1233,102 @@
           "checkout_url"
         ],
         "title": "CheckoutResponse",
+        "type": "object"
+      },
+      "ClimateIngestResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de `POST /climate/query-and-ingest` — une entrée par paramètre mesuré.",
+        "properties": {
+          "date_observation": {
+            "format": "date-time",
+            "title": "Date Observation",
+            "type": "string"
+          },
+          "nom_station": {
+            "title": "Nom Station",
+            "type": "string"
+          },
+          "requete_id": {
+            "format": "uuid",
+            "title": "Requete Id",
+            "type": "string"
+          },
+          "resultats": {
+            "items": {
+              "$ref": "#/components/schemas/ClimateIngestResult"
+            },
+            "maxItems": 10,
+            "title": "Resultats",
+            "type": "array"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requete_id",
+          "station_id",
+          "nom_station",
+          "date_observation"
+        ],
+        "title": "ClimateIngestResponse",
+        "type": "object"
+      },
+      "ClimateIngestResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'ingestion d'une mesure SYNOP dans le Knowledge Engine.\n\nUne mesure par résultat (température, humidité, pression, vent,\nprécipitations) : chaque paramètre devient une connaissance atomique\ndistincte, interrogeable indépendamment (`par_concept`, `par_domaine`).",
+        "properties": {
+          "connaissance_id": {
+            "format": "uuid",
+            "title": "Connaissance Id",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "nom": {
+            "description": "Ex. « temperature_c », « humidite_pct »",
+            "title": "Nom",
+            "type": "string"
+          },
+          "raison": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motif si non ingérée (quarantaine ou refus)",
+            "title": "Raison"
+          },
+          "statut": {
+            "description": "ingested | quarantined | refused (EvidenceKnowledgePipeline)",
+            "title": "Statut",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Version dans le graphe si ingérée (None sinon)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "nom",
+          "statut",
+          "evidence_level",
+          "connaissance_id"
+        ],
+        "title": "ClimateIngestResult",
         "type": "object"
       },
       "ClimateQuery": {
@@ -1700,6 +1890,186 @@
           "evidence_level"
         ],
         "title": "CorrelationComputeRequest",
+        "type": "object"
+      },
+      "CorrelationMatrixRequest": {
+        "additionalProperties": false,
+        "description": "Requête de calcul d'une matrice de corrélations pairwise N×N.\n\nExtension v1.1 — le contrat cible (CORRELATION_ENGINE.md §5) prévoit\nune liste de N paramètres. Cette extension utilise numpy.corrcoef\n(vectorisé BLAS) pour la matrice Pearson, soit 326x à 1521x plus\nrapide que scipy pairwise (benchmark BENCHMARK_CORRELATION_ENGINE.md).",
+        "properties": {
+          "domaine": {
+            "$ref": "#/components/schemas/DomaineCorrelation",
+            "description": "Domaine de la corrélation"
+          },
+          "domaine_validite": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ex. « France atlantique, altitude < 800 m »",
+            "title": "Domaine Validite"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel",
+            "description": "Niveau de preuve de la source des données"
+          },
+          "methode": {
+            "$ref": "#/components/schemas/CorrelationMethod",
+            "default": "pearson",
+            "description": "pearson (vectorisé numpy), spearman/kendall (scipy pairwise)"
+          },
+          "requete_id": {
+            "description": "Identifiant de la requête",
+            "format": "uuid",
+            "title": "Requete Id",
+            "type": "string"
+          },
+          "seuil_force": {
+            "$ref": "#/components/schemas/CorrelationStrength",
+            "default": "moderate",
+            "description": "Force minimale pour inclure une paire dans les résultats significatifs"
+          },
+          "seuil_significativite": {
+            "default": 0.05,
+            "description": "Seuil de p-valeur pour la significativité",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Seuil Significativite",
+            "type": "number"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference",
+            "description": "Source des données observées — CON-002, toute corrélation doit être sourcée"
+          },
+          "variables": {
+            "description": "Liste des variables à corréler (minimum 2, maximum 200)",
+            "items": {
+              "$ref": "#/components/schemas/ParametreCorrelation"
+            },
+            "maxItems": 200,
+            "minItems": 2,
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requete_id",
+          "domaine",
+          "variables",
+          "source",
+          "evidence_level"
+        ],
+        "title": "CorrelationMatrixRequest",
+        "type": "object"
+      },
+      "CorrelationMatrixResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'une matrice de corrélations pairwise N×N.",
+        "properties": {
+          "date_calcul": {
+            "format": "date-time",
+            "title": "Date Calcul",
+            "type": "string"
+          },
+          "domaine_validite": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domaine Validite"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "matrice": {
+            "description": "Matrice N×N symétrique. Diagonale = None (auto-corrélation triviale). matrice[i][j] = coefficient entre variables[i] et variables[j].",
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Matrice",
+            "type": "array"
+          },
+          "methode": {
+            "$ref": "#/components/schemas/CorrelationMethod"
+          },
+          "n_observations": {
+            "minimum": 3.0,
+            "title": "N Observations",
+            "type": "integer"
+          },
+          "n_paires_significatives": {
+            "description": "Paires au-dessus du seuil de force et de significativité",
+            "minimum": 0.0,
+            "title": "N Paires Significatives",
+            "type": "integer"
+          },
+          "n_paires_total": {
+            "description": "N×(N-1)/2 — nombre total de paires uniques",
+            "minimum": 1.0,
+            "title": "N Paires Total",
+            "type": "integer"
+          },
+          "n_variables": {
+            "minimum": 2.0,
+            "title": "N Variables",
+            "type": "integer"
+          },
+          "paires_significatives": {
+            "description": "Paires triées par |coefficient| décroissant, filtrées par seuil_force",
+            "items": {
+              "$ref": "#/components/schemas/PairwiseCorrelation"
+            },
+            "title": "Paires Significatives",
+            "type": "array"
+          },
+          "requete_origine": {
+            "format": "uuid",
+            "title": "Requete Origine",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          },
+          "variables": {
+            "description": "Noms des variables (avec unité si fournie)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requete_origine",
+          "methode",
+          "n_variables",
+          "n_observations",
+          "n_paires_total",
+          "n_paires_significatives",
+          "matrice",
+          "variables",
+          "source",
+          "evidence_level"
+        ],
+        "title": "CorrelationMatrixResult",
         "type": "object"
       },
       "CorrelationMethod": {
@@ -5344,6 +5714,56 @@
         "title": "PageTelechargementResponse",
         "type": "object"
       },
+      "PairwiseCorrelation": {
+        "additionalProperties": false,
+        "description": "Une paire de variables corrélées dans une matrice N×N.",
+        "properties": {
+          "coefficient": {
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Coefficient",
+            "type": "number"
+          },
+          "n_observations": {
+            "minimum": 3.0,
+            "title": "N Observations",
+            "type": "integer"
+          },
+          "p_valeur": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "P Valeur",
+            "type": "number"
+          },
+          "strength": {
+            "$ref": "#/components/schemas/CorrelationStrength"
+          },
+          "type_relation": {
+            "$ref": "#/components/schemas/TypeRelation"
+          },
+          "variable_a": {
+            "description": "Nom de la variable A (avec unité si fournie)",
+            "title": "Variable A",
+            "type": "string"
+          },
+          "variable_b": {
+            "description": "Nom de la variable B (avec unité si fournie)",
+            "title": "Variable B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variable_a",
+          "variable_b",
+          "coefficient",
+          "p_valeur",
+          "type_relation",
+          "strength",
+          "n_observations"
+        ],
+        "title": "PairwiseCorrelation",
+        "type": "object"
+      },
       "ParametreCorrelation": {
         "additionalProperties": false,
         "description": "Une variable à corréler, avec ses valeurs observées (extension v1).",
@@ -5564,6 +5984,101 @@
           "source"
         ],
         "title": "PedologyData",
+        "type": "object"
+      },
+      "PedologyIngestResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de `POST /pedology/query-and-ingest` — une entrée par caractéristique.",
+        "properties": {
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "profondeur": {
+            "title": "Profondeur",
+            "type": "string"
+          },
+          "requete_id": {
+            "format": "uuid",
+            "title": "Requete Id",
+            "type": "string"
+          },
+          "resultats": {
+            "items": {
+              "$ref": "#/components/schemas/PedologyIngestResult"
+            },
+            "maxItems": 20,
+            "title": "Resultats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requete_id",
+          "latitude",
+          "longitude",
+          "profondeur"
+        ],
+        "title": "PedologyIngestResponse",
+        "type": "object"
+      },
+      "PedologyIngestResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'ingestion d'une caractéristique de sol dans le Knowledge Engine.\n\nUne caractéristique par résultat : chaque propriété SoilGrids (pH,\nargile, sable, limon) devient une connaissance atomique distincte,\ninterrogeable indépendamment (`par_concept`, `par_domaine`) plutôt\nqu'un unique objet fourre-tout par point.",
+        "properties": {
+          "connaissance_id": {
+            "format": "uuid",
+            "title": "Connaissance Id",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "nom": {
+            "description": "Caractéristique concernée, ex. « ph »",
+            "title": "Nom",
+            "type": "string"
+          },
+          "raison": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motif si non ingérée (quarantaine ou refus)",
+            "title": "Raison"
+          },
+          "statut": {
+            "description": "ingested | quarantined | refused (EvidenceKnowledgePipeline)",
+            "title": "Statut",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Version dans le graphe si ingérée (None sinon)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "nom",
+          "statut",
+          "evidence_level",
+          "connaissance_id"
+        ],
+        "title": "PedologyIngestResult",
         "type": "object"
       },
       "PedologyQuery": {
@@ -5823,6 +6338,99 @@
           "family"
         ],
         "title": "PlantNetIdentificationResult",
+        "type": "object"
+      },
+      "PlantNetIngestResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de `POST /botanical/identify-and-ingest` — une entrée par candidat.",
+        "properties": {
+          "best_match": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nom scientifique de la meilleure correspondance",
+            "title": "Best Match"
+          },
+          "resultats": {
+            "items": {
+              "$ref": "#/components/schemas/PlantNetIngestResult"
+            },
+            "maxItems": 20,
+            "title": "Resultats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "best_match"
+        ],
+        "title": "PlantNetIngestResponse",
+        "type": "object"
+      },
+      "PlantNetIngestResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'ingestion d'une correspondance PlantNet dans le Knowledge Engine.\n\nUne correspondance par résultat : chaque espèce candidate devient une\nconnaissance atomique distincte, interrogeable indépendamment\n(`par_concept`, `par_domaine`).",
+        "properties": {
+          "connaissance_id": {
+            "format": "uuid",
+            "title": "Connaissance Id",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "nom_scientifique": {
+            "title": "Nom Scientifique",
+            "type": "string"
+          },
+          "raison": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motif si non ingérée (quarantaine ou refus)",
+            "title": "Raison"
+          },
+          "score": {
+            "exclusiveMaximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "statut": {
+            "description": "ingested | quarantined | refused (EvidenceKnowledgePipeline)",
+            "title": "Statut",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Version dans le graphe si ingérée (None sinon)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "nom_scientifique",
+          "score",
+          "statut",
+          "evidence_level",
+          "connaissance_id"
+        ],
+        "title": "PlantNetIngestResult",
         "type": "object"
       },
       "Probabilite": {
@@ -7460,6 +8068,92 @@
         ],
         "title": "TaxonStatus",
         "type": "string"
+      },
+      "TaxrefIngestResponse": {
+        "additionalProperties": false,
+        "description": "Résultat de `POST /botanical/taxref-and-ingest` — null si TAXREF ne trouve rien.",
+        "properties": {
+          "requete_id": {
+            "format": "uuid",
+            "title": "Requete Id",
+            "type": "string"
+          },
+          "resultat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxrefIngestResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "requete_id"
+        ],
+        "title": "TaxrefIngestResponse",
+        "type": "object"
+      },
+      "TaxrefIngestResult": {
+        "additionalProperties": false,
+        "description": "Résultat d'ingestion d'une entrée TAXREF dans le Knowledge Engine.",
+        "properties": {
+          "cd_nom": {
+            "title": "Cd Nom",
+            "type": "integer"
+          },
+          "connaissance_id": {
+            "format": "uuid",
+            "title": "Connaissance Id",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "nom_scientifique": {
+            "title": "Nom Scientifique",
+            "type": "string"
+          },
+          "raison": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motif si non ingérée (quarantaine ou refus)",
+            "title": "Raison"
+          },
+          "statut": {
+            "description": "ingested | quarantined | refused (EvidenceKnowledgePipeline)",
+            "title": "Statut",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Version dans le graphe si ingérée (None sinon)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "cd_nom",
+          "nom_scientifique",
+          "statut",
+          "evidence_level",
+          "connaissance_id"
+        ],
+        "title": "TaxrefIngestResult",
+        "type": "object"
       },
       "TaxrefQuery": {
         "additionalProperties": false,
@@ -10099,6 +10793,61 @@
         ]
       }
     },
+    "/api/v1/botanical/identify-and-ingest": {
+      "post": {
+        "description": "Identifie une plante comme /identify, puis fait passer chaque espèce candidate par l'Evidence Engine et l'ingère dans le Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md). Une identification par image plafonne à evidence_level=D (quarantaine, validation humaine requise, CON-001) — contrairement à SoilGrids, ce n'est jamais ingéré automatiquement.",
+        "operationId": "botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlantNetIngestResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Botanical Identify And Ingest Api V1 Botanical Identify And Ingest Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Identifier une plante par image, candidats ingérés dans le Knowledge Engine",
+        "tags": [
+          "botanical"
+        ]
+      }
+    },
     "/api/v1/botanical/indigenat": {
       "post": {
         "description": "Interroge le dataset réel Bellifa et al. (2026, DOI 10.57745/DHJHGS) pour le statut d'indigénat d'une essence (France + sylvoécorégion). Retourne null si le taxon ou le code SER est introuvable — jamais un statut approximé (ADR-009).",
@@ -10201,6 +10950,53 @@
         ]
       }
     },
+    "/api/v1/botanical/query-and-ingest": {
+      "post": {
+        "description": "Résout un nom scientifique comme /query, puis fait passer le taxon accepté par l'Evidence Engine et l'ingère dans le Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md). GBIF Backbone Taxonomy est un référentiel officiel : plafond evidence_level=B, statut accepte, ingestion automatique — comme SoilGrids.",
+        "operationId": "botanical_query_and_ingest_api_v1_botanical_query_and_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotanicalQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotanicalIngestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Résoudre une essence vers son taxon GBIF, ingéré dans le Knowledge Engine",
+        "tags": [
+          "botanical"
+        ]
+      }
+    },
     "/api/v1/botanical/status": {
       "get": {
         "description": "Statut du moteur Botanical.",
@@ -10273,6 +11069,53 @@
           }
         ],
         "summary": "Résout un nom scientifique vers son entrée TAXREF réelle (SCI-003)",
+        "tags": [
+          "botanical"
+        ]
+      }
+    },
+    "/api/v1/botanical/taxref-and-ingest": {
+      "post": {
+        "description": "Résout une entrée TAXREF comme /taxref, puis fait passer le résultat par l'Evidence Engine et l'ingère dans le Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md). TAXREF (MNHN) est un référentiel officiel : plafond evidence_level=B, statut accepte, ingestion automatique — comme GBIF et SoilGrids.",
+        "operationId": "botanical_taxref_and_ingest_api_v1_botanical_taxref_and_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxrefQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxrefIngestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Résoudre une entrée TAXREF réelle, ingérée dans le Knowledge Engine",
         "tags": [
           "botanical"
         ]
@@ -10598,6 +11441,61 @@
         ]
       }
     },
+    "/api/v1/climate/query-and-ingest": {
+      "post": {
+        "description": "Interroge SYNOP comme /query, puis fait passer chaque paramètre mesuré par l'Evidence Engine et l'ingère dans le Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md). Une observation SYNOP plafonne à evidence_level=D (quarantaine, validation humaine requise, CON-001) — contrairement à SoilGrids, ce n'est jamais ingéré automatiquement. Retourne null si la station est introuvable — jamais une observation approximée (ADR-009).",
+        "operationId": "climate_query_and_ingest_api_v1_climate_query_and_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClimateQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ClimateIngestResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Climate Query And Ingest Api V1 Climate Query And Ingest Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Dernière observation SYNOP, ingérée dans le Knowledge Engine",
+        "tags": [
+          "climate"
+        ]
+      }
+    },
     "/api/v1/climate/status": {
       "get": {
         "description": "Statut du moteur Climate.",
@@ -10715,6 +11613,53 @@
           }
         ],
         "summary": "Calculer une corrélation entre deux variables",
+        "tags": [
+          "correlation"
+        ]
+      }
+    },
+    "/api/v1/correlation/matrix": {
+      "post": {
+        "description": "Calcule la matrice de corrélations pairwise (pearson/spearman/kendall) entre N variables. Pour Pearson, utilise numpy.corrcoef vectorisé (BLAS) — 326x à 1521x plus rapide que scipy pairwise. Retourne la matrice complète et les paires significatives filtrées par seuil de force et de significativité. Ne persiste pas les corrélations individuelles (persistance massive prévue v7).",
+        "operationId": "correlation_matrix_api_v1_correlation_matrix_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrelationMatrixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrelationMatrixResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Calculer une matrice de corrélations pairwise N×N",
         "tags": [
           "correlation"
         ]
@@ -12683,6 +13628,53 @@
           }
         ],
         "summary": "Récupérer les propriétés de sol réelles d'un point (SoilGrids)",
+        "tags": [
+          "pedology"
+        ]
+      }
+    },
+    "/api/v1/pedology/query-and-ingest": {
+      "post": {
+        "description": "Interroge SoilGrids comme /query, puis fait passer chaque caractéristique par l'Evidence Engine et l'ingère dans le Knowledge Engine si acceptée (Gate 5 — maillon amont ingestion→Evidence→Knowledge, ROADMAP.md). Contrairement à /query, le résultat devient une connaissance sourcée, versionnée et réutilisable par les autres moteurs, pas une valeur transitoire.",
+        "operationId": "pedology_query_and_ingest_api_v1_pedology_query_and_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedologyQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PedologyIngestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Propriétés de sol d'un point, ingérées dans le Knowledge Engine",
         "tags": [
           "pedology"
         ]
