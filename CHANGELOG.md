@@ -4,6 +4,38 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GATE 5 INTÉGRATION — MAILLON AMONT GBIF/TAXREF→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Suite des connecteurs SoilGrids/PlantNet/Météo-France** (voir entrées
+  précédentes) : même pattern répliqué sur les deux référentiels
+  taxonomiques déjà clients du Botanical Engine — `EvidenceKnowledgePipeline`
+  a désormais cinq appelants réels en production.
+- **GBIF** : `BotanicalEngine.query_and_ingest()` + endpoint
+  `POST /botanical/query-and-ingest` (`EngineWriteUser`). Réutilise
+  `query()` (même persistance `entity`/`entity_alias`, aucune double
+  requête GBIF) puis fait passer le taxon accepté par l'Evidence Engine.
+- **TAXREF** : `BotanicalEngine.resolve_taxref_and_ingest()` + endpoint
+  `POST /botanical/taxref-and-ingest` (`EngineWriteUser`). Réutilise
+  `resolve_taxref()`.
+- **Différence assumée avec PlantNet/SYNOP** : GBIF Backbone Taxonomy et
+  TAXREF (MNHN) sont des référentiels taxonomiques officiels consultés
+  directement — pas une inférence ML ni une mesure brute instantanée.
+  `ContentType.referentiel` + `SourceType.referentiel_officiel` plafonnent
+  à `evidence_level=B` dans la matrice de décision, donc statut `accepte`
+  et ingestion automatique, comme SoilGrids. C'est la matrice de
+  l'Evidence Engine qui en décide, aucun code spécifique ajouté pour
+  forcer ce comportement.
+- **Nouveaux schémas** : `BotanicalIngestResult`/`BotanicalIngestResponse`,
+  `TaxrefIngestResult`/`TaxrefIngestResponse` (`botanical/schemas.py`) —
+  même forme que `PedologyIngestResult`/`PlantNetIngestResult`/
+  `ClimateIngestResult`.
+- **Tests** : `test_botanical_gbif_taxref_ingest.py` (succès, absence de
+  résultat, échec de la source amont, échec d'ingestion Knowledge Engine
+  rapporté comme `refused` sans interrompre la requête),
+  `test_routers_coverage.py` (401/502/200 sur les deux nouveaux
+  endpoints). 100% de couverture sur `botanical/engine.py`,
+  `botanical/router.py`.
+
 ## [GATE 5 INTÉGRATION — MAILLON AMONT SOILGRIDS→EVIDENCE→KNOWLEDGE] - 2026-08-08
 
 - **Constat** : `EvidenceKnowledgePipeline` (`engines/pipeline.py`) connecte
