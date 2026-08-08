@@ -39,7 +39,7 @@ dependencies = [
     "opentelemetry-instrumentation-redis==0.65b0",
     "opentelemetry-exporter-otlp-proto-grpc==1.44.0",
     # Auth — JWT GSIE + mots de passe locaux Argon2id + Google OIDC (DEC-000044)
-    "pyjwt[crypto]==2.10.1",
+    "pyjwt[crypto]==2.13.0",
     "bcrypt==5.0.0",
     "argon2-cffi==25.1.0",
     "email-validator==2.3.0",
