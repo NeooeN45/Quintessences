@@ -212,8 +212,6 @@ class CorrelationMatrixRequest(BaseModel):
 
     @model_validator(mode="after")
     def _valeurs_appariees(self) -> "CorrelationMatrixRequest":
-        if len(self.variables) < 2:
-            raise ValueError("Au moins 2 variables sont requises pour une matrice pairwise")
         n_obs = len(self.variables[0].valeurs)
         for i, var in enumerate(self.variables):
             if len(var.valeurs) != n_obs:

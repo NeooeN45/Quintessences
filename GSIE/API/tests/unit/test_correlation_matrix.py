@@ -11,7 +11,7 @@ Couvre :
 Aucune DB réelle — la session est un MagicMock (compute_matrix ne persiste pas).
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
@@ -307,3 +307,43 @@ class TestStrengthThreshold:
         self, strength: CorrelationStrength, expected: float
     ) -> None:
         assert CorrelationEngine._strength_threshold_value(strength) == pytest.approx(expected)
+
+    def should_return_zero_when_strength_unknown(self) -> None:
+        """Fallback défensif — force inconnue retourne 0.0 (ligne 396)."""
+        # CorrelationStrength est un enum StrEnum ; on injecte une valeur
+        # inexistante via mock pour tester le fallback.
+        fake = type("FakeStrength", (), {"__eq__": lambda self, other: False})()
+        assert CorrelationEngine._strength_threshold_value(fake) == 0.0  # type: ignore[arg-type]
+
+
+class TestComputeMatrixNanFilter:
+    """Filtrage des paires NaN dans compute_matrix (ligne 293)."""
+
+    async def should_skip_pairs_with_nan_coefficient(self) -> None:
+        """Une paire avec coefficient NaN est skippée (pas dans significatives)."""
+        session = _make_mock_session()
+        engine = CorrelationEngine(session)
+        request = _make_matrix_request(
+            [
+                _make_variable("v1", [1.0, 2.0, 3.0, 4.0, 5.0]),
+                _make_variable("v2", [2.0, 4.0, 6.0, 8.0, 10.0]),
+            ]
+        )
+
+        # Mock _pearson_matrix_vectorized pour injecter un NaN
+        original = engine._pearson_matrix_vectorized
+
+        def _mock_pearson(data: np.ndarray, n_obs: int) -> tuple[np.ndarray, np.ndarray]:
+            corr, pval = original(data, n_obs)
+            # Injecte NaN sur la paire (0,1)
+            corr[0, 1] = np.nan
+            corr[1, 0] = np.nan
+            return corr, pval
+
+        with patch.object(engine, "_pearson_matrix_vectorized", side_effect=_mock_pearson):
+            result = await engine.compute_matrix(request)
+
+        # La matrice contient NaN (arrondi)
+        assert result.matrice[0][1] != result.matrice[0][1]  # NaN != NaN
+        # Aucune paire significative (NaN skippé)
+        assert len(result.paires_significatives) == 0

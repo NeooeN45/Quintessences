@@ -106,6 +106,7 @@ async def correlation_compute(
 async def correlation_matrix(
     request_body: CorrelationMatrixRequest,
     request: Request,
+    response: Response,
     session: DbSession,
     _user: EngineWriteUser,
 ) -> CorrelationMatrixResult:

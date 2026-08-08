@@ -297,10 +297,7 @@ class CorrelationEngine:
                 if p_val >= request.seuil_significativite:
                     continue
                 strength = self._classify_strength(abs_coeff)
-                if p_val >= request.seuil_significativite:
-                    type_rel = TypeRelation.non_significative
-                else:
-                    type_rel = TypeRelation.positive if coeff > 0 else TypeRelation.negative
+                type_rel = TypeRelation.positive if coeff > 0 else TypeRelation.negative
                 significant_pairs.append(
                     PairwiseCorrelation(
                         variable_a=labels[i],
