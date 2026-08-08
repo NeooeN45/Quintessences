@@ -11,7 +11,7 @@ authors = [{ name = "Camille Perraudeau" }]
 dependencies = [
     # Framework API
     "fastapi==0.115.6",
-    "uvicorn[standard]==0.34.0",
+    "uvicorn[standard]==0.52.1",
     "gunicorn==23.0.0",
     # Validation
     "pydantic==2.10.4",
