@@ -73,12 +73,12 @@ de chaque tâche produite par une loop.
 
 > L'orchestrateur réécrit cette section après chaque évolution.
 
-- **Version** : 0.9.0
+- **Version** : 1.0.0
 - **Date création** : 2026-08-08
-- **Dernière évolution** : 2026-08-09 (upgrade FastAPI/Starlette validé)
-- **Cycles total** : 7
-- **Évolutions total** : 8
-- **Prochaine révision** : après revalidation pip-audit et traitement des warnings
+- **Dernière évolution** : 2026-08-09 (nettoyage warnings FastAPI)
+- **Cycles total** : 8
+- **Évolutions total** : 9
+- **Prochaine révision** : après revalidation pip-audit et audit des 17 warnings résiduels
 
 ## Métriques de santé
 
@@ -86,8 +86,8 @@ de chaque tâche produite par une loop.
 
 | Métrique | Valeur | Tendance |
 |---|---|---|
-| Cycles complétés | 7 | +1 |
-| Tâches réussies | 7 | +1 |
+| Cycles complétés | 8 | +1 |
+| Tâches réussies | 8 | +1 |
 | Tâches échouées | 0 | — |
 | Escalades générées | 2 | — |
 | Escalades résolues | 2 | +1 |

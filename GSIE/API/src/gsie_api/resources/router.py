@@ -51,7 +51,7 @@ def _erreur_validation(exc: ResourceValidationError) -> HTTPException:
     invariants du métamodèle qui refusent l'état demandé.
     """
     return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         detail={
             "code": VALIDATION_ERROR_CODE,
             "resource_type": exc.type_name,

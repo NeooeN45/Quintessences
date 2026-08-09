@@ -65,6 +65,18 @@
   3. Planifier séparément le refactoring des services > 30 lignes
 - **Escalades recommandées** : Aucune
 
+### Post-upgrade FastAPI — nettoyage des dépréciations (2026-08-09)
+
+- Suppression de `ORJSONResponse` global déprécié par FastAPI 0.134.
+- Remplacement de `HTTP_422_UNPROCESSABLE_ENTITY` par
+  `HTTP_422_UNPROCESSABLE_CONTENT` dans les routers concernés.
+- Tests ciblés : **217 passants** après nettoyage.
+- Suite complète : **2667 passés, 63 ignorés, 100 % couverture**.
+- Warnings : **187 → 17**.
+- Les 17 warnings restants sont indépendants de FastAPI/Starlette : Stripe,
+  `RuntimeWarning` de modules exécutés, `ConstantInputWarning` SciPy couvert,
+  et avertissements de coverage/xdist.
+
 ## Évolution du trust score
 
 - **Avant** : 0.50

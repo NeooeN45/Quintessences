@@ -21,7 +21,7 @@ from typing import Any
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -296,9 +296,9 @@ def create_app() -> FastAPI:
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
         openapi_tags=_OPENAPI_TAGS,
-        # Sérialisation JSON haute performance (veille techno 2026-08-02).
-        # ORJSONResponse remplace le sérialiseur stdlib sur tous les endpoints.
-        default_response_class=ORJSONResponse,
+        # FastAPI sérialise les réponses typées via Pydantic/Rust.
+        # Le chemin standard est plus rapide que l'ancien ORJSONResponse
+        # global et évite une API de réponse dépréciée.
     )
 
     # Prometheus /metrics — monitoring production (CON-005)

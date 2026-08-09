@@ -7,9 +7,9 @@
     "derniere_maj": "2026-08-09"
   },
   "loop_qa": {
-    "score": 0.55,
-    "cycles_total": 1,
-    "cycles_reussis": 1,
+    "score": 0.60,
+    "cycles_total": 2,
+    "cycles_reussis": 2,
     "cycles_echoues": 0,
     "derniere_maj": "2026-08-09"
   },

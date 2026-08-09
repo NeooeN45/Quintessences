@@ -42,6 +42,7 @@
 | episode-006 | 2026-08-09 | 0.9 | Benchmark : numpy.corrcoef 30x–1521x plus rapide que scipy |
 | episode-007 | 2026-08-09 | 1.0 | Starlette nécessite un upgrade coordonné FastAPI, décision en attente |
 | episode-008 | 2026-08-09 | 1.0 | Upgrade FastAPI 0.134/Starlette 0.52.1 validé par la suite complète |
+| episode-009 | 2026-08-09 | 0.8 | Warnings FastAPI 187→17 après nettoyage Pydantic/422 |
 
 ### error
 

@@ -372,7 +372,7 @@ async def register_local(
             status_code=422,
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="PASSWORD_COMPROMISED",
         ) from None
     except WeakPasswordError as exc:
@@ -386,7 +386,7 @@ async def register_local(
             details={"score": exc.score, "minimum": exc.minimum},
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="PASSWORD_TOO_WEAK",
         ) from None
     try:
@@ -829,7 +829,7 @@ async def change_password(
         ) from None
     except (CompromisedPasswordError, WeakPasswordError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="PASSWORD_TOO_WEAK_OR_COMPROMISED",
         ) from exc
     await session_service.revoke_all_sessions(account_id)

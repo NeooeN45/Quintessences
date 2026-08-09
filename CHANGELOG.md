@@ -25,6 +25,9 @@ Format : `## [version] - YYYY-MM-DD`
   Starlette 0.52.1. Validation complète : 2667 tests passants, 100 %
   couverture, 70/70 mutations, ruff/mypy verts. 187 warnings de
   dépréciation restent à traiter séparément.
+- Nettoyage FastAPI : suppression de l’ORJSONResponse global déprécié et
+  remplacement de la constante 422 ; warnings réduits de 187 à 17,
+  sans régression fonctionnelle.
 
 ## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
 
