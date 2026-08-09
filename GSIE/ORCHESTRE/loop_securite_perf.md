@@ -7,7 +7,7 @@
 
 | Champ | Valeur |
 |---|---|
-| **Modèle** | SWE-1.6 |
+| **Modèle** | SWE 1.7 max |
 | **Fréquence** | Continue (dès qu'un cycle finit, le suivant commence) |
 | **Budget retry** | 3 par tâche |
 | **Trust score initial** | 0.50 (neutre, évolue avec les résultats) |

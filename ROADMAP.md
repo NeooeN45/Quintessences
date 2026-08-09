@@ -1,5 +1,13 @@
 # ROADMAP — Quintessences / GSIE
 
+## Outillage de qualité — Orchestre GSIE (2026-08-09)
+
+L'Orchestre GSIE est opérationnel pour les audits séquentiels : OWASP,
+dépendances CVE, QA et veille technologique. Les workers sont configurés
+sur **SWE 1.7 max**. Le prochain jalon est la résolution de l'escalade
+Fondateur #001 (mise à jour de pyjwt 2.10.1), puis le benchmark de
+performance de la loop Sécurité+Perf.
+
 ## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
 
 Le périmètre de la prochaine évolution mobile est consigné dans

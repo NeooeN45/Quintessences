@@ -30,9 +30,9 @@ MÉTA-ORCHESTRATEUR (GLM 5.2 High — session courante)
     ├── GENOME (genome.md — stratégie versionnée, auto-évolutive)
     ├── MÉMOIRE (memories/ — 6 types: info, skill, episode, error, reflection, todo)
     ├── LEÇONS (lessons/ — règles apprises, auto-append)
-    ├── LOOP Sécurité+Perf (SWE-1.6 — background sub-agent)
-    ├── LOOP QA (SWE-1.6 — background sub-agent) [extensible]
-    ├── LOOP Veille (SWE-1.6 — background sub-agent) [extensible]
+    ├── LOOP Sécurité+Perf (SWE 1.7 max — background sub-agent)
+    ├── LOOP QA (SWE 1.7 max — background sub-agent) [extensible]
+    ├── LOOP Veille (SWE 1.7 max — background sub-agent) [extensible]
     ├── AGENT CONSENSUS (GLM 5.2 — on-demand foreground)
     └── GATE ESCALADE (file-based → notification IDE)
 ```
@@ -75,7 +75,7 @@ Cycle 1: Audit OWASP Top 10
 
 ### 4.2 EXECUTE
 
-La loop (sub-agent SWE-1.6 en background) exécute la tâche.
+La loop (sub-agent SWE 1.7 max en background) exécute la tâche.
 L'orchestrateur surveille via `read_subagent`.
 
 ### 4.3 VERIFY

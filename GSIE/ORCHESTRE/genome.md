@@ -27,7 +27,7 @@ décision structurante (RFC, breaking change, sécurité).
 
 ### Règles d'activation
 
-- Une loop tourne en background (sub-agent SWE-1.6)
+- Une loop tourne en background (sub-agent SWE 1.7 max)
 - Maximum 3 loops simultanées (limite de parallélisme)
 - Une loop se met en pause si elle touche une escalade critique
 - L'orchestrateur surveille les loops et synthétise les résultats
@@ -73,12 +73,12 @@ de chaque tâche produite par une loop.
 
 > L'orchestrateur réécrit cette section après chaque évolution.
 
-- **Version** : 0.2.0
+- **Version** : 0.5.0
 - **Date création** : 2026-08-08
-- **Dernière évolution** : 2026-08-08 (cycle 1 loop sécu — trust 0.50→0.62)
-- **Cycles total** : 1
-- **Évolutions total** : 1
-- **Prochaine révision** : après le cycle 2 (audit dépendances CVE)
+- **Dernière évolution** : 2026-08-09 (cycles CVE, QA et veille terminés)
+- **Cycles total** : 4
+- **Évolutions total** : 4
+- **Prochaine révision** : après résolution de l'escalade #001
 
 ## Métriques de santé
 
@@ -86,13 +86,13 @@ de chaque tâche produite par une loop.
 
 | Métrique | Valeur | Tendance |
 |---|---|---|
-| Cycles complétés | 1 | +1 |
-| Tâches réussies | 1 | +1 |
+| Cycles complétés | 4 | +3 |
+| Tâches réussies | 4 | +3 |
 | Tâches échouées | 0 | — |
-| Escalades générées | 0 | — |
+| Escalades générées | 1 | +1 |
 | Escalades résolues | 0 | — |
 | Consensus atteints | 0 | — |
 | Consensus échoués | 0 | — |
 | Leçons apprises | 5 | — |
-| Couverture moyenne | — | — |
-| Vulnérabilités ouvertes | 0 critique, 1 WARN (A06) | — |
+| Couverture moyenne | 100 % | +100 % |
+| Vulnérabilités ouvertes | 6 HIGH, 18 autres CVE, 0 critique | +24 |

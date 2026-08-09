@@ -4,6 +4,16 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [ORCHESTRE GSIE — CYCLES CVE, QA ET VEILLE] - 2026-08-09
+
+- Cycle 2 Sécurité+Perf : audit `pip-audit` sur 138 packages, 24 CVE
+  sur 7 packages, dont 6 HIGH ; escalade #001 ouverte pour pyjwt 2.10.1.
+- Cycle QA : 2667 tests passés, 63 ignorés, 100 % couverture,
+  70/70 mutations détectées, ruff et mypy sans erreur.
+- Cycle Veille : rapport `GSIE/RESEARCH/VEILLE_2026-08-09.md` produit
+  sur six domaines ; aucune ressource téléchargée ou ingérée.
+- Les workers de l'Orchestre utilisent désormais **SWE 1.7 max**.
+
 ## [APPLICATIONS CLIENTES — ACTIVATION TERRA/AERIS/ATLAS + ICÔNES DES 8 APPS] - 2026-08-09
 
 - **DEC-000056** : les trois applications futures réservées par

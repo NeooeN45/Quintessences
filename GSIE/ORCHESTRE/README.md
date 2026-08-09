@@ -29,9 +29,9 @@ MÉTA-ORCHESTRATEUR (GLM 5.2 High — session Devin courante)
     ├── MÉMOIRE (memories/ — 6 types: info, skill, episode, error, reflection, todo)
     ├── LEÇONS (lessons/ — règles apprises, auto-append)
     │
-    ├── LOOP Sécurité+Perf (SWE-1.6 — background sub-agent)
-    ├── LOOP Veille (SWE-1.6 — background sub-agent) [extensible]
-    ├── LOOP QA (SWE-1.6 — background sub-agent) [extensible]
+    ├── LOOP Sécurité+Perf (SWE 1.7 max — background sub-agent)
+    ├── LOOP Veille (SWE 1.7 max — background sub-agent) [extensible]
+    ├── LOOP QA (SWE 1.7 max — background sub-agent) [extensible]
     │
     ├── AGENT CONSENSUS (GLM 5.2 — on-demand foreground)
     └── GATE ESCALADE (file-based → notification IDE)

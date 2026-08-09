@@ -35,7 +35,9 @@
 
 | ID | Date | Salience | Contenu (extrait) |
 |---|---|---|---|
-| — | — | — | Aucun épisode enregistré (système nouvellement créé) |
+| episode-002 | 2026-08-08 | 1.0 | Audit dépendances : 24 CVE sur 7 packages, escalade pyjwt |
+| episode-003 | 2026-08-09 | 0.9 | QA : 100 % couverture, 70/70 mutations, ruff/mypy verts |
+| episode-004 | 2026-08-09 | 0.8 | Veille six domaines, 8 ressources candidates, aucune ingestion |
 
 ### error
 
@@ -53,7 +55,8 @@
 
 | ID | Date | Salience | Contenu (extrait) |
 |---|---|---|---|
-| todo-001 | 2026-08-08 | 0.9 | Lancer premier cycle loop Sécurité+Perf |
+| todo-001 | 2026-08-08 | 0.9 | Lancer premier cycle loop Sécurité+Perf — réalisé |
+| todo-002 | 2026-08-08 | 1.0 | Répondre à l'escalade #001 pyjwt avant mise à jour |
 
 ## Association spontanée
 
