@@ -365,14 +365,80 @@ Les dépendances clés suivantes sont **confirmées sans CVE** sur leurs version
 - **CVE CRITIQUE (CVSS ≥ 9.0)** : 0 — aucune escalade critique requise
 - **Escalade** : Aucune escalade CRITIQUE créée (aucune CVE CVSS ≥ 9.0). Les 6 CVE HIGH sont suivies dans les recommandations Priorité 1.
 
+#### Résolution option B — vérifiée le 2026-08-09
+
+Les trois dépendances HIGH prioritaires étaient déjà mises à jour dans le
+projet par les commits de dépendances existants :
+
+| Package | Version auditée | Version actuelle | Vérification |
+|---|---:|---:|---|
+| pyjwt | 2.10.1 | **2.13.0** | `pyproject.toml`, `uv.lock`, environnement |
+| python-multipart | 0.0.20 | **0.0.32** | `pyproject.toml`, `uv.lock`, environnement |
+| cryptography | 49.0.0 | **50.0.0** | `pyproject.toml`, `uv.lock`, environnement |
+
+- `uv lock --check` : réussi
+- Tests auth/JWT/SSRF : **60/60 passants**
+- Suite unitaire : **2667 passés, 63 ignorés, 100 % couverture**
+- Aucun changement de code nécessaire pour cette résolution
+- `pip-audit` en ligne reste à relancer : l'accès PyPI/OSV est bloqué
+  par le certificat TLS intercepté de l'environnement
+
 #### Leçons
 
-1. **pip-audit fonctionne** dans cet environnement avec un workaround SSL (monkey-patch `requests`). Le proxy local utilise un certificat auto-signé. Pour les cycles futurs : utiliser le wrapper `_pip_audit_wrapper.py` ou configurer `REQUESTS_CA_BUNDLE` avec le certificat du proxy.
-2. **starlette est le maillon faible** — 7 CVE sur une dépendance transitive de fastapi. La politique d'épinglage de fastapi contraint la version de starlette. Envisager une veille sur les advisories starlette indépendamment de fastapi.
-3. **pyjwt 2.10.1 a un backlog de CVE important** (7 CVE en quelques mois). La mise à jour vers 2.13.0 est la priorité 1 absolue pour la sécurité JWT de GSIE.
-4. **Le Cycle 1 (A06) avait anticipé** cette vérification — la recommandation d'exécuter pip-audit au Cycle 2 est maintenant exécutée et confirme le WARN avec 24 CVE concrètes.
+1. Le proxy local utilise un certificat auto-signé ; l'audit en ligne doit
+   être relancé avec une chaîne CA approuvée, sans désactiver la validation
+   TLS dans le workflow de production.
+2. `starlette` reste le risque principal ouvert : dépendance transitive de
+   `fastapi==0.115.6`, à traiter dans un cycle dédié avec compatibilité API.
+3. Les dépendances directes HIGH de l'escalade #001 sont maintenant à jour.
+4. Le Cycle 1 avait correctement identifié A06 comme point à vérifier ; la
+   résolution est tracée, mais la confirmation en ligne reste nécessaire.
 
 ---
+
+### Cycle 3 — Benchmark performance Correlation Engine (2026-08-09)
+
+- **Statut** : TERMINÉ
+- **Action** : comparaison CPU `scipy` pairwise vs `numpy.corrcoef` vectorisé
+- **Environnement** : Windows, Python 3.12, CPU local, sans GPU
+- **Résultat** : avantage numpy de **30x à 1521x** selon la taille
+- **Décision** : conserver `numpy.corrcoef` pour les matrices Pearson N×N
+- **Trust score** : 0.71 → 0.76
+
+| Variables × observations | Paires | scipy (ms) | numpy (ms) | Accélération |
+|---|---:|---:|---:|---:|
+| 10 × 100 | 45 | 15.14 | 0.24 | 64.3x |
+| 10 × 1 000 | 45 | 24.40 | 0.33 | 73.4x |
+| 10 × 10 000 | 45 | 20.52 | 0.68 | 30.1x |
+| 50 × 1 000 | 1 225 | 461.84 | 0.54 | 849.6x |
+| 50 × 10 000 | 1 225 | 622.05 | 3.75 | 165.7x |
+| 120 × 1 000 | 7 140 | 2 406.70 | 1.58 | **1 521.0x** |
+| 120 × 10 000 | 7 140 | 3 410.47 | 10.45 | **326.4x** |
+
+**Source** : `GSIE/API/tests/perf/benchmark_output.txt`.
+
+Limite : ce cycle mesure le calcul matriciel, pas la latence HTTP p50/p99
+ni le bénéfice GPU nvmath-python ; ces mesures restent à faire sur la
+plateforme cible.
+
+### Qualification Starlette/FastAPI — 2026-08-09
+
+- **Version actuelle** : FastAPI 0.115.6 + Starlette 0.41.3
+- **Contrainte actuelle** : FastAPI 0.115.6 exige Starlette `<0.42.0`
+- **Cible documentée** : FastAPI 0.133.0 supporte Starlette 1.0+ ; FastAPI
+  0.134.0 relève le minimum Starlette à 0.46.0.
+- **Source** : releases FastAPI 0.133.0 et 0.134.0, documentation officielle
+- **Décision** : ne pas appliquer automatiquement ; changement de framework
+  public nécessitant une escalade et une validation complète.
+- **Blocage technique** : `uv tree --outdated` est bloqué par le certificat
+  TLS du proxy lors de l'accès à PyPI.
+
+### Escalade #002 — Upgrade Starlette/FastAPI
+
+La montée nécessaire pour corriger les CVE Starlette implique un upgrade
+coordonné de FastAPI, avec validation des routers, middleware, WebSocket,
+OpenAPI et des 2 667 tests unitaires. La question est enregistrée dans
+`ESCALATIONS/2026-08-09_002_starlette.md`.
 
 ## Baseline de performance
 
@@ -380,8 +446,9 @@ Les dépendances clés suivantes sont **confirmées sans CVE** sur leurs version
 > Mises à jour après chaque cycle de benchmark.
 
 | Endpoint | Latence p50 (ms) | Latence p99 (ms) | Date mesure |
-|---|---|---|---|
-| — | — | — | — |
+|---|---:|---:|---|
+| Correlation Engine — matrice Pearson 120×1 000 | 1.58 (numpy) | — | 2026-08-09 |
+| Correlation Engine — matrice Pearson 120×10 000 | 10.45 (numpy) | — | 2026-08-09 |
 
 ## Vulnérabilités connues
 
@@ -389,12 +456,12 @@ Les dépendances clés suivantes sont **confirmées sans CVE** sur leurs version
 
 | ID | Date | Sévérité | Description | Statut |
 |---|---|---|---|---|
-| CVE-2026-48523 | 2026-08-08 | HIGH | pyjwt 2.10.1 — bypass allow-list algorithmes avec PyJWK | Ouvert — fix: pyjwt 2.12.1+ |
-| CVE-2026-48526 | 2026-08-08 | HIGH | pyjwt 2.10.1 — clé publique utilisée comme secret HMAC | Ouvert — fix: pyjwt 2.13.0 |
-| CVE-2026-48522 | 2026-08-08 | HIGH | pyjwt 2.10.1 — SSRF PyJWKClient (urllib.urlopen) | Ouvert — fix: pyjwt 2.13.0 |
+| CVE-2026-48523 | 2026-08-08 | HIGH | pyjwt 2.10.1 — bypass allow-list algorithmes avec PyJWK | Résolu — pyjwt 2.13.0 |
+| CVE-2026-48526 | 2026-08-08 | HIGH | pyjwt 2.10.1 — clé publique utilisée comme secret HMAC | Résolu — pyjwt 2.13.0 |
+| CVE-2026-48522 | 2026-08-08 | HIGH | pyjwt 2.10.1 — SSRF PyJWKClient (urllib.urlopen) | Résolu — pyjwt 2.13.0 |
 | CVE-2025-62727 | 2026-08-08 | HIGH (7.5) | starlette 0.41.3 — DoS O(n²) Range header FileResponse | Ouvert — fix: starlette 0.49.1 (via fastapi upgrade) |
-| CVE-2026-24486 | 2026-08-08 | HIGH | python-multipart 0.0.20 — path traversal upload | Ouvert — fix: python-multipart 0.0.22 |
-| CVE-2026-69247 | 2026-08-08 | HIGH | cryptography 49.0.0 — oracle Bleichenbacher PKCS#7 | Ouvert — fix: cryptography 50.0.0 |
+| CVE-2026-24486 | 2026-08-08 | HIGH | python-multipart 0.0.20 — path traversal upload | Résolu — python-multipart 0.0.32 |
+| CVE-2026-69247 | 2026-08-08 | HIGH | cryptography 49.0.0 — oracle Bleichenbacher PKCS#7 | Résolu — cryptography 50.0.0 |
 | CVE-2026-48710 | 2026-08-08 | MODERATE (6.5) | starlette 0.41.3 — Host header bypass auth | Ouvert — fix: starlette 1.0.1 (via fastapi upgrade) |
 | CVE-2025-67221 | 2026-08-08 | MODERATE | orjson 3.10.11 — DoS récursion JSON profonde | Ouvert — fix: orjson 3.11.6 |
 | CVE-2025-71176 | 2026-08-08 | LOW | pytest 8.3.4 — DoS/escalade tmpdir UNIX (dev only) | Ouvert — fix: pytest 9.0.3 |
@@ -405,10 +472,10 @@ Les dépendances clés suivantes sont **confirmées sans CVE** sur leurs version
 
 | Package | Version | CVE | Statut | Date |
 |---|---|---|---|---|
-| pyjwt | 2.10.1 | 7 CVE (3 HIGH, 4 MODERATE) | À mettre à jour → 2.13.0 | 2026-08-08 |
-| starlette | 0.41.3 | 7 CVE (1 HIGH, 6 MODERATE) | À mettre à jour via fastapi upgrade | 2026-08-08 |
-| python-multipart | 0.0.20 | 6 CVE (1 HIGH, 5 MODERATE) | À mettre à jour → 0.0.31 | 2026-08-08 |
-| cryptography | 49.0.0 | 1 CVE HIGH | À mettre à jour → 50.0.0 | 2026-08-08 |
+| pyjwt | 2.13.0 | 7 CVE historiques (3 HIGH corrigées) | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
+| starlette | 0.41.3 | 7 CVE (1 HIGH, 6 MODERATE) | Ouvert — upgrade FastAPI à qualifier | 2026-08-08 |
+| python-multipart | 0.0.32 | 6 CVE historiques corrigées | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
+| cryptography | 50.0.0 | 1 CVE historique corrigée | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
 | orjson | 3.10.11 | 1 CVE MODERATE | À mettre à jour → 3.11.6 | 2026-08-08 |
 | app-store-server-library | 1.5.0 | 1 CVE MODERATE | À évaluer → 3.1.2 (breaking) | 2026-08-08 |
 | pytest | 8.3.4 | 1 CVE LOW (dev) | À mettre à jour → 9.0.3 (quand compatible) | 2026-08-08 |

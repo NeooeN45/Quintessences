@@ -4,9 +4,12 @@
 
 L'Orchestre GSIE est opérationnel pour les audits séquentiels : OWASP,
 dépendances CVE, QA et veille technologique. Les workers sont configurés
-sur **SWE 1.7 max**. Le prochain jalon est la résolution de l'escalade
-Fondateur #001 (mise à jour de pyjwt 2.10.1), puis le benchmark de
-performance de la loop Sécurité+Perf.
+sur **SWE 1.7 max**. L'escalade Fondateur #001 est résolue par l'option B
+(pyjwt, python-multipart et cryptography à jour). Le prochain jalon est
+la revalidation pip-audit après correction TLS, puis le benchmark de performance de la loop Sécurité+Perf, désormais
+réalisé : numpy est 30x à 1521x plus rapide que scipy pairwise.
+Prochaine action : décision Fondateur sur l’escalade #002 concernant
+la mise à jour coordonnée Starlette/FastAPI.
 
 ## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
 

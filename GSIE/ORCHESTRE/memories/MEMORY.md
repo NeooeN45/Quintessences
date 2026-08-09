@@ -38,6 +38,9 @@
 | episode-002 | 2026-08-08 | 1.0 | Audit dépendances : 24 CVE sur 7 packages, escalade pyjwt |
 | episode-003 | 2026-08-09 | 0.9 | QA : 100 % couverture, 70/70 mutations, ruff/mypy verts |
 | episode-004 | 2026-08-09 | 0.8 | Veille six domaines, 8 ressources candidates, aucune ingestion |
+| episode-005 | 2026-08-09 | 1.0 | Option B résolue : trois dépendances HIGH à jour, TLS à revalider |
+| episode-006 | 2026-08-09 | 0.9 | Benchmark : numpy.corrcoef 30x–1521x plus rapide que scipy |
+| episode-007 | 2026-08-09 | 1.0 | Starlette nécessite un upgrade coordonné FastAPI, décision en attente |
 
 ### error
 

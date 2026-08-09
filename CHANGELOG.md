@@ -7,12 +7,49 @@ Format : `## [version] - YYYY-MM-DD`
 ## [ORCHESTRE GSIE — CYCLES CVE, QA ET VEILLE] - 2026-08-09
 
 - Cycle 2 Sécurité+Perf : audit `pip-audit` sur 138 packages, 24 CVE
-  sur 7 packages, dont 6 HIGH ; escalade #001 ouverte pour pyjwt 2.10.1.
+  sur 7 packages, dont 6 HIGH ; escalade #001 résolue par l'option B.
 - Cycle QA : 2667 tests passés, 63 ignorés, 100 % couverture,
   70/70 mutations détectées, ruff et mypy sans erreur.
 - Cycle Veille : rapport `GSIE/RESEARCH/VEILLE_2026-08-09.md` produit
   sur six domaines ; aucune ressource téléchargée ou ingérée.
 - Les workers de l'Orchestre utilisent désormais **SWE 1.7 max**.
+- Escalade #001 résolue par l'option B : `pyjwt==2.13.0`,
+  `python-multipart==0.0.32`, `cryptography==50.0.0`. Les tests ciblés
+  auth/JWT/SSRF passent 60/60 ; l'audit pip-audit reste bloqué par TLS.
+- Cycle 3 performance : `numpy.corrcoef` mesure 30x à 1521x plus rapide
+  que scipy pairwise sur les matrices de corrélation GSIE.
+- Qualification Starlette/FastAPI : l’upgrade coordonné est nécessaire
+  pour corriger les CVE Starlette ; escalade #002 ouverte avant toute
+  modification du framework public.
+
+## [SITE PUBLIC QUINTESSENCES — SPÉCIFICATION, ARCHITECTURE ET V1] - 2026-08-09
+
+- **DEC-000057** : validation de `SITE-001` (spécification fonctionnelle)
+  et `SITE-002` (vision créative) — Draft → Validé. Nouveau dossier
+  `05_SPECIFICATIONS/SITE/` couvrant 5 zones : landing, compte,
+  actualités, galerie, contact.
+- **Architecture** : `GSIE/ARCHITECTURE/SITE_PUBLIC_ARCHITECTURE.md` —
+  Astro 5 + React 19 (îlots) + Tailwind 4 + Framer Motion, même stack
+  qu'`GSIE/ADMIN_WEB` pour cohérence d'outillage.
+- **Implémentation** : nouveau projet `site-quintessences/`, distinct
+  de `landing-quintessences/` (conservé en production sans changement).
+  - Landing : hero, chaîne d'intelligence GSIE animée au scroll (7
+    moteurs), grille interactive des 9 applications (icônes
+    `DEC-000056`), indicateurs live avec état « donnée indisponible »
+    explicite, principes fondateurs.
+  - Actualités : fil chronologique, contenu versionné en Markdown
+    (`src/content/actualites/`), 2 entrées publiées.
+  - Contact : formulaire migré depuis `landing-quintessences/` avec
+    vérification Turnstile réelle, catégorisation ajoutée (non encore
+    routée côté serveur).
+  - Galerie et Compte : scaffoldées, état « en construction » explicite
+    (prérequis non résolus, voir `SITE-001` §9).
+  - `npm run build` vérifié (7 pages générées) et testé en direct dans
+    le navigateur, aucune erreur console.
+- **Reste à faire** : endpoint public `GET /public/stats` côté API,
+  processus de vérification vie privée pour la galerie, vérification
+  des hypothèses `IDENTITE-001` pour un client web, déploiement
+  Cloudflare Pages (étape humaine, `wrangler login`).
 
 ## [APPLICATIONS CLIENTES — ACTIVATION TERRA/AERIS/ATLAS + ICÔNES DES 8 APPS] - 2026-08-09
 

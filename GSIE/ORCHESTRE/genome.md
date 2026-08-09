@@ -73,12 +73,12 @@ de chaque tâche produite par une loop.
 
 > L'orchestrateur réécrit cette section après chaque évolution.
 
-- **Version** : 0.5.0
+- **Version** : 0.8.0
 - **Date création** : 2026-08-08
-- **Dernière évolution** : 2026-08-09 (cycles CVE, QA et veille terminés)
-- **Cycles total** : 4
-- **Évolutions total** : 4
-- **Prochaine révision** : après résolution de l'escalade #001
+- **Dernière évolution** : 2026-08-09 (qualification Starlette/FastAPI)
+- **Cycles total** : 6
+- **Évolutions total** : 7
+- **Prochaine révision** : après décision sur l'escalade #002
 
 ## Métriques de santé
 
@@ -86,13 +86,13 @@ de chaque tâche produite par une loop.
 
 | Métrique | Valeur | Tendance |
 |---|---|---|
-| Cycles complétés | 4 | +3 |
-| Tâches réussies | 4 | +3 |
+| Cycles complétés | 6 | +1 |
+| Tâches réussies | 6 | +1 |
 | Tâches échouées | 0 | — |
-| Escalades générées | 1 | +1 |
-| Escalades résolues | 0 | — |
+| Escalades générées | 2 | +1 |
+| Escalades résolues | 1 | — |
 | Consensus atteints | 0 | — |
 | Consensus échoués | 0 | — |
 | Leçons apprises | 5 | — |
-| Couverture moyenne | 100 % | +100 % |
-| Vulnérabilités ouvertes | 6 HIGH, 18 autres CVE, 0 critique | +24 |
+| Couverture moyenne | 100 % | — |
+| Vulnérabilités ouvertes | Starlette à qualifier, audit en ligne bloqué TLS | stable |
