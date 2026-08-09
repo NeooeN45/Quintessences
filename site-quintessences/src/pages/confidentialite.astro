@@ -1,12 +1,11 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimatedHeading from "../components/AnimatedHeading.tsx";
 ---
 
 <BaseLayout title="Politique de confidentialité" description="Politique de confidentialité et protection des données personnelles.">
   <section class="mx-auto max-w-2xl px-6 py-20">
-    <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">
-      Politique de confidentialité
-    </h1>
+    <AnimatedHeading client:load lines={[{ text: "Confidentialité" }]} />
     <p class="mt-2 text-sm text-[var(--color-fg-400)]">Dernière mise à jour : 9 août 2026</p>
 
     <div class="content mt-10">

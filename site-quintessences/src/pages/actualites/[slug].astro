@@ -1,6 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import AnimatedHeading from "../../components/AnimatedHeading.tsx";
 
 export async function getStaticPaths() {
   const entries = await getCollection("actualites");
@@ -26,7 +27,9 @@ const { Content } = await entry.render();
     <time class="mt-6 block text-xs text-[var(--color-fg-500)]" datetime={entry.data.date.toISOString()}>
       {entry.data.date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
     </time>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">{entry.data.title}</h1>
+    <div class="mt-2">
+      <AnimatedHeading client:load size="page" lines={[{ text: entry.data.title }]} />
+    </div>
     <div class="content mt-6 text-[var(--color-fg-300)]">
       <Content />
     </div>

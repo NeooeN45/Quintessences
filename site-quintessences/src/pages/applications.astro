@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimatedHeading from "../components/AnimatedHeading.tsx";
+import ApplicationsList from "../components/ApplicationsList.tsx";
+---
+
+<BaseLayout title="Applications" description="Les applications de l'écosystème Quintessences.">
+  <section class="mx-auto max-w-5xl px-6 pb-4 pt-24">
+    <p class="eyebrow">Projections métier · même jumeau numérique</p>
+    <div class="mt-6">
+      <AnimatedHeading client:load lines={[{ text: "Applications" }]} />
+    </div>
+    <p class="mt-6 max-w-md text-[var(--color-fg-300)]">
+      Chaque application est une projection métier spécialisée du même
+      jumeau numérique fédéré GSIE.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-6 pb-20">
+    <ApplicationsList client:visible />
+  </section>
+</BaseLayout>

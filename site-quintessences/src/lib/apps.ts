@@ -6,9 +6,12 @@ export interface AppEntry {
   icon: string;
   accent: string; // variable CSS --color-app-*
   status: "disponible" | "planifiee";
+  /** null tant que l'application n'est pas publiée sur le store. */
+  playStoreUrl: string | null;
 }
 
 // Domaines repris tels quels de CLAUDE.md §10 et GSIE-DIR-0009 §3/§227 — aucune invention.
+// playStoreUrl reste null pour toutes les apps : aucune n'est encore publiée.
 export const APPS: AppEntry[] = [
   {
     slug: "geosylva",
@@ -19,6 +22,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/geosylva.png",
     accent: "var(--color-app-geosylva)",
     status: "disponible",
+    playStoreUrl: null,
   },
   {
     slug: "ignis",
@@ -29,6 +33,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/ignis.png",
     accent: "var(--color-app-ignis)",
     status: "planifiee",
+    playStoreUrl: null,
   },
   {
     slug: "hydro",
@@ -39,6 +44,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/hydro.png",
     accent: "var(--color-app-hydro)",
     status: "planifiee",
+    playStoreUrl: null,
   },
   {
     slug: "flora",
@@ -48,6 +54,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/flora.png",
     accent: "var(--color-app-flora)",
     status: "planifiee",
+    playStoreUrl: null,
   },
   {
     slug: "artemis",
@@ -57,15 +64,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/artemis.png",
     accent: "var(--color-app-artemis)",
     status: "planifiee",
-  },
-  {
-    slug: "qgisia",
-    name: "QGISIA",
-    domain: "Plugin QGIS",
-    summary: "Agent IA pour QGIS — analyses environnementales expertes directement dans QGIS.",
-    icon: "/icons/qgisia.svg",
-    accent: "var(--color-app-qgisia)",
-    status: "disponible",
+    playStoreUrl: null,
   },
   {
     slug: "terra",
@@ -75,6 +74,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/terra.png",
     accent: "var(--color-app-terra)",
     status: "planifiee",
+    playStoreUrl: null,
   },
   {
     slug: "aeris",
@@ -84,6 +84,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/aeris.png",
     accent: "var(--color-app-aeris)",
     status: "planifiee",
+    playStoreUrl: null,
   },
   {
     slug: "atlas",
@@ -93,5 +94,6 @@ export const APPS: AppEntry[] = [
     icon: "/icons/atlas.png",
     accent: "var(--color-app-atlas)",
     status: "planifiee",
+    playStoreUrl: null,
   },
 ];

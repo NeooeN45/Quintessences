@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Skeleton from "./Skeleton.tsx";
 
 interface Props {
   label: string;
@@ -22,8 +23,11 @@ export default function LiveStat({ label, field }: Props) {
     let cancelled = false;
 
     if (!STATS_URL) {
-      setState({ kind: "unavailable" });
-      return;
+      // Petit délai pour laisser le squelette de chargement se voir
+      // au moins un instant, comme sur les interfaces pro, plutôt que
+      // de basculer instantanément vers l'état indisponible.
+      const t = setTimeout(() => !cancelled && setState({ kind: "unavailable" }), 400);
+      return () => clearTimeout(t);
     }
 
     fetch(STATS_URL)
@@ -51,9 +55,13 @@ export default function LiveStat({ label, field }: Props) {
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-100)] p-5">
-      <p className="text-2xl font-semibold tabular-nums text-[var(--color-fg-100)]">
-        {state.kind === "ok" ? state.value.toLocaleString("fr-FR") : "—"}
-      </p>
+      {state.kind === "loading" ? (
+        <Skeleton className="h-8 w-16" />
+      ) : (
+        <p className="text-2xl font-semibold tabular-nums text-[var(--color-fg-100)]">
+          {state.kind === "ok" ? state.value.toLocaleString("fr-FR") : "—"}
+        </p>
+      )}
       <p className="mt-1 text-sm text-[var(--color-fg-400)]">{label}</p>
       {state.kind === "unavailable" && (
         <p className="mt-2 text-xs text-[var(--color-warning)]">Donnée indisponible</p>

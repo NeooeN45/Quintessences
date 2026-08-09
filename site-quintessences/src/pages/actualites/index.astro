@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import AnimatedHeading from "../../components/AnimatedHeading.tsx";
 import { APPS } from "../../lib/apps";
 
 const entries = (await getCollection("actualites")).sort(
@@ -17,7 +18,7 @@ function appAccent(slug?: string) {
 
 <BaseLayout title="Actualités" description="Le fil des avancées produit de Quintessences.">
   <section class="mx-auto max-w-3xl px-6 py-20">
-    <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">Actualités</h1>
+    <AnimatedHeading client:load lines={[{ text: "Actualités" }]} />
     <p class="mt-3 text-[var(--color-fg-400)]">Le fil des avancées produit de l'écosystème Quintessences.</p>
 
     <ol class="mt-10 space-y-8 border-l border-[var(--color-border)] pl-6">

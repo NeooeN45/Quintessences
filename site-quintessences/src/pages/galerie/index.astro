@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import AnimatedHeading from "../../components/AnimatedHeading.tsx";
 import { getCollection } from "astro:content";
 
 // SITE-F-018 à SITE-F-021 : aucun média n'apparaît sans publication
@@ -11,7 +12,7 @@ const entries = await getCollection("galerie");
 
 <BaseLayout title="Galerie" description="Images et vidéos de démonstration Quintessences.">
   <section class="mx-auto max-w-4xl px-6 py-20 text-center">
-    <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">Galerie</h1>
+    <AnimatedHeading client:load lines={[{ text: "Galerie" }]} />
 
     {entries.length === 0 ? (
       <div class="mt-10 rounded-xl border border-dashed border-[var(--color-border)] p-12">

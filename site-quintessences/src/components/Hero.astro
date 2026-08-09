@@ -1,15 +1,21 @@
 ---
-import HeroTitle from "./HeroTitle.tsx";
-import AnimatedBackdrop from "./AnimatedBackdrop.astro";
+import AnimatedHeading from "./AnimatedHeading.tsx";
+import VideoBackdrop from "./VideoBackdrop.astro";
+
+const HERO_LINES = [
+  { text: "De la preuve" },
+  { text: "à la décision", accent: true },
+  { text: "du forestier." },
+];
 ---
 
 <section class="relative overflow-hidden border-b border-[var(--color-border)]">
-  <AnimatedBackdrop />
+  <VideoBackdrop />
   <div class="relative mx-auto max-w-5xl px-6 pb-20 pt-24 sm:pt-32">
     <p class="eyebrow">Jumeau numérique · environnemental · fédéré</p>
 
     <div class="mt-6">
-      <HeroTitle client:load />
+      <AnimatedHeading client:load size="hero" lines={HERO_LINES} />
     </div>
 
     <p class="relative mt-10 max-w-md text-[var(--color-fg-300)]">
@@ -20,7 +26,7 @@ import AnimatedBackdrop from "./AnimatedBackdrop.astro";
 
     <div class="relative mt-8 flex flex-wrap items-center gap-3">
       <a
-        href="/compte/"
+        href="/compte/inscription/"
         class="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
         style="background: var(--color-fg-100)"
       >

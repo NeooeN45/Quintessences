@@ -26,6 +26,31 @@ Format : `## [version] - YYYY-MM-DD`
   couverture, 70/70 mutations, ruff/mypy verts. 187 warnings de
   dépréciation restent à traiter séparément.
 
+## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
+
+- **Hero** : titre réorganisé en 3 lignes lisibles au lieu d'un mot par
+  ligne ; fond passé en vidéo de fond en boucle (`VideoBackdrop.astro`,
+  fichier à fournir dans `public/video/`), dégradé animé conservé en
+  repli si la vidéo est absente.
+- **Titres animés génériques** : `AnimatedHeading.tsx` factorise
+  l'animation du hero et l'applique à toutes les pages du site — même
+  syntaxe visuelle partout, sans jamais fabriquer de contenu pour
+  remplir une ligne manquante.
+- **Chargement fantôme** : `Skeleton.tsx` (pulsation) appliqué aux
+  indicateurs live et aux futures captures d'écran d'application.
+- **QGISIA retiré** de la liste des applications, à la demande du
+  Fondateur.
+- **Nouvelle page `/applications/`** : une section détaillée par
+  application (icône, domaine, description, statut, capture d'écran
+  en réserve, lien Google Play — jamais de lien inventé, "Bientôt sur
+  Google Play" par défaut).
+- **Pages Compte fonctionnelles** : `/compte/inscription/`,
+  `/compte/connexion/`, `/compte/` branchées sur les vrais endpoints
+  `IDENTITE-001` (`/auth/register`, `/auth/login/password`,
+  `/auth/me`, `/auth/logout`). Jetons en sessionStorage — limite déjà
+  documentée en `SITE-001` §9, non résolue par ce changement.
+- Vérifié par `npm run build` (13 pages) et navigation en direct.
+
 ## [SITE PUBLIC QUINTESSENCES — PIVOT THÈME CLAIR (PAPA CREATIVE)] - 2026-08-09
 
 - **SITE-002 v1.1.0** : décision directe du Fondateur — thème clair
