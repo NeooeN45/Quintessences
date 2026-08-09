@@ -28,6 +28,9 @@ Format : `## [version] - YYYY-MM-DD`
   remplacement de la constante 422 et suppression du warning Stripe ;
   warnings réduits de 187 à 3. Les trois restants sont des warnings
   `runpy` de tests de points d’entrée, sans régression fonctionnelle.
+- Revalidation `pip-audit` dans le venv réel après correction TLS :
+  Starlette 1.3.1 et toutes les dépendances HIGH sont propres. Quatre
+  avis MODERATE/LOW restent sur trois packages ; escalade #003 ouverte.
 
 ## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
 

@@ -423,8 +423,8 @@ plateforme cible.
 
 ### Qualification Starlette/FastAPI — 2026-08-09
 
-- **Version actuelle** : FastAPI 0.115.6 + Starlette 0.41.3
-- **Contrainte actuelle** : FastAPI 0.115.6 exige Starlette `<0.42.0`
+- **Version avant upgrade** : FastAPI 0.115.6 + Starlette 0.41.3
+- **Contrainte avant upgrade** : FastAPI 0.115.6 exigeait Starlette `<0.42.0`
 - **Cible documentée** : FastAPI 0.133.0 supporte Starlette 1.0+ ; FastAPI
   0.134.0 relève le minimum Starlette à 0.46.0.
 - **Source** : releases FastAPI 0.133.0 et 0.134.0, documentation officielle
@@ -440,17 +440,29 @@ Upgrade coordonné appliqué par le commit dédié `a79e17c` :
 | Package | Avant | Après |
 |---|---:|---:|
 | FastAPI | 0.115.6 | **0.134.0** |
-| Starlette | 0.41.3 | **0.52.1** |
+| Starlette | 0.41.3 | **1.3.1** |
 
+- `prometheus-fastapi-instrumentator` : **7.0.0 → 8.0.2** pour accepter Starlette 1.x
 - `uv.lock` régénéré ; `uv lock --check` réussi
-- Tests ciblés framework/auth/WebSocket : **300/300 passants**
+- Tests ciblés framework/auth/WebSocket/metrics : **326/326 passants**
 - Suite unitaire : **2667 passés, 63 ignorés, couverture 100 %**
 - Ruff : 0 erreur ; mypy : 0 erreur sur 201 fichiers
 - Harnais de mutation : terminé, code retour 0
 - 187 warnings de dépréciation FastAPI, sans échec fonctionnel
 
-L'audit en ligne `pip-audit` reste à revalider après correction du
-certificat TLS du proxy.
+#### Revalidation pip-audit — 2026-08-09
+
+Audit exécuté dans le venv GSIE avec `pip-audit==2.10.1` et TLS système.
+
+- `pyjwt`, `python-multipart`, `cryptography` : **aucun avis restant**
+- Starlette 1.3.1 : **aucun avis restant**
+- 4 avis restants sur 3 packages :
+  - `app-store-server-library==1.5.0` → 3.1.2 (MODERATE)
+  - `orjson==3.10.11` → 3.11.6 (MODERATE)
+  - `pytest==8.3.4` → 9.0.3 (LOW, dev uniquement)
+- `gsie-api==0.1.0` : ignoré car package local non publié sur PyPI
+
+L'escalade #003 est ouverte pour qualifier ces trois mises à jour.
 
 ## Baseline de performance
 
@@ -471,10 +483,10 @@ certificat TLS du proxy.
 | CVE-2026-48523 | 2026-08-08 | HIGH | pyjwt 2.10.1 — bypass allow-list algorithmes avec PyJWK | Résolu — pyjwt 2.13.0 |
 | CVE-2026-48526 | 2026-08-08 | HIGH | pyjwt 2.10.1 — clé publique utilisée comme secret HMAC | Résolu — pyjwt 2.13.0 |
 | CVE-2026-48522 | 2026-08-08 | HIGH | pyjwt 2.10.1 — SSRF PyJWKClient (urllib.urlopen) | Résolu — pyjwt 2.13.0 |
-| CVE-2025-62727 | 2026-08-08 | HIGH (7.5) | starlette 0.41.3 — DoS O(n²) Range header FileResponse | Ouvert — fix: starlette 0.49.1 (via fastapi upgrade) |
+| CVE-2025-62727 | 2026-08-08 | HIGH (7.5) | starlette 0.41.3 — DoS O(n²) Range header FileResponse | Résolu — Starlette 1.3.1 |
 | CVE-2026-24486 | 2026-08-08 | HIGH | python-multipart 0.0.20 — path traversal upload | Résolu — python-multipart 0.0.32 |
 | CVE-2026-69247 | 2026-08-08 | HIGH | cryptography 49.0.0 — oracle Bleichenbacher PKCS#7 | Résolu — cryptography 50.0.0 |
-| CVE-2026-48710 | 2026-08-08 | MODERATE (6.5) | starlette 0.41.3 — Host header bypass auth | Ouvert — fix: starlette 1.0.1 (via fastapi upgrade) |
+| CVE-2026-48710 | 2026-08-08 | MODERATE (6.5) | starlette 0.41.3 — Host header bypass auth | Résolu — Starlette 1.3.1 |
 | CVE-2025-67221 | 2026-08-08 | MODERATE | orjson 3.10.11 — DoS récursion JSON profonde | Ouvert — fix: orjson 3.11.6 |
 | CVE-2025-71176 | 2026-08-08 | LOW | pytest 8.3.4 — DoS/escalade tmpdir UNIX (dev only) | Ouvert — fix: pytest 9.0.3 |
 
@@ -485,9 +497,9 @@ certificat TLS du proxy.
 | Package | Version | CVE | Statut | Date |
 |---|---|---|---|---|
 | pyjwt | 2.13.0 | 7 CVE historiques (3 HIGH corrigées) | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
-| starlette | 0.41.3 | 7 CVE (1 HIGH, 6 MODERATE) | Ouvert — upgrade FastAPI à qualifier | 2026-08-08 |
-| python-multipart | 0.0.32 | 6 CVE historiques corrigées | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
-| cryptography | 50.0.0 | 1 CVE historique corrigée | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
-| orjson | 3.10.11 | 1 CVE MODERATE | À mettre à jour → 3.11.6 | 2026-08-08 |
-| app-store-server-library | 1.5.0 | 1 CVE MODERATE | À évaluer → 3.1.2 (breaking) | 2026-08-08 |
-| pytest | 8.3.4 | 1 CVE LOW (dev) | À mettre à jour → 9.0.3 (quand compatible) | 2026-08-08 |
+| starlette | 1.3.1 | 7 avis historiques corrigés | À jour ; aucun avis pip-audit | 2026-08-09 |
+| python-multipart | 0.0.32 | 6 avis historiques corrigés | À jour ; aucun avis pip-audit | 2026-08-09 |
+| cryptography | 50.0.0 | 1 avis historique corrigé | À jour ; aucun avis pip-audit | 2026-08-09 |
+| orjson | 3.10.11 | 1 CVE MODERATE | À mettre à jour → 3.11.6 | 2026-08-09 |
+| app-store-server-library | 1.5.0 | 1 CVE MODERATE | À évaluer → 3.1.2 (breaking) | 2026-08-09 |
+| pytest | 8.3.4 | 1 CVE LOW (dev) | À mettre à jour → 9.0.3 (compatibilité) | 2026-08-09 |

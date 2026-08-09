@@ -12,7 +12,9 @@ Prochaine action : décision Fondateur sur l’escalade #002 concernant
 la mise à jour coordonnée Starlette/FastAPI. Cette mise à jour est
 maintenant validée sur `chore/upgrade-fastapi-starlette` avec FastAPI
 0.134.0 et Starlette 0.52.1. Reste à traiter les warnings de dépréciation
-et à revalider pip-audit après correction TLS.
+et à revalider pip-audit après correction TLS. Cette revalidation est
+faite : Starlette et les dépendances HIGH sont propres ; quatre avis
+restent sur trois packages et attendent la décision de l’escalade #003.
 
 ## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
 
