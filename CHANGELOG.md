@@ -23,11 +23,11 @@ Format : `## [version] - YYYY-MM-DD`
   modification du framework public.
 - Upgrade coordonné appliqué sur branche dédiée : FastAPI 0.134.0 et
   Starlette 0.52.1. Validation complète : 2667 tests passants, 100 %
-  couverture, 70/70 mutations, ruff/mypy verts. 187 warnings de
-  dépréciation restent à traiter séparément.
-- Nettoyage FastAPI : suppression de l’ORJSONResponse global déprécié et
-  remplacement de la constante 422 ; warnings réduits de 187 à 17,
-  sans régression fonctionnelle.
+  couverture, 70/70 mutations, ruff/mypy verts.
+- Nettoyage FastAPI : suppression de l’ORJSONResponse global déprécié,
+  remplacement de la constante 422 et suppression du warning Stripe ;
+  warnings réduits de 187 à 3. Les trois restants sont des warnings
+  `runpy` de tests de points d’entrée, sans régression fonctionnelle.
 
 ## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
 

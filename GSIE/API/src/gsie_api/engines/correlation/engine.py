@@ -28,6 +28,7 @@ Knowledge Engine.
 """
 
 import math
+import warnings
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -109,7 +110,9 @@ class CorrelationEngine:
                 f"— méthodes supportées : {[m.value for m in _METHOD_FUNCS]}"
             )
 
-        stat_result = method_func(request.variable_a.valeurs, request.variable_b.valeurs)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", scipy_stats.ConstantInputWarning)
+            stat_result = method_func(request.variable_a.valeurs, request.variable_b.valeurs)
         coefficient = float(stat_result.statistic)
         p_valeur = float(stat_result.pvalue)
 

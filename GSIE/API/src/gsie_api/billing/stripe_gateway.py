@@ -156,7 +156,7 @@ class StripeWebhookProcessor:
         if existing is not None:
             return False
 
-        payload = event.to_dict_recursive()
+        payload = json.loads(str(event))
         event_model = BillingEventModel(
             id=uuid4(),
             provider="stripe",

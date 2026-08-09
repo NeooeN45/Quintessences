@@ -14,7 +14,8 @@
 - Constante 422 dépréciée remplacée dans les routers concernés.
 - 217 tests ciblés passants.
 - Suite complète : 2667 tests passants, 63 ignorés, 100 % couverture.
-- Warnings réduits de 187 à 17.
+- Warnings réduits de 187 à 3.
+- Les 3 warnings résiduels sont des `RuntimeWarning` `runpy` dans les
+  tests de points d'entrée (`outbox_health`, `outbox_worker`, `run_seeds`).
 
-Les warnings résiduels sont indépendants de FastAPI/Starlette et sont
-classés pour une tâche QA ultérieure.
+Les warnings applicatifs Stripe, SciPy et FastAPI/Starlette sont résolus.

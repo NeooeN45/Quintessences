@@ -78,7 +78,7 @@ de chaque tâche produite par une loop.
 - **Dernière évolution** : 2026-08-09 (nettoyage warnings FastAPI)
 - **Cycles total** : 8
 - **Évolutions total** : 9
-- **Prochaine révision** : après revalidation pip-audit et audit des 17 warnings résiduels
+- **Prochaine révision** : après revalidation pip-audit et audit des 3 warnings `runpy` résiduels
 
 ## Métriques de santé
 

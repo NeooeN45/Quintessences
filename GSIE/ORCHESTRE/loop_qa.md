@@ -72,10 +72,13 @@
   `HTTP_422_UNPROCESSABLE_CONTENT` dans les routers concernés.
 - Tests ciblés : **217 passants** après nettoyage.
 - Suite complète : **2667 passés, 63 ignorés, 100 % couverture**.
-- Warnings : **187 → 17**.
-- Les 17 warnings restants sont indépendants de FastAPI/Starlette : Stripe,
-  `RuntimeWarning` de modules exécutés, `ConstantInputWarning` SciPy couvert,
-  et avertissements de coverage/xdist.
+- Warnings : **187 → 3**.
+- Les 3 warnings restants sont des `RuntimeWarning` `runpy` dans les tests
+  de points d'entrée (`outbox_health`, `outbox_worker`, `run_seeds`) ; ils
+  ne proviennent pas du runtime HTTP ni du code métier appelé par l'API.
+- Le warning Stripe a été supprimé par l'API JSON publique ; le
+  `ConstantInputWarning` SciPy est filtré uniquement autour du calcul
+  volontairement dégénéré.
 
 ## Évolution du trust score
 
