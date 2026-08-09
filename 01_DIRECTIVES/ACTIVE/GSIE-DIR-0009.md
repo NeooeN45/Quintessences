@@ -21,7 +21,7 @@ Quintessences :
    GSIE-Ignis devient **Ignis** (incendies).
 2. **Nouvelles applications** : **Hydro** (eau) et **Flora** (végétation)
    rejoignent l'écosystème.
-3. **Applications futures** : Terra, Atmos, Atlas, Aether, Chronos, Nexus…
+3. **Applications futures** : Terra, Aeris, Atlas…
 4. **QGISIA** reste comme plugin QGIS de l'écosystème Quintessences.
 5. **Unreal Engine** est repositionné comme **Centre de Commandement
    GSIE** — pas une simple visionneuse 3D, mais un poste de pilotage
@@ -80,11 +80,8 @@ GSIE n'est pas une application. C'est le cœur. Il est responsable de :
 | Application | Domaine potentiel |
 |---|---|
 | Terra | Sols / géologie |
-| Atmos | Atmosphère / météo |
+| Aeris | Atmosphère / météo |
 | Atlas | Cartographie globale |
-| Aether | Air / qualité atmosphérique |
-| Chronos | Séries temporelles / historique |
-| Nexus | Interopérabilité / intégration |
 
 ---
 
@@ -105,7 +102,7 @@ Un poste de pilotage où l'utilisateur peut :
 - localiser les animaux suivis par Artemis ;
 - consulter les parcelles et peuplements de GeoSylva ;
 - visualiser le réseau hydrographique d'Hydro ;
-- afficher les données météo d'Atmos ;
+- afficher les données météo d'Aeris ;
 - lancer une simulation d'incendie d'Ignis ;
 - visualiser les déplacements d'une harde de cervidés ;
 - comparer l'état d'un secteur entre plusieurs dates ;
@@ -227,8 +224,7 @@ changements. Il devient un outil de l'écosystème Quintessences.
 4. QGISIA reste comme **plugin QGIS** de Quintessences.
 5. Unreal Engine devient le **Centre de Commandement GSIE**.
 6. Les dossiers de mémoire projet sont réorganisés par application.
-7. Les applications futures (Terra, Atmos, Atlas, Aether, Chronos,
-   Nexus) sont réservées.
+7. Les applications futures (Terra, Aeris, Atlas) sont réservées.
 8. GSIE reste le **moteur central** — les applications sont des clients.
 
 ---

@@ -112,6 +112,9 @@ graph TB
             HYDRO["Hydro<br/>eau"]
             FLORA["Flora<br/>végétation"]
             QGISIA["QGISIA<br/>plugin QGIS"]
+            TERRA["Terra<br/>sols / géologie"]
+            AERIS["Aeris<br/>atmosphère / météo"]
+            ATLAS["Atlas<br/>cartographie globale"]
             HUB["Centre de Commandement<br/>Unreal Engine 5.8"]
         end
 
@@ -299,6 +302,43 @@ critiques restent soumises à validation humaine.
 - **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
   (effets), WebSockets natifs (temps réel).
 - **Document de référence** : `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+
+### Terra — sols et géologie
+
+Application de caractérisation et de classification des sols. Texture,
+pH, profondeur, drainage, réserve utile en eau. Réservée par
+`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Terra/`
+- **Lien GSIE** : moteurs Pedology, Knowledge, Climate, Correlation
+  (caractéristiques et classification des sols, sourcées CON-002).
+- **Socle spécifique** : SoilGrids (ISRIC), RMQS (INRAE), Référentiel
+  Pédologique Français.
+
+### Aeris — atmosphère et météo
+
+Application de suivi météorologique et climatique. Observations,
+prévisions, variables bioclimatiques et projections climatiques
+scénarisées. Réservée par `GSIE-DIR-0009` §3/§227 (ex-Atmos), scaffolding
+activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Aeris/`
+- **Lien GSIE** : moteurs Climate, Knowledge, Correlation, Diagnostic
+  (données climatiques datées, projections avec scénario et incertitude).
+- **Socle spécifique** : Météo-France (SYNOP), Copernicus Climate
+  Change Service (C3S).
+
+### Atlas — cartographie globale
+
+Application de cartographie interactive multi-couches et d'analyse
+spatiale (relief, pente, exposition, distance). Réservée par
+`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Atlas/`
+- **Lien GSIE** : moteurs GIS, Knowledge, Correlation (couches
+  géospatiales de référence, services d'analyse spatiale communs).
+- **Socle spécifique** : IGN (BD Topo, BD Ortho, RGE ALTI), Cadastre,
+  OpenStreetMap.
 
 ### Futures spécialisations
 

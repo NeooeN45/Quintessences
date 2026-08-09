@@ -615,7 +615,7 @@ Runtime Fabric
 ### 14.2 Prévision de propagation
 
 ```text
-Atmos / Météo-France
+Aeris / Météo-France
    │
 prévision vent
    │

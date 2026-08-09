@@ -10,8 +10,8 @@
 | **Date d'ouverture** | 2026-08-06 |
 | **RFC de référence** | RFC-0011 (métamodèle v6.2), RFC-0029 (organisation physique des données), RFC-0035 (Server Meshing), RFC-0036 (Territorial Mesh) |
 | **Directives liées** | GSIE-DIR-0005, GSIE-DIR-0009, GSIE-DIR-0013 |
-| **Décisions liées** | DEC-000010, DEC-000013, DEC-000054 |
-| **Impact** | Architecture GSIE, Hub Unreal, API, State Fabric, contrats inter-applications, GeoSylva, Ignis, Hydro, Flora, Artemis, QGISIA |
+| **Décisions liées** | DEC-000010, DEC-000013, DEC-000054, DEC-000056 |
+| **Impact** | Architecture GSIE, Hub Unreal, API, State Fabric, contrats inter-applications, GeoSylva, Ignis, Hydro, Flora, Artemis, QGISIA, Terra, Aeris, Atlas |
 
 ---
 
@@ -87,7 +87,18 @@ Chaque domaine expose une projection spécialisée du même jumeau :
 | **Flora** | Végétation | Taxonomie, répartition, phénologie, habitats végétaux, changements écologiques |
 | **Artemis** | Faune | Observations, habitats, populations, corridors, impacts et déplacements |
 | **QGISIA** | SIG et analyse | Exploration, préparation, analyse et export géospatial |
+| **Terra** | Sols et géologie | Texture, pH, profondeur, drainage, réserve utile en eau, classification pédologique |
+| **Aeris** | Atmosphère et météo | Observations, prévisions, variables bioclimatiques, projections climatiques scénarisées |
+| **Atlas** | Cartographie globale | Couches géospatiales de référence, analyse spatiale transverse (relief, pente, exposition, distance) |
 | **Hub Unreal** | Immersion et supervision | Exploration, visualisation, comparaison, interaction contrôlée et supervision |
+
+Terra, Aeris et Atlas sont des applications futures réservées par
+`GSIE-DIR-0009` §3/§227 ; leur scaffolding documentaire (`apps/<App>/`,
+icônes) a été activé par `DEC-000056` (2026-08-09) sans qu'aucun code
+applicatif n'existe encore. Elles rejoignent le tableau des projections
+métier à ce titre — leur intégration effective aux contrats
+inter-domaines (§4, §5) reste à instruire au même rythme que leur
+scaffolding applicatif réel.
 
 Une projection peut produire des ressources pour les autres domaines,
 mais elle ne modifie jamais directement leur état interne.
@@ -232,6 +243,31 @@ Flora et Artemis partagent avec GeoSylva et Ignis :
 
 Les observations restent attribuées à leur domaine producteur et ne sont
 pas fusionnées sans règle de provenance et de résolution.
+
+### 5.5 Terra, Aeris et Atlas — projections transverses
+
+Terra, Aeris et Atlas ne portent pas d'enjeu opérationnel propre comme
+Ignis ou GeoSylva : elles fournissent des données de référence
+consommées par les autres projections.
+
+Aeris fournit à toutes les projections des données climatiques datées
+(observations et prévisions) et des variables bioclimatiques, avec leur
+scénario et leur incertitude quand il s'agit d'une projection. GeoSylva
+peut les consommer pour le risque de gel ou de sécheresse, Ignis pour le
+risque incendie, Hydro pour le régime hydrique.
+
+Terra fournit les caractéristiques et classifications de sol sourcées
+(CON-002) consommées notamment par GeoSylva (station forestière) et
+Hydro (régime hydrique, infiltration).
+
+Atlas fournit les couches géospatiales de référence et les services
+d'analyse spatiale communs (relief, pente, exposition, distance) sans
+dupliquer les bases internes des autres projections ; elle ne produit
+pas de diagnostic.
+
+Aucune des trois ne modifie l'état interne d'une autre projection —
+elles publient des ressources GSIE versionnées comme les autres
+domaines (§4).
 
 ## 6. Interactions et actions physiques
 

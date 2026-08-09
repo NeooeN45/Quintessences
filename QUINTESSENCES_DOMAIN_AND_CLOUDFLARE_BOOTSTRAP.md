@@ -33,7 +33,7 @@
 | `auth.quintessences-platform.com` | Non résolu | — | Authentification centralisée (à réserver) |
 | `docs.quintessences-platform.com` | Non résolu | — | Documentation (à réserver) |
 | `status.quintessences-platform.com` | Non résolu | — | Statut des services (à réserver) |
-| Autres (dev, staging, geosylva, ignis, hydro, flora, artemis, terra, atmos) | Non résolus | — | À réserver progressivement |
+| Autres (dev, staging, geosylva, ignis, hydro, flora, artemis, terra, aeris) | Non résolus | — | À réserver progressivement |
 
 ### 1.3 Tunnel Cloudflare
 
@@ -128,7 +128,7 @@ quintessences-platform.com
 ├── flora                → portail spécifique Flora (futur)
 ├── artemis              → portail spécifique Artemis (futur)
 ├── terra                → portail spécifique Terra (futur)
-├── atmos                → portail spécifique Atmos (futur)
+├── aeris                → portail spécifique Aeris (futur)
 ├── dev                  → environnement de développement (accès restreint)
 ├── staging              → préproduction (accès restreint)
 └── control              → interfaces d’administration (Cloudflare Access + MFA)
@@ -195,7 +195,7 @@ quintessences-platform.com
 | CNAME | `flora` | Tunnel app Flora |
 | CNAME | `artemis` | Tunnel app Artemis |
 | CNAME | `terra` | Tunnel app Terra |
-| CNAME | `atmos` | Tunnel app Atmos |
+| CNAME | `aeris` | Tunnel app Aeris |
 | CNAME | `dev` | Tunnel dev + Access |
 | CNAME | `staging` | Tunnel staging + Access |
 | CNAME | `control` | Tunnel admin + Access |
@@ -548,7 +548,7 @@ Règles minimales recommandées :
 
 ### 12.3 Phase 3 — Multi-app (3–6 mois)
 
-1. Créer les sous-domaines spécifiques (`geosylva`, `ignis`, `hydro`, `flora`, `artemis`, `terra`, `atmos`) au fur et à mesure des MVP.
+1. Créer les sous-domaines spécifiques (`geosylva`, `ignis`, `hydro`, `flora`, `artemis`, `terra`, `aeris`) au fur et à mesure des MVP.
 2. Migrer l’API du host Windows vers le conteneur Docker `api-api-1` ou un VPS.
 3. Mettre en place un Load Balancer Cloudflare si 2+ origines.
 4. Évaluer Cloudflare Pro si le trafic le justifie.

@@ -4,6 +4,50 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [APPLICATIONS CLIENTES — ACTIVATION TERRA/AERIS/ATLAS + ICÔNES DES 8 APPS] - 2026-08-09
+
+- **DEC-000056** : les trois applications futures réservées par
+  `GSIE-DIR-0009` §3/§227 — **Terra** (sols/géologie), **Aeris**
+  (atmosphère/météo), **Atlas** (cartographie globale) — sont créées
+  dans `apps/` avec `README.md` + `GSIE_INTEGRATION.md` (statut
+  Planifiée, Phase 4), sur le modèle d'Artemis/Flora/Hydro.
+- **Icônes** : le fondateur a fourni des packs d'icônes complets (PNG
+  48–1024 px, assets Android `mipmap-hdpi/mdpi/xhdpi/xxhdpi/xxxhdpi`,
+  assets store Google Play/App Store) pour les 8 applications
+  clientes (GeoSylva, Artemis, Ignis, Hydro, Flora, QGISIA, Terra,
+  Aeris, Atlas). Rangées dans `apps/<App>/branding/icons/` pour les 7
+  apps sans scaffolding applicatif ; intégrée immédiatement pour
+  **GeoSylva** (`app/src/main/res/drawable-nodpi/app_icon.png`,
+  foreground de l'adaptive icon, minSdk 26).
+- **Documentation** : `CLAUDE.md` §10 (table des apps + note sur
+  GSIE-DIR-0009/DEC-000056), `PROJECT_MEMORY.md` (section RFC-0037 et
+  dernière mise à jour), `README.md` (diagramme + sections Terra/Aeris/
+  Atlas), `03_DECISIONS/DEC-000056.md`.
+- **RFC-0037 amendée** (même jour) : §3.1 (tableau des projections
+  métier) et nouvelle §5.5 intègrent Terra/Aeris/Atlas comme projections
+  transverses fournissant des données de référence aux autres domaines.
+- **Reste à faire** : scaffolding applicatif complet (Architecture +
+  Specification + code, comme pour GeoSylva) de Terra, Aeris, Atlas,
+  Artemis, Flora, Hydro, Ignis — aucun n'existe encore hors GeoSylva.
+
+## [APPLICATIONS FUTURES — AERIS ET RÉDUCTION DE LA LISTE] - 2026-08-08
+
+- **Aeris** : l'application future **Atmos** est renommée **Aeris**
+  (atmosphère / météo).
+- **Retrait de la liste réservée** : **Aether**, **Chronos** et **Nexus**
+  ne sont plus retenus comme applications futures réservées.
+  La liste réservée est désormais : **Terra, Aeris, Atlas**.
+- **Fichiers mis à jour** : `01_DIRECTIVES/ACTIVE/GSIE-DIR-0009.md`,
+  `GSIE/ARCHITECTURE/HUB_UNREAL_TECHNOLOGY_STACK.md`,
+  `landing-quintessences/public/index.html`,
+  `QUINTESSENCES_DOMAIN_AND_CLOUDFLARE_BOOTSTRAP.md`,
+  `22_PROJECT_MEMORY/notes/modification_architecture_globale.txt`.
+- **Non modifiés** : `GSIE/AUDIT_2026-08-03/GSIE_CURRENT_ARCHITECTURE.md`
+  (audit daté), `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` (contient
+  le modèle *Chronos-2*, sans lien avec le nom d'application) et
+  `22_PROJECT_MEMORY/notes/possible_changement_de_noms.txt` (note de
+  brainstorming historique).
+
 ## [APPLICATIONS CLIENTES — IGNIS MOBILE] - 2026-08-08
 
 - **Ignis** : ajout d'une **application mobile terrain** dans le périmètre
