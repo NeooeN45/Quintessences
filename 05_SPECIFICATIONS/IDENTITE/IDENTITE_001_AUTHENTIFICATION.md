@@ -1,13 +1,13 @@
-# IDENTITÉ — Authentification multi-fournisseurs 1.2.0
+# IDENTITÉ — Authentification multi-fournisseurs 1.3.0
 
 | Champ | Valeur |
 |---|---|
 | **Identifiant** | IDENTITE-001 |
 | **Statut** | Draft |
-| **Version** | 1.2.0 |
+| **Version** | 1.3.0 |
 | **Date** | 2026-08-03 |
 | **Auteur** | Direction technique (assistée par Codex) |
-| **Décision** | DEC-000044, DEC-000045, DEC-000046 |
+| **Décision** | DEC-000044, DEC-000045, DEC-000046, DEC-000058 |
 
 ## 1. Résumé
 
@@ -28,7 +28,7 @@ tous les clients de l’API GSIE.
 | ID-F-007 | Un compte existant n’est jamais fusionné automatiquement par e-mail | P0 | L’API retourne `ACCOUNT_LINK_REQUIRED` |
 | ID-F-008 | Un utilisateur authentifié peut rattacher Google explicitement | P0 | Le lien conserve l’UUID canonique existant |
 | ID-F-009 | Tous les fournisseurs partagent refresh, verify et logout | P0 | Les jetons suivent le contrat JWT RS256 actuel |
-| ID-F-010 | La connexion professionnelle apparaît comme « En développement » | P1 | Aucun flux OIDC/SAML n’est déclenché avant configuration |
+| ID-F-010 | La connexion professionnelle n’apparaît que si un fournisseur d’entreprise est déclaré par `/auth/providers` | P1 | Aucun flux OIDC/SAML n’est déclenché avant configuration ; aucun contrôle inactif n’est affiché (DEC-000058) |
 | ID-F-011 | Les rôles sont issus de Quintessences, pas du fournisseur public | P0 | Les claims Google ne peuvent pas accorder `admin` ou un rôle métier |
 | ID-F-012 | Les applications utilisent le même compte | P0 | GeoSylva, Web, PC, Artemis, Hydro et Ignis acceptent le même `sub` |
 | ID-F-013 | GeoSylva propose un espace compte distinct de la page de connexion | P0 | L'utilisateur peut consulter sa session et se déconnecter sans quitter les paramètres |
@@ -76,10 +76,15 @@ tous les clients de l’API GSIE.
 
 ## 5. Exigences d'interface
 
-L'ordre visuel recommandé est : Google, séparateur « ou », formulaire
-e-mail/mot de passe, puis connexion professionnelle désactivée avec le
-libellé « En développement ». Le client doit suivre `/auth/providers` et
-ne jamais simuler un fournisseur actif.
+L'ordre visuel retenu pour GeoSylva est : formulaire e-mail/mot de passe,
+séparateur « ou », puis Google (DEC-000058). Le formulaire local occupe la
+position principale tant que Google n'est pas configuré en production ;
+l'ordre sera réévalué à ce moment-là.
+
+Aucun contrôle inactif n'est affiché : la connexion professionnelle
+apparaît dès que `/auth/providers` déclare un fournisseur d'entreprise, et
+reste masquée sinon. Le client doit suivre `/auth/providers` et ne jamais
+simuler un fournisseur actif.
 
 GeoSylva présente trois surfaces distinctes :
 
@@ -98,7 +103,10 @@ GSIE et d'une vérification serveur sur chaque requête.
 - authentification multifacteur et passkeys ;
 - administration des organisations ;
 - fédération OIDC/SAML ;
-- usage de logos institutionnels ;
+- usage de logos institutionnels — institutions partenaires (ONF, CNPF,
+  collectivités), dont l'usage engage une relation contractuelle. Les logos
+  des fournisseurs d'identité en sont exclus : leurs règles de marque
+  imposent au contraire la présence du logo (DEC-000058) ;
 - synchronisation hors-ligne de nouveaux comptes.
 
 ## 7. Traçabilité
@@ -117,3 +125,4 @@ GSIE et d'une vérification serveur sur chaque requête.
 | 2026-08-03 | 1.0.0 | Première spécification issue de DEC-000044 |
 | 2026-08-03 | 1.1.0 | Parcours GeoSylva et diagnostic développeur issus de DEC-000045 |
 | 2026-08-03 | 1.2.0 | Profil, vérification e-mail, récupération et révocation issus de DEC-000046 |
+| 2026-08-09 | 1.3.0 | Ordre de l'écran de connexion GeoSylva, affichage conditionnel de la connexion professionnelle et précision sur les logos, issus de DEC-000058 |
