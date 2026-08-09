@@ -435,8 +435,7 @@ plateforme cible.
 
 ### Résolution escalade #002 — Upgrade Starlette/FastAPI (2026-08-09)
 
-Upgrade coordonné appliqué sur la branche dédiée
-`chore/upgrade-fastapi-starlette` :
+Upgrade coordonné appliqué par le commit dédié `a79e17c` :
 
 | Package | Avant | Après |
 |---|---:|---:|
