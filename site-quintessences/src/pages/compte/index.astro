@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<!--
+  SITE-F-010/011/012 : zone Compte, dépend d'IDENTITE-001.
+  En construction tant que la stratégie de session côté navigateur
+  (stockage de jeton, CSRF) n'est pas vérifiée contre IDENTITE-001
+  pour un client web — voir SITE-001 §9 et DEC-000057 §5.
+-->
+<BaseLayout title="Compte" description="Connexion et gestion du compte Quintessences.">
+  <section class="mx-auto max-w-md px-6 py-24 text-center">
+    <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">Compte</h1>
+    <div class="mt-8 rounded-xl border border-dashed border-[var(--color-border)] p-10">
+      <p class="text-[var(--color-fg-300)]">Cette zone est en construction.</p>
+      <p class="mt-2 text-sm text-[var(--color-fg-500)]">
+        La connexion, l'inscription et la gestion du profil arrivent
+        bientôt sur le web. En attendant, ces fonctions sont disponibles
+        dans l'application GeoSylva.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

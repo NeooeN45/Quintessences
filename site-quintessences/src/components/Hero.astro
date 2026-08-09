@@ -1,0 +1,43 @@
+---
+const WORDS = ["De", "la", "preuve", "à", "la", "décision", "du", "forestier."];
+---
+
+<section class="border-b border-[var(--color-border)]">
+  <div class="mx-auto max-w-5xl px-6 pb-20 pt-24 sm:pt-32">
+    <p class="eyebrow">Jumeau numérique · environnemental · fédéré</p>
+
+    <h1 class="mt-6 text-[13vw] font-medium leading-[0.94] tracking-tight text-[var(--color-fg-100)] sm:text-[6.5rem]">
+      {WORDS.map((word, i) => (
+        <span class="block">
+          {word === "décision" ? (
+            <span style={{ color: "var(--color-accent)" }}>{word}</span>
+          ) : (
+            word
+          )}
+        </span>
+      ))}
+    </h1>
+
+    <p class="mt-10 max-w-md text-[var(--color-fg-300)]">
+      Quintessences qualifie la preuve scientifique, raisonne dessus et laisse
+      un forestier décider — un écosystème d'intelligence environnementale
+      fondé sur le moteur GSIE.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href="/compte/"
+        class="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        style="background: var(--color-fg-100)"
+      >
+        Créer un compte
+      </a>
+      <a
+        href="https://docs.quintessences-platform.com"
+        class="rounded-full border border-[var(--color-border-strong)] px-5 py-2.5 text-sm font-medium text-[var(--color-fg-200)] transition-colors hover:border-[var(--color-fg-100)]"
+      >
+        Documentation
+      </a>
+    </div>
+  </div>
+</section>

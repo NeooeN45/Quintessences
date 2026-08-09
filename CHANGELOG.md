@@ -22,6 +22,27 @@ Format : `## [version] - YYYY-MM-DD`
   pour corriger les CVE Starlette ; escalade #002 ouverte avant toute
   modification du framework public.
 
+## [SITE PUBLIC QUINTESSENCES — PIVOT THÈME CLAIR (PAPA CREATIVE)] - 2026-08-09
+
+- **SITE-002 v1.1.0** : décision directe du Fondateur — thème clair
+  exclusif (retrait du sombre par défaut de la v1.0.0), direction
+  éditoriale inspirée de `papacreative.com` : typographie Space
+  Grotesk + Space Mono, hero en titre empilé sur plusieurs lignes,
+  légendes capitales très espacées, fiches applications façon
+  « case study » (DOMAINE/STATUT au lieu de PROJECT TYPE/INDUSTRY).
+  `SITE-001` `SITE-X-007` amendée en conséquence.
+- **Implémentation** : `ThemeToggle` retiré, palette entièrement
+  réécrite (fond quasi blanc, texte quasi noir, accent teal sombre
+  `#00786a` utilisé avec parcimonie). Polices chargées via Google
+  Fonts (`<link>`, pas `@import` CSS — évite un avertissement de build
+  Tailwind sur l'ordre des règles).
+- **Accessibilité** : contraste mesuré en direct dans le navigateur
+  après implémentation — `--color-fg-400`/`--color-fg-500` étaient
+  sous le seuil AA (4,5:1) sur fond blanc, corrigés et revérifiés
+  (5,49:1 et 6,58:1).
+- Vérifié par `npm run build` (7 pages) et test navigateur en direct,
+  aucune erreur console.
+
 ## [SITE PUBLIC QUINTESSENCES — SPÉCIFICATION, ARCHITECTURE ET V1] - 2026-08-09
 
 - **DEC-000057** : validation de `SITE-001` (spécification fonctionnelle)

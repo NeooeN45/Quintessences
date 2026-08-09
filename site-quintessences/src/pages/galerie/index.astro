@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+// SITE-F-018 à SITE-F-021 : aucun média n'apparaît sans publication
+// manuelle explicite. Le processus de vérification vie privée (§9
+// SITE-001) n'est pas encore défini — cette zone reste en
+// construction tant qu'il ne l'est pas (DEC-000057 §2).
+const entries = await getCollection("galerie");
+---
+
+<BaseLayout title="Galerie" description="Images et vidéos de démonstration Quintessences.">
+  <section class="mx-auto max-w-4xl px-6 py-20 text-center">
+    <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-fg-100)]">Galerie</h1>
+
+    {entries.length === 0 ? (
+      <div class="mt-10 rounded-xl border border-dashed border-[var(--color-border)] p-12">
+        <p class="text-[var(--color-fg-300)]">Cette zone est en construction.</p>
+        <p class="mt-2 max-w-md mx-auto text-sm text-[var(--color-fg-500)]">
+          La publication d'un média nécessite une vérification préalable
+          (vie privée, contexte, mention démonstration/réel) qui n'est pas
+          encore définie — voir SITE-001 §9.
+        </p>
+      </div>
+    ) : (
+      <div class="mt-10 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
+        {entries.map((entry) => (
+          <figure class="overflow-hidden rounded-xl border border-[var(--color-border)]">
+            <img src={entry.data.mediaUrl} alt={entry.data.title} class="aspect-video w-full object-cover" />
+            <figcaption class="p-4">
+              <p class="font-medium text-[var(--color-fg-100)]">{entry.data.title}</p>
+              <p class="mt-1 text-sm text-[var(--color-fg-400)]">{entry.data.context}</p>
+              {entry.data.isDemo && (
+                <p class="mt-2 text-xs text-[var(--color-warning)]">Vol de test / démonstration</p>
+              )}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>

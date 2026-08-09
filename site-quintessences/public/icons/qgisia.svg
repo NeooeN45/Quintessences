@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- GeoSylva AI — badge SIG (courbes de niveau) + feuille (sylva) + étincelle IA -->
+  <defs>
+    <linearGradient id="gsBg" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34d399"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="gsLeaf" x1="22" y1="12" x2="42" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d1fae5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Badge -->
+  <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#gsBg)"/>
+  <rect x="3" y="3" width="58" height="29" rx="16" fill="#ffffff" opacity="0.08"/>
+
+  <!-- Courbes de niveau (signal cartographie/SIG) -->
+  <g stroke="#ffffff" stroke-opacity="0.20" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <path d="M7 45 C 17 39, 30 51, 44 43 C 51 39, 55 41, 57 40"/>
+    <path d="M7 53 C 19 48, 33 58, 47 51 C 53 48, 56 49, 57 49"/>
+  </g>
+
+  <!-- Feuille (sylva = forêt), pointe en bas façon repère cartographique -->
+  <path d="M32 9 C 45 16, 46 33, 32 51 C 18 33, 19 16, 32 9 Z" fill="url(#gsLeaf)"/>
+  <!-- Nervure centrale + nervures latérales -->
+  <path d="M32 15 L32 45" stroke="#059669" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
+  <g stroke="#059669" stroke-width="1.6" stroke-linecap="round" opacity="0.45">
+    <path d="M32 24 L25.5 20.5 M32 24 L38.5 20.5"/>
+    <path d="M32 33 L25 30 M32 33 L39 30"/>
+  </g>
+
+  <!-- Étincelle IA -->
+  <path d="M47 12 L48.7 16.3 L53 18 L48.7 19.7 L47 24 L45.3 19.7 L41 18 L45.3 16.3 Z" fill="#fbbf24"/>
+</svg>

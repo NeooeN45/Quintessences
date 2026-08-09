@@ -1,0 +1,39 @@
+---
+const currentPath = Astro.url.pathname;
+const links = [
+  { href: "/", label: "Accueil" },
+  { href: "/actualites/", label: "Actualités" },
+  { href: "/galerie/", label: "Galerie" },
+  { href: "/contact/", label: "Contact" },
+];
+---
+
+<header class="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-bg-000)]/90 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--color-fg-100)]">
+      <span class="inline-block h-2 w-2 rounded-full" style="background: var(--color-accent)"></span>
+      Quintessences
+    </a>
+
+    <nav class="hidden items-center gap-7 md:flex">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class:list={[
+            "eyebrow transition-colors hover:text-[var(--color-fg-100)]",
+            currentPath === link.href && "text-[var(--color-fg-100)]",
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <a
+      href="/compte/"
+      class="eyebrow rounded-full border border-[var(--color-border-strong)] px-4 py-2 transition-colors hover:border-[var(--color-fg-100)] hover:text-[var(--color-fg-100)]"
+    >
+      Compte
+    </a>
+  </div>
+</header>
