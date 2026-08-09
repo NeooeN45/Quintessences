@@ -7,7 +7,7 @@
 
 | Champ | Valeur |
 |---|---|
-| **Statut** | ACTIF — escalade #003 dépendances restantes en attente |
+| **Statut** | ACTIF — audit dépendances propre, 0 CVE connue |
 | **Dernière mise à jour** | 2026-08-09 |
 | **Session Devin** | Courante (GLM 5.2 High) |
 | **Modèle orchestrateur** | GLM 5.2 High |
@@ -18,7 +18,7 @@
 
 | Loop | Statut | Dernier cycle | Prochain cycle | Findings |
 |---|---|---|---|---|
-| Sécurité+Perf | PAUSE — escalade #003 | Revalidation pip-audit | 4 avis restants sur 3 packages | 0 avis Starlette/HIGH |
+| Sécurité+Perf | PAUSE — cycle sécurité terminé | Audit pip-audit final | 0 avis, 0 CVE connue | Package local non publié ignoré |
 | QA | PAUSE (cycle 2 terminé) | Nettoyage warnings | 2667 tests, 100 %, 3 warnings runpy | — |
 | Veille | PAUSE (cycle 1 terminé) | Cycle 1 — 6 domaines | — | 8 ressources candidates |
 
@@ -26,7 +26,7 @@
 
 | # | Date | Loop | Question | Statut |
 |---|---|---|---|---|
-| 003 | 2026-08-09 | Sécurité+Perf | Mettre à jour les 3 packages restants ? | EN ATTENTE — réponse Fondateur |
+| — | — | — | — | Aucune — #003 résolue par option A |
 
 ## Consensus récents
 
@@ -40,7 +40,7 @@
 
 | Date | Événement | Détail |
 |---|---|---|
-| 2026-08-09 | ESCALADE #003 | pip-audit réel : 4 avis restants sur app-store-server-library, orjson et pytest |
+| 2026-08-09 | ESCALADE #003 RÉSOLUE | Option A : trois packages mis à jour, pip-audit sans vulnérabilité connue |
 | 2026-08-09 | ESCALADE #002 RÉSOLUE | FastAPI 0.134.0 + Starlette 1.3.1 validés par 2667 tests, couverture 100 % |
 | 2026-08-09 | CYCLE 3 PERF | Correlation Engine : numpy vectorisé 30x–1521x plus rapide que scipy pairwise |
 | 2026-08-09 | ESCALADE RÉSOLUE | #001 — Option B : pyjwt 2.13.0, python-multipart 0.0.32, cryptography 50.0.0 ; pip-audit à revalider après correction TLS |

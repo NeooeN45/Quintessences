@@ -29,8 +29,13 @@ Format : `## [version] - YYYY-MM-DD`
   warnings réduits de 187 à 3. Les trois restants sont des warnings
   `runpy` de tests de points d’entrée, sans régression fonctionnelle.
 - Revalidation `pip-audit` dans le venv réel après correction TLS :
-  Starlette 1.3.1 et toutes les dépendances HIGH sont propres. Quatre
-  avis MODERATE/LOW restent sur trois packages ; escalade #003 ouverte.
+  Starlette 1.3.1 et toutes les dépendances HIGH sont propres. L'audit
+  intermédiaire a identifié quatre avis sur trois packages ; ils ont été
+  traités dans l'option A ci-dessous.
+- Option A appliquée : `app-store-server-library==3.1.2`,
+  `orjson==3.11.6`, `pytest==9.0.3` et `pytest-asyncio==1.3.0`.
+  `pip-audit` est maintenant propre ; billing, suite complète, couverture,
+  ruff et mypy sont validés.
 
 ## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
 

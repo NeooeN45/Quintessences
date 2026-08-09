@@ -73,12 +73,12 @@ de chaque tâche produite par une loop.
 
 > L'orchestrateur réécrit cette section après chaque évolution.
 
-- **Version** : 1.1.0
+- **Version** : 1.2.0
 - **Date création** : 2026-08-08
-- **Dernière évolution** : 2026-08-09 (revalidation pip-audit dans le venv)
-- **Cycles total** : 9
-- **Évolutions total** : 10
-- **Prochaine révision** : après décision sur l'escalade #003
+- **Dernière évolution** : 2026-08-09 (audit pip-audit propre après option A)
+- **Cycles total** : 10
+- **Évolutions total** : 11
+- **Prochaine révision** : cycle de surveillance périodique
 
 ## Métriques de santé
 
@@ -86,13 +86,13 @@ de chaque tâche produite par une loop.
 
 | Métrique | Valeur | Tendance |
 |---|---|---|
-| Cycles complétés | 9 | +1 |
-| Tâches réussies | 9 | +1 |
+| Cycles complétés | 10 | +1 |
+| Tâches réussies | 10 | +1 |
 | Tâches échouées | 0 | — |
-| Escalades générées | 3 | +1 |
-| Escalades résolues | 2 | — |
+| Escalades générées | 3 | — |
+| Escalades résolues | 3 | +1 |
 | Consensus atteints | 0 | — |
 | Consensus échoués | 0 | — |
 | Leçons apprises | 5 | — |
 | Couverture moyenne | 100 % | — |
-| Vulnérabilités ouvertes | 4 avis sur 3 packages ; 0 sur Starlette/HIGH | à traiter |
+| Vulnérabilités ouvertes | 0 avis connus ; package local non audité | propre |

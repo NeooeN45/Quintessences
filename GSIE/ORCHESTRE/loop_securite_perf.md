@@ -456,13 +456,12 @@ Audit exécuté dans le venv GSIE avec `pip-audit==2.10.1` et TLS système.
 
 - `pyjwt`, `python-multipart`, `cryptography` : **aucun avis restant**
 - Starlette 1.3.1 : **aucun avis restant**
-- 4 avis restants sur 3 packages :
-  - `app-store-server-library==1.5.0` → 3.1.2 (MODERATE)
-  - `orjson==3.10.11` → 3.11.6 (MODERATE)
-  - `pytest==8.3.4` → 9.0.3 (LOW, dev uniquement)
+- `app-store-server-library==3.1.2` : **aucun avis restant**
+- `orjson==3.11.6` : **aucun avis restant**
+- `pytest==9.0.3` : **aucun avis restant**
 - `gsie-api==0.1.0` : ignoré car package local non publié sur PyPI
 
-L'escalade #003 est ouverte pour qualifier ces trois mises à jour.
+L'escalade #003 est résolue par l'option A.
 
 ## Baseline de performance
 
@@ -487,8 +486,8 @@ L'escalade #003 est ouverte pour qualifier ces trois mises à jour.
 | CVE-2026-24486 | 2026-08-08 | HIGH | python-multipart 0.0.20 — path traversal upload | Résolu — python-multipart 0.0.32 |
 | CVE-2026-69247 | 2026-08-08 | HIGH | cryptography 49.0.0 — oracle Bleichenbacher PKCS#7 | Résolu — cryptography 50.0.0 |
 | CVE-2026-48710 | 2026-08-08 | MODERATE (6.5) | starlette 0.41.3 — Host header bypass auth | Résolu — Starlette 1.3.1 |
-| CVE-2025-67221 | 2026-08-08 | MODERATE | orjson 3.10.11 — DoS récursion JSON profonde | Ouvert — fix: orjson 3.11.6 |
-| CVE-2025-71176 | 2026-08-08 | LOW | pytest 8.3.4 — DoS/escalade tmpdir UNIX (dev only) | Ouvert — fix: pytest 9.0.3 |
+| CVE-2025-67221 | 2026-08-08 | MODERATE | orjson 3.10.11 — DoS récursion JSON profonde | Résolu — orjson 3.11.6 |
+| CVE-2025-71176 | 2026-08-08 | LOW | pytest 8.3.4 — DoS/escalade tmpdir UNIX (dev only) | Résolu — pytest 9.0.3 |
 
 ## Dépendances à surveiller
 
@@ -496,10 +495,10 @@ L'escalade #003 est ouverte pour qualifier ces trois mises à jour.
 
 | Package | Version | CVE | Statut | Date |
 |---|---|---|---|---|
-| pyjwt | 2.13.0 | 7 CVE historiques (3 HIGH corrigées) | À jour ; confirmation pip-audit à relancer | 2026-08-09 |
+| pyjwt | 2.13.0 | 7 avis historiques corrigés | À jour ; aucun avis pip-audit | 2026-08-09 |
 | starlette | 1.3.1 | 7 avis historiques corrigés | À jour ; aucun avis pip-audit | 2026-08-09 |
 | python-multipart | 0.0.32 | 6 avis historiques corrigés | À jour ; aucun avis pip-audit | 2026-08-09 |
 | cryptography | 50.0.0 | 1 avis historique corrigé | À jour ; aucun avis pip-audit | 2026-08-09 |
-| orjson | 3.10.11 | 1 CVE MODERATE | À mettre à jour → 3.11.6 | 2026-08-09 |
-| app-store-server-library | 1.5.0 | 1 CVE MODERATE | À évaluer → 3.1.2 (breaking) | 2026-08-09 |
-| pytest | 8.3.4 | 1 CVE LOW (dev) | À mettre à jour → 9.0.3 (compatibilité) | 2026-08-09 |
+| orjson | 3.11.6 | Avis historique corrigé | À jour ; aucun avis pip-audit | 2026-08-09 |
+| app-store-server-library | 3.1.2 | Avis historique corrigé | À jour ; tests billing passants | 2026-08-09 |
+| pytest | 9.0.3 | Avis historique corrigé | À jour ; pytest-asyncio 1.3.0 compatible | 2026-08-09 |

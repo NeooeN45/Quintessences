@@ -44,6 +44,7 @@
 | episode-008 | 2026-08-09 | 1.0 | Upgrade FastAPI 0.134/Starlette 0.52.1 validé par la suite complète |
 | episode-009 | 2026-08-09 | 0.8 | Warnings FastAPI 187→3 après nettoyage applicatif |
 | episode-010 | 2026-08-09 | 1.0 | pip-audit : Starlette et dépendances HIGH propres, 4 avis restants |
+| episode-011 | 2026-08-09 | 1.0 | pip-audit final : aucune vulnérabilité connue après option A |
 
 ### error
 

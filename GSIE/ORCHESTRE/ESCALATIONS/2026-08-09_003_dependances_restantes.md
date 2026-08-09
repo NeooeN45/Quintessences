@@ -1,6 +1,19 @@
 # ESCALADE #003 — Vulnérabilités restantes des dépendances
 
-## Statut: EN ATTENTE DE RÉPONSE
+## Statut: RÉSOLU
+
+**Réponse du Fondateur (2026-08-09) : A.** Les trois mises à jour ont
+été appliquées et validées :
+
+- `app-store-server-library==3.1.2`
+- `orjson==3.11.6`
+- `pytest==9.0.3`
+- `pytest-asyncio==1.3.0` ajouté pour la compatibilité pytest 9
+
+Validation : pip-audit ne trouve plus aucune vulnérabilité connue ;
+89 tests billing, 155 tests app/auth/routers, 2667 tests unitaires,
+63 ignorés, couverture 100 %, ruff/mypy verts et harnais de mutation
+terminé avec code retour 0.
 
 ## Question
 
