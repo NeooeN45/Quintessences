@@ -433,12 +433,25 @@ plateforme cible.
 - **Blocage technique** : `uv tree --outdated` est bloqué par le certificat
   TLS du proxy lors de l'accès à PyPI.
 
-### Escalade #002 — Upgrade Starlette/FastAPI
+### Résolution escalade #002 — Upgrade Starlette/FastAPI (2026-08-09)
 
-La montée nécessaire pour corriger les CVE Starlette implique un upgrade
-coordonné de FastAPI, avec validation des routers, middleware, WebSocket,
-OpenAPI et des 2 667 tests unitaires. La question est enregistrée dans
-`ESCALATIONS/2026-08-09_002_starlette.md`.
+Upgrade coordonné appliqué sur la branche dédiée
+`chore/upgrade-fastapi-starlette` :
+
+| Package | Avant | Après |
+|---|---:|---:|
+| FastAPI | 0.115.6 | **0.134.0** |
+| Starlette | 0.41.3 | **0.52.1** |
+
+- `uv.lock` régénéré ; `uv lock --check` réussi
+- Tests ciblés framework/auth/WebSocket : **300/300 passants**
+- Suite unitaire : **2667 passés, 63 ignorés, couverture 100 %**
+- Ruff : 0 erreur ; mypy : 0 erreur sur 201 fichiers
+- Harnais de mutation : terminé, code retour 0
+- 187 warnings de dépréciation FastAPI, sans échec fonctionnel
+
+L'audit en ligne `pip-audit` reste à revalider après correction du
+certificat TLS du proxy.
 
 ## Baseline de performance
 

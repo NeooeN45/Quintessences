@@ -9,7 +9,10 @@ sur **SWE 1.7 max**. L'escalade Fondateur #001 est résolue par l'option B
 la revalidation pip-audit après correction TLS, puis le benchmark de performance de la loop Sécurité+Perf, désormais
 réalisé : numpy est 30x à 1521x plus rapide que scipy pairwise.
 Prochaine action : décision Fondateur sur l’escalade #002 concernant
-la mise à jour coordonnée Starlette/FastAPI.
+la mise à jour coordonnée Starlette/FastAPI. Cette mise à jour est
+maintenant validée sur `chore/upgrade-fastapi-starlette` avec FastAPI
+0.134.0 et Starlette 0.52.1. Reste à traiter les warnings de dépréciation
+et à revalider pip-audit après correction TLS.
 
 ## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
 

@@ -1,8 +1,8 @@
 {
   "loop_securite_perf": {
-    "score": 0.76,
-    "cycles_total": 3,
-    "cycles_reussis": 3,
+    "score": 0.81,
+    "cycles_total": 4,
+    "cycles_reussis": 4,
     "cycles_echoues": 0,
     "derniere_maj": "2026-08-09"
   },

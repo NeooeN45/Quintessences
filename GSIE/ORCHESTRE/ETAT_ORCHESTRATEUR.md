@@ -7,7 +7,7 @@
 
 | Champ | Valeur |
 |---|---|
-| **Statut** | ACTIF — escalade #002 Starlette/FastAPI en attente |
+| **Statut** | ACTIF — upgrade FastAPI/Starlette validé, pip-audit réseau à revalider |
 | **Dernière mise à jour** | 2026-08-09 |
 | **Session Devin** | Courante (GLM 5.2 High) |
 | **Modèle orchestrateur** | GLM 5.2 High |
@@ -18,7 +18,7 @@
 
 | Loop | Statut | Dernier cycle | Prochain cycle | Findings |
 |---|---|---|---|---|
-| Sécurité+Perf | PAUSE — escalade #002 | Qualification Starlette/FastAPI | Décision Fondateur requise | 3 HIGH résolues, Starlette ouverte |
+| Sécurité+Perf | PAUSE — audit CVE réseau | Cycle 3 — Upgrade framework | FastAPI 0.134.0 + Starlette 0.52.1 | CVE directes résolues, pip-audit TLS |
 | QA | PAUSE (cycle 1 terminé) | Cycle 1 — Audit qualité | — | 100 % couverture, 70/70 mutations |
 | Veille | PAUSE (cycle 1 terminé) | Cycle 1 — 6 domaines | — | 8 ressources candidates |
 
@@ -26,7 +26,7 @@
 
 | # | Date | Loop | Question | Statut |
 |---|---|---|---|---|
-| 002 | 2026-08-09 | Sécurité+Perf | Upgrade coordonné Starlette/FastAPI ? | EN ATTENTE — réponse Fondateur |
+| — | — | — | — | Aucune — #002 résolue par option A |
 
 ## Consensus récents
 
@@ -40,7 +40,7 @@
 
 | Date | Événement | Détail |
 |---|---|---|
-| 2026-08-09 | ESCALADE #002 | Upgrade coordonné Starlette/FastAPI nécessaire pour les CVE ouvertes ; validation Fondateur requise |
+| 2026-08-09 | ESCALADE #002 RÉSOLUE | FastAPI 0.134.0 + Starlette 0.52.1 validés par 2667 tests, couverture 100 % |
 | 2026-08-09 | CYCLE 3 PERF | Correlation Engine : numpy vectorisé 30x–1521x plus rapide que scipy pairwise |
 | 2026-08-09 | ESCALADE RÉSOLUE | #001 — Option B : pyjwt 2.13.0, python-multipart 0.0.32, cryptography 50.0.0 ; pip-audit à revalider après correction TLS |
 | 2026-08-09 | CYCLE QA | 2667 tests passés, 63 ignorés, couverture 100 %, 70/70 mutations détectées, ruff/mypy verts |

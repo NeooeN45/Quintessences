@@ -10,7 +10,7 @@ authors = [{ name = "Camille Perraudeau" }]
 # Dépendances épinglées — versions publiées > 7 jours (règle global_rules)
 dependencies = [
     # Framework API
-    "fastapi==0.115.6",
+    "fastapi==0.134.0",
     "uvicorn[standard]==0.34.0",
     "gunicorn==23.0.0",
     # Validation

@@ -73,12 +73,12 @@ de chaque tâche produite par une loop.
 
 > L'orchestrateur réécrit cette section après chaque évolution.
 
-- **Version** : 0.8.0
+- **Version** : 0.9.0
 - **Date création** : 2026-08-08
-- **Dernière évolution** : 2026-08-09 (qualification Starlette/FastAPI)
-- **Cycles total** : 6
-- **Évolutions total** : 7
-- **Prochaine révision** : après décision sur l'escalade #002
+- **Dernière évolution** : 2026-08-09 (upgrade FastAPI/Starlette validé)
+- **Cycles total** : 7
+- **Évolutions total** : 8
+- **Prochaine révision** : après revalidation pip-audit et traitement des warnings
 
 ## Métriques de santé
 
@@ -86,13 +86,13 @@ de chaque tâche produite par une loop.
 
 | Métrique | Valeur | Tendance |
 |---|---|---|
-| Cycles complétés | 6 | +1 |
-| Tâches réussies | 6 | +1 |
+| Cycles complétés | 7 | +1 |
+| Tâches réussies | 7 | +1 |
 | Tâches échouées | 0 | — |
-| Escalades générées | 2 | +1 |
-| Escalades résolues | 1 | — |
+| Escalades générées | 2 | — |
+| Escalades résolues | 2 | +1 |
 | Consensus atteints | 0 | — |
 | Consensus échoués | 0 | — |
 | Leçons apprises | 5 | — |
 | Couverture moyenne | 100 % | — |
-| Vulnérabilités ouvertes | Starlette à qualifier, audit en ligne bloqué TLS | stable |
+| Vulnérabilités ouvertes | Audit en ligne bloqué TLS ; warnings à traiter | stable |

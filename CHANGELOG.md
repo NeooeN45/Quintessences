@@ -21,6 +21,10 @@ Format : `## [version] - YYYY-MM-DD`
 - Qualification Starlette/FastAPI : l’upgrade coordonné est nécessaire
   pour corriger les CVE Starlette ; escalade #002 ouverte avant toute
   modification du framework public.
+- Upgrade coordonné appliqué sur branche dédiée : FastAPI 0.134.0 et
+  Starlette 0.52.1. Validation complète : 2667 tests passants, 100 %
+  couverture, 70/70 mutations, ruff/mypy verts. 187 warnings de
+  dépréciation restent à traiter séparément.
 
 ## [SITE PUBLIC QUINTESSENCES — PIVOT THÈME CLAIR (PAPA CREATIVE)] - 2026-08-09
 
