@@ -34,21 +34,21 @@ Audit exécuté dans le venv GSIE avec `pip-audit==2.10.1` et TLS système :
 ## Options
 
 A) **Mettre à jour les trois packages maintenant**
-   - `app-store-server-library==3.1.2`
-   - `orjson==3.11.6`
-   - `pytest==9.0.3`
-   - Risque : moyen à élevé pour App Store (major 1.x → 3.x), moyen pour
-     pytest 9 avec pytest-asyncio/xdist
-   - Tests : billing App Store, suite complète, lockfile
+- `app-store-server-library==3.1.2`
+- `orjson==3.11.6`
+- `pytest==9.0.3`
+- Risque : moyen à élevé pour App Store (major 1.x → 3.x), moyen pour
+  pytest 9 avec pytest-asyncio/xdist
+- Tests : billing App Store, suite complète, lockfile
 
 B) **Mettre à jour orjson et pytest uniquement**
-   - Corrige le package runtime simple et le package dev
-   - Laisse la dépendance App Store majeure en attente
-   - Risque résiduel : GHSA moderate si l'intégration App Store est active
+- Corrige le package runtime simple et le package dev
+- Laisse la dépendance App Store majeure en attente
+- Risque résiduel : GHSA moderate si l'intégration App Store est active
 
 C) **Reporter les trois**
-   - Conserver les versions actuelles
-   - Documenter les trois avis et ouvrir une tâche de compatibilité App Store
+- Conserver les versions actuelles
+- Documenter les trois avis et ouvrir une tâche de compatibilité App Store
 
 ## Recommandation
 

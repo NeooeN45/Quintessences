@@ -714,8 +714,8 @@
       "Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post": {
         "properties": {
           "file": {
+            "contentMediaType": "application/octet-stream",
             "description": "Image de la plante (JPG ou PNG)",
-            "format": "binary",
             "title": "File",
             "type": "string"
           }
@@ -729,8 +729,8 @@
       "Body_botanical_identify_api_v1_botanical_identify_post": {
         "properties": {
           "file": {
+            "contentMediaType": "application/octet-stream",
             "description": "Image de la plante (JPG ou PNG)",
-            "format": "binary",
             "title": "File",
             "type": "string"
           }
@@ -1784,6 +1784,32 @@
         "title": "ContradictionDetectee",
         "type": "object"
       },
+      "ContradictionDomaines": {
+        "additionalProperties": false,
+        "description": "Deux affirmations qui s'opposent (§6).\n\nExemples : sol favorable contre climat défavorable — deux domaines ; mais\naussi « climat favorable à l'essence » contre « risque de sécheresse\ncroissante », deux affirmations climatiques qui se contredisent bel et\nbien.\n\nLes domaines peuvent donc être identiques. Exiger qu'ils diffèrent, comme\nle faisait une version antérieure de ce modèle, rendait inexprimables les\ncontradictions intra-domaine — précisément les plus fréquentes, puisque\ndeux sources d'une même discipline se contredisent plus souvent que deux\ndisciplines éloignées.\n\nL'identité qui compte est celle des conclusions, et elle est vérifiée en\namont par `ContradictionDeclaree`. Comme pour le Reasoning Engine, aucun\nchamp de résolution n'existe : une contradiction est présentée au\nforestier, jamais arbitrée par la machine\n(`SCIENTIFIC_CONSTITUTION.md` S-3).",
+        "properties": {
+          "description": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "domaine_a": {
+            "$ref": "#/components/schemas/Domaine"
+          },
+          "domaine_b": {
+            "$ref": "#/components/schemas/Domaine",
+            "description": "Peut être identique à `domaine_a` : une contradiction intra-domaine reste une contradiction."
+          }
+        },
+        "required": [
+          "description",
+          "domaine_a",
+          "domaine_b"
+        ],
+        "title": "ContradictionDomaines",
+        "type": "object"
+      },
       "ControleResultat": {
         "additionalProperties": false,
         "description": "Résultat d'un contrôle individuel (`§5`).",
@@ -2458,6 +2484,16 @@
           "global"
         ],
         "title": "DiagnosticType",
+        "type": "string"
+      },
+      "DiagnosticValidationStatus": {
+        "description": "Statut de validation humaine d'un diagnostic.\n\nAbsent du contrat §5, ajouté par le moteur : `GSIE-CON-001` réserve la\ndécision au forestier, donc un diagnostic non relu doit se déclarer\nbrouillon. Sans statut, il serait indistinguable d'un diagnostic établi.\nLa justification complète est portée par\n`gsie_api.engines.diagnostic.schemas` — ce module ne fait qu'en tenir le\ntype.",
+        "enum": [
+          "brouillon",
+          "valide",
+          "refuse"
+        ],
+        "title": "DiagnosticValidationStatus",
         "type": "string"
       },
       "Domaine": {
@@ -7553,6 +7589,47 @@
         "title": "RevokeSessionRequest",
         "type": "object"
       },
+      "RisqueDiagnostic": {
+        "additionalProperties": false,
+        "description": "Un risque identifié, avec sa probabilité qualitative et son horizon (§5).",
+        "properties": {
+          "description": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "domaine": {
+            "$ref": "#/components/schemas/DomaineRisque"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/EvidenceLevel"
+          },
+          "horizon": {
+            "description": "Horizon temporel du risque, ex. « 5 ans », « une révolution »",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Horizon",
+            "type": "string"
+          },
+          "probabilite": {
+            "$ref": "#/components/schemas/Probabilite"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          }
+        },
+        "required": [
+          "description",
+          "probabilite",
+          "horizon",
+          "domaine",
+          "evidence_level",
+          "source"
+        ],
+        "title": "RisqueDiagnostic",
+        "type": "object"
+      },
       "RoleDiagnostic": {
         "description": "Rôle d'une conclusion dans le diagnostic.\n\nDéclaré par l'appelant, jamais déduit. Décider qu'une conclusion est une\ncontrainte plutôt qu'un atout est un jugement scientifique ; l'inférer du\ntexte français de son énoncé serait de l'invention (`GSIE-CON-002`).",
         "enum": [
@@ -8420,6 +8497,13 @@
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -8449,6 +8533,43 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValidationHumaine": {
+        "additionalProperties": false,
+        "description": "Trace d'une relecture humaine (`GSIE-CON-001`, `GSIE-CON-005`).\n\nSans identité ni date, une validation n'est pas auditable : on ne peut\nni la contester, ni savoir ce qui a été relu.",
+        "properties": {
+          "commentaire": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commentaire"
+          },
+          "date_validation": {
+            "description": "Horodatage de la relecture, fuseau obligatoire",
+            "format": "date-time",
+            "title": "Date Validation",
+            "type": "string"
+          },
+          "validateur": {
+            "description": "Identité de la personne ayant relu, jamais un système",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Validateur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "validateur",
+          "date_validation"
+        ],
+        "title": "ValidationHumaine",
         "type": "object"
       },
       "ValidationRequest": {
