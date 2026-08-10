@@ -3,9 +3,21 @@
 | Champ | Valeur |
 |---|---|
 | **Créé le** | 2026-07-01 |
-| **Phase** | 1 — Foundation |
+| **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0003 |
-| **Dernière mise à jour** | 2026-07-06 |
+| **Dernière mise à jour** | 2026-08-10 |
+
+---
+
+## État opérationnel récent
+
+- Data Registry Phase 2, QualityAssessment et FETCH fail-closed validés.
+- Micro-extrait SoilGrids unique certifié par DEC-000061, sans promotion.
+- API locale redéployée et chaîne PostgreSQL/Redis/MinIO vérifiée par
+  DEC-000062.
+- Profilage DEC-000063 : le port Docker Desktop explique le plafond hôte ;
+  recyclage Gunicorn désynchronisé à 5000/5000. La capacité de production doit
+  encore être qualifiée sous Linux avec plusieurs réplicas.
 
 ---
 

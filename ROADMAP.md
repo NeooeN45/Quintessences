@@ -810,7 +810,10 @@ non encore implémentées.
   contre PostgreSQL Docker réel.
 - [x] Redéployer l'API active avec l'image 0048 après autorisation explicite
   (DEC-000062), puis vérifier santé, fail-closed, PostgreSQL et MinIO.
-- [ ] Profiler le plafond local d'environ 19 req/s sous concurrence avant de
-  définir la capacité de production.
+- [x] Profiler le plafond local d'environ 19 req/s : port Docker Desktop
+  identifié comme goulot principal et recyclage Gunicorn désynchronisé par
+  DEC-000063.
+- [ ] Qualifier la capacité sous Linux avec plusieurs réplicas, retrait
+  gracieux et routes représentatives avant de définir un SLO de production.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
   DataAsset, normalisation et porte explicite STAGING → PRODUCTION.

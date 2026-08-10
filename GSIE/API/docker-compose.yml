@@ -228,6 +228,9 @@ services:
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      # Recyclage désynchronisé : évite la sortie groupée des workers sous charge.
+      GSIE_GUNICORN_MAX_REQUESTS: ${GSIE_GUNICORN_MAX_REQUESTS:-5000}
+      GSIE_GUNICORN_MAX_REQUESTS_JITTER: ${GSIE_GUNICORN_MAX_REQUESTS_JITTER:-5000}
       GSIE_EDGE_PROXY_MODE: ${GSIE_EDGE_PROXY_MODE:-direct}
       # En développement Docker, MinIO est disponible sur le réseau Compose.
       GSIE_OBJECT_STORAGE_BACKEND: ${GSIE_OBJECT_STORAGE_BACKEND:-s3}

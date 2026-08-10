@@ -4,6 +4,19 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [ARCHITECTURE — DURABILITÉ ÉVOLUTIVE ET INTÉGRATION IA] - 2026-08-10
+
+- Création de `GSIE-ARCH-EVOLUTION-001` en statut Draft pour formaliser les
+  migrations expand/backfill/contract, la compatibilité API, le versionnement
+  scientifique, l'invalidation des données dérivées, la fraîcheur, les licences,
+  la performance et les portes de qualité.
+- Définition du benchmark propriétaire GSIE : scénarios versionnés, baselines
+  non-IA et expertes, vérités terrain, mesures par sous-groupe, prévention des
+  fuites et garde de promotion.
+- Définition de la frontière d'intégration des modèles IA spécialisés après la
+  bêta fonctionnelle : entrées GSIE versionnées, sorties typées, incertitude,
+  provenance, shadow mode, validation humaine et rollback.
+
 ## [GSIE DATA PLATFORM — QUALITÉ TECHNIQUE ET PORTE FETCH] - 2026-08-10
 
 - Politique `registry-quality-1` : cinq dimensions, aucun score global pour
@@ -53,6 +66,12 @@ Format : `## [version] - YYYY-MM-DD`
 - DEC-000062 : API et worker redéployés depuis `6986e80`, migration 0048,
   fail-closed, manifeste idempotent et DataAsset TIFF MinIO revérifiés. Charge
   stable à 100 % de succès, avec un plafond local d'environ 19 req/s à profiler.
+- DEC-000063 : le port publié Docker Desktop est identifié comme goulot local
+  principal (23,4 req/s contre 405,1 req/s dans le réseau Docker). Le recyclage
+  Gunicorn passe de 1000/50 à 5000/5000, devient configurable et refuse les
+  valeurs non positives ; 6 000/6 000 requêtes internes réussissent à
+  669,34 req/s, p95 11,47 ms. La haute disponibilité multi-réplicas reste à
+  qualifier sous Linux avant toute annonce de capacité de production.
 
 ## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
 
