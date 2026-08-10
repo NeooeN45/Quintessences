@@ -256,6 +256,7 @@ async def should_report_search_blockers_before_any_future_resolver() -> None:
     session = _Session(
         [
             _Result(rows=[(version, dataset)]),
+            _Result(values=[]),  # aucun QualityAssessment complet persisté
             _Result(values=[distribution]),
             _Result(values=[rights]),
             _Result(values=[asset]),
@@ -300,4 +301,26 @@ async def should_block_an_invalid_status_transition_through_generic_crud() -> No
             {"status": "discovered"},
             {"status": DatasetStatus.discovered},
         )
+    session.rollback.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def should_block_promotion_through_generic_crud_even_when_transition_is_valid() -> None:
+    session = SimpleNamespace(rollback=AsyncMock())
+    service = ResourceService(session)
+    instance = DatasetVersionModel(
+        id=uuid4(),
+        dataset_id=uuid4(),
+        version="2026.08",
+        status=DatasetStatus.validated,
+    )
+
+    with pytest.raises(ResourceValidationError, match="DEDICATED_SERVICE"):
+        await service._reject_invalid_update(
+            "dataset_version",
+            instance,
+            {"status": "staging"},
+            {"status": DatasetStatus.staging},
+        )
+
     session.rollback.assert_awaited_once()

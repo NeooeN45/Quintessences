@@ -206,13 +206,32 @@ async def should_reuse_s3_client_pool_and_close_it_once() -> None:
 
 
 @pytest.mark.asyncio
-async def should_return_false_when_s3_head_reports_missing_object() -> None:
+async def should_return_false_without_error_log_when_s3_head_reports_missing_object(
+    monkeypatch,
+) -> None:
     class MissingClient(FakeS3Client):
         async def head_object(self, **kwargs: Any) -> dict[str, object]:
             raise FakeClientError("NoSuchKey")
 
+    class RecordingLogger:
+        def __init__(self) -> None:
+            self.debug_events: list[tuple[str, dict[str, object]]] = []
+            self.error_events: list[tuple[str, dict[str, object]]] = []
+
+        def debug(self, event: str, **kwargs: object) -> None:
+            self.debug_events.append((event, kwargs))
+
+        def error(self, event: str, **kwargs: object) -> None:
+            self.error_events.append((event, kwargs))
+
+    logger = RecordingLogger()
+    monkeypatch.setattr(object_storage, "logger", logger)
     storage = _s3(MissingClient())
+
     assert await storage.exists("missing.bin") is False
+    assert logger.error_events == []
+    assert logger.debug_events[0][0] == "object_storage_object_not_found"
+    assert logger.debug_events[0][1]["error_code"] == "NoSuchKey"
 
 
 @pytest.mark.asyncio

@@ -30,10 +30,21 @@
       "fetch_enabled": false,
       "legal_basis": "SCI-001:OPEN_COPY",
       "blocking_reasons": [
-        "Le périmètre de propriétés et de profondeurs doit être borné.",
-        "Les limites de débit, de taille et de cache doivent être qualifiées."
+        "L'API REST v2.0 est officiellement en pause et ne doit pas porter un FETCH de production.",
+        "Le catalogue exact des couvertures WCS, propriétés, profondeurs et quantiles autorisés doit être figé.",
+        "La limite de 8 MiB est une borne GSIE candidate, pas une limite fournisseur publiée et validée."
       ],
-      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:soilgrids-properties"]
+      "evidence_refs": [
+        "SCI-001",
+        "RFC-0038",
+        "REGISTRY_MANIFEST.json:soilgrids-properties",
+        "https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs_02.html",
+        "https://docs.isric.org/globaldata/soilgrids/wcs.html"
+      ],
+      "allowed_hosts": ["maps.isric.org"],
+      "allowed_content_types": ["image/tiff"],
+      "max_bytes": 8388608,
+      "checksum_algorithm": "sha256"
     },
     {
       "source_registry_id": "meteofrance-portail-api",

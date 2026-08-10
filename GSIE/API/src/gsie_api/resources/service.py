@@ -623,6 +623,11 @@ class ResourceService:
                     transition_status(current_status, target_status)
                 except InvalidDatasetTransition as exc:
                     errors.append(f"DATASET_STATUS_TRANSITION_INVALID: {exc}")
+                if target_status in {DatasetStatus.staging, DatasetStatus.production}:
+                    errors.append(
+                        "DATASET_PROMOTION_REQUIRES_DEDICATED_SERVICE: "
+                        "la promotion exige qualité, droits, actif RAW et validation opérateur"
+                    )
         if not errors:
             return
 

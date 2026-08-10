@@ -1295,3 +1295,36 @@ sont mesurées et reproductibles.
 
 > La mémoire détaillée vit dans `22_PROJECT_MEMORY/`.
 > La roadmap complète vit dans `ROADMAP.md`.
+
+#### Data Registry — qualité et préparation FETCH (2026-08-10)
+
+`QualityAssessment` repose désormais sur des campagnes append-only et une
+politique versionnée. Un bilan incomplet ne produit jamais de score global ;
+le resolver n'utilise plus `DatasetVersion.stats` comme preuve de qualité,
+y compris dans sa fonction pure de classement (fallback legacy supprimé).
+Les quatre sources actuelles ont une complétude et une cohérence déclarative
+de 1.0, mais restent non qualifiées faute de mesures positionnelle, temporelle
+et thématique. `FETCH` demeure fermé avant tout réseau et toute promotion.
+La migration 0048 a été appliquée sur PostgreSQL Docker et ses contraintes
+testées sous transaction annulée. Une image neuve a démarré saine sur ce head
+(`/health` et `/ready` à 200). SoilGrids reste fermé : son API REST est en
+pause officielle ; WCS est seulement un candidat borné à qualifier.
+Le contrat WCS est désormais figé et testé, mais la sonde réelle reste bloquée
+par l'interception TLS de l'antivirus. Aucun contournement TLS n'est autorisé ;
+la décision opérateur SoilGrids reste donc en attente.
+Le récepteur borné est prêt derrière cette porte : contrôle MIME, taille
+annoncée et réelle, timeout, SHA-256 et destination transactionnelle. Il ne
+crée aucun `DataAsset` tant que SoilGrids reste fermé.
+Le sink MinIO transactionnel est également prêt : spool privé, publication
+RAW au commit, absence garantie sur abort et timeout d'abandon. Les preuves
+réelles MinIO ont été nettoyées ; aucune donnée de test ne subsiste.
+Les absences attendues lors des sondes `HEAD` ne génèrent plus de faux logs
+d'erreur : elles sont tracées en `debug`, tandis que les véritables erreurs S3
+restent journalisées et propagées.
+La sonde TLS SoilGrids réelle passe désormais sans contournement. Le code
+métier `wv003` est explicitement mappé vers l'endpoint actif `wv0033`, tandis
+que `wv0033` reste interdit comme identifiant métier. La campagne élargie
+compte 99 tests passants. FETCH demeure fermé et aucun raster n'a été demandé.
+DEC-000061 autorise et trace le premier micro-extrait réel : 100 pixels, 569
+octets, SHA-256 vérifié, un DataAsset RAW dans MinIO et version toujours
+`discovered`. Le registre FETCH canonique demeure fermé.

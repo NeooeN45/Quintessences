@@ -78,14 +78,20 @@ def _translate_error(operation: str, key: str, error: Exception) -> ObjectStorag
     if isinstance(error, ObjectStorageError):
         return error
     code = _error_code(error)
+    if code in {"404", "NoSuchKey", "NotFound", "NoSuchObject"}:
+        logger.debug(
+            "object_storage_object_not_found",
+            operation=operation,
+            key_fingerprint=_key_fingerprint(key),
+            error_code=code,
+        )
+        return ObjectNotFoundError("Object not found")
     logger.error(
         "object_storage_operation_failed",
         operation=operation,
         key_fingerprint=_key_fingerprint(key),
         error_code=code,
     )
-    if code in {"404", "NoSuchKey", "NotFound", "NoSuchObject"}:
-        return ObjectNotFoundError("Object not found")
     return ObjectStorageError(f"Object storage operation failed: {operation}")
 
 

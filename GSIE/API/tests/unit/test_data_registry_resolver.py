@@ -6,7 +6,6 @@ from uuid import uuid4
 from gsie_api.data.resolver import (
     RESOLVER_POLICY_VERSION,
     ResolutionMetadata,
-    quality_score_from_stats,
     resolve_candidates,
 )
 from gsie_api.data.schemas import (
@@ -82,11 +81,20 @@ def _candidate(
     )
 
 
-def should_keep_quality_missing_distinct_from_zero() -> None:
-    assert quality_score_from_stats({"rows": 10}) is None
-    assert quality_score_from_stats({"quality_score": 0}) == 0
-    assert quality_score_from_stats({"quality": {"score": 0.8}}) == 0.8
-    assert quality_score_from_stats({"quality_score": 2}) is None
+def should_ignore_quality_score_in_dataset_version_stats() -> None:
+    candidate = _candidate(quality=0.99)
+    query = ResolveRequest(minimum_quality_score=0.8)
+
+    response = resolve_candidates(
+        query,
+        [candidate],
+        metadata={},
+        vocabulary_version="2026-08-10",
+    )
+
+    assert response.selected is None
+    assert "QUALITY_MISSING" in response.candidates[0].blocking_reasons
+    assert response.candidates[0].criteria["quality"] is None
 
 
 def should_apply_constraints_before_scoring_and_expose_blockers() -> None:

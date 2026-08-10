@@ -165,7 +165,16 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "method": ["name", "description"],
     "instrument": ["name", "type"],
     "uncertainty": ["type"],
-    "quality_assessment": ["target_id", "dimension", "score", "method", "assessed_at"],
+    "quality_assessment": [
+        "target_id",
+        "dimension",
+        "score",
+        "method",
+        "assessed_at",
+        "assessment_run_id",
+        "policy_version",
+        "weight",
+    ],
     "activity": ["type", "started_at"],
     "agent": ["name", "type"],
     # Auteur et date obligatoires : une source qui ne peut pas etre citee

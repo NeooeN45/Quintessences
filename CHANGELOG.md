@@ -4,6 +4,53 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE DATA PLATFORM — QUALITÉ TECHNIQUE ET PORTE FETCH] - 2026-08-10
+
+- Politique `registry-quality-1` : cinq dimensions, aucun score global pour
+  un bilan incomplet et séparation stricte de la santé et de l'Evidence Level.
+- Migration réversible `20260810_0048` pour les campagnes append-only et les
+  contraintes de score, poids et unicité par dimension.
+- Resolver et recherche alimentés uniquement par les évaluations persistées,
+  sans confiance implicite dans `DatasetVersion.stats`.
+- Suppression du dernier fallback `quality_score_from_stats` dans le resolver
+  pur et ajout d'une non-régression prouvant que `stats.quality_score` est ignoré.
+- Évaluation reproductible des quatre sources : manifeste complet et cohérent,
+  mais trois dimensions non mesurées, donc aucune promotion.
+- Worker FETCH fail-closed ajouté ; les quatre sources restent désactivées et
+  aucun appel adapter, téléchargement RAW ou changement de statut n'a lieu.
+- Migration 0048 appliquée sur PostgreSQL Docker réel ; contraintes d'unicité
+  et de score vérifiées dans une transaction annulée.
+- CRUD générique fermé pour les promotions STAGING/PRODUCTION : un futur
+  service dédié devra vérifier qualité, droits, actif RAW et opérateur.
+- Qualification SoilGrids approfondie : licence CC BY 4.0 confirmée, mais API
+  REST officiellement en pause ; candidat WCS borné préparé sans activer FETCH.
+- Contrat WCS fermé ajouté : endpoint fixe, 12 propriétés, six profondeurs,
+  quatre sorties, EPSG:152160, GeoTIFF INT16, 1 Mpx, 8 Mio et 30 secondes.
+- Sonde TLS réelle maintenue fail-closed face à l'interception antivirus ;
+  aucune désactivation de certificat et aucune activation FETCH.
+- Récepteur FETCH transactionnel ajouté : MIME, `Content-Length`, octets réels,
+  timeout global et SHA-256 contrôlés avant `commit`, avec `abort` sur erreur.
+- Aucun raccordement MinIO ni `DataAsset RAW` tant que la source reste fermée.
+- Campagne élargie du worker : 56/56 tests, head PostgreSQL 0048 et contraintes
+  SQL rejouées sous transaction annulée ; rapport de preuve versionné.
+- Sink ObjectStorage/MinIO transactionnel : spool privé, clé RAW non écrasable,
+  publication au commit seulement et timeout propre autour de `abort()`.
+- Round-trips MinIO réels commit/relecture/suppression et abort sans publication
+  validés ; nettoyage anti-orphelin après commit ambigu et 96 tests passants.
+- Les `HEAD 404` attendus par `ObjectStorage.exists()` ne remontent plus comme
+  erreurs d'exploitation ; les autres échecs S3 restent journalisés et propagés.
+- Image candidate `gsie-api:quality-0048` reconstruite et smoke-testée, sans
+  redéploiement de l'API active et sans activation de FETCH.
+- Sonde TLS SoilGrids réelle réussie : WCS 2.0, EPSG:152160 et résolution
+  250 m confirmés. Divergence identifiée entre le code métier `wv003` et le
+  service actif `wv0033` ; aucun `GetCoverage` exécuté.
+- Mapping contractuel `wv003` vers `wv0033` ajouté pour l'accès WCS, sans
+  modifier l'identifiant métier ni ouvrir l'allowlist à `wv0033` ; 99 tests
+  Data Registry/FETCH passants.
+- DEC-000061 : premier `GetCoverage` SoilGrids réel exécuté sur 100 pixels ;
+  569 octets vérifiés par SHA-256, DataAsset RAW unique publié dans MinIO et
+  version maintenue à l'état `discovered` sans promotion automatique.
+
 ## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
 
 - Ajout d'une commande reproductible unique pour les trois campagnes de

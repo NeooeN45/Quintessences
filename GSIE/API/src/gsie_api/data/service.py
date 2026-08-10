@@ -22,7 +22,6 @@ from gsie_api.data.contracts import (
 from gsie_api.data.lifecycle import transition_status
 from gsie_api.data.resolver import (
     ResolutionMetadata,
-    quality_score_from_stats,
     resolve_candidates,
 )
 from gsie_api.data.schemas import (
@@ -47,7 +46,12 @@ from gsie_api.data.schemas import (
 )
 from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.infrastructure.models.ecology import ScaleContextModel
-from gsie_api.infrastructure.models.enums import DatasetHealthStatus, DatasetStatus, EvidenceLevel
+from gsie_api.infrastructure.models.enums import (
+    DatasetHealthStatus,
+    DatasetStatus,
+    EvidenceLevel,
+    QualityDimension,
+)
 from gsie_api.infrastructure.models.governance import (
     DataRightsStatementModel,
     DatasetHealthModel,
@@ -58,6 +62,7 @@ from gsie_api.infrastructure.models.models_ai import (
     DatasetVersionModel,
     DistributionModel,
 )
+from gsie_api.infrastructure.models.observation import QualityAssessmentModel
 from gsie_api.infrastructure.models.prov import AgentModel, CitationModel, SourceModel
 from gsie_api.infrastructure.models.spatial_temporal import PlaceModel
 
@@ -214,6 +219,43 @@ class DataRegistryService:
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def _quality_scores(self, version_ids: list[UUID]) -> dict[UUID, float]:
+        """Retourne uniquement le dernier run complet et persisté par version."""
+
+        if not version_ids:
+            return {}
+        rows = list(
+            (
+                await self._session.execute(
+                    select(QualityAssessmentModel)
+                    .where(QualityAssessmentModel.target_id.in_(version_ids))
+                    .order_by(desc(QualityAssessmentModel.assessed_at))
+                )
+            )
+            .scalars()
+            .all()
+        )
+        runs: dict[tuple[UUID, UUID], list[QualityAssessmentModel]] = {}
+        order: list[tuple[UUID, UUID]] = []
+        for row in rows:
+            key = (row.target_id, row.assessment_run_id)
+            if key not in runs:
+                order.append(key)
+            runs.setdefault(key, []).append(row)
+        scores: dict[UUID, float] = {}
+        expected = set(QualityDimension)
+        for target_id, run_id in order:
+            if target_id in scores:
+                continue
+            run = runs[(target_id, run_id)]
+            if {item.dimension for item in run} != expected:
+                continue
+            weight_sum = sum(item.weight for item in run)
+            if weight_sum <= 0:
+                continue
+            scores[target_id] = sum(item.score * item.weight for item in run) / weight_sum
+        return scores
 
     async def catalog(
         self,
@@ -557,6 +599,11 @@ class DataRegistryService:
             desc(DatasetVersionModel.created_at), desc(DatasetVersionModel.id)
         ).limit(query.limit + 1)
         rows = list((await self._session.execute(statement)).all())
+        quality_scores = (
+            await self._quality_scores([version.id for version, _dataset in rows[: query.limit]])
+            if query.minimum_quality_score is not None
+            else {}
+        )
         candidates: list[SearchCandidate] = []
         for version, dataset in rows[: query.limit]:
             distributions = list(
@@ -632,7 +679,7 @@ class DataRegistryService:
             ):
                 reasons.append("COMMERCIAL_USE_NOT_ALLOWED")
             if query.minimum_quality_score is not None:
-                quality_score = quality_score_from_stats(version.stats)
+                quality_score = quality_scores.get(version.id)
                 if quality_score is None:
                     reasons.append("QUALITY_MISSING")
                 elif quality_score < query.minimum_quality_score:
@@ -683,6 +730,14 @@ class DataRegistryService:
         search_response = await self.search(query, include_blocked=True)
         metadata: dict[UUID, ResolutionMetadata] = {}
         version_ids = [item.version.id for item in search_response.items]
+        if version_ids and (query.minimum_quality_score is not None or "quality" in query.prefer):
+            for version_id, quality_score in (await self._quality_scores(version_ids)).items():
+                current = metadata.get(version_id, ResolutionMetadata())
+                metadata[version_id] = ResolutionMetadata(
+                    quality_score=quality_score,
+                    freshness_at=current.freshness_at,
+                    offline_available=current.offline_available,
+                )
         if version_ids and (query.use == "inference" or "offline_availability" in query.prefer):
             assets = list(
                 (

@@ -215,6 +215,12 @@ def test_egress_allowlist_and_fetch_contract_block_unsafe_urls() -> None:
             external_id="dataset-1",
             distribution_url="file:///etc/passwd",
         )
+    with pytest.raises(AdapterContractError, match="SHA-256"):
+        AdapterFetchRequest(
+            external_id="dataset-1",
+            distribution_url="https://data.example.test/file.tif",
+            expected_checksum="checksum-invalide",
+        )
 
 
 def test_query_result_keeps_cursor_and_observation_timezone() -> None:

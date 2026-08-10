@@ -781,3 +781,33 @@ non encore implémentées.
 > Chaque phase fait l'objet d'une Directive dédiée.
 > La Phase 1 ne se clôture que lorsque les 12 livrables sont au
 > minimum **Validated**.
+
+### Data Registry — prochaine tranche
+
+- [x] Politique QualityAssessment versionnée et historique append-only.
+- [x] Resolver fondé sur les évaluations persistées.
+- [x] Évaluation partielle et reproductible des quatre manifests.
+- [x] Porte worker FETCH fail-closed, sans activation fournisseur.
+- [ ] Qualifier juridiquement et techniquement chaque source pour FETCH.
+- [x] Qualifier la base juridique SoilGrids et identifier WCS comme voie
+  candidate ; maintien fermé en attente de l'allowlist des couvertures.
+- [x] Figer le contrat WCS SoilGrids : 12 propriétés, six profondeurs, quatre
+  sorties, CRS, format, pixels, taille et timeout.
+- [x] Reproduire `DescribeCoverage` avec une chaîne TLS approuvée.
+- [x] Mapper explicitement le code métier `wv003` vers le service WCS réel
+  `wv0033`, sans accepter `wv0033` comme propriété métier.
+- [x] Faire signer la décision opérateur SoilGrids avant tout `GetCoverage`.
+- [x] DEC-000061 : premier micro-extrait SoilGrids borné, SHA-256, DataAsset
+  RAW MinIO unique et absence de promotion prouvés.
+- [x] Implémenter et tester le récepteur borné MIME/octets/timeout/SHA-256 avec
+  destination transactionnelle et abandon sur échec.
+- [x] Sink MinIO transactionnel et timeout d'abandon, testés sur MinIO réel.
+- [x] Observabilité ObjectStorage : `HEAD 404` attendu au niveau debug, sans
+  masquer les erreurs S3 réelles.
+- [ ] Après décision opérateur seulement : relier le reçu validé à la création
+  atomique d'un unique `DataAsset RAW`, puis normaliser le micro-extrait.
+- [x] Prouver migration 0048, contraintes SQL et démarrage d'une image neuve
+  contre PostgreSQL Docker réel.
+- [ ] Redéployer l'API active avec l'image 0048 après autorisation explicite.
+- [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
+  DataAsset, normalisation et porte explicite STAGING → PRODUCTION.

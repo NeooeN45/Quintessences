@@ -42,25 +42,6 @@ class ResolutionMetadata:
     offline_available: bool | None = None
 
 
-def quality_score_from_stats(stats: dict[str, object] | None) -> float | None:
-    """Retourne uniquement un score explicite et borné présent dans ``stats``.
-
-    Un nombre de lignes ou un checksum ne constitue pas une qualité technique
-    et ne doit donc jamais être transformé implicitement en score.
-    """
-
-    if not isinstance(stats, dict):
-        return None
-    raw = stats.get("quality_score")
-    quality = stats.get("quality")
-    if raw is None and isinstance(quality, dict):
-        raw = quality.get("score")
-    if isinstance(raw, bool) or not isinstance(raw, int | float):
-        return None
-    score = float(raw)
-    return score if 0 <= score <= 1 else None
-
-
 def _evidence_rank(level: EvidenceLevel | str | None) -> int:
     value = level.value if isinstance(level, EvidenceLevel) else level
     return _EVIDENCE_RANK.get(value or "", 99)
@@ -132,8 +113,6 @@ def resolve_candidates(
         version = candidate.version
         extra = metadata.get(version.id, ResolutionMetadata())
         quality = extra.quality_score
-        if quality is None:
-            quality = quality_score_from_stats(version.stats)
         freshness_score = _freshness_score(extra.freshness_at, clock)
         reasons = list(dict.fromkeys(candidate.blocking_reasons))
         status = version.status

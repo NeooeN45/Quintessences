@@ -337,8 +337,17 @@ class AdapterFetchRequest:
         _validate_public_url(self.distribution_url, field_name="distribution_url")
         if self.max_bytes <= 0:
             raise AdapterContractError("max_bytes doit être strictement positif")
+        if self.expected_checksum is not None and not re.fullmatch(
+            r"[0-9a-fA-F]{64}", self.expected_checksum
+        ):
+            raise AdapterContractError("expected_checksum doit être un SHA-256 hexadécimal")
         object.__setattr__(self, "external_id", self.external_id.strip())
         object.__setattr__(self, "distribution_url", self.distribution_url.strip())
+        object.__setattr__(
+            self,
+            "expected_checksum",
+            self.expected_checksum.lower() if self.expected_checksum is not None else None,
+        )
 
 
 @dataclass(frozen=True, slots=True)
