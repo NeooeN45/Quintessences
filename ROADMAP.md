@@ -815,5 +815,10 @@ non encore implémentées.
   DEC-000063.
 - [ ] Qualifier la capacité sous Linux avec plusieurs réplicas, retrait
   gracieux et routes représentatives avant de définir un SLO de production.
+- [x] Banc Linux conteneurisé à deux replicas : HAProxy, DNS dynamique,
+  sentinelle de drainage, remplacement et rechargements séquencés validés par
+  DEC-000064, sans publier de capacité de production.
+- [ ] Reproduire DEC-000064 sur hôte Linux natif/CI avec TLS réel, requêtes
+  longues et écritures idempotentes ; expliquer le maximum à 14,1 secondes.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
   DataAsset, normalisation et porte explicite STAGING → PRODUCTION.

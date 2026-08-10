@@ -18,6 +18,9 @@
 - Profilage DEC-000063 : le port Docker Desktop explique le plafond hôte ;
   recyclage Gunicorn désynchronisé à 5000/5000. La capacité de production doit
   encore être qualifiée sous Linux avec plusieurs réplicas.
+- DEC-000064 : banc Linux conteneurisé à deux replicas derrière HAProxy,
+  drainage sans coupure et rechargements séquencés validés. Une preuve Linux
+  native/CI et l'analyse du maximum à 14,1 s restent requises avant les SLO.
 
 ---
 

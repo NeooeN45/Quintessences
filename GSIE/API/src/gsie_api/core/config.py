@@ -203,6 +203,8 @@ class Settings(BaseSettings):
     redis_connect_timeout: float = 5.0
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
+    # Fichier sentinelle créé avant SIGTERM pour retirer le replica de la bordure.
+    graceful_drain_file: str = "/tmp/gsie-draining"
     # Scheduler Data Registry — fermé par défaut, distribué via verrou Redis.
     data_registry_health_scheduler_enabled: bool = False
     data_registry_health_manifest_path: str = "/app/data/REGISTRY_MANIFEST.json"

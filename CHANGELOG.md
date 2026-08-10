@@ -72,6 +72,12 @@ Format : `## [version] - YYYY-MM-DD`
   valeurs non positives ; 6 000/6 000 requêtes internes réussissent à
   669,34 req/s, p95 11,47 ms. La haute disponibilité multi-réplicas reste à
   qualifier sous Linux avant toute annonce de capacité de production.
+- DEC-000064 : banc HA Linux conteneurisé à deux replicas derrière HAProxy,
+  readiness de drainage privée, résolution DNS dynamique et grâce de 45 s.
+  Drainage : 6 000/6 000 succès ; rechargements séquencés : 8 000/8 000 ;
+  lecture PostgreSQL authentifiée : 100/100. Les essais volontairement mal
+  séquencés prouvent que le retour explicite du backend est une porte
+  obligatoire. Les SLO de production restent non publiés.
 
 ## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
 

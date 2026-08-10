@@ -1,12 +1,14 @@
 """Tests unitaires — endpoints health/ready (sans dépendances externes)."""
 
 import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.infrastructure import health as health_module
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.redis_client import get_redis
 
@@ -76,6 +78,22 @@ def should_contain_dependencies_when_readiness_responds(client: TestClient):
     data = response.json()
     assert "database" in data["dependencies"]
     assert "redis" in data["dependencies"]
+
+
+def should_answer_503_without_querying_dependencies_when_draining(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    """Le signal de drainage retire immédiatement le replica de la rotation."""
+    drain_file = tmp_path / "gsie-draining"
+    drain_file.touch()
+    monkeypatch.setattr(health_module._settings, "graceful_drain_file", str(drain_file))
+
+    response = client.get("/ready")
+
+    assert response.status_code == 503
+    assert response.json()["dependencies"] == {"draining": "active"}
 
 
 def should_contain_version_when_health_responds(client: TestClient):

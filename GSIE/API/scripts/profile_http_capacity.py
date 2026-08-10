@@ -5,24 +5,43 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import statistics
 import time
 
 import httpx
 
 
-async def run(url: str, requests: int, concurrency: int) -> dict[str, object]:
+async def run(
+    url: str,
+    requests: int,
+    concurrency: int,
+    bearer_token_env: str | None = None,
+) -> dict[str, object]:
     semaphore = asyncio.Semaphore(concurrency)
     latencies: list[float] = []
     statuses: dict[int, int] = {}
     errors: list[str] = []
+    backends: dict[str, int] = {}
     limits = httpx.Limits(
         max_connections=concurrency,
         max_keepalive_connections=concurrency,
         keepalive_expiry=30.0,
     )
 
-    async with httpx.AsyncClient(limits=limits, trust_env=False, timeout=30.0) as client:
+    headers: dict[str, str] = {}
+    if bearer_token_env:
+        token = os.environ.get(bearer_token_env)
+        if not token:
+            raise ValueError(f"Variable de jeton absente : {bearer_token_env}")
+        headers["Authorization"] = f"Bearer {token}"
+
+    async with httpx.AsyncClient(
+        limits=limits,
+        trust_env=False,
+        timeout=30.0,
+        headers=headers,
+    ) as client:
 
         async def request_once() -> None:
             async with semaphore:
@@ -30,6 +49,9 @@ async def run(url: str, requests: int, concurrency: int) -> dict[str, object]:
                 try:
                     response = await client.get(url)
                     statuses[response.status_code] = statuses.get(response.status_code, 0) + 1
+                    backend = response.headers.get("x-gsie-backend")
+                    if backend:
+                        backends[backend] = backends.get(backend, 0) + 1
                 except Exception as exc:  # noqa: BLE001 - preuve de charge exhaustive
                     errors.append(f"{type(exc).__name__}: {exc}")
                 finally:
@@ -52,6 +74,8 @@ async def run(url: str, requests: int, concurrency: int) -> dict[str, object]:
         "duration_seconds": round(duration, 3),
         "requests_per_second": round(requests / duration, 2),
         "statuses": statuses,
+        "backends": backends,
+        "error_count": len(errors),
         "errors": errors[:10],
         "latency_ms": {
             "mean": round(statistics.mean(ordered), 2),
@@ -68,10 +92,19 @@ def main() -> None:
     parser.add_argument("--url", required=True)
     parser.add_argument("--requests", type=int, default=500)
     parser.add_argument("--concurrency", type=int, default=20)
+    parser.add_argument(
+        "--bearer-token-env",
+        help="Nom de la variable contenant le jeton Bearer (jamais sa valeur)",
+    )
     args = parser.parse_args()
     if args.requests <= 0 or args.concurrency <= 0:
         parser.error("requests et concurrency doivent être positifs")
-    print(json.dumps(asyncio.run(run(args.url, args.requests, args.concurrency)), indent=2))
+    print(
+        json.dumps(
+            asyncio.run(run(args.url, args.requests, args.concurrency, args.bearer_token_env)),
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

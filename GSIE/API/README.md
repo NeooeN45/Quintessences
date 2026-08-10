@@ -236,3 +236,5 @@ src/gsie_api/
   rotation RSA et contrainte multi-clés (pas de `kid`/JWKS natif)
 - [Parallélisation pytest (xdist)](docs/TESTING_XDIST.md) — état,
   contraintes (scipy DLL, fuite SQLAlchemy) et usage manuel
+- [Haute disponibilité et drainage](docs/HA_GRACEFUL_DRAIN_TEST_2026-08-11.md) —
+  deux replicas, HAProxy, sentinelle readiness et preuves de bascule

@@ -1,0 +1,86 @@
+name: gsie-ha
+
+x-api-ha: &api-ha
+  image: ${GSIE_HA_API_IMAGE:-api-api:latest}
+  environment: &api-ha-environment
+    GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis}
+    GSIE_DEBUG: "false"
+    GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+    GSIE_GUNICORN_WORKERS: ${GSIE_HA_WORKERS:-2}
+    GSIE_GUNICORN_MAX_REQUESTS: ${GSIE_HA_MAX_REQUESTS:-5000}
+    GSIE_GUNICORN_MAX_REQUESTS_JITTER: ${GSIE_HA_MAX_REQUESTS_JITTER:-5000}
+    GSIE_GRACEFUL_DRAIN_FILE: /tmp/gsie-draining
+    GSIE_EDGE_PROXY_MODE: direct
+    GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+    GSIE_MIGRATION_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+    GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
+    GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
+    GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
+    GSIE_OBJECT_STORAGE_BACKEND: s3
+    GSIE_OBJECT_STORAGE_S3_ENDPOINT: http://minio:9000
+    GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: ${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY:?clé S3 requise}
+    GSIE_OBJECT_STORAGE_S3_SECRET_KEY: ${GSIE_OBJECT_STORAGE_S3_SECRET_KEY:?secret S3 requis}
+    GSIE_OBJECT_STORAGE_S3_REGION: ${GSIE_OBJECT_STORAGE_S3_REGION:-us-east-1}
+    GSIE_OBJECT_STORAGE_S3_BUCKET: ${GSIE_OBJECT_STORAGE_S3_BUCKET:-gsie-assets}
+    GSIE_JWT_PRIVATE_KEY_PATH: /keys/private.pem
+    GSIE_JWT_PUBLIC_KEY_PATH: /keys/public.pem
+    GSIE_AUTH_DEV_LOGIN_ENABLED: "false"
+    GSIE_AUTH_LOCAL_REGISTRATION_ENABLED: "true"
+    GSIE_GOOGLE_OAUTH_CLIENT_IDS: "[]"
+    GSIE_DATA_REGISTRY_HEALTH_SCHEDULER_ENABLED: "false"
+    GSIE_RATE_LIMIT_ENABLED: "true"
+    GSIE_OTEL_ENABLED: "false"
+  volumes:
+    - ./keys:/keys:ro
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  healthcheck:
+    test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 40s
+  stop_grace_period: 45s
+  networks:
+    - gsie
+
+services:
+  api-ha-a:
+    <<: *api-ha
+    container_name: api-ha-a
+
+  api-ha-b:
+    <<: *api-ha
+    container_name: api-ha-b
+
+  edge:
+    image: haproxy:3.2-alpine@sha256:79799e8b2977e60802774fa53d29e6b54e045402cdd8a8b9fe43923e7095a047
+    container_name: api-ha-edge
+    ports:
+      - "127.0.0.1:${GSIE_HA_EDGE_PORT:-8088}:8080"
+    volumes:
+      - ./docker/ha/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    read_only: true
+    tmpfs:
+      - /var/lib/haproxy:rw,noexec,nosuid,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      api-ha-a:
+        condition: service_healthy
+      api-ha-b:
+        condition: service_healthy
+    networks:
+      - gsie
+
+networks:
+  gsie:
+    external: true
+    name: ${GSIE_HA_NETWORK:-api_default}
