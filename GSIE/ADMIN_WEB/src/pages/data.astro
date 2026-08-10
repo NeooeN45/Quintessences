@@ -1,0 +1,22 @@
+---
+import AdminLayout from "../layouts/AdminLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import DataCatalogPanel from "../components/DataCatalogPanel.tsx";
+import { ToastProvider } from "../components/ToastProvider.tsx";
+import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+---
+
+<AdminLayout title="Catalogue datasets">
+  <div class="space-y-6">
+    <PageHeader
+      title="Catalogue datasets"
+      description="Projection du Data Registry GSIE — licence, domaines et versions restent décidés côté serveur."
+    />
+
+    <ToastProvider client:load>
+      <ErrorBoundary>
+        <DataCatalogPanel client:load />
+      </ErrorBoundary>
+    </ToastProvider>
+  </div>
+</AdminLayout>

@@ -203,6 +203,14 @@ class Settings(BaseSettings):
     redis_connect_timeout: float = 5.0
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
+    # Scheduler Data Registry — fermé par défaut, distribué via verrou Redis.
+    data_registry_health_scheduler_enabled: bool = False
+    data_registry_health_manifest_path: str = "/app/data/REGISTRY_MANIFEST.json"
+    data_registry_health_interval_seconds: float = Field(default=3600.0, ge=300.0)
+    data_registry_health_timeout_seconds: float = Field(default=30.0, ge=1.0, le=120.0)
+    data_registry_health_max_concurrency: int = Field(default=1, ge=1, le=4)
+    data_registry_health_max_bytes: int = Field(default=1024 * 1024, ge=1024, le=32 * 1024 * 1024)
+    data_registry_health_lock_ttl_seconds: int = Field(default=600, ge=120, le=3600)
     # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
     # En développement/test, "memory://" est utilisé (pas de Redis requis)
     rate_limit_storage_url: str = "memory://"
@@ -233,9 +241,17 @@ class Settings(BaseSettings):
     ws_allowed_origins: list[str] = ["*"]  # CORS WS — restreindre en prod
 
     # Object Storage (ADR-006)
+    object_storage_backend: Literal["local", "s3"] = "local"
     object_storage_local_path: str = "./data/assets"
     object_storage_s3_endpoint: str | None = None
+    object_storage_s3_access_key: SecretStr = SecretStr("")
+    object_storage_s3_secret_key: SecretStr = SecretStr("")
+    object_storage_s3_region: str = "us-east-1"
     object_storage_s3_bucket: str = "gsie-assets"
+    object_storage_s3_server_side_encryption: Literal["AES256", "aws:kms"] | None = None
+    object_storage_s3_multipart_chunk_size: int = Field(
+        default=8 * 1024 * 1024, ge=5 * 1024 * 1024, le=512 * 1024 * 1024
+    )
 
     # Auth — JWT RS256 (DEC-000019)
     jwt_algorithm: Literal["RS256"] = "RS256"
@@ -429,7 +445,36 @@ class Settings(BaseSettings):
                     )
                 if not self.smtp_use_tls and not self.smtp_starttls:
                     raise ValueError("Le transport SMTP doit être chiffré en staging/production")
+        if self.object_storage_backend == "s3":
+            self._validate_s3_storage_configuration()
+            if (
+                self.environment in ("staging", "production")
+                and not self.object_storage_s3_server_side_encryption
+            ):
+                raise ValueError("Chiffrement serveur S3 requis en staging/production")
+        elif self.environment in ("production", "staging"):
+            raise ValueError("S3 object storage is required in staging/production")
         return self
+
+    def _validate_s3_storage_configuration(self) -> None:
+        """Valide les paramètres S3 avant toute création de client réseau."""
+        endpoint = (self.object_storage_s3_endpoint or "").strip()
+        access_key = self.object_storage_s3_access_key.get_secret_value().strip()
+        secret_key = self.object_storage_s3_secret_key.get_secret_value().strip()
+        if not all((endpoint, self.object_storage_s3_bucket.strip(), access_key, secret_key)):
+            raise ValueError(
+                "S3 endpoint, bucket, access_key et secret_key sont requis pour le stockage S3"
+            )
+        parsed = urlparse(endpoint)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("S3 endpoint doit être une URL HTTP(S) valide")
+        insecure_dev_hosts = {"localhost", "127.0.0.1", "minio"}
+        if parsed.scheme != "https" and (
+            self.environment != "development" or parsed.hostname not in insecure_dev_hosts
+        ):
+            raise ValueError(
+                "HTTPS obligatoire pour le endpoint S3 hors MinIO/local en développement"
+            )
 
 
 # --- Chiffrement .env (audit sécurité P1-1) -------------------------------

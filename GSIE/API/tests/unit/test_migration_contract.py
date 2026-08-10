@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+import sqlalchemy as sa
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 
@@ -11,7 +12,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260806_0043"
+_HEAD = "20260810_0047"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -79,6 +80,16 @@ def test_modeles_legacy_isoles_du_schema_courant() -> None:
     assert expected_new_tables <= set(Base.metadata.tables)
     assert frozenset(LegacyBase.metadata.tables) == _LEGACY_TABLES
     assert frozenset(Base.metadata.tables).isdisjoint(_LEGACY_TABLES)
+
+
+def test_data_asset_accepte_les_assets_volumineux_et_refuse_les_tailles_negatives() -> None:
+    """Le registre d'octets doit dépasser la limite d'un INTEGER PostgreSQL."""
+    table = Base.metadata.tables["data_asset"]
+
+    assert isinstance(table.c.size_bytes.type, sa.BigInteger)
+    assert any(
+        constraint.name == "ck_data_asset_size_non_negative" for constraint in table.constraints
+    )
 
 
 def test_migration_sync_force_rls_et_interdit_la_suppression_physique() -> None:

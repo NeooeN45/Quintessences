@@ -37,20 +37,38 @@ services:
       # `docker exec` déclenché par scripts/pgbackrest_backup.sh). La
       # passphrase ne figure jamais dans docker/pgbackrest.conf.
       PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS:?PGBACKREST_REPO1_CIPHER_PASS requis dans .env, generer avec openssl rand -base64 48}
-    command: >
-      postgres
-      -c shared_preload_libraries=age,pg_stat_statements,pgaudit
-      -c search_path=ag_catalog,public,tiger
-      -c max_connections=100
-      -c wal_level=replica
-      -c archive_mode=on
-      -c "archive_command=pgbackrest --stanza=gsie archive-push %p"
-      -c archive_timeout=300
-      -c max_wal_senders=6
-      -c pg_stat_statements.track=all
-      -c pg_stat_statements.max=5000
-      -c pgaudit.log=ddl,write,role
-      -c pgaudit.log_parameter=on
+    # Liste YAML volontairement explicite : des commentaires dans un bloc
+    # scalaire `>` deviennent des arguments PostgreSQL (et font échouer le
+    # conteneur au redémarrage).
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=age,pg_stat_statements,pgaudit
+      - -c
+      - search_path=ag_catalog,public,tiger
+      - -c
+      - max_connections=100
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - "archive_command=pgbackrest --stanza=gsie archive-push %p"
+      - -c
+      - archive_timeout=300
+      - -c
+      - max_wal_senders=6
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - pg_stat_statements.max=5000
+      - -c
+      - pgaudit.log=ddl,write,role
+      # Les valeurs SQL peuvent contenir données personnelles, jetons ou
+      # secrets. L'audit conserve l'opération et le rôle sans journaliser les
+      # paramètres.
+      - -c
+      - pgaudit.log_parameter=off
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -98,6 +116,11 @@ services:
       --maxmemory-policy allkeys-lru
       --appendonly yes
       --appendfsync everysec
+    # L'image Redis exécute son entrypoint avec l'utilisateur root avant de
+    # basculer vers UID 999. Avec cap_drop=ALL, root ne peut pas traverser le
+    # répertoire AOF 0700 ; démarrer directement avec le propriétaire du
+    # volume conserve le durcissement sans ajouter DAC_OVERRIDE.
+    user: "999:1000"
     expose:
       - "6379"
     # Accès depuis l'API lancée sur le host en dev local (dev-only).
@@ -117,11 +140,76 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 512M
+
+  # MinIO — stockage objet S3 local pour le développement
+  # Les ports sont bindés sur localhost : aucun accès externe au daemon.
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${GSIE_MINIO_ROOT_USER:?GSIE_MINIO_ROOT_USER requis dans .env}
+      MINIO_ROOT_PASSWORD: ${GSIE_MINIO_ROOT_PASSWORD:?GSIE_MINIO_ROOT_PASSWORD requis dans .env}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - gsie_miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # Initialisation idempotente du bucket S3 de développement.
+  # Le runtime API n'a pas besoin du droit de créer des buckets.
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${GSIE_OBJECT_STORAGE_S3_BUCKET}" &&
+        printf '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket"],"Resource":["arn:aws:s3:::%s"]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:AbortMultipartUpload","s3:ListMultipartUploadParts"],"Resource":["arn:aws:s3:::%s/*"]}]}' "$${GSIE_OBJECT_STORAGE_S3_BUCKET}" "$${GSIE_OBJECT_STORAGE_S3_BUCKET}" > /tmp/policy.json &&
+        (mc admin policy remove local gsie-object-storage >/dev/null 2>&1 || true) &&
+        mc admin policy create local gsie-object-storage /tmp/policy.json &&
+        (mc admin user info local "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}" >/dev/null 2>&1 || mc admin user add local "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}" "$${GSIE_OBJECT_STORAGE_S3_SECRET_KEY}") &&
+        mc admin policy attach local gsie-object-storage --user "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}"
+    environment:
+      MINIO_ROOT_USER: ${GSIE_MINIO_ROOT_USER:?GSIE_MINIO_ROOT_USER requis dans .env}
+      MINIO_ROOT_PASSWORD: ${GSIE_MINIO_ROOT_PASSWORD:?GSIE_MINIO_ROOT_PASSWORD requis dans .env}
+      MC_CONFIG_DIR: /tmp/mc
+      GSIE_OBJECT_STORAGE_S3_BUCKET: ${GSIE_OBJECT_STORAGE_S3_BUCKET:-gsie-assets}
+      GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: ${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY:?GSIE_OBJECT_STORAGE_S3_ACCESS_KEY requis dans .env}
+      GSIE_OBJECT_STORAGE_S3_SECRET_KEY: ${GSIE_OBJECT_STORAGE_S3_SECRET_KEY:?GSIE_OBJECT_STORAGE_S3_SECRET_KEY requis dans .env}
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./docker/minio-object-storage-policy.json.tmpl:/policy/template.json:ro
+    tmpfs:
+      - /tmp
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   # API FastAPI — Gunicorn + UvicornWorker
   # Durcissement : read-only rootfs, no-new-privileges, cap_drop ALL
@@ -141,6 +229,21 @@ services:
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
       GSIE_EDGE_PROXY_MODE: ${GSIE_EDGE_PROXY_MODE:-direct}
+      # En développement Docker, MinIO est disponible sur le réseau Compose.
+      GSIE_OBJECT_STORAGE_BACKEND: ${GSIE_OBJECT_STORAGE_BACKEND:-s3}
+      GSIE_OBJECT_STORAGE_S3_ENDPOINT: ${GSIE_OBJECT_STORAGE_S3_ENDPOINT:-http://minio:9000}
+      GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: ${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY:-gsie-minio}
+      GSIE_OBJECT_STORAGE_S3_SECRET_KEY: ${GSIE_OBJECT_STORAGE_S3_SECRET_KEY:?GSIE_OBJECT_STORAGE_S3_SECRET_KEY requis dans .env}
+      GSIE_OBJECT_STORAGE_S3_REGION: ${GSIE_OBJECT_STORAGE_S3_REGION:-us-east-1}
+      GSIE_OBJECT_STORAGE_S3_BUCKET: ${GSIE_OBJECT_STORAGE_S3_BUCKET:-gsie-assets}
+      GSIE_OBJECT_STORAGE_S3_MULTIPART_CHUNK_SIZE: ${GSIE_OBJECT_STORAGE_S3_MULTIPART_CHUNK_SIZE:-8388608}
+      GSIE_DATA_REGISTRY_HEALTH_SCHEDULER_ENABLED: ${GSIE_DATA_REGISTRY_HEALTH_SCHEDULER_ENABLED:-false}
+      GSIE_DATA_REGISTRY_HEALTH_MANIFEST_PATH: /app/data/REGISTRY_MANIFEST.json
+      GSIE_DATA_REGISTRY_HEALTH_INTERVAL_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_INTERVAL_SECONDS:-3600}
+      GSIE_DATA_REGISTRY_HEALTH_TIMEOUT_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_TIMEOUT_SECONDS:-30}
+      GSIE_DATA_REGISTRY_HEALTH_MAX_CONCURRENCY: ${GSIE_DATA_REGISTRY_HEALTH_MAX_CONCURRENCY:-1}
+      GSIE_DATA_REGISTRY_HEALTH_MAX_BYTES: ${GSIE_DATA_REGISTRY_HEALTH_MAX_BYTES:-1048576}
+      GSIE_DATA_REGISTRY_HEALTH_LOCK_TTL_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_LOCK_TTL_SECONDS:-600}
       # Exécution sous le compte applicatif, pas sous le propriétaire de la base.
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       # Alembic seul emprunte le compte d'administration : `gsie_application`
@@ -195,6 +298,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
       mailpit:
         condition: service_started
     volumes:
@@ -309,7 +414,7 @@ services:
       - --loglevel
       - info
       - --metrics
-      - 0.0.0.0:2000
+      - 127.0.0.1:2000
       - run
       - --token-file
       - /run/secrets/cloudflare_tunnel_token
@@ -362,6 +467,7 @@ networks:
 volumes:
   gsie_pgdata:
   gsie_redisdata:
+  gsie_miniodata:
   gsie_kuma_data:
   gsie_pgbackrest_repo:
   gsie_pgbackrest_log:

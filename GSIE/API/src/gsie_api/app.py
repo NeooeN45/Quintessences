@@ -35,6 +35,7 @@ from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.core.rbac import require_roles
+from gsie_api.data.router import router as data_registry_router
 from gsie_api.engines.botanical.router import router as botanical_router
 from gsie_api.engines.climate.router import router as climate_router
 from gsie_api.engines.correlation.router import router as correlation_router
@@ -108,6 +109,10 @@ _OPENAPI_TAGS = [
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
     {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
+    {
+        "name": "data-registry",
+        "description": "Data Registry RFC-0038 — catalogue, qualification et couverture",
+    },
     {
         "name": "sync-geosylva",
         "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
@@ -186,9 +191,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await manager.start_redis_subscriber()
     await manager.start_heartbeat()
 
+    health_scheduler = None
+    if _settings.data_registry_health_scheduler_enabled:
+        from gsie_api.data.health_scheduler import DataRegistryHealthScheduler
+
+        health_scheduler = DataRegistryHealthScheduler(_settings)
+        health_scheduler.start()
+
     yield
     logger.info("api_stopping")
     # Graceful shutdown — ferme WebSocket, pools de connexions (P0 résilience)
+    try:
+        if health_scheduler is not None:
+            await health_scheduler.stop()
+    except Exception as exc:
+        logger.error(
+            "data_registry_health_scheduler_shutdown_failed",
+            error_type=type(exc).__name__,
+        )
     try:
         await manager.shutdown()
     except Exception as exc:
@@ -224,6 +244,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "oidc_nonce_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.infrastructure.object_storage import close_object_storage
+
+        await close_object_storage()
+    except Exception as exc:
+        logger.error(
+            "object_storage_shutdown_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )
@@ -394,6 +424,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
     app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(data_registry_router, prefix=_settings.api_v1_prefix)
     app.include_router(organisations_router, prefix=_settings.api_v1_prefix)
     app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)

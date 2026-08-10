@@ -224,6 +224,12 @@ src/gsie_api/
 
 ## Documentation
 
+- [Application du manifeste Data Registry](docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md) —
+  dry-run, application transactionnelle, santé réelle persistée, idempotence
+  et limites `metadata_only`/`FETCH`.
+- [Test réel Data Registry](docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md) —
+  acquisition publique, normalisation, archivage MinIO, round-trip checksum et
+  sélection par le resolver.
 - [Guide d'exploitation Outbox](docs/OUTBOX_EXPLOITATION.md) — cycle de
   vie, métriques Prometheus, procédure de ré-enfilement
 - [Rotation des clés JWT](docs/JWT_KEY_ROTATION.md) — procédure de

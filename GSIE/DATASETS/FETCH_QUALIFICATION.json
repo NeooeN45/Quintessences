@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-08-10",
+  "sources": [
+    {
+      "source_registry_id": "gbif",
+      "status": "blocked_pending_source_scoping",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "La licence doit être résolue pour chaque jeu constitutif avant archivage.",
+        "Les paramètres, quotas et limites d'occurrences restent à borner par cas d'usage."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:gbif-occurrences"]
+    },
+    {
+      "source_registry_id": "ign-apicarto-geopf",
+      "status": "blocked_pending_technical_limits",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "Les endpoints et couches autorisés doivent être énumérés sans URL arbitraire.",
+        "Les quotas, tailles maximales et règles d'attribution doivent être figés."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:ign-apicarto"]
+    },
+    {
+      "source_registry_id": "soilgrids",
+      "status": "blocked_pending_technical_limits",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "Le périmètre de propriétés et de profondeurs doit être borné.",
+        "Les limites de débit, de taille et de cache doivent être qualifiées."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:soilgrids-properties"]
+    },
+    {
+      "source_registry_id": "meteofrance-portail-api",
+      "status": "blocked_pending_credentials_and_quotas",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "Chaque produit souscrit doit être associé à son endpoint et à son quota.",
+        "Les identifiants doivent provenir du gestionnaire de secrets et ne jamais entrer dans le manifeste."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:meteofrance-services"]
+    }
+  ]
+}

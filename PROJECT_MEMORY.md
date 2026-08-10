@@ -6,7 +6,207 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-09 — **Site public : titre du hero réorganisé, fond vidéo, titres animés génériques, page Applications, pages Compte fonctionnelles.** Titre hero regroupé en 3 lignes lisibles (« De la preuve / à la décision / du forestier. ») au lieu d'un mot par ligne. `VideoBackdrop.astro` remplace `AnimatedBackdrop.astro` : vidéo de fond en boucle (fichier à déposer dans `public/video/`, dégradé animé de repli si absente). Nouveau composant générique `AnimatedHeading.tsx` (même animation que le hero) appliqué au H1 de toutes les pages (actualités, galerie, contact, mentions légales, confidentialité, CGU, applications, compte) — un titre court n'anime qu'une ligne, aucun remplissage artificiel. `Skeleton.tsx` (chargement fantôme) appliqué à `LiveStat` et aux captures d'écran d'app. QGISIA retiré de la liste des applications (à la demande du Fondateur). Nouvelle page `/applications/` : présentation détaillée par app (icône, domaine, description, statut, capture d'écran en réserve, lien Google Play — aucun lien inventé, "Bientôt sur Google Play" tant qu'aucune app n'est publiée). Pages **Compte** rendues réellement fonctionnelles (`/compte/inscription/`, `/compte/connexion/`, `/compte/`) contre les vrais endpoints `IDENTITE-001` (`POST /auth/register`, `POST /auth/login/password`, `GET /auth/me`, `POST /auth/logout`) — jetons en sessionStorage (même compromis qu'ADMIN_WEB, documenté SITE-001 §9, non résolu). Vérifié par `npm run build` (13 pages) et navigation en direct sur les pages clés, aucune erreur console pertinente. Voir aussi **SITE-002 v1.1.0 : pivot vers un thème clair exclusif, direction éditoriale inspirée de papacreative.com (décision Fondateur).** Retrait du « sombre par défaut » de la v1.0.0 (`SITE-002` §4.3, `SITE-001` `SITE-X-007` amendée). Nouvelle direction : typographie Space Grotesk (titres/corps) + Space Mono (légendes/nav en capitales espacées), hero en titre empilé sur plusieurs lignes, accent unique (teal sombre `#00786a`, dérivé et assombri du néon mint de la référence pour rester AA sur fond clair), fiches applications façon « case study » (DOMAINE/STATUT). `ThemeToggle` retiré (plus de bascule, thème unique). Contraste re-vérifié après implémentation : `--color-fg-400`/`--color-fg-500` resserrés à ≥4.5:1 sur fond blanc (étaient sous le seuil AA avant correction, mesuré et corrigé en direct). Vérifié par build (`npm run build`, 7 pages) et test navigateur en direct (polices chargées, couleurs et contrastes contrôlés via JS, aucune erreur console). Voir aussi **DEC-000057 : SITE-001/SITE-002 validés, architecture technique et première implémentation du site public livrées.** `SITE-001`/`SITE-002` passent Draft → Validé. Architecture technique produite : `GSIE/ARCHITECTURE/SITE_PUBLIC_ARCHITECTURE.md` (Astro 5 + React 19 + Tailwind 4 + Framer Motion, même stack qu'`GSIE/ADMIN_WEB`). Nouveau projet `site-quintessences/` : zones Landing, Actualités et Contact pleinement implémentées et vérifiées (`npm run build` réussi, 7 pages générées, testé en direct sans erreur console) ; zones Galerie et Compte scaffoldées en état « en construction » explicite tant que leurs prérequis (`SITE-001` §9) ne sont pas résolus. Landing page : hero, chaîne d'intelligence en scrollytelling (7 moteurs), grille des 9 apps interactive (icônes `DEC-000056`), indicateurs live avec état « donnée indisponible » honnête (aucun endpoint public de stats n'existe encore côté API), principes fondateurs. Actualités : 2 entrées réelles publiées via collection Markdown versionnée. Contact : formulaire Turnstile migré depuis `landing-quintessences/` (même limite assumée : la catégorie n'est pas encore routée, seule la vérification Turnstile est réelle). `landing-quintessences/` reste en production sans changement jusqu'à bascule explicite du domaine. Reste à faire : endpoint `GET /public/stats` (API), processus de vérification vie privée avant publication galerie, vérification des hypothèses `IDENTITE-001` pour un client web avant d'implémenter la zone Compte pour de vrai, déploiement Cloudflare Pages (étape humaine). Voir aussi **SITE-001/SITE-002 : spécification et vision créative du site public Quintessences (Draft, en attente de validation Fondateur).** Nouveau dossier `05_SPECIFICATIONS/SITE/` : `SITE_001_SPECIFICATION.md` (exigences fonctionnelles/non-fonctionnelles/sécurité/données pour 5 zones — landing, compte, actualités, galerie, contact) et `SITE_002_VISION_ET_DIRECTION_CREATIVE.md` (identité visuelle, inspirations, moments d'interaction). Remplace à terme `landing-quintessences/` (statique actuel). Dépend de `IDENTITE-001` pour la zone Compte (aucune duplication des exigences d'authentification) et de `DEC-000056` pour les icônes des 9 apps affichées en landing. Risques ouverts identifiés : vie privée sur la galerie drones, endpoint public d'indicateurs live à concevoir, hypothèses `IDENTITE-001` à vérifier pour un client web. Aucun code ni architecture technique produits — hiérarchie documentaire respectée (spécification avant architecture). Voir aussi **DEC-000056 : activation du scaffolding de Terra/Aeris/Atlas (réservées par GSIE-DIR-0009 §3/§227) + icônes des 8 apps clientes.** Le fondateur a fourni des packs d'icônes complets (PNG 48–1024 px, assets Android `mipmap-*`, assets store) pour GeoSylva, Artemis, Ignis, Hydro, Flora, QGISIA et pour les 3 applications futures réservées jamais encore créées : **Terra** (sols/géologie), **Aeris** (atmosphère/météo), **Atlas** (cartographie globale). Les 3 apps sont créées dans `apps/` avec `README.md` + `GSIE_INTEGRATION.md` (statut Planifiée, Phase 4) ; leurs icônes et celles d'Artemis/Flora/Hydro/Ignis sont rangées dans `apps/<App>/branding/icons/` en attente de scaffolding applicatif complet. L'icône de **GeoSylva** (seule app avec un vrai scaffolding Android) est intégrée immédiatement (`drawable-nodpi/app_icon.png`, foreground adaptive icon). RFC-0037 §3.1 et §5.5 amendés (2026-08-09) pour intégrer Terra/Aeris/Atlas au tableau des projections métier et à leurs interconnexions. Voir aussi **Gate 5 Intégration — maillon amont étendu à GBIF et TAXREF** (`GSIE/API/src/gsie_api/engines/botanical/engine.py::query_and_ingest`, `POST /botanical/query-and-ingest` ; `::resolve_taxref_and_ingest`, `POST /botanical/taxref-and-ingest`). Contrairement à PlantNet/SYNOP, GBIF Backbone Taxonomy et TAXREF (MNHN) sont des référentiels taxonomiques officiels consultés directement — `referentiel_officiel`+`referentiel` plafonnent à evidence_level=B → statut accepte, ingestion automatique, comme SoilGrids. `EvidenceKnowledgePipeline` a désormais cinq appelants réels en production. 100% couverture maintenue sur `botanical/engine.py` et `botanical/router.py`. Reste : validation humaine du forestier sur les connaissances PlantNet/SYNOP en quarantaine (Gate 4, hors code). Voir aussi **Gate 5 Intégration — maillon amont étendu à PlantNet et Météo-France** (`GSIE/API/src/gsie_api/engines/botanical/engine.py::identify_and_ingest`, `POST /botanical/identify-and-ingest` ; `GSIE/API/src/gsie_api/engines/climate/engine.py::query_and_ingest`, `POST /climate/query-and-ingest`). Même pattern que le connecteur SoilGrids (voir plus bas) répliqué sur les deux autres sources externes déjà clientes — `EvidenceKnowledgePipeline` a désormais trois appelants réels en production. Différence assumée avec SoilGrids : PlantNet (inférence ML sur une photo) et SYNOP (mesure brute instantanée) plafonnent tous deux à evidence_level=D → statut quarantine systématique (validation humaine requise, CON-001), jamais d'ingestion automatique — c'est la matrice de décision de l'Evidence Engine qui en décide, aucun code spécifique ajouté. 100% couverture maintenue sur `botanical/{engine,router,schemas}.py` et `climate/{engine,router,schemas}.py`. Reste : déduplication (hors périmètre, comme pour SoilGrids), et validation humaine du forestier sur les connaissances en quarantaine (Gate 4, nécessite du terrain réel — hors code). Voir aussi **Gate 5 Intégration — maillon amont livré** (`GSIE/API/src/gsie_api/engines/pedology/engine.py::query_and_ingest`, `POST /pedology/query-and-ingest`). `EvidenceKnowledgePipeline` existait et était testé mais n'avait aucun appelant en production — première source externe réelle (SoilGrids) raccordée de bout en bout : chaque caractéristique de sol devient une connaissance atomique sourcée et versionnée dans le Knowledge Engine (plafond evidence_level=B, statut accepte, sans changement de la matrice de décision), au lieu de rester une valeur transitoire. 100% couverture maintenue sur le code touché ; un branch mort détecté et supprimé (`except KnowledgeEngineError` inatteignable au niveau router). Voir aussi **Limite mémoire du conteneur `api` relevée à 2G** (`docker-compose.yml`, était 768M). Appliquée et vérifiée en direct : au repos, le conteneur tourne désormais à ~1,36 GiB / 2 GiB (68%), contre 725,8 MiB / 768M (94,5%, quasi-OOM) avant correction — marge réelle rétablie. La consommation de base reste élevée (~270 MB/worker × 5 workers gunicorn, dépendances scientifiques lourdes) : à surveiller sous charge de production réelle, `GSIE_GUNICORN_WORKERS` reste un levier si la marge se resserre à nouveau. Voir aussi **Gate 6 Performance — benchmark charge concurrente** (`GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md`, `scripts/load_test_concurrent.py`) qui a détecté le problème : pool DB (`DEC-000037`) validé empiriquement pour la première fois (dégradation gracieuse à 24 sessions contre une capacité de 14, zéro erreur), rate limiting confirmé sous rafale concurrente, latences absolues non transposables (artefact Docker Desktop/Windows, à re-mesurer sur l'hôte Linux de production). Voir aussi **MFA administrateur obligatoire implémenté** (gate Sécurité, ROADMAP §3). Un compte avec le rôle `admin` sans MFA actif ne reçoit plus jamais de token complet — jeton restreint `mfa_setup_required` (15 min, `core/auth.py`), rejeté partout sauf `/mfa/setup`+`/mfa/verify` (`get_current_user_or_mfa_setup`), jamais de blocage du compte. Enforcement centralisé dans `_issue_tokens` (choke point unique, tous fournisseurs). Guide `GSIE/API/docs/GOOGLE_OAUTH_PRODUCTION_SETUP.md` produit pour l'étape humaine restante (Google Cloud Console). 100% couverture maintenue (13 194 stmts), 2555 tests, ruff/mypy verts. Voir aussi **P0-1 Sauvegardes DB pgBackRest + WAL archiving implémenté et validé en direct** sur la base de dev réelle (52 MB, 151 tables) : stanza-create online, archivage WAL, sauvegarde complète chiffrée AES-256-CBC (52→5,8 MB), restauration isolée avec promotion et parité exacte. 2 bugs corrigés dans le template DEC-000037 (`pg1-host` SSH au lieu de `pg1-socket-path` local ; rôle `gsie_migrator` jamais câblé au lieu de `gsie` réel) et 1 dans la config (`repo1-cipher-pass=${VAR}` non interprété — passphrase lue depuis l'environnement). Reste : rebuild `Dockerfile.db` pour figer pgbackrest dans l'image (bloqué ponctuellement par un problème réseau sans lien avec pgBackRest), repo2 S3. Voir `GSIE/API/docs/BACKUP_RESTORE.md` et `GSIE/DOCUMENTATION/DR-RESTAURATION.md` §3.5. Voir aussi **Tests unitaires 100 % coverage + master test**. La suite `tests/unit` couvre désormais 100 % de `src/gsie_api` (13 170 statements). Garde-fous ajoutés : `tool.coverage.report.fail_under = 100` dans `pyproject.toml`, `scripts/run-master-tests.ps1/.sh` (lint + mypy + tests 100 % + mutation optionnelle), `cov-fail-under=100` dans `.github/workflows/ci.yml`. Voir aussi **Pentest authentification/connexion — clos** (`PENTEST_AUTH_CONNEXION_2026-08-07.md`) : 3 constats Moyens corrigés (IP réelle via `get_client_address()`, lockout par compte, nonce OIDC générique). 2545 tests unitaires passants, 63 skipped. Voir aussi **Pentest défensif post-déploiement** (`SECURITY_AUDIT_2026-08-07.md`) : CAA, HSTS preload (pending), Worker rate-limiter, `/metrics` protégé. |
+| **Dernière mise à jour** | 2026-08-10 — **Data Registry clôturé techniquement : preuve unique, CI PostgreSQL/MinIO, scheduler borné, qualification FETCH fermée et redéploiement sain.** |
+
+### Graphes Mermaid de synthèse (2026-08-10)
+
+Site statique `graphes-quintessences/` : 13 diagrammes Mermaid répartis en
+4 catégories (Écosystème, Gouvernance, Progression, Infrastructure), sourcés
+depuis `README.md`, `PROJECT_MEMORY.md`, `ROADMAP.md`, `03_DECISIONS/` et
+`GSIE/ARCHITECTURE/` (Server/Territorial Mesh, Identité). Généré par
+`generate_site.py` (stdlib Python, ruff + mypy strict) depuis des fichiers
+`.mmd` + `meta.json`. Site : sidebar par catégorie avec compteurs, filtres +
+recherche combinés, thème clair/sombre persistant, zoom/pan, plein écran,
+export SVG, bascule code source, copie du code. Port 4300. Skill Devin
+`.devin/skills/graphes-progression/` pour maintenir les graphes
+automatiquement après chaque grosse progression.
+
+### Manifeste Data Registry (2026-08-10)
+
+Le manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json`, sa validation
+et son service d'application transactionnel sont livrés. Les quatre sources
+GBIF, IGN, SoilGrids et Météo-France restent `metadata_only` : 32 ressources
+de provenance/catalogue ont été créées en base, puis un rejeu a produit 0
+création et 0 mise à jour. Le `dry-run` est le défaut ; SCI-001, licences,
+URLs, domaines, statuts et champs immuables restent contrôlés. Quatre
+snapshots de santé réels ont créé exactement quatre `DatasetHealth`; leur
+rejeu n'a créé aucun doublon. Voir
+`GSIE/API/docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md`.
+
+La clôture formelle ajoute une commande unique de preuve (151 Data Registry,
+103 P0/P1, 121 infrastructure/lifespan), un job CI PostgreSQL/PostGIS/AGE +
+MinIO et un scheduler de santé sous verrou Redis. Le scheduler est embarqué
+mais reste désactivé par défaut. Les quatre décisions du registre
+`FETCH_QUALIFICATION.json` sont fail-closed ; aucun octet brut fournisseur
+n'est téléchargé. Les images ont été reconstruites et l'API redéployée :
+`/health` et `/ready` sont sains, le smoke réel MinIO a relu le même SHA-256
+puis supprimé l'objet. Voir
+`GSIE/API/docs/data/GSIE_DATA_REGISTRY_CLOTURE_2026-08-10.md`.
+
+### Surface site admin Data Registry (2026-08-10)
+
+Le site `GSIE/ADMIN_WEB` expose désormais `/data`, une île React qui lit
+`GET /api/v1/data/catalog` avec la session existante, recherche par texte et
+filtre par domaine. L'interface n'a pas de données mockées et affiche
+explicitement un catalogue vide tant que le manifeste n'est pas appliqué en
+base. `astro check` reste sans erreur et le build produit 13 routes ; les
+avertissements restants sont préexistants (imports inutilisés/Cell Recharts).
+
+### Audit contrat GeoSylva ↔ Data Registry (2026-08-10)
+
+La synchronisation parcellaire GeoSylva existante reste séparée du Data
+Registry : upsert/delete/pull versionnés, idempotence par `operation_id`,
+conflit HTTP 409 et protection des modifications locales. Le mobile ne sera
+branché sur `POST /api/v1/data/resolve` qu'après application idempotente du
+manifeste, contrôles `DatasetHealth`, puis endpoint de pack avec checksum et
+droits offline. Aucun fichier du dépôt Android externe n'a été modifié dans
+cette passe. Voir `GSIE/API/docs/data/GEOSYLVA_DATA_REGISTRY_MIGRATION_PHASE7.md`.
+
+### Data Selection Engine (2026-08-10)
+
+La route authentifiée `POST /api/v1/data/resolve` est livrée. Le resolver
+`data-resolver-1` applique les contraintes avant le classement, conserve les
+blocages par candidat, calcule les préférences de fraîcheur/qualité/offline de
+manière versionnée et n'autorise un fallback que sur demande explicite. Il ne
+contacte aucun fournisseur et ne renvoie aucune URL sensible. Les quatre
+distributions du manifeste disposent maintenant d'un premier
+`DatasetHealth` réel. Les `QualityAssessment` complets restent à alimenter ;
+un catalogue vide produit une décision vide explicable. Voir
+`GSIE/API/docs/data/GSIE_DATA_RESOLVER_PHASE5.md`.
+
+### Stabilisation Docker et bootstrap Data Registry (2026-08-10)
+
+Le build Docker fonctionne avec validation TLS stricte malgré l'inspection
+HTTPS Kaspersky : les Dockerfiles acceptent l'autorité locale uniquement via
+un secret BuildKit éphémère, `UV_SYSTEM_CERTS=true` aligne `uv` sur le magasin
+Debian et `GSIE/API/scripts/build_images.ps1` construit `api-db`, `api-api` et
+`api-outbox-worker` sans incorporer le certificat. Les volumes existants ont
+été conservés. Le Compose corrige aussi le bloc de commande PostgreSQL, le
+démarrage Redis sous son UID de volume et l'initialiseur MinIO sans dépendance
+à `sed`.
+
+Les services Docker sont opérationnels : API `/health` et `/ready` 200,
+PostgreSQL head `20260810_0047`, Redis, MinIO, outbox-worker, Mailpit et
+Uptime Kuma sains ; le bucket `gsie-assets` et la politique runtime ont été
+créés. La génération de la politique est corrigée : le bucket est injecté dans
+le format `printf` (aucun ARN littéral `%s`). Les identifiants MinIO de
+développement restent dans `.env.enc`.
+
+La migration `0047` replace les enums Registry dans `public`; un cycle réel
+sur base jetable `upgrade → downgrade 0044 → upgrade` est passé. Le bootstrap
+`gsie_api.data.bootstrap` enregistre explicitement GBIF, IGN,
+SoilGrids et Météo-France sans instancier de client au démarrage. La campagne
+`AdapterHealthService` est séquentielle, corrélée par `trace_id`, redige les
+exceptions et produit `unknown/OFFLINE_MODE` hors ligne. La table append-only
+`DatasetHealth` contient quatre observations `healthy`; le même snapshot est
+dédupliqué. Le futur job périodique ajoutera de nouvelles observations
+horodatées.
+
+### Test réel acquisition → stockage → normalisation (2026-08-10)
+
+La campagne `GSIE/API/scripts/test_data_registry_e2e.py` a exécuté les quatre
+adapters sur des réponses publiques réelles : GBIF (1 taxon), IGN (altitude),
+SoilGrids (profil couvert) et Météo-France (96 départements). Les quatre
+sorties ont été normalisées, archivées temporairement dans MinIO, relues avec
+égalité octet à octet et SHA-256 identique, puis consommées par une projection
+métier et sélectionnées par `data-resolver-1`. Résultat final : **4/4, cleanup
+ok**, sans objet `e2e` restant. La preuve détaillée et les empreintes sont dans
+`GSIE/API/docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md`.
+
+Le point Paris sans couche SoilGrids a été conservé comme contrôle de
+non-imputation ; le test utilise un point français couvert. Les adapters ne
+déclarent encore que `QUERY`/`NORMALIZE` : l'archivage des octets bruts et la
+création de `DataAsset` restent à qualifier. `DatasetHealth` est maintenant
+persisté séparément et de façon idempotente.
+
+### Mise à jour — DataAsset/API (2026-08-10)
+
+Le CRUD générique protège désormais les métadonnées `DataAsset` : taille
+entière non négative, checksum cohérent avec l’algorithme déclaré, URI
+autorisées et absence d’identifiants. `size_bytes` est en `BIGINT` avec la
+contrainte `ck_data_asset_size_non_negative` (`20260810_0045`). Le stockage
+local renvoie un identifiant opaque `local:///…` et refuse les URLs présignées,
+afin de ne jamais divulguer un chemin serveur. Les scénarios d’intégration
+PostgreSQL couvrent un asset supérieur à 2 Gio et le rejet de `file://` ; ils
+restent à exécuter sur Docker.
+
+### Relecture et adoption — Data Registry (2026-08-10)
+
+Après la passe de cohérence, `RFC-0038` v1.2.0 est validée et `DEC-000059`
+adoptée par le Fondateur. Le contrat distingue explicitement le fournisseur
+(projection `Agent`/`Source`/`Citation`), les droits de dataset et les droits
+RGPD, la couverture spatiale, la santé par distribution, les transitions
+récupérables, la qualification Registry A–F distincte des assertions, le
+vocabulaire de domaines versionné et les contraintes de recherche `Evidence
+Level`/grain/licence.
+L’audit complémentaire est synchronisé en v1.7.0. La première tranche Phase 2
+est implémentée : modèles et migration `20260810_0046`, cycle de vie
+`DatasetStatus`, droits d’usage, santé par distribution, DTOs stricts,
+curseurs opaques et `DataRegistryService` read-only. Les routes
+`/api/v1/data/catalog`, `datasets/{id}`, `providers`, `search`, `health` et
+`coverage` sont authentifiées, rate-limités et protégées par RBAC. Les 39 tests
+ciblés passent, avec Ruff et mypy stricts. Les adapters, le bootstrap et le
+resolver sont désormais livrés ; la persistance périodique de santé, le cache
+partagé et l'application du manifeste restent séquencés.
+
+### Phase 3 — Contrat et façades des adapters (2026-08-10)
+
+Le contrat commun `DataSourceAdapter` et `AdapterPluginRegistry` est livré dans
+`GSIE/API/src/gsie_api/data/adapters.py`. Les descripteurs imposent les
+capacités déclarées, l’allowlist d’hôtes, les bornes de taille/timeout et des
+objets d’échange immuables ; les appels non déclarés et les factories
+incohérentes sont refusés. `GBIFAdapter`, `IGNAdapter`, `SoilGridsAdapter` et
+`MeteoFranceAdapter` sont disponibles mais ne sont pas enregistrés par défaut.
+Ils délèguent aux clients résilients existants, refusent les paramètres
+incomplets, retournent `unknown` en mode offline et convertissent les pannes en
+statuts stables. Les 29 tests de contrat/façades passent, sans appel réseau.
+
+### Phase 4 — Plateforme de données GSIE (2026-08-09)
+
+La Phase 1 du plan Data Registry est livrée côté stockage objet : `S3Storage`
+fonctionne avec `aiobotocore==3.7.0` pour MinIO/AWS S3, avec upload multipart
+par blocs, checksum SHA-256, lecture en flux, lecture par plages, HEAD,
+suppression, URLs présignées et validation stricte des clés. `DataAsset` porte
+désormais `storage_uri` et `checksum_algorithm` via la migration réversible
+`20260809_0044`. MinIO est disponible dans le Compose de développement, mais le
+smoke test réel reste à exécuter sur un daemon Docker/Linux ; les tests unitaires
+utilisent un faux client asynchrone et restent indépendants de Docker.
+
+Les formats et technologies retenus pour la suite sont : STAC en projection de
+catalogue géospatial ; COG, GeoParquet, COPC et Zarr pour les assets ;
+DuckDB/Polars/PyArrow comme baseline CPU ; cuDF/Dask-cuDF/cuSpatial comme
+accélération GPU optionnelle après benchmark ; Iceberg, DataFusion, cuFile et
+cuObject comme pistes différées. Voir `GSIE-DATA-RESEARCH-0001` et l’audit
+`GSIE/API/docs/data/GSIE_DATA_ARCHITECTURE_AUDIT.md` v1.9.0.
+
+La Phase 2 est désormais cadrée par `DEC-000059` Validated : `RFC-0038` définit
+le Data Registry, la séparation Agent/Source/Dataset, les statuts,
+DatasetHealth, le lineage et la projection STAC. La tranche Registry/API, le
+contrat/registre lazy, les quatre façades fournisseurs, le bootstrap contrôlé
+et le resolver sont livrés ; les contrôles périodiques de santé et
+l'application du manifeste restent à réaliser par tranches conformément au
+§13 de la RFC adoptée.
+
+La migration Docker a été appliquée et vérifiée jusqu’à `20260810_0046` : deux
+tables satellites, deux enums, les sept colonnes de version et la clé étrangère
+composite santé → distribution sont présents. Le smoke test Alembic retourne
+`20260810_0046 (head)`.
+
+Audit sécurité 2026-08-10 : les paramètres SQL ne sont plus journalisés,
+l’API MinIO emploie un compte runtime distinct limité au bucket, les URI
+`file://` ne sont plus exposables et les URLs présignées sont limitées à quinze
+minutes. Les 85 tests ciblés sont verts ; le smoke test MinIO réel reste requis.
+Voir `GSIE/API/docs/SECURITY_AUDIT_2026-08-10.md` et
+`GSIE/API/docs/data/GSIE_DATA_ADAPTER_CONTRACT_PHASE3.md`.
+
+### Bilan hebdomadaire — 2026-08-03 → 2026-08-10
+
+La synthèse traçable des sept derniers jours relie les commits, le code, les
+preuves, les décisions/RFC et les travaux encore non commités :
+`GSIE/DOCUMENTATION/BILAN_HEBDOMADAIRE_2026-08-03_2026-08-10.md`. Elle confirme
+les livraisons API, GeoSylva, sécurité, sauvegarde, connecteurs et site public,
+et distingue explicitement les éléments en revue ou dépendants de Docker et
+des configurations opérateur.
 
 ### État de l'Orchestre GSIE (2026-08-09)
 

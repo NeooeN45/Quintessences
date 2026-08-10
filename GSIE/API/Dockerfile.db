@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # Dockerfile DB — PostgreSQL 16 + PostGIS 3.4 + Apache AGE
 # Construit Apache AGE par-dessus l'image postgis/postgis officielle.
 # AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
@@ -24,6 +25,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-16-pgvector \
     pgbackrest \
     && rm -rf /var/lib/apt/lists/*
+
+# Environnement avec inspection HTTPS (par exemple Kaspersky) : l'autorité
+# locale est fournie uniquement comme secret BuildKit et n'est jamais copiée
+# dans le contexte ni conservée dans l'image finale. Sans secret, le build
+# utilise le magasin de certificats standard de Debian.
+RUN --mount=type=secret,id=gsie_host_ca,target=/run/secrets/gsie_host_ca,required=false \
+    if [ -s /run/secrets/gsie_host_ca ]; then \
+        install -m 0644 /run/secrets/gsie_host_ca /usr/local/share/ca-certificates/gsie-host-ca.crt; \
+        update-ca-certificates; \
+    fi
 
 # Téléchargement et compilation d'Apache AGE
 RUN curl --fail --location --output "${AGE_PACKAGE}-src.tar.gz" "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \

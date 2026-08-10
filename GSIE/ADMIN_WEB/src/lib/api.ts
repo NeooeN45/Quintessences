@@ -46,6 +46,27 @@ export interface ResourceList {
   page_size: number;
 }
 
+// --- Data Registry (RFC-0038) ---
+
+export interface DatasetSummary {
+  id: string;
+  slug: string | null;
+  title: string;
+  description: string;
+  publisher_id: string | null;
+  purpose: "production" | "training" | "evaluation" | "reference";
+  topic: string | null;
+  primary_domain: string | null;
+  domains: string[];
+  tags: string[];
+  domain_vocabulary_version: string | null;
+}
+
+export interface DataCatalogResponse {
+  items: DatasetSummary[];
+  page: { limit: number; next_cursor: string | null };
+}
+
 // --- Session management ---
 
 const SESSION_KEY = "gsie_admin_session";
@@ -303,6 +324,10 @@ export async function getResources(
   });
   if (type) params.set("type", type);
   return request<ResourceList>(`/resources?${params}`);
+}
+
+export async function getDataCatalog(limit = 100): Promise<DataCatalogResponse> {
+  return request<DataCatalogResponse>(`/data/catalog?limit=${limit}`);
 }
 
 // --- Engines status ---

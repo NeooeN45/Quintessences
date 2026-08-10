@@ -53,6 +53,11 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "require_rust_backend": True,
         "db_ssl_mode": "require",
         "mfa_encryption_key": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        "object_storage_backend": "s3",
+        "object_storage_s3_endpoint": "https://s3.example.com",
+        "object_storage_s3_access_key": "test-access",
+        "object_storage_s3_secret_key": "test-secret",
+        "object_storage_s3_server_side_encryption": "AES256",
     } | overrides
 
 
@@ -94,6 +99,18 @@ def should_accept_redis_with_password_in_production():
     """Settings doit accepter Redis avec mot de passe en production."""
     settings = Settings(**_production_kwargs())
     assert "secret" in settings.redis_url
+
+
+def should_reject_incomplete_s3_configuration_in_production():
+    """Un stockage S3 incomplet doit échouer avant la création du client."""
+    with pytest.raises(ValidationError, match="endpoint, bucket, access_key et secret_key"):
+        Settings(**_production_kwargs(object_storage_s3_bucket=""))
+
+
+def should_reject_non_http_s3_endpoint_in_production():
+    """Un endpoint S3 doit utiliser HTTP(S) et porter un hôte."""
+    with pytest.raises(ValidationError, match=r"S3 endpoint doit être une URL HTTP\(S\)"):
+        Settings(**_production_kwargs(object_storage_s3_endpoint="ftp://s3.example.com"))
 
 
 def should_reject_wildcard_ws_origins_in_production():

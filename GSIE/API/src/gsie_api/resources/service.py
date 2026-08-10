@@ -22,7 +22,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
+from gsie_api.data.lifecycle import InvalidDatasetTransition, transition_status
 from gsie_api.infrastructure.models import RESOURCE_TYPES, ResourceModel
+from gsie_api.infrastructure.models.enums import DatasetStatus
 from gsie_api.infrastructure.models.outbox import OutboxEvent
 from gsie_api.infrastructure.models.temporal_engine import (
     ResourceDiffModel,
@@ -606,8 +608,21 @@ class ResourceService:
         qu'aucune mutation partielle ni aucun événement ne survive à l'échec.
         """
         errors = validate_resource_payload(raw_data)
-        final_state = {**self._current_state(type_instance), **safe_data}
+        current_state = self._current_state(type_instance)
+        final_state = {**current_state, **safe_data}
         errors.extend(validate_resource_state(type_name, final_state))
+        if type_name == "dataset_version" and "status" in safe_data:
+            current_status = current_state.get("status")
+            target_status = safe_data["status"]
+            if (
+                current_status != target_status
+                and isinstance(current_status, DatasetStatus | str)
+                and isinstance(target_status, DatasetStatus | str)
+            ):
+                try:
+                    transition_status(current_status, target_status)
+                except InvalidDatasetTransition as exc:
+                    errors.append(f"DATASET_STATUS_TRANSITION_INVALID: {exc}")
         if not errors:
             return
 

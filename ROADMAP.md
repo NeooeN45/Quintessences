@@ -1,5 +1,157 @@
 # ROADMAP — Quintessences / GSIE
 
+## Manifeste Data Registry (2026-08-10)
+
+- Manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json` livré pour les
+  quatre sources déjà consommées par les adapters ; toutes les entrées sont
+  explicitement `metadata_only`.
+- Porte `gsie_api.ingestion.manifest` : identité unique, domaines versionnés,
+  licence alignée sur SCI-001, URLs HTTPS sûres, refus des sources restreintes
+  pour `archive_copy` et contrôle des packs offline.
+- CLI de validation et service transactionnel avec `dry-run` par défaut : 32
+  ressources de catalogue créées pour quatre entrées, rejeu à 0 création et
+  0 mise à jour.
+- Collecte santé réelle puis persistance append-only : 4/4 fournisseurs
+  `healthy`, quatre `DatasetHealth`, rejeu identique sans doublon.
+- Import package allégé, validateurs découpés, pool S3 partagé et fermeture
+  au shutdown ; Ruff, mypy strict et suites ciblées verts.
+
+Prochaine étape ordonnée : planifier le job périodique de santé, qualifier
+source par source la capacité `FETCH` et les droits de copie, puis créer les
+premiers `DataAsset` bruts avec checksum avant la migration GeoSylva.
+
+Le site admin expose déjà `/data` et consomme le catalogue réel via
+`GET /api/v1/data/catalog` ; il affiche un état vide explicable tant que le
+manifeste n'est pas appliqué en base.
+
+Le contrat GeoSylva a été audité : la synchronisation parcellaire versionnée
+reste indépendante du Data Registry. La migration mobile est volontairement
+séquencée après l'application du manifeste, la santé des distributions et un
+endpoint de packs contrôlé par checksum/licence.
+
+## Test réel de la chaîne Data Registry (2026-08-10)
+
+La campagne `GSIE/API/scripts/test_data_registry_e2e.py` est rejouable dans le
+conteneur API. Elle contacte GBIF, IGN, SoilGrids et Météo-France, normalise
+leurs réponses, écrit puis relit quatre objets JSON dans MinIO avec checksum
+SHA-256, fait passer chaque projection dans `data-resolver-1` et supprime les
+objets à la fin. Le dernier run est **4/4 réussi**, `cleanup=ok`, sans objet
+`e2e` résiduel. Voir `GSIE/API/docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md`.
+
+Cette preuve porte sur l'acquisition structurée réelle et l'archivage de la
+représentation normalisée. Les adapters ne déclarent pas encore `FETCH` ; la
+copie des octets bruts et la promotion contrôlée vers `DataAsset` restent les
+prochaines étapes. La persistance manuelle et idempotente de `DatasetHealth`
+est livrée ; seule son orchestration périodique reste à planifier.
+
+## Stabilisation Docker et bootstrap adapters (2026-08-10)
+
+- Build TLS strict corrigé pour les environnements inspectés par Kaspersky via
+  secret BuildKit éphémère et `UV_SYSTEM_CERTS=true` ; aucun certificat ni
+  secret n'est enregistré dans l'image.
+- Compose corrigé et recréé sans perte de volumes : PostgreSQL head
+  `20260810_0047`, Redis, MinIO/bucket `gsie-assets`, API, outbox-worker,
+  Mailpit et Uptime Kuma sont sains ; `/health` et `/ready` répondent 200.
+- Bootstrap explicite `gsie_api.data.bootstrap` livré : factories lazy GBIF,
+  IGN, SoilGrids et Météo-France, campagne santé offline et redaction des
+  erreurs. Quatre distributions et leurs premiers contrôles append-only sont
+  persistés ; le job périodique reste la prochaine tranche opératoire.
+
+Le Data Selection Engine, l'application du manifeste, la persistance
+contrôlée de `DatasetHealth`, le scheduler borné et sa CI PostgreSQL/MinIO sont
+livrés. Restent la qualité complète et l'ingestion brute juridiquement et
+techniquement qualifiée. Le scheduler reste désactivé jusqu'à décision
+opérateur sur la cadence et les quotas.
+
+## Data Selection Engine — tranche 2026-08-10
+
+- `POST /api/v1/data/resolve` authentifié et rate-limitée ;
+- contraintes évaluées avant score, blocages stables et qualification A–F ;
+- préférences fraîcheur/qualité/offline versionnées, classement stable et
+  fallback opt-in soumis à la même politique ;
+- aucune récupération fournisseur, URL présignée ou secret exposé ;
+- tests unitaires, route, Ruff et mypy strict validés.
+
+Le manifeste est publié et appliqué de façon idempotente ; les premiers
+contrôles réels sont persistés. La cadence automatisable et le registre de
+qualification `FETCH` sont livrés, avec quatre sources encore fermées. La
+prochaine étape est `QualityAssessment`, puis la levée source par source des
+blocages avant tout `RAW DataAsset` ou pack GeoSylva.
+
+## Dataset/API — intégrité des DataAsset (2026-08-10)
+
+Le socle existant est renforcé ; le contrat Registry est adopté et sa première
+tranche read-only est implémentée :
+
+- validation API des tailles, checksums et URI `DataAsset` ;
+- `size_bytes` en `BIGINT` avec contrainte SQL non négative,
+  migration réversible `20260810_0045` ;
+- URI locales opaques (`local:///…`), sans divulgation du chemin serveur ;
+- scénarios d’intégration PostgreSQL ajoutés pour un asset de plus de 2 Gio et
+  le refus d’un URI `file://`.
+
+RFC-0038 est validée. Les migrations Registry jusqu'à `20260810_0047`, les
+modèles, validateurs, routes, adapters, resolver, application du manifeste et
+scheduler périodique sont livrés. Le smoke PostgreSQL/MinIO est réel et la CI
+le reproduit. L'activation opérateur du scheduler et le worker `FETCH` restent
+séquencés.
+
+## Plateforme de données GSIE — Phase 1 Object Storage (2026-08-09)
+
+La Phase 1 du Data Registry est implémentée côté GSIE Server :
+
+- backend `S3Storage` asynchrone compatible MinIO/AWS S3 ;
+- upload multipart par blocs avec checksum SHA-256 ;
+- lecture en flux, plages HTTP, HEAD, suppression et URLs présignées ;
+- `DataAsset.storage_uri` et `checksum_algorithm` via migration réversible
+  `20260809_0044` ;
+- service MinIO de développement dans Docker Compose ;
+- 51 tests ciblés stockage/configuration, 112 tests infrastructure ciblés,
+  ruff et mypy validés.
+
+Le smoke test réseau réel reste à exécuter lorsque Docker Desktop/Linux sera
+opérationnel sur l’environnement de validation.
+
+## Plateforme de données GSIE — Phase 2 Data Registry (RFC Validated)
+
+`RFC-0038` v1.2.0 et `DEC-000059` sont Validated après validation formelle du
+Fondateur.
+Le contrat fixe la projection fournisseur Agent/Source/Citation, les statuts de
+qualification, `DatasetHealth` par distribution, le lineage PROV, la
+couverture, la qualification Registry A–F, le vocabulaire de domaines versionné
+et STAC comme projection géospatiale.
+
+La tranche Registry interne est terminée : modèles/migration, `DatasetStatus`,
+DTOs stricts, recherche cursor-paginée, projection fournisseurs, health/coverage
+et validation CRUD. Les 39 tests ciblés, Ruff et mypy strict passent. La suite
+porte sur l’activation progressive des adapters fournisseurs et les contrôles
+périodiques, puis sur le Data Selection Engine ; l’API actuelle reste read-only
+et n’exécute aucun téléchargement.
+
+## Plateforme de données GSIE — Phase 3 Adapters (contrat et façades livrés)
+
+Le contrat commun `DataSourceAdapter` et le registre lazy
+`AdapterPluginRegistry` sont livrés dans `GSIE/API/src/gsie_api/data/adapters.py`.
+Les descripteurs imposent capacités, domaines, allowlist d’hôtes, bornes de
+fetch et rapports de santé. Les 9 tests de contrat passent, sans accès réseau.
+
+Les façades `GBIFAdapter`, `IGNAdapter`, `SoilGridsAdapter` et
+`MeteoFranceAdapter` sont disponibles dans `GSIE/API/src/gsie_api/data/` et
+délèguent aux clients résilients existants. Elles ne sont pas enregistrées par
+défaut ; leurs ports de test n’ouvrent aucun réseau. Vingt tests façades
+passent, Ruff et mypy strict sont verts. Le bootstrap explicite, les jobs de
+santé, le resolver et la migration des consommateurs restent hors périmètre.
+
+## Bilan des sept derniers jours — 2026-08-03 → 2026-08-10
+
+Le suivi consolidé est disponible dans
+[`GSIE-WEEKLY-2026-08-03`](GSIE/DOCUMENTATION/BILAN_HEBDOMADAIRE_2026-08-03_2026-08-10.md).
+Il relie les évolutions GeoSylva, identité/multi-tenant, sécurité, Cloudflare,
+sauvegarde, connecteurs scientifiques, site public et plateforme de données
+aux preuves de code et aux décisions correspondantes. Le bilan sépare les
+fonctions livrées, les documents en revue et les étapes humaines ou Docker
+encore nécessaires.
+
 ## Outillage de qualité — Orchestre GSIE (2026-08-09)
 
 L'Orchestre GSIE est opérationnel pour les audits séquentiels : OWASP,

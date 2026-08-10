@@ -50,6 +50,11 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "transactional_email_mode": "smtp",
         "smtp_host": "smtp.example.com",
         "smtp_starttls": True,
+        "object_storage_backend": "s3",
+        "object_storage_s3_endpoint": "https://s3.example.com",
+        "object_storage_s3_access_key": "test-access",
+        "object_storage_s3_secret_key": "test-secret",
+        "object_storage_s3_server_side_encryption": "AES256",
     } | overrides
 
 

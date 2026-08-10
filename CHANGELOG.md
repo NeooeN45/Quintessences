@@ -4,6 +4,243 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
+
+- Ajout d'une commande reproductible unique pour les trois campagnes de
+  validation, avec rapport JSON horodaté : 151 tests Data Registry, 103 P0/P1
+  et 121 infrastructure/lifespan.
+- Ajout du job CI obligatoire PostgreSQL/PostGIS/AGE + MinIO : migrations,
+  application/rejeu du manifeste, round-trip S3, SHA-256 et nettoyage.
+- Ajout du scheduler périodique de santé : verrou Redis avec jeton/TTL,
+  concurrence et tailles bornées, métriques Prometheus et historique
+  `DatasetHealth`. Il reste désactivé par défaut.
+- Ajout de `FETCH_QUALIFICATION.json` et d'une porte fail-closed. GBIF, IGN,
+  SoilGrids et Météo-France restent fermés jusqu'à levée de leurs blocages
+  juridiques ou techniques propres.
+- Reconstruction des trois images et redéploiement API/outbox. `/health` et
+  `/ready` sont sains ; le smoke réel confirme le head `20260810_0047`, le
+  rejeu idempotent et le nettoyage MinIO.
+- Preuve :
+  `GSIE/API/docs/data/GSIE_DATA_REGISTRY_CLOTURE_2026-08-10.md`.
+
+## [GSIE DATA PLATFORM — MANIFESTE APPLIQUÉ ET SANTÉ PERSISTÉE] - 2026-08-10
+
+- Ajout de `ManifestRegistryService` et du CLI
+  `scripts/apply_dataset_manifest.py` : `dry-run` par défaut, transaction
+  explicite, identifiants stables et rejeu idempotent.
+- Projection complète des quatre entrées vers Agent, Source, EntityAlias,
+  droits, Dataset, DatasetVersion, Distribution et Citation : 32 ressources
+  créées, puis rejeu à 0 création/0 mise à jour.
+- Ajout de `scripts/collect_manifest_health.py` ; contrôle TLS réel 4/4
+  `healthy`, quatre `DatasetHealth` persistés, rejeu identique sans doublon.
+- Migration `20260810_0047` et durcissement de `0046` : enums Registry
+  déterministes dans `public`. Cycle réel sur base jetable
+  `upgrade head → downgrade 0044 → upgrade head` validé.
+- Correction des blocages de revue : paquet `gsie_api.data` sans réexports,
+  test d'import en processus froid, bytes UTF-8 valide et Ruff/mypy verts.
+- Refactor des validateurs DataAsset/DatasetVersion par invariant ; fermeture
+  symétrique des fichiers temporaires en erreur.
+- Réutilisation d'un client/pool aiobotocore S3 par instance, singleton
+  applicatif et fermeture propre au shutdown FastAPI.
+- Preuves initiales : 136 tests Data Registry, 103 tests P0/P1 et 121 tests
+  cycle de vie/infrastructure, tous passants. Documentation :
+  `GSIE/API/docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md`.
+
+## [OUTILLAGE — SITE DES GRAPHES MERMAID ENRICHI] - 2026-08-10
+
+- Extension de `graphes-quintessences/` de 5 à **13 diagrammes** répartis en
+  **4 catégories** (Écosystème, Gouvernance, Progression, Infrastructure) :
+  ajout du métamodèle Encyclopédie, des applications clientes, de l'identité
+  Quintessences, du cycle de vie documentaire, de la chronologie des
+  décisions structurantes, du pipeline Data Registry, du Server Meshing et
+  du Territorial Mesh — tous sourcés depuis la documentation réelle
+  (`README.md`, `PROJECT_MEMORY.md`, `03_DECISIONS/`, `GSIE/ARCHITECTURE/`).
+- Refonte du site généré : sidebar par catégorie avec compteurs, puces de
+  filtre combinées à la recherche, thème clair/sombre persistant (police
+  Space Grotesk/Space Mono), zoom/pan par diagramme, vue plein écran,
+  téléchargement SVG, bascule « voir le code source », badge de type de
+  diagramme détecté automatiquement.
+- `generate_site.py` réécrit (stdlib uniquement, ruff + mypy strict verts) ;
+  `diagrams/meta.json` enrichi (`categorie`, `description`, `date_maj`).
+- Port 4300 (évite conflits avec les autres services locaux).
+- Skill Devin `.devin/skills/graphes-progression/SKILL.md` mis à jour avec
+  la table de correspondance événement → diagramme à maintenir.
+
+## [GSIE DATA PLATFORM — TEST E2E RÉEL] - 2026-08-10
+
+- Ajout de `GSIE/API/scripts/test_data_registry_e2e.py` : campagne réelle
+  bornée GBIF, IGN, SoilGrids et Météo-France, sans fixture ni réponse simulée.
+- Vérification de bout en bout : santé fournisseur, acquisition, normalisation,
+  projection métier, écriture/lecture MinIO avec égalité octet à octet et
+  SHA-256, sélection `data-resolver-1`, puis nettoyage automatique.
+- Résultat reproductible : 4/4 adapters sains, 96 départements Météo-France,
+  `cleanup=ok` et aucun objet de test résiduel. Preuves :
+  `GSIE/API/docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md`.
+- Correction de la politique MinIO Compose : le bucket est désormais injecté
+  dans l'ARN généré (au lieu du littéral `%s`) et la politique est recréée de
+  manière idempotente avant association au compte runtime.
+- Limite explicitée : les adapters exposent encore `QUERY`/`NORMALIZE`, pas
+  `FETCH`; l'archivage des octets bruts et la promotion `DataAsset` restent à
+  planifier.
+
+## [GSIE DATA PLATFORM — PHASE 6 MANIFESTE] - 2026-08-10
+
+- Ajout du manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json` pour
+  GBIF, IGN, SoilGrids et Météo-France, sans téléchargement ni écriture DB.
+- Ajout de la porte `gsie_api.ingestion.manifest` : identité dataset/version,
+  vocabulaire de domaines, licence alignée sur SCI-001, URLs HTTPS sûres et
+  distinction explicite `metadata_only` / `archive_copy`.
+- Les sources restreintes ne peuvent pas franchir la porte de copie ; un pack
+  hors ligne exige une copie et un droit de redistribution déclaré.
+- Ajout du validateur CLI et de 12 tests unitaires ; Ruff et mypy strict
+  passent. Documentation : `GSIE/API/docs/data/GSIE_DATA_MANIFEST_PHASE6.md`.
+- Ajout de la page `/data` au site `GSIE/ADMIN_WEB` : catalogue réel,
+  recherche, filtre par domaine et état vide explicable ; `astro check` sans
+  erreur et build 13 routes validé.
+- Audit du contrat GeoSylva : la synchronisation parcellaire existante reste
+  isolée du Data Registry ; la future consommation mobile attend un manifeste
+  de pack, une santé persistée et un checksum vérifié. Documentation :
+  `GSIE/API/docs/data/GEOSYLVA_DATA_REGISTRY_MIGRATION_PHASE7.md`.
+
+## [GSIE DATA PLATFORM — PHASE 5 RESOLVER] - 2026-08-10
+
+- Ajout du `Data Selection Engine` déterministe et explicable dans
+  `gsie_api.data.resolver`.
+- Ajout de `POST /api/v1/data/resolve`, authentifié, rate-limitée et corrélée
+  par trace ID ; aucun adapter ni téléchargement n'est déclenché.
+- Contraintes évaluées avant score : statut, qualification Registry A–F,
+  licence commerciale, qualité et archive ; blocages stables exposés.
+- Préférences fraîcheur/qualité/offline et fallback opt-in soumis à une
+  politique versionnée ; tests ciblés, Ruff et mypy strict passent.
+- Documentation : `GSIE/API/docs/data/GSIE_DATA_RESOLVER_PHASE5.md`.
+
+## [STABILISATION DOCKER + BOOTSTRAP DATA REGISTRY] - 2026-08-10
+
+- Correction TLS des builds PostgreSQL/Apache AGE et API sous inspection HTTPS
+  Kaspersky : certificat injecté uniquement par secret BuildKit éphémère,
+  `UV_SYSTEM_CERTS=true` pour uv, sans désactivation de la validation.
+- Ajout de `GSIE/API/scripts/build_images.ps1` et construction vérifiée des
+  images `api-db`, `api-api` et `api-outbox-worker`.
+- Correction du bloc `command` PostgreSQL, du démarrage Redis sous UID 999 et
+  de l'initialiseur MinIO (shell POSIX, configuration temporaire et opérations
+  idempotentes). Aucun volume n'a été supprimé.
+- Vérification Docker : API `/health`/`/ready` 200, migration head
+  `20260810_0046`, DB/Redis/MinIO/outbox/Mailpit/Uptime Kuma sains ; bucket et
+  politique MinIO créés.
+- Bootstrap explicite `gsie_api.data.bootstrap` pour GBIF, IGN, SoilGrids et
+  Météo-France, campagne `AdapterHealthService` offline et tests ciblés verts.
+  Les résultats ne sont pas encore persistés dans `DatasetHealth` sans
+  distribution qualifiée.
+
+## [GSIE DATA PLATFORM — PHASE 3 ADAPTERS] - 2026-08-10
+
+- Contrat commun `DataSourceAdapter` livré avec capacités explicites :
+  découverte, métadonnées, santé, requête, fetch et normalisation.
+- `AdapterPluginRegistry` ajouté avec factories lazy, cache d’instances,
+  refus des doublons et vérification des descripteurs retournés.
+- Bornes de sécurité ajoutées : trace ID, timeout, taille maximale, allowlist
+  d’hôtes, URLs sans identifiants/query/fragment et flux de fetch non chargés
+  entièrement en mémoire.
+- Aucun fournisseur ni appel réseau activé par défaut ; les façades IGN, GBIF,
+  SoilGrids et Météo-France délèguent aux clients résilients existants et sont
+  enregistrables uniquement par bootstrap explicite.
+- 29 tests de contrat/façades passent (9 contrat + 20 fournisseurs), avec
+  clients simulés et aucun appel externe ; Ruff et mypy strict passent.
+- Docker relancé : migrations `20260809_0044` → `20260810_0046` appliquées,
+  `20260810_0046` confirmé comme head et contraintes SQL vérifiées.
+
+## [GSIE DATA PLATFORM — PHASE 2 DATA REGISTRY] - 2026-08-10
+
+- Tranche read-only de RFC-0038 implémentée après validation de `DEC-000059`.
+- Migration réversible `20260810_0046` : statuts `DatasetStatus`, domaines,
+  tags, couverture temporelle, preuve, droits d’usage, santé par distribution
+  et contraintes d’intégrité.
+- Ajout des contrats/DTOs versionnés, du cycle de vie contrôlé, de la
+  pagination par curseur opaque et de `DataRegistryService`.
+- Routes authentifiées `/api/v1/data/catalog`, `datasets/{id}`, `providers`,
+  `search`, `health` et `coverage`, avec RBAC, rate limiting, trace ID et
+  masquage des URLs sensibles.
+- Validation spécialisée intégrée au CRUD historique : transitions de statut,
+  bornes santé, licence/preuve et clé composite distribution-version.
+- 39 tests ciblés passent ; Ruff et mypy strict passent. Le smoke test
+  PostgreSQL reste à exécuter lorsque Docker/Linux sera disponible.
+- Adapters, scheduler de santé, cache partagé et resolver restent hors de la
+  Phase 2.
+
+## [DATASET/API — INTÉGRITÉ DES DATA ASSET] - 2026-08-10
+
+- Le CRUD générique valide désormais les métadonnées `DataAsset` : taille
+  entière non négative, checksum compatible avec l’algorithme déclaré, URI
+  autorisées et refus des identifiants dans les URI.
+- `size_bytes` est stocké en `BIGINT` avec la contrainte SQL
+  `ck_data_asset_size_non_negative` (`20260810_0045`), pour couvrir les assets
+  COG/COPC volumineux sans troncature.
+- Le stockage local ne renvoie plus de chemin `file://` : il renvoie un URI
+  opaque `local:///…` et refuse les URLs présignées. La suite unitaire complète
+  passe : 2 703 tests, 63 ignorés et 100 % de couverture ; les deux tests
+  PostgreSQL DataAsset attendent Docker.
+
+## [BILAN HEBDOMADAIRE — TRAÇABILITÉ DES TRAVAUX] - 2026-08-10
+
+- Ajout du bilan [`GSIE-WEEKLY-2026-08-03`](GSIE/DOCUMENTATION/BILAN_HEBDOMADAIRE_2026-08-03_2026-08-10.md).
+- La chronologie relie les commits du 03 au 09 août et les changements du
+  10 août encore présents dans l’espace de travail aux décisions, RFC,
+  spécifications, fichiers de code et preuves de tests.
+- Les statuts sont séparés entre livré, en revue et en attente ; le smoke test
+  MinIO/Docker, les configurations opérateur et l’adoption de RFC-0038 restent
+  explicitement ouverts.
+
+## [AUDIT SÉCURITÉ — STOCKAGE OBJET ET COMPOSE] - 2026-08-10
+
+- Désactivation de la journalisation des paramètres SQL par pgaudit pour ne pas
+  exposer de données personnelles, jetons ou secrets dans les logs.
+- Compte MinIO runtime séparé du compte racine et politique restreinte au bucket
+  GSIE ; chiffrement serveur AES256 demandé lors des uploads S3.
+- Les URLs présignées sont limitées à quinze minutes et le backend local ne
+  divulgue plus de chemin `file://`.
+- Métriques Cloudflared liées à `127.0.0.1`; 85 tests ciblés passent, Ruff et
+  validation Compose sont verts. Rapport : `GSIE/API/docs/SECURITY_AUDIT_2026-08-10.md`.
+
+## [GSIE DATA PLATFORM — OBJECT STORAGE MINIO/S3] - 2026-08-09
+
+- Phase 1 du Data Registry livrée côté stockage objet dans `GSIE/API/`.
+- `S3Storage` asynchrone compatible MinIO/AWS S3 via `aiobotocore==3.7.0`.
+- Upload multipart par blocs, checksum SHA-256 en métadonnée, abandon sûr
+  des uploads incomplets, lecture en flux, lecture par plage, HEAD,
+  suppression et URLs présignées.
+- `DataAsset` enrichi de `storage_uri` et `checksum_algorithm` par la
+  migration réversible `20260809_0044`.
+- MinIO ajouté au Compose de développement, avec ports limités à localhost,
+  volume persistant, healthcheck et initialisation idempotente du bucket.
+- Validation : 51 tests stockage/configuration, 112 tests infrastructure,
+  ruff, mypy, migration head et `docker compose config` passants.
+- Smoke test réseau réel reporté : le daemon Docker Desktop n’était pas
+  disponible sur l’environnement Windows de développement.
+- Veille externe intégrée au plan : STAC, COG, GeoParquet, COPC, Zarr,
+  DuckDB, Iceberg et accélérations GPU optionnelles.
+
+## [GSIE DATA PLATFORM — RFC-0038 DATA REGISTRY] - 2026-08-10
+
+- Passe de logique de `RFC-0038` : v1.1.0 conserve le statut `Draft` et
+  clarifie Agent/Source/Citation, couverture spatiale, droits de dataset
+  séparés du RGPD, santé par distribution, transitions récupérables,
+  qualification Registry A–F distincte des assertions, vocabulaire de domaines
+  versionné et recherche déterministe par preuve/grain/licence.
+- `DEC-000059` est alignée en `Draft` ; aucune adoption n’est anticipée avant
+  la décision explicite du Fondateur.
+- L’audit complémentaire passe en v1.4.0. Aucun endpoint Registry, adapter,
+  resolver ou migration Phase 2 n’est appliqué avant adoption de la RFC.
+
+## [GSIE DATA PLATFORM — ADOPTION RFC-0038] - 2026-08-10
+
+- Validation formelle du Fondateur : `RFC-0038` v1.2.0 et `DEC-000059` passent
+  à `Validated`.
+- La Phase 2 Data Registry est autorisée par tranches : Registry, DTOs,
+  recherche, health checks, adapters puis Data Selection Engine.
+- Aucun code Registry, endpoint `/api/v1/data/*`, adapter ou resolver n’est
+  ajouté par cette seule validation documentaire.
+- L’audit architecture données est synchronisé en v1.5.0.
+
 ## [ORCHESTRE GSIE — CYCLES CVE, QA ET VEILLE] - 2026-08-09
 
 - Cycle 2 Sécurité+Perf : audit `pip-audit` sur 138 packages, 24 CVE
