@@ -808,6 +808,9 @@ non encore implémentées.
   atomique d'un unique `DataAsset RAW`, puis normaliser le micro-extrait.
 - [x] Prouver migration 0048, contraintes SQL et démarrage d'une image neuve
   contre PostgreSQL Docker réel.
-- [ ] Redéployer l'API active avec l'image 0048 après autorisation explicite.
+- [x] Redéployer l'API active avec l'image 0048 après autorisation explicite
+  (DEC-000062), puis vérifier santé, fail-closed, PostgreSQL et MinIO.
+- [ ] Profiler le plafond local d'environ 19 req/s sous concurrence avant de
+  définir la capacité de production.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
   DataAsset, normalisation et porte explicite STAGING → PRODUCTION.

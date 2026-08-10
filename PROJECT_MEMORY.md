@@ -1328,3 +1328,7 @@ compte 99 tests passants. FETCH demeure fermé et aucun raster n'a été demand�
 DEC-000061 autorise et trace le premier micro-extrait réel : 100 pixels, 569
 octets, SHA-256 vérifié, un DataAsset RAW dans MinIO et version toujours
 `discovered`. Le registre FETCH canonique demeure fermé.
+DEC-000062 redéploie localement le commit `6986e80` et valide la chaîne active :
+API/worker sains, migration 0048, manifeste idempotent, MinIO et DataAsset TIFF
+cohérents. La charge est stable sans erreur mais plafonne autour de 19 req/s
+via Docker Desktop ; ce point doit être profilé avant toute cible production.

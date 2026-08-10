@@ -50,6 +50,9 @@ Format : `## [version] - YYYY-MM-DD`
 - DEC-000061 : premier `GetCoverage` SoilGrids réel exécuté sur 100 pixels ;
   569 octets vérifiés par SHA-256, DataAsset RAW unique publié dans MinIO et
   version maintenue à l'état `discovered` sans promotion automatique.
+- DEC-000062 : API et worker redéployés depuis `6986e80`, migration 0048,
+  fail-closed, manifeste idempotent et DataAsset TIFF MinIO revérifiés. Charge
+  stable à 100 % de succès, avec un plafond local d'environ 19 req/s à profiler.
 
 ## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
 
