@@ -11,6 +11,7 @@ from gsie_api.infrastructure.models.models_ai import (
     DatasetVersionModel,
     DistributionModel,
 )
+from gsie_api.infrastructure.models.observation import QualityAssessmentModel
 
 
 def should_register_the_registry_projection_types() -> None:
@@ -63,3 +64,27 @@ def should_enforce_health_distribution_version_coherence() -> None:
     }
     assert "uq_distribution_id_dataset_version" in distribution_constraints
     assert "fk_dataset_health_distribution_version" in health_constraints
+
+
+def should_align_quality_assessment_history_with_migration_0048() -> None:
+    table = QualityAssessmentModel.__table__
+    indexes = {
+        index.name: tuple(column.name for column in index.columns) for index in table.indexes
+    }
+    constraints = {
+        constraint.name: tuple(column.name for column in constraint.columns)
+        for constraint in table.constraints
+        if hasattr(constraint, "columns")
+    }
+
+    assert indexes["ix_quality_assessment_run_id"] == ("assessment_run_id",)
+    assert indexes["ix_quality_assessment_target_assessed"] == (
+        "target_id",
+        "assessed_at",
+    )
+    assert "ix_quality_assessment_assessment_run_id" not in indexes
+    assert constraints["uq_quality_assessment_run_dimension"] == (
+        "target_id",
+        "assessment_run_id",
+        "dimension",
+    )

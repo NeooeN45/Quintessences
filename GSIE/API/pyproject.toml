@@ -134,9 +134,13 @@ markers = [
 [tool.coverage.run]
 source = ["src/gsie_api"]
 branch = false
+relative_files = true
 
 [tool.coverage.report]
-fail_under = 100
+# DEC-000066 : cliquet global vérifié en plus des seuils par couche du
+# script scripts/check_coverage_policy.py. La base mesurée est 97,15 %.
+fail_under = 97.1
+precision = 2
 show_missing = true
 skip_covered = false
 

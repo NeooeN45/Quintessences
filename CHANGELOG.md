@@ -4,6 +4,26 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [HA LINUX/TLS ET COUVERTURE MULTICOUCHE] - 2026-08-11
+
+- DEC-000065 prouvée par le run GitHub Actions `31479643460` : 6 000/6 000
+  réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et p99 245,58 ms ;
+  construction, migrations, TLS et nettoyage réussis.
+- Initialisation PostgreSQL fraîche fiabilisée : Apache AGE précède les autres
+  extensions, `public` reste premier dans le `search_path` et le stanza
+  pgBackRest n'est créé que lorsque l'archivage WAL est actif.
+- Action de publication de l'artefact HA épinglée par SHA immuable.
+- DEC-000066 : couverture Python fusionnée unités + intégration, cliquet global
+  à 97,10 %, contrats publics à 100 %, métier/application à 80 % minimum et
+  infrastructure à 60 % minimum ; rapport invalide refusé fail-closed.
+- Preuve locale finale : 2 873 unités, 349 intégrations, 98,18 % combinés,
+  49 contrats publics à 100 %, métier/application à 96,80 % et infrastructure
+  à 99,97 %.
+- Routeur et schémas Data Registry portés à 100 %. Vérificateur de politique
+  testé, compatible Windows CP-1252 et intégré comme porte obligatoire de CI.
+- Dérive `QualityAssessment` détectée par la campagne Alembic puis corrigée par
+  alignement du modèle sur la migration 0048 ; aucun écart n'est toléré.
+
 ## [ARCHITECTURE — DURABILITÉ ÉVOLUTIVE ET INTÉGRATION IA] - 2026-08-10
 
 - Création de `GSIE-ARCH-EVOLUTION-001` en statut Draft pour formaliser les

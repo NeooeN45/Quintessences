@@ -1,11 +1,11 @@
-# Qualification HA Linux native avec TLS — workflow candidat
+# Qualification HA Linux native avec TLS — preuve distante
 
 ## État
 
 Le workflow `.github/workflows/ha-linux.yml` est implémenté et déclenchable
-manuellement ou par une pull request touchant la chaîne HA. Il n'est pas encore
-qualifié comme preuve distante tant que GitHub Actions ne l'a pas exécuté après
-push.
+manuellement ou par une pull request touchant la chaîne HA. Le run GitHub
+Actions `31479643460`, sur le commit `6442655`, est réussi et constitue la
+première preuve distante Linux/TLS du banc.
 
 ## Chaîne automatisée
 
@@ -42,6 +42,25 @@ Un smoke test fonctionnel a été exécuté dans le runtime Linux Docker :
 
 Cette mesure valide le câblage TLS, pas la capacité du runner GitHub.
 
+## Validation distante GitHub Actions
+
+L'artefact `ha-linux-tls-results` du run `31479643460` contient les métriques
+suivantes :
+
+| Mesure | Résultat | Porte |
+|---|---:|---:|
+| Réponses HTTP 200 | 6 000/6 000 | 100 % |
+| Erreurs de transport | 0 | 0 |
+| Débit | 298,03 req/s | >= 120 req/s |
+| p95 | 164,71 ms | <= 250 ms |
+| p99 | 245,58 ms | <= 400 ms |
+| Maximum observé | 545,90 ms | informatif |
+
+Le replica A a été retiré pendant la charge, le replica B a servi les requêtes
+restantes et `/ready` est demeuré disponible. Toutes les étapes de construction,
+d'initialisation PostgreSQL, de migration, de TLS et de nettoyage sont vertes.
+L'action de publication de l'artefact est épinglée sur une révision immuable.
+
 ## Blocages honnêtes de la tranche suivante
 
 ### Requête longue
@@ -58,8 +77,9 @@ un POST ou un PUT actuel ne prouverait pas l'absence de doublon ou d'effet
 ambigu. Une RFC doit définir clé, portée, TTL, empreinte de requête, stockage,
 réponse rejouée et concurrence avant implémentation.
 
-## Acceptation future
+## Conclusion
 
-Après push, le run GitHub doit être relié à cette preuve avec son identifiant,
-son artefact JSON et les métriques réelles. Seulement ensuite la qualification
-« Linux natif + TLS » pourra être clôturée.
+La qualification « Linux natif + TLS » du banc de drainage est clôturée. Elle
+ne constitue pas encore un SLO de production : la requête longue réelle,
+l'écriture HTTP idempotente et une qualification sur infrastructure cible
+restent des travaux séparés.

@@ -1,5 +1,21 @@
 # ROADMAP — Quintessences / GSIE
 
+## Haute disponibilité et couverture CI (2026-08-11)
+
+- DEC-000065 est prouvée sur GitHub Actions par le run `31479643460` :
+  6 000/6 000 réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et
+  p99 245,58 ms derrière TLS vérifié et deux replicas drainables.
+- DEC-000066 ajoute une porte de couverture fusionnée unités + intégration :
+  global >= 97,10 %, chaque routeur/schéma public à 100 %, métier/application
+  >= 80 % et infrastructure >= 60 %, avec refus des rapports invalides.
+- La preuve locale finale passe 2 873 tests unitaires et 349 intégrations ; la
+  fusion atteint 98,18 %. Le modèle `QualityAssessment` est réaligné sur la
+  migration 0048 et les cycles Alembic sont verts.
+
+Ordre restant : obtenir toute la CI verte sur le commit de couverture, relire
+le diff et les statuts GitHub, puis seulement sortir la PR du brouillon. Le
+merge et les SLO de production nécessitent des décisions séparées.
+
 ## Manifeste Data Registry (2026-08-10)
 
 - Manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json` livré pour les

@@ -181,7 +181,27 @@ jobs:
           fi
 
       - name: Test with pytest
-        run: uv run pytest tests/unit --cov=gsie_api --cov-report=term-missing --cov-fail-under=100
+        env:
+          COVERAGE_FILE: tests/perf/results/.coverage.unit
+        run: |
+          mkdir -p tests/perf/results
+          uv run pytest tests/unit --cov=gsie_api \
+            --cov-report=term-missing \
+            --cov-report=json:tests/perf/results/coverage-unit.json
+          uv run python scripts/check_coverage_policy.py \
+            --report tests/perf/results/coverage-unit.json
+
+      - name: Publier la couverture unitaire
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: python-unit-coverage
+          path: |
+            GSIE/API/tests/perf/results/.coverage.unit
+            GSIE/API/tests/perf/results/coverage-unit.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
 
   # Le harnais de mutation est séparé du job python-quality pour paralléliser :
   # il lance 67 mutations en subprocess, chacune exécutant un sous-ensemble de
@@ -251,15 +271,81 @@ jobs:
           fi
 
       - name: Run integration tests (testcontainers — Docker requis)
-        # --no-cov : la couverture 100% est vérifiée par le job python-quality
-        # sur les tests unitaires. Les tests d'intégration ne couvrent qu'une
-        # partie du code (67%) — le seuil fail_under=100 de pyproject.toml
-        # ferait échouer ce job systématiquement.
-        run: uv run pytest tests/integration -q --tb=short -v --no-cov
+        # La campagne conserve sa mesure propre puis le job python-coverage
+        # l'unit à la mesure unitaire. Son succès fonctionnel ne dépend pas du
+        # pourcentage isolé : la politique est appliquée au rapport combiné.
+        run: |
+          mkdir -p tests/perf/results
+          uv run pytest tests/integration -q --tb=short -v \
+            --cov=gsie_api \
+            --cov-report=term-missing \
+            --cov-report=json:tests/perf/results/coverage-integration.json \
+            --cov-fail-under=0
         env:
+          COVERAGE_FILE: tests/perf/results/.coverage.integration
           # testcontainers utilise le socket Docker de l'hôte (déjà disponible sur ubuntu-latest)
           TESTCONTAINERS_RYUK_DISABLED: "true"
           GSIE_REQUIRE_MIGRATION_IMAGE: "true"
+
+      - name: Publier la couverture d'intégration
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: python-integration-coverage
+          path: |
+            GSIE/API/tests/perf/results/.coverage.integration
+            GSIE/API/tests/perf/results/coverage-integration.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  python-coverage:
+    name: Python couverture combinée
+    runs-on: ubuntu-latest
+    needs: [python-quality, python-integration]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: GSIE/API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev
+
+      - name: Télécharger la couverture unitaire
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: python-unit-coverage
+          path: GSIE/API/tests/perf/results/coverage-input
+
+      - name: Télécharger la couverture d'intégration
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: python-integration-coverage
+          path: GSIE/API/tests/perf/results/coverage-input
+
+      - name: Fusionner et vérifier la politique multicouche
+        run: |
+          uv run coverage combine tests/perf/results/coverage-input
+          uv run coverage report --show-missing
+          uv run coverage json -o tests/perf/results/coverage-combined.json
+          uv run python scripts/check_coverage_policy.py \
+            --report tests/perf/results/coverage-combined.json
+
+      - name: Publier le rapport combiné
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: python-combined-coverage
+          path: GSIE/API/tests/perf/results/coverage-combined.json
+          if-no-files-found: warn
+          retention-days: 14
 
   data-registry-validation:
     name: Data Registry (PostgreSQL + MinIO)
@@ -575,7 +661,7 @@ jobs:
   ci-gate:
     name: CI Gate (bloque merge)
     runs-on: ubuntu-latest
-    needs: [markdown-lint, consistency-checks, python-quality, python-mutation, python-integration, data-registry-validation, rust-quality, docker-build, governance-check]
+    needs: [markdown-lint, consistency-checks, python-quality, python-mutation, python-integration, python-coverage, data-registry-validation, rust-quality, docker-build, governance-check]
     timeout-minutes: 5
     if: always()
     steps:
@@ -587,6 +673,7 @@ jobs:
           echo "  python-quality: ${{ needs.python-quality.result }}"
           echo "  python-mutation: ${{ needs.python-mutation.result }}"
           echo "  python-integration: ${{ needs.python-integration.result }}"
+          echo "  python-coverage: ${{ needs.python-coverage.result }}"
           echo "  data-registry-validation: ${{ needs.data-registry-validation.result }}"
           echo "  rust-quality: ${{ needs.rust-quality.result }}"
           echo "  docker-build: ${{ needs.docker-build.result }}"
@@ -596,6 +683,7 @@ jobs:
                 "${{ needs.python-quality.result }}" != "success" || \
                 "${{ needs.python-mutation.result }}" != "success" || \
                 "${{ needs.python-integration.result }}" != "success" || \
+                "${{ needs.python-coverage.result }}" != "success" || \
                 "${{ needs.data-registry-validation.result }}" != "success" || \
                 "${{ needs.rust-quality.result }}" != "success" || \
                 "${{ needs.docker-build.result }}" != "success" || \

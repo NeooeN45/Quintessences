@@ -5,7 +5,7 @@
 | **Créé le** | 2026-07-01 |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0003 |
-| **Dernière mise à jour** | 2026-08-10 |
+| **Dernière mise à jour** | 2026-08-11 |
 
 ---
 
@@ -18,12 +18,15 @@
 - Profilage DEC-000063 : le port Docker Desktop explique le plafond hôte ;
   recyclage Gunicorn désynchronisé à 5000/5000. La capacité de production doit
   encore être qualifiée sous Linux avec plusieurs réplicas.
-- DEC-000064 : banc Linux conteneurisé à deux replicas derrière HAProxy,
-  drainage sans coupure et rechargements séquencés validés. Une preuve Linux
-  native/CI et l'analyse du maximum à 14,1 s restent requises avant les SLO.
-- DEC-000065 : workflow Ubuntu HA+TLS prêt avec portes automatiques. Le premier
-  run distant, le contrat d'idempotence HTTP et une vraie requête longue restent
-  nécessaires avant clôture de la qualification de production.
+- DEC-000064 et DEC-000065 : banc à deux replicas puis workflow Ubuntu/TLS
+  validés. Le run distant `31479643460` passe 6 000/6 000 requêtes sans erreur,
+  à 298,03 req/s, p95 164,71 ms et p99 245,58 ms. Les requêtes longues,
+  l'idempotence HTTP et les SLO de production restent hors preuve.
+- DEC-000066 : couverture Python multicouche obligatoire. Les suites finales
+  passent 2 873 unités et 349 intégrations ; la fusion atteint 98,18 %, les
+  49 contrats publics sont à 100 %, métier/application à 96,80 % et
+  infrastructure à 99,97 %. Le run CI distant de cette nouvelle porte reste à
+  obtenir avant sortie de la PR du brouillon.
 
 ---
 

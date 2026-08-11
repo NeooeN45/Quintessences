@@ -4,6 +4,17 @@
 # réinitialise ses processus en boucle malgré un conteneur encore « healthy ».
 set -eu
 
+archive_mode="$(
+    psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+        --tuples-only --no-align --command 'SHOW archive_mode'
+)"
+if [ "$archive_mode" != "on" ]; then
+    echo "[init] Archivage WAL désactivé : initialisation pgBackRest ignorée."
+    return 0 2>/dev/null || exit 0
+fi
+
+: "${PGBACKREST_REPO1_CIPHER_PASS:?Passphrase pgBackRest requise avec archive_mode=on}"
+
 echo "[init] Création et vérification de la stanza pgBackRest « gsie »..."
 pgbackrest --stanza=gsie stanza-create
 pgbackrest --stanza=gsie check

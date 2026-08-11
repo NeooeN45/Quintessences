@@ -19,7 +19,7 @@ from gsie_api.data.lifecycle import (
     can_transition,
     transition_status,
 )
-from gsie_api.data.schemas import DataSearchQuery
+from gsie_api.data.schemas import DataSearchQuery, normalize_dataset_tags
 from gsie_api.infrastructure.models.enums import DatasetStatus, EvidenceLevel
 
 
@@ -83,6 +83,32 @@ def should_reject_an_invalid_search_bbox_or_date_range() -> None:
             date_start=datetime(2026, 8, 11, tzinfo=UTC),
             date_end=datetime(2026, 8, 10, tzinfo=UTC),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("bbox", (0, -91, 1, 2), "latitude"),
+        ("bbox", (2, 0, 1, 2), "min <= max"),
+        ("date_start", datetime(2026, 8, 10), "date_start"),
+        ("date_end", datetime(2026, 8, 10), "date_end"),
+    ],
+)
+def should_reject_invalid_spatial_or_naive_temporal_search_values(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        DataSearchQuery(**{field: value})
+
+
+def should_normalize_public_dataset_tags() -> None:
+    assert normalize_dataset_tags([" Forêt ", "FORÊT", "sol-humide"]) == [
+        "forêt",
+        "sol-humide",
+    ]
+    assert normalize_dataset_tags(None) == []
 
 
 def should_accept_the_declared_dataset_lifecycle_transitions() -> None:
