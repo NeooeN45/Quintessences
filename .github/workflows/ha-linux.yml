@@ -58,6 +58,23 @@ jobs:
           docker compose up -d --build db redis minio minio-init mailpit
           docker compose run --rm \
             -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true api true
+          # L'initdb PostgreSQL et le premier conteneur de migration peuvent se
+          # chevaucher sur un runner vierge. On réconcilie le compte jetable
+          # après les migrations, puis on prouve son authentification avant HA.
+          docker compose exec -T db psql \
+            --username "${GSIE_DB_USER:-gsie}" \
+            --dbname "${GSIE_DB_NAME:-gsie}" \
+            --set=ON_ERROR_STOP=1 \
+            --set=api_password="$GSIE_API_DB_PASSWORD" <<'SQL'
+          ALTER ROLE gsie_api PASSWORD :'api_password';
+          GRANT gsie_application TO gsie_api;
+          SQL
+          docker compose exec -T \
+            -e PGPASSWORD="$GSIE_API_DB_PASSWORD" db \
+            psql --host 127.0.0.1 --username gsie_api \
+            --dbname "${GSIE_DB_NAME:-gsie}" \
+            --set=ON_ERROR_STOP=1 \
+            --command 'SELECT 1' >/dev/null
           docker compose build api
 
       - name: Démarrer les replicas derrière TLS
