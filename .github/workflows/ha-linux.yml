@@ -62,8 +62,12 @@ jobs:
 
       - name: Démarrer les replicas derrière TLS
         run: |
-          docker compose -f docker-compose.ha.yml \
-            -f docker-compose.ha-tls.yml up -d
+          if ! docker compose -f docker-compose.ha.yml \
+            -f docker-compose.ha-tls.yml up -d; then
+            docker compose -f docker-compose.ha.yml \
+              -f docker-compose.ha-tls.yml logs --no-color
+            exit 1
+          fi
           for attempt in $(seq 1 90); do
             curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
               https://127.0.0.1:8443/ready >/dev/null && break
@@ -92,21 +96,27 @@ jobs:
           curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
             https://127.0.0.1:8443/ready >/dev/null
 
-      - name: Publier les métriques
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ha-linux-tls-results
-          path: GSIE/API/tests/perf/results/ha-linux-*.json
-          if-no-files-found: warn
-          retention-days: 14
-
-      - name: Diagnostics et nettoyage
+      - name: Collecter les diagnostics
         if: always()
         run: |
           docker compose -f docker-compose.ha.yml \
             -f docker-compose.ha-tls.yml logs --no-color \
             > tests/perf/results/ha-linux-containers.log || true
+
+      - name: Publier les métriques et diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ha-linux-tls-results
+          path: |
+            GSIE/API/tests/perf/results/ha-linux-*.json
+            GSIE/API/tests/perf/results/ha-linux-containers.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Nettoyer la plateforme jetable
+        if: always()
+        run: |
           docker compose -f docker-compose.ha.yml \
             -f docker-compose.ha-tls.yml down --remove-orphans || true
           docker compose down --remove-orphans --volumes || true
