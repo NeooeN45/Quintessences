@@ -89,8 +89,12 @@ aucune campagne ne sont réduits.
 
 La reproduction locale sous les variables S3 du job passe 165/165 scénarios
 Data Registry, 103/103 P0/P1 et 121/121 infrastructure/lifespan, puis Ruff et
-mypy strict. La mutation `lecture_hors_racine_de_stockage` est tuée isolément ;
-les 70 mutations complètes doivent encore être confirmées par le runner Linux.
+mypy strict. La mutation `lecture_hors_racine_de_stockage` est tuée isolément.
+
+Le run de pull request `31492339317`, sur `8a531ed`, clôt la réserve Linux :
+les 70/70 mutations sont détectées, la fusion couvre 16 086 lignes sur 16 386
+(98,17 %) et la politique multicouche passe. Les jobs Data Registry,
+intégration, Docker, sécurité et la porte CI finale sont également verts.
 
 La pull request ne peut sortir du brouillon qu'après un run complet vert sur la
 tête courante. Le merge reste soumis à une autorisation distincte du Fondateur.

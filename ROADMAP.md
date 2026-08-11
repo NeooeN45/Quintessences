@@ -17,6 +17,13 @@
   complet a détecté une préparation S3/JWT non hermétique du harnais Registry
   et un motif de mutation ObjectStorage périmé ; les deux corrections gardent
   les campagnes, les 70 mutations et tous les seuils inchangés.
+- Le run de PR `31492339317` sur `8a531ed` est entièrement vert : 70/70
+  mutations, 98,17 % de couverture combinée, Registry, intégration, Docker,
+  sécurité et gate final réussis.
+- Les coupures transitoires Debian/GitHub Releases sont maintenant absorbées
+  par des reprises `apt` et `curl` strictement bornées. TLS et le SHA-256 d'AGE
+  restent obligatoires ; les images DB et API sont reconstruites et
+  smoke-testées localement après correction.
 
 Ordre restant : obtenir toute la CI verte sur la tête courante, relire le diff
 et les statuts GitHub, puis seulement sortir la PR du brouillon. Le merge et

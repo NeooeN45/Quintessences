@@ -61,6 +61,30 @@ restantes et `/ready` est demeuré disponible. Toutes les étapes de constructio
 d'initialisation PostgreSQL, de migration, de TLS et de nettoyage sont vertes.
 L'action de publication de l'artefact est épinglée sur une révision immuable.
 
+## Résilience de la construction réseau
+
+Les runs ultérieurs ont exposé deux coupures Debian avant le démarrage des
+tests sur la même tête Git, alors que les constructions parallèles de cette
+tête réussissaient. Ces incidents de transport ne remettent pas en cause la
+preuve HA, mais rendaient la porte inutilement sensible au miroir externe.
+
+Les deux Dockerfiles appliquent maintenant cinq reprises `apt`, avec délais
+HTTP et HTTPS de 60 secondes. Apache AGE est téléchargé avec cinq reprises, un
+délai de connexion de 30 secondes, un temps par tentative de 300 secondes et
+une fenêtre totale de reprise de 180 secondes. TLS reste obligatoire et le
+SHA-256 attendu est toujours vérifié avant extraction.
+
+La validation locale post-correction couvre :
+
+- huit contrats statiques, Ruff et formatage ;
+- reconstruction complète de l'image PostgreSQL/PostGIS/AGE ;
+- présence d'AGE, pgAudit, pgVector et pgBackRest, puis retrait de `curl` ;
+- reconstruction complète de l'image API ;
+- exécution sous l'UID non-root 1000 et imports `gsie_api`/`gsie_evidence`.
+
+Une coupure durable continue de faire échouer le build : aucune reprise globale
+du job, désactivation TLS ou tolérance de checksum n'a été ajoutée.
+
 ## Blocages honnêtes de la tranche suivante
 
 ### Requête longue

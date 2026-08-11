@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 
 COMPOSE_PATH = Path(__file__).resolve().parents[2] / "docker-compose.yml"
+API_DOCKERFILE_PATH = Path(__file__).resolve().parents[2] / "Dockerfile"
+DATABASE_DOCKERFILE_PATH = Path(__file__).resolve().parents[2] / "Dockerfile.db"
 INIT_DIRECTORY = Path(__file__).resolve().parents[2] / "docker" / "init"
 HA_WORKFLOW_PATH = Path(__file__).resolve().parents[4] / ".github" / "workflows" / "ha-linux.yml"
 CI_WORKFLOW_PATH = Path(__file__).resolve().parents[4] / ".github" / "workflows" / "ci.yml"
@@ -66,3 +68,27 @@ def test_should_generate_jwt_keys_before_registry_validation_campaigns() -> None
     key_generation = registry_job.index("sh docker/generate-jwt-keys.sh")
     campaign = registry_job.index("scripts/validate_data_registry_release.py")
     assert key_generation < campaign
+
+
+def test_should_bound_apt_download_retries_in_runtime_images() -> None:
+    """Les téléchargements Debian doivent tolérer les coupures transitoires."""
+    for dockerfile_path in (API_DOCKERFILE_PATH, DATABASE_DOCKERFILE_PATH):
+        content = dockerfile_path.read_text(encoding="utf-8")
+
+        assert "Acquire::Retries=5" in content
+        assert "Acquire::http::Timeout=60" in content
+        assert "Acquire::https::Timeout=60" in content
+        assert "apt-get update" not in content
+
+
+def test_should_bound_age_download_retries_and_keep_integrity_check() -> None:
+    """Apache AGE doit conserver TLS et SHA-256 malgré les reprises réseau."""
+    content = DATABASE_DOCKERFILE_PATH.read_text(encoding="utf-8")
+
+    assert "--connect-timeout 30" in content
+    assert "--max-time 300" in content
+    assert "--retry 5" in content
+    assert "--retry-all-errors" in content
+    assert "--retry-max-time 180" in content
+    assert "sha256sum -c -" in content
+    assert "--insecure" not in content

@@ -14,7 +14,8 @@ ARG AGE_SHA256=b41abaf5fc89d6a5bcb62a63a6b2fc4b7d0d1530869879b6cc85df931b333b5d
 # + pgvector (recherche sémantique — migration 20260731_0024, débloque Treekipedia)
 # + pgbackrest (sauvegarde PITR — DEC-000037 P0-1, docs/BACKUP_RESTORE.md)
 # Le dépôt PGDG (apt.postgresql.org) est déjà configuré par l'image de base postgres:16.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     build-essential \
     bison \
     curl \
@@ -36,8 +37,17 @@ RUN --mount=type=secret,id=gsie_host_ca,target=/run/secrets/gsie_host_ca,require
         update-ca-certificates; \
     fi
 
-# Téléchargement et compilation d'Apache AGE
-RUN curl --fail --location --output "${AGE_PACKAGE}-src.tar.gz" "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
+# Téléchargement et compilation d'Apache AGE. Les reprises sont bornées et
+# n'affaiblissent ni la validation TLS ni le contrôle SHA-256 qui suit.
+RUN curl --fail --location \
+    --connect-timeout 30 \
+    --max-time 300 \
+    --retry 5 \
+    --retry-all-errors \
+    --retry-delay 2 \
+    --retry-max-time 180 \
+    --output "${AGE_PACKAGE}-src.tar.gz" \
+    "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
     && echo "${AGE_SHA256}  ${AGE_PACKAGE}-src.tar.gz" | sha256sum -c - \
     && tar -xvzf "${AGE_PACKAGE}-src.tar.gz" \
     && cd "${AGE_PACKAGE}" \

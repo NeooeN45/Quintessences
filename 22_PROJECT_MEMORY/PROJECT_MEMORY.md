@@ -23,7 +23,10 @@
   à 298,03 req/s, p95 164,71 ms et p99 245,58 ms. Les requêtes longues,
   l'idempotence HTTP et les SLO de production restent hors preuve. Le run
   `31488527136` confirme le banc sur `e9743d8` après un unique rejeu dû à une
-  coupure GitHub Releases antérieure aux tests.
+  coupure GitHub Releases antérieure aux tests. Deux coupures Debian parallèles
+  sur `8a531ed` ont conduit à borner les reprises `apt`/`curl`, sans affaiblir
+  TLS ni SHA-256 ; les images DB et API corrigées sont reconstruites et
+  smoke-testées localement. La preuve distante de la tête finale reste requise.
 - DEC-000066 : couverture Python multicouche obligatoire. Les suites finales
   passent 2 873 unités et 349 intégrations ; la fusion atteint 98,18 %, les
   49 contrats publics sont à 100 %, métier/application à 96,80 % et
@@ -31,9 +34,10 @@
   98,169 %, 49/49 contrats, 96,80 % métier et 99,90 % infrastructure. Le premier
   run complet a aussi révélé puis fait corriger l'isolation S3/JWT du harnais
   Data Registry et un motif de mutation périmé. La sortie du brouillon reste
-  conditionnée à un run complet vert sur la tête courante. La reproduction
-  locale corrigée passe 165/165 Registry, 103/103 P0/P1 et 121/121
-  infrastructure/lifespan ; la mutation ciblée est tuée.
+  conditionnée à un run complet vert sur la tête courante. Le run de PR
+  `31492339317` sur `8a531ed` confirme 70/70 mutations, 98,17 % combinés,
+  Registry, intégration, Docker, sécurité et gate final verts. La tête finale
+  doit encore reproduire cette preuve après le durcissement réseau.
 
 ---
 

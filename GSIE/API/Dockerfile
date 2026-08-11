@@ -20,7 +20,8 @@ LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 WORKDIR /build
 
 # Dépendances système — minimales pour semaine 1 (asyncpg, shapely, pyproj)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     build-essential \
     libgeos-dev \
     libproj-dev \
@@ -84,7 +85,8 @@ FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3
 WORKDIR /app
 
 # Dépendances runtime (sans build-essential)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     libgeos-c1v5 \
     libproj25 \
     libpq5 \

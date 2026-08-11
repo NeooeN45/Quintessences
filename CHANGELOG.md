@@ -35,6 +35,13 @@ Format : `## [version] - YYYY-MM-DD`
 - Reproduction avec l'environnement S3 du runner : 165/165 Data Registry,
   103/103 P0/P1 et 121/121 infrastructure/lifespan ; Ruff et mypy strict verts,
   mutation ObjectStorage ciblée tuée.
+- Run de pull request `31492339317` entièrement vert sur `8a531ed` : 70/70
+  mutations, couverture combinée à 98,17 %, Registry, intégration, Docker,
+  sécurité et gate final réussis.
+- Résilience des builds renforcée après deux coupures Debian transitoires : cinq
+  reprises `apt` bornées dans les images DB/API et reprises `curl` bornées pour
+  AGE, sans désactiver TLS ni son SHA-256. Les deux images sont reconstruites et
+  smoke-testées localement ; huit contrats statiques protègent ces invariants.
 
 ## [ARCHITECTURE — DURABILITÉ ÉVOLUTIVE ET INTÉGRATION IA] - 2026-08-10
 
