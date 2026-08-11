@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimatedHeading from "../components/AnimatedHeading.tsx";
+---
+
+<BaseLayout title="Mentions légales" description="Mentions légales du site Quintessences.">
+  <section class="mx-auto max-w-2xl px-6 py-20">
+    <AnimatedHeading client:load lines={[{ text: "Mentions" }, { text: "légales" }]} />
+    <p class="mt-2 text-sm text-[var(--color-fg-400)]">Dernière mise à jour : 9 août 2026</p>
+
+    <div class="content mt-10">
+      <h2>Éditeur du site</h2>
+      <p>
+        [À COMPLÉTER — nom ou raison sociale de l'éditeur, forme juridique,
+        adresse du siège, numéro SIRET/RCS le cas échéant, capital social si
+        société]
+      </p>
+      <p>
+        Directeur de la publication : [À COMPLÉTER]<br />
+        Contact : <a href="mailto:contact@quintessences-platform.com">contact@quintessences-platform.com</a>
+      </p>
+
+      <h2>Hébergement</h2>
+      <p>
+        Ce site est hébergé par Cloudflare, Inc., 101 Townsend Street, San
+        Francisco, CA 94107, États-Unis. [À CONFIRMER selon l'hébergeur
+        définitif retenu au moment de la mise en production.]
+      </p>
+
+      <h2>Propriété intellectuelle</h2>
+      <p>
+        L'ensemble des contenus de ce site (textes, structure, identité
+        visuelle) est la propriété de l'éditeur, sauf mention contraire. Toute
+        reproduction sans autorisation préalable est interdite, sous réserve
+        des exceptions prévues par le Code de la propriété intellectuelle.
+      </p>
+
+      <h2>Données personnelles</h2>
+      <p>
+        Le traitement des données personnelles est détaillé dans notre
+        <a href="/confidentialite/">politique de confidentialité</a>.
+      </p>
+
+      <h2>Droit applicable</h2>
+      <p>Le présent site est soumis au droit français.</p>
+    </div>
+  </section>
+</BaseLayout>

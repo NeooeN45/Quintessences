@@ -11,7 +11,10 @@ les RFC métier.
 
 # Import de tous les domaines — chaque import enregistre les types dans RESOURCE_TYPES
 from gsie_api.infrastructure.models import (
+    accounts,  # noqa: F401 — comptes Quintessences multi-fournisseurs (RFC-0032)
     assertion,  # noqa: F401
+    audit_log,  # noqa: F401 — journal d'audit append-only (migration 20260803_0033)
+    billing,  # noqa: F401 — catalogue plans, abonnements et entitlements
     business,  # noqa: F401 — 7 types métier (audit ONF/CNPF)
     diagnostic,  # noqa: F401 — diagnostic stationnel persisté (Diagnostic Engine)
     dynamics,  # noqa: F401
@@ -24,11 +27,13 @@ from gsie_api.infrastructure.models import (
     junctions,  # noqa: F401 — 17 tables de jonction n:m
     models_ai,  # noqa: F401
     observation,  # noqa: F401
+    organisations,  # noqa: F401 — multi-tenant enterprise (migration 20260803_0032)
     outbox,  # noqa: F401 — Outbox/Inbox (ADR-005)
     prov,  # noqa: F401
     provenance,  # noqa: F401
     reasoning,  # noqa: F401
     spatial_temporal,  # noqa: F401
+    sync,  # noqa: F401 — répliques privées des applications Quintessences
     temporal_engine,  # noqa: F401
 )
 from gsie_api.infrastructure.models.base import (  # noqa: F401

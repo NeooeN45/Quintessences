@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import AnimatedHeading from "../../components/AnimatedHeading.tsx";
+import LoginForm from "../../components/LoginForm.tsx";
+---
+
+<BaseLayout title="Connexion" description="Se connecter à son compte Quintessences.">
+  <section class="mx-auto max-w-md px-6 py-20">
+    <AnimatedHeading client:load lines={[{ text: "Connexion" }]} />
+    <div class="mt-10">
+      <LoginForm client:load />
+    </div>
+  </section>
+</BaseLayout>

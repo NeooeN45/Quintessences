@@ -115,3 +115,38 @@ class PedologyData(BaseModel):
     caracteristiques: list[SolCaracteristique] = Field(default_factory=list, max_length=20)
     source: SourceReference
     date_donnees: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class PedologyIngestResult(BaseModel):
+    """Résultat d'ingestion d'une caractéristique de sol dans le Knowledge Engine.
+
+    Une caractéristique par résultat : chaque propriété SoilGrids (pH,
+    argile, sable, limon) devient une connaissance atomique distincte,
+    interrogeable indépendamment (`par_concept`, `par_domaine`) plutôt
+    qu'un unique objet fourre-tout par point.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom: str = Field(description="Caractéristique concernée, ex. « ph »")
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: EvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class PedologyIngestResponse(BaseModel):
+    """Résultat de `POST /pedology/query-and-ingest` — une entrée par caractéristique."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    latitude: float
+    longitude: float
+    profondeur: str
+    resultats: list[PedologyIngestResult] = Field(default_factory=list, max_length=20)

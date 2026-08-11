@@ -69,6 +69,10 @@ Ajouter une entrée dans `22_PROJECT_MEMORY/sessions/INDEX.md` :
 ### 5. Vérifier la cohérence
 
 - Si la session a créé un DEC → vérifier que DEC-xxxxxx existe dans 03_DECISIONS/
+- Si la session a enregistré une idée → vérifier son identifiant et son statut
+  dans `22_PROJECT_MEMORY/IDEA_BACKLOG.md`
+- Si la session a qualifié une ressource → vérifier sa destination, sa licence
+  et ses preuves de provenance
 - Si la session a modifié des Locked → vérifier qu'une RFC a été créée
 - Si la session a implémenté un moteur → vérifier PROJECT_MEMORY.md est à jour
 

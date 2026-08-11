@@ -3,9 +3,54 @@
 | Champ | Valeur |
 |---|---|
 | **Créé le** | 2026-07-01 |
-| **Phase** | 1 — Foundation |
+| **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0003 |
-| **Dernière mise à jour** | 2026-07-06 |
+| **Dernière mise à jour** | 2026-08-11 |
+
+---
+
+## État de référence courant — 2026-08-11
+
+La tête `f12e3cd` clôture la tranche HA Linux/TLS et couverture multicouche.
+Les runs PR `31494308995`, push `31494302005` et HA `31494308961` sont verts.
+La preuve distante établit 6 000/6 000 réponses HTTP 200, zéro erreur,
+276,3 req/s, p95 175,58 ms et p99 252,82 ms. La couverture fusionnée est de
+16 086/16 386 instructions (98,17 %) et 70/70 mutations sont détectées.
+Data Registry passe ses trois campagnes distantes (165/165, 103/103 et
+121/121). La PR #28 est prête pour revue, mais aucun merge, SLO de production
+ou FETCH global n'est autorisé par cette preuve seule.
+
+Les sections historiques ci-dessous sont conservées sans réécriture.
+
+## État opérationnel récent
+
+- Data Registry Phase 2, QualityAssessment et FETCH fail-closed validés.
+- Micro-extrait SoilGrids unique certifié par DEC-000061, sans promotion.
+- API locale redéployée et chaîne PostgreSQL/Redis/MinIO vérifiée par
+  DEC-000062.
+- Profilage DEC-000063 : le port Docker Desktop explique le plafond hôte ;
+  recyclage Gunicorn désynchronisé à 5000/5000. La capacité de production doit
+  encore être qualifiée sous Linux avec plusieurs réplicas.
+- DEC-000064 et DEC-000065 : banc à deux replicas puis workflow Ubuntu/TLS
+  validés. Le run distant `31479643460` passe 6 000/6 000 requêtes sans erreur,
+  à 298,03 req/s, p95 164,71 ms et p99 245,58 ms. Les requêtes longues,
+  l'idempotence HTTP et les SLO de production restent hors preuve. Le run
+  `31488527136` confirme le banc sur `e9743d8` après un unique rejeu dû à une
+  coupure GitHub Releases antérieure aux tests. Deux coupures Debian parallèles
+  sur `8a531ed` ont conduit à borner les reprises `apt`/`curl`, sans affaiblir
+  TLS ni SHA-256 ; les images DB et API corrigées sont reconstruites et
+  smoke-testées localement. La preuve distante de la tête finale reste requise.
+- DEC-000066 : couverture Python multicouche obligatoire. Les suites finales
+  passent 2 873 unités et 349 intégrations ; la fusion atteint 98,18 %, les
+  49 contrats publics sont à 100 %, métier/application à 96,80 % et
+  infrastructure à 99,97 %. Le job distant du run `31488527209` confirme
+  98,169 %, 49/49 contrats, 96,80 % métier et 99,90 % infrastructure. Le premier
+  run complet a aussi révélé puis fait corriger l'isolation S3/JWT du harnais
+  Data Registry et un motif de mutation périmé. La sortie du brouillon reste
+  conditionnée à un run complet vert sur la tête courante. Le run de PR
+  `31492339317` sur `8a531ed` confirme 70/70 mutations, 98,17 % combinés,
+  Registry, intégration, Docker, sécurité et gate final verts. La tête finale
+  doit encore reproduire cette preuve après le durcissement réseau.
 
 ---
 

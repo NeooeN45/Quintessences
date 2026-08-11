@@ -22,6 +22,16 @@ GIS, Climate, Knowledge, Correlation
 
 BD Carthage (IGN), BD TOPAGE, Sandre
 
+## Intégration GSIE
+
+Hydro est la projection métier eau du jumeau numérique environnemental fédéré
+GSIE. Il publie les réseaux, bassins versants, écoulements, crues et résultats
+de simulation avec leur provenance et leur état réel ou simulé. Les impacts
+post-incendie d'Ignis peuvent alimenter les simulations de ruissellement,
+d'érosion et de crue via les contrats GSIE versionnés.
+
+Voir [GSIE_INTEGRATION.md](GSIE_INTEGRATION.md).
+
 ## Voir aussi
 
 - `GSIE/ARCHITECTURE/` — architecture du moteur

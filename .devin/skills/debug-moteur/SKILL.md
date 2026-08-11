@@ -26,11 +26,10 @@ Reproduit-on en isolation ou seulement avec d'autres composants ?
 Créer un test qui capture le bug AVANT de le fixer :
 
 ```python
-@pytest.mark.asyncio
 async def test_should_handle_empty_sources_without_crash(async_client):
     """Bug : moteur crash avec sources=[] au lieu de lever ValidationException"""
     response = await async_client.post(
-        "/v1/engines/evidence/process",
+        "/api/v1/evidence/evaluate",
         json={"sources": [], "confidence_threshold": 0.75}
     )
     assert response.status_code == 422  # pas 500

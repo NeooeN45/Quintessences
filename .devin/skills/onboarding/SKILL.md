@@ -59,7 +59,8 @@ Invoquer `devin skills list` et présenter les skills organisées par catégorie
 - Process : /git-flow-gsie, /naming-conventions, /documentation-gsie
 - Orchestration : /audit-phase4, /handoff-moteur, /orchestration-moteurs
 - Ops : /deploiement, /migration-db, /refactor-moteur, /debug-moteur
-- Veille : /veille-techno, /session-archive
+- Veille et intake : /veille-techno, /ingestion-idee, /ingestion-ressource
+- Pilotage : /pilotage-wip, /audit-skills-devin, /session-archive
 
 ### 5. Lister les sous-agents
 

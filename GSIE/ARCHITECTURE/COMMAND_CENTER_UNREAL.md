@@ -5,16 +5,16 @@
 | **Livrable** | 211 — Centre de Commandement GSIE (Unreal Engine 5.8) |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-13 (v2.2.0 — complément de recherche §9 : UE5.8, Cesium post-avril 2026, précédents multi-domaines, MCP, publications 2026) |
+| **Date de révision** | 2026-08-06 (alignement RFC-0037 — Hubs spécialisés et interactions contrôlées) |
 | **Lois fondatrices** | GSIE-CON-004, GSIE-CON-005, GSIE-CON-007 |
 | **Constitutions liées** | Technique (T-2, T-8, T-10) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0006 (moteur cognitif), GSIE-DIR-0009 (restructuration écosystème) |
-| **RFC de référence** | RFC-0004 (Ignis, §8 garde-fous) |
+| **RFC de référence** | RFC-0004 (Ignis, §8 garde-fous), RFC-0037 (plateforme de jumeau numérique fédéré) |
 | **Décision d'adoption** | DEC-000010 (adoption UE 5.8 + Cesium), DEC-000013 (restructuration GSIE) |
-| **Documents connexes** | `GSIE_MASTER_ARCHITECTURE.md` (livrable 201), `ENGINE_DATA_SOCLE.md` (livrable 310), `GSIE_IGNIS_ARCHITECTURE.md` (livrable 208), `GSIE_IGNIS_DATA_PIPELINE.md` (livrable 209), `GSIE_IGNIS_DRONE_ARCHITECTURE.md` (livrable 210) |
+| **Documents connexes** | `GSIE_MASTER_ARCHITECTURE.md` (livrable 201), `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md` (RFC-0037), `ENGINE_DATA_SOCLE.md` (historique du livrable 310), `GSIE_IGNIS_ARCHITECTURE.md` (livrable 208), `GSIE_IGNIS_DATA_PIPELINE.md` (livrable 209), `GSIE_IGNIS_DRONE_ARCHITECTURE.md` (livrable 210), `HUB_UNREAL_TECHNOLOGY_STACK.md` (langages et technologies) |
 
 > Version 2.0.0 — 2026-07-13
-> Repositionne le livrable 211 : ce n'est plus seulement le GCS-Cinéma d'Ignis, c'est le **Centre de Commandement GSIE** — un poste de pilotage immersif où TOUTES les données de l'écosystème Quintessences convergent (GeoSylva, Artemis, Ignis, Hydro, Flora). Le contenu technique (Cesium, Niagara, WebSocket) est conservé et élargi à l'ensemble des apps.
+> Repositionne le livrable 211 : ce n'est plus seulement le GCS-Cinéma d'Ignis, c'est le **Centre de Commandement GSIE** — un ensemble de Hubs Unreal spécialisés où les projections GeoSylva, Ignis, Hydro, Flora et Artemis explorent et simulent le même jumeau numérique environnemental fédéré. Le contenu technique (Cesium, Niagara, WebSocket) est conservé et relié au contrat de plateforme défini par RFC-0037.
 > Principe directeur : « avec ce qui existe » — chaque recommandation ci-dessous s'appuie sur une capacité native du moteur, un plugin établi, ou une publication de recherche déjà validée. Rien n'est inventé de zéro.
 
 ---
@@ -44,11 +44,12 @@ DEC-000013), Unreal Engine 5.8 est repositionné comme le **Centre de
 Commandement GSIE** : un poste de pilotage immersif unique où
 **TOUTES les données de l'écosystème convergent**.
 
-GSIE devient le **moteur central** (système nerveux) et le Centre de
-Commandement en devient le **poste de pilotage visuel**. Les
-applications ne sont plus des silos isolés : elles sont des couches
-de données qui s'affichent et se croisent dans une même scène 3D
-géoréférencée.
+GSIE devient le **socle du jumeau numérique fédéré** et les Hubs en
+deviennent les **environnements de pilotage visuel et interactif**.
+GeoSylva, Ignis, Hydro, Flora, Artemis et QGISIA ne sont plus des silos
+isolés : ce sont des projections métier qui publient et consomment des
+ressources GSIE versionnées, puis s'affichent et se croisent dans des
+scènes 3D géoréférencées.
 
 ### 0.2 Les apps qui convergent dans le Centre de Commandement
 
@@ -105,6 +106,23 @@ dans un même environnement géoréférencé.
 > drones) restent valides comme **premier cas d'usage** du Centre de
 > Commandement — le plus exigeant en temps réel — mais le périmètre
 > est désormais l'ensemble de l'écosystème.
+
+### 0.4 Modes Hub spécialisés
+
+Le Centre de Commandement conserve un socle Unreal commun, mais propose
+des expériences métier spécialisées :
+
+- **Hub Ignis** : feu, météo, enjeux, moyens, drones et scénarios de crise ;
+- **Hub GeoSylva** : visite forestière, croissance, rendement, martelage et
+  scénarios de changement d'essences ;
+- **Hub Hydro** : écoulements, bassins, crues, nappes et réseaux karstiques ;
+- **Hub multi-domaines** : superposition contrôlée des projections forêt,
+  feu, eau, végétation et faune.
+
+Chaque mode consomme les ressources fédérées de RFC-0037. Il ne possède
+pas une base ou une logique scientifique concurrente. Les scénarios sont
+des branches distinctes de l'état réel ; les demandes d'action passent
+par HUB-002 et nécessitent les contrôles d'autorité applicables.
 
 ---
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -135,6 +135,9 @@ class Settings(BaseSettings):
     environment: Literal["development", "staging", "production"] = "development"
     debug: bool = False
     log_level: str = "INFO"
+    # Point d'entrée réseau. En mode tunnel, seuls les en-têtes Cloudflare
+    # validés syntaxiquement sont utilisés pour le quota par adresse IP.
+    edge_proxy_mode: Literal["direct", "cloudflare_tunnel"] = "direct"
 
     # API
     api_v1_prefix: str = "/api/v1"
@@ -200,6 +203,16 @@ class Settings(BaseSettings):
     redis_connect_timeout: float = 5.0
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
+    # Fichier sentinelle créé avant SIGTERM pour retirer le replica de la bordure.
+    graceful_drain_file: str = "/tmp/gsie-draining"
+    # Scheduler Data Registry — fermé par défaut, distribué via verrou Redis.
+    data_registry_health_scheduler_enabled: bool = False
+    data_registry_health_manifest_path: str = "/app/data/REGISTRY_MANIFEST.json"
+    data_registry_health_interval_seconds: float = Field(default=3600.0, ge=300.0)
+    data_registry_health_timeout_seconds: float = Field(default=30.0, ge=1.0, le=120.0)
+    data_registry_health_max_concurrency: int = Field(default=1, ge=1, le=4)
+    data_registry_health_max_bytes: int = Field(default=1024 * 1024, ge=1024, le=32 * 1024 * 1024)
+    data_registry_health_lock_ttl_seconds: int = Field(default=600, ge=120, le=3600)
     # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
     # En développement/test, "memory://" est utilisé (pas de Redis requis)
     rate_limit_storage_url: str = "memory://"
@@ -221,15 +234,26 @@ class Settings(BaseSettings):
     # Amplitude du bruit aléatoire, en fraction du délai calculé (0 = aucun).
     # Évite que N workers rejouent le même lot à la même milliseconde.
     outbox_retry_jitter_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
+    # Battement écrit uniquement après un cycle PostgreSQL/Redis réussi.
+    outbox_healthcheck_path: str = "/tmp/gsie-outbox-worker.heartbeat"
+    outbox_healthcheck_max_age_seconds: float = Field(default=30.0, ge=2.0, le=300.0)
     # WebSocket (ADR-007)
     ws_max_connections: int = 1000
     ws_heartbeat_interval: int = 30  # secondes
     ws_allowed_origins: list[str] = ["*"]  # CORS WS — restreindre en prod
 
     # Object Storage (ADR-006)
+    object_storage_backend: Literal["local", "s3"] = "local"
     object_storage_local_path: str = "./data/assets"
     object_storage_s3_endpoint: str | None = None
+    object_storage_s3_access_key: SecretStr = SecretStr("")
+    object_storage_s3_secret_key: SecretStr = SecretStr("")
+    object_storage_s3_region: str = "us-east-1"
     object_storage_s3_bucket: str = "gsie-assets"
+    object_storage_s3_server_side_encryption: Literal["AES256", "aws:kms"] | None = None
+    object_storage_s3_multipart_chunk_size: int = Field(
+        default=8 * 1024 * 1024, ge=5 * 1024 * 1024, le=512 * 1024 * 1024
+    )
 
     # Auth — JWT RS256 (DEC-000019)
     jwt_algorithm: Literal["RS256"] = "RS256"
@@ -245,6 +269,83 @@ class Settings(BaseSettings):
     auth_dev_login_enabled: bool = False
     auth_dev_username: str = "admin"
     auth_dev_password: str = ""
+    # Identité Quintessences persistée (RFC-0032 / DEC-000044).
+    auth_local_registration_enabled: bool = True
+    # Liste JSON des client IDs Web/Android autorisés à présenter un ID token
+    # au backend. Un tableau vide garde Google fermé par défaut.
+    google_oauth_client_ids: list[str] = Field(default_factory=list)
+    # Les nonces utilisent Redis hors développement ; l'URL vide réutilise le
+    # registre distribué des refresh tokens avec un préfixe de clés distinct.
+    google_nonce_storage_url: str = ""
+    google_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
+    # Même principe que Google : nonce serveur à usage unique lié au flux
+    # OIDC générique (Keycloak, Entra ID, etc.), pour empêcher le rejeu d'un
+    # ID token intercepté (PENTEST_AUTH_CONNEXION_2026-08-07.md §2.1).
+    oidc_nonce_storage_url: str = ""
+    oidc_nonce_expire_seconds: int = Field(default=300, ge=60, le=600)
+    # E-mails transactionnels : codes de vérification et de récupération.
+    transactional_email_mode: Literal["disabled", "smtp"] = "disabled"
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_use_tls: bool = False
+    smtp_starttls: bool = True
+    email_sender: str = "noreply@quintessences-platform.com"
+    identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
+    organisation_invitation_base_url: str = "http://localhost:4000/invitations/accept"
+    organisation_invitation_expire_hours: int = Field(default=72, ge=1, le=168)
+    # MFA TOTP (RFC 6238) — issuer affiché dans l'app d'authentification.
+    mfa_enabled: bool = True
+    mfa_issuer: str = "Quintessences"
+    # Clé Fernet base64-url 32 bytes, fournie par secret manager en staging/prod.
+    mfa_encryption_key: SecretStr = SecretStr("")
+    mfa_totp_step_seconds: int = Field(default=30, ge=15, le=120)
+    mfa_recovery_code_count: int = Field(default=10, ge=5, le=20)
+    # Lockout progressif — seuils de tentatives échouées avant blocage temporaire.
+    lockout_max_attempts: int = Field(default=5, ge=3, le=20)
+    lockout_duration_minutes: int = Field(default=15, ge=1, le=120)
+    # Cloudflare Turnstile — bot protection (OWASP A07).
+    # Le site key est public (widget), le secret key reste en SecretStr.
+    turnstile_enabled: bool = False
+    turnstile_site_key: str = ""
+    turnstile_secret_key: SecretStr = SecretStr("")
+    # Métriques Prometheus — token statique optionnel pour les scrapers.
+    # S'il est vide et que l'environnement != development, le role `admin` est requis.
+    metrics_bearer_token: SecretStr = SecretStr("")
+    # Vérification de force mot de passe — HIBP k-anonymity + score zxcvbn.
+    password_check_hibp_enabled: bool = True
+    password_check_zxcvbn_enabled: bool = True
+    password_min_zxcvbn_score: int = Field(default=3, ge=0, le=4)
+    # OIDC générique — fournisseurs enterprise configurables (Keycloak, Microsoft, etc.).
+    # Liste JSON : [{"name":"keycloak","issuer":"...","client_ids":[...],"jwks_url":"..."}]
+    oidc_providers: list[dict[str, object]] = Field(default_factory=list)
+    # Détection de réutilisation de refresh token — invalide toute la chaîne si un
+    # token révoqué est réutilisé.
+    refresh_token_reuse_detection_enabled: bool = True
+    # Stripe Billing — secrets uniquement via secret manager.
+    stripe_enabled: bool = False
+    stripe_secret_key: SecretStr = SecretStr("")
+    stripe_webhook_secret: SecretStr = SecretStr("")
+    stripe_checkout_success_url: str = "http://localhost:4000/billing/success"
+    stripe_checkout_cancel_url: str = "http://localhost:4000/billing/cancel"
+    stripe_portal_return_url: str = "http://localhost:4000/billing"
+    # Identifiants de prix Stripe : les prix restent créés et versionnés côté Stripe.
+    stripe_price_geosylva_pro_monthly: str = ""
+    stripe_price_quintessences_pro_monthly: str = ""
+    # Validation des achats mobiles — désactivée tant que les comptes stores ne sont pas configurés.
+    google_play_enabled: bool = False
+    google_play_package_name: str = ""
+    google_play_service_account_json_path: str = ""
+    google_play_product_geosylva_pro: str = ""
+    google_play_product_quintessences_pro: str = ""
+    apple_store_enabled: bool = False
+    apple_store_bundle_id: str = ""
+    apple_store_issuer_id: str = ""
+    apple_store_key_id: str = ""
+    apple_store_private_key_path: str = ""
+    apple_store_root_certificates_path: list[str] = Field(default_factory=list)
+    apple_store_environment: Literal["sandbox", "production"] = "sandbox"
 
     # Moteur Climate — portail API Météo-France (clé de compte, hors préfixe GSIE_)
     meteofrance_api_key: str | None = Field(default=None, validation_alias="METEOFRANCE_API_KEY")
@@ -277,6 +378,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Valide que la configuration est sûre en production et staging."""
+        if self.smtp_use_tls and self.smtp_starttls:
+            raise ValueError("SMTP TLS direct et STARTTLS ne peuvent pas être activés ensemble")
+        if self.transactional_email_mode == "smtp" and not self.smtp_host.strip():
+            raise ValueError("GSIE_SMTP_HOST est requis lorsque les e-mails SMTP sont activés")
         # Cohérence pool vs max_connections (toujours vérifié, pas seulement en prod)
         max_app_connections = self.gunicorn_workers * (self.db_pool_size + self.db_max_overflow)
         # +1 pour outbox-worker, +5 reserve admin
@@ -324,6 +429,8 @@ class Settings(BaseSettings):
                 raise ValueError("Distributed refresh-token storage required in production")
             if self.auth_dev_login_enabled:
                 raise ValueError("Development login must be disabled in production")
+            if self.mfa_enabled and not self.mfa_encryption_key.get_secret_value().strip():
+                raise ValueError("MFA encryption key required in production")
             if not self.require_rust_backend:
                 raise ValueError("Rust Evidence backend must be required in production")
             if "*" in self.ws_allowed_origins:
@@ -333,7 +440,43 @@ class Settings(BaseSettings):
                     "TLS PostgreSQL requis en production/staging "
                     "(db_ssl_mode doit être 'require', 'verify-ca' ou 'verify-full')"
                 )
+            if self.auth_local_registration_enabled:
+                if self.transactional_email_mode != "smtp":
+                    raise ValueError(
+                        "La création de comptes locaux exige un service SMTP en staging/production"
+                    )
+                if not self.smtp_use_tls and not self.smtp_starttls:
+                    raise ValueError("Le transport SMTP doit être chiffré en staging/production")
+        if self.object_storage_backend == "s3":
+            self._validate_s3_storage_configuration()
+            if (
+                self.environment in ("staging", "production")
+                and not self.object_storage_s3_server_side_encryption
+            ):
+                raise ValueError("Chiffrement serveur S3 requis en staging/production")
+        elif self.environment in ("production", "staging"):
+            raise ValueError("S3 object storage is required in staging/production")
         return self
+
+    def _validate_s3_storage_configuration(self) -> None:
+        """Valide les paramètres S3 avant toute création de client réseau."""
+        endpoint = (self.object_storage_s3_endpoint or "").strip()
+        access_key = self.object_storage_s3_access_key.get_secret_value().strip()
+        secret_key = self.object_storage_s3_secret_key.get_secret_value().strip()
+        if not all((endpoint, self.object_storage_s3_bucket.strip(), access_key, secret_key)):
+            raise ValueError(
+                "S3 endpoint, bucket, access_key et secret_key sont requis pour le stockage S3"
+            )
+        parsed = urlparse(endpoint)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("S3 endpoint doit être une URL HTTP(S) valide")
+        insecure_dev_hosts = {"localhost", "127.0.0.1", "minio"}
+        if parsed.scheme != "https" and (
+            self.environment != "development" or parsed.hostname not in insecure_dev_hosts
+        ):
+            raise ValueError(
+                "HTTPS obligatoire pour le endpoint S3 hors MinIO/local en développement"
+            )
 
 
 # --- Chiffrement .env (audit sécurité P1-1) -------------------------------

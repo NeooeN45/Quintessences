@@ -113,6 +113,11 @@ from gsie_api.engines.gis.ign_client import (
     IGNClient,
     IGNClientError,
 )
+from gsie_api.engines.gis.telechargement_client import (
+    _TELECHARGEMENT_BASE_URL,
+    TelechargementClient,
+    TelechargementClientError,
+)
 from gsie_api.engines.pedology.soilgrids_client import (
     _SOILGRIDS_URL,
     SoilGridsClient,
@@ -238,6 +243,15 @@ CLIENT_REGISTRY: list[ClientSpec] = [
         call=lambda c: c.get_altitude(44.0, -0.5),
         auth=False,
         body_format=BodyFormat.JSON,
+    ),
+    ClientSpec(
+        name="ign_telechargement",
+        factory=lambda: TelechargementClient(),
+        url=f"{_TELECHARGEMENT_BASE_URL}/capabilities",
+        exception=TelechargementClientError,
+        call=lambda c: c.get_capabilities(),
+        auth=False,
+        body_format=BodyFormat.XML,
     ),
     ClientSpec(
         name="vigilance",
@@ -385,9 +399,16 @@ async def test_mode4_missing_field(spec: ClientSpec) -> None:
     try:
         result = await spec.call(client)
         # Si le client retourne une valeur, ce doit être une valeur "vide"
-        # (None, [], {}, ou un dict sans les champs attendus) — jamais
-        # une valeur inventée.
-        assert result is None or result == [] or result == {} or isinstance(result, dict | list)
+        # (None, [], {}, un dict sans les champs attendus, ou un tuple
+        # contenant une liste/dict vide — ex. pagination) — jamais une
+        # valeur inventée.
+        assert (
+            result is None
+            or result == []
+            or result == {}
+            or isinstance(result, dict | list)
+            or (isinstance(result, tuple) and len(result) >= 1)
+        )
     except spec.exception:
         # Le client peut légitimement lever son exception métier si la
         # réponse est considérée comme invalide — c'est aussi acceptable.

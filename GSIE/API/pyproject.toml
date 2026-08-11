@@ -10,7 +10,7 @@ authors = [{ name = "Camille Perraudeau" }]
 # Dépendances épinglées — versions publiées > 7 jours (règle global_rules)
 dependencies = [
     # Framework API
-    "fastapi==0.115.6",
+    "fastapi==0.134.0",
     "uvicorn[standard]==0.34.0",
     "gunicorn==23.0.0",
     # Validation
@@ -31,16 +31,21 @@ dependencies = [
     "pyproj==3.7.0",
     # Observabilité
     "structlog==24.4.0",
-    "prometheus-fastapi-instrumentator==7.0.0",
+    "prometheus-fastapi-instrumentator==8.0.2",
     "opentelemetry-api==1.44.0",
     "opentelemetry-sdk==1.44.0",
     "opentelemetry-instrumentation-fastapi==0.65b0",
     "opentelemetry-instrumentation-sqlalchemy==0.65b0",
     "opentelemetry-instrumentation-redis==0.65b0",
     "opentelemetry-exporter-otlp-proto-grpc==1.44.0",
-    # Auth — bcrypt direct (passlib 1.7.4 non maintenu, CVE potentielles)
-    "pyjwt[crypto]==2.10.1",
+    # Auth — JWT GSIE + mots de passe locaux Argon2id + Google OIDC (DEC-000044)
+    "pyjwt[crypto]==2.13.0",
     "bcrypt==5.0.0",
+    "argon2-cffi==25.1.0",
+    "email-validator==2.3.0",
+    "google-auth==2.56.0",
+    # Transport HTTP requis explicitement par google.auth.transport.requests.
+    "requests==2.34.2",
     # Sécurité — chiffrement .env (audit P1-1, tools/secure_env.py + core/config.py)
     # cryptography est tiré par pyjwt[crypto] mais importé directement → déclarer
     "cryptography==50.0.0",
@@ -64,17 +69,23 @@ dependencies = [
     # Retries avec backoff exponentiel — clients API externes (GSIE-PROMPT-0023)
     "tenacity==8.5.0",
     # Sérialisation JSON haute performance (veille techno 2026-08-02)
-    "orjson==3.10.11",
+    "orjson==3.11.6",
     # Boucle d'événements haute performance (Linux uniquement, veille techno 2026-08-02)
     "uvloop==0.21.0 ; sys_platform != 'win32'",
     "eccodeslib==2.47.3.23 ; sys_platform != 'win32'",
     "pgvector==0.5.0",
+    "pyotp==2.9.0",
+    "zxcvbn==4.4.28",
+    "stripe==11.6.0",
+    "app-store-server-library==3.1.2",
+    "starlette==1.3.1",
+    "aiobotocore==3.7.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==8.3.4",
-    "pytest-asyncio==0.25.0",
+    "pytest==9.0.3",
+    "pytest-asyncio==1.3.0",
     "pytest-cov==6.0.0",
     # Parallélisation de la suite pytest (P2-1) — version stable, publiée
     # depuis plusieurs mois, compatible pytest 8.3.x
@@ -120,6 +131,19 @@ markers = [
     "xdist_group(name): groupe de tests à exécuter sur le même worker xdist",
 ]
 
+[tool.coverage.run]
+source = ["src/gsie_api"]
+branch = false
+relative_files = true
+
+[tool.coverage.report]
+# DEC-000066 : cliquet global vérifié en plus des seuils par couche du
+# script scripts/check_coverage_policy.py. La base mesurée est 97,15 %.
+fail_under = 97.1
+precision = 2
+show_missing = true
+skip_covered = false
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100
@@ -158,6 +182,21 @@ ignore_missing_imports = true
 module = ["cfgrib.*", "defusedxml.*"]
 ignore_missing_imports = true
 
+# google-auth ne distribue pas de stubs complets pour tous ses transports.
+[[tool.mypy.overrides]]
+module = ["google.auth.*"]
+ignore_missing_imports = true
+
+# zxcvbn n'a pas de stubs officiels — vérification de force mot de passe
+[[tool.mypy.overrides]]
+module = ["zxcvbn.*"]
+ignore_missing_imports = true
+
+# pyotp n'a pas de stubs officiels — MFA TOTP (RFC 6238)
+[[tool.mypy.overrides]]
+module = ["pyotp.*"]
+ignore_missing_imports = true
+
 # scipy-stubs existe mais n'est pas encore ajouté aux dépendances dev —
 # Correlation Engine (tests statistiques)
 [[tool.mypy.overrides]]
@@ -167,4 +206,6 @@ ignore_missing_imports = true
 [dependency-groups]
 dev = [
     "psycopg2-binary==2.9.12",
+    "pytest==9.0.3",
+    "pytest-asyncio==1.3.0",
 ]

@@ -6,10 +6,17 @@ Taxonomy), résoudre les synonymes vers le taxon accepté
 uniquement — pas d'autécologie (voir docstring engine.py).
 
 Endpoints :
-- GET  /botanical/status   — statut du moteur
-- GET  /botanical/version  — version et backend
-- POST /botanical/query     — résout une essence vers son taxon GBIF
-- POST /botanical/identify  — identifie une plante par image (PlantNet, RFC-0031)
+- GET  /botanical/status              — statut du moteur
+- GET  /botanical/version             — version et backend
+- POST /botanical/query                — résout une essence vers son taxon GBIF
+- POST /botanical/query-and-ingest     — idem, puis fait entrer le taxon dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
+- POST /botanical/taxref                — résout une entrée TAXREF réelle
+- POST /botanical/taxref-and-ingest     — idem, puis fait entrer l'entrée dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
+- POST /botanical/identify             — identifie une plante par image (PlantNet, RFC-0031)
+- POST /botanical/identify-and-ingest  — idem, puis fait entrer les candidats dans le
+  Knowledge Engine via EvidenceKnowledgePipeline (Gate 5 — maillon amont)
 """
 
 from typing import Annotated
@@ -19,18 +26,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
-from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+from gsie_api.engines.botanical.engine import (
+    BotanicalEngine,
+    BotanicalEngineError,
+    parse_plantnet_results,
+)
 from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
 from gsie_api.engines.botanical.schemas import (
     BotanicalData,
+    BotanicalIngestResponse,
     BotanicalQuery,
     IndigenatQuery,
     IndigenatResult,
     PlantNetIdentificationResponse,
-    PlantNetIdentificationResult,
+    PlantNetIngestResponse,
+    TaxrefIngestResponse,
     TaxrefQuery,
     TaxrefResult,
 )
+from gsie_api.engines.knowledge.engine import KnowledgeEngine
 from gsie_api.infrastructure.database import get_db as get_db_session
 from gsie_api.shared.schemas import EngineStatusResponse, EngineVersionResponse
 
@@ -90,6 +104,41 @@ async def botanical_query(
     """
     try:
         return await BotanicalEngine(session).query(request_body)
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
+    "/query-and-ingest",
+    response_model=BotanicalIngestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Résoudre une essence vers son taxon GBIF, ingéré dans le Knowledge Engine",
+    description=(
+        "Résout un nom scientifique comme /query, puis fait passer le "
+        "taxon accepté par l'Evidence Engine et l'ingère dans le "
+        "Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→"
+        "Knowledge, ROADMAP.md). GBIF Backbone Taxonomy est un "
+        "référentiel officiel : plafond evidence_level=B, statut "
+        "accepte, ingestion automatique — comme SoilGrids."
+    ),
+)
+@_limiter.limit("30/minute")
+async def botanical_query_and_ingest(
+    request_body: BotanicalQuery,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> BotanicalIngestResponse:
+    """Résout une essence vers son taxon GBIF et l'ingère.
+
+    Raises:
+        502: Si l'API GBIF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).query_and_ingest(
+            request_body, KnowledgeEngine(session)
+        )
     except BotanicalEngineError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -157,6 +206,41 @@ async def botanical_taxref(
 
 
 @router.post(
+    "/taxref-and-ingest",
+    response_model=TaxrefIngestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Résoudre une entrée TAXREF réelle, ingérée dans le Knowledge Engine",
+    description=(
+        "Résout une entrée TAXREF comme /taxref, puis fait passer le "
+        "résultat par l'Evidence Engine et l'ingère dans le Knowledge "
+        "Engine (Gate 5 — maillon amont ingestion→Evidence→Knowledge, "
+        "ROADMAP.md). TAXREF (MNHN) est un référentiel officiel : "
+        "plafond evidence_level=B, statut accepte, ingestion automatique "
+        "— comme GBIF et SoilGrids."
+    ),
+)
+@_limiter.limit("30/minute")
+async def botanical_taxref_and_ingest(
+    request_body: TaxrefQuery,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> TaxrefIngestResponse:
+    """Résout une entrée TAXREF réelle et l'ingère.
+
+    Raises:
+        502: Si le miroir GBIF de TAXREF est indisponible.
+    """
+    try:
+        return await BotanicalEngine(session).resolve_taxref_and_ingest(
+            request_body, KnowledgeEngine(session)
+        )
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
     "/identify",
     response_model=PlantNetIdentificationResponse | None,
     status_code=status.HTTP_200_OK,
@@ -198,23 +282,54 @@ async def botanical_identify(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     if data is None:
         return None
-    results: list[PlantNetIdentificationResult] = []
-    for r in data.get("results", []):
-        species = r.get("species", {})
-        genus = species.get("genus", {})
-        family = species.get("family", {})
-        results.append(
-            PlantNetIdentificationResult(
-                score=r.get("score", 0.0),
-                scientific_name=species.get("scientificName", ""),
-                scientific_name_without_author=species.get("scientificNameWithoutAuthor", ""),
-                genus=genus.get("scientificNameWithoutAuthor", genus.get("scientificName", "")),
-                family=family.get("scientificNameWithoutAuthor", family.get("scientificName", "")),
-                common_names=species.get("commonNames", []),
-                gbif_id=str(r.get("gbif", {}).get("id", "")) or None,
-            )
-        )
     return PlantNetIdentificationResponse(
         best_match=data.get("bestMatch"),
-        results=results,
+        results=parse_plantnet_results(data),
     )
+
+
+@router.post(
+    "/identify-and-ingest",
+    response_model=PlantNetIngestResponse | None,
+    status_code=status.HTTP_200_OK,
+    summary="Identifier une plante par image, candidats ingérés dans le Knowledge Engine",
+    description=(
+        "Identifie une plante comme /identify, puis fait passer chaque "
+        "espèce candidate par l'Evidence Engine et l'ingère dans le "
+        "Knowledge Engine (Gate 5 — maillon amont ingestion→Evidence→"
+        "Knowledge, ROADMAP.md). Une identification par image plafonne à "
+        "evidence_level=D (quarantaine, validation humaine requise, "
+        "CON-001) — contrairement à SoilGrids, ce n'est jamais ingéré "
+        "automatiquement."
+    ),
+)
+@_limiter.limit("10/minute")
+async def botanical_identify_and_ingest(
+    request: Request,
+    response: Response,
+    file: Annotated[UploadFile, File(description="Image de la plante (JPG ou PNG)")],
+    session: DbSession,
+    _user: EngineWriteUser,
+) -> PlantNetIngestResponse | None:
+    """Identifie une plante par image et ingère les candidats.
+
+    Raises:
+        502: Si l'API PlantNet est indisponible ou la clé API manquante.
+        400: Si le fichier est vide ou dans un format non supporté.
+    """
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Fichier image vide")
+    if file.content_type and file.content_type not in ("image/jpeg", "image/png"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Format non supporté : {file.content_type}. JPG ou PNG requis.",
+        )
+    try:
+        return await BotanicalEngine(session).identify_and_ingest(
+            image_bytes,
+            filename=file.filename or "image.jpg",
+            knowledge_engine=KnowledgeEngine(session),
+        )
+    except BotanicalEngineError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

@@ -25,12 +25,18 @@ def _add_trace_id(_: WrappedLogger, __: str, event_dict: EventDict) -> EventDict
 
 
 def setup_logging(log_level: str = "INFO", environment: str = "development") -> None:
-    """Configure structlog avec format JSON en production, console en dev."""
-    is_production = environment == "production"
+    """Configure structlog avec format JSON en production, console en dev.
 
-    renderer = (
-        structlog.processors.JSONRenderer() if is_production else structlog.dev.ConsoleRenderer()
-    )
+    Sur un flux non-TTY (Docker, redirection, pipe), le renderer Console
+    (colorama) lève ``OSError: [Errno 22]`` sur Windows lors du flush.
+    On retombe donc sur JSON dès que stderr n'est pas un terminal, quel
+    que soit l'environnement.
+    """
+    is_production = environment == "production"
+    is_tty = bool(getattr(sys.stderr, "isatty", lambda: False)())
+
+    use_json = is_production or not is_tty
+    renderer = structlog.processors.JSONRenderer() if use_json else structlog.dev.ConsoleRenderer()
 
     structlog.configure(
         processors=[

@@ -11,6 +11,7 @@ Séparation liveness/readiness (recommandation stress test) :
 
 from contextlib import suppress
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
@@ -112,6 +113,18 @@ async def readiness(
     Le cache est appliqué au corps **et** au code : un `degraded` en cache
     rejouerait sinon un 200.
     """
+    # Le signal de retrait prime sur le cache : un résultat healthy ancien ne
+    # doit jamais maintenir ce replica dans la rotation pendant son arrêt.
+    if Path(_settings.graceful_drain_file).is_file():
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return HealthResponse(
+            status="degraded",
+            version=_settings.app_version,
+            environment=_settings.environment,
+            timestamp=datetime.now(UTC),
+            dependencies={"draining": "active"},
+        )
+
     # Vérifier le cache Redis d'abord
     try:
         cached = await redis.get(_READY_CACHE_KEY)

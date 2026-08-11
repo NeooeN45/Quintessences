@@ -31,11 +31,8 @@ Quintessences
 ├── Hydro
 ├── Flora
 ├── Terra
-├── Atmos
+├── Aeris
 ├── Atlas
-├── Aether
-├── Chronos
-├── Nexus
 ├── ...
 └── GSIE
 Le rôle de GSIE
@@ -100,7 +97,7 @@ Arbres modélisés individuellement.
 Animaux localisés par Artemis.
 Parcelles et peuplements de GeoSylva.
 Réseau hydrographique d'Hydro.
-Données météo d'Atmos.
+Données météo d'Aeris.
 Départs de feu et propagation d'Ignis.
 Flux vidéo de drones ou de caméras.
 Capteurs IoT.

@@ -1,3 +1,11 @@
+---
+name: methode-glm52-high
+description: Méthode de travail GLM 5.2 High pour les recherches approfondies et les validations par preuves
+triggers:
+  - user
+  - model
+---
+
 # Note de méthode — GLM 5.2 High (Devin CLI)
 
 > Pour les futures sessions : si le LLM actif est GLM 5.2 High, adopter cette méthode.

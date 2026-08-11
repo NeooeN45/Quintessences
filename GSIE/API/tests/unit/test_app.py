@@ -1,7 +1,7 @@
 """Tests unitaires — application FastAPI (app.py)."""
 
 from datetime import UTC, datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from fastapi import FastAPI
@@ -48,6 +48,25 @@ def should_trigger_lifecycle_when_started(mock_lifespan: object):
         # Si le lifespan s'exécute sans erreur, on obtient une réponse
         response = client.get("/health")
         assert response.status_code == 200
+
+
+def should_log_error_when_oidc_nonce_store_shutdown_fails(mock_lifespan: object) -> None:
+    """Une erreur de fermeture du store OIDC nonces ne doit pas crasher le shutdown."""
+    with (
+        patch(
+            "gsie_api.auth.oidc_nonces.close_oidc_nonce_store",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("fermeture impossible"),
+        ),
+        patch("gsie_api.app.logger.error") as mock_log_error,
+    ):
+        app = create_app()
+        with TestClient(app) as client:
+            assert client.get("/health").status_code == 200
+
+    mock_log_error.assert_called_once()
+    call_kwargs = mock_log_error.call_args.kwargs
+    assert call_kwargs["error_type"] == "RuntimeError"
 
 
 def should_disable_docs_when_production():

@@ -1,0 +1,43 @@
+---
+import AnimatedHeading from "./AnimatedHeading.tsx";
+import VideoBackdrop from "./VideoBackdrop.astro";
+
+const HERO_LINES = [
+  { text: "De la preuve" },
+  { text: "à la décision", accent: true },
+  { text: "du forestier." },
+];
+---
+
+<section class="relative overflow-hidden border-b border-[var(--color-border)]">
+  <VideoBackdrop />
+  <div class="relative mx-auto max-w-5xl px-6 pb-20 pt-24 sm:pt-32">
+    <p class="eyebrow">Jumeau numérique · environnemental · fédéré</p>
+
+    <div class="mt-6">
+      <AnimatedHeading client:load size="hero" lines={HERO_LINES} />
+    </div>
+
+    <p class="relative mt-10 max-w-md text-[var(--color-fg-300)]">
+      Quintessences qualifie la preuve scientifique, raisonne dessus et laisse
+      un forestier décider — un écosystème d'intelligence environnementale
+      fondé sur le moteur GSIE.
+    </p>
+
+    <div class="relative mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href="/compte/inscription/"
+        class="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        style="background: var(--color-fg-100)"
+      >
+        Créer un compte
+      </a>
+      <a
+        href="https://docs.quintessences-platform.com"
+        class="rounded-full border border-[var(--color-border-strong)] px-5 py-2.5 text-sm font-medium text-[var(--color-fg-200)] transition-colors hover:border-[var(--color-fg-100)]"
+      >
+        Documentation
+      </a>
+    </div>
+  </div>
+</section>

@@ -151,6 +151,20 @@ Après **tout changement d'état** du projet :
 | `01_DIRECTIVES/README.md` | Format des directives |
 | `00_CONSTITUTION/README.md` | Hiérarchie constitutionnelle |
 
+## Intake des idées et ressources
+
+Les skills `/ingestion-idee` et `/ingestion-ressource` préparent des
+propositions, mais ne remplacent pas la gouvernance :
+
+- une idée reste dans `22_PROJECT_MEMORY/IDEA_BACKLOG.md` tant qu'elle n'est
+  pas qualifiée ;
+- une ressource est routée vers `GSIE/RESEARCH/`, `GSIE/DATASETS/`,
+  `GSIE/KNOWLEDGE/`, `21_EXPERIMENTS/` ou `19_LEGAL/` selon sa nature ;
+- une licence inconnue interdit l'ingestion d'un dataset ;
+- aucune skill d'intake ne crée seule de RFC, DEC ou code métier ;
+- toute décision structurante reste soumise au Fondateur et aux sources
+  canoniques.
+
 ## Phase courante
 
 **Phase 4 — Implémentation** (lancée par `DEC-000017` / `GSIE-DIR-0011`

@@ -13,7 +13,7 @@ from gsie_api.resources.validators import validate_resource_data
 class TestResourceTypes:
     """Tests du registry des types."""
 
-    def test_should_list_90_types_when_called(self) -> None:
+    def test_should_list_92_types_when_called(self) -> None:
         # 76 types + 3 types forestiers spécialisés (RFC-0016, tranche 1/10 :
         # autecology_profile, site_index_model, fertility_class) + 2 types
         # de diagnostic stationnel (RFC-0016, tranche 2/10 : station_type,
@@ -28,9 +28,10 @@ class TestResourceTypes:
         # `diagnostic` (persistance des diagnostics, 2026-07-26 — rend
         # `diagnostic_id` résolvable pour le Recommendation Engine ; ni
         # `inference`, ni `recommendation`, ni `diagnostic_protocol` ne
-        # désignent cet objet).
+        # désignent cet objet) + 2 projections Data Registry RFC-0038
+        # (`data_rights_statement`, `dataset_health`).
         types = ResourceService.list_types()
-        assert len(types) == 90
+        assert len(types) == 92
         assert "diagnostic" in types
         assert "assertion" in types
         assert "observation" in types
@@ -110,6 +111,281 @@ class TestValidators:
             },
         )
         assert errors == []
+
+    def test_should_validate_data_asset_storage_metadata(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "geoparquet",
+                "size_bytes": 1024,
+                "checksum": "a" * 64,
+                "checksum_algorithm": "sha256",
+                "storage_uri": "s3://gsie-assets/org-1/dataset/file.parquet",
+                "original_uri": "https://data.example.org/file.parquet",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert errors == []
+
+    def test_should_reject_negative_data_asset_size(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "parquet",
+                "size_bytes": -1,
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("size_bytes" in error for error in errors)
+
+    def test_should_reject_non_integer_data_asset_size(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "parquet",
+                "size_bytes": "not-an-integer",
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("size_bytes" in error for error in errors)
+
+    def test_should_reject_fractional_data_asset_size(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "parquet",
+                "size_bytes": 1.5,
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("size_bytes" in error for error in errors)
+
+    def test_should_reject_boolean_data_asset_size(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "parquet",
+                "size_bytes": True,
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("size_bytes" in error for error in errors)
+
+    def test_should_accept_coercible_data_asset_size(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "parquet",
+                "size_bytes": "1024",
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert errors == []
+
+    def test_should_reject_file_storage_uri(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "geotiff",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "storage_uri": "file:///srv/gsie/secret.tif",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("storage_uri" in error and "file" in error for error in errors)
+
+    def test_should_reject_credentials_in_data_asset_uri(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "storage_uri": "s3://access:secret@gsie-assets/org-1/asset.tif",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("identifiants" in error for error in errors)
+
+    def test_should_reject_malformed_data_asset_uri(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "original_uri": "https://[adresse-invalide",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("original_uri" in error for error in errors)
+
+    def test_should_reject_remote_data_asset_uri_without_host(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "original_uri": "https:///asset.tif",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("original_uri" in error for error in errors)
+
+    def test_should_reject_empty_data_asset_uri(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "storage_uri": "",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("storage_uri" in error for error in errors)
+
+    def test_should_reject_s3_uri_without_bucket(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "storage_uri": "s3:///asset.tif",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("bucket S3" in error for error in errors)
+
+    def test_should_reject_local_uri_without_key(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "storage_uri": "local://",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("clé locale" in error for error in errors)
+
+    def test_should_reject_empty_data_asset_checksum(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("checksum" in error for error in errors)
+
+    def test_should_reject_data_asset_uri_over_column_limit(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "cog",
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "original_uri": "https://example.org/" + "a" * 500,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("original_uri" in error and "500" in error for error in errors)
+
+    def test_should_reject_invalid_sha256_checksum(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "zarr",
+                "size_bytes": 12,
+                "checksum": "not-a-sha256",
+                "checksum_algorithm": "sha256",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("checksum" in error for error in errors)
+
+    def test_should_reject_data_asset_checksum_with_wrong_sha256_length(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "zarr",
+                "size_bytes": 12,
+                "checksum": "a" * 63,
+                "checksum_algorithm": "sha256",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("64 caractères" in error for error in errors)
+
+    def test_should_reject_unknown_data_asset_checksum_algorithm(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "zarr",
+                "size_bytes": 12,
+                "checksum": "a" * 20,
+                "checksum_algorithm": "crc32",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("Algorithme de checksum inconnu" in error for error in errors)
+
+    def test_should_reject_empty_data_asset_checksum_algorithm(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "zarr",
+                "size_bytes": 12,
+                "checksum": "a" * 20,
+                "checksum_algorithm": "",
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("checksum_algorithm" in error for error in errors)
+
+    def test_should_reject_overlong_data_asset_format(self) -> None:
+        errors = validate_resource_data(
+            "data_asset",
+            {
+                "dataset_version_id": uuid4(),
+                "format": "a" * 51,
+                "size_bytes": 12,
+                "checksum": "a" * 64,
+                "archived_at": "2026-08-10T08:00:00Z",
+            },
+        )
+        assert any("format" in error and "50" in error for error in errors)
 
     def test_should_validate_flow_all_required(self) -> None:
         errors = validate_resource_data(

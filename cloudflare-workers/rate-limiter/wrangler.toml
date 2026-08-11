@@ -1,0 +1,16 @@
+name = "gsie-rate-limiter"
+main = "src/index.js"
+compatibility_date = "2024-08-01"
+account_id = "eeae29da23faaa394198aec9f6d0d0b6"
+
+# Remplacer {{KV_NAMESPACE_ID}} par l'identifiant du namespace créé via
+# `npx wrangler kv:namespace create RATE_LIMITS`.
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "be925fb1b6204f45a85e25a2fa8c5ddc"
+preview_id = "be925fb1b6204f45a85e25a2fa8c5ddc"
+
+# Optionnel : routes (décommenter après test sur *.workers.dev)
+# [[routes]]
+# pattern = "api.quintessences-platform.com/*"
+# zone_name = "quintessences-platform.com"

@@ -173,6 +173,99 @@ class RefutationResult(BaseModel):
     )
 
 
+class CorrelationMatrixRequest(BaseModel):
+    """Requête de calcul d'une matrice de corrélations pairwise N×N.
+
+    Extension v1.1 — le contrat cible (CORRELATION_ENGINE.md §5) prévoit
+    une liste de N paramètres. Cette extension utilise numpy.corrcoef
+    (vectorisé BLAS) pour la matrice Pearson, soit 326x à 1521x plus
+    rapide que scipy pairwise (benchmark BENCHMARK_CORRELATION_ENGINE.md).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID = Field(description="Identifiant de la requête")
+    domaine: DomaineCorrelation = Field(description="Domaine de la corrélation")
+    variables: list[ParametreCorrelation] = Field(
+        min_length=2,
+        max_length=200,
+        description="Liste des variables à corréler (minimum 2, maximum 200)",
+    )
+    methode: CorrelationMethod = Field(
+        default=CorrelationMethod.pearson,
+        description="pearson (vectorisé numpy), spearman/kendall (scipy pairwise)",
+    )
+    seuil_significativite: float = Field(
+        default=0.05, gt=0.0, lt=1.0, description="Seuil de p-valeur pour la significativité"
+    )
+    source: SourceReference = Field(
+        description="Source des données observées — CON-002, toute corrélation doit être sourcée"
+    )
+    evidence_level: EvidenceLevel = Field(description="Niveau de preuve de la source des données")
+    domaine_validite: str | None = Field(
+        default=None, max_length=300, description="Ex. « France atlantique, altitude < 800 m »"
+    )
+    seuil_force: CorrelationStrength = Field(
+        default=CorrelationStrength.moderate,
+        description="Force minimale pour inclure une paire dans les résultats significatifs",
+    )
+
+    @model_validator(mode="after")
+    def _valeurs_appariees(self) -> "CorrelationMatrixRequest":
+        n_obs = len(self.variables[0].valeurs)
+        for i, var in enumerate(self.variables):
+            if len(var.valeurs) != n_obs:
+                raise ValueError(
+                    f"Toutes les variables doivent avoir le même nombre de valeurs (appariées) "
+                    f"— variable {i} ({var.variable}) a {len(var.valeurs)}, attendu {n_obs}"
+                )
+        return self
+
+
+class PairwiseCorrelation(BaseModel):
+    """Une paire de variables corrélées dans une matrice N×N."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    variable_a: str = Field(description="Nom de la variable A (avec unité si fournie)")
+    variable_b: str = Field(description="Nom de la variable B (avec unité si fournie)")
+    coefficient: float = Field(ge=-1.0, le=1.0)
+    p_valeur: float = Field(ge=0.0, le=1.0)
+    type_relation: TypeRelation
+    strength: CorrelationStrength
+    n_observations: int = Field(ge=3)
+
+
+class CorrelationMatrixResult(BaseModel):
+    """Résultat d'une matrice de corrélations pairwise N×N."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_origine: UUID
+    methode: CorrelationMethod
+    n_variables: int = Field(ge=2)
+    n_observations: int = Field(ge=3)
+    n_paires_total: int = Field(ge=1, description="N×(N-1)/2 — nombre total de paires uniques")
+    n_paires_significatives: int = Field(
+        ge=0, description="Paires au-dessus du seuil de force et de significativité"
+    )
+    matrice: list[list[float | None]] = Field(
+        description=(
+            "Matrice N×N symétrique. Diagonale = None (auto-corrélation triviale). "
+            "matrice[i][j] = coefficient entre variables[i] et variables[j]."
+        )
+    )
+    variables: list[str] = Field(description="Noms des variables (avec unité si fournie)")
+    paires_significatives: list[PairwiseCorrelation] = Field(
+        default_factory=list,
+        description="Paires triées par |coefficient| décroissant, filtrées par seuil_force",
+    )
+    domaine_validite: str | None = None
+    source: SourceReference
+    evidence_level: EvidenceLevel
+    date_calcul: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 class CorrelationResult(BaseModel):
     """Résultat d'un calcul de corrélation (CORRELATION_ENGINE.md §5 — Correlation)."""
 

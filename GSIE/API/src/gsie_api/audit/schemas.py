@@ -1,35 +1,54 @@
-"""Schémas Pydantic pour la feature Audit.
+"""Schemas Pydantic pour la feature Audit (v2 persistant).
 
-Alignés sur le contrat du frontend (AuditLogViewer.tsx) :
-- AuditLog : id, timestamp, user, action, resource, ip, details
-- AuditLogListResponse : items + total (pagination future)
+Alignés sur le contrat du frontend (AuditLogViewer.tsx) avec extension
+pour les nouveaux champs (actor_id, organisation_id, status_code, etc.).
 """
 
-from typing import Any
+from datetime import datetime
+from typing import Any, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-
-class AuditLog(BaseModel):
-    """Une entrée de journal d'audit."""
-
-    id: str = Field(..., description="Identifiant unique de l'entrée")
-    timestamp: str = Field(..., description="ISO 8601 — moment de l'action")
-    user: str = Field(..., description="Utilisateur ayant effectué l'action")
-    action: str = Field(
-        ...,
-        description="Type d'action : create | update | delete | export",
-    )
-    resource: str = Field(..., description="Ressource concernée (type + id)")
-    ip: str = Field(..., description="Adresse IP d'origine")
-    details: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Détails contextuels supplémentaires",
-    )
+AuditAction = Literal[
+    "create", "read", "update", "delete", "export", "login", "logout", "invite", "revoke", "sync"
+]
 
 
-class AuditLogListResponse(BaseModel):
-    """Réponse paginée — actuellement une simple liste (Phase 4)."""
+class AuditLogResponse(BaseModel):
+    """Une entrée de journal d'audit — réponse API."""
 
-    items: list[AuditLog] = Field(default_factory=list)
-    total: int = Field(0, ge=0, description="Nombre total d'entrées")
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    timestamp: datetime
+    actor_id: UUID | None = None
+    actor_email: str | None = None
+    action: AuditAction
+    resource_type: str
+    resource_id: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+    organisation_id: UUID | None = None
+    workspace_id: UUID | None = None
+    status_code: int | None = None
+    method: str | None = None
+    path: str | None = None
+    details: dict[str, Any] = Field(default_factory=dict)
+    trace_id: str | None = None
+
+
+class AuditLogPage(BaseModel):
+    """Réponse paginée du journal d'audit."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[AuditLogResponse]
+    page: int
+    size: int
+    total: int
+
+
+# Alias pour compatibilité avec le frontend existant (AuditLog)
+AuditLog = AuditLogResponse
+AuditLogListResponse = AuditLogPage

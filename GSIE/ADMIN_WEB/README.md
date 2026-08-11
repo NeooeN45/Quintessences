@@ -36,7 +36,7 @@ src/
 │   ├── index.astro             # Vue d'ensemble (stat cards + santé système)
 │   ├── engines.astro           # Monitoring 14 moteurs
 │   ├── users.astro             # Gestion utilisateurs
-│   └── data.astro              # Catalogue datasets
+│   └── data.astro              # Catalogue datasets Data Registry
 ├── components/
 │   ├── Sidebar.astro           # Navigation groupée par sections (statique)
 │   ├── Topbar.astro            # Search + notifications + user menu (statique)
@@ -44,29 +44,30 @@ src/
 │   ├── SystemHealth.tsx        # React Island — santé système
 │   ├── EngineStatusGrid.tsx    # React Island — moteurs
 │   ├── UserTable.tsx           # React Island — utilisateurs
-│   └── DataCatalog.tsx         # React Island — datasets
+│   └── DataCatalogPanel.tsx    # React Island — catalogue Data Registry
 ├── lib/
-│   ├── api.ts                  # Client hybride (mock → API GSIE)
-│   ├── mock-data.ts            # Données simulées
-│   └── types.ts                # Types partagés
+│   ├── api.ts                  # Client authentifié vers l'API GSIE
+│   ├── constants.ts            # Constantes du dashboard
+│   └── useDebounce.ts          # Utilitaire de recherche
 └── styles/
     └── global.css              # Tailwind 4 + thème Tabler dark mode
 ```
 
 ## Connexion API GSIE
 
-Par défaut, le site utilise des **données simulées** (mock data).
-Quand l'API GSIE est disponible, le client bascule automatiquement.
+Le site utilise les données de l'API GSIE avec une session Bearer stockée
+temporairement dans `sessionStorage`. Il n'y a pas de fallback silencieux vers
+des données simulées : une API indisponible est affichée comme une erreur.
 
-Pour forcer la connexion à l'API :
+Pour configurer la connexion à l'API :
 
 ```bash
 cp .env.example .env
 # Éditer .env : GSIE_API_URL=http://localhost:8000
 ```
 
-Le client tente un ping sur `GSIE_API_URL/health` au démarrage.
-Si l'API répond, toutes les requêtes utilisent l'API réelle.
+Le client utilise `PUBLIC_GSIE_API_URL/health` et les routes authentifiées
+réelles dès que la session est établie.
 
 ## Pages
 
@@ -75,25 +76,25 @@ Si l'API répond, toutes les requêtes utilisent l'API réelle.
 | Vue d'ensemble | `/` | Statique + 1 island | 4 stat cards + santé système |
 | Moteurs | `/engines` | 1 island | 14 moteurs, filtres par catégorie |
 | Utilisateurs | `/users` | 1 island | Tableau, recherche, filtres rôle |
-| Données | `/data` | 1 island | Catalogue, filtres par source |
+| Données | `/data` | 1 island | Catalogue Data Registry réel, recherche et filtres par domaine |
 
 ## Tests
 
 ```bash
-npx astro check    # 0 erreur, 0 warning, 0 hint
-npm run build      # 4 pages, islands 3.5-4.5 KB chacun
+npx astro check    # 0 erreur (les hints préexistants sont listés)
+npm run build      # 13 routes statiques, îles React hydratées à la demande
 ```
 
 ## Préparation version serveur
 
 L'architecture est découplée :
 - `lib/api.ts` centralise tous les appels de données
-- `lib/types.ts` définit les contrats (compatibles avec l'API FastAPI)
+- `lib/api.ts` définit les contrats et centralise les appels (compatibles avec l'API FastAPI)
 - Les composants React consomment uniquement les types, pas l'API directement
 
 Quand la version serveur GSIE sera déployée :
 1. Définir `GSIE_API_URL` dans `.env`
-2. L'API FastAPI doit exposer : `/health`, `/api/v1/system/health`,
-   `/api/v1/system/stats`, `/api/v1/engines`, `/api/v1/users`,
-   `/api/v1/datasets`
+2. L'API FastAPI doit exposer : `/health`, `/ready`, les routes de contrôle,
+   et le Data Registry `/api/v1/data/catalog`, `/api/v1/data/search` et
+   `/api/v1/data/resolve`.
 3. Aucune modification de l'UI n'est nécessaire

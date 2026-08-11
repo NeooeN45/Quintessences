@@ -1,5 +1,272 @@
 # ROADMAP — Quintessences / GSIE
 
+## Haute disponibilité et couverture CI (2026-08-11)
+
+### Clôture de la tête finale `f12e3cd`
+
+- Les runs PR `31494308995`, push `31494302005` et HA `31494308961` sont
+  verts sur la tête finale `f12e3cd`.
+- La preuve HA distante atteint 6 000/6 000 réponses HTTP 200, zéro erreur,
+  276,3 req/s, p95 175,58 ms et p99 252,82 ms.
+- La couverture fusionnée atteint 16 086/16 386 instructions, soit 98,17 % ;
+  les portes multicouches sont validées et le harnais détecte 70/70 mutations.
+- La PR #28 est prête pour revue. Aucun merge ni SLO de production n'est
+  autorisé par cette preuve seule.
+
+- DEC-000065 est prouvée sur GitHub Actions par le run `31479643460` :
+  6 000/6 000 réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et
+  p99 245,58 ms derrière TLS vérifié et deux replicas drainables. Le run
+  `31488527136` confirme la preuve sur `e9743d8` après un incident réseau
+  GitHub Releases antérieur aux tests.
+- DEC-000066 ajoute une porte de couverture fusionnée unités + intégration :
+  global >= 97,10 %, chaque routeur/schéma public à 100 %, métier/application
+  >= 80 % et infrastructure >= 60 %, avec refus des rapports invalides.
+- La preuve locale finale passe 2 873 tests unitaires et 349 intégrations ; la
+  fusion atteint 98,18 %. Le modèle `QualityAssessment` est réaligné sur la
+  migration 0048 et les cycles Alembic sont verts.
+- Le job de couverture du run `31488527209` est vert à 98,169 %. Ce premier run
+  complet a détecté une préparation S3/JWT non hermétique du harnais Registry
+  et un motif de mutation ObjectStorage périmé ; les deux corrections gardent
+  les campagnes, les 70 mutations et tous les seuils inchangés.
+- Le run de PR `31492339317` sur `8a531ed` est entièrement vert : 70/70
+  mutations, 98,17 % de couverture combinée, Registry, intégration, Docker,
+  sécurité et gate final réussis.
+- Les coupures transitoires Debian/GitHub Releases sont maintenant absorbées
+  par des reprises `apt` et `curl` strictement bornées. TLS et le SHA-256 d'AGE
+  restent obligatoires ; les images DB et API sont reconstruites et
+  smoke-testées localement après correction.
+
+Ordre suivant : revue et autorisation explicite du merge de la PR #28, smoke
+post-merge sur `main`, qualification de routes métier et de requêtes longues,
+tests de rolling restart et de dépendances, puis publication séparée de SLO
+de production. En parallèle contrôlé, le Data Registry doit recevoir son
+scheduler de santé avant toute nouvelle qualification FETCH source par source.
+
+## Manifeste Data Registry (2026-08-10)
+
+- Manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json` livré pour les
+  quatre sources déjà consommées par les adapters ; toutes les entrées sont
+  explicitement `metadata_only`.
+- Porte `gsie_api.ingestion.manifest` : identité unique, domaines versionnés,
+  licence alignée sur SCI-001, URLs HTTPS sûres, refus des sources restreintes
+  pour `archive_copy` et contrôle des packs offline.
+- CLI de validation et service transactionnel avec `dry-run` par défaut : 32
+  ressources de catalogue créées pour quatre entrées, rejeu à 0 création et
+  0 mise à jour.
+- Collecte santé réelle puis persistance append-only : 4/4 fournisseurs
+  `healthy`, quatre `DatasetHealth`, rejeu identique sans doublon.
+- Import package allégé, validateurs découpés, pool S3 partagé et fermeture
+  au shutdown ; Ruff, mypy strict et suites ciblées verts.
+
+Prochaine étape ordonnée : planifier le job périodique de santé, qualifier
+source par source la capacité `FETCH` et les droits de copie, puis créer les
+premiers `DataAsset` bruts avec checksum avant la migration GeoSylva.
+
+Le site admin expose déjà `/data` et consomme le catalogue réel via
+`GET /api/v1/data/catalog` ; il affiche un état vide explicable tant que le
+manifeste n'est pas appliqué en base.
+
+Le contrat GeoSylva a été audité : la synchronisation parcellaire versionnée
+reste indépendante du Data Registry. La migration mobile est volontairement
+séquencée après l'application du manifeste, la santé des distributions et un
+endpoint de packs contrôlé par checksum/licence.
+
+## Test réel de la chaîne Data Registry (2026-08-10)
+
+La campagne `GSIE/API/scripts/test_data_registry_e2e.py` est rejouable dans le
+conteneur API. Elle contacte GBIF, IGN, SoilGrids et Météo-France, normalise
+leurs réponses, écrit puis relit quatre objets JSON dans MinIO avec checksum
+SHA-256, fait passer chaque projection dans `data-resolver-1` et supprime les
+objets à la fin. Le dernier run est **4/4 réussi**, `cleanup=ok`, sans objet
+`e2e` résiduel. Voir `GSIE/API/docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md`.
+
+Cette preuve porte sur l'acquisition structurée réelle et l'archivage de la
+représentation normalisée. Les adapters ne déclarent pas encore `FETCH` ; la
+copie des octets bruts et la promotion contrôlée vers `DataAsset` restent les
+prochaines étapes. La persistance manuelle et idempotente de `DatasetHealth`
+est livrée ; seule son orchestration périodique reste à planifier.
+
+## Stabilisation Docker et bootstrap adapters (2026-08-10)
+
+- Build TLS strict corrigé pour les environnements inspectés par Kaspersky via
+  secret BuildKit éphémère et `UV_SYSTEM_CERTS=true` ; aucun certificat ni
+  secret n'est enregistré dans l'image.
+- Compose corrigé et recréé sans perte de volumes : PostgreSQL head
+  `20260810_0047`, Redis, MinIO/bucket `gsie-assets`, API, outbox-worker,
+  Mailpit et Uptime Kuma sont sains ; `/health` et `/ready` répondent 200.
+- Bootstrap explicite `gsie_api.data.bootstrap` livré : factories lazy GBIF,
+  IGN, SoilGrids et Météo-France, campagne santé offline et redaction des
+  erreurs. Quatre distributions et leurs premiers contrôles append-only sont
+  persistés ; le job périodique reste la prochaine tranche opératoire.
+
+Le Data Selection Engine, l'application du manifeste, la persistance
+contrôlée de `DatasetHealth`, le scheduler borné et sa CI PostgreSQL/MinIO sont
+livrés. Restent la qualité complète et l'ingestion brute juridiquement et
+techniquement qualifiée. Le scheduler reste désactivé jusqu'à décision
+opérateur sur la cadence et les quotas.
+
+## Data Selection Engine — tranche 2026-08-10
+
+- `POST /api/v1/data/resolve` authentifié et rate-limitée ;
+- contraintes évaluées avant score, blocages stables et qualification A–F ;
+- préférences fraîcheur/qualité/offline versionnées, classement stable et
+  fallback opt-in soumis à la même politique ;
+- aucune récupération fournisseur, URL présignée ou secret exposé ;
+- tests unitaires, route, Ruff et mypy strict validés.
+
+Le manifeste est publié et appliqué de façon idempotente ; les premiers
+contrôles réels sont persistés. La cadence automatisable et le registre de
+qualification `FETCH` sont livrés, avec quatre sources encore fermées. La
+prochaine étape est `QualityAssessment`, puis la levée source par source des
+blocages avant tout `RAW DataAsset` ou pack GeoSylva.
+
+## Dataset/API — intégrité des DataAsset (2026-08-10)
+
+Le socle existant est renforcé ; le contrat Registry est adopté et sa première
+tranche read-only est implémentée :
+
+- validation API des tailles, checksums et URI `DataAsset` ;
+- `size_bytes` en `BIGINT` avec contrainte SQL non négative,
+  migration réversible `20260810_0045` ;
+- URI locales opaques (`local:///…`), sans divulgation du chemin serveur ;
+- scénarios d’intégration PostgreSQL ajoutés pour un asset de plus de 2 Gio et
+  le refus d’un URI `file://`.
+
+RFC-0038 est validée. Les migrations Registry jusqu'à `20260810_0047`, les
+modèles, validateurs, routes, adapters, resolver, application du manifeste et
+scheduler périodique sont livrés. Le smoke PostgreSQL/MinIO est réel et la CI
+le reproduit. L'activation opérateur du scheduler et le worker `FETCH` restent
+séquencés.
+
+## Plateforme de données GSIE — Phase 1 Object Storage (2026-08-09)
+
+La Phase 1 du Data Registry est implémentée côté GSIE Server :
+
+- backend `S3Storage` asynchrone compatible MinIO/AWS S3 ;
+- upload multipart par blocs avec checksum SHA-256 ;
+- lecture en flux, plages HTTP, HEAD, suppression et URLs présignées ;
+- `DataAsset.storage_uri` et `checksum_algorithm` via migration réversible
+  `20260809_0044` ;
+- service MinIO de développement dans Docker Compose ;
+- 51 tests ciblés stockage/configuration, 112 tests infrastructure ciblés,
+  ruff et mypy validés.
+
+Le smoke test réseau réel reste à exécuter lorsque Docker Desktop/Linux sera
+opérationnel sur l’environnement de validation.
+
+## Plateforme de données GSIE — Phase 2 Data Registry (RFC Validated)
+
+`RFC-0038` v1.2.0 et `DEC-000059` sont Validated après validation formelle du
+Fondateur.
+Le contrat fixe la projection fournisseur Agent/Source/Citation, les statuts de
+qualification, `DatasetHealth` par distribution, le lineage PROV, la
+couverture, la qualification Registry A–F, le vocabulaire de domaines versionné
+et STAC comme projection géospatiale.
+
+La tranche Registry interne est terminée : modèles/migration, `DatasetStatus`,
+DTOs stricts, recherche cursor-paginée, projection fournisseurs, health/coverage
+et validation CRUD. Les 39 tests ciblés, Ruff et mypy strict passent. La suite
+porte sur l’activation progressive des adapters fournisseurs et les contrôles
+périodiques, puis sur le Data Selection Engine ; l’API actuelle reste read-only
+et n’exécute aucun téléchargement.
+
+## Plateforme de données GSIE — Phase 3 Adapters (contrat et façades livrés)
+
+Le contrat commun `DataSourceAdapter` et le registre lazy
+`AdapterPluginRegistry` sont livrés dans `GSIE/API/src/gsie_api/data/adapters.py`.
+Les descripteurs imposent capacités, domaines, allowlist d’hôtes, bornes de
+fetch et rapports de santé. Les 9 tests de contrat passent, sans accès réseau.
+
+Les façades `GBIFAdapter`, `IGNAdapter`, `SoilGridsAdapter` et
+`MeteoFranceAdapter` sont disponibles dans `GSIE/API/src/gsie_api/data/` et
+délèguent aux clients résilients existants. Elles ne sont pas enregistrées par
+défaut ; leurs ports de test n’ouvrent aucun réseau. Vingt tests façades
+passent, Ruff et mypy strict sont verts. Le bootstrap explicite, les jobs de
+santé, le resolver et la migration des consommateurs restent hors périmètre.
+
+## Bilan des sept derniers jours — 2026-08-03 → 2026-08-10
+
+Le suivi consolidé est disponible dans
+[`GSIE-WEEKLY-2026-08-03`](GSIE/DOCUMENTATION/BILAN_HEBDOMADAIRE_2026-08-03_2026-08-10.md).
+Il relie les évolutions GeoSylva, identité/multi-tenant, sécurité, Cloudflare,
+sauvegarde, connecteurs scientifiques, site public et plateforme de données
+aux preuves de code et aux décisions correspondantes. Le bilan sépare les
+fonctions livrées, les documents en revue et les étapes humaines ou Docker
+encore nécessaires.
+
+## Outillage de qualité — Orchestre GSIE (2026-08-09)
+
+L'Orchestre GSIE est opérationnel pour les audits séquentiels : OWASP,
+dépendances CVE, QA et veille technologique. Les workers sont configurés
+sur **SWE 1.7 max**. L'escalade Fondateur #001 est résolue par l'option B
+(pyjwt, python-multipart et cryptography à jour). Le prochain jalon est
+la revalidation pip-audit après correction TLS, puis le benchmark de performance de la loop Sécurité+Perf, désormais
+réalisé : numpy est 30x à 1521x plus rapide que scipy pairwise.
+Prochaine action : décision Fondateur sur l’escalade #002 concernant
+la mise à jour coordonnée Starlette/FastAPI. Cette mise à jour est
+maintenant validée sur `chore/upgrade-fastapi-starlette` avec FastAPI
+0.134.0 et Starlette 0.52.1. Reste à traiter les warnings de dépréciation
+et à revalider pip-audit après correction TLS. Cette revalidation est
+faite : Starlette et les dépendances HIGH sont propres. Les quatre avis
+intermédiaires ont été corrigés par l’option A ; `pip-audit` est propre.
+
+## GeoSylva 3.0 — spécification fonctionnelle et roadmap (Draft v0.4.0)
+
+Le périmètre de la prochaine évolution mobile est consigné dans
+`apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` (GEOSYLVA-003).
+La v0.4.0 intègre le GeoSylva Quintessences Dev Pack (brainstorming ChatGPT,
+`21_EXPERIMENTS/GEOSYLVA_DEV_PACK_2026-08-04/`) : QPIS (§16), Mission/Protocol
+Engine (§17), TreeVision (§18), métiers et architecture modulaire (§19),
+identité fédérée Keycloak/OIDC (§20). Vision long terme GeoSylva comme poste
+de travail numérique complet du technicien forestier.
+
+### Architecture cible
+
+GeoSylva 3.0 consolide trois axes d'intelligence distincts :
+
+1. **Cœur forestier offline** — calculs déterministes sourcés (tarifs, IBP,
+   Shannon), LLM on-device léger (SmolLM3 3B / Phi-3-mini) pour assistance
+   vocale et explication, jamais pour calculer.
+2. **Canal 1 — GSIE Serveur** — moteurs lourds (Correlation, Reasoning,
+   Diagnostic, Recommendation, Forest Dynamics, Simulation), LLM serveur
+   (Mistral 7B / Phi-4-reasoning via vLLM) pour RAG scientifique et
+   raisonnement profond, Knowledge Engine pour coefficients sourcés.
+3. **Canaux 2-3 — terrain** — Bluetooth (proximité immédiate) et LoRa mesh
+   (portée longue, bas débit) pour synchronisation d'équipe.
+
+### Cascade LLM multi-tier
+
+| Tier | Modèle cible | Rôle | Réseau |
+|---|---|---|---|
+| T1 Mobile | SmolLM3 3B (INT4) | Assistance vocale, explication, identification essence | Aucun |
+| T2 Edge | Mistral 7B (NIM/Jetson) | RAG documentation, raisonnement intermédiaire | Wi-Fi local |
+| T3 Serveur | Phi-4-reasoning 14B (vLLM) | Raisonnement profond via moteurs GSIE | 4G/Wi-Fi |
+
+Principe non négociable : le LLM appelle les moteurs, ne calcule jamais de
+mémoire (ADR-009, VISION_LLM_SPECIALISES §2.1).
+
+### Phases de réalisation
+
+| Phase | Livrables | Décisions requises |
+|---|---|---|
+| P0 Fondations | Corrections audits (Hdom, station, SQLCipher, pinning, RGPD) + contrat données (migration v34 amorcée) | DEC corrections |
+| P1 Création guidée | Forêt/parcelle/placette, questionnaires, contrôles surface, provenance | — |
+| P2 Martelage persistant | Session complète, modes classique/vocal/hybride, instantané immuable | DEC format session |
+| P3 Moteurs scientifiques locaux | Fiches méthodes versionnées, qualité, pathogènes, incertitudes | RFC fiches méthodes |
+| P4 Connexion GSIE Serveur | SDK Kotlin, contrats API moteurs, cache, pull, résolution conflits | RFC-0033 contrats GeoSylva ↔ moteurs |
+| P5 LLM on-device | Modèle T1 embarqué, RAG local, cascade T1→T2→T3, assistant vocal | RFC-0034 IA forestière on-device |
+| P6 Sync terrain | Bluetooth, QR team key, Meshtastic, paquets signés, journal fusion | RFC sync terrain |
+| P7 Refonte visuelle | Onboarding, animation, packs offline, batterie/accessibilité | — |
+
+P7 peut démarrer dès P1 et progresser en parallèle de P2-P6.
+
+### Sources consolidées
+
+La roadmap consolide sans réinventer : `VOLUME_CALCULATION_NEXT_GEN.md`
+§10/§16, `RESEARCH_OPPORTUNITIES.md` §3, `VISION_LLM_SPECIALISES`, RFC-0003,
+RFC-0019, RFC-0018, contrats des 14 moteurs `GSIE/ENGINES/`, GEO-001 à
+GEO-004, `MASTER_PLAN.md`. Voir GEOSYLVA-003 §12.7 pour la liste complète.
+
 ## Jalon P0 — Refondation constitutionnelle (EN_REVUE)
 
 | Élément | État |
@@ -294,10 +561,17 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **RFC-0016 Phase A** — Schéma forestier spécialisé (DEC-000027) | ✅ **Complète (2026-07-19)** | 10/10 entités du §3.1 implémentées en 6 tranches (10 tables satellite + 3 entités réutilisées : Intervention, EvidenceStatement, ConflictRecord), registre de types 76→86, 364 tests (304 passed/60 skipped) |
 | **RFC-0016 Phase B** — Intégration Botanical/Forest Dynamics Engine (DEC-000027) | ✅ **Complète (2026-07-19)** | Fermeture du validateur générique pour les 10 types forestiers, passeport de décision à 5 catégories (`DecisionPassportCategory`/`Item`/`Passport`), extension Forest Dynamics Engine (`station_observation_id`, `to_decision_passport_items()`), pont extraction documentaire → `AutecologyProfile` (`extraction_bridge`), testé sur 29 faits réels du 3e pilote RFC-0014 §3.6. 387 tests (327 passed/60 skipped). Reste : Phase C (pilote Nouvelle-Aquitaine) |
 | **Socle de fiabilité d'entreprise** — RFC-0021 / DEC-000031 | ✅ **Tranche critique contre-auditée (2026-07-22)** | Auth/RBAC moteurs/refresh/WebSocket RGPD, outbox transactionnel expurgé, migrations gardées, stockage et requêtes bornés ; build Linux reproductible non-root avec dépendances natives verrouillées ; CI bloquante (Python, Rust, intégration, Docker, sources de vérité, nouveaux Markdown stricts, documents Locked/RFC). Restent planifiés : migration mobile en clair, sauvegarde complète, egress réseau, stratégie LanceDB multi-hôtes, 63 exclusions historiques, réactivation progressive des règles Markdown en baseline, dette Kotlin et décision de licence GSIE. |
-| **Vague 3 — Reasoning + Diagnostic Engine** (tranches R1-R4) | ✅ **Exposés sur l'API (2026-07-26)** | Reasoning : moteur, schémas et routeur (`/reasoning/status`, `/version`, `/infer`), R1-R4 validées (`GSIE-PROMPT-0014` à `0017`). Diagnostic : moteur et schémas (R1-R3), routeur R4 repris en interne (`/diagnostic/status`, `/version`, `/diagnostiquer`). Les deux routeurs sont montés sur `app.py` et couverts par un test de montage qui échoue si un routeur présent devient inatteignable. 509 tests unitaires, 83 % de couverture, ruff et mypy `--strict` verts. **Persistance des diagnostics livrée (2026-07-26)** : type de resource `diagnostic` (registre 89 → 90), écriture transactionnelle dans `DiagnosticEngine.diagnostiquer`, intégrée à la baseline `20260726_0001` ; `diagnostic_id` est résolvable et la tranche R2 est débloquée. **Historique Alembic assaini (DEC-000036)** : l'ancienne lignée locale `0001`-`0013` est remplacée par une baseline autonome de 116 tables ; le cycle base vierge → `upgrade head` → `downgrade base` → `upgrade head` et le contrôle de dérive sont verts sur PostgreSQL/PostGIS/AGE. Les 12 tables legacy restent exclues et les anciennes bases locales doivent être recréées. Reste : le maillon Recommendation Engine (chargement par `diagnostic_id`, cas « diagnostic introuvable »). Le langage n'est plus un reste à faire : `DEC-000035` remplace l'attribution Rust *a priori* de la vague 3 par un critère de pertinence, les trois moteurs restant en Python. |
+| **Vague 3 — Reasoning + Diagnostic Engine** (tranches R1-R4) | ✅ **Exposés sur l'API (2026-07-26)** | Reasoning : moteur, schémas et routeur (`/reasoning/status`, `/version`, `/infer`), R1-R4 validées (`GSIE-PROMPT-0014` à `0017`). Diagnostic : moteur et schémas (R1-R3), routeur R4 repris en interne (`/diagnostic/status`, `/version`, `/diagnostiquer`). Les deux routeurs sont montés sur `app.py` et couverts par un test de montage qui échoue si un routeur présent devient inatteignable. 509 tests unitaires, 83 % de couverture, ruff et mypy `--strict` verts. **Persistance des diagnostics livrée (2026-07-26)** : type de resource `diagnostic` (registre 89 → 90), écriture transactionnelle dans `DiagnosticEngine.diagnostiquer`, intégrée à la baseline `20260726_0001` ; `diagnostic_id` est résolvable et la tranche R2 est débloquée. **Historique Alembic assaini (DEC-000036)** : l'ancienne lignée locale `0001`-`0013` est remplacée par une baseline autonome de 116 tables ; le cycle base vierge → `upgrade head` → `downgrade base` → `upgrade head` et le contrôle de dérive sont verts sur PostgreSQL/PostGIS/AGE. Les 12 tables legacy restent exclues et les anciennes bases locales doivent être recréées. **Correction (2026-08-08)** : la mention « reste le maillon Recommendation Engine » était obsolète — `RecommendationEngine._diagnostic()` charge le diagnostic par `diagnostic_id` et lève `DiagnosticIntrouvableError` s'il est absent depuis le 2026-07-30 (`e6f2c89`), testé en unitaire, intégration et harnais de mutation. Le langage n'est plus un reste à faire : `DEC-000035` remplace l'attribution Rust *a priori* de la vague 3 par un critère de pertinence, les trois moteurs restant en Python. |
 | **Orchestration des agents IA** — RFC-0022 / DEC-000032 | ✅ **Processus adopté (2026-07-22)** | Codex orchestre et vérifie ; Claude assure la contre-revue ; GLM 5.2 exécute les validations bornées via Devin. Prompts versionnés et séparation auteur/relecteur obligatoires. Premières missions bloquées jusqu'à disponibilité de snapshots Git identifiables. |
+| **Système de développement assisté par IA v1** — DEC-000051 | **Pilote planifié (2026-08-05)** | Hiérarchie documentaire existante conservée ; intake contrôlé des idées et ressources ; WIP Fondateur `1+1+1` ; gating adaptatif. Pilote retenu : synchronisation multi-client GeoSylva. |
 | **Couverture 100% + endpoints dashboard** — audit/gamification | ✅ **Complète (2026-08-02)** | 1859 tests unitaires passent, 63 skipped, 100% couverture (8831 stmts), score mutation 67/67. Endpoints `GET /audit-logs` + `GET /gamification/stats` (données statiques Phase 4). ruff + mypy OK. |
 | **Phase de stabilisation** — DEC-000043 | ✅ **Clôturée (2026-08-02)** | S1 restauration DB prouvée (127 tables, parité source ✓), S2 tranche verticale réelle (chaîne complète sur pilote Parelle 2007, 0.15s), S3 validation scientifique (3/3 scénarios, 18/18 checks, latence 32ms p95 34.68ms). Gates 4/5/6 rouvrables. |
+| **Identité Quintessences** — RFC-0032 / DEC-000044 à DEC-000046 | ✅ **Cycle local serveur + GeoSylva livrés (2026-08-03)** | Compte canonique, inscription/connexion Argon2id, Google OIDC, profil, vérification e-mail et récupération anti-énumération avec révocation des sessions. 5 tables dans `gsie_rgpd_identites`. GeoSylva fournit le parcours complet, coffre chiffré, Credential Manager et diagnostic API ; 518 tests et Lint sans erreur. Restent avant ouverture publique : relais SMTP et hébergement RGPD finaux, configuration/validation de marque OAuth Google et centre de comptes web. OIDC/SAML entreprise demeure « En développement ». |
+| **Synchronisation parcelles GeoSylva** — DEC-000048 | ✅ **Première tranche verticale livrée (2026-08-03)** | API dédiée et paginée, table RLS `gsie_synchronisation.geosylva_parcels`, version optimiste, idempotence et tombstones. GeoSylva v33 possède une file SQLCipher, WorkManager, reprise réseau et diagnostic. Activation explicite requise. Restent : pull serveur→mobile, comparaison/résolution des conflits et extension graduelle aux autres entités. |
+| **GSIE Server Meshing** — RFC-0035 / GSIE-DIR-0012 / DEC-000053 | 📐 **Cadrage Vagues 1-3 produit (2026-08-03)** | Chantier annexe d'architecture distribuée (inspiration Star Citizen Server Meshing) ouvert par décision Fondateur. Périmètre prototype v0 : mono-région Landiras, autorité hybride zone+type, compatibilité UE6 anticipée par interfaces abstraites. 17 documents Draft produits : RFC-0035, GSIE-DIR-0012, DEC-000053, architecture cible, prototype v0, roadmap dédiée, registre ADR (ADR-010 à ADR-019), registre de risques (16 risques), diagrammes, backlog phasé, critères d'acceptation, stratégie de test, stratégie migration UE6, features expérimentales, estimation complexité. **N'interrompt pas la Phase 4** — préparation par interfaces abstraites et persistance externe. Phase 5 (prototype Landiras) requiert validation préalable des documents par le Fondateur. Voir `GSIE/ARCHITECTURE/SERVER_MESHING_*.md`. |
+| **GSIE Territorial Mesh** — RFC-0036 / GSIE-DIR-0013 / DEC-000054 | 📐 **Cadrage Vagues 1-4 produit (2026-08-06)** | Chantier annexe complémentaire au Server Meshing : couche logique de gouvernance territoriale superposée à l'exécution technique. Hiérarchie France → Région → Département → Territoire Opérationnel → Cellule Spatiale → Sous-cellule, avec états Froid/Chaud/Opérationnel/Crise. Prototype v0 restreint à la Nouvelle-Aquitaine (Charente 16, Deux-Sèvres 79), 2 DOD, 2 cellules, 1 drone edge traversant, simulation IGNIS simplifiée. 20 livrables dédiés produits (RFC-0036 et 17 documents d'architecture/cadrage Draft, GSIE-DIR-0013 Active, DEC-000054 Validé), complétés par un lot de synchronisation des trois fichiers racine : RFC-0036, GSIE-DIR-0013, DEC-000054, architecture cible, NCP, RCH, DOD, cellules dynamiques, State Fabric fédéré, bus d'événements fédéré, matrices, diagrammes, roadmap dédiée, backlog phasé, registre ADR (ADR-020 à ADR-028), registre de risques (16 risques), critères d'acceptation, stratégie de test, prototype v0, estimation complexité. Orthogonalité actée avec le Server Meshing (ADR-021). **N'interrompt pas la Phase 4** — préparation par interfaces abstraites et réutilisation encadrée d'ADR-005/008/011/013/015/017 ; ADR-008 reste au statut Proposé jusqu'à validation de l'usage edge. Phase 5 (prototype Nouvelle-Aquitaine) requiert validation préalable des documents par le Fondateur. Voir `GSIE/ARCHITECTURE/TERRITORIAL_MESH_*.md`. |
+
+| **GSIE Environmental Digital Twin Platform** — RFC-0037 | 📐 **Cadrage fédérateur Draft (2026-08-06)** | Formalise GSIE comme un jumeau numérique environnemental fédéré : GeoSylva, Ignis, Hydro, Flora, Artemis et QGISIA sont des projections métier spécialisées ; les Hubs Unreal explorent, simulent et permettent des interactions contrôlées. Architecture de référence : `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`. Contrat Hub HUB-002 version Draft 1.1.0. Aucun démarrage d'implémentation multi-domaines n'est autorisé avant validation des contrats et de la tranche verticale Ignis. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -327,10 +601,10 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 
 1. **Gouvernance** — ✅ phase, statuts, objectifs et contrats cohérents.
 2. **Reproductibilité** — ✅ Docker reproductible (context fix, entrypoint Alembic, .dockerignore), CI build Docker + wheel Rust. **CI 100% verte** (Docker build validé en CI avec rustc 1.85 + maturin 1.9.6).
-3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production. Reste : identité DB users (Phase 4 semaine 3).
+3. **Sécurité** — ✅ JWT RS256, RBAC par type, secrets en env vars, audit trail (IP + User-Agent), dev login bloqué en production, comptes persistés et fournisseurs local/Google isolés en base (DEC-000044), vérification e-mail et récupération de mot de passe (AUTH-2, DEC-000046), **MFA administrateur obligatoire** (2026-08-08 : un compte avec le rôle `admin` sans second facteur ne reçoit jamais de token complet — jeton de bootstrap restreint à `/mfa/setup`+`/mfa/verify` le temps de l'activer, sans jamais bloquer le compte). Reste avant ouverture publique : configuration OAuth Google en production (guide `GSIE/API/docs/GOOGLE_OAUTH_PRODUCTION_SETUP.md` — étape humaine, Google Cloud Console).
 4. **Science** — ⚠️ golden datasets, provenance, incertitude et validation experte. **S3 clôturé** : 3/3 scénarios ground truth validés (Parelle 2007), sources traçables, benchmark mesuré. Reste : multi-sources, terrain réel, validation humaine du forestier.
-5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout. **S2 clôturé** : chaîne Reasoning→Diagnostic→Recommendation→Validation prouvée sur données réelles. Reste : maillon amont (ingestion→evidence→knowledge) et validation humaine.
-6. **Performance** — ⚠️ SLO mesurés et profiling avant toute migration de code. **S3 clôturé** : latence 32ms p95 34.68ms, mémoire 0.25 MB, reproductible. Reste : benchmark charge concurrente, mémoire conteneur Docker, production.
+5. **Intégration** — ⚠️ Evidence → Knowledge → humain → Hub vérifié de bout en bout. **S2 clôturé** : chaîne Reasoning→Diagnostic→Recommendation→Validation prouvée sur données réelles. **Maillon amont livré (2026-08-08)** : `EvidenceKnowledgePipeline` (`engines/pipeline.py`) existait déjà, testé, mais n'avait aucun appelant en production. Cinq sources externes réelles raccordées de bout en bout : `PedologyEngine.query_and_ingest()` + `POST /pedology/query-and-ingest`, SoilGrids (ISRIC) → Evidence Engine (plafond B, `accepte`) → Knowledge Engine ; `BotanicalEngine.query_and_ingest()` + `POST /botanical/query-and-ingest`, GBIF Backbone Taxonomy → Evidence Engine (`referentiel_officiel`+`referentiel`, plafond B, `accepte`) → Knowledge Engine ; `BotanicalEngine.resolve_taxref_and_ingest()` + `POST /botanical/taxref-and-ingest`, TAXREF (MNHN) → Evidence Engine (même plafond B, `accepte`) → Knowledge Engine ; `BotanicalEngine.identify_and_ingest()` + `POST /botanical/identify-and-ingest`, PlantNet → Evidence Engine (`referentiel_officiel`+`observation`, plafond D, `quarantine` — inférence ML sur une photo, validation humaine requise, CON-001) → Knowledge Engine ; `ClimateEngine.query_and_ingest()` + `POST /climate/query-and-ingest`, SYNOP Météo-France → Evidence Engine (même plafond D, `quarantine` — mesure brute instantanée) → Knowledge Engine. Chaque connecteur produit une connaissance atomique versionnée par caractéristique/paramètre/candidat/taxon, réutilisable par les autres moteurs au lieu de rester une valeur transitoire — c'est la matrice de décision de l'Evidence Engine qui fixe le statut (`accepte` vs `quarantine`) selon que la source est un référentiel officiel consulté directement (GBIF, TAXREF, SoilGrids) ou une inférence/mesure brute (PlantNet, SYNOP), pas le code du connecteur. 100% couverture maintenue sur le code touché. Reste : validation humaine du forestier sur les connaissances en quarantaine — hors périmètre code, nécessite du terrain réel.
+6. **Performance** — ⚠️ SLO mesurés et profiling avant toute migration de code. **S3 clôturé** : latence 32ms p95 34.68ms (séquentiel), mémoire 0.25 MB (client), reproductible. **Charge concurrente + mémoire conteneur mesurées (2026-08-08)**, `GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md` : pool DB (`DEC-000037`) validé empiriquement (dégradation gracieuse, zéro erreur à 24 sessions contre une capacité de 14) ; rate limiting tient sous rafale concurrente (pas seulement séquentielle). **Trouvaille corrigée (2026-08-08)** : le conteneur `api` tournait à 94,5 % de sa mémoire (768M) **au repos, sans charge** — marge quasi nulle, risque d'OOM-kill. Limite relevée à 2G (`docker-compose.yml`), vérifiée en direct : ~1,36 GiB/2 GiB (68%) au repos après recréation du conteneur. La consommation de base reste élevée (~270 MB/worker × 5 workers, dépendances scientifiques lourdes) — `GSIE_GUNICORN_WORKERS` reste un levier si la marge se resserre à nouveau sous charge de production réelle. Reste : re-mesure sur l'hôte Linux de production (les latences absolues mesurées via Docker Desktop/Windows ne sont pas transposables).
 
 ### Encyclopédie de l'Écosystème (GSIE-DIR-0008, amendée par DEC-000022)
 
@@ -431,9 +705,12 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 
 | ID | Description | Statut |
 |---|---|---|
-| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **À faire** |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **À faire** |
-| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **À faire** |
+| P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **Implémenté et validé en direct (2026-08-08)**. Rebuild `Dockerfile.db` en local reste bloqué (2026-08-08, re-testé) par l'interception TLS de l'antivirus Kaspersky sur ce poste dev (`curl` vers github.com échoue avec `SSL certificate problem: self signed certificate in certificate chain`) — **confirmé sans lien avec le projet** : `.github/workflows/ci.yml` (job `Docker build`, ligne 244) construit `Dockerfile.db` avec succès en CI (environnement Linux GitHub Actions, aucune interception TLS). Ce n'est donc pas un blocage réel pour la production, seulement une gêne locale de ce poste Windows. Reste : repo2 S3 pour pgBackRest. Voir `GSIE/API/docs/BACKUP_RESTORE.md` |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **Livré (2026-08-08)** — `ParcelSyncRepository.pull()` (`apps/GeoSylva`, commit `705967e`) : pagine `GET /parcelles`, fusionne en local via `decideMergeOutcome()` (fonction pure testée). Règle de résolution : une modification locale non encore synchronisée n'est jamais écrasée par le pull (le local gagne) ; un tombstone serveur déclenche une suppression douce locale sous la même garde. Bouton « Récupérer depuis le serveur » ajouté aux options développeur. Suite de tests du module verte. Commit local uniquement — push vers le repo externe GeoSylva à confirmer. |
+| AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
+| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
+| SEC-EDGE | Cloudflare Tunnel, protocole M2M et plan de contrôle | **Code et runbook terminés — activation avec domaine/token à faire** |
+| P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **Partiel — GeoSylva parcelles livré ; QGISIA et SDK commun à faire** |
 
 ### Applications
 
@@ -456,6 +733,7 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | GEO-001 | Spécification fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_001_SPECIFICATION.md` | Draft ✅ |
 | GEO-002 | Spécification non fonctionnelle GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_002_NON_FUNCTIONAL.md` | Draft ✅ |
 | GEO-003 | Matrice de traçabilité GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_003_TRACEABILITY.md` | Draft ✅ |
+| ID-001 | Authentification Quintessences multi-fournisseurs | `05_SPECIFICATIONS/IDENTITE/IDENTITE_001_AUTHENTIFICATION.md` | Draft ✅ |
 
 > Ordre : Hub (P0, bloquant) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora
 > (P2) → Artemis/QGISIA (P3).
@@ -545,3 +823,50 @@ non encore implémentées.
 > Chaque phase fait l'objet d'une Directive dédiée.
 > La Phase 1 ne se clôture que lorsque les 12 livrables sont au
 > minimum **Validated**.
+
+### Data Registry — prochaine tranche
+
+- [x] Politique QualityAssessment versionnée et historique append-only.
+- [x] Resolver fondé sur les évaluations persistées.
+- [x] Évaluation partielle et reproductible des quatre manifests.
+- [x] Porte worker FETCH fail-closed, sans activation fournisseur.
+- [ ] Qualifier juridiquement et techniquement chaque source pour FETCH.
+- [x] Qualifier la base juridique SoilGrids et identifier WCS comme voie
+  candidate ; maintien fermé en attente de l'allowlist des couvertures.
+- [x] Figer le contrat WCS SoilGrids : 12 propriétés, six profondeurs, quatre
+  sorties, CRS, format, pixels, taille et timeout.
+- [x] Reproduire `DescribeCoverage` avec une chaîne TLS approuvée.
+- [x] Mapper explicitement le code métier `wv003` vers le service WCS réel
+  `wv0033`, sans accepter `wv0033` comme propriété métier.
+- [x] Faire signer la décision opérateur SoilGrids avant tout `GetCoverage`.
+- [x] DEC-000061 : premier micro-extrait SoilGrids borné, SHA-256, DataAsset
+  RAW MinIO unique et absence de promotion prouvés.
+- [x] Implémenter et tester le récepteur borné MIME/octets/timeout/SHA-256 avec
+  destination transactionnelle et abandon sur échec.
+- [x] Sink MinIO transactionnel et timeout d'abandon, testés sur MinIO réel.
+- [x] Observabilité ObjectStorage : `HEAD 404` attendu au niveau debug, sans
+  masquer les erreurs S3 réelles.
+- [ ] Après décision opérateur seulement : relier le reçu validé à la création
+  atomique d'un unique `DataAsset RAW`, puis normaliser le micro-extrait.
+- [x] Prouver migration 0048, contraintes SQL et démarrage d'une image neuve
+  contre PostgreSQL Docker réel.
+- [x] Redéployer l'API active avec l'image 0048 après autorisation explicite
+  (DEC-000062), puis vérifier santé, fail-closed, PostgreSQL et MinIO.
+- [x] Profiler le plafond local d'environ 19 req/s : port Docker Desktop
+  identifié comme goulot principal et recyclage Gunicorn désynchronisé par
+  DEC-000063.
+- [ ] Qualifier la capacité sous Linux avec plusieurs réplicas, retrait
+  gracieux et routes représentatives avant de définir un SLO de production.
+- [x] Banc Linux conteneurisé à deux replicas : HAProxy, DNS dynamique,
+  sentinelle de drainage, remplacement et rechargements séquencés validés par
+  DEC-000064, sans publier de capacité de production.
+- [ ] Reproduire DEC-000064 sur hôte Linux natif/CI avec TLS réel, requêtes
+  longues et écritures idempotentes ; expliquer le maximum à 14,1 secondes.
+- [x] DEC-000065 : workflow Ubuntu HA+TLS implémenté avec seuils bloquants et
+  artefact JSON ; smoke TLS local 500/500 validé.
+- [ ] Exécuter le workflow après push et rattacher l'identifiant du run et son
+  artefact avant de clôturer la preuve Linux native.
+- [ ] Définir par RFC l'idempotence HTTP des écritures et choisir une vraie
+  opération longue avant leurs tests de drainage.
+- [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
+  DataAsset, normalisation et porte explicite STAGING → PRODUCTION.

@@ -1,0 +1,6 @@
+name = "quintessences-status"
+compatibility_date = "2026-08-06"
+pages_build_output_dir = "public"
+
+# Cloudflare Pages — page de statut Quintessences
+# Deploiement : npx wrangler pages deploy public --project-name=quintessences-status --branch=main

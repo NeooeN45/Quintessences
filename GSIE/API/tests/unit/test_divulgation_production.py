@@ -50,8 +50,17 @@ def _kwargs_production(**overrides: object) -> dict[str, object]:
         "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
         "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
+        "transactional_email_mode": "smtp",
+        "smtp_host": "smtp.example.com",
+        "smtp_starttls": True,
         "require_rust_backend": True,
         "db_ssl_mode": "require",
+        "mfa_encryption_key": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        "object_storage_backend": "s3",
+        "object_storage_s3_endpoint": "https://s3.example.com",
+        "object_storage_s3_access_key": "test-access",
+        "object_storage_s3_secret_key": "test-secret",
+        "object_storage_s3_server_side_encryption": "AES256",
     } | overrides
 
 

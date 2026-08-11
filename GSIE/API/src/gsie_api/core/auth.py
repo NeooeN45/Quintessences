@@ -17,7 +17,7 @@ En attendant, un stub utilisateur est utilisé pour les tests.
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 from uuid import uuid4
 
 import jwt
@@ -42,8 +42,11 @@ def _load_private_key() -> str:
     key_path = Path(_settings.jwt_private_key_path)
     if key_path.exists():
         return key_path.read_text(encoding="utf-8")
-    if _settings.environment == "production":
-        raise RuntimeError(f"JWT private key not found: {key_path}")
+    if _settings.environment in ("staging", "production"):
+        raise RuntimeError(
+            f"JWT private key not found: {key_path}. "
+            "Générez les clés avec docker/generate-jwt-keys.sh."
+        )
 
     logger.warning("jwt_private_key_not_found_using_dev_key", path=str(key_path))
     return _generate_dev_private_key()
@@ -54,8 +57,11 @@ def _load_public_key() -> str:
     key_path = Path(_settings.jwt_public_key_path)
     if key_path.exists():
         return key_path.read_text(encoding="utf-8")
-    if _settings.environment == "production":
-        raise RuntimeError(f"JWT public key not found: {key_path}")
+    if _settings.environment in ("staging", "production"):
+        raise RuntimeError(
+            f"JWT public key not found: {key_path}. "
+            "Générez les clés avec docker/generate-jwt-keys.sh."
+        )
 
     logger.warning("jwt_public_key_not_found_using_dev_key", path=str(key_path))
     return _generate_dev_public_key()
@@ -163,6 +169,57 @@ def create_refresh_token(subject: str, claims: dict[str, Any] | None = None) -> 
     return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
 
 
+def create_mfa_challenge_token(subject: str, claims: dict[str, Any] | None = None) -> str:
+    """Crée un jeton court, non utilisable comme access token, pour le MFA."""
+    now = datetime.now(UTC)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iss": _settings.jwt_issuer,
+        "aud": _settings.jwt_audience,
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+        "jti": str(uuid4()),
+        "type": "mfa_challenge",
+    }
+    if claims:
+        reserved_claims = payload.keys() & claims.keys()
+        if reserved_claims:
+            names = ", ".join(sorted(reserved_claims))
+            raise ValueError(f"Reserved JWT claims cannot be overridden: {names}")
+        payload.update(claims)
+    return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
+
+
+def create_mfa_setup_token(subject: str, claims: dict[str, Any] | None = None) -> str:
+    """Crée un jeton restreint pour un compte admin qui doit activer le MFA.
+
+    Distinct du token d'accès (``type=access``) : ``get_current_user``
+    n'accepte que ``type=access`` et rejette donc ce jeton partout, sauf sur
+    les deux endpoints qui l'acceptent explicitement via
+    ``get_current_user_or_mfa_setup`` (``/mfa/setup``, ``/mfa/verify``).
+    Aucune route protégée par ``require_roles``/RBAC ne peut être atteinte
+    avec ce jeton — le compte ne peut rien faire d'autre que configurer son
+    second facteur tant qu'il n'est pas activé.
+    """
+    now = datetime.now(UTC)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iss": _settings.jwt_issuer,
+        "aud": _settings.jwt_audience,
+        "iat": now,
+        "exp": now + timedelta(minutes=15),
+        "jti": str(uuid4()),
+        "type": "mfa_setup_required",
+    }
+    if claims:
+        reserved_claims = payload.keys() & claims.keys()
+        if reserved_claims:
+            names = ", ".join(sorted(reserved_claims))
+            raise ValueError(f"Reserved JWT claims cannot be overridden: {names}")
+        payload.update(claims)
+    return jwt.encode(payload, _load_private_key(), algorithm=_settings.jwt_algorithm)
+
+
 def verify_token(token: str, expected_type: str = "access") -> dict[str, Any]:
     """Vérifie un token JWT (signature + expiration + type).
 
@@ -177,16 +234,13 @@ def verify_token(token: str, expected_type: str = "access") -> dict[str, Any]:
         HTTPException 401 si le token est invalide, expiré ou mauvais type.
     """
     try:
-        payload = cast(
-            "dict[str, Any]",
-            jwt.decode(
-                token,
-                _load_public_key(),
-                algorithms=[_settings.jwt_algorithm],
-                audience=_settings.jwt_audience,
-                issuer=_settings.jwt_issuer,
-                options={"require": ["sub", "iss", "aud", "iat", "exp", "jti", "type"]},
-            ),
+        payload = jwt.decode(
+            token,
+            _load_public_key(),
+            algorithms=[_settings.jwt_algorithm],
+            audience=_settings.jwt_audience,
+            issuer=_settings.jwt_issuer,
+            options={"require": ["sub", "iss", "aud", "iat", "exp", "jti", "type"]},
         )
     except jwt.ExpiredSignatureError:
         raise HTTPException(
@@ -235,6 +289,29 @@ async def get_current_user(
         )
 
     return verify_token(credentials.credentials, expected_type="access")
+
+
+async def get_current_user_or_mfa_setup(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_security_scheme)],
+) -> dict[str, Any]:
+    """Dependency FastAPI — accepte un token d'accès normal OU un token
+    restreint de bootstrap MFA (``type=mfa_setup_required``).
+
+    Réservée aux deux seuls endpoints qui doivent rester joignables par un
+    compte admin qui n'a pas encore de second facteur : ``/mfa/setup`` et
+    ``/mfa/verify``. Toute autre route continue d'exiger ``get_current_user``
+    (type ``access`` strict) et rejette donc ce token restreint.
+    """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        return verify_token(credentials.credentials, expected_type="access")
+    except HTTPException:
+        return verify_token(credentials.credentials, expected_type="mfa_setup_required")
 
 
 async def verify_ws_token(token: str | None) -> dict[str, Any] | None:

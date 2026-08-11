@@ -5,7 +5,7 @@
 | **Livrable** | 203 — Protocole de communication entre moteurs |
 | **Phase** | 2 — Architecture |
 | **Statut** | Draft |
-| **Date de révision** | 2026-07-12 |
+| **Date de révision** | 2026-08-06 |
 | **Lois fondatrices** | GSIE-CON-007, GSIE-CON-010 |
 | **Constitutions liées** | Technique (T-1, T-2, T-6, T-7, T-8) |
 | **RFC de référence** | RFC-0003 (GSIE-Net) |
@@ -131,8 +131,11 @@ typés (serde / Pydantic), garantissant la cohérence.
 
 ### 3.2 Enveloppe de message standard
 
-Tout message entre moteurs respecte l'enveloppe suivante. Les champs
-sont obligatoires sauf indication contraire.
+Tout message entre moteurs ou entre une projection métier et un service
+GSIE respecte l'enveloppe suivante. Les champs sont obligatoires sauf
+indication contraire. Les contrats de ressources et d'événements de
+RFC-0037 réutilisent cette enveloppe au lieu de créer un protocole privé
+par application.
 
 ```
 EnveloppeMessage {
@@ -140,6 +143,8 @@ EnveloppeMessage {
   message_id      : UUID v7       // identifiant unique du message
   trace_id        : UUID v7       // identifiant de trace (chaîne complète)
   parent_id       : UUID v7?      // message qui a déclenché celui-ci (null si racine)
+  causation_id     : UUID v7?      // cause métier ou événement parent
+  scenario_id      : UUID v7?      // branche de simulation, null pour l'état réel
 
   // --- Routage ---
   source_engine   : string        // nom du moteur émetteur (ex: "evidence")
@@ -151,6 +156,8 @@ EnveloppeMessage {
 
   // --- Temporalité ---
   timestamp       : ISO 8601      // heure d'émission (UTC, précision ms)
+  valid_time      : Intervalle?   // période représentée par le message
+  transaction_time: ISO 8601      // moment d'entrée dans GSIE
   expires_at      : ISO 8601?     // expiration (pour les messages différés)
 
   // --- Charge utile ---
@@ -160,6 +167,8 @@ EnveloppeMessage {
   evidence_level  : enum?         // niveau de preuve (A-F) si applicable (S-2)
   source_refs     : SourceRef[]?  // références des sources citées (S-1)
   audit_context   : AuditContext? // contexte d'audit (utilisateur, mission, etc.)
+  state_kind      : enum          // real | derived | forecast | simulated | proposed | decided
+  freshness       : Duration?     // fraîcheur attendue ou mesurée
 }
 ```
 
@@ -579,7 +588,8 @@ synchronisé avec le serveur (GSIE-Net).
 
 - Il n'implémente aucun code (Phase 2 — interdit, DEC-000004).
 - Il ne définit pas les contrats détaillés de chaque moteur
-  (livrable 206 — `ENGINE_INTERFACE_CONTRACTS.md`).
+  (livrable 206 — `ENGINE_INTERFACE_CONTRACTS.md`) ; RFC-0037 définit la
+  fédération des projections et réutilise cette enveloppe.
 - Il ne définit pas le protocole réseau GSIE-Net (RFC-0003).
 - Il ne choisit pas de format de sérialisation définitif pour tous
   les cas (JSON/MessagePack par défaut, gRPC à évaluer par ADR).
@@ -594,6 +604,7 @@ synchronisé avec le serveur (GSIE-Net).
 | 2026-07-01 | Création — version squelette (Phase 1) |
 | 2026-07-12 | Enrichissement Phase 2 — modes, format, erreurs, versioning, offline-first |
 | 2026-07-12 | Audit Phase 2 — ajout priorisation messages (§6.5), limites et mode dégradé (§6.6), codes d'erreur offline (§6.7), lien CON-003 |
+| 2026-08-06 | Extension de l'enveloppe pour les projections métier RFC-0037 (scénarios, causalité, bitemporalité, fraîcheur) |
 
 ---
 

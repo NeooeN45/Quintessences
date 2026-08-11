@@ -1,0 +1,85 @@
+---
+// Fond vidéo du hero. Place le fichier fourni dans public/video/hero.mp4
+// (+ éventuellement hero.webm et un poster hero-poster.jpg) — tant que le
+// fichier n'existe pas, la vidéo échoue silencieusement (onerror) et le
+// dégradé de repli reste visible seul, jamais d'icône de lecteur cassée.
+// Un voile clair est posé au-dessus pour garder le texte lisible sur le
+// thème clair (SITE-X-004). Coupée par défaut ; l'utilisateur doit
+// interagir (bouton) pour l'entendre — aucune vidéo n'est jamais
+// bruyante à l'insu du visiteur.
+---
+
+<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+  <div class="gradient-fallback absolute inset-0">
+    <span class="blob blob-a"></span>
+    <span class="blob blob-b"></span>
+    <span class="blob blob-c"></span>
+  </div>
+
+  <video
+    class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700"
+    autoplay
+    muted
+    loop
+    playsinline
+    poster="/video/hero-poster.jpg"
+    onloadeddata="this.classList.add('!opacity-40')"
+    onerror="this.remove()"
+  >
+    <source src="/video/hero.webm" type="video/webm" />
+    <source src="/video/hero.mp4" type="video/mp4" />
+  </video>
+
+  <div class="absolute inset-0 bg-[var(--color-bg-000)]/55"></div>
+</div>
+
+<style>
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.35;
+    will-change: transform;
+  }
+  .blob-a {
+    top: -10%;
+    left: 8%;
+    width: 34vw;
+    height: 34vw;
+    background: var(--color-accent);
+    animation: drift-a 22s ease-in-out infinite;
+  }
+  .blob-b {
+    top: 5%;
+    right: 4%;
+    width: 26vw;
+    height: 26vw;
+    background: var(--color-signature-light);
+    animation: drift-b 26s ease-in-out infinite;
+  }
+  .blob-c {
+    bottom: -15%;
+    left: 30%;
+    width: 22vw;
+    height: 22vw;
+    background: var(--color-app-flora);
+    opacity: 0.18;
+    animation: drift-c 30s ease-in-out infinite;
+  }
+  @keyframes drift-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(4vw, 3vh) scale(1.08); }
+  }
+  @keyframes drift-b {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-3vw, 4vh) scale(0.95); }
+  }
+  @keyframes drift-c {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(2vw, -3vh) scale(1.1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .blob { animation: none; }
+    video { display: none; }
+  }
+</style>

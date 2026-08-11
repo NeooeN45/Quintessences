@@ -345,3 +345,93 @@ async def test_should_raise_when_integrity_error_without_concurrent() -> None:
 
     with pytest.raises(IntegrityError):
         await engine._get_or_create_taxon(2878688)
+
+
+# ---------------------------------------------------------------------------
+# resolve_indigenat — code_ser inconnu + cd_nom_raw parsing
+# ---------------------------------------------------------------------------
+
+
+def test_should_return_none_when_code_ser_unknown_in_indigenat_dataset() -> None:
+    """Un code SER absent de la ligne doit retourner None — jamais approxé."""
+    loader = Mock(spec=IndigenatLoader)
+    loader.find.return_value = {
+        "Nom_scientifique": "Fagus sylvatica L., 1753",
+        "Nom_vernaculaire": "Hêtre commun",
+        "Famille": "Fagaceae",
+        "CD_NOM_TaxRefv18.0": "100282",
+        "Indigenat FR": "1",
+        # Pas de clé "Z99" — code SER inconnu
+        "A11": "1",
+    }
+    engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
+
+    result = engine.get_indigenat(IndigenatQuery(requete_id=uuid4(), cd_nom=100282, code_ser="Z99"))
+
+    assert result is None
+
+
+def test_should_parse_cd_nom_when_valid_in_indigenat_dataset() -> None:
+    """Un cd_nom valide dans le dataset doit être parsé en int."""
+    loader = Mock(spec=IndigenatLoader)
+    loader.find.return_value = {
+        "Nom_scientifique": "Fagus sylvatica L., 1753",
+        "Nom_vernaculaire": "Hêtre commun",
+        "Famille": "Fagaceae",
+        "CD_NOM_TaxRefv18.0": "100282",
+        "Indigenat FR": "1",
+        "A11": "1",
+    }
+    engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
+
+    result = engine.get_indigenat(IndigenatQuery(requete_id=uuid4(), cd_nom=100282, code_ser="A11"))
+
+    assert result is not None
+    assert result.cd_nom == 100282
+
+
+def test_should_return_none_cd_nom_when_dataset_value_is_na() -> None:
+    """Un cd_nom 'NA' dans le dataset doit donner cd_nom=None."""
+    loader = Mock(spec=IndigenatLoader)
+    loader.find.return_value = {
+        "Nom_scientifique": "Fagus sylvatica L., 1753",
+        "Nom_vernaculaire": "Hêtre commun",
+        "Famille": "Fagaceae",
+        "CD_NOM_TaxRefv18.0": "NA",
+        "Indigenat FR": "1",
+        "A11": "1",
+    }
+    engine = BotanicalEngine(_NoOpSession(), indigenat_loader=loader)  # type: ignore[arg-type]
+
+    result = engine.get_indigenat(IndigenatQuery(requete_id=uuid4(), cd_nom=100282, code_ser="A11"))
+
+    assert result is not None
+    assert result.cd_nom is None
+
+
+# ---------------------------------------------------------------------------
+# resolve_taxref — TaxrefClientError + result is None
+# ---------------------------------------------------------------------------
+
+
+async def test_should_raise_botanical_engine_error_when_taxref_client_fails() -> None:
+    """Une panne du TaxrefClient doit lever BotanicalEngineError."""
+    from gsie_api.engines.botanical.taxref_client import TaxrefClientError
+
+    taxref_client = AsyncMock(spec=TaxrefClient)
+    taxref_client.search.side_effect = TaxrefClientError("API indisponible")
+    engine = BotanicalEngine(_NoOpSession(), taxref_client=taxref_client)  # type: ignore[arg-type]
+
+    with pytest.raises(BotanicalEngineError, match="API indisponible"):
+        await engine.resolve_taxref(TaxrefQuery(nom_scientifique="Quercus petraea"))
+
+
+async def test_should_return_none_when_taxref_finds_no_match() -> None:
+    """Aucune entrée TAXREF trouvée doit retourner None — jamais un cd_nom inventé."""
+    taxref_client = AsyncMock(spec=TaxrefClient)
+    taxref_client.search.return_value = None
+    engine = BotanicalEngine(_NoOpSession(), taxref_client=taxref_client)  # type: ignore[arg-type]
+
+    result = await engine.resolve_taxref(TaxrefQuery(nom_scientifique="NonExistent species"))
+
+    assert result is None

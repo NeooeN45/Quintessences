@@ -1,0 +1,10 @@
+{
+  "main_module": "index.js",
+  "bindings": [
+    {
+      "type": "kv_namespace",
+      "name": "RATE_LIMITS",
+      "namespace_id": "be925fb1b6204f45a85e25a2fa8c5ddc"
+    }
+  ]
+}

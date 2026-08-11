@@ -4,6 +4,1560 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [CLÔTURE PR HA ET CI] - 2026-08-11
+
+- Tête finale `f12e3cd` validée par les runs PR `31494308995`, push
+  `31494302005` et HA Linux/TLS `31494308961`.
+- Banc HA distant : 6 000/6 000 réponses HTTP 200, zéro erreur, 276,3 req/s,
+  p95 175,58 ms et p99 252,82 ms.
+- Couverture fusionnée : 16 086/16 386 instructions, soit 98,17 % ; gate
+  multicouche et 70/70 mutations verts.
+- Data Registry PostgreSQL + MinIO : campagnes 165/165, 103/103 et 121/121
+  passantes ; Ruff, mypy strict, Docker, Bandit et Trivy verts.
+- La PR #28 est prête pour revue. Le merge, les SLO de production et
+  l'ouverture FETCH globale restent des décisions séparées.
+
+## [HA LINUX/TLS ET COUVERTURE MULTICOUCHE] - 2026-08-11
+
+- DEC-000065 prouvée par le run GitHub Actions `31479643460` : 6 000/6 000
+  réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et p99 245,58 ms ;
+  construction, migrations, TLS et nettoyage réussis.
+- Initialisation PostgreSQL fraîche fiabilisée : Apache AGE précède les autres
+  extensions, `public` reste premier dans le `search_path` et le stanza
+  pgBackRest n'est créé que lorsque l'archivage WAL est actif.
+- Action de publication de l'artefact HA épinglée par SHA immuable.
+- DEC-000066 : couverture Python fusionnée unités + intégration, cliquet global
+  à 97,10 %, contrats publics à 100 %, métier/application à 80 % minimum et
+  infrastructure à 60 % minimum ; rapport invalide refusé fail-closed.
+- Preuve locale finale : 2 873 unités, 349 intégrations, 98,18 % combinés,
+  49 contrats publics à 100 %, métier/application à 96,80 % et infrastructure
+  à 99,97 %.
+- Routeur et schémas Data Registry portés à 100 %. Vérificateur de politique
+  testé, compatible Windows CP-1252 et intégré comme porte obligatoire de CI.
+- Dérive `QualityAssessment` détectée par la campagne Alembic puis corrigée par
+  alignement du modèle sur la migration 0048 ; aucun écart n'est toléré.
+- Confirmation HA sur `e9743d8` par le run `31488527136` ; son premier essai a
+  subi une coupure GitHub Releases avant les tests, puis le rejeu du même SHA a
+  réussi sans contournement TLS.
+- Première preuve distante de la porte multicouche : le job dédié du run
+  `31488527209` passe à 98,169 %, avec 49/49 contrats publics à 100 %, 96,80 %
+  métier/application et 99,90 % infrastructure.
+- Deux dettes de harnais révélées par ce run sont corrigées sans affaiblissement
+  des portes : isolation explicite du test S3, génération JWT dans le job Data
+  Registry et mise à jour du motif ObjectStorage parmi les 70 mutations.
+- Reproduction avec l'environnement S3 du runner : 165/165 Data Registry,
+  103/103 P0/P1 et 121/121 infrastructure/lifespan ; Ruff et mypy strict verts,
+  mutation ObjectStorage ciblée tuée.
+- Run de pull request `31492339317` entièrement vert sur `8a531ed` : 70/70
+  mutations, couverture combinée à 98,17 %, Registry, intégration, Docker,
+  sécurité et gate final réussis.
+- Résilience des builds renforcée après deux coupures Debian transitoires : cinq
+  reprises `apt` bornées dans les images DB/API et reprises `curl` bornées pour
+  AGE, sans désactiver TLS ni son SHA-256. Les deux images sont reconstruites et
+  smoke-testées localement ; huit contrats statiques protègent ces invariants.
+
+## [ARCHITECTURE — DURABILITÉ ÉVOLUTIVE ET INTÉGRATION IA] - 2026-08-10
+
+- Création de `GSIE-ARCH-EVOLUTION-001` en statut Draft pour formaliser les
+  migrations expand/backfill/contract, la compatibilité API, le versionnement
+  scientifique, l'invalidation des données dérivées, la fraîcheur, les licences,
+  la performance et les portes de qualité.
+- Définition du benchmark propriétaire GSIE : scénarios versionnés, baselines
+  non-IA et expertes, vérités terrain, mesures par sous-groupe, prévention des
+  fuites et garde de promotion.
+- Définition de la frontière d'intégration des modèles IA spécialisés après la
+  bêta fonctionnelle : entrées GSIE versionnées, sorties typées, incertitude,
+  provenance, shadow mode, validation humaine et rollback.
+
+## [GSIE DATA PLATFORM — QUALITÉ TECHNIQUE ET PORTE FETCH] - 2026-08-10
+
+- Politique `registry-quality-1` : cinq dimensions, aucun score global pour
+  un bilan incomplet et séparation stricte de la santé et de l'Evidence Level.
+- Migration réversible `20260810_0048` pour les campagnes append-only et les
+  contraintes de score, poids et unicité par dimension.
+- Resolver et recherche alimentés uniquement par les évaluations persistées,
+  sans confiance implicite dans `DatasetVersion.stats`.
+- Suppression du dernier fallback `quality_score_from_stats` dans le resolver
+  pur et ajout d'une non-régression prouvant que `stats.quality_score` est ignoré.
+- Évaluation reproductible des quatre sources : manifeste complet et cohérent,
+  mais trois dimensions non mesurées, donc aucune promotion.
+- Worker FETCH fail-closed ajouté ; les quatre sources restent désactivées et
+  aucun appel adapter, téléchargement RAW ou changement de statut n'a lieu.
+- Migration 0048 appliquée sur PostgreSQL Docker réel ; contraintes d'unicité
+  et de score vérifiées dans une transaction annulée.
+- CRUD générique fermé pour les promotions STAGING/PRODUCTION : un futur
+  service dédié devra vérifier qualité, droits, actif RAW et opérateur.
+- Qualification SoilGrids approfondie : licence CC BY 4.0 confirmée, mais API
+  REST officiellement en pause ; candidat WCS borné préparé sans activer FETCH.
+- Contrat WCS fermé ajouté : endpoint fixe, 12 propriétés, six profondeurs,
+  quatre sorties, EPSG:152160, GeoTIFF INT16, 1 Mpx, 8 Mio et 30 secondes.
+- Sonde TLS réelle maintenue fail-closed face à l'interception antivirus ;
+  aucune désactivation de certificat et aucune activation FETCH.
+- Récepteur FETCH transactionnel ajouté : MIME, `Content-Length`, octets réels,
+  timeout global et SHA-256 contrôlés avant `commit`, avec `abort` sur erreur.
+- Aucun raccordement MinIO ni `DataAsset RAW` tant que la source reste fermée.
+- Campagne élargie du worker : 56/56 tests, head PostgreSQL 0048 et contraintes
+  SQL rejouées sous transaction annulée ; rapport de preuve versionné.
+- Sink ObjectStorage/MinIO transactionnel : spool privé, clé RAW non écrasable,
+  publication au commit seulement et timeout propre autour de `abort()`.
+- Round-trips MinIO réels commit/relecture/suppression et abort sans publication
+  validés ; nettoyage anti-orphelin après commit ambigu et 96 tests passants.
+- Les `HEAD 404` attendus par `ObjectStorage.exists()` ne remontent plus comme
+  erreurs d'exploitation ; les autres échecs S3 restent journalisés et propagés.
+- Image candidate `gsie-api:quality-0048` reconstruite et smoke-testée, sans
+  redéploiement de l'API active et sans activation de FETCH.
+- Sonde TLS SoilGrids réelle réussie : WCS 2.0, EPSG:152160 et résolution
+  250 m confirmés. Divergence identifiée entre le code métier `wv003` et le
+  service actif `wv0033` ; aucun `GetCoverage` exécuté.
+- Mapping contractuel `wv003` vers `wv0033` ajouté pour l'accès WCS, sans
+  modifier l'identifiant métier ni ouvrir l'allowlist à `wv0033` ; 99 tests
+  Data Registry/FETCH passants.
+- DEC-000061 : premier `GetCoverage` SoilGrids réel exécuté sur 100 pixels ;
+  569 octets vérifiés par SHA-256, DataAsset RAW unique publié dans MinIO et
+  version maintenue à l'état `discovered` sans promotion automatique.
+- DEC-000062 : API et worker redéployés depuis `6986e80`, migration 0048,
+  fail-closed, manifeste idempotent et DataAsset TIFF MinIO revérifiés. Charge
+  stable à 100 % de succès, avec un plafond local d'environ 19 req/s à profiler.
+- DEC-000063 : le port publié Docker Desktop est identifié comme goulot local
+  principal (23,4 req/s contre 405,1 req/s dans le réseau Docker). Le recyclage
+  Gunicorn passe de 1000/50 à 5000/5000, devient configurable et refuse les
+  valeurs non positives ; 6 000/6 000 requêtes internes réussissent à
+  669,34 req/s, p95 11,47 ms. La haute disponibilité multi-réplicas reste à
+  qualifier sous Linux avant toute annonce de capacité de production.
+- DEC-000064 : banc HA Linux conteneurisé à deux replicas derrière HAProxy,
+  readiness de drainage privée, résolution DNS dynamique et grâce de 45 s.
+  Drainage : 6 000/6 000 succès ; rechargements séquencés : 8 000/8 000 ;
+  lecture PostgreSQL authentifiée : 100/100. Les essais volontairement mal
+  séquencés prouvent que le retour explicite du backend est une porte
+  obligatoire. Les SLO de production restent non publiés.
+- DEC-000065 : workflow GitHub Actions Ubuntu pour reconstruire la plateforme,
+  terminer TLS avec une CA éphémère vérifiée, drainer un replica sous 6 000
+  requêtes et bloquer sur statuts, erreurs, p95, p99 ou débit. Le câblage TLS
+  local passe 500/500 ; la preuve distante attend le premier run après push.
+
+## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
+
+- Ajout d'une commande reproductible unique pour les trois campagnes de
+  validation, avec rapport JSON horodaté : 151 tests Data Registry, 103 P0/P1
+  et 121 infrastructure/lifespan.
+- Ajout du job CI obligatoire PostgreSQL/PostGIS/AGE + MinIO : migrations,
+  application/rejeu du manifeste, round-trip S3, SHA-256 et nettoyage.
+- Ajout du scheduler périodique de santé : verrou Redis avec jeton/TTL,
+  concurrence et tailles bornées, métriques Prometheus et historique
+  `DatasetHealth`. Il reste désactivé par défaut.
+- Ajout de `FETCH_QUALIFICATION.json` et d'une porte fail-closed. GBIF, IGN,
+  SoilGrids et Météo-France restent fermés jusqu'à levée de leurs blocages
+  juridiques ou techniques propres.
+- Reconstruction des trois images et redéploiement API/outbox. `/health` et
+  `/ready` sont sains ; le smoke réel confirme le head `20260810_0047`, le
+  rejeu idempotent et le nettoyage MinIO.
+- Preuve :
+  `GSIE/API/docs/data/GSIE_DATA_REGISTRY_CLOTURE_2026-08-10.md`.
+
+## [GSIE DATA PLATFORM — MANIFESTE APPLIQUÉ ET SANTÉ PERSISTÉE] - 2026-08-10
+
+- Ajout de `ManifestRegistryService` et du CLI
+  `scripts/apply_dataset_manifest.py` : `dry-run` par défaut, transaction
+  explicite, identifiants stables et rejeu idempotent.
+- Projection complète des quatre entrées vers Agent, Source, EntityAlias,
+  droits, Dataset, DatasetVersion, Distribution et Citation : 32 ressources
+  créées, puis rejeu à 0 création/0 mise à jour.
+- Ajout de `scripts/collect_manifest_health.py` ; contrôle TLS réel 4/4
+  `healthy`, quatre `DatasetHealth` persistés, rejeu identique sans doublon.
+- Migration `20260810_0047` et durcissement de `0046` : enums Registry
+  déterministes dans `public`. Cycle réel sur base jetable
+  `upgrade head → downgrade 0044 → upgrade head` validé.
+- Correction des blocages de revue : paquet `gsie_api.data` sans réexports,
+  test d'import en processus froid, bytes UTF-8 valide et Ruff/mypy verts.
+- Refactor des validateurs DataAsset/DatasetVersion par invariant ; fermeture
+  symétrique des fichiers temporaires en erreur.
+- Réutilisation d'un client/pool aiobotocore S3 par instance, singleton
+  applicatif et fermeture propre au shutdown FastAPI.
+- Preuves initiales : 136 tests Data Registry, 103 tests P0/P1 et 121 tests
+  cycle de vie/infrastructure, tous passants. Documentation :
+  `GSIE/API/docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md`.
+
+## [OUTILLAGE — SITE DES GRAPHES MERMAID ENRICHI] - 2026-08-10
+
+- Extension de `graphes-quintessences/` de 5 à **13 diagrammes** répartis en
+  **4 catégories** (Écosystème, Gouvernance, Progression, Infrastructure) :
+  ajout du métamodèle Encyclopédie, des applications clientes, de l'identité
+  Quintessences, du cycle de vie documentaire, de la chronologie des
+  décisions structurantes, du pipeline Data Registry, du Server Meshing et
+  du Territorial Mesh — tous sourcés depuis la documentation réelle
+  (`README.md`, `PROJECT_MEMORY.md`, `03_DECISIONS/`, `GSIE/ARCHITECTURE/`).
+- Refonte du site généré : sidebar par catégorie avec compteurs, puces de
+  filtre combinées à la recherche, thème clair/sombre persistant (police
+  Space Grotesk/Space Mono), zoom/pan par diagramme, vue plein écran,
+  téléchargement SVG, bascule « voir le code source », badge de type de
+  diagramme détecté automatiquement.
+- `generate_site.py` réécrit (stdlib uniquement, ruff + mypy strict verts) ;
+  `diagrams/meta.json` enrichi (`categorie`, `description`, `date_maj`).
+- Port 4300 (évite conflits avec les autres services locaux).
+- Skill Devin `.devin/skills/graphes-progression/SKILL.md` mis à jour avec
+  la table de correspondance événement → diagramme à maintenir.
+
+## [GSIE DATA PLATFORM — TEST E2E RÉEL] - 2026-08-10
+
+- Ajout de `GSIE/API/scripts/test_data_registry_e2e.py` : campagne réelle
+  bornée GBIF, IGN, SoilGrids et Météo-France, sans fixture ni réponse simulée.
+- Vérification de bout en bout : santé fournisseur, acquisition, normalisation,
+  projection métier, écriture/lecture MinIO avec égalité octet à octet et
+  SHA-256, sélection `data-resolver-1`, puis nettoyage automatique.
+- Résultat reproductible : 4/4 adapters sains, 96 départements Météo-France,
+  `cleanup=ok` et aucun objet de test résiduel. Preuves :
+  `GSIE/API/docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md`.
+- Correction de la politique MinIO Compose : le bucket est désormais injecté
+  dans l'ARN généré (au lieu du littéral `%s`) et la politique est recréée de
+  manière idempotente avant association au compte runtime.
+- Limite explicitée : les adapters exposent encore `QUERY`/`NORMALIZE`, pas
+  `FETCH`; l'archivage des octets bruts et la promotion `DataAsset` restent à
+  planifier.
+
+## [GSIE DATA PLATFORM — PHASE 6 MANIFESTE] - 2026-08-10
+
+- Ajout du manifeste versionné `GSIE/DATASETS/REGISTRY_MANIFEST.json` pour
+  GBIF, IGN, SoilGrids et Météo-France, sans téléchargement ni écriture DB.
+- Ajout de la porte `gsie_api.ingestion.manifest` : identité dataset/version,
+  vocabulaire de domaines, licence alignée sur SCI-001, URLs HTTPS sûres et
+  distinction explicite `metadata_only` / `archive_copy`.
+- Les sources restreintes ne peuvent pas franchir la porte de copie ; un pack
+  hors ligne exige une copie et un droit de redistribution déclaré.
+- Ajout du validateur CLI et de 12 tests unitaires ; Ruff et mypy strict
+  passent. Documentation : `GSIE/API/docs/data/GSIE_DATA_MANIFEST_PHASE6.md`.
+- Ajout de la page `/data` au site `GSIE/ADMIN_WEB` : catalogue réel,
+  recherche, filtre par domaine et état vide explicable ; `astro check` sans
+  erreur et build 13 routes validé.
+- Audit du contrat GeoSylva : la synchronisation parcellaire existante reste
+  isolée du Data Registry ; la future consommation mobile attend un manifeste
+  de pack, une santé persistée et un checksum vérifié. Documentation :
+  `GSIE/API/docs/data/GEOSYLVA_DATA_REGISTRY_MIGRATION_PHASE7.md`.
+
+## [GSIE DATA PLATFORM — PHASE 5 RESOLVER] - 2026-08-10
+
+- Ajout du `Data Selection Engine` déterministe et explicable dans
+  `gsie_api.data.resolver`.
+- Ajout de `POST /api/v1/data/resolve`, authentifié, rate-limitée et corrélée
+  par trace ID ; aucun adapter ni téléchargement n'est déclenché.
+- Contraintes évaluées avant score : statut, qualification Registry A–F,
+  licence commerciale, qualité et archive ; blocages stables exposés.
+- Préférences fraîcheur/qualité/offline et fallback opt-in soumis à une
+  politique versionnée ; tests ciblés, Ruff et mypy strict passent.
+- Documentation : `GSIE/API/docs/data/GSIE_DATA_RESOLVER_PHASE5.md`.
+
+## [STABILISATION DOCKER + BOOTSTRAP DATA REGISTRY] - 2026-08-10
+
+- Correction TLS des builds PostgreSQL/Apache AGE et API sous inspection HTTPS
+  Kaspersky : certificat injecté uniquement par secret BuildKit éphémère,
+  `UV_SYSTEM_CERTS=true` pour uv, sans désactivation de la validation.
+- Ajout de `GSIE/API/scripts/build_images.ps1` et construction vérifiée des
+  images `api-db`, `api-api` et `api-outbox-worker`.
+- Correction du bloc `command` PostgreSQL, du démarrage Redis sous UID 999 et
+  de l'initialiseur MinIO (shell POSIX, configuration temporaire et opérations
+  idempotentes). Aucun volume n'a été supprimé.
+- Vérification Docker : API `/health`/`/ready` 200, migration head
+  `20260810_0046`, DB/Redis/MinIO/outbox/Mailpit/Uptime Kuma sains ; bucket et
+  politique MinIO créés.
+- Bootstrap explicite `gsie_api.data.bootstrap` pour GBIF, IGN, SoilGrids et
+  Météo-France, campagne `AdapterHealthService` offline et tests ciblés verts.
+  Les résultats ne sont pas encore persistés dans `DatasetHealth` sans
+  distribution qualifiée.
+
+## [GSIE DATA PLATFORM — PHASE 3 ADAPTERS] - 2026-08-10
+
+- Contrat commun `DataSourceAdapter` livré avec capacités explicites :
+  découverte, métadonnées, santé, requête, fetch et normalisation.
+- `AdapterPluginRegistry` ajouté avec factories lazy, cache d’instances,
+  refus des doublons et vérification des descripteurs retournés.
+- Bornes de sécurité ajoutées : trace ID, timeout, taille maximale, allowlist
+  d’hôtes, URLs sans identifiants/query/fragment et flux de fetch non chargés
+  entièrement en mémoire.
+- Aucun fournisseur ni appel réseau activé par défaut ; les façades IGN, GBIF,
+  SoilGrids et Météo-France délèguent aux clients résilients existants et sont
+  enregistrables uniquement par bootstrap explicite.
+- 29 tests de contrat/façades passent (9 contrat + 20 fournisseurs), avec
+  clients simulés et aucun appel externe ; Ruff et mypy strict passent.
+- Docker relancé : migrations `20260809_0044` → `20260810_0046` appliquées,
+  `20260810_0046` confirmé comme head et contraintes SQL vérifiées.
+
+## [GSIE DATA PLATFORM — PHASE 2 DATA REGISTRY] - 2026-08-10
+
+- Tranche read-only de RFC-0038 implémentée après validation de `DEC-000059`.
+- Migration réversible `20260810_0046` : statuts `DatasetStatus`, domaines,
+  tags, couverture temporelle, preuve, droits d’usage, santé par distribution
+  et contraintes d’intégrité.
+- Ajout des contrats/DTOs versionnés, du cycle de vie contrôlé, de la
+  pagination par curseur opaque et de `DataRegistryService`.
+- Routes authentifiées `/api/v1/data/catalog`, `datasets/{id}`, `providers`,
+  `search`, `health` et `coverage`, avec RBAC, rate limiting, trace ID et
+  masquage des URLs sensibles.
+- Validation spécialisée intégrée au CRUD historique : transitions de statut,
+  bornes santé, licence/preuve et clé composite distribution-version.
+- 39 tests ciblés passent ; Ruff et mypy strict passent. Le smoke test
+  PostgreSQL reste à exécuter lorsque Docker/Linux sera disponible.
+- Adapters, scheduler de santé, cache partagé et resolver restent hors de la
+  Phase 2.
+
+## [DATASET/API — INTÉGRITÉ DES DATA ASSET] - 2026-08-10
+
+- Le CRUD générique valide désormais les métadonnées `DataAsset` : taille
+  entière non négative, checksum compatible avec l’algorithme déclaré, URI
+  autorisées et refus des identifiants dans les URI.
+- `size_bytes` est stocké en `BIGINT` avec la contrainte SQL
+  `ck_data_asset_size_non_negative` (`20260810_0045`), pour couvrir les assets
+  COG/COPC volumineux sans troncature.
+- Le stockage local ne renvoie plus de chemin `file://` : il renvoie un URI
+  opaque `local:///…` et refuse les URLs présignées. La suite unitaire complète
+  passe : 2 703 tests, 63 ignorés et 100 % de couverture ; les deux tests
+  PostgreSQL DataAsset attendent Docker.
+
+## [BILAN HEBDOMADAIRE — TRAÇABILITÉ DES TRAVAUX] - 2026-08-10
+
+- Ajout du bilan [`GSIE-WEEKLY-2026-08-03`](GSIE/DOCUMENTATION/BILAN_HEBDOMADAIRE_2026-08-03_2026-08-10.md).
+- La chronologie relie les commits du 03 au 09 août et les changements du
+  10 août encore présents dans l’espace de travail aux décisions, RFC,
+  spécifications, fichiers de code et preuves de tests.
+- Les statuts sont séparés entre livré, en revue et en attente ; le smoke test
+  MinIO/Docker, les configurations opérateur et l’adoption de RFC-0038 restent
+  explicitement ouverts.
+
+## [AUDIT SÉCURITÉ — STOCKAGE OBJET ET COMPOSE] - 2026-08-10
+
+- Désactivation de la journalisation des paramètres SQL par pgaudit pour ne pas
+  exposer de données personnelles, jetons ou secrets dans les logs.
+- Compte MinIO runtime séparé du compte racine et politique restreinte au bucket
+  GSIE ; chiffrement serveur AES256 demandé lors des uploads S3.
+- Les URLs présignées sont limitées à quinze minutes et le backend local ne
+  divulgue plus de chemin `file://`.
+- Métriques Cloudflared liées à `127.0.0.1`; 85 tests ciblés passent, Ruff et
+  validation Compose sont verts. Rapport : `GSIE/API/docs/SECURITY_AUDIT_2026-08-10.md`.
+
+## [GSIE DATA PLATFORM — OBJECT STORAGE MINIO/S3] - 2026-08-09
+
+- Phase 1 du Data Registry livrée côté stockage objet dans `GSIE/API/`.
+- `S3Storage` asynchrone compatible MinIO/AWS S3 via `aiobotocore==3.7.0`.
+- Upload multipart par blocs, checksum SHA-256 en métadonnée, abandon sûr
+  des uploads incomplets, lecture en flux, lecture par plage, HEAD,
+  suppression et URLs présignées.
+- `DataAsset` enrichi de `storage_uri` et `checksum_algorithm` par la
+  migration réversible `20260809_0044`.
+- MinIO ajouté au Compose de développement, avec ports limités à localhost,
+  volume persistant, healthcheck et initialisation idempotente du bucket.
+- Validation : 51 tests stockage/configuration, 112 tests infrastructure,
+  ruff, mypy, migration head et `docker compose config` passants.
+- Smoke test réseau réel reporté : le daemon Docker Desktop n’était pas
+  disponible sur l’environnement Windows de développement.
+- Veille externe intégrée au plan : STAC, COG, GeoParquet, COPC, Zarr,
+  DuckDB, Iceberg et accélérations GPU optionnelles.
+
+## [GSIE DATA PLATFORM — RFC-0038 DATA REGISTRY] - 2026-08-10
+
+- Passe de logique de `RFC-0038` : v1.1.0 conserve le statut `Draft` et
+  clarifie Agent/Source/Citation, couverture spatiale, droits de dataset
+  séparés du RGPD, santé par distribution, transitions récupérables,
+  qualification Registry A–F distincte des assertions, vocabulaire de domaines
+  versionné et recherche déterministe par preuve/grain/licence.
+- `DEC-000059` est alignée en `Draft` ; aucune adoption n’est anticipée avant
+  la décision explicite du Fondateur.
+- L’audit complémentaire passe en v1.4.0. Aucun endpoint Registry, adapter,
+  resolver ou migration Phase 2 n’est appliqué avant adoption de la RFC.
+
+## [GSIE DATA PLATFORM — ADOPTION RFC-0038] - 2026-08-10
+
+- Validation formelle du Fondateur : `RFC-0038` v1.2.0 et `DEC-000059` passent
+  à `Validated`.
+- La Phase 2 Data Registry est autorisée par tranches : Registry, DTOs,
+  recherche, health checks, adapters puis Data Selection Engine.
+- Aucun code Registry, endpoint `/api/v1/data/*`, adapter ou resolver n’est
+  ajouté par cette seule validation documentaire.
+- L’audit architecture données est synchronisé en v1.5.0.
+
+## [ORCHESTRE GSIE — CYCLES CVE, QA ET VEILLE] - 2026-08-09
+
+- Cycle 2 Sécurité+Perf : audit `pip-audit` sur 138 packages, 24 CVE
+  sur 7 packages, dont 6 HIGH ; escalade #001 résolue par l'option B.
+- Cycle QA : 2667 tests passés, 63 ignorés, 100 % couverture,
+  70/70 mutations détectées, ruff et mypy sans erreur.
+- Cycle Veille : rapport `GSIE/RESEARCH/VEILLE_2026-08-09.md` produit
+  sur six domaines ; aucune ressource téléchargée ou ingérée.
+- Les workers de l'Orchestre utilisent désormais **SWE 1.7 max**.
+- Escalade #001 résolue par l'option B : `pyjwt==2.13.0`,
+  `python-multipart==0.0.32`, `cryptography==50.0.0`. Les tests ciblés
+  auth/JWT/SSRF passent 60/60 ; l'audit pip-audit reste bloqué par TLS.
+- Cycle 3 performance : `numpy.corrcoef` mesure 30x à 1521x plus rapide
+  que scipy pairwise sur les matrices de corrélation GSIE.
+- Qualification Starlette/FastAPI : l’upgrade coordonné est nécessaire
+  pour corriger les CVE Starlette ; escalade #002 ouverte avant toute
+  modification du framework public.
+- Upgrade coordonné appliqué sur branche dédiée : FastAPI 0.134.0 et
+  Starlette 0.52.1. Validation complète : 2667 tests passants, 100 %
+  couverture, 70/70 mutations, ruff/mypy verts.
+- Nettoyage FastAPI : suppression de l’ORJSONResponse global déprécié,
+  remplacement de la constante 422 et suppression du warning Stripe ;
+  warnings réduits de 187 à 3. Les trois restants sont des warnings
+  `runpy` de tests de points d’entrée, sans régression fonctionnelle.
+- Revalidation `pip-audit` dans le venv réel après correction TLS :
+  Starlette 1.3.1 et toutes les dépendances HIGH sont propres. L'audit
+  intermédiaire a identifié quatre avis sur trois packages ; ils ont été
+  traités dans l'option A ci-dessous.
+- Option A appliquée : `app-store-server-library==3.1.2`,
+  `orjson==3.11.6`, `pytest==9.0.3` et `pytest-asyncio==1.3.0`.
+  `pip-audit` est maintenant propre ; billing, suite complète, couverture,
+  ruff et mypy sont validés.
+
+## [SITE PUBLIC QUINTESSENCES — APPLICATIONS, COMPTE, FOND VIDÉO] - 2026-08-09
+
+- **Hero** : titre réorganisé en 3 lignes lisibles au lieu d'un mot par
+  ligne ; fond passé en vidéo de fond en boucle (`VideoBackdrop.astro`,
+  fichier à fournir dans `public/video/`), dégradé animé conservé en
+  repli si la vidéo est absente.
+- **Titres animés génériques** : `AnimatedHeading.tsx` factorise
+  l'animation du hero et l'applique à toutes les pages du site — même
+  syntaxe visuelle partout, sans jamais fabriquer de contenu pour
+  remplir une ligne manquante.
+- **Chargement fantôme** : `Skeleton.tsx` (pulsation) appliqué aux
+  indicateurs live et aux futures captures d'écran d'application.
+- **QGISIA retiré** de la liste des applications, à la demande du
+  Fondateur.
+- **Nouvelle page `/applications/`** : une section détaillée par
+  application (icône, domaine, description, statut, capture d'écran
+  en réserve, lien Google Play — jamais de lien inventé, "Bientôt sur
+  Google Play" par défaut).
+- **Pages Compte fonctionnelles** : `/compte/inscription/`,
+  `/compte/connexion/`, `/compte/` branchées sur les vrais endpoints
+  `IDENTITE-001` (`/auth/register`, `/auth/login/password`,
+  `/auth/me`, `/auth/logout`). Jetons en sessionStorage — limite déjà
+  documentée en `SITE-001` §9, non résolue par ce changement.
+- Vérifié par `npm run build` (13 pages) et navigation en direct.
+
+## [SITE PUBLIC QUINTESSENCES — PIVOT THÈME CLAIR (PAPA CREATIVE)] - 2026-08-09
+
+- **SITE-002 v1.1.0** : décision directe du Fondateur — thème clair
+  exclusif (retrait du sombre par défaut de la v1.0.0), direction
+  éditoriale inspirée de `papacreative.com` : typographie Space
+  Grotesk + Space Mono, hero en titre empilé sur plusieurs lignes,
+  légendes capitales très espacées, fiches applications façon
+  « case study » (DOMAINE/STATUT au lieu de PROJECT TYPE/INDUSTRY).
+  `SITE-001` `SITE-X-007` amendée en conséquence.
+- **Implémentation** : `ThemeToggle` retiré, palette entièrement
+  réécrite (fond quasi blanc, texte quasi noir, accent teal sombre
+  `#00786a` utilisé avec parcimonie). Polices chargées via Google
+  Fonts (`<link>`, pas `@import` CSS — évite un avertissement de build
+  Tailwind sur l'ordre des règles).
+- **Accessibilité** : contraste mesuré en direct dans le navigateur
+  après implémentation — `--color-fg-400`/`--color-fg-500` étaient
+  sous le seuil AA (4,5:1) sur fond blanc, corrigés et revérifiés
+  (5,49:1 et 6,58:1).
+- Vérifié par `npm run build` (7 pages) et test navigateur en direct,
+  aucune erreur console.
+
+## [SITE PUBLIC QUINTESSENCES — SPÉCIFICATION, ARCHITECTURE ET V1] - 2026-08-09
+
+- **DEC-000057** : validation de `SITE-001` (spécification fonctionnelle)
+  et `SITE-002` (vision créative) — Draft → Validé. Nouveau dossier
+  `05_SPECIFICATIONS/SITE/` couvrant 5 zones : landing, compte,
+  actualités, galerie, contact.
+- **Architecture** : `GSIE/ARCHITECTURE/SITE_PUBLIC_ARCHITECTURE.md` —
+  Astro 5 + React 19 (îlots) + Tailwind 4 + Framer Motion, même stack
+  qu'`GSIE/ADMIN_WEB` pour cohérence d'outillage.
+- **Implémentation** : nouveau projet `site-quintessences/`, distinct
+  de `landing-quintessences/` (conservé en production sans changement).
+  - Landing : hero, chaîne d'intelligence GSIE animée au scroll (7
+    moteurs), grille interactive des 9 applications (icônes
+    `DEC-000056`), indicateurs live avec état « donnée indisponible »
+    explicite, principes fondateurs.
+  - Actualités : fil chronologique, contenu versionné en Markdown
+    (`src/content/actualites/`), 2 entrées publiées.
+  - Contact : formulaire migré depuis `landing-quintessences/` avec
+    vérification Turnstile réelle, catégorisation ajoutée (non encore
+    routée côté serveur).
+  - Galerie et Compte : scaffoldées, état « en construction » explicite
+    (prérequis non résolus, voir `SITE-001` §9).
+  - `npm run build` vérifié (7 pages générées) et testé en direct dans
+    le navigateur, aucune erreur console.
+- **Reste à faire** : endpoint public `GET /public/stats` côté API,
+  processus de vérification vie privée pour la galerie, vérification
+  des hypothèses `IDENTITE-001` pour un client web, déploiement
+  Cloudflare Pages (étape humaine, `wrangler login`).
+
+## [APPLICATIONS CLIENTES — ACTIVATION TERRA/AERIS/ATLAS + ICÔNES DES 8 APPS] - 2026-08-09
+
+- **DEC-000056** : les trois applications futures réservées par
+  `GSIE-DIR-0009` §3/§227 — **Terra** (sols/géologie), **Aeris**
+  (atmosphère/météo), **Atlas** (cartographie globale) — sont créées
+  dans `apps/` avec `README.md` + `GSIE_INTEGRATION.md` (statut
+  Planifiée, Phase 4), sur le modèle d'Artemis/Flora/Hydro.
+- **Icônes** : le fondateur a fourni des packs d'icônes complets (PNG
+  48–1024 px, assets Android `mipmap-hdpi/mdpi/xhdpi/xxhdpi/xxxhdpi`,
+  assets store Google Play/App Store) pour les 8 applications
+  clientes (GeoSylva, Artemis, Ignis, Hydro, Flora, QGISIA, Terra,
+  Aeris, Atlas). Rangées dans `apps/<App>/branding/icons/` pour les 7
+  apps sans scaffolding applicatif ; intégrée immédiatement pour
+  **GeoSylva** (`app/src/main/res/drawable-nodpi/app_icon.png`,
+  foreground de l'adaptive icon, minSdk 26).
+- **Documentation** : `CLAUDE.md` §10 (table des apps + note sur
+  GSIE-DIR-0009/DEC-000056), `PROJECT_MEMORY.md` (section RFC-0037 et
+  dernière mise à jour), `README.md` (diagramme + sections Terra/Aeris/
+  Atlas), `03_DECISIONS/DEC-000056.md`.
+- **RFC-0037 amendée** (même jour) : §3.1 (tableau des projections
+  métier) et nouvelle §5.5 intègrent Terra/Aeris/Atlas comme projections
+  transverses fournissant des données de référence aux autres domaines.
+- **Reste à faire** : scaffolding applicatif complet (Architecture +
+  Specification + code, comme pour GeoSylva) de Terra, Aeris, Atlas,
+  Artemis, Flora, Hydro, Ignis — aucun n'existe encore hors GeoSylva.
+
+## [APPLICATIONS FUTURES — AERIS ET RÉDUCTION DE LA LISTE] - 2026-08-08
+
+- **Aeris** : l'application future **Atmos** est renommée **Aeris**
+  (atmosphère / météo).
+- **Retrait de la liste réservée** : **Aether**, **Chronos** et **Nexus**
+  ne sont plus retenus comme applications futures réservées.
+  La liste réservée est désormais : **Terra, Aeris, Atlas**.
+- **Fichiers mis à jour** : `01_DIRECTIVES/ACTIVE/GSIE-DIR-0009.md`,
+  `GSIE/ARCHITECTURE/HUB_UNREAL_TECHNOLOGY_STACK.md`,
+  `landing-quintessences/public/index.html`,
+  `QUINTESSENCES_DOMAIN_AND_CLOUDFLARE_BOOTSTRAP.md`,
+  `22_PROJECT_MEMORY/notes/modification_architecture_globale.txt`.
+- **Non modifiés** : `GSIE/AUDIT_2026-08-03/GSIE_CURRENT_ARCHITECTURE.md`
+  (audit daté), `21_EXPERIMENTS/VEILLE_TECHNO_2026-08-02.md` (contient
+  le modèle *Chronos-2*, sans lien avec le nom d'application) et
+  `22_PROJECT_MEMORY/notes/possible_changement_de_noms.txt` (note de
+  brainstorming historique).
+
+## [APPLICATIONS CLIENTES — IGNIS MOBILE] - 2026-08-08
+
+- **Ignis** : ajout d'une **application mobile terrain** dans le périmètre
+  de la branche fonctionnelle Ignis (RFC-0004, ADOPTÉ). L'application
+  mobile complète le Centre de Commandement GSIE (Unreal Engine 5.8) et
+  l'intégration API : prise de terrain, remontée d'observations, suivi de
+  sinistre, accès offline aux simulations et aux ressources locales.
+- **Documentation** : mise à jour de `README.md` (table des interfaces
+  Ignis), `CLAUDE.md` §10 (colonne « Type / interfaces » indiquant le
+  mobile pour GeoSylva, Artemis et Ignis), `PROJECT_MEMORY.md`
+  (applications mobiles reconnues et lien RFC-0004).
+
+## [GATE 5 INTÉGRATION — MAILLON AMONT GBIF/TAXREF→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Suite des connecteurs SoilGrids/PlantNet/Météo-France** (voir entrées
+  précédentes) : même pattern répliqué sur les deux référentiels
+  taxonomiques déjà clients du Botanical Engine — `EvidenceKnowledgePipeline`
+  a désormais cinq appelants réels en production.
+- **GBIF** : `BotanicalEngine.query_and_ingest()` + endpoint
+  `POST /botanical/query-and-ingest` (`EngineWriteUser`). Réutilise
+  `query()` (même persistance `entity`/`entity_alias`, aucune double
+  requête GBIF) puis fait passer le taxon accepté par l'Evidence Engine.
+- **TAXREF** : `BotanicalEngine.resolve_taxref_and_ingest()` + endpoint
+  `POST /botanical/taxref-and-ingest` (`EngineWriteUser`). Réutilise
+  `resolve_taxref()`.
+- **Différence assumée avec PlantNet/SYNOP** : GBIF Backbone Taxonomy et
+  TAXREF (MNHN) sont des référentiels taxonomiques officiels consultés
+  directement — pas une inférence ML ni une mesure brute instantanée.
+  `ContentType.referentiel` + `SourceType.referentiel_officiel` plafonnent
+  à `evidence_level=B` dans la matrice de décision, donc statut `accepte`
+  et ingestion automatique, comme SoilGrids. C'est la matrice de
+  l'Evidence Engine qui en décide, aucun code spécifique ajouté pour
+  forcer ce comportement.
+- **Nouveaux schémas** : `BotanicalIngestResult`/`BotanicalIngestResponse`,
+  `TaxrefIngestResult`/`TaxrefIngestResponse` (`botanical/schemas.py`) —
+  même forme que `PedologyIngestResult`/`PlantNetIngestResult`/
+  `ClimateIngestResult`.
+- **Tests** : `test_botanical_gbif_taxref_ingest.py` (succès, absence de
+  résultat, échec de la source amont, échec d'ingestion Knowledge Engine
+  rapporté comme `refused` sans interrompre la requête),
+  `test_routers_coverage.py` (401/502/200 sur les deux nouveaux
+  endpoints). 100% de couverture sur `botanical/engine.py`,
+  `botanical/router.py`.
+
+## [GATE 5 INTÉGRATION — MAILLON AMONT SOILGRIDS→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Constat** : `EvidenceKnowledgePipeline` (`engines/pipeline.py`) connecte
+  déjà Evidence Engine → Knowledge Engine, testé (unitaire + intégration),
+  mais n'avait **aucun appelant en production** — aucune source externe
+  réelle ne le traversait jamais. C'est le « maillon amont » que
+  ROADMAP.md donnait comme reste du Gate 5.
+- **Connecteur livré** : `PedologyEngine.query_and_ingest()` (réutilise
+  `query()` existant, aucune double requête SoilGrids) + endpoint
+  `POST /pedology/query-and-ingest` (`EngineWriteUser`). Chaque
+  caractéristique de sol (pH, argile, sable, limon) devient une
+  soumission `RawKnowledgeSubmission` distincte, passe par l'Evidence
+  Engine (SoilGrids = peer-reviewed + référentiel → plafond B → statut
+  `accepte` dans la matrice de décision, sans changement de code), puis
+  s'ingère comme connaissance atomique versionnée dans le Knowledge
+  Engine — réutilisable par Correlation/Diagnostic au lieu de rester une
+  valeur jetable renvoyée au seul appelant HTTP.
+- **Nouveaux schémas** : `PedologyIngestResult`/`PedologyIngestResponse`
+  (`pedology/schemas.py`) — un résultat par caractéristique, échec de
+  l'une n'empêche pas l'ingestion des autres.
+- **`query()` existant inchangé** — reste transitoire, comportement
+  historique préservé ; `query_and_ingest()` est un chemin additionnel.
+- **Limite connue, non traitée** : pas de déduplication — requêter deux
+  fois le même point crée deux connaissances distinctes plutôt qu'une
+  révision (`KnowledgeEngine.revise()` existe mais suppose un
+  `connaissance_id` déjà connu ; identifier « le même fait » exigerait
+  une clé stable point+propriété+source, hors périmètre de cette tranche).
+- **Tests** : `test_pedology_engine_coverage.py` (succès, échec partiel
+  d'une caractéristique, propagation de l'échec SoilGrids),
+  `test_routers_coverage.py` (401/502/200 sur le nouvel endpoint).
+  100% de couverture sur `engine.py`, `router.py`, `schemas.py`,
+  `pipeline.py`. Un branch mort détecté et supprimé en cours de route
+  (`except KnowledgeEngineError` au niveau router — l'exception est déjà
+  capturée à l'intérieur du pipeline, ne remonte jamais jusqu'au router).
+
+
+## [GATE 5 INTÉGRATION — MAILLON AMONT PLANTNET/MÉTÉO-FRANCE→EVIDENCE→KNOWLEDGE] - 2026-08-08
+
+- **Suite du connecteur SoilGrids** (voir entrée précédente) : même
+  pattern répliqué sur les deux autres sources externes déjà clientes
+  (PlantNet, Météo-France SYNOP) — `EvidenceKnowledgePipeline` a
+  désormais trois appelants réels en production.
+- **PlantNet** : `BotanicalEngine.identify_and_ingest()` (nouveau
+  paramètre injectable `plantnet_client`, même schéma que
+  `gbif_client`/`taxref_client`) + endpoint
+  `POST /botanical/identify-and-ingest` (`EngineWriteUser`). Réutilise
+  le même client que `/botanical/identify` (aucune double requête) —
+  la logique de parsing de la réponse brute PlantNet est factorisée
+  dans `parse_plantnet_results()` (`botanical/engine.py`), appelée par
+  les deux endpoints. Chaque espèce candidate devient une soumission
+  distincte. **Différence assumée avec SoilGrids** : une identification
+  PlantNet est une inférence par apprentissage automatique sur une
+  photo précise, pas un produit peer-reviewed — `ContentType.observation`
+  + `SourceType.referentiel_officiel` plafonnent à `evidence_level=D`
+  dans la matrice de décision, donc statut `quarantine` systématique
+  (validation humaine requise, CON-001), jamais d'ingestion automatique.
+  C'est la matrice de l'Evidence Engine qui en décide, aucun code
+  spécifique n'a été ajouté pour forcer ce comportement.
+- **Météo-France** : `ClimateEngine.query_and_ingest()` (réutilise
+  `query()` existant) + endpoint `POST /climate/query-and-ingest`
+  (`EngineWriteUser`). Chaque paramètre mesuré présent (température,
+  humidité, pression, vent, précipitations — un champ CSV vide reste
+  omis, jamais soumis, ADR-009) devient une soumission distincte. Même
+  plafond D/`quarantine` que PlantNet : une observation SYNOP est une
+  mesure brute instantanée, pas un produit modélisé avec incertitude
+  quantifiée comme SoilGrids.
+- **Nouveaux schémas** : `PlantNetIngestResult`/`PlantNetIngestResponse`
+  (`botanical/schemas.py`), `ClimateIngestResult`/`ClimateIngestResponse`
+  (`climate/schemas.py`) — même forme que `PedologyIngestResult` (un
+  résultat par candidat/paramètre, `statut`/`evidence_level`/
+  `connaissance_id`/`version`/`raison`).
+- **Tests** : `test_botanical_identify_and_ingest.py`,
+  `test_climate_query_and_ingest.py` (succès, absence de résultat,
+  échec de la source amont, confirmation qu'`ingest()` n'est jamais
+  appelé puisque D/`quarantine` ne déclenche jamais l'ingestion),
+  `test_routers_coverage.py` (401/400/502/200 sur les deux nouveaux
+  endpoints). 100% de couverture sur `botanical/engine.py`,
+  `botanical/router.py`, `botanical/schemas.py`, `climate/engine.py`,
+  `climate/router.py`, `climate/schemas.py`.
+
+
+## [FIX — LIMITE MÉMOIRE CONTENEUR API 768M → 2G] - 2026-08-08
+
+- **Correction** de la trouvaille du benchmark de charge concurrente
+  (voir entrée suivante) : `docker-compose.yml`, service `api`,
+  `deploy.resources.limits.memory` passé de `768M` à `2G`.
+- **Appliqué et vérifié en direct** : conteneur recréé
+  (`docker compose up -d api`), healthcheck vert, `/health` et
+  `/api/v1/auth/providers` répondent normalement.
+- **Mémoire au repos avant/après** : 725,8 MiB / 768M (94,5%, quasi-OOM)
+  → ~1,36 GiB / 2 GiB (68%, marge réelle rétablie).
+- **Reste à surveiller** : la consommation de base reste élevée
+  (~270 MB/worker × 5 workers gunicorn, dépendances scientifiques
+  lourdes — scipy/xarray/cfgrib/geopandas/bindings Rust). Si la marge se
+  resserre à nouveau sous charge de production réelle,
+  `GSIE_GUNICORN_WORKERS` (actuellement 5) est le levier à ajuster.
+
+## [GATE 6 PERFORMANCE — BENCHMARK CHARGE CONCURRENTE] - 2026-08-08
+
+- **Nouveau** : `scripts/load_test_concurrent.py`, complète
+  `validation_benchmark.py` (S3, séquentiel) avec 3 volets concurrents :
+  capacité HTTP brute (`/health`), rate limiting sous rafale
+  (`/api/v1/resources`), pool de connexions DB (bypass HTTP, sessions
+  SQLAlchemy directes).
+- **Pool DB validé empiriquement pour la première fois** : `DEC-000037`
+  fixait la formule `workers × (pool_size + max_overflow) ≤ max_connections`
+  sur le papier seulement. 24 sessions concurrentes contre une capacité de
+  14 (pool_size=4 + max_overflow=10) → dégradation gracieuse confirmée via
+  `engine.pool.checkedout()`, zéro erreur.
+  - Piège méthodologique corrigé en cours de route : une première mesure
+    comptait la concurrence à l'ouverture du context manager
+    (`async with async_session_factory()`), qui n'acquiert pas de
+    connexion physique (checkout paresseux) — pic mesuré à 24 au lieu de
+    14 alors que la latence trahissait une file d'attente invisible au
+    compteur. Corrigé via l'introspection directe du pool SQLAlchemy.
+- **Rate limiting confirmé sous rafale concurrente** (pas seulement
+  séquentielle comme le pentest du 2026-08-07) : 60 requêtes simultanées,
+  toutes dans le budget 120/min, aucune dérive du compteur Redis.
+- **Trouvaille critique** : le conteneur `api` (limite Docker 768M) tourne
+  à **94,5 % de sa mémoire au repos, sans aucune charge** (725,8 MiB).
+  Sous charge légère (60 requêtes `/health` concurrentes), pic à 99,9 %
+  (767,1 MiB) — à un pas d'un OOM-kill par le cgroup Docker. Ce n'est pas
+  un effet de charge : c'est l'empreinte de base des 5 workers gunicorn
+  avec dépendances scientifiques lourdes (scipy, xarray, cfgrib,
+  geopandas, bindings Rust). Décision d'infrastructure non prise dans ce
+  rapport : augmenter la limite mémoire ou réduire `GSIE_GUNICORN_WORKERS`.
+- **Limite méthodologique documentée** : les latences absolues varient de
+  5 à 10× selon que le trafic traverse le port-forwarding Docker
+  Desktop/Windows ou non (207ms p50 en interne vs 1382ms via l'hôte) — un
+  artefact de l'environnement de dev local, à ne pas citer comme
+  représentatif de la production.
+- **Rapport complet** : `GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md`.
+
+## [SÉCURITÉ — MFA ADMINISTRATEUR OBLIGATOIRE + GUIDE OAUTH GOOGLE] - 2026-08-08
+
+- **MFA obligatoire pour le rôle `admin`** : un compte avec le rôle le plus
+  privilégié de la plateforme ne reçoit plus jamais de token complet tant
+  que son second facteur n'est pas actif — corrige la lacune restante du
+  gate Sécurité (ROADMAP §3).
+  - Nouveau type de jeton restreint `mfa_setup_required`
+    (`core/auth.py::create_mfa_setup_token`, 15 min) : rejeté par
+    `get_current_user`/RBAC comme n'importe quel jeton non-`access` (même
+    garde déjà utilisée pour le jeton de challenge MFA), donc inutilisable
+    hors de `/mfa/setup` et `/mfa/verify` (nouvelle dependency
+    `get_current_user_or_mfa_setup`, seule à l'accepter en plus du token
+    d'accès normal).
+  - `_issue_tokens` (choke point unique d'émission de session, tous
+    fournisseurs confondus — local, Google, OIDC, MFA) renvoie
+    `AdminMfaSetupRequiredResponse` au lieu de tokens si le compte a le
+    rôle `admin` sans MFA actif. Le compte n'est jamais bloqué : chaque
+    connexion réémet un nouveau jeton de bootstrap.
+  - `@overload` sur `_issue_tokens` pour que `register_local` (comptes
+    neufs, jamais admin par défaut) garde un type de retour exact
+    `TokenResponse`, vérifié par mypy --strict.
+  - Nouveaux tests : `test_auth_type_jeton.py` (jeton de bootstrap rejeté
+    comme accès, `get_current_user_or_mfa_setup` accepte les deux types,
+    claims réservés), `test_identity_coverage.py` (admin sans MFA reçoit
+    le bootstrap, admin avec MFA suit le flux normal existant, le bootstrap
+    fonctionne sur `/mfa/setup`+`/mfa/verify` et est rejeté sur `/me`).
+  - 100% de couverture maintenue (13 194 statements), 2555 tests passants,
+    ruff et mypy --strict verts.
+- **Guide OAuth Google production** : `GSIE/API/docs/GOOGLE_OAUTH_PRODUCTION_SETUP.md`
+  — étapes Google Cloud Console (écran de consentement, Client IDs Web +
+  Android `com.forestry.counter`, soumission à vérification). Aucune étape
+  automatisable (compte Google, vérification humaine par Google).
+- `docs/openapi.json` resynchronisé (nouveaux schémas de réponse).
+
+## [P0-1 — SAUVEGARDES DB PGBACKREST + WAL ARCHIVING] - 2026-08-08
+
+- **Implémentation** : `pgbackrest` installé dans `Dockerfile.db`,
+  `archive_mode=on` + `archive_command` + `max_wal_senders=6` sur le
+  service `db` (`docker-compose.yml`), dépôt persistant sur volumes
+  Docker nommés (`gsie_pgbackrest_repo`, `gsie_pgbackrest_log`),
+  chiffrement AES-256-CBC via `PGBACKREST_REPO1_CIPHER_PASS` (jamais dans
+  `docker/pgbackrest.conf` — lu nativement depuis l'environnement).
+- **2 bugs corrigés dans le template DEC-000037 avant mise en service** :
+  `pg1-host=/var/run/postgresql` (option réservée à SSH distant, faisait
+  échouer `stanza-create`) remplacé par `pg1-socket-path` ; rôle
+  `pg1-user=gsie_migrator` (jamais câblé dans l'initdb réel) remplacé par
+  `gsie` (le rôle superuser effectivement déployé) ; `repo1-cipher-pass=${VAR}`
+  (interpolation shell non supportée par `pgbackrest.conf`) supprimé au
+  profit de la lecture d'environnement native.
+- **Validation live (2026-08-08)** sur la base de dev réelle (52 MB, 151
+  tables) : `stanza-create` online, archivage WAL manuel + automatique,
+  sauvegarde complète chiffrée (52 MB → 5,8 MB), restauration dans un
+  répertoire isolé avec promotion automatique — 151 = 151 tables, PostGIS
+  fonctionnel. Base de dev live non affectée, laissée dans un état
+  fonctionnel (archivage + backup actifs, non chiffrés en attendant le
+  rebuild d'image).
+- **Nouveaux fichiers** : `scripts/pgbackrest_backup.sh` (wrapper
+  `docker exec`, cron full/diff/incr), `.env.example`
+  (`PGBACKREST_REPO1_CIPHER_PASS`).
+- **Documentation** : `GSIE/API/docs/BACKUP_RESTORE.md` passé de Draft à
+  Implémenté (§3.5/3.6) ; `GSIE/DOCUMENTATION/DR-RESTAURATION.md` §3.5 ;
+  `ROADMAP.md` P0-1.
+- **Reste** : `docker compose build db` pour figer pgbackrest dans l'image
+  de façon permanente (bloqué au moment de la validation par un problème
+  réseau/certificat sans rapport avec pgBackRest — échec du téléchargement
+  de la source Apache AGE) ; repo2 S3 cross-région (identifiants cloud à
+  provisionner).
+
+## [TESTS — 100% COVERAGE ET MASTER TEST] - 2026-08-07
+
+- **Couverture** : la suite unitaire atteint **100 % de couverture** sur
+  `src/gsie_api` (13 170 statements). Les 14 dernières lignes non couvertes
+  l'ont été par des tests ciblés dans `test_app.py`, `test_audit_service.py`,
+  `test_auth_hardening.py`, `test_auth_type_jeton.py`, `test_config.py` et
+  `test_turnstile.py`.
+- **Garde-fous** :
+  - `tool.coverage.report.fail_under = 100` dans `pyproject.toml`.
+  - `scripts/run-master-tests.ps1` et `scripts/run-master-tests.sh` pour
+    exécuter en une commande : ruff, ruff format, mypy, tests unitaires à
+    100 % et (optionnel) harnais de mutation.
+  - `.github/workflows/ci.yml` : `cov-fail-under` porté à 100.
+- **Harnais de mutation** : 67 mutations, score maintenu.
+
+## [HUB UNREAL — STACK TECHNOLOGIQUE] - 2026-08-07
+
+- **Document architectural ajouté** :
+  `GSIE/ARCHITECTURE/HUB_UNREAL_TECHNOLOGY_STACK.md` (Draft). Présentation
+  des langages et technologies autour du Centre de Commandement Unreal,
+  organisée en quatre catégories : fondamentaux (C++, Rust, Python,
+  Kotlin, PostGIS), stratégiques (Elixir, Julia, WebAssembly),
+  accélérateurs spécialisés (Futhark, Taichi, Mojo) et recherche/validation
+  (P, Dafny, Pony, Unison, MoonBit, Zig).
+- **Respect des décisions validées** : DEC-000010 (UE 5.8 + Cesium),
+  DEC-000019 (Python + Rust + Go + TypeScript), DEC-000053 (Server Meshing).
+- **Principes affermis** : le Hub Unreal est une projection interactive du
+  `State Fabric` ; GSIE State ≠ Unreal World ; chaque langage doit apporter
+  un avantage structurel mesurable pour être adopté.
+- **Références croisées** : `GSIE/ARCHITECTURE/README.md` et
+  `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` mis à jour.
+
+## [PENTEST — CORRECTIFS RESTANTS] - 2026-08-07
+
+- **DNS** : enregistrements CAA ajoutés sur `quintessences-platform.com`
+  (`issue letsencrypt.org`, `issue pki.goog; cansignhttpexchanges=yes`,
+  `issuewild` pour les deux, `iodef` mailto security).
+- **HSTS preload** : paramètre Cloudflare `preload: true` + `max-age: 63072000`
+  activé. Domaine soumis à `hstspreload.org` (statut `pending`).
+- **Worker edge rate limiter** : `cloudflare-workers/rate-limiter/` déployé
+  sous `gsie-rate-limiter`, route `api.quintessences-platform.com/*`.
+  Seuils : 10 req/min pour `/api/v1/auth/*`, 100 req/min pour le reste.
+  KV `gsie-rate-limiter-RATE_LIMITS` créé. Script + `deploy.ps1` versionnés.
+- **Protection `/metrics`** : token Bearer optionnel `GSIE_METRICS_BEARER_TOKEN`.
+  Si défini, exigé partout ; sinon, rôle `admin` requis hors développement.
+  Tests ajoutés dans `tests/unit/test_metrics.py`.
+- **Prompt Claude pentest** : `PROMPT_PENTEST_CLAUDE.md` à la racine,
+  prêt pour audit défensif ciblé.
+- **Validation** : ruff, mypy et tests unitaires passants.
+
+## [PENTEST — AUTHENTIFICATION ET CONNEXION] - 2026-08-07
+
+- **Rapport** : `PENTEST_AUTH_CONNEXION_2026-08-07.md`. Revue statique
+  complémentaire à `SECURITY_AUDIT_2026-08-07.md`, centrée sur le code des
+  flux d'authentification, d'identité fédérée et de RBAC (3 revues ciblées
+  indépendantes).
+- **Corrections appliquées** :
+  - `auth/identity_router.py`, `auth/router.py`, `audit/middleware.py` :
+    remplacement de `request.client.host` par `core.limiter.get_client_address()`
+    partout — l'audit trail et le lockout utilisaient l'IP interne du tunnel
+    Cloudflare au lieu de l'IP réelle du client, faussant la traçabilité
+    (`GSIE-CON-005`) et le score anti-robot Turnstile.
+  - `auth/lockout.py` : `AccountLockoutService` verrouille désormais aussi
+    sur une clé par compte seul (en plus de la clé composite email+IP) —
+    la clé composite seule permettait de contourner le lockout par rotation
+    d'IP (proxys rotatifs / botnet).
+- **Validation** : 192 tests unitaires auth/identité/RBAC passants après
+  correctifs, aucune régression.
+
+## [PENTEST — NONCE OIDC GÉNÉRIQUE] - 2026-08-07
+
+- Correction du troisième constat (Moyen) du pentest ci-dessus : le flux
+  OIDC générique (`auth/oidc_generic.py`) ne validait pas de `nonce`,
+  contrairement au flux Google, exposant un ID token intercepté à un rejeu.
+- Nouveau module `auth/oidc_nonces.py` (miroir de `google_nonces.py`,
+  store mémoire/Redis, GETDEL atomique, préfixe `gsie:auth:oidc-nonce:`).
+- `oidc_authorize` génère et retourne un nonce serveur, inclus dans l'URL
+  d'autorisation ; `login_oidc` l'exige, le consomme à usage unique et le
+  fait vérifier par `GenericOidcVerifier` (claim `nonce` requis, comparaison
+  `hmac.compare_digest`).
+- Nouveaux réglages `GSIE_OIDC_NONCE_STORAGE_URL` / `GSIE_OIDC_NONCE_EXPIRE_SECONDS`.
+- `PENTEST_AUTH_CONNEXION_2026-08-07.md` mis à jour : les 3 constats Moyens
+  identifiés sont désormais tous corrigés, aucun constat ouvert.
+- 117 tests unitaires auth/identité re-exécutés, aucune régression.
+
+## [VEILLE — BEAM/OTP ET VÉRIFICATION FORMELLE] - 2026-08-07
+
+- **Document** : `GSIE/RESEARCH/VEILLE_BEAM_OTP_SERVER_MESHING_2026-08-07.md`
+  (Draft). Synthèse d'une discussion externe (ChatGPT, non sourcée
+  indépendamment) sur Erlang/OTP/Elixir/Gleam et langages émergents pour GSIE.
+- **Constat** : ne modifie pas le verdict déjà tracé dans
+  `EMERGING_LANGUAGES_STUDY.md` (DEC-000019, stack Python+Rust+Go+TypeScript
+  validée ; Elixir à surveiller, Gleam ignoré).
+- **Apports retenus pour mémoire** (aucune décision, aucun code) :
+  - Patron OTP « supervision par isolation de panne » comme critère de
+    conception si/quand le futur GSIE Server Meshing est spécifié
+    (indépendant du langage retenu).
+  - **P** (machines à états, Microsoft Research) et **Dafny** (preuve
+    d'invariants) ajoutés au plan de surveillance comme outils de
+    vérification formelle pour le protocole de transfert d'autorité
+    (drones/cellules) du Server Meshing.
+- **Sécurité** : durcissement `Strict-Transport-Security` en
+  `max-age=63072000; includeSubDomains; preload` dans
+  `src/gsie_api/shared/middleware.py` (recommandation restante du pentest du
+  2026-08-07).
+
+## [PENTEST DÉFENSIF POST-DÉPLOIEMENT] - 2026-08-07
+
+- **Rapport d'audit** : `SECURITY_AUDIT_2026-08-07.md` couvre Cloudflare, DNS,
+  API, landing, admin web, Docker et secrets. Score global 8.2/10.
+- **Tests live** : headers, CORS, rate limiting, DNSSEC, WAF, SSL/TLS, firewall rules.
+- **Corrections immédiates** :
+  - `src/gsie_api/auth/router.py` : comparaison dev login en `hmac.compare_digest`.
+  - `src/gsie_api/core/auth.py` : refus des clés JWT auto-générées en staging et prod.
+  - `.env.example` : `GSIE_AUTH_DEV_LOGIN_ENABLED=false` par défaut.
+- **Recommandations restantes** : CAA record, HSTS preload, restriction `/metrics`, rate
+  limiting edge Cloudflare (plan payant/Worker).
+- **Nettoyage sécurité** : révoquer la Global API Key utilisée pour l'audit ; regénérer
+  le secret Turnstile si nécessaire.
+
+## [GSIE API v0.1.0 — DEPLOIEMENT CLOUDFLARE + DOMAINE PERMANENT] - 2026-08-06
+
+- **Domaine permanent acquis** : `quintessences-platform.com` via
+  Cloudflare Registrar (prix coutant, 10,46 $/an, WHOIS privacy gratuit).
+- **Tunnel Cloudflare nomme** : `gsie-api` (ID `07e329c5-7e1f-4bdd-898f-bc38a10ad287`)
+  deploye avec 2 connexions QUIC HA vers les PoP CDG07/CDG14.
+- **DNS configure** : `api.quintessences-platform.com` en CNAME vers le tunnel.
+- **HTTPS actif** : certificat SSL/Cloudflare, HSTS, headers de securite
+  (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy).
+- **API GSIE exposee publiquement** : endpoints `/health`, `/docs`, `/redoc`,
+  `/api/v1/openapi.json` accessibles en `https://api.quintessences-platform.com`.
+- **Mode proxy Cloudflare active** : `GSIE_EDGE_PROXY_MODE=cloudflare_tunnel`,
+  rate-limiting base sur `CF-Connecting-IP`, CORS autorises pour
+  `https://api.quintessences-platform.com` et `https://quintessences-platform.com`.
+- **Fix logging colorama** : fallback JSON renderer quand `stderr` n'est pas un TTY
+  (evite `OSError: [Errno 22] Invalid argument` sur Windows avec Docker/pipe).
+- **Redis expose pour le dev host** : port `127.0.0.1:6379` ajoute a
+  `docker-compose.yml` pour l'API lancee localement.
+- **Document d'architecture Cloudflare** : `QUINTESSENCES_DOMAIN_AND_CLOUDFLARE_BOOTSTRAP.md`
+  avec arborescence des sous-domaines, strategie free-first, offres gratuites,
+  couts, securite, permissions API token et procedure de retour arriere.
+- **Landing page statique** : creation de `landing-quintessences/` (HTML/CSS,
+  `wrangler.toml`, script de deploiement Cloudflare Pages). Déployée sur
+  `https://quintessences-platform.com` et `https://www.quintessences-platform.com`.
+- **Adresse e-mail transactionnelle** : `GSIE_EMAIL_SENDER` mis a jour vers
+  `noreply@quintessences-platform.com` dans `.env`, `.env.example`,
+  `docker-compose.yml` et `src/gsie_api/core/config.py`.
+- **Verification des mises a jour cloudflared** : script
+  `GSIE/API/cloudflared/check-update.ps1`.
+- **DNSSEC + SSL/TLS Full + HSTS + Always Use HTTPS + TLS 1.2** actifs via Cloudflare.
+- **WAF Managed Free Ruleset + custom firewall ruleset** pour bloquer les scanners
+  et challenger les user-agents vides sur `/auth/`.
+- **DNS records** : `www.quintessences-platform.com` et `status.quintessences-platform.com`
+  créés, apex en CNAME flattening vers Cloudflare Pages.
+- **Email Routing** activé sur `quintessences-platform.com`.
+- **Nettoyage securite** : suppression des tokens API temporaires (`Wrangler-Pages-Temp`) et des
+  fichiers secrets locaux (`.cloudflare_credentials`, `.cloudflare_api_token`, `.cloudflare_zone_id`).
+- **Page de statut** : creation de `status-quintessences/` (HTML/CSS/JS), deploiement
+  sur `status.quintessences-platform.com` via Cloudflare Pages.
+- **Turnstile** : service `gsie_api.shared.turnstile`, endpoint `POST /auth/turnstile/verify`,
+  verification du challenge sur `POST /auth/login` et `POST /auth/login/password`,
+  widget sur la landing page et sur la page de connexion de l'admin web.
+- **SMTP transactionnel** : port Mailpit `127.0.0.1:1025` mappe, variables d'environnement `.env`
+  pretes, tests unitaires `test_transactional_email.py`.
+- **Migration Docker API** : l'API tourne dans le conteneur `api-api-1`, `cloudflared\migrate-to-docker.ps1`
+  documente le basculement.
+- **Fichiers de configuration ajoutes** :
+  - `GSIE/API/cloudflared/config.yml`
+  - `GSIE/API/cloudflared/setup-tunnel.ps1`
+  - `GSIE/API/cloudflared/start-tunnel.ps1`
+- **Audit final valide** :
+  - endpoints publics 200 OK,
+  - 2080 tests unitaires passes, 63 skipped, 4 warnings non bloquantes,
+  - `ruff` et `mypy` OK,
+  - migrations DB a jour (`20260806_0043`),
+  - services Docker `healthy`,
+  - SSL/TLS valide via Cloudflare.
+
+## [GSIE ENVIRONMENTAL DIGITAL TWIN PLATFORM — CADRAGE FÉDÉRATEUR] - 2026-08-06
+
+- **RFC-0037 ouverte en Draft** : GSIE est formalisé comme un jumeau
+  numérique environnemental fédéré. GeoSylva, Ignis, Hydro, Flora et
+  Artemis sont des projections métier spécialisées du même jumeau ;
+  QGISIA fournit la projection SIG et analytique ; les Hubs Unreal sont
+  les environnements immersifs permettant d'explorer, simuler et
+  interagir sous contrôle humain.
+- **Architecture de référence ajoutée** :
+  `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
+  Elle définit les ressources communes, les scénarios branchés, la
+  séparation réel/dérivé/prévision/simulé/proposé/décidé, les flux
+  GeoSylva ↔ Ignis ↔ Hydro, les classes de performance et les règles
+  d'action contrôlée.
+- **HUB-002 étendu en Draft 1.1.0** : ressources multi-domaines,
+  provenance, fraîcheur, `scenario_id` et `ActionRequest` auditées ; le
+  Hub reste passif pour les calculs et ne commande pas directement un
+  système physique.
+- **Documentation des projections ajoutée** dans GeoSylva, Ignis, Hydro,
+  Flora, Artemis et QGISIA. Ces documents ne modifient aucun contrat
+  applicatif existant et n'autorisent aucune commande opérationnelle.
+- La RFC-0037 ne crée pas encore de décision d'adoption, de migration de
+  schéma ou de nouvelle dépendance technique.
+
+## [GSIE ENVIRONMENTAL DIGITAL TWIN — CAS D'USAGE RÉELS] - 2026-08-06
+
+- **Catalogue de cas d'usage réels ajouté** :
+  `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md`. Six cas
+  fédérés sourcés : ruissellement post-incendie (Maures, Landiras),
+  crise scolytes du sapin pectiné (Grand-Est, Vosges), SITAC multi-moyens
+  (Haute-Corse, NexSIS), crues éclair et karst (Gard 2002, Larzac),
+  biodiversité forestière et corridors (BioDT, Forest DTC, SenseForest),
+  tempêtes et récupération forestière (Lothar, Klaus, DestinE Finland).
+- **Références croisées** ajoutées dans `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`
+  et `02_RFC/RFC-0037-gsie-environmental-digital-twin-platform.md`. Le
+  catalogue oriente le phasage P1 (tranche Ignis), P3 (Hydro) et P4-P5
+  (Flora, Artemis).
+
+## [GSIE TERRITORIAL MESH — CADRAGE ARCHITECTURAL] - 2026-08-06
+
+- **Chantier annexe complémentaire au Server Meshing** ouvert par décision
+  Fondateur (DEC-000054, GSIE-DIR-0013, RFC-0036). Couche logique de
+  gouvernance territoriale superposée à l'exécution technique du Server
+  Meshing (RFC-0035) : là où le Server Meshing organise l'exécution
+  (serveurs de zone, autorité de rendu, streaming), le Territorial Mesh
+  organise la hiérarchie administrative et opérationnelle
+  (France → Région → Département → Territoire Opérationnel → Cellule
+  Spatiale → Sous-cellule) et ses états (Froid, Chaud, Opérationnel,
+  Crise).
+- **Périmètre prototype v0** : Nouvelle-Aquitaine (Charente 16,
+  Deux-Sèvres 79), 1 RCH, 2 DOD, 2 cellules spatiales, 1 drone edge
+  traversant, simulation IGNIS simplifiée. NCP optionnel/simulé.
+- **20 livrables dédiés produits** (RFC-0036 et 17 documents
+  d'architecture/cadrage en Draft, GSIE-DIR-0013 Active, DEC-000054 Validé),
+  complétés par un lot de synchronisation des trois fichiers racine, dans `GSIE/ARCHITECTURE/` et
+  `02_RFC/`, `01_DIRECTIVES/`, `03_DECISIONS/` :
+  1. RFC-0036 (vision + 10 principes P-TERR-01 à P-TERR-10)
+  2. GSIE-DIR-0013 (directive fondatrice)
+  3. DEC-000054 (décision d'ouverture)
+  4. `TERRITORIAL_MESH_TARGET.md` (architecture cible long terme)
+  5. `TERRITORIAL_MESH_NATIONAL_CONTROL_PLANE.md` (NCP)
+  6. `TERRITORIAL_MESH_REGIONAL_HUB.md` (RCH)
+  7. `TERRITORIAL_MESH_DEPARTMENTAL_DOMAIN.md` (DOD)
+  8. `TERRITORIAL_MESH_DYNAMIC_CELLS.md` (cellules spatiales dynamiques)
+  9. `TERRITORIAL_MESH_STATE_FABRIC.md` (State Fabric fédéré)
+  10. `TERRITORIAL_MESH_EVENT_BUS.md` (bus d'événements fédéré)
+  11. `TERRITORIAL_MESH_MATRICES.md` (matrices responsabilités/autorités/réplication)
+  12. `TERRITORIAL_MESH_DIAGRAMS.md` (10 diagrammes ASCII)
+  13. `TERRITORIAL_MESH_ROADMAP.md` (phasage Phases 5-9)
+  14. `TERRITORIAL_MESH_BACKLOG.md` (backlog phasé TERR-T/TERR-P5/P6/P7/P8)
+  15. `TERRITORIAL_MESH_ADR.md` (registre ADR-020 à ADR-028)
+  16. `TERRITORIAL_MESH_RISKS.md` (16 risques, 2 Critiques, 4 Élevés)
+  17. `TERRITORIAL_MESH_ACCEPTANCE.md` (critères d'acceptation par phase)
+  18. `TERRITORIAL_MESH_TEST_STRATEGY.md` (stratégie de test)
+  19. `TERRITORIAL_MESH_PROTOTYPE_V0.md` (prototype Nouvelle-Aquitaine)
+  20. `TERRITORIAL_MESH_COMPLEXITY.md` (estimation complexité/chemin critique)
+- **10 principes fondateurs** (P-TERR-01 à P-TERR-10) : hiérarchie
+  configurable, orthogonalité avec le Server Meshing, concentration
+  dynamique par la demande, états opérationnels explicites, PostgreSQL
+  source de vérité sans consensus distribué, offline-first territorial,
+  autorité unique par périmètre, frontières scientifiques réconciliées,
+  subordination à la connaissance, traçabilité multi-niveaux.
+- **9 ADR** (ADR-020 à ADR-028) : hiérarchie configurable, orthogonalité
+  Territorial/Server Meshing, réplication logique PostgreSQL cross-région,
+  Redis Pub/Sub fédéré multi-niveaux, capsules territoriales pour edge,
+  états opérationnels comme signal de gouvernance, RBAC territorial,
+  autorité unique par périmètre, frontières scientifiques réconciliées.
+- **Orthogonalité actée avec le Server Meshing** (ADR-021) : les deux
+  chantiers restent indépendants, la jonction se fait par interfaces
+  abstraites (ADR-015 réutilisée). Réutilisation encadrée des ADR-005 (Outbox),
+  ADR-008 (capsules signées, encore Proposé), ADR-011 (PostgreSQL source de vérité),
+  ADR-013 (Redis Pub/Sub), ADR-017 (mTLS).
+- **N'interrompt pas la Phase 4** — préparation par interfaces abstraites
+  et réutilisation des briques existantes. Phase 5 (prototype
+  Nouvelle-Aquitaine) requiert validation préalable des documents par
+  le Fondateur.
+- **Roadmap générale mise à jour** : section Territorial Mesh ajoutée
+  à la Phase 4 de `ROADMAP.md`.
+
+## [GSIE SERVER MESHING — CADRAGE ARCHITECTURAL] - 2026-08-03
+
+- **Chantier annexe d'architecture distribuée ouvert** par décision
+  Fondateur (DEC-000053, GSIE-DIR-0012, RFC-0035). Inspiration :
+  Server Meshing de Star Citizen, adapté à un jumeau numérique
+  environnemental persistant et distribué.
+- **Périmètre prototype v0** : mono-région Landiras, autorité hybride
+  zone + type, compatibilité UE6 anticipée par interfaces abstraites
+  (pas de dépendance hard).
+- **17 documents Draft produits** dans `GSIE/ARCHITECTURE/` :
+  1. RFC-0035 (vision + 8 principes P-MESH-01 à P-MESH-08)
+  2. GSIE-DIR-0012 (directive fondatrice)
+  3. DEC-000053 (décision d'ouverture)
+  4. `SERVER_MESHING_TARGET.md` (architecture cible long terme)
+  5. `SERVER_MESHING_PROTOTYPE_V0.md` (prototype Landiras)
+  6. `SERVER_MESHING_ROADMAP.md` (phasage Phases 5-7)
+  7. `SERVER_MESHING_ADR.md` (registre ADR-010 à ADR-019)
+  8. `SERVER_MESHING_RISKS.md` (16 risques, 1 Critique, 4 Élevés)
+  9. `SERVER_MESHING_DIAGRAMS.md` (8 diagrammes ASCII)
+  10. `SERVER_MESHING_BACKLOG.md` (backlog phasé MESH-PREP/P5/P6/P7)
+  11. `SERVER_MESHING_ACCEPTANCE.md` (critères d'acceptation par phase)
+  12. `SERVER_MESHING_TEST_STRATEGY.md` (stratégie de test)
+  13. `SERVER_MESHING_UE6_MIGRATION.md` (stratégie migration UE6)
+  14. `SERVER_MESHING_EXPERIMENTAL.md` (features expérimentales gated)
+  15. `SERVER_MESHING_COMPLEXITY.md` (estimation complexité/chemin critique)
+- **8 principes fondateurs** (P-MESH-01 à P-MESH-08) : continuité
+  spatiale, persistance externe obligatoire, autorité hybride,
+  concentration dynamique, offline-first, traçabilité, modularité,
+  subordination à la connaissance.
+- **10 ADR** (ADR-010 à ADR-019) : autorité hybride, persistance
+  PostgreSQL, réplication par pertinence, Redis Pub/Sub, bitemporalité,
+  interfaces abstraites UE6, orchestrateur centralisé, mTLS, grille
+  adaptative, mode dégradé offline-first.
+- **N'interrompt pas la Phase 4** — préparation par interfaces
+  abstraites et persistance externe. Phase 5 (prototype Landiras)
+  requiert validation préalable des documents par le Fondateur.
+- **Roadmap générale mise à jour** : section Server Meshing ajoutée
+  à la Phase 4 de `ROADMAP.md`.
+
+## [GSIE/API — HARDENING AUTH V1] - 2026-08-05
+
+- **7 lacunes d'authentification comblées** pour un système de connexion
+  très avancé :
+  1. **MFA TOTP** (RFC 6238) + codes de récupération à usage unique
+     (Argon2id, chiffrés Fernet côté serveur).
+  2. **Lockout progressif** — blocage temporaire après N tentatives échouées
+     (Redis distribué ou mémoire locale, fenêtre glissante).
+  3. **Sessions actives** — traçage par appareil, liste et révocation
+     sélective (logout par appareil, logout-all sauf session courante).
+  4. **OIDC générique** — vérificateur OIDC standard pour Keycloak,
+     Microsoft Entra ID, GitHub, etc. (découverte JWKS, validation
+     audience/issuer).
+  5. **Force mot de passe** — HIBP k-anonymity (préfixe SHA-1 uniquement)
+     + score zxcvbn avec seuil minimum configurable.
+  6. **Détection réutilisation refresh token** — log d'avertissement
+     quand un token déjà rotaté est réutilisé (vol détecté).
+  7. **Événements auth dans audit_log** — bridge fire-and-forget vers
+     le journal d'audit append-only (login, lockout, MFA, sessions).
+- **Migration 20260803_0034** : 5 nouvelles tables
+  (`mfa_secret`, `mfa_recovery_code`, `active_session`,
+  `failed_login_attempt`, `revoked_refresh_token`).
+- **Dépendances** : `pyotp` (TOTP), `zxcvbn` (force mot de passe).
+- **Configuration** : 11 nouvelles variables d'environnement documentées
+  dans `.env.example`.
+- **Tests** : 24 nouveaux tests unitaires (`test_auth_hardening.py`)
+  couvrant MFA, lockout, sessions, force mot de passe.
+
+## [GOUVERNANCE — SYSTÈME DE DÉVELOPPEMENT IA V1] - 2026-08-05
+
+- **DEC-000051 validée** : adoption du système de développement assisté par IA
+  Quintessences v1.
+- La hiérarchie documentaire existante reste la seule source de vérité ; aucun
+  second coffre d'idées, registre de prompts ou arborescence `docs/` parallèle
+  n'est créé.
+- La limite de travail en cours du Fondateur est fixée à `1+1+1` : une tranche
+  produit, une recherche et une correction urgente.
+- Ajout de `/ingestion-idee` et `/ingestion-ressource` en mode proposition par
+  défaut, ainsi que `/pilotage-wip` et `/audit-skills-devin`.
+- `IDEA-0003` enregistre IGNIS-FOLD comme hypothèse de recherche inspirée de
+  G-FOLD ; aucune classe de drone n'est choisie et aucun code n'est autorisé.
+- Le pilote de méthode est la synchronisation multi-client GeoSylva.
+- Passe qualité reprise le 2026-08-05 : caractère d'encodage corrompu retiré de `ROADMAP.md` et d'une analyse historique ; frontmatter rétabli pour les 36 skills Devin ; conventions `pytest-asyncio` auto documentées dans `/tests-gsie`.
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.9.1] - 2026-08-04
+
+- **Nettoyage** — 8 corrections résiduelles avant gel de la spec.
+- **CORR 1** : §3.1 — « parent » unique → relations
+  structurelles/contextuelles/workspace (pas de `parentId` universel).
+- **CORR 2** : 8 mentions résiduelles « Données » → « Explorer ».
+- **CORR 3** : §29.1 tableau de cadrage actualisé (Explorer, cartes
+  conditionnelles au lieu d'onglets).
+- **CORR 4** : « 16 sections » → « 4 domaines, 16 destinations
+  secondaires » (4 occurrences).
+- **CORR 5** : §12.8 — P0-P7 « plan d'exécution immédiat » →
+  « archivées pour traçabilité, lots 0-10 = plan actuel ».
+- **CORR 6** : §12.5 — déclencheurs P0/P2/P3/P4/P5/P6 →
+  Lot 0/3/2/5/9/10.
+- **CORR 7** : avertissement routes altérées (Devin doit relire le code
+  source, pas les chaînes Markdown).
+- **CORR 8** : §14 et §15 marqués **NON NORMATIF** (endpoints, tables,
+  JSON, WorkManager = exemples de cadrage, pas contrats avant RFC).
+- GeoSylva spec passe en v0.9.1 — Candidate for Review (commit `7c0ae53`
+  sur `fix/enterprise-reliability-2026-07-21`, +63/-32 lignes).
+- **Prochaines étapes** : gel de GEOSYLVA-003 comme spécification produit,
+  audit du code réel, extraction RFC-UI-001, extraction RFC-0001,
+  backlog du Lot 0.
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.9.0] - 2026-08-04
+
+- **Candidate for Review** — 11 corrections structurantes du Fondateur.
+- **CORR 1** : hiérarchie territoriale — `⊇` remplacés par relations
+  nommées (graphe relationnel N-N, pas arbre rigide). Une forêt peut
+  couvrir plusieurs propriétés ; un peuplement peut chevaucher plusieurs
+  parcelles.
+- **CORR 2** : navigation contextuelle clarifiée comme **vue
+  utilisateur**, pas propriété des données. Les entités utilisent des
+  relations N-N (forêt dans plusieurs projets, mission sur plusieurs
+  forêts, etc.).
+- **CORR 3** : surcharge d'onglets réduite — fiche parcelle 13 onglets →
+  5 groupes (Aperçu/Terrain/Interventions/Analyse/Plus) avec
+  sous-navigation ; fiche placette 11 onglets → 5 groupes.
+- **CORR 4** : bottom nav — « Données » → « Explorer » (variante B
+  privilégiée) + variantes A/B à tester avec utilisateurs.
+- **CORR 5** : Compte — 16 sections regroupées en 4 groupes visuels
+  (Identité / Offre Quintessences / Application / Confidentialité).
+- **CORR 6** : permissions onboarding — pas toutes dès le départ,
+  demandées au premier usage de chaque fonction (localisation → carte,
+  caméra → scan, etc.).
+- **CORR 7** : fond vidéo connexion — ressource APK légère par défaut +
+  pack signé facultatif (avant la première installation de packs).
+- **CORR 8** : splash — séparation bloquant (base/migration/intégrité)
+  et non-bloquant (sync/packs/session), démarrage rapide.
+- **CORR 9** : contradiction roadmap — ancien P7 « Reporté » →
+  « Obsolète, refonte UI transversale à tous les lots ».
+- **CORR 10** : contradiction 12 métiers — « 12 métiers v1 » →
+  « 12 profils cible longue durée, 1 métier v1 (technicien forestier) ».
+- **CORR 11** : diagnostics — onglets fixes → **cartes conditionnelles**
+  (apparaissent selon protocoles installés, territoire, métier,
+  abonnement, mission, données disponibles).
+- GeoSylva spec passe en v0.9.0 — Candidate for Review (commit `684f185`
+  sur `fix/enterprise-reliability-2026-07-21`, +284/-68 lignes).
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.8.0] - 2026-08-04
+
+- **Section §29 — Architecture des écrans, navigation et refonte UI/UX**
+  (+750 lignes, 31 sous-sections).
+- **Audit des 27 écrans existants** (5 NavGraphs) classés en 3
+  catégories : conservés/enrichis (18), transformés (10), nouveaux (21).
+- **Décisions de cadrage UI** :
+  - Bottom nav 5 entrées (Accueil, Missions, Carte, Données, Compte)
+    remplace le démarrage direct sur Forets.
+  - Écran Martelage → **SynthèseMartelage** (s'ouvre auto après martelage,
+    plus écran de saisie).
+  - Carte : **refonte complète** (3ème entrée bottom nav, carte globale
+    workspace ; ancien Map par parcelle conservé depuis les fiches).
+  - Settings **supprimé** → tout dans Compte (16 sections).
+  - Diagnostics (stationnel/ripisylve/IBP) **déplacés** en onglets fiche
+    parcelle + protocoles Mission Engine (plus de NavGraphs séparés).
+- **Roadmap §12.4 enrichie** : colonne « Pages UI » par lot + Quality
+  Pass final. La refonte UI/UX accompagne chaque lot technique.
+- GeoSylva spec passe en v0.8.0 (commit `d23a9d0` sur
+  `fix/enterprise-reliability-2026-07-21`, +750/-14 lignes).
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.7.0] - 2026-08-04
+
+- **Cadrage** suite à la revue critique du Fondateur (10 corrections
+  critiques, roadmap refondue, structure territoriale, corrections de
+  forme).
+- **CORR 1** : avertissement monolithique en §3 + §28 Annexe listant 11
+  RFC à extraire (RFC-0001 à RFC-0008, RFC-IA-MODEL-SELECTION, RFC-0018,
+  RFC-0019).
+- **CORR 2** : modèles IA (SmolLM3, Phi-3, Mistral, Phi-4) remplacés par
+  profils T1-MICRO/STANDARD/T2-EDGE/T3-SERVER + RFC renouvelable
+  `RFC-IA-MODEL-SELECTION-YYYY-MM`. Latences → objectifs à mesurer (P50,
+  P95, tokens/s, RAM). Pack 500 Mo corrigé (3B INT4 = ~1,5 GB).
+- **CORR 3** : PureForest TFLite reformulé comme modèle à entraîner/adapter
+  + étape audit dataset 7 phases (audit licence, nettoyage, découpage,
+  benchmark, conversion, validation terrain).
+- **CORR 4** : TreeVision §18.10 colonne « Précision » → « Statut initial »
+  + seuils de passage (Prototype → expérimental → assistance → mesure
+  professionnelle validée).
+- **CORR 5** : GNSS exemples ±1,9 m → objectifs pédagogiques + covariance,
+  résidus, poids dynamiques (jamais constantes métier).
+- **CORR 6** : migration Google→Keycloak 3 cas (sub vérifié / adresse
+  vérifiée / identité ambiguë) + UUID Quintessences indépendant (pas
+  dérivé de Google).
+- **CORR 7** : identifiant appareil = UUID installation + paire clés
+  Keystore + clé publique enregistrée (pas Android ID hashé).
+- **CORR 8** : jetons = stockage chiffré + clé Keystore non exportable
+  (Keystore stocke des clés, pas des jetons).
+- **CORR 9** : séparation Entitlement / Feature module signé / Pack QPIS
+  (un pack QPIS ne doit jamais injecter du code exécutable non signé).
+- **CORR 10** : tableau licences enrichi (8 colonnes) + données
+  institutionnelles (IGN, INPN, BRGM, Copernicus, datasets IA).
+- **Roadmap refondue** : 11 lots (0-10) remplaçant P0-P7. Fondations
+  (audit, contrat données, noyau scientifique, Mission Engine, identité,
+  sync, QPIS, Geo Engine) avant TreeVision R&D, IA locale et Meshtastic.
+- **Structure territoriale** : 8 entités distinctes (Property, Forest,
+  CadastralParcel, ManagementUnit, ForestParcel, Stand, SamplingUnit,
+  Plot).
+- **Corrections de forme** : typo « contournée », « connaissances
+  cachées » → « disponibles localement », `source` → `entry_mode` +
+  `transport`, `auteur` → UUID, `session_id` optionnel.
+- GeoSylva spec passe en v0.7.0 (commit `99c6a2d` sur
+  `fix/enterprise-reliability-2026-07-21`, +321/-99 lignes).
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.6.0] - 2026-08-04
+
+- Intégration complète de la conversation ChatGPT source (155k caractères)
+  : 23 recommandations issues de l'analyse comparative conversation vs Dev
+  Pack vs spec v0.5.0.
+- **§7 enrichi** (7 sous-sections) : système qualité données (6 états, 6
+  niveaux, exemples), campagnes multiannuelles (placettes permanentes),
+  architecture moteurs spécialisés (9 domaines, 30 composants), règles
+  déclaratives (exemple JSON + décision Kotlin dédié), chaîne valorisation
+  (exemple chiffré), versionnement méthodes (scénario migration), IA vs
+  moteurs déterministes.
+- **§10.1** Catégories de consentement (5 catégories).
+- **§16.10-16.12** GSIE usine de packs + Pack Store commun + intelligence
+  locale de recommandation.
+- **§17.10** Exemple de protocole déclaratif ODK YAML.
+- **§18.11-18.18** TreeVision (8 sous-sections) : philosophie coopérative,
+  méthodes A/B RANSAC, modèle de confiance, contrôles cohérence, GNSS
+  immobilisation, constellations, SpatialEvidence, calibration.
+- **§19.7-19.11** Services techniques GSIE + 14 technologies open source
+  + Meshtastic détaillé + décisions MapLibre/Room.
+- **§20.13-20.17** Droits basés sur capacités (10 exemples) + alternatives
+  rejetées (Firebase, Auth0, Clerk) + SCIM + 4 phases déploiement +
+  architecture finale recommandée.
+- **Nouvelles sections §21-§25** : Diagnostic de station, Scénarios
+  sylvicoles, Organisation travaux forestiers, Documents de gestion
+  durable, Références locales de marché.
+- Renumérotation : §21→§26 Références, §22→§27 Historique.
+- GeoSylva spec passe en v0.6.0 (commit `a01bdfc` sur
+  `fix/enterprise-reliability-2026-07-21`, +857 lignes).
+
+## [DOCUMENTATION — GEOSYLVA-003 V0.5.0] - 2026-08-04
+
+- Vérification section par section de la spec v0.4.0 face aux documents
+  sources du Dev Pack. Correction de 9 écarts et 3 tensions logiques.
+- **§4.2 amendé** : pointe vers §20 comme architecture cible (transition
+  Keycloak), les comptes entreprise ne sont plus « en développement ».
+- **§16.9 Droits et abonnements** : chaîne logique Subscription ↔ QPIS via
+  EntitlementResolver (comble la tension T3).
+- **§17.9 Catalogue de protocoles** : 4 sources (officiels, organisationnels,
+  pédagogiques, communautaires) + 11 métadonnées.
+- **§18.10 Modes TreeVision** : rapide, précis, calibration, placette
+  semi-automatique.
+- **§20.2 enrichi + §20.2.1** : justification Keycloak auto-hébergé, méthodes
+  connexion Quintessences (passkey principal, TOTP/codes récupération
+  secondaire, mot de passe compatibilité).
+- **§20.5 enrichi** : interdictions Android (WebView, secret APK, flux
+  implicite, flux mot de passe direct, jetons en clair).
+- **§20.9 Migration** : procédure de transition Google direct → Keycloak
+  (liaison automatique au premier login, période de transition, fallback).
+- **§20.10 Connexion entreprise** : petite structure (invitation) vs grande
+  structure (détection domaine → SSO entreprise → Keycloak broker).
+- **§20.11 Sécurité administrative** : passkey obligatoire, second facteur,
+  session réduite, journal, révocation appareils.
+- **§20.12 Gestion des jetons** : access 5-10min, refresh rotation, session
+  normale vs admin, vérifications API (signature, iss, aud, exp, session,
+  rôles, org active).
+- GeoSylva spec passe en v0.5.0 (commit `fe9be9d` sur
+  `fix/enterprise-reliability-2026-07-21`).
+
+## [DOCUMENTATION — GEOSYLVA-003 DEV PACK] - 2026-08-04
+
+- Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.4.0) :
+  intégration du GeoSylva Quintessences Dev Pack (brainstorming ChatGPT,
+  `21_EXPERIMENTS/GEOSYLVA_DEV_PACK_2026-08-04/`).
+- **§16 QPIS** — Quintessences Pack Intelligence System : 7 types de packs,
+  manifestes, états, téléchargement intelligent, Storage Budget Manager,
+  mise à jour différentielle. Le §9 existant est un sous-ensemble de QPIS.
+- **§17 Mission Engine et Protocol Engine** : 12 métiers, capabilities,
+  missions, protocoles déclaratifs versionnés (inspiré ODK/Open Foris),
+  formulaires contextuels, workflows de validation, tableaux de bord par
+  métier.
+- **§18 TreeVision** : mesure multimodale des arbres (caméra, profondeur,
+  IMU, GNSS, instruments), hiérarchie des sources, correction humaine,
+  position améliorée (Kalman, triangulation), indice de confiance, banc de
+  validation, boucle GSIE.
+- **§19 Métiers, capabilities et adaptation contextuelle** : 20 objets
+  communs Quintessences, unité territoriale partagée (7 modules), deep
+  links interapplications, architecture modulaire (platform/forest-core/
+  mission-engine/geo-engine/treevision), moteurs locaux/serveur/hybrides
+  avec parité, distance de débardage sur graphe.
+- **§20 Identité fédérée et organisations** : Keycloak, OIDC PKCE S256,
+  passkeys/WebAuthn, UUID Quintessences immuable, modèle
+  (QuintessencesUser, ExternalIdentity, Organization, Workspace, etc.),
+  flux Android, hors ligne, séparation identité/autorisation métier,
+  liaison de comptes.
+- **§12.8 Vision long terme (Dev Pack)** : 10 phases (0-9) du Dev Pack
+  comme complément de la roadmap P0-P7 existante.
+- **Renumérotation** : §16→§21 Références, §17→§22 Historique.
+- ROADMAP.md racine : section GeoSylva 3.0 mise à jour (v0.4.0).
+
+## [DOCUMENTATION — GEOSYLVA-003 ROADMAP] - 2026-08-03
+
+- Enrichissement de la spécification fonctionnelle GeoSylva 3.0 (v0.2.0) :
+  roadmap structurée §12 consolidant la documentation existante.
+- **Architecture cible** : trois axes distincts (cœur offline, canal 1 GSIE
+  Serveur, canaux 2-3 terrain) avec schéma et principes non négociables.
+- **Cascade LLM multi-tier** : T1 mobile (SmolLM3 3B), T2 edge (Mistral 7B),
+  T3 serveur (Phi-4-reasoning 14B). Règle : le LLM appelle les moteurs, ne
+  calcule jamais de mémoire (ADR-009).
+- **Connexion GSIE Serveur** : tableau des 8 moteurs appelés par GeoSylva
+  (Correlation, Reasoning, Diagnostic, Recommendation, Forest Dynamics,
+  Simulation, Botanical, Learning) avec rôle, déclencheur et statut.
+- **8 phases** (P0 fondations → P7 refonte visuelle) avec livrables,
+  dépendances et 6 décisions/RFC requises.
+- **Sources consolidées** (§12.7) : VOLUME_CALCULATION_NEXT_GEN §10/§16,
+  RESEARCH_OPPORTUNITIES §3, VISION_LLM_SPECIALISES, RFC-0003, RFC-0019,
+  RFC-0018, contrats 14 moteurs, GEO-001 à GEO-004, MASTER_PLAN.
+- ROADMAP.md racine : section GeoSylva 3.0 mise à jour avec architecture
+  cible, cascade LLM, phases et sources consolidées.
+
+## [RFC — GEOSYLVA-003 DÉTAILLÉ] - 2026-08-03
+
+- Spécification GeoSylva 3.0 enrichie (v0.3.0) avec deux sections majeures :
+- **§14 Connexion GSIE Serveur détaillée** : enveloppes communes de
+  requête/réponse (requete_id, session_id, source_reference,
+  evidence_level), tableau des 8 moteurs avec déclencheurs, chaîne
+  d'analyse approfondie (Correlation → Reasoning → Diagnostic →
+  Recommendation → Simulation), cache local SQLCipher avec badges
+  version/obsolescence, pull serveur→mobile, résolution de conflits,
+  SDK Kotlin, garde-fous ADR-009/CON-001/CON-004.
+- **§15 LLM on-device et multi-tier détaillée** : architecture 3 tiers
+  (T1 mobile SmolLM3 3B ONNX, T2 edge Mistral 7B, T3 serveur vLLM),
+  règles de cascade, adaptateurs LoRA GeoSylva-Forest, RAG scientifique
+  (pgvector + RFC-0019), identification essence on-device (TFLite +
+  PureForest), assistant vocal (Vosk FR), distribution via packs de
+  données, banc d'évaluation GSIE-Eval-FR, choix de modèles.
+- **RFC-0033** créée : contrats d'interface GeoSylva ↔ moteurs GSIE.
+  Endpoints par moteur, orchestrateur, SDK Kotlin, cache, pull, conflits.
+- **RFC-0034** créée : IA forestière on-device et multi-tier. Choix
+  SmolLM3 3B, runtime ONNX, RAG local SQLite-vec, quantification INT4,
+  cascade, identification TFLite, assistant vocal, RGPD audio.
+- ROADMAP.md : références aux RFC-0033 et RFC-0034 dans les phases P4/P5.
+
+## [DÉCISIONS — DEC-000049, DEC-000050] - 2026-08-03
+
+- **DEC-000049** : contrats d'interface GeoSylva ↔ moteurs GSIE (RFC-0033
+  adoptée). Enveloppes communes, 8 endpoints moteurs + 2 orchestration +
+  1 pull, SDK Kotlin, cache local, résolution conflits. Phase P4.
+- **DEC-000050** : IA forestière on-device et multi-tier (RFC-0034 adoptée).
+  T1 SmolLM3 3B ONNX, T2 Mistral 7B edge, T3 serveur vLLM. RAG local
+  SQLite-vec, identification TFLite PureForest, assistant vocal Vosk FR,
+  banc GSIE-Eval-FR. Phase P5.
+- RFC-0033 et RFC-0034 passées en statut `Adopté`.
+
+## [DOCUMENTATION — GEOSYLVA-003] - 2026-08-03
+
+- Création de la spécification fonctionnelle GeoSylva 3.0 : parcours
+  Projet→Forêt→Parcelle→Placette→Martelage, onboarding, cartographie, packs,
+  échanges terrain et mode développeur.
+- Ajout de la doctrine scientifique imposant provenance, unités, incertitudes,
+  tests reproductibles et prise en compte explicite de la qualité du bois et des
+  observations sanitaires, y compris le contexte des parcelles voisines.
+
+## [SESSION 2026-08-03 — SYNCHRONISATION PARCELLES GEOSYLVA] - 2026-08-03
+
+### DEC-000048 — première donnée métier connectée à GSIE
+
+- API privée `/api/v1/sync/geosylva/parcelles` authentifiée et isolée par
+  compte, avec liste paginée, validation stricte et quotas.
+- Migration Alembic `20260803_0031` : schéma `gsie_synchronisation`, table de
+  répliques, index propriétaire/date, RLS forcée et absence de droit `DELETE`
+  pour le rôle applicatif.
+- Écritures idempotentes par UUID d’opération, version optimiste et réponse
+  HTTP 409 contenant l’instantané courant sans écrasement automatique.
+- Suppressions conservées sous forme de tombstones.
+- GeoSylva Room v33 : file chiffrée, reprise WorkManager, refresh de session
+  sur 401, backoff réseau et états visibles dans les options développeur.
+- Réclamations et réponses de file conditionnées par UUID : une réponse réseau
+  ancienne ne peut pas écraser une modification locale plus récente ; les
+  lots supérieurs à 50 éléments déclenchent une continuation.
+- Première transmission soumise à une action explicite ; compte facultatif et
+  cœur forestier hors ligne préservés.
+
+### Preuves
+
+- API : 6 tests de service/contrat et 8 tests migration/PostgreSQL ciblés
+  passent ; Ruff et mypy strict sont verts.
+- Android : compilation debug réussie ; 5/5 tests de projection, politique de
+  reprise et migration Room passent, schéma v33 exporté ; campagne complète
+  de 518/518 tests et lint sans erreur.
+
+## [SESSION 2026-08-03 — BORDURE CLOUDFLARE ZERO TRUST] - 2026-08-03
+
+### DEC-000047 — protocole réseau GSIE
+
+- Cloudflare Tunnel adopté comme entrée publique optionnelle, sortante
+  uniquement, sans exposition directe de l'origine.
+- Séparation formelle des flux publics, machine-à-machine, plan de contrôle
+  Fondateur et réseau Docker interne.
+- Mobile : HTTPS, WAF et JWT GSIE ; aucun secret Cloudflare ou certificat mTLS
+  commun dans les APK.
+- Services de confiance : Cloudflare Access ou mTLS sur un nom dédié, puis
+  identité et rôles GSIE obligatoires.
+- Profil Compose `edge`, image `cloudflared` 2026.7.2 verrouillée par digest,
+  token monté comme secret et healthcheck natif du tunnel.
+- Quotas GSIE compatibles avec `CF-Connecting-IP` uniquement lorsque le mode
+  tunnel est explicitement activé.
+
+### Fiabilité outbox
+
+- Remplacement du faux healthcheck HTTP hérité de l'image API par un battement
+  écrit après chaque cycle PostgreSQL/Redis réussi.
+- Sonde Docker dédiée refusant un battement absent ou vieux de plus de trente
+  secondes.
+
+## [SESSION 2026-08-03 — CYCLE COMPLET DU COMPTE LOCAL] - 2026-08-03
+
+### DEC-000046 — profil, vérification et récupération
+
+- API du profil courant avec modification du nom affiché.
+- Vérification d'adresse et récupération de mot de passe par codes Argon2id
+  à usage unique, valables quinze minutes et jamais persistés en clair.
+- Réponses anti-énumération et révocation des anciennes sessions après
+  changement du mot de passe.
+- SMTP configurable avec chiffrement obligatoire en production ; Mailpit
+  captif sur `localhost:8025` pour le développement.
+- Migration `20260803_0030` ajoutant la table temporaire des actions
+  d'identité et la version de session.
+- GeoSylva complète désormais le profil, la vérification, la récupération et
+  le diagnostic développeur, sans dépendance du cœur forestier hors ligne.
+
+### Preuves
+
+- Cycle Docker réel validé de bout en bout : inscription, profil,
+  vérification, récupération, révocation de l'ancienne session et
+  reconnexion.
+- Domaine identité Python : 170 tests passés ; modules de cycle, dépôt et
+  courrier transactionnel couverts à 100 %, Ruff et mypy strict verts.
+- Suite API complète antérieure : 1 936 tests passés, 63 ignorés ; les
+  nouveaux tests de fermeture passent, mais la relance globale a dépassé la
+  fenêtre locale de dix minutes sans échec observé.
+- GeoSylva : 513 tests passés, 0 échec, 0 ignoré ; Lint 0 erreur bloquante ;
+  APK debug produit et parcours vérifié sur émulateur Android.
+
+## [SESSION 2026-08-03 — CLIENT IDENTITÉ GEOSYLVA] - 2026-08-03
+
+### DEC-000045 — première interface mobile Quintessences
+
+- Trois écrans Jetpack Compose distincts dans le repo externe GeoSylva :
+  connexion/création, gestion du compte et options développeur.
+- Client Retrofit du contrat GSIE, fournisseurs publiés dynamiquement,
+  connexion locale et Google Credential Manager avec nonce serveur.
+- Jetons GSIE conservés dans un coffre Android chiffré, jamais dans DataStore,
+  les logs ou l’interface.
+- Mode développeur persistant activable après huit pressions sur la version ;
+  diagnostic en lecture seule de `/health`, `/ready`, des fournisseurs, de la
+  session, du build et de l’appareil.
+- Le geste local n’accorde aucun rôle. Toute future commande réservée au
+  Fondateur devra être contrôlée côté serveur.
+- Cœur forestier hors-ligne préservé et aucune donnée de terrain synchronisée
+  par cette tranche.
+
+### Preuves
+
+- `:app:compileDebugKotlin` : succès.
+- `:app:assembleDebug` : APK de débogage produit.
+- `:app:lintDebug` : succès, 0 erreur (576 avertissements non bloquants).
+- 513 tests unitaires : 513 passés, 0 échec.
+- Documentation GeoSylva, politique de confidentialité, registre des
+  traitements, mémoire, roadmap et spécification d’identité synchronisés.
+
+## [SESSION 2026-08-03 — IDENTITÉ QUINTESSENCES MULTI-FOURNISSEURS] - 2026-08-03
+
+### RFC-0032 / DEC-000044 — socle serveur livré
+
+- Compte Quintessences canonique commun à toutes les applications de
+  l’écosystème, séparé des moyens de connexion.
+- Inscription et connexion locales avec normalisation d’e-mail, mot de passe
+  Argon2id et erreurs anti-énumération.
+- Connexion Google OpenID Connect côté serveur : validation par audience,
+  émetteur et sujet stable `sub`, e-mail vérifié, nonce à usage unique ; aucun
+  rapprochement silencieux par adresse e-mail.
+- Rattachement Google explicite à un compte déjà authentifié.
+- Jetons GSIE RS256 et refresh rotatif conservés quelle que soit l’origine de
+  connexion.
+- Découverte des fournisseurs ; connexion professionnelle OIDC/SAML déclarée
+  « En développement » sans fausse activation.
+
+### Persistance et sécurité
+
+- Migration réversible `20260803_0029` : `user_account`,
+  `identity_provider_link`, `local_credential`, `account_role` dans
+  `gsie_rgpd_identites`.
+- Le rôle `gsie_application` reçoit seulement `SELECT`, `INSERT` et `UPDATE`
+  sur ces quatre tables, sans `DELETE` et sans accès à `data_subject` ou aux
+  consentements.
+- Configuration documentée pour les client IDs Google et le stockage Redis
+  des nonces.
+
+### Preuves exécutées
+
+- Migration base vierge → head → downgrade → head et parité SQLAlchemy :
+  **2 tests passés**.
+- Isolement RGPD réel sous rôles PostgreSQL : **48 tests passés**.
+- Suite unitaire globale : **1 915 tests passés**, 63 ignorés, 0 échec,
+  **100 % de couverture** (9 338/9 338 instructions).
+- Dépôt d’identité PostgreSQL : **4 tests d’intégration passés**.
+- Ruff, formatage, mypy strict et quatre gardes de gouvernance/cohérence verts.
+
+### Suites prévues avant ouverture publique
+
+- vérification de l’adresse e-mail et récupération du mot de passe ;
+- configuration et validation de la marque OAuth Google ;
+- écrans de compte web et GeoSylva ;
+- MFA administrateur puis fédération entreprise OIDC/SAML.
+
 ## [SESSION 2026-08-02 (soir) — PHASE DE STABILISATION CLÔTURÉE] - 2026-08-02
 
 ### Phase de stabilisation DEC-000043 — 3/3 livrables clôturés

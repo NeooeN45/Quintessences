@@ -4,7 +4,18 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, String, Text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -150,3 +161,21 @@ class QualityAssessmentModel(Base, TimestampMixin):
     score: Mapped[float] = mapped_column(Float, nullable=False)
     method: Mapped[str] = mapped_column(String(200), nullable=False)
     assessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    assessment_run_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    policy_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    details: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    automated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    __table_args__ = (
+        CheckConstraint("score >= 0 AND score <= 1", name="ck_quality_assessment_score"),
+        CheckConstraint("weight > 0 AND weight <= 1", name="ck_quality_assessment_weight"),
+        UniqueConstraint(
+            "target_id",
+            "assessment_run_id",
+            "dimension",
+            name="uq_quality_assessment_run_dimension",
+        ),
+        Index("ix_quality_assessment_run_id", "assessment_run_id"),
+        Index("ix_quality_assessment_target_assessed", "target_id", "assessed_at"),
+    )

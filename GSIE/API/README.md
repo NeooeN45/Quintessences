@@ -13,6 +13,7 @@ Métamodèle v6.2 — 73 types noyau et extensions métier, table racine `resour
 - **OpenTelemetry** — observabilité (CON-005)
 - **JWT RS256 + RBAC** — authentification (HTTP + WebSocket)
 - **slowapi** — rate limiting (OWASP A07)
+- **Cloudflare Tunnel optionnel** — bordure Zero Trust sans port Internet entrant (DEC-000047)
 
 ## Métamodèle v6.2 (RFC-0011, RFC-0012, ADR-007)
 
@@ -36,6 +37,46 @@ Toute resource a une ligne dans la table racine `resource` (ADR-001) +
 une ligne dans sa table spécifique (class-table inheritance).
 
 ## Endpoints
+
+### Identité Quintessences (RFC-0032 / DEC-000044 à DEC-000046)
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/api/v1/auth/providers` | Moyens de connexion réellement disponibles |
+| POST | `/api/v1/auth/register` | Créer un compte local par e-mail et mot de passe |
+| POST | `/api/v1/auth/login/password` | Se connecter avec un compte local |
+| POST | `/api/v1/auth/google/nonce` | Créer un nonce Google à usage unique |
+| POST | `/api/v1/auth/login/google` | Se connecter ou créer un compte avec Google |
+| POST | `/api/v1/auth/link/google` | Rattacher Google au compte GSIE courant |
+| GET | `/api/v1/auth/me` | Consulter le profil du compte courant |
+| PATCH | `/api/v1/auth/me` | Modifier le nom affiché |
+| POST | `/api/v1/auth/email/verification/request` | Demander un code de vérification |
+| POST | `/api/v1/auth/email/verification/confirm` | Confirmer l'adresse électronique |
+| POST | `/api/v1/auth/password/reset/request` | Demander une récupération anti-énumération |
+| POST | `/api/v1/auth/password/reset/confirm` | Définir un nouveau mot de passe et révoquer les anciennes sessions |
+| POST | `/api/v1/auth/refresh` | Rotation du refresh token, tous fournisseurs |
+| GET | `/api/v1/auth/verify` | Vérifier un access token GSIE |
+| POST | `/api/v1/auth/logout` | Révoquer un refresh token |
+
+Les comptes persistés vivent dans `gsie_rgpd_identites`. Google est fermé
+tant que `GSIE_GOOGLE_OAUTH_CLIENT_IDS` est vide. Le login de développement
+historique `/auth/login` reste interdit en staging et production.
+
+En développement, `docker compose up -d mailpit` expose l'interface captive
+sur <http://localhost:8025> et le SMTP uniquement dans le réseau Compose.
+Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
+du relais et STARTTLS ou TLS direct ; Mailpit ne doit jamais recevoir de
+données réelles.
+
+La publication de production passe par le profil `edge` :
+
+```bash
+docker compose --profile edge up -d cloudflared
+```
+
+Le token est fourni par fichier secret hors Git. Le protocole public,
+l'isolement du plan de contrôle et la rotation sont décrits dans
+[`docs/CLOUDFLARE_ZERO_TRUST.md`](docs/CLOUDFLARE_ZERO_TRUST.md).
 
 ### CRUD générique (ADR-007)
 
@@ -83,15 +124,20 @@ docker compose run --rm \
   -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true \
   api true
 
-# 5. Démarrer l'API et le worker outbox
-docker compose up -d api outbox-worker
+# 5. Démarrer l'API, le worker outbox et le courrier local captif
+docker compose up -d api outbox-worker mailpit
 
 # 6. Vérifier l'API
 curl http://localhost:8000/health
 curl http://localhost:8000/ready
 curl http://localhost:8000/docs
 
-# 7. Authentification (dev)
+# 7. Authentification persistée locale
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "forestier@example.fr", "password": "un-mot-de-passe-long-et-unique"}'
+
+# Login historique réservé au développement
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "your-dev-password"}'
@@ -178,9 +224,19 @@ src/gsie_api/
 
 ## Documentation
 
+- [Application du manifeste Data Registry](docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md) —
+  dry-run, application transactionnelle, santé réelle persistée, idempotence
+  et limites `metadata_only`/`FETCH`.
+- [Test réel Data Registry](docs/data/GSIE_DATA_E2E_REAL_TEST_2026-08-10.md) —
+  acquisition publique, normalisation, archivage MinIO, round-trip checksum et
+  sélection par le resolver.
 - [Guide d'exploitation Outbox](docs/OUTBOX_EXPLOITATION.md) — cycle de
   vie, métriques Prometheus, procédure de ré-enfilement
 - [Rotation des clés JWT](docs/JWT_KEY_ROTATION.md) — procédure de
   rotation RSA et contrainte multi-clés (pas de `kid`/JWKS natif)
 - [Parallélisation pytest (xdist)](docs/TESTING_XDIST.md) — état,
   contraintes (scipy DLL, fuite SQLAlchemy) et usage manuel
+- [Haute disponibilité et drainage](docs/HA_GRACEFUL_DRAIN_TEST_2026-08-11.md) —
+  deux replicas, HAProxy, sentinelle readiness et preuves de bascule
+- [Workflow HA Linux TLS](docs/HA_LINUX_CI_TLS_2026-08-11.md) — campagne Ubuntu
+  automatisée, certificat vérifié et limites encore ouvertes

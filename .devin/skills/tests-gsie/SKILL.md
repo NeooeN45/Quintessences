@@ -12,14 +12,20 @@ triggers:
 
 Écrire les tests AVANT l'implémentation. Si tu es tenté d'écrire le code d'abord, arrête — écris le test en premier.
 
+`pytest-asyncio` est configuré en mode `auto` dans `GSIE/API/pyproject.toml` : les tests et fixtures asynchrones n'ajoutent pas `@pytest.mark.asyncio` et utilisent `@pytest.fixture`.
+
 ## Structure des tests par moteur
 
+Dans l'API actuelle, les contrats des moteurs sont documentés dans
+`GSIE/ENGINES/<NOM>_ENGINE/`, tandis que l'implémentation et les tests vivent
+dans `GSIE/API/` :
+
 ```
-GSIE/ENGINES/<NOM>_ENGINE/tests/
-├── conftest.py              ← fixtures partagées (DB, mocks moteurs amont)
-├── test_unit.py             ← tests unitaires (sans I/O externe)
-├── test_integration.py      ← tests avec DB de test réelle
-└── test_contract.py         ← vérification du contrat d'interface
+GSIE/API/tests/
+├── conftest.py              ← fixtures partagées
+├── unit/                    ← services, schémas et moteurs sans I/O externe
+├── integration/             ← PostgreSQL/PostGIS, API et frontières réelles
+└── mutation/                ← harnais des gardes de résilience
 ```
 
 ## Nommage
@@ -36,7 +42,6 @@ def test_should_fallback_to_cache_when_db_unavailable():
 ```python
 # conftest.py
 import pytest
-import pytest_asyncio
 
 @pytest.fixture
 def sample_forest_plot():
@@ -47,7 +52,7 @@ def sample_forest_plot():
         surface_ha=2.5
     )
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_db():
     """Base de test réinitialisée à chaque test."""
     pool = await asyncpg.create_pool(dsn=settings.TEST_DATABASE_URL)
@@ -70,10 +75,9 @@ Pour chaque moteur :
 ## Tests API (FastAPI)
 
 ```python
-@pytest.mark.asyncio
 async def test_should_return_200_when_valid_evidence_request(async_client):
     response = await async_client.post(
-        "/v1/engines/evidence/process",
+        "/api/v1/evidence/evaluate",
         json={"sources": [{"id": "DS-001", "type": "lidar"}]},
         headers={"Authorization": f"Bearer {valid_token}"}
     )
@@ -93,12 +97,12 @@ async def test_should_return_200_when_valid_evidence_request(async_client):
 ## Commandes
 
 ```bash
-# Lancer tous les tests
-pytest GSIE/TESTS/
+# Depuis GSIE/API
+.\.venv\Scripts\python.exe -m pytest tests/ -q
 
 # Avec couverture
-pytest --cov=GSIE --cov-report=term-missing
+.\.venv\Scripts\python.exe -m pytest tests/ -q --cov=gsie_api --cov-report=term-missing
 
-# Un moteur spécifique
-pytest GSIE/ENGINES/EVIDENCE_ENGINE/tests/ -v
+# Tests unitaires d'un moteur
+.\.venv\Scripts\python.exe -m pytest tests/unit/ -q -k evidence
 ```

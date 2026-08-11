@@ -129,11 +129,18 @@ async def resources_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 async def climate_client() -> AsyncGenerator[AsyncClient, None]:
-    """Client AsyncClient pour le router climate (pas de DB)."""
-    app = _build_engine_app(climate_router)
+    """Client AsyncClient pour le router climate.
+
+    DB mockée : /query n'en a pas besoin (inchangé), mais
+    /query-and-ingest en a besoin pour construire un KnowledgeEngine
+    (Gate 5 — maillon amont ingestion→Evidence→Knowledge).
+    """
+    mock_db = AsyncMock()
+    app = _build_engine_app(climate_router, mock_db)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -160,11 +167,18 @@ async def gis_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 async def pedology_client() -> AsyncGenerator[AsyncClient, None]:
-    """Client AsyncClient pour le router pedology (pas de DB)."""
-    app = _build_engine_app(pedology_router)
+    """Client AsyncClient pour le router pedology.
+
+    DB mockée : /query n'en a pas besoin (inchangé), mais
+    /query-and-ingest en a besoin pour construire un KnowledgeEngine
+    (Gate 5 — maillon amont ingestion→Evidence→Knowledge).
+    """
+    mock_db = AsyncMock()
+    app = _build_engine_app(pedology_router, mock_db)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -955,6 +969,87 @@ async def should_return_403_when_climate_query_without_reader_role(climate_clien
     assert response.status_code == 403
 
 
+async def should_return_401_when_climate_query_and_ingest_without_token(
+    climate_client: AsyncClient,
+):
+    """POST /climate/query-and-ingest sans token retourne 401."""
+    response = await climate_client.post(
+        f"{_API_PREFIX}/climate/query-and-ingest",
+        json={"station_id": "07510"},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_climate_query_and_ingest_synop_fails(
+    climate_client: AsyncClient,
+):
+    """POST /climate/query-and-ingest — SYNOP down retourne 502."""
+    from gsie_api.engines.climate.engine import ClimateEngine, ClimateEngineError
+
+    with patch.object(
+        ClimateEngine,
+        "query_and_ingest",
+        new=AsyncMock(side_effect=ClimateEngineError("SYNOP down")),
+    ):
+        response = await climate_client.post(
+            f"{_API_PREFIX}/climate/query-and-ingest",
+            json={"station_id": "07510"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_climate_query_and_ingest_success(
+    climate_client: AsyncClient,
+):
+    """POST /climate/query-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.climate.engine import ClimateEngine
+    from gsie_api.engines.climate.schemas import ClimateIngestResponse, ClimateIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = ClimateIngestResponse(
+        requete_id=uuid4(),
+        station_id="07510",
+        nom_station="BORDEAUX-MERIGNAC",
+        date_observation=datetime.now(UTC),
+        resultats=[
+            ClimateIngestResult(
+                nom="temperature_c",
+                statut="quarantined",
+                evidence_level=EvidenceLevel.D,
+                connaissance_id=uuid4(),
+                raison="Connaissance quarantine par l'Evidence Engine (niveau D)",
+            )
+        ],
+    )
+    with patch.object(ClimateEngine, "query_and_ingest", new=AsyncMock(return_value=mock_response)):
+        response = await climate_client.post(
+            f"{_API_PREFIX}/climate/query-and-ingest",
+            json={"station_id": "07510"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom"] == "temperature_c"
+    assert body["resultats"][0]["statut"] == "quarantined"
+
+
+async def should_return_200_when_climate_query_and_ingest_station_not_found(
+    climate_client: AsyncClient,
+):
+    """POST /climate/query-and-ingest retourne null quand la station est introuvable."""
+    from gsie_api.engines.climate.engine import ClimateEngine
+
+    with patch.object(ClimateEngine, "query_and_ingest", new=AsyncMock(return_value=None)):
+        response = await climate_client.post(
+            f"{_API_PREFIX}/climate/query-and-ingest",
+            json={"station_id": "99999"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    assert response.json() is None
+
+
 # ===========================================================================
 # 3. Botanical Router — taxonomie GBIF/TAXREF
 # ===========================================================================
@@ -1020,6 +1115,70 @@ async def should_return_200_when_botanical_query_success(botanical_client: Async
             headers=_auth_headers(["writer"]),
         )
     assert response.status_code == 200
+
+
+async def should_return_401_when_botanical_query_and_ingest_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/query-and-ingest",
+        json={"essence": "Quercus petraea"},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_botanical_query_and_ingest_gbif_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest — GBIF down retourne 502."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+
+    with patch.object(
+        BotanicalEngine,
+        "query_and_ingest",
+        new=AsyncMock(side_effect=BotanicalEngineError("GBIF down")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/query-and-ingest",
+            json={"essence": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_query_and_ingest_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/query-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import BotanicalIngestResponse, BotanicalIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = BotanicalIngestResponse(
+        requete_id=uuid4(),
+        resultats=[
+            BotanicalIngestResult(
+                nom_scientifique="Quercus petraea",
+                statut="ingested",
+                evidence_level=EvidenceLevel.B,
+                connaissance_id=uuid4(),
+                version=1,
+            )
+        ],
+    )
+    with patch.object(
+        BotanicalEngine, "query_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/query-and-ingest",
+            json={"essence": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom_scientifique"] == "Quercus petraea"
+    assert body["resultats"][0]["statut"] == "ingested"
 
 
 async def should_return_502_when_botanical_indigenat_error(botanical_client: AsyncClient):
@@ -1110,6 +1269,299 @@ async def should_return_200_when_botanical_taxref_success(botanical_client: Asyn
             headers=_auth_headers(["reader"]),
         )
     assert response.status_code == 200
+
+
+async def should_return_401_when_botanical_taxref_and_ingest_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/taxref-and-ingest",
+        json={"nom_scientifique": "Quercus petraea"},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_botanical_taxref_and_ingest_taxref_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest — TAXREF down retourne 502."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+
+    with patch.object(
+        BotanicalEngine,
+        "resolve_taxref_and_ingest",
+        new=AsyncMock(side_effect=BotanicalEngineError("TAXREF down")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_taxref_and_ingest_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest avec succes retourne le resultat d'ingestion."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import TaxrefIngestResponse, TaxrefIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = TaxrefIngestResponse(
+        requete_id=uuid4(),
+        resultat=TaxrefIngestResult(
+            cd_nom=135,
+            nom_scientifique="Quercus petraea",
+            statut="ingested",
+            evidence_level=EvidenceLevel.B,
+            connaissance_id=uuid4(),
+            version=1,
+        ),
+    )
+    with patch.object(
+        BotanicalEngine, "resolve_taxref_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Quercus petraea"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultat"]["cd_nom"] == 135
+    assert body["resultat"]["statut"] == "ingested"
+
+
+async def should_return_200_when_botanical_taxref_and_ingest_finds_nothing(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/taxref-and-ingest retourne resultat=null quand TAXREF ne trouve rien."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import TaxrefIngestResponse
+
+    mock_response = TaxrefIngestResponse(requete_id=uuid4(), resultat=None)
+    with patch.object(
+        BotanicalEngine, "resolve_taxref_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/taxref-and-ingest",
+            json={"nom_scientifique": "Taxon inexistant"},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    assert response.json()["resultat"] is None
+
+
+async def should_return_401_when_botanical_identify_and_ingest_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify-and-ingest",
+        files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_400_when_botanical_identify_and_ingest_empty_file(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest avec un fichier vide retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify-and-ingest",
+        files={"file": ("test.jpg", b"", "image/jpeg")},
+        headers=_auth_headers(["writer"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_400_when_botanical_identify_and_ingest_format_unsupported(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest avec un format non supporté retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify-and-ingest",
+        files={"file": ("test.gif", b"GIF89a", "image/gif")},
+        headers=_auth_headers(["writer"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_502_when_botanical_identify_and_ingest_plantnet_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest — PlantNet down retourne 502."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine, BotanicalEngineError
+
+    with patch.object(
+        BotanicalEngine,
+        "identify_and_ingest",
+        new=AsyncMock(side_effect=BotanicalEngineError("PlantNet down")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify-and-ingest",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_identify_and_ingest_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+    from gsie_api.engines.botanical.schemas import PlantNetIngestResponse, PlantNetIngestResult
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+
+    mock_response = PlantNetIngestResponse(
+        best_match="Quercus robur L.",
+        resultats=[
+            PlantNetIngestResult(
+                nom_scientifique="Quercus robur",
+                score=0.85,
+                statut="quarantined",
+                evidence_level=EvidenceLevel.D,
+                connaissance_id=uuid4(),
+                raison="Connaissance quarantine par l'Evidence Engine (niveau D)",
+            )
+        ],
+    )
+    with patch.object(
+        BotanicalEngine, "identify_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify-and-ingest",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom_scientifique"] == "Quercus robur"
+    assert body["resultats"][0]["statut"] == "quarantined"
+
+
+async def should_return_200_when_botanical_identify_and_ingest_finds_nothing(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify-and-ingest retourne null quand PlantNet ne trouve rien."""
+    from gsie_api.engines.botanical.engine import BotanicalEngine
+
+    with patch.object(BotanicalEngine, "identify_and_ingest", new=AsyncMock(return_value=None)):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify-and-ingest",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    assert response.json() is None
+
+
+# --- /botanical/identify (sans ingest) ---
+
+
+async def should_return_401_when_botanical_identify_without_token(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify sans token retourne 401."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_400_when_botanical_identify_empty_file(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec un fichier vide retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.jpg", b"", "image/jpeg")},
+        headers=_auth_headers(["reader"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_400_when_botanical_identify_format_unsupported(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec un format non supporté retourne 400."""
+    response = await botanical_client.post(
+        f"{_API_PREFIX}/botanical/identify",
+        files={"file": ("test.gif", b"GIF89a", "image/gif")},
+        headers=_auth_headers(["reader"]),
+    )
+    assert response.status_code == 400
+
+
+async def should_return_502_when_botanical_identify_plantnet_fails(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify — PlantNet down retourne 502."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient, PlantNetClientError
+
+    with patch.object(
+        PlantNetClient,
+        "identify",
+        new=AsyncMock(side_effect=PlantNetClientError("API indisponible")),
+    ):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_botanical_identify_success(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify avec succès retourne la meilleure correspondance."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient
+
+    fake_response = {
+        "bestMatch": "Quercus robur L.",
+        "results": [
+            {
+                "score": 0.85,
+                "species": {
+                    "scientificName": "Quercus robur L.",
+                    "scientificNameWithoutAuthor": "Quercus robur",
+                    "genus": {"scientificNameWithoutAuthor": "Quercus"},
+                    "family": {"scientificNameWithoutAuthor": "Fagaceae"},
+                    "commonNames": ["Chêne pédonculé"],
+                },
+                "gbif": {"id": "2878688"},
+            }
+        ],
+    }
+    with patch.object(PlantNetClient, "identify", new=AsyncMock(return_value=fake_response)):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 200
+    assert response.json()["best_match"] == "Quercus robur L."
+
+
+async def should_return_200_when_botanical_identify_finds_nothing(
+    botanical_client: AsyncClient,
+):
+    """POST /botanical/identify retourne null quand PlantNet ne trouve rien."""
+    from gsie_api.engines.botanical.plantnet_client import PlantNetClient
+
+    with patch.object(PlantNetClient, "identify", new=AsyncMock(return_value=None)):
+        response = await botanical_client.post(
+            f"{_API_PREFIX}/botanical/identify",
+            files={"file": ("test.jpg", b"\x89PNG fake", "image/jpeg")},
+            headers=_auth_headers(["reader"]),
+        )
+    assert response.status_code == 200
+    assert response.json() is None
 
 
 # ===========================================================================
@@ -1291,6 +1743,73 @@ async def should_return_200_when_pedology_query_success(pedology_client: AsyncCl
             headers=_auth_headers(["reader"]),
         )
     assert response.status_code == 200
+
+
+async def should_return_401_when_pedology_query_and_ingest_without_token(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest sans token retourne 401."""
+    response = await pedology_client.post(
+        f"{_API_PREFIX}/pedology/query-and-ingest",
+        json={"latitude": 43.6, "longitude": 1.4},
+    )
+    assert response.status_code == 401
+
+
+async def should_return_502_when_pedology_query_and_ingest_soilgrids_fails(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest — SoilGrids down retourne 502."""
+    from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
+
+    with patch.object(
+        PedologyEngine,
+        "query_and_ingest",
+        new=AsyncMock(side_effect=PedologyEngineError("SoilGrids down")),
+    ):
+        response = await pedology_client.post(
+            f"{_API_PREFIX}/pedology/query-and-ingest",
+            json={"latitude": 43.6, "longitude": 1.4},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 502
+
+
+async def should_return_200_when_pedology_query_and_ingest_success(
+    pedology_client: AsyncClient,
+):
+    """POST /pedology/query-and-ingest avec succes retourne les resultats d'ingestion."""
+    from gsie_api.engines.evidence.schemas import EvidenceLevel
+    from gsie_api.engines.pedology.engine import PedologyEngine
+    from gsie_api.engines.pedology.schemas import PedologyIngestResponse, PedologyIngestResult
+
+    mock_response = PedologyIngestResponse(
+        requete_id=uuid4(),
+        latitude=43.6,
+        longitude=1.4,
+        profondeur="0-5cm",
+        resultats=[
+            PedologyIngestResult(
+                nom="ph",
+                statut="ingested",
+                evidence_level=EvidenceLevel.B,
+                connaissance_id=uuid4(),
+                version=1,
+            )
+        ],
+    )
+    with patch.object(
+        PedologyEngine, "query_and_ingest", new=AsyncMock(return_value=mock_response)
+    ):
+        response = await pedology_client.post(
+            f"{_API_PREFIX}/pedology/query-and-ingest",
+            json={"latitude": 43.6, "longitude": 1.4},
+            headers=_auth_headers(["writer"]),
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resultats"][0]["nom"] == "ph"
+    assert body["resultats"][0]["statut"] == "ingested"
 
 
 # ===========================================================================

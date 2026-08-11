@@ -32,3 +32,6 @@ docker-compose.override.yml
 # Clés JWT (never commit)
 keys/
 *.pem
+
+# Secrets d'exploitation Cloudflare et fournisseurs externes
+secrets/

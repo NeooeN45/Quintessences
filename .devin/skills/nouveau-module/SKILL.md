@@ -53,5 +53,8 @@ apps/<App>/src/
 - Si décision structurante → créer DEC-xxxxxx dans 03_DECISIONS/
 - Mettre à jour PROJECT_MEMORY.md après chaque livrable
 
-### 5. Commit
-Format : `feat(engine-name): description courte en français`
+### 5. Préparation de livraison
+
+Préparer un commit conventionnel au format :
+`feat(engine-name): description courte en français`.
+Ne pas committer, pousser ou fusionner sans autorisation explicite du Fondateur.

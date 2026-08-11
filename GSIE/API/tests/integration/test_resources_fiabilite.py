@@ -354,6 +354,54 @@ class TestResolutionNativeDeclaree:
 
         assert reponse.status_code == 201, reponse.text
 
+    async def test_data_asset_accepte_un_fichier_superieur_a_2_gio(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
+        """La taille BIGINT est conservée par le CRUD générique."""
+        version = await self._creer_version(client, entetes_ecriture)
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={
+                "type": "data_asset",
+                "data": {
+                    "dataset_version_id": version,
+                    "format": "copc",
+                    "size_bytes": 5_000_000_000,
+                    "checksum": "a" * 64,
+                    "checksum_algorithm": "sha256",
+                    "storage_uri": "s3://gsie-assets/forest/copc.laz",
+                    "archived_at": "2026-08-10T08:00:00Z",
+                },
+            },
+            headers=entetes_ecriture,
+        )
+
+        assert reponse.status_code == 201, reponse.text
+        assert reponse.json()["data"]["size_bytes"] == 5_000_000_000
+
+    async def test_data_asset_refuse_un_chemin_local_expose(
+        self, client: AsyncClient, entetes_ecriture: dict[str, str]
+    ) -> None:
+        version = await self._creer_version(client, entetes_ecriture)
+        reponse = await client.post(
+            "/api/v1/resources",
+            json={
+                "type": "data_asset",
+                "data": {
+                    "dataset_version_id": version,
+                    "format": "geotiff",
+                    "size_bytes": 12,
+                    "checksum": "a" * 64,
+                    "storage_uri": "file:///srv/gsie/secret.tif",
+                    "archived_at": "2026-08-10T08:00:00Z",
+                },
+            },
+            headers=entetes_ecriture,
+        )
+
+        assert reponse.status_code == 422, reponse.text
+        assert any("storage_uri" in error for error in reponse.json()["detail"]["errors"])
+
 
 class TestSourceCitable:
     """Une source qui ne peut pas être citée n'est pas une source (CON-005).

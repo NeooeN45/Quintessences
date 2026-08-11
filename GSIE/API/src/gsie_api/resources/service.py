@@ -22,7 +22,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
+from gsie_api.data.lifecycle import InvalidDatasetTransition, transition_status
 from gsie_api.infrastructure.models import RESOURCE_TYPES, ResourceModel
+from gsie_api.infrastructure.models.enums import DatasetStatus
 from gsie_api.infrastructure.models.outbox import OutboxEvent
 from gsie_api.infrastructure.models.temporal_engine import (
     ResourceDiffModel,
@@ -353,6 +355,8 @@ class ResourceService:
             id=resource.id,
             type=resource.type,
             gsie_id=resource.gsie_id,
+            organisation_id=resource.organisation_id,
+            workspace_id=resource.workspace_id,
             created_at=resource.created_at,
             updated_at=resource.updated_at,
             metadata_json=resource.metadata_json,
@@ -366,6 +370,8 @@ class ResourceService:
             id=resource.id,
             type=resource.type,
             gsie_id=resource.gsie_id,
+            organisation_id=resource.organisation_id,
+            workspace_id=resource.workspace_id,
             created_at=resource.created_at,
             updated_at=resource.updated_at,
             metadata_json=resource.metadata_json,
@@ -439,7 +445,12 @@ class ResourceService:
         self, type_name: str, gsie_id: str, model_cls: type, safe_data: dict[str, Any]
     ) -> ResourceModel:
         """Insère la ligne racine resource + la ligne dans la table du type."""
-        resource = ResourceModel(type=type_name, gsie_id=gsie_id)
+        resource = ResourceModel(
+            type=type_name,
+            gsie_id=gsie_id,
+            organisation_id=self._session.info.get("organisation_id"),
+            workspace_id=self._session.info.get("workspace_id"),
+        )
         self._session.add(resource)
         await self._session.flush()
         type_instance = model_cls(id=resource.id, **safe_data)
@@ -597,8 +608,26 @@ class ResourceService:
         qu'aucune mutation partielle ni aucun événement ne survive à l'échec.
         """
         errors = validate_resource_payload(raw_data)
-        final_state = {**self._current_state(type_instance), **safe_data}
+        current_state = self._current_state(type_instance)
+        final_state = {**current_state, **safe_data}
         errors.extend(validate_resource_state(type_name, final_state))
+        if type_name == "dataset_version" and "status" in safe_data:
+            current_status = current_state.get("status")
+            target_status = safe_data["status"]
+            if (
+                current_status != target_status
+                and isinstance(current_status, DatasetStatus | str)
+                and isinstance(target_status, DatasetStatus | str)
+            ):
+                try:
+                    transition_status(current_status, target_status)
+                except InvalidDatasetTransition as exc:
+                    errors.append(f"DATASET_STATUS_TRANSITION_INVALID: {exc}")
+                if target_status in {DatasetStatus.staging, DatasetStatus.production}:
+                    errors.append(
+                        "DATASET_PROMOTION_REQUIRES_DEDICATED_SERVICE: "
+                        "la promotion exige qualité, droits, actif RAW et validation opérateur"
+                    )
         if not errors:
             return
 

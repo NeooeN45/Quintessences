@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # GSIE API — Dockerfile multi-stage (DEC-000019 §18)
 # Build : docker build -t gsie-api .
 # Run : docker compose up
@@ -19,12 +20,23 @@ LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 WORKDIR /build
 
 # Dépendances système — minimales pour semaine 1 (asyncpg, shapely, pyproj)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     build-essential \
     libgeos-dev \
     libproj-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Environnement avec inspection HTTPS (par exemple Kaspersky) : l'autorité
+# locale est fournie uniquement comme secret BuildKit et n'est jamais copiée
+# dans le contexte ni conservée dans l'image finale. Sans secret, le build
+# utilise le magasin de certificats standard de Debian.
+RUN --mount=type=secret,id=gsie_host_ca,target=/run/secrets/gsie_host_ca,required=false \
+    if [ -s /run/secrets/gsie_host_ca ]; then \
+        install -m 0644 /run/secrets/gsie_host_ca /usr/local/share/ca-certificates/gsie-host-ca.crt; \
+        update-ca-certificates; \
+    fi
 
 # Rust 1.85.0 provient d'une image officielle verrouillée par digest.
 # Aucun script d'installation distant n'est exécuté pendant le build.
@@ -32,6 +44,10 @@ ENV CARGO_HOME="/usr/local/cargo" \
     RUSTUP_HOME="/usr/local/rustup" \
     PATH="/usr/local/cargo/bin:$PATH"
 ENV MATURIN_VERSION=1.9.6
+# uv utilise par défaut ses racines Mozilla embarquées. En présence d'une
+# autorité d'inspection HTTPS injectée dans Debian par le secret BuildKit,
+# il doit utiliser le magasin système (validation TLS conservée).
+ENV UV_SYSTEM_CERTS=true
 COPY --from=rust-toolchain /usr/local/cargo /usr/local/cargo
 COPY --from=rust-toolchain /usr/local/rustup /usr/local/rustup
 RUN rustup component add clippy && \
@@ -69,7 +85,8 @@ FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3
 WORKDIR /app
 
 # Dépendances runtime (sans build-essential)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     libgeos-c1v5 \
     libproj25 \
     libpq5 \
@@ -83,6 +100,9 @@ COPY --chown=gsie:gsie --from=builder /build/api/pyproject.toml /build/api/gunic
 # Alembic — migrations du schéma (opération explicite, jamais automatique)
 COPY --chown=gsie:gsie --from=builder /build/api/alembic/ ./alembic/
 COPY --chown=gsie:gsie --from=builder /build/api/alembic.ini ./
+# Manifeste canonique lu par le scheduler de santé (aucun dataset brut).
+COPY --chown=gsie:gsie GSIE/DATASETS/REGISTRY_MANIFEST.json ./data/REGISTRY_MANIFEST.json
+COPY --chown=gsie:gsie GSIE/DATASETS/FETCH_QUALIFICATION.json ./data/FETCH_QUALIFICATION.json
 # Script d'entrée — garde de migration optionnelle puis démarrage Gunicorn
 COPY --chown=gsie:gsie GSIE/API/docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh

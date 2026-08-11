@@ -1,0 +1,6 @@
+name = "quintessences-landing"
+compatibility_date = "2026-08-06"
+pages_build_output_dir = "public"
+
+# Cloudflare Pages — déploiement du site statique
+# Lier le domaine personnalisé dans le dashboard après le premier déploiement.

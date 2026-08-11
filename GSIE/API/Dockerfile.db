@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # Dockerfile DB — PostgreSQL 16 + PostGIS 3.4 + Apache AGE
 # Construit Apache AGE par-dessus l'image postgis/postgis officielle.
 # AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
@@ -11,8 +12,10 @@ ARG AGE_SHA256=b41abaf5fc89d6a5bcb62a63a6b2fc4b7d0d1530869879b6cc85df931b333b5d
 
 # Installation des dépendances de compilation + pgAudit (audit trail DDL/DML — P0-4)
 # + pgvector (recherche sémantique — migration 20260731_0024, débloque Treekipedia)
+# + pgbackrest (sauvegarde PITR — DEC-000037 P0-1, docs/BACKUP_RESTORE.md)
 # Le dépôt PGDG (apt.postgresql.org) est déjà configuré par l'image de base postgres:16.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     build-essential \
     bison \
     curl \
@@ -21,10 +24,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-server-dev-16 \
     postgresql-16-pgaudit \
     postgresql-16-pgvector \
+    pgbackrest \
     && rm -rf /var/lib/apt/lists/*
 
-# Téléchargement et compilation d'Apache AGE
-RUN curl --fail --location --output "${AGE_PACKAGE}-src.tar.gz" "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
+# Environnement avec inspection HTTPS (par exemple Kaspersky) : l'autorité
+# locale est fournie uniquement comme secret BuildKit et n'est jamais copiée
+# dans le contexte ni conservée dans l'image finale. Sans secret, le build
+# utilise le magasin de certificats standard de Debian.
+RUN --mount=type=secret,id=gsie_host_ca,target=/run/secrets/gsie_host_ca,required=false \
+    if [ -s /run/secrets/gsie_host_ca ]; then \
+        install -m 0644 /run/secrets/gsie_host_ca /usr/local/share/ca-certificates/gsie-host-ca.crt; \
+        update-ca-certificates; \
+    fi
+
+# Téléchargement et compilation d'Apache AGE. Les reprises sont bornées et
+# n'affaiblissent ni la validation TLS ni le contrôle SHA-256 qui suit.
+RUN curl --fail --location \
+    --connect-timeout 30 \
+    --max-time 300 \
+    --retry 5 \
+    --retry-all-errors \
+    --retry-delay 2 \
+    --retry-max-time 180 \
+    --output "${AGE_PACKAGE}-src.tar.gz" \
+    "https://github.com/apache/age/releases/download/PG16/v${AGE_VERSION}-rc0/${AGE_PACKAGE}-src.tar.gz" \
     && echo "${AGE_SHA256}  ${AGE_PACKAGE}-src.tar.gz" | sha256sum -c - \
     && tar -xvzf "${AGE_PACKAGE}-src.tar.gz" \
     && cd "${AGE_PACKAGE}" \
@@ -40,3 +63,10 @@ RUN apt-get purge -y bison build-essential flex postgresql-server-dev-16 curl \
 # Configuration PostgreSQL pour Apache AGE + pgAudit
 # shared_preload_libraries est requis pour AGE et pgAudit (chargement au démarrage)
 RUN echo "shared_preload_libraries = 'age,pg_stat_statements,pgaudit'" >> /usr/share/postgresql/postgresql.conf.sample
+
+# Répertoires pgBackRest — créés et chownés à l'image pour que le volume
+# Docker nommé hérite de la bonne propriété au premier montage (Docker
+# initialise un volume vide avec le contenu/permissions du chemin monté
+# dans l'image, comme /var/lib/postgresql/data le fait déjà nativement).
+RUN mkdir -p /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest \
+    && chown -R postgres:postgres /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest

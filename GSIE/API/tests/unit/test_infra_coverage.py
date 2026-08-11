@@ -3,7 +3,7 @@
 Comble les lignes manquantes des modules d'infrastructure pour atteindre 90%+ :
 - websocket/manager.py (ConnectionManager : Redis Pub/Sub, heartbeat, broadcast, shutdown)
 - websocket/router.py (endpoints /hub et /events, auth WS, rate limiting, broadcast-test)
-- infrastructure/object_storage.py (LocalStorage CRUD, S3Storage NotImplementedError, factory)
+- infrastructure/object_storage.py (LocalStorage CRUD, S3Storage fake client, factory)
 - auth/refresh_tokens.py (Memory + Redis store : register, consume, rotate, close, factory)
 - engines/climate/dpclim_client.py (client HTTP Météo-France : fetch, parse, errors, polling)
 - seeds/run_seeds.py (refus explicite du seed v6.1 retire)
@@ -715,13 +715,13 @@ class TestLocalStorage:
     """Tests du stockage filesystem local."""
 
     @pytest.mark.asyncio
-    async def should_put_and_return_file_uri(self, tmp_path) -> None:
+    async def should_put_and_return_internal_local_uri(self, tmp_path) -> None:
         from gsie_api.infrastructure.object_storage import LocalStorage
 
         storage = LocalStorage(str(tmp_path / "objects"))
         uri = await storage.put("test.txt", BytesIO(b"hello"), "text/plain")
-        assert uri.startswith("file://")
-        assert "test.txt" in uri
+        assert uri == "local:///test.txt"
+        assert str(tmp_path) not in uri
 
     @pytest.mark.asyncio
     async def should_get_stored_object(self, tmp_path) -> None:
@@ -760,13 +760,12 @@ class TestLocalStorage:
         assert await storage.exists("found.txt") is True
 
     @pytest.mark.asyncio
-    async def should_return_presigned_url_in_local(self, tmp_path) -> None:
-        from gsie_api.infrastructure.object_storage import LocalStorage
+    async def should_refuse_presigned_url_in_local(self, tmp_path) -> None:
+        from gsie_api.infrastructure.object_storage import LocalStorage, ObjectStorageError
 
         storage = LocalStorage(str(tmp_path / "objects"))
-        url = await storage.get_presigned_url("doc.pdf", expires_in=600)
-        assert url.startswith("file://")
-        assert "doc.pdf" in url
+        with pytest.raises(ObjectStorageError, match="indisponible"):
+            await storage.get_presigned_url("doc.pdf", expires_in=600)
 
     @pytest.mark.asyncio
     async def should_reject_empty_key(self, tmp_path) -> None:
@@ -803,13 +802,14 @@ class TestLocalStorage:
 
 
 class TestS3Storage:
-    """Tests du stockage S3 (NonImplementedError)."""
+    """Tests du constructeur S3 sans appel réseau."""
 
-    def should_raise_not_implemented_on_init(self) -> None:
+    def should_construct_s3_storage_with_explicit_credentials(self) -> None:
         from gsie_api.infrastructure.object_storage import S3Storage
 
-        with pytest.raises(NotImplementedError, match="Vague 2"):
-            S3Storage("http://minio:9000", "key", "secret", "bucket")
+        storage = S3Storage("http://minio:9000", "key", "secret", "bucket")
+
+        assert storage._bucket == "bucket"
 
 
 class TestObjectStorageFactory:

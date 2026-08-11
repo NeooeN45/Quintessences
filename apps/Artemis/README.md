@@ -25,6 +25,15 @@ GIS, Botanical, Knowledge, Climate
 
 INPN (MNHN), GBIF, BD Forêt v2, Safran
 
+## Intégration GSIE
+
+Artemis est la projection métier faune du jumeau numérique fédéré GSIE.
+Observations, habitats, populations et impacts sont publiés avec leur
+provenance et peuvent être corrélés aux données de GeoSylva, Ignis, Hydro et
+Flora sans accès direct aux bases internes des autres domaines.
+
+Voir [GSIE_INTEGRATION.md](GSIE_INTEGRATION.md).
+
 ## Voir aussi
 
 - `GSIE/ARCHITECTURE/` — architecture du moteur

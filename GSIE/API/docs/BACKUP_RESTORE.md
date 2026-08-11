@@ -3,10 +3,10 @@
 | Champ | Valeur |
 |---|---|
 | **ID** | DOC-BACKUP-001 |
-| **Statut** | Draft |
-| **Date** | 2026-07-27 |
+| **Statut** | Implémenté — validé en direct le 2026-08-08 (voir §3.6 et `GSIE/DOCUMENTATION/DR-RESTAURATION.md` §3.5) |
+| **Date** | 2026-07-27 (config initiale) — 2026-08-08 (implémentation + validation) |
 | **Référence** | DEC-000037, DEC-000019 |
-| **Périmètre** | PostgreSQL 16 + PostGIS 3.4 + Apache AGE (116 tables) |
+| **Périmètre** | PostgreSQL 16 + PostGIS 3.4 + Apache AGE (151 tables) |
 
 ---
 
@@ -102,19 +102,27 @@ max_wal_senders = 6
 
 ### 3.3 Planification (cron)
 
+pgbackrest et son dépôt vivent uniquement dans le conteneur/volume `db` —
+l'hôte ne peut pas invoquer `pgbackrest` directement, il passe par
+`scripts/pgbackrest_backup.sh` (wrapper `docker exec`) :
+
 ```cron
 # Full hebdomadaire (dimanche 01h00)
-0 1 * * 0 pgbackrest --stanza=gsie --type=full backup
+0 1 * * 0 /path/to/GSIE/API/scripts/pgbackrest_backup.sh full
 
 # Diff quotidien (lundi-samedi 01h00)
-0 1 * * 1-6 pgbackrest --stanza=gsie --type=diff backup
+0 1 * * 1-6 /path/to/GSIE/API/scripts/pgbackrest_backup.sh diff
 
 # Incrémental toutes les 30 minutes
-*/30 * * * * pgbackrest --stanza=gsie --type=incr backup
+*/30 * * * * /path/to/GSIE/API/scripts/pgbackrest_backup.sh incr
 
 # Vérification quotidienne (06h00)
-0 6 * * * pgbackrest --stanza=gsie check
+0 6 * * * docker exec -u postgres api-db-1 pgbackrest --stanza=gsie check
 ```
+
+L'archivage WAL continu (RPO ≤ 5 min) est indépendant de ce planning — il
+tourne en permanence via `archive_command` sur le serveur PostgreSQL
+(§3.2), déclenché par PostgreSQL lui-même à chaque bascule de segment.
 
 ### 3.4 PITR (Point-in-Time Recovery)
 
@@ -138,6 +146,37 @@ Alembic critique :
 ```sql
 SELECT pg_create_restore_point('avant_migration_202607');
 ```
+
+### 3.5 Points d'implémentation vérifiés
+
+- **Connexion locale** : `pg1-socket-path`, jamais `pg1-host` (réservé à
+  un accès SSH distant — le conteneur `db` exécute pgbackrest lui-même).
+- **Passphrase de chiffrement** : jamais écrite dans `pgbackrest.conf`
+  (le fichier n'interprète pas `${VAR}`, ce n'est pas un script shell) —
+  lue nativement par pgbackrest depuis la variable d'environnement
+  `PGBACKREST_REPO1_CIPHER_PASS` du conteneur.
+- **Rôle `pg1-user`** : `gsie` (le rôle SUPERUSER réel créé par l'image
+  officielle). Le template initial référençait `gsie_migrator`, un rôle
+  du schéma à 3 comptes de DEC-000037 jamais câblé dans
+  `docker-entrypoint-initdb.d` — remplacé par les rôles réellement
+  déployés (`gsie`, `gsie_api`/`api_user`, `gsie_viz`/`viz_user`,
+  migration `20260801_0025`).
+
+### 3.6 Validation live (2026-08-08)
+
+Testé en conditions réelles sur la base de développement (52 MB, 151
+tables) : `stanza-create` (online), archivage WAL (manuel et automatique
+via `archive_command`), sauvegarde complète chiffrée AES-256-CBC, et
+restauration dans un répertoire isolé avec promotion automatique — parité
+exacte (151 = 151 tables) et PostGIS fonctionnel sur l'instance restaurée.
+Détail complet : `GSIE/DOCUMENTATION/DR-RESTAURATION.md` §3.5.
+
+**Reste à faire** : `docker compose build db` pour figer pgbackrest dans
+`Dockerfile.db` de façon permanente (la validation a reconfiguré le
+conteneur en service directement, sans reconstruire l'image — bloqué au
+moment du test par un problème réseau/certificat sans rapport avec
+pgBackRest) ; activation du repo2 S3 cross-région quand des identifiants
+cloud seront disponibles.
 
 ---
 

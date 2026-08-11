@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/*
+ * Thème du site public Quintessences — SITE-002 §4 (v1.1.0).
+ * Thème clair exclusif, direction éditoriale inspirée de papacreative.com :
+ * fond quasi blanc, typographie d'affiche, légendes mono capitales
+ * très espacées, un seul accent vif utilisé avec parcimonie.
+ * Couleur signature reprise des diagrammes GSIE (#1a5276).
+ * Une couleur d'accent par application, dérivée des icônes DEC-000056.
+ */
+
+@theme {
+  /* Surfaces — thème clair exclusif (SITE-X-007 amendée) */
+  --color-bg-000: #ffffff;
+  --color-bg-100: #fafaf9;
+  --color-bg-200: #f2f1ee;
+  --color-bg-300: #e8e6e1;
+  --color-bg-400: #d9d6cf;
+  --color-bg-500: #c2beb4;
+
+  /* Texte — chaque teinte vérifiée ≥4.5:1 sur --color-bg-000 (WCAG AA,
+     SITE-X-004). fg-500 est volontairement plus sombre que fg-400 (au
+     lieu de plus clair) car il sert les libellés les plus petits
+     (10-11px), qui ont besoin d'un contraste plus généreux, pas moins. */
+  --color-fg-100: #0e0e0d;
+  --color-fg-200: #33322f;
+  --color-fg-300: #5c5a55;
+  --color-fg-400: #6b6963;
+  --color-fg-500: #5f5d57;
+
+  /* Bordures */
+  --color-border: #e5e3de;
+  --color-border-light: #eeece7;
+  --color-border-strong: #c9c6bf;
+
+  /* Signature GSIE — reprise des diagrammes Mermaid du projet */
+  --color-signature: #1a5276;
+  --color-signature-light: #2e86ab;
+  --color-signature-bg: rgba(26, 82, 118, 0.08);
+
+  /* Accent vif — dérivé du néon mint de papacreative.com (rgb(0,255,216)),
+     assombri pour un contraste AA sur fond clair. Utilisé avec parcimonie
+     (mots-clés du hero, puces, liens actifs) — jamais en grande surface. */
+  --color-accent: #00786a;
+  --color-accent-bg: rgba(0, 120, 106, 0.08);
+
+  /* Statut */
+  --color-success: #1e8449;
+  --color-warning: #9a6b00;
+  --color-error: #b03a2e;
+
+  /* Accents par application — SITE-002 §4.1 (approximatifs, à affiner
+     avec la charte graphique finale issue des icônes DEC-000056) */
+  --color-app-geosylva: #3f8f4f;
+  --color-app-ignis: #d1550f;
+  --color-app-hydro: #2166b0;
+  --color-app-flora: #8e44ad;
+  --color-app-artemis: #2f4f3e;
+  --color-app-qgisia: #128a72;
+  --color-app-terra: #6b4c30;
+  --color-app-aeris: #2f8f8a;
+  --color-app-atlas: #2c7594;
+
+  --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg-000);
+  color: var(--color-fg-100);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Réduction de mouvement — SITE-X-002 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Légende capitale espacée — motif récurrent de papacreative.com
+   (ex. "UI UX, BRAND, MOTION, PRODUCT DESIGN", "PROJECT TYPE"). */
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: var(--color-fg-400);
+}
+
+/* Rendu minimal du contenu Markdown des collections (actualités, galerie) */
+.content :where(p) {
+  margin: 1em 0;
+  line-height: 1.7;
+}
+.content :where(ul, ol) {
+  margin: 1em 0;
+  padding-left: 1.4em;
+}
+.content :where(li) {
+  margin: 0.4em 0;
+}
+.content :where(strong) {
+  color: var(--color-fg-100);
+}
+.content :where(a) {
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}

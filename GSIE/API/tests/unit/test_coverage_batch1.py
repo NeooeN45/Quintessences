@@ -116,6 +116,44 @@ def should_log_error_when_auth_store_shutdown_fails(mock_lifespan: object) -> No
                 pass
 
 
+def should_log_error_when_google_nonce_store_shutdown_fails(
+    mock_lifespan: object,
+) -> None:
+    """Le lifespan journalise aussi un échec de fermeture des nonces Google."""
+    with patch("gsie_api.app._settings") as mock_settings:
+        mock_settings.otel_enabled = False
+        mock_settings.app_name = "GSIE API"
+        mock_settings.app_version = "0.1.0"
+        mock_settings.environment = "development"
+        mock_settings.debug = False
+        mock_settings.log_level = "INFO"
+        mock_settings.api_v1_prefix = "/api/v1"
+        mock_settings.cors_origins = ["http://localhost:3000"]
+        mock_settings.rate_limit_enabled = False
+        mock_settings.rate_limit_default = "60/minute"
+        mock_settings.rate_limit_storage_url = "memory://"
+        mock_settings.max_request_body_size = 1_048_576
+
+        with (
+            patch("gsie_api.infrastructure.database.engine") as mock_engine,
+            patch("gsie_api.infrastructure.redis_client.redis_pool") as mock_pool,
+            patch(
+                "gsie_api.auth.refresh_tokens.close_refresh_token_store",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "gsie_api.auth.google_nonces.close_google_nonce_store",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("google nonce shutdown failed"),
+            ),
+        ):
+            mock_engine.dispose = AsyncMock()
+            mock_pool.disconnect = AsyncMock()
+
+            with TestClient(create_app()):
+                pass
+
+
 # ===========================================================================
 # app.py — branches du handler de rate limiting
 # ===========================================================================

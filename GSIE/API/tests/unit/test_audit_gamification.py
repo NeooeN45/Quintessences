@@ -10,16 +10,54 @@ On vérifie le contrat : structure JSON, types, champs attendus.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.audit.router import get_audit_service
+from gsie_api.audit.service import AuditEntry
 from gsie_api.core.auth import create_access_token
 
 
 def _auth_headers() -> dict[str, str]:
     """Génère un token JWT valide avec rôle reader pour les endpoints protégés."""
-    token = create_access_token(subject="test-user", claims={"roles": ["reader"]})
+    token = create_access_token(subject=str(uuid4()), claims={"roles": ["reader"]})
     return {"Authorization": f"Bearer {token}"}
+
+
+def _audit_app() -> object:
+    app = create_app()
+    service = AsyncMock()
+    service.list = AsyncMock(
+        return_value=(
+            [
+                AuditEntry(
+                    id=uuid4(),
+                    timestamp=datetime.now(UTC),
+                    actor_id=None,
+                    actor_email=None,
+                    action="login",
+                    resource_type="auth",
+                    resource_id=None,
+                    ip_address=None,
+                    user_agent=None,
+                    organisation_id=None,
+                    workspace_id=None,
+                    status_code=200,
+                    method="POST",
+                    path="/auth/login/password",
+                    details={},
+                    trace_id=None,
+                )
+            ],
+            1,
+        )
+    )
+    app.dependency_overrides[get_audit_service] = lambda: service
+    return app
 
 
 class TestAuditLogsEndpoint:
@@ -27,7 +65,7 @@ class TestAuditLogsEndpoint:
 
     def should_return_audit_logs_list(self) -> None:
         """L'endpoint retourne une liste non vide d'entrées d'audit."""
-        app = create_app()
+        app = _audit_app()
         client = TestClient(app)
         response = client.get(
             "/api/v1/audit-logs",
@@ -35,25 +73,25 @@ class TestAuditLogsEndpoint:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
-        assert len(data) > 0
+        assert isinstance(data["items"], list)
+        assert len(data["items"]) > 0
 
     def should_return_well_formed_audit_entries(self) -> None:
         """Chaque entrée contient les champs attendus (id, timestamp, user, action)."""
-        app = create_app()
+        app = _audit_app()
         client = TestClient(app)
         response = client.get(
             "/api/v1/audit-logs",
             headers=_auth_headers(),
         )
         assert response.status_code == 200
-        for entry in response.json():
+        for entry in response.json()["items"]:
             assert "id" in entry
             assert "timestamp" in entry
-            assert "user" in entry
+            assert "actor_id" in entry
             assert "action" in entry
-            assert "resource" in entry
-            assert "ip" in entry
+            assert "resource_type" in entry
+            assert "ip_address" in entry
             assert "details" in entry
 
 

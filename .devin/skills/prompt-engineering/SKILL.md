@@ -120,6 +120,21 @@ Contrat : [coller si pertinent]
 Critères : [liste numérotée]
 ```
 
+## Intake avant implémentation
+
+Une demande qui commence par une idée, une conversation ou une ressource ne
+se transforme pas directement en prompt de code :
+
+1. invoquer `/ingestion-idee` ou `/ingestion-ressource` selon le cas ;
+2. distinguer hypothèse, exigence, décision et tâche ;
+3. dédupliquer avec `IDEA_BACKLOG.md`, les RFC et les décisions ;
+4. choisir le niveau `LÉGER`, `STANDARD` ou `LOURD` ;
+5. produire un prompt versionné seulement lorsque le résultat est borné.
+
+Les skills d'intake travaillent en mode proposition par défaut. Elles ne
+créent pas de RFC, DEC, code ou ingestion de données sans demande explicite du
+Fondateur.
+
 ## Anti-patterns
 
 - ❌ Prompt vague ("fais quelque chose de bien")
@@ -128,6 +143,9 @@ Critères : [liste numérotée]
 - ❌ Pas de contexte ("tu devrais savoir")
 - ❌ Instructions contradictoires
 - ❌ Prompt de 500 lignes (découper en sous-tâches)
+- ❌ Transformer une idée intéressante en code sans qualification
+- ❌ Confondre recommandation d'agent et décision du Fondateur
+- ❌ Déclarer une preuve ou une source qui n'a pas été vérifiée
 
 ## Pour les playbooks cloud
 

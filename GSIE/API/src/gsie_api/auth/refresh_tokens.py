@@ -28,6 +28,12 @@ class RefreshTokenStore(Protocol):
     async def rotate(self, current_jti: str, new_jti: str, expires_at: float) -> bool:
         """Remplace atomiquement un token actif par son successeur."""
 
+    async def revoke(self, jti: str) -> bool:
+        """Révoque explicitement un token actif (logout)."""
+
+    async def is_revoked(self, jti: str) -> bool:
+        """Vérifie si un token a été révoqué (détection de réutilisation)."""
+
     async def close(self) -> None:
         """Ferme les ressources du registre."""
 
@@ -64,6 +70,16 @@ class MemoryRefreshTokenStore:
 
     async def close(self) -> None:
         """Aucune ressource externe à fermer pour le registre mémoire."""
+
+    async def revoke(self, jti: str) -> bool:
+        async with self._lock:
+            self._purge_expired()
+            return self._tokens.pop(jti, None) is not None
+
+    async def is_revoked(self, jti: str) -> bool:
+        async with self._lock:
+            self._purge_expired()
+            return jti not in self._tokens
 
     def _purge_expired(self) -> None:
         now = time()
@@ -129,6 +145,14 @@ class RedisRefreshTokenStore:
 
     async def close(self) -> None:
         await self._client.aclose()
+
+    async def revoke(self, jti: str) -> bool:
+        deleted = await self._client.delete(f"{self._KEY_PREFIX}{jti}")
+        return bool(deleted)
+
+    async def is_revoked(self, jti: str) -> bool:
+        value = await self._client.get(f"{self._KEY_PREFIX}{jti}")
+        return value is None
 
 
 @lru_cache

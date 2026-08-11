@@ -28,6 +28,13 @@ CLAUDE.md
 # Secrets — fichiers d'environnement réels (ne jamais committer)
 .env
 .env.*
+.cloudflare_api_token
+.cloudflare_zone_id
+.cloudflare_credentials
+.cloudflare_wrangler_token
+.wrangler/
+landing-quintessences/.wrangler/
+status-quintessences/.wrangler/
 !.env.example
 **/.env
 **/.env.*
@@ -91,3 +98,7 @@ Forge/
 # Ancré à la racine pour ne matcher que le vault, pas un futur dossier homonyme.
 /Quintessences/
 GSIE/API/backups/
+
+# Rapports horodatés reproductibles (publiés comme artefacts CI, pas comme source).
+GSIE/API/tests/perf/results/data_registry_validation_*.json
+GSIE/API/tests/perf/results/data_registry_infrastructure_smoke_*.json

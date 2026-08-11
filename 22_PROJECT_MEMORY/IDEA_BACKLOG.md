@@ -3,6 +3,8 @@
 | Champ | Valeur |
 |---|---|
 | **Créé le** | 2026-07-01 |
+| **Source de vérité** | Ce fichier uniquement pour les idées non décidées |
+| **Processus** | `/ingestion-idee` puis qualification Fondateur |
 
 ---
 
@@ -13,11 +15,24 @@ Chaque idée suit le modèle :
 ```
 ### IDEA-XXXX — [Titre]
 - **Date** : YYYY-MM-JJ
-- **Origine** : [Discussion / Directive / Observation]
-- **Description** : [Résumé de l'idée]
-- **Statut** : PROPOSÉE / ÉTUDIÉE / TRANSFORMÉE EN DEC / REJETÉE
-- **Lien** : [DEC ou RFC si transformée]
+- **Origine** : [Discussion / Directive / Observation / Veille]
+- **Produit** : [Quintessences / GSIE / GeoSylva / IGNIS / autre]
+- **Type** : [produit / recherche / architecture / donnée / UX / commercial]
+- **Description** : [Résumé de l'idée et problème traité]
+- **Valeur potentielle** : faible / moyenne / élevée / inconnue
+- **Maturité** : brute / qualifiée / recherche / prototype / validée
+- **Horizon** : actif / phase courante / phase future / spéculatif
+- **Dépendances** : [RFC, moteur, dataset, app ou décision]
+- **Risques** : [scientifiques, techniques, juridiques, commerciaux]
+- **Prochaine action** : [action minimale vérifiable]
+- **Statut** : PROPOSÉE / ÉTUDIÉE / TRANSFORMÉE EN RFC / TRANSFORMÉE EN DEC / REJETÉE
+- **Sources** : [DOI, URL, fichier ou conversation]
+- **Lien** : [RFC ou DEC si transformée]
 ```
+
+Une idée enregistrée n'est pas une priorité de développement. Toute écriture
+automatique doit rester explicitement demandée par le Fondateur. Les RFC et DEC
+restent dans leurs dossiers canoniques respectifs.
 
 ---
 
@@ -32,9 +47,9 @@ Chaque idée suit le modèle :
   systèmes experts environnementaux, dont la foresterie constitue la
   première spécialisation officielle — sans que cela change l'architecture
   actuelle, qui valide déjà ce principe par construction. Piste de
-  formulation : « GSIE est conçu comme une plateforme générique
-  d'intelligence environnementale ; la spécialisation forestière constitue
-  son premier domaine d'application officiel. »
+  formulation : « GSIE est conçu comme une plateforme générique d'intelligence
+  environnementale ; la spécialisation forestière constitue son premier domaine
+  d'application officiel. »
 - **Statut** : PROPOSÉE
 - **Lien** : —
 
@@ -53,4 +68,32 @@ Chaque idée suit le modèle :
 - **Statut** : PROPOSÉE
 - **Lien** : —
 
-> Prochaine idée : IDEA-0003.
+### IDEA-0003 — IGNIS-FOLD : guidage d'urgence inspiré de G-FOLD
+- **Date** : 2026-08-05
+- **Origine** : Brainstorming externe du Fondateur avec ChatGPT
+- **Produit** : IGNIS
+- **Type** : recherche
+- **Description** : Étudier une architecture de guidage de trajectoire pour les
+  dérivations urgentes, le retour avec énergie limitée et l'atterrissage sûr
+  d'un drone autonome opérant dans un environnement d'incendie. Le concept
+  s'inspire de G-FOLD, méthode de guidage de descente propulsée par
+  optimisation convexe de type SOCP, mais ne constitue pas une adaptation
+  validée pour un drone. Le planificateur de mission, le guidage, le
+  Safety Supervisor et l'autopilote doivent rester séparés.
+- **Valeur potentielle** : élevée
+- **Maturité** : recherche
+- **Horizon** : phase future
+- **Dépendances** : modèle dynamique, classe de drone, météo, terrain 3D,
+  énergie, PX4/ArduPilot SITL et HIL
+- **Risques** : validité de l'adaptation mathématique, sécurité aérienne,
+  incertitudes thermiques et aérologiques, certification, licence des
+  implémentations, validation terrain
+- **Prochaine action** : définir les classes de drones candidates et produire
+  une étude de faisabilité hors vol avec modèle dynamique et critères de
+  sécurité
+- **Statut** : PROPOSÉE
+- **Sources** : Açıkmeşe & Ploen, DOI 10.2514/1.27553 ; Scharf et al.,
+  DOI 10.2514/1.g000399 ; conversation externe du 2026-08-05
+- **Lien** : —
+
+> Prochaine idée : IDEA-0004.

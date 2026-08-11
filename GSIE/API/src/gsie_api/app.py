@@ -15,22 +15,27 @@ Architecture (DEC-000019) :
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from hmac import compare_digest
+from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 
 from gsie_api.audit.router import router as audit_router
+from gsie_api.auth.identity_router import router as identity_router
 from gsie_api.auth.router import router as auth_router
+from gsie_api.billing.router import router as billing_router
 from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.core.rbac import require_roles
+from gsie_api.data.router import router as data_registry_router
 from gsie_api.engines.botanical.router import router as botanical_router
 from gsie_api.engines.climate.router import router as climate_router
 from gsie_api.engines.correlation.router import router as correlation_router
@@ -48,26 +53,70 @@ from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
 from gsie_api.gamification.router import router as gamification_router
 from gsie_api.infrastructure.health import router as health_router
+from gsie_api.organisations.router import router as organisations_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import (
     RequestBodyLimitMiddleware,
     StatusVersionGuardMiddleware,
     TraceIdMiddleware,
 )
+from gsie_api.sync.router import router as sync_router
 from gsie_api.websocket.router import router as ws_router
 
 _settings = get_settings()
 logger = get_logger("gsie_api.app")
 
-# Le limiter est défini dans core/limiter.py (storage_uri Redis configuré)
+
+def _metrics_auth_dependency() -> list[Any]:
+    """Construit les garde-fous pour `/metrics` et `/metrics/db-quality`.
+
+    - Si `GSIE_METRICS_BEARER_TOKEN` est défini : exige
+      `Authorization: Bearer <token>` (tous environnements).
+    - Sinon, en dehors du développement : exige le rôle `admin`.
+    - En développement sans token : public.
+    """
+    token = _settings.metrics_bearer_token.get_secret_value().strip()
+
+    if token:
+
+        async def _require_metrics_token(request: Request) -> None:
+            auth = request.headers.get("Authorization", "")
+            scheme, _, value = auth.partition(" ")
+            if not (compare_digest(scheme, "Bearer") and compare_digest(value, token)):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid metrics bearer token",
+                )
+
+        return [Depends(_require_metrics_token)]
+
+    if _settings.environment == "development":
+        return []
+
+    return [Depends(require_roles("admin"))]
+
+
 # — importé ci-dessus pour éviter les imports circulaires
 
 # Tags OpenAPI déclarés à la racine pour groupement Swagger/ReDoc
 _OPENAPI_TAGS = [
-    {"name": "auth", "description": "Authentification JWT RS256 — login, refresh, verify"},
+    {
+        "name": "auth",
+        "description": (
+            "Compte Quintessences — e-mail, Google OIDC, JWT RS256, refresh et révocation"
+        ),
+    },
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
     {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
+    {
+        "name": "data-registry",
+        "description": "Data Registry RFC-0038 — catalogue, qualification et couverture",
+    },
+    {
+        "name": "sync-geosylva",
+        "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
+    },
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
     {"name": "gis", "description": "GIS Engine — traitement géospatial"},
@@ -142,9 +191,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await manager.start_redis_subscriber()
     await manager.start_heartbeat()
 
+    health_scheduler = None
+    if _settings.data_registry_health_scheduler_enabled:
+        from gsie_api.data.health_scheduler import DataRegistryHealthScheduler
+
+        health_scheduler = DataRegistryHealthScheduler(_settings)
+        health_scheduler.start()
+
     yield
     logger.info("api_stopping")
     # Graceful shutdown — ferme WebSocket, pools de connexions (P0 résilience)
+    try:
+        if health_scheduler is not None:
+            await health_scheduler.stop()
+    except Exception as exc:
+        logger.error(
+            "data_registry_health_scheduler_shutdown_failed",
+            error_type=type(exc).__name__,
+        )
     try:
         await manager.shutdown()
     except Exception as exc:
@@ -160,6 +224,36 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error(
             "auth_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.auth.google_nonces import close_google_nonce_store
+
+        await close_google_nonce_store()
+    except Exception as exc:
+        logger.error(
+            "google_nonce_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.auth.oidc_nonces import close_oidc_nonce_store
+
+        await close_oidc_nonce_store()
+    except Exception as exc:
+        logger.error(
+            "oidc_nonce_store_shutdown_failed",
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+    try:
+        from gsie_api.infrastructure.object_storage import close_object_storage
+
+        await close_object_storage()
+    except Exception as exc:
+        logger.error(
+            "object_storage_shutdown_failed",
             error_type=type(exc).__name__,
             error=str(exc),
         )
@@ -232,9 +326,9 @@ def create_app() -> FastAPI:
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else f"{_settings.api_v1_prefix}/openapi.json",
         openapi_tags=_OPENAPI_TAGS,
-        # Sérialisation JSON haute performance (veille techno 2026-08-02).
-        # ORJSONResponse remplace le sérialiseur stdlib sur tous les endpoints.
-        default_response_class=ORJSONResponse,
+        # FastAPI sérialise les réponses typées via Pydantic/Rust.
+        # Le chemin standard est plus rapide que l'ancien ORJSONResponse
+        # global et évite une API de réponse dépréciée.
     )
 
     # Prometheus /metrics — monitoring production (CON-005)
@@ -246,9 +340,7 @@ def create_app() -> FastAPI:
     # par type d'agrégat (`data_subject`, `consent`), donc la cadence des
     # traitements RGPD devenait publique. Hors développement, il faut le rôle
     # `admin` — un scraper Prometheus porte un jeton comme un autre appelant.
-    metrics_dependencies = (
-        [] if _settings.environment == "development" else [Depends(require_roles("admin"))]
-    )
+    metrics_dependencies = _metrics_auth_dependency()
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/metrics",
@@ -330,9 +422,14 @@ def create_app() -> FastAPI:
     # Routes — health/ready à la racine, auth + moteurs sous /api/v1/
     app.include_router(health_router)
     app.include_router(auth_router, prefix=_settings.api_v1_prefix)
+    app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
+    app.include_router(data_registry_router, prefix=_settings.api_v1_prefix)
+    app.include_router(organisations_router, prefix=_settings.api_v1_prefix)
+    app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)
+    app.include_router(billing_router, prefix=_settings.api_v1_prefix)
     app.include_router(evidence_router, prefix=_settings.api_v1_prefix)
     app.include_router(knowledge_router, prefix=_settings.api_v1_prefix)
     app.include_router(correlation_router, prefix=_settings.api_v1_prefix)
@@ -352,10 +449,25 @@ def create_app() -> FastAPI:
     app.include_router(orchestration_router, prefix=_settings.api_v1_prefix)
     app.include_router(ws_router, prefix=_settings.api_v1_prefix)
 
-    # 404 handler custom — RFC 7807 Problem Details (OWASP A05)
+    # 404 handler custom — RFC 7807 Problem Details (OWASP A05).
+    # Les HTTPException(404) levees intentionnellement par le code metier
+    # (ex. MFA_NON_ACTIVE, AccountNotFoundError) doivent preserver leur
+    # detail — on n'ecrase que les 404 de routing (route inexistante).
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc: Exception) -> JSONResponse:
         trace_id = request.headers.get("X-Trace-Id", "")
+        if isinstance(exc, HTTPException):
+            return JSONResponse(
+                status_code=404,
+                content=_build_problem_detail(
+                    status_code=404,
+                    title="Not Found",
+                    detail=str(exc.detail),
+                    error_code=exc.detail if isinstance(exc.detail, str) else "NOT_FOUND",
+                    trace_id=trace_id,
+                    request=request,
+                ),
+            )
         return JSONResponse(
             status_code=404,
             content=_build_problem_detail(

@@ -31,13 +31,16 @@ os.environ.setdefault("GSIE_RATE_LIMIT_STORAGE_URL", "memory://")
 # fonctionnel pour les tests unitaires.
 os.environ.setdefault("GSIE_REFRESH_TOKEN_STORAGE_URL", "memory://")
 
-from collections.abc import AsyncGenerator, Iterator, Sequence
+from collections.abc import AsyncGenerator, Generator, Iterator, Sequence
 from contextlib import ExitStack
+from datetime import UTC
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sqlalchemy import text
+from pydantic import SecretStr
+from sqlalchemy import DateTime, text
+from sqlalchemy.dialects.sqlite import DATETIME as _SQLiteDATETIME  # noqa: N811
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from gsie_api.infrastructure.models import Base
@@ -104,6 +107,37 @@ def _ensure_fresh_event_loop() -> object:
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
     yield
+
+
+@pytest.fixture(autouse=True)
+def _disable_turnstile_for_tests() -> Generator[None, None, None]:
+    """Désactive Turnstile par défaut pour les tests — sauf s'ils le réactivent.
+
+    Le module-level `_settings` des routers auth et identity est initialisé
+    depuis `.env` au chargement. Les tests de login couvrent la fonctionnelle
+    d'identité, non le challenge Turnstile ; ils échoueraient avec l'erreur
+    `Challenge anti-robot non résolu.` sans cette isolation.
+    """
+    from gsie_api.auth import identity_router
+    from gsie_api.auth import router as auth_router
+
+    previous_enabled = (
+        auth_router._settings.turnstile_enabled,
+        identity_router._settings.turnstile_enabled,
+    )
+    previous_secret = (
+        auth_router._settings.turnstile_secret_key,
+        identity_router._settings.turnstile_secret_key,
+    )
+    auth_router._settings.turnstile_enabled = False
+    identity_router._settings.turnstile_enabled = False
+    auth_router._settings.turnstile_secret_key = SecretStr("")
+    identity_router._settings.turnstile_secret_key = SecretStr("")
+    yield
+    auth_router._settings.turnstile_enabled = previous_enabled[0]
+    identity_router._settings.turnstile_enabled = previous_enabled[1]
+    auth_router._settings.turnstile_secret_key = previous_secret[0]
+    identity_router._settings.turnstile_secret_key = previous_secret[1]
 
 
 @pytest.fixture(autouse=True)
@@ -188,6 +222,80 @@ def _docker_available(tentatives: int = 3, pause: float = 2.0) -> bool:
 
 
 DOCKER_AVAILABLE = _docker_available()
+
+
+class _TZAwareSQLiteDateTime(_SQLiteDATETIME):
+    """Réattache le fuseau UTC aux datetimes relues depuis SQLite.
+
+    Utilisée uniquement par ``identity_sqlite_session`` — voir le
+    commentaire de la fixture pour le pourquoi.
+    """
+
+    def result_processor(self, dialect: object, coltype: object) -> Any:
+        processor = super().result_processor(dialect, coltype)
+
+        def process(value: Any) -> Any:
+            result = processor(value) if processor else value
+            if result is not None and result.tzinfo is None:
+                result = result.replace(tzinfo=UTC)
+            return result
+
+        return process
+
+
+_IDENTITY_TABLE_NAMES = (
+    "user_account",
+    "identity_provider_link",
+    "local_credential",
+    "account_role",
+    "identity_action_token",
+    "email_change_request",
+    "mfa_secret",
+    "mfa_recovery_code",
+    "active_session",
+)
+
+
+@pytest.fixture
+async def identity_sqlite_session() -> AsyncGenerator[AsyncSession, None]:
+    """Session SQLite en mémoire portant uniquement le schéma d'identité.
+
+    Alternative sans Docker à ``db_session`` pour les dépôts auth
+    (``SqlAlchemyIdentityRepository``, ``SqlAlchemySessionRepository``) :
+    ces tables n'utilisent que des types portables (UUID, String, DateTime,
+    Boolean, Integer) contrairement au reste du schéma (JSONB, PostGIS,
+    pgvector), donc SQLite via aiosqlite suffit à exercer le SQL réel
+    (contraintes UNIQUE, IntegrityError, FOR UPDATE no-op) sans conteneur.
+    """
+    from gsie_api.infrastructure.models.accounts import IDENTITY_SCHEMA
+
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        execution_options={"schema_translate_map": {IDENTITY_SCHEMA: None}},
+    )
+    # SQLite n'a pas de type datetime "aware" : la colonne générique
+    # ``DateTime(timezone=True)`` des modèles se lit naive une fois relue,
+    # ce qui casse toute comparaison avec ``datetime.now(UTC)`` côté dépôt
+    # (`TypeError: can't compare offset-naive and offset-aware datetimes`).
+    # On force la ré-attache du fuseau UTC au moment de la lecture, pour ce
+    # moteur de test uniquement — la colonne reste un DateTime(timezone=True)
+    # standard, inchangée côté modèles/production (PostgreSQL gère nativement
+    # le fuseau).
+    engine.dialect.colspecs = {**engine.dialect.colspecs, DateTime: _TZAwareSQLiteDateTime}
+    tables = [
+        table
+        for table in Base.metadata.tables.values()
+        if table.schema == IDENTITY_SCHEMA and table.name in _IDENTITY_TABLE_NAMES
+    ]
+    async with engine.begin() as conn:
+        await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, tables=tables))
+
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with session_factory() as session:
+        yield session
+
+    await engine.dispose()
+
 
 # Filet pour l'intégration continue : là où Docker est censé être présent, une
 # sonde en échec doit arrêter la suite, pas la vider de ses tests. Sur un poste

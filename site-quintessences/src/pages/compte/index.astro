@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import AnimatedHeading from "../../components/AnimatedHeading.tsx";
+import ProfileView from "../../components/ProfileView.tsx";
+---
+
+<BaseLayout title="Compte" description="Votre compte Quintessences.">
+  <section class="mx-auto max-w-md px-6 py-20">
+    <AnimatedHeading client:load lines={[{ text: "Mon compte" }]} />
+    <div class="mt-10">
+      <ProfileView client:load />
+    </div>
+  </section>
+</BaseLayout>

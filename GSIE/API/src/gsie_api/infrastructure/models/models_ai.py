@@ -4,7 +4,17 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, String, Text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,6 +23,8 @@ from gsie_api.infrastructure.models.base import Base, TimestampMixin, register_t
 from gsie_api.infrastructure.models.enums import (
     AccessMethod,
     DatasetPurpose,
+    DatasetStatus,
+    EvidenceLevel,
     FeatureSourceType,
     ModelType,
 )
@@ -89,6 +101,16 @@ class DatasetModel(Base, TimestampMixin):
         nullable=False,
         default=DatasetPurpose.production,
     )
+    # Identité stable du Registry (RFC-0038 §5.2). Nullable pour les lignes
+    # historiques découvertes avant la qualification ; le validateur impose
+    # la présence dès qu'une entrée est promue.
+    slug: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True)
+    primary_domain: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    domains: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True, default=list)
+    tags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True, default=list)
+    domain_vocabulary_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    __table_args__ = (UniqueConstraint("slug", name="uq_dataset_slug"),)
 
 
 @register_type("model_version")
@@ -135,13 +157,49 @@ class DatasetVersionModel(Base, TimestampMixin):
     release_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     changes: Mapped[str | None] = mapped_column(Text, nullable=True)
     stats: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    temporal_coverage_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    temporal_coverage_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    schema_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[DatasetStatus] = mapped_column(
+        Enum(DatasetStatus, name="dataset_status"),
+        nullable=False,
+        default=DatasetStatus.discovered,
+        index=True,
+    )
+    # Qualification Registry A–F, distincte des EvidenceAssessment d'assertion.
+    evidence_level: Mapped[EvidenceLevel | None] = mapped_column(
+        Enum(
+            EvidenceLevel,
+            name="evidence_level",
+            values_callable=lambda values: [member.value for member in values],
+        ),
+        nullable=True,
+    )
+    evidence_basis: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    evidence_assessed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("dataset_id", "version", name="uq_dataset_version_dataset_version"),
+        CheckConstraint(
+            "temporal_coverage_start IS NULL OR temporal_coverage_end IS NULL "
+            "OR temporal_coverage_start <= temporal_coverage_end",
+            name="ck_dataset_version_coverage_order",
+        ),
+    )
 
 
 @register_type("data_asset")
 class DataAssetModel(Base, TimestampMixin):
-    """Actif physique (fichier archivé localement) — indépendance API (F-P2-08)."""
+    """Actif archivé via ``ObjectStorage`` — indépendance API (F-P2-08)."""
 
     __tablename__ = "data_asset"
+    __table_args__ = (CheckConstraint("size_bytes >= 0", name="ck_data_asset_size_non_negative"),)
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
@@ -152,12 +210,16 @@ class DataAssetModel(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=False, index=True
     )
     format: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    size_bytes: Mapped[int] = mapped_column(nullable=False)
+    # Un fichier de données peut dépasser 2 Gio : PostgreSQL INTEGER (32 bits)
+    # n'est pas suffisant pour les COG, COPC ou archives de référence.
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     checksum: Mapped[str] = mapped_column(String(200), nullable=False)
     archived_from: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
     original_uri: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    storage_uri: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    checksum_algorithm: Mapped[str | None] = mapped_column(String(50), nullable=True)
     archived_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
@@ -166,6 +228,13 @@ class DistributionModel(Base, TimestampMixin):
     """Distribution d'un DatasetVersion avec canal d'accès typé."""
 
     __tablename__ = "distribution"
+    __table_args__ = (
+        UniqueConstraint(
+            "id",
+            "dataset_version_id",
+            name="uq_distribution_id_dataset_version",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
@@ -183,6 +252,17 @@ class DistributionModel(Base, TimestampMixin):
     rights_statement_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
     )
+    # Champ canonique RFC-0038 ; rights_statement_id est conservé pour les
+    # lignes historiques RGPD et ne doit plus être utilisé pour une nouvelle
+    # distribution qualifiée.
+    data_rights_statement_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
+    )
+    coverage_place_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("resource.id"), nullable=True, index=True
+    )
+    format: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    crs: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSONB, nullable=True)
     # Resolution native de la source (NOMENCLATURE_SOURCES.md §8.1).
     # `scale_context` porte deja `level`, `extent_m2` (couverture) et
     # `grain_m2` (resolution) : le rattacher ici evite de dupliquer la

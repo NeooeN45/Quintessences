@@ -1,0 +1,36 @@
+---
+const PRINCIPLES = [
+  {
+    title: "Le forestier reste le décideur",
+    text: "GSIE-CON-001 — les recommandations sont explicables et toujours contournables.",
+  },
+  {
+    title: "La connaissance avant le code",
+    text: "Toute affirmation scientifique est sourçable et traçable jusqu'à sa preuve d'origine.",
+  },
+  {
+    title: "L'IA assiste, ne décide jamais seule",
+    text: "Chaque sortie du système passe par une validation avant d'atteindre l'utilisateur.",
+  },
+  {
+    title: "Aucune décision perdue",
+    text: "Toute décision structurante de l'écosystème est tracée et consultable.",
+  },
+];
+---
+
+<section class="border-b border-[var(--color-border)] bg-[var(--color-bg-100)]">
+  <div class="mx-auto max-w-6xl px-6 py-20">
+    <h2 class="eyebrow">
+      Principes fondateurs
+    </h2>
+    <div class="mt-6 grid gap-8 sm:grid-cols-2">
+      {PRINCIPLES.map((p) => (
+        <div>
+          <p class="font-medium text-[var(--color-fg-100)]">{p.title}</p>
+          <p class="mt-1 text-sm text-[var(--color-fg-400)]">{p.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

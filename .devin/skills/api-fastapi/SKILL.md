@@ -11,31 +11,25 @@ triggers:
 ## Stack
 
 - FastAPI + Pydantic v2
-- Python 3.11+
-- PostgreSQL + PostGIS via asyncpg
-- Auth : JWT Bearer (python-jose)
+- Python 3.12
+- PostgreSQL 16 + PostGIS via asyncpg/SQLAlchemy async
+- Auth : JWT RS256 avec PyJWT
 - Tests : pytest + httpx AsyncClient
 
 ## Structure de l'API
 
 ```
 GSIE/API/
-├── main.py                    ← app FastAPI + lifespan
-├── routers/
-│   └── {engine_name}.py      ← un router par moteur
-├── models/
-│   ├── requests.py            ← modèles Pydantic entrée
-│   └── responses.py           ← modèles Pydantic sortie
-├── auth/
-│   ├── jwt.py                 ← validation JWT
-│   └── dependencies.py        ← Depends(get_current_user)
-├── middleware/
-│   ├── rate_limiting.py
-│   └── observability.py       ← logging structuré + trace_id
+├── src/gsie_api/
+│   ├── app.py                 ← factory FastAPI + lifespan
+│   ├── core/                  ← configuration, auth, RBAC, logging
+│   ├── engines/{name}/         ← engine.py, schemas.py, router.py
+│   ├── infrastructure/        ← DB, modèles SQLAlchemy, santé
+│   ├── shared/                 ← middleware et schémas communs
+│   └── resources/              ← CRUD générique v6.2
 └── tests/
-    ├── conftest.py            ← fixtures AsyncClient
-    ├── test_{router}.py
-    └── test_auth.py
+    ├── unit/                  ← services, validateurs, clients
+    └── integration/           ← PostgreSQL, API et frontières
 ```
 
 ## Conventions de réponse
@@ -70,9 +64,9 @@ class TraceIDMiddleware(BaseHTTPMiddleware):
 
 ```python
 from fastapi import Depends, HTTPException
-from app.auth.dependencies import get_current_user
+from gsie_api.core.auth import get_current_user
 
-@router.post("/v1/engines/evidence/process")
+@router.post("/api/v1/evidence/evaluate")
 async def process(
     request: EvidenceRequest,
     user: User = Depends(get_current_user)
@@ -91,9 +85,8 @@ async def process(
 ## Tests
 
 ```python
-@pytest.mark.asyncio
 async def test_should_return_evidence_when_valid_input(async_client):
-    response = await async_client.post("/v1/engines/evidence/process", json={...})
+    response = await async_client.post("/api/v1/evidence/evaluate", json={...})
     assert response.status_code == 200
     assert "confidence" in response.json()
 ```

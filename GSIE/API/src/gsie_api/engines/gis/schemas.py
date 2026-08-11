@@ -93,3 +93,83 @@ class StationCharacteristics(BaseModel):
     latitude: float
     longitude: float
     source: SourceReference
+
+
+# --- API de téléchargement Géoplateforme IGN ---
+# GetCapabilities / GetResource / GetSubResource / Download
+# (cartes.gouv.fr — téléchargement bulk de produits IGN)
+
+
+class RessourceTelechargementResponse(BaseModel):
+    """Une ressource (produit IGN) listée par GetCapabilities."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom: str
+    url_resource: str = Field(description="URL GetResource de la ressource")
+    description: str
+    date_maj: str
+    zones: list[str] = Field(default_factory=list)
+    formats: list[str] = Field(default_factory=list)
+
+
+class DossierTelechargementResponse(BaseModel):
+    """Un dossier (jeu de données) listé par GetResource."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom: str
+    url_subresource: str = Field(description="URL GetSubResource du dossier")
+    date_maj: str
+    zone: str
+    format: str
+    date_edition: str
+
+
+class FichierTelechargementResponse(BaseModel):
+    """Un fichier téléchargeable listé par GetSubResource."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    url_download: str = Field(description="URL Download du fichier")
+    taille_octets: int
+    checksum_md5: str
+    mime_types: list[str] = Field(default_factory=list)
+
+
+class PageTelechargementResponse(BaseModel):
+    """Métadonnées de pagination d'une réponse Atom."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_entries: int
+    page: int
+    page_size: int
+    page_count: int
+
+
+class ListeRessourcesResponse(BaseModel):
+    """Réponse de GetCapabilities — ressources paginées."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ressources: list[RessourceTelechargementResponse]
+    pagination: PageTelechargementResponse
+
+
+class ListeDossiersResponse(BaseModel):
+    """Réponse de GetResource — dossiers paginés."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dossiers: list[DossierTelechargementResponse]
+    pagination: PageTelechargementResponse
+
+
+class ListeFichiersResponse(BaseModel):
+    """Réponse de GetSubResource — fichiers paginés."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fichiers: list[FichierTelechargementResponse]
+    pagination: PageTelechargementResponse

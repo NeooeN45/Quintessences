@@ -1,0 +1,61 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import Principles from "../components/Principles.astro";
+import EngineChain from "../components/EngineChain.tsx";
+import AppGrid from "../components/AppGrid.tsx";
+import LiveStat from "../components/LiveStat.tsx";
+---
+
+<BaseLayout title="Intelligence environnementale fédérée">
+  <Hero />
+
+  <section class="border-b border-[var(--color-border)]">
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <h2 class="eyebrow">
+        Le moteur GSIE
+      </h2>
+      <p class="mt-3 max-w-2xl text-[var(--color-fg-300)]">
+        <strong class="text-[var(--color-fg-100)]">GSIE</strong> (General
+        System Intelligence Engine) est le moteur central de données, d'IA,
+        de simulations et d'interopérabilité de Quintessences. Chaque
+        recommandation traverse une chaîne d'intelligence complète, de la
+        preuve scientifique à la validation.
+      </p>
+      <div class="mt-10">
+        <EngineChain client:visible />
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-[var(--color-border)] bg-[var(--color-bg-100)]">
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <h2 class="eyebrow">
+        En chiffres
+      </h2>
+      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <LiveStat client:load label="Connaissances validées" field="connaissances_validees" />
+        <LiveStat client:load label="Datasets catalogués" field="datasets_catalogues" />
+        <LiveStat client:load label="Moteurs actifs" field="moteurs_actifs" />
+        <LiveStat client:load label="Applications" field="applications" />
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-[var(--color-border)]">
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <h2 class="eyebrow">
+        Applications
+      </h2>
+      <p class="mt-3 max-w-2xl text-[var(--color-fg-300)]">
+        Chaque application est une projection métier spécialisée du même
+        jumeau numérique fédéré.
+      </p>
+      <div class="mt-8">
+        <AppGrid client:load />
+      </div>
+    </div>
+  </section>
+
+  <Principles />
+</BaseLayout>

@@ -1,0 +1,29 @@
+{
+  "loop_securite_perf": {
+    "score": 0.91,
+    "cycles_total": 6,
+    "cycles_reussis": 6,
+    "cycles_echoues": 0,
+    "derniere_maj": "2026-08-09"
+  },
+  "loop_qa": {
+    "score": 0.60,
+    "cycles_total": 2,
+    "cycles_reussis": 2,
+    "cycles_echoues": 0,
+    "derniere_maj": "2026-08-09"
+  },
+  "loop_veille": {
+    "score": 0.55,
+    "cycles_total": 1,
+    "cycles_reussis": 1,
+    "cycles_echoues": 0,
+    "derniere_maj": "2026-08-09"
+  },
+  "agent_consensus": {
+    "score": 0.50,
+    "consensus_atteints": 0,
+    "consensus_echoues": 0,
+    "derniere_maj": "2026-08-09"
+  }
+}

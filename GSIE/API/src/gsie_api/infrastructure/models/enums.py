@@ -194,6 +194,38 @@ class DatasetPurpose(StrEnum):
     reference = "reference"
 
 
+# RFC-0038 §6.1 — état opérationnel d'une publication de dataset.
+# Cet enum est volontairement distinct de DatasetPurpose (intention métier)
+# et de LifecycleStatus (assertions scientifiques).
+class DatasetStatus(StrEnum):
+    discovered = "discovered"
+    link_checked = "link_checked"
+    metadata_extracted = "metadata_extracted"
+    license_analyzed = "license_analyzed"
+    coverage_analyzed = "coverage_analyzed"
+    schema_analyzed = "schema_analyzed"
+    security_checked = "security_checked"
+    validated = "validated"
+    staging = "staging"
+    production = "production"
+    deprecated = "deprecated"
+    broken = "broken"
+    unavailable = "unavailable"
+    license_restricted = "license_restricted"
+    unknown_license = "unknown_license"
+    archived = "archived"
+    experimental = "experimental"
+
+
+# RFC-0038 §5.6 — résultat d'un contrôle de santé de distribution.
+class DatasetHealthStatus(StrEnum):
+    healthy = "healthy"
+    degraded = "degraded"
+    unavailable = "unavailable"
+    invalid = "invalid"
+    unknown = "unknown"
+
+
 # §3.16 — Sample.sample_type
 class SampleType(StrEnum):
     soil = "soil"

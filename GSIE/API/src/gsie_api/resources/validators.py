@@ -17,10 +17,13 @@ Deux portes distinctes, volontairement séparées (P0 2026-07-26) :
 création et pour les appelants historiques.
 """
 
+import re
 from collections.abc import Callable
 from enum import Enum
 from typing import Any
+from urllib.parse import urlsplit
 
+from gsie_api.data.contracts import normalize_keywords, normalize_slug, validate_domain
 from gsie_api.infrastructure.models.enums import (
     AccessMethod,
     ActivityType,
@@ -31,7 +34,9 @@ from gsie_api.infrastructure.models.enums import (
     ConstraintType,
     CorrelationMethod,
     CorrelationStrength,
+    DatasetHealthStatus,
     DatasetPurpose,
+    DatasetStatus,
     DiagnosticGlobalState,
     DiagnosticType,
     DiagnosticValidationStatus,
@@ -89,6 +94,10 @@ _ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "temporal_context": {"granularity": TemporalGranularity},
     "model": {"type": ModelType},
     "dataset": {"purpose": DatasetPurpose},
+    "dataset_version": {
+        "status": DatasetStatus,
+        "evidence_level": EvidenceLevel,
+    },
     "distribution": {"access_method": AccessMethod},
     "feature": {"source_type": FeatureSourceType},
     "scale_context": {"level": ScaleLevel},
@@ -118,6 +127,8 @@ _ENUM_FIELDS: dict[str, dict[str, type[Enum]]] = {
     "question": {"question_type": QuestionType},
     "hypothesis": {"status": HypothesisStatus},
     "rights_statement": {"usage_rights": UsageRights},
+    "data_rights_statement": {"usage_rights": UsageRights},
+    "dataset_health": {"health_status": DatasetHealthStatus},
     "conflict_cluster": {},  # status est un enum ConflictStatus mais pas dans la mappe encore
     "flow": {"flow_type": FlowType, "direction": FlowDirection},
     "goal": {"goal_type": GoalType},
@@ -154,7 +165,16 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "method": ["name", "description"],
     "instrument": ["name", "type"],
     "uncertainty": ["type"],
-    "quality_assessment": ["target_id", "dimension", "score", "method", "assessed_at"],
+    "quality_assessment": [
+        "target_id",
+        "dimension",
+        "score",
+        "method",
+        "assessed_at",
+        "assessment_run_id",
+        "policy_version",
+        "weight",
+    ],
     "activity": ["type", "started_at"],
     "agent": ["name", "type"],
     # Auteur et date obligatoires : une source qui ne peut pas etre citee
@@ -174,6 +194,13 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "dataset": ["title", "description"],
     "model_version": ["model_id", "version"],
     "dataset_version": ["dataset_id", "version"],
+    "data_rights_statement": ["licence", "usage_rights"],
+    "dataset_health": [
+        "dataset_version_id",
+        "distribution_id",
+        "checked_at",
+        "health_status",
+    ],
     "data_asset": [
         "dataset_version_id",
         "format",
@@ -393,6 +420,264 @@ def _validate_health_risk_conditional(data: dict[str, Any]) -> list[str]:
     return []
 
 
+_CHECKSUM_HEX = re.compile(r"^[0-9a-fA-F]+$")
+_CHECKSUM_ALGORITHMS = frozenset({"md5", "sha1", "sha-1", "sha256", "sha-256", "sha512", "sha-512"})
+
+
+def _validate_data_asset_size(data: dict[str, Any]) -> list[str]:
+    """Refuse toute taille ambiguë, tronquée ou négative."""
+    size = data.get("size_bytes")
+    if isinstance(size, bool):
+        size_value: int | None = None
+    elif isinstance(size, int):
+        size_value = size
+    elif isinstance(size, str):
+        try:
+            size_value = int(size.strip())
+        except ValueError:
+            size_value = None
+    else:
+        size_value = None
+    if size_value is None or size_value < 0:
+        return ["size_bytes doit être un entier supérieur ou égal à zéro"]
+    return []
+
+
+def _validate_data_asset_text_fields(data: dict[str, Any]) -> list[str]:
+    """Valide les champs courts avant leur persistance SQL."""
+    errors: list[str] = []
+    for field, maximum in {
+        "format": 50,
+        "checksum": 200,
+        "checksum_algorithm": 50,
+    }.items():
+        value = data.get(field)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{field} doit être une chaîne non vide")
+        elif len(value) > maximum:
+            errors.append(f"{field} dépasse la taille maximale de {maximum} caractères")
+    return errors
+
+
+def _validate_data_asset_checksum(data: dict[str, Any]) -> list[str]:
+    """Vérifie la cohérence entre algorithme déclaré et empreinte."""
+    errors: list[str] = []
+    checksum = data.get("checksum")
+    algorithm = data.get("checksum_algorithm")
+    if algorithm is None:
+        return errors
+    if not isinstance(algorithm, str) or not algorithm.strip():
+        return ["checksum_algorithm doit être un algorithme non vide"]
+    normalized_algorithm = algorithm.strip().lower()
+    if normalized_algorithm not in _CHECKSUM_ALGORITHMS:
+        return [f"Algorithme de checksum inconnu : {algorithm}"]
+    normalized_digest = normalized_algorithm.replace("-", "")
+    expected_length = {"sha256": 64, "sha512": 128}.get(normalized_digest)
+    if expected_length is None:
+        return errors
+    if not isinstance(checksum, str) or not _CHECKSUM_HEX.fullmatch(checksum):
+        errors.append("checksum doit être hexadécimal pour l'algorithme déclaré")
+    elif len(checksum) != expected_length:
+        errors.append(
+            f"checksum doit contenir {expected_length} caractères hexadécimaux pour {algorithm}"
+        )
+    return errors
+
+
+def _validate_data_asset_uri(
+    field: str, value: object, allowed_schemes: frozenset[str]
+) -> list[str]:
+    """Valide une URI sans identifiant ni schéma implicite."""
+    if value is None:
+        return []
+    if not isinstance(value, str) or not value.strip():
+        return [f"{field} doit être une URI non vide"]
+    if len(value) > 500:
+        return [f"{field} dépasse la taille maximale de 500 caractères"]
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return [f"{field} est une URI malformée"]
+    scheme = parsed.scheme.lower()
+    if scheme not in allowed_schemes:
+        return [f"{field} utilise un schéma interdit : {scheme or '(absent)'}"]
+    errors: list[str] = []
+    if parsed.username is not None or parsed.password is not None:
+        errors.append(f"{field} ne doit pas contenir d'identifiants")
+    if scheme == "s3" and not parsed.netloc:
+        errors.append(f"{field} doit indiquer un bucket S3")
+    if scheme in {"http", "https"} and not parsed.netloc:
+        errors.append(f"{field} doit indiquer un hôte")
+    if scheme == "local" and not parsed.path:
+        errors.append(f"{field} doit indiquer une clé locale")
+    return errors
+
+
+def _validate_data_asset_storage_uris(data: dict[str, Any]) -> list[str]:
+    """Valide séparément les URI interne et fournisseur."""
+    errors = _validate_data_asset_uri(
+        "storage_uri", data.get("storage_uri"), frozenset({"local", "s3"})
+    )
+    errors.extend(
+        _validate_data_asset_uri(
+            "original_uri",
+            data.get("original_uri"),
+            frozenset({"http", "https", "s3"}),
+        )
+    )
+    return errors
+
+
+def _validate_data_asset_conditional(data: dict[str, Any]) -> list[str]:
+    """Compose les validations indépendantes d'un actif archivé."""
+    errors = _validate_data_asset_size(data)
+    errors.extend(_validate_data_asset_text_fields(data))
+    errors.extend(_validate_data_asset_checksum(data))
+    errors.extend(_validate_data_asset_storage_uris(data))
+
+    return errors
+
+
+def _validate_dataset_conditional(data: dict[str, Any]) -> list[str]:
+    """Valide l'identité et le vocabulaire contrôlé d'un Dataset."""
+    errors: list[str] = []
+    slug = data.get("slug")
+    if slug is not None:
+        try:
+            normalize_slug(slug)
+        except ValueError as exc:
+            errors.append(str(exc))
+
+    primary_domain = data.get("primary_domain")
+    if primary_domain is not None:
+        try:
+            primary_domain = validate_domain(primary_domain)
+        except ValueError as exc:
+            errors.append(str(exc))
+
+    domains = data.get("domains")
+    if domains is not None:
+        if not isinstance(domains, list):
+            errors.append("domains doit être une liste")
+        else:
+            try:
+                normalized_domains = [validate_domain(value) for value in domains]
+                if primary_domain is not None and primary_domain in normalized_domains:
+                    errors.append("primary_domain ne doit pas être répété dans domains")
+            except (TypeError, ValueError) as exc:
+                errors.append(str(exc))
+
+    tags = data.get("tags")
+    if tags is not None:
+        if not isinstance(tags, list):
+            errors.append("tags doit être une liste")
+        else:
+            try:
+                normalize_keywords(tags)
+            except ValueError as exc:
+                errors.append(str(exc))
+
+    if (primary_domain is not None or domains) and not data.get("domain_vocabulary_version"):
+        errors.append("domain_vocabulary_version requis quand un domaine est renseigné")
+    return errors
+
+
+def _validate_dataset_version_temporal(data: dict[str, Any]) -> list[str]:
+    """Vérifie l'ordre de la couverture temporelle quand il est comparable."""
+    start = data.get("temporal_coverage_start")
+    end = data.get("temporal_coverage_end")
+    if start is None or end is None:
+        return []
+    try:
+        if start > end:
+            return ["temporal_coverage_start doit précéder temporal_coverage_end"]
+    except TypeError:
+        # La couche de schéma produira ensuite une erreur 422 stable pour une
+        # date malformée ; cette porte ne doit pas provoquer un 500.
+        return []
+    return []
+
+
+def _dataset_version_status_value(data: dict[str, Any]) -> object:
+    """Normalise un statut Python ou JSON sans le valider deux fois."""
+    status = data.get("status", DatasetStatus.discovered)
+    return status.value if isinstance(status, DatasetStatus) else status
+
+
+def _validate_dataset_version_release(data: dict[str, Any]) -> list[str]:
+    """Exige une date de publication aux statuts qualifiés."""
+    status_value = _dataset_version_status_value(data)
+    requires_release = {
+        DatasetStatus.validated.value,
+        DatasetStatus.staging.value,
+        DatasetStatus.production.value,
+    }
+    if status_value in requires_release and data.get("release_date") is None:
+        return ["release_date requis avant la publication qualifiée"]
+    return []
+
+
+def _validate_dataset_version_schema(data: dict[str, Any]) -> list[str]:
+    """Exige l'empreinte du schéma après son analyse."""
+    status_value = _dataset_version_status_value(data)
+    requires_schema = {
+        DatasetStatus.schema_analyzed.value,
+        DatasetStatus.security_checked.value,
+        DatasetStatus.validated.value,
+        DatasetStatus.staging.value,
+        DatasetStatus.production.value,
+    }
+    if status_value in requires_schema and not data.get("schema_hash"):
+        return ["schema_hash requis à partir de SCHEMA_ANALYZED"]
+    return []
+
+
+def _validate_dataset_version_evidence(data: dict[str, Any]) -> list[str]:
+    """Exige une base de preuve traçable uniquement en production."""
+    if _dataset_version_status_value(data) != DatasetStatus.production.value:
+        return []
+    errors: list[str] = []
+    if data.get("evidence_level") is None:
+        errors.append("evidence_level requis en production")
+    if data.get("evidence_assessed_at") is None:
+        errors.append("evidence_assessed_at requis en production")
+    basis = data.get("evidence_basis")
+    if not isinstance(basis, dict) or not basis.get("justification"):
+        errors.append("evidence_basis.justification requis en production")
+    if isinstance(basis, dict) and not (basis.get("source_ids") or basis.get("citation_ids")):
+        errors.append("evidence_basis doit référencer des sources ou citations")
+    return errors
+
+
+def _validate_dataset_version_conditional(data: dict[str, Any]) -> list[str]:
+    """Compose les portes indépendantes de qualification d'une version."""
+    errors = _validate_dataset_version_temporal(data)
+    errors.extend(_validate_dataset_version_release(data))
+    errors.extend(_validate_dataset_version_schema(data))
+    errors.extend(_validate_dataset_version_evidence(data))
+    return errors
+
+
+def _validate_dataset_health_conditional(data: dict[str, Any]) -> list[str]:
+    """Valide les bornes d'un contrôle de santé append-only."""
+    errors: list[str] = []
+    latency = data.get("latency_ms")
+    if latency is not None and (
+        isinstance(latency, bool) or not isinstance(latency, int | float) or latency < 0
+    ):
+        errors.append("latency_ms doit être un nombre supérieur ou égal à zéro")
+    http_status = data.get("http_status")
+    if http_status is not None and (
+        isinstance(http_status, bool)
+        or not isinstance(http_status, int)
+        or not 100 <= http_status <= 599
+    ):
+        errors.append("http_status doit être un entier HTTP entre 100 et 599")
+    return errors
+
+
 # Règles métier conditionnelles (au-delà des champs simplement obligatoires ou
 # des enums) — chacune reflète une contrainte SQL déjà en place, appliquée ici
 # également à l'API générique de resources (même porte de validation que les
@@ -402,6 +687,10 @@ _CONDITIONAL_RULES: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "station_observation": _validate_station_observation_conditional,
     "silvicultural_rule": _validate_silvicultural_rule_conditional,
     "health_risk": _validate_health_risk_conditional,
+    "data_asset": _validate_data_asset_conditional,
+    "dataset": _validate_dataset_conditional,
+    "dataset_version": _validate_dataset_version_conditional,
+    "dataset_health": _validate_dataset_health_conditional,
 }
 
 

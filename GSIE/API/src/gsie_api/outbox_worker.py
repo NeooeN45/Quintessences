@@ -39,6 +39,8 @@ from gsie_api.infrastructure.models.outbox import (
     OUTBOX_STATUS_PUBLISHED,
     OutboxEvent,
 )
+from gsie_api.infrastructure.redis_client import get_redis
+from gsie_api.outbox_health import write_worker_heartbeat
 from gsie_api.websocket.manager import manager as ws_manager
 
 Publisher = Callable[[str, dict[str, Any]], Awaitable[None]]
@@ -420,6 +422,7 @@ async def run_worker() -> None:
     """Traite continuellement l'outbox jusqu'à l'arrêt du processus."""
     setup_logging(_settings.log_level, _settings.environment)
     policy = RetryPolicy.from_settings()
+    redis = await get_redis()
     logger.info(
         "outbox_worker_started",
         batch_size=_settings.outbox_batch_size,
@@ -438,6 +441,10 @@ async def run_worker() -> None:
                         # Moment creux : on rafraîchit les jauges sans peser
                         # sur le débit quand un arriéré est en cours de purge.
                         await collect_outbox_stats(session)
+                    # Même sans événement à publier, la sonde atteste que le
+                    # chemin complet PostgreSQL + Redis reste opérationnel.
+                    await redis.ping()
+                    write_worker_heartbeat(_settings.outbox_healthcheck_path)
                 except asyncio.CancelledError:
                     await session.rollback()
                     raise
@@ -447,6 +454,7 @@ async def run_worker() -> None:
             if delivered == 0:
                 await asyncio.sleep(_settings.outbox_poll_interval_seconds)
     finally:
+        await redis.aclose()
         await ws_manager.shutdown()
         logger.info("outbox_worker_stopped")
 

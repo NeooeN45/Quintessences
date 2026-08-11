@@ -14,11 +14,11 @@ Tu es l'orchestrateur d'audit. Quand l'utilisateur invoque `/audit-phase4`, tu l
 
 ### Audit 1 — Qualité code (sous-agent `qa`)
 
-Lance un sous-agent avec le profil `qa` qui exécute :
+Lance un sous-agent avec le profil `qa` qui exécute depuis `GSIE/API` :
 ```bash
-mypy GSIE/ --strict
-ruff check GSIE/
-pytest GSIE/ --cov=GSIE --cov-report=term-missing --cov-fail-under=80
+.\.venv\Scripts\python.exe -m mypy src/gsie_api/
+.\.venv\Scripts\python.exe -m ruff check src/ tests/
+.\.venv\Scripts\python.exe -m pytest tests/ -q --cov=gsie_api --cov-report=term-missing --cov-fail-under=80
 ```
 Et rapporte : erreurs mypy, erreurs ruff, couverture par moteur, tests échoués.
 

@@ -31,16 +31,46 @@ services:
       GSIE_VIZ_DB_PASSWORD: ${GSIE_VIZ_DB_PASSWORD:?GSIE_VIZ_DB_PASSWORD requis dans .env}
       # Apache AGE requiert shared_preload_libraries
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
-    command: >
-      postgres
-      -c shared_preload_libraries=age,pg_stat_statements,pgaudit
-      -c search_path=ag_catalog,public,tiger
-      -c max_connections=100
-      -c wal_level=replica
-      -c pg_stat_statements.track=all
-      -c pg_stat_statements.max=5000
-      -c pgaudit.log=ddl,write,role
-      -c pgaudit.log_parameter=on
+      # Sauvegarde pgBackRest (DEC-000037 P0-1, docs/BACKUP_RESTORE.md) —
+      # pgbackrest lit PGBACKREST_<OPTION> depuis l'environnement du process
+      # qui l'invoque (ici : archive_command exécuté par postgres, ou un
+      # `docker exec` déclenché par scripts/pgbackrest_backup.sh). La
+      # passphrase ne figure jamais dans docker/pgbackrest.conf.
+      PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS:?PGBACKREST_REPO1_CIPHER_PASS requis dans .env, generer avec openssl rand -base64 48}
+    # Liste YAML volontairement explicite : des commentaires dans un bloc
+    # scalaire `>` deviennent des arguments PostgreSQL (et font échouer le
+    # conteneur au redémarrage).
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=age,pg_stat_statements,pgaudit
+      - -c
+      # `public` doit rester premier pendant initdb : `ag_catalog` n'existe
+      # qu'après CREATE EXTENSION age dans la migration baseline.
+      - search_path=public,ag_catalog,tiger
+      - -c
+      - max_connections=100
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - "archive_command=pgbackrest --stanza=gsie archive-push %p"
+      - -c
+      - archive_timeout=300
+      - -c
+      - max_wal_senders=6
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - pg_stat_statements.max=5000
+      - -c
+      - pgaudit.log=ddl,write,role
+      # Les valeurs SQL peuvent contenir données personnelles, jetons ou
+      # secrets. L'audit conserve l'opération et le rôle sans journaliser les
+      # paramètres.
+      - -c
+      - pgaudit.log_parameter=off
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -49,6 +79,10 @@ services:
       # Source unique du SQL de création des comptes — 04-comptes-de-connexion.sh
       # lui passe les identifiants, que les fichiers .sql d'initdb ne reçoivent pas.
       - ./docker/comptes-de-connexion.sql:/gsie/comptes-de-connexion.sql:ro
+      # pgBackRest — config statique (sans secret) + repos persistants.
+      - ./docker/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+      - gsie_pgbackrest_repo:/var/lib/pgbackrest
+      - gsie_pgbackrest_log:/var/log/pgbackrest
     healthcheck:
       # Les noms étaient en dur : la sonde mentait dès que GSIE_DB_USER changeait.
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
@@ -84,8 +118,18 @@ services:
       --maxmemory-policy allkeys-lru
       --appendonly yes
       --appendfsync everysec
+    # L'image Redis exécute son entrypoint avec l'utilisateur root avant de
+    # basculer vers UID 999. Avec cap_drop=ALL, root ne peut pas traverser le
+    # répertoire AOF 0700 ; démarrer directement avec le propriétaire du
+    # volume conserve le durcissement sans ajouter DAC_OVERRIDE.
+    user: "999:1000"
     expose:
       - "6379"
+    # Accès depuis l'API lancée sur le host en dev local (dev-only).
+    # En production, l'API tourne dans le réseau Docker et n'a pas besoin
+    # de ce mapping.
+    ports:
+      - "127.0.0.1:6379:6379"
     environment:
       REDISCLI_AUTH: ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
     volumes:
@@ -98,11 +142,76 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 512M
+
+  # MinIO — stockage objet S3 local pour le développement
+  # Les ports sont bindés sur localhost : aucun accès externe au daemon.
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${GSIE_MINIO_ROOT_USER:?GSIE_MINIO_ROOT_USER requis dans .env}
+      MINIO_ROOT_PASSWORD: ${GSIE_MINIO_ROOT_PASSWORD:?GSIE_MINIO_ROOT_PASSWORD requis dans .env}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - gsie_miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # Initialisation idempotente du bucket S3 de développement.
+  # Le runtime API n'a pas besoin du droit de créer des buckets.
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${GSIE_OBJECT_STORAGE_S3_BUCKET}" &&
+        printf '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket"],"Resource":["arn:aws:s3:::%s"]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:AbortMultipartUpload","s3:ListMultipartUploadParts"],"Resource":["arn:aws:s3:::%s/*"]}]}' "$${GSIE_OBJECT_STORAGE_S3_BUCKET}" "$${GSIE_OBJECT_STORAGE_S3_BUCKET}" > /tmp/policy.json &&
+        (mc admin policy remove local gsie-object-storage >/dev/null 2>&1 || true) &&
+        mc admin policy create local gsie-object-storage /tmp/policy.json &&
+        (mc admin user info local "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}" >/dev/null 2>&1 || mc admin user add local "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}" "$${GSIE_OBJECT_STORAGE_S3_SECRET_KEY}") &&
+        mc admin policy attach local gsie-object-storage --user "$${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY}"
+    environment:
+      MINIO_ROOT_USER: ${GSIE_MINIO_ROOT_USER:?GSIE_MINIO_ROOT_USER requis dans .env}
+      MINIO_ROOT_PASSWORD: ${GSIE_MINIO_ROOT_PASSWORD:?GSIE_MINIO_ROOT_PASSWORD requis dans .env}
+      MC_CONFIG_DIR: /tmp/mc
+      GSIE_OBJECT_STORAGE_S3_BUCKET: ${GSIE_OBJECT_STORAGE_S3_BUCKET:-gsie-assets}
+      GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: ${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY:?GSIE_OBJECT_STORAGE_S3_ACCESS_KEY requis dans .env}
+      GSIE_OBJECT_STORAGE_S3_SECRET_KEY: ${GSIE_OBJECT_STORAGE_S3_SECRET_KEY:?GSIE_OBJECT_STORAGE_S3_SECRET_KEY requis dans .env}
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./docker/minio-object-storage-policy.json.tmpl:/policy/template.json:ro
+    tmpfs:
+      - /tmp
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   # API FastAPI — Gunicorn + UvicornWorker
   # Durcissement : read-only rootfs, no-new-privileges, cap_drop ALL
@@ -121,6 +230,26 @@ services:
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      # Recyclage désynchronisé : évite la sortie groupée des workers sous charge.
+      GSIE_GUNICORN_MAX_REQUESTS: ${GSIE_GUNICORN_MAX_REQUESTS:-5000}
+      GSIE_GUNICORN_MAX_REQUESTS_JITTER: ${GSIE_GUNICORN_MAX_REQUESTS_JITTER:-5000}
+      GSIE_GRACEFUL_DRAIN_FILE: /tmp/gsie-draining
+      GSIE_EDGE_PROXY_MODE: ${GSIE_EDGE_PROXY_MODE:-direct}
+      # En développement Docker, MinIO est disponible sur le réseau Compose.
+      GSIE_OBJECT_STORAGE_BACKEND: ${GSIE_OBJECT_STORAGE_BACKEND:-s3}
+      GSIE_OBJECT_STORAGE_S3_ENDPOINT: ${GSIE_OBJECT_STORAGE_S3_ENDPOINT:-http://minio:9000}
+      GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: ${GSIE_OBJECT_STORAGE_S3_ACCESS_KEY:-gsie-minio}
+      GSIE_OBJECT_STORAGE_S3_SECRET_KEY: ${GSIE_OBJECT_STORAGE_S3_SECRET_KEY:?GSIE_OBJECT_STORAGE_S3_SECRET_KEY requis dans .env}
+      GSIE_OBJECT_STORAGE_S3_REGION: ${GSIE_OBJECT_STORAGE_S3_REGION:-us-east-1}
+      GSIE_OBJECT_STORAGE_S3_BUCKET: ${GSIE_OBJECT_STORAGE_S3_BUCKET:-gsie-assets}
+      GSIE_OBJECT_STORAGE_S3_MULTIPART_CHUNK_SIZE: ${GSIE_OBJECT_STORAGE_S3_MULTIPART_CHUNK_SIZE:-8388608}
+      GSIE_DATA_REGISTRY_HEALTH_SCHEDULER_ENABLED: ${GSIE_DATA_REGISTRY_HEALTH_SCHEDULER_ENABLED:-false}
+      GSIE_DATA_REGISTRY_HEALTH_MANIFEST_PATH: /app/data/REGISTRY_MANIFEST.json
+      GSIE_DATA_REGISTRY_HEALTH_INTERVAL_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_INTERVAL_SECONDS:-3600}
+      GSIE_DATA_REGISTRY_HEALTH_TIMEOUT_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_TIMEOUT_SECONDS:-30}
+      GSIE_DATA_REGISTRY_HEALTH_MAX_CONCURRENCY: ${GSIE_DATA_REGISTRY_HEALTH_MAX_CONCURRENCY:-1}
+      GSIE_DATA_REGISTRY_HEALTH_MAX_BYTES: ${GSIE_DATA_REGISTRY_HEALTH_MAX_BYTES:-1048576}
+      GSIE_DATA_REGISTRY_HEALTH_LOCK_TTL_SECONDS: ${GSIE_DATA_REGISTRY_HEALTH_LOCK_TTL_SECONDS:-600}
       # Exécution sous le compte applicatif, pas sous le propriétaire de la base.
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       # Alembic seul emprunte le compte d'administration : `gsie_application`
@@ -134,15 +263,36 @@ services:
       # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
       GSIE_JWT_PRIVATE_KEY_PATH: /keys/private.pem
       GSIE_JWT_PUBLIC_KEY_PATH: /keys/public.pem
-      # Défaut `false` : `_get_dev_user` retourne roles=["admin"] et c'est le
-      # seul mécanisme d'authentification implémenté. Le compose l'activait
-      # par défaut, ce que `config.py` s'appliquait justement à éviter.
+      # Compte de développement historique, séparé des comptes persistés.
+      # Il reste fermé par défaut et interdit en staging/production.
       GSIE_AUTH_DEV_LOGIN_ENABLED: ${GSIE_AUTH_DEV_LOGIN_ENABLED:-false}
       GSIE_AUTH_DEV_USERNAME: ${GSIE_AUTH_DEV_USERNAME:-admin}
       # Plus obligatoire : exiger un mot de passe pour un mécanisme désactivé
       # poussait à recopier celui de `.env.example`. La configuration refuse
       # désormais toute valeur de remplissage quand le dev login est actif.
       GSIE_AUTH_DEV_PASSWORD: ${GSIE_AUTH_DEV_PASSWORD:-}
+      # Identité Quintessences (RFC-0032 / DEC-000044).
+      GSIE_AUTH_LOCAL_REGISTRATION_ENABLED: ${GSIE_AUTH_LOCAL_REGISTRATION_ENABLED:-true}
+      # Tableau JSON, par exemple ["123.apps.googleusercontent.com"].
+      # Aucun secret OAuth n'est requis pour vérifier un ID token.
+      GSIE_GOOGLE_OAUTH_CLIENT_IDS: ${GSIE_GOOGLE_OAUTH_CLIENT_IDS:-[]}
+      GSIE_GOOGLE_NONCE_STORAGE_URL: ${GSIE_GOOGLE_NONCE_STORAGE_URL:-}
+      GSIE_GOOGLE_NONCE_EXPIRE_SECONDS: ${GSIE_GOOGLE_NONCE_EXPIRE_SECONDS:-300}
+      # Mailpit capture les messages uniquement en développement local. En
+      # staging/production, surcharger ces valeurs avec le relais réel.
+      GSIE_TRANSACTIONAL_EMAIL_MODE: ${GSIE_TRANSACTIONAL_EMAIL_MODE:-smtp}
+      GSIE_SMTP_HOST: ${GSIE_SMTP_HOST:-mailpit}
+      GSIE_SMTP_PORT: ${GSIE_SMTP_PORT:-1025}
+      GSIE_SMTP_USERNAME: ${GSIE_SMTP_USERNAME:-}
+      GSIE_SMTP_PASSWORD: ${GSIE_SMTP_PASSWORD:-}
+      GSIE_SMTP_USE_TLS: ${GSIE_SMTP_USE_TLS:-false}
+      GSIE_SMTP_STARTTLS: ${GSIE_SMTP_STARTTLS:-false}
+      GSIE_EMAIL_SENDER: ${GSIE_EMAIL_SENDER:-noreply@quintessences-platform.com}
+      GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES: ${GSIE_IDENTITY_ACTION_CODE_EXPIRE_MINUTES:-15}
+      # Cloudflare Turnstile — bot protection (OWASP A07).
+      GSIE_TURNSTILE_ENABLED: ${GSIE_TURNSTILE_ENABLED:-false}
+      GSIE_TURNSTILE_SITE_KEY: ${GSIE_TURNSTILE_SITE_KEY:-}
+      GSIE_TURNSTILE_SECRET_KEY: ${GSIE_TURNSTILE_SECRET_KEY:-}
       # CORS — origines autorisées (dev : dashboard Astro sur 4000-4001)
       GSIE_CORS_ORIGINS: ${GSIE_CORS_ORIGINS:-["http://localhost:3000","http://localhost:4000","http://localhost:8080"]}
       # Clé API Météo-France (DPClim, Vigilance, Météo des forêts, AROME, PaquetObs)
@@ -154,6 +304,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
     volumes:
       # Clés JWT RS256 — montées en lecture seule depuis le host
       - ./keys:/keys:ro
@@ -172,12 +326,18 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Limites ressources (recommandation stress test)
+    # Limites ressources. 768M relevé à 2G le 2026-08-08 : le benchmark de
+    # charge concurrente (GSIE/API/docs/LOAD_TEST_CONCURRENT_2026-08-08.md)
+    # a mesuré 725,8 MiB (94,5%) au repos, sans charge — empreinte de base
+    # des 5 workers gunicorn avec dépendances scientifiques lourdes
+    # (scipy/xarray/cfgrib/geopandas/bindings Rust), pas un effet de la
+    # charge. À 768M, le conteneur était à un pas d'un OOM-kill sous
+    # trafic réel.
     deploy:
       resources:
         limits:
           cpus: "2.0"
-          memory: 768M
+          memory: 2G
 
   # Worker outbox — livraison au moins une fois vers Redis/WebSocket.
   outbox-worker:
@@ -194,12 +354,20 @@ services:
       GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
       GSIE_OUTBOX_BATCH_SIZE: ${GSIE_OUTBOX_BATCH_SIZE:-100}
       GSIE_OUTBOX_POLL_INTERVAL_SECONDS: ${GSIE_OUTBOX_POLL_INTERVAL_SECONDS:-1.0}
+      GSIE_OUTBOX_HEALTHCHECK_PATH: /tmp/gsie-outbox-worker.heartbeat
+      GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS: ${GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS:-30}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-m", "gsie_api.outbox_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     read_only: true
     tmpfs:
       - /tmp
@@ -212,6 +380,72 @@ services:
         limits:
           cpus: "0.5"
           memory: 256M
+
+  # Boîte SMTP locale pour tester vérification d'adresse et mot de passe oublié.
+  # Interface strictement locale : http://127.0.0.1:8025
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+    expose:
+      - "1025"
+    environment:
+      MP_MAX_MESSAGES: 200
+      MP_SMTP_AUTH_ACCEPT_ANY: "false"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "false"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+  # Entrée publique optionnelle : connexion sortante uniquement vers
+  # Cloudflare, aucun port Internet ouvert sur le serveur GSIE.
+  # Activation : docker compose --profile edge up -d cloudflared
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.2@sha256:4f6655284ab3d252b7f28fedb19fe6c8fc82ee5b1295c20ac74d475e5398a52d
+    profiles: ["edge"]
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --loglevel
+      - info
+      - --metrics
+      - 127.0.0.1:2000
+      - run
+      - --token-file
+      - /run/secrets/cloudflare_tunnel_token
+    secrets:
+      - cloudflare_tunnel_token
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "127.0.0.1:2000", "ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
 
   # Uptime Kuma — monitoring uptime des services GSIE
   # (veille techno 2026-08-02, RFC-0031 action 7)
@@ -239,4 +473,11 @@ networks:
 volumes:
   gsie_pgdata:
   gsie_redisdata:
+  gsie_miniodata:
   gsie_kuma_data:
+  gsie_pgbackrest_repo:
+  gsie_pgbackrest_log:
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${CLOUDFLARE_TUNNEL_TOKEN_FILE:-./secrets/cloudflare_tunnel_token}

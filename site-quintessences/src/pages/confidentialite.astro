@@ -1,0 +1,72 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimatedHeading from "../components/AnimatedHeading.tsx";
+---
+
+<BaseLayout title="Politique de confidentialité" description="Politique de confidentialité et protection des données personnelles.">
+  <section class="mx-auto max-w-2xl px-6 py-20">
+    <AnimatedHeading client:load lines={[{ text: "Confidentialité" }]} />
+    <p class="mt-2 text-sm text-[var(--color-fg-400)]">Dernière mise à jour : 9 août 2026</p>
+
+    <div class="content mt-10">
+      <h2>Responsable de traitement</h2>
+      <p>
+        [À COMPLÉTER — identité du responsable de traitement]. Pour toute
+        question relative à vos données, contactez
+        <a href="mailto:contact@quintessences-platform.com">contact@quintessences-platform.com</a>.
+      </p>
+
+      <h2>Ce que nous collectons aujourd'hui</h2>
+      <p>Ce site est composé de plusieurs zones qui ne traitent pas toutes des données personnelles :</p>
+      <ul>
+        <li>
+          <strong>Accueil, Actualités, Galerie</strong> — aucune donnée
+          personnelle n'est collectée pour la simple consultation de ces
+          pages.
+        </li>
+        <li>
+          <strong>Contact</strong> — l'adresse e-mail, la catégorie et le
+          message que vous saisissez sont transmis dans le seul but de
+          répondre à votre demande. Le formulaire est protégé par
+          Cloudflare Turnstile, un service tiers qui vérifie que vous n'êtes
+          pas un robot ; Cloudflare peut à ce titre traiter des données
+          techniques (voir sa propre politique de confidentialité).
+        </li>
+        <li>
+          <strong>Compte</strong> — cette zone est en construction. Lorsqu'elle
+          sera disponible, la création d'un compte impliquera un traitement de
+          données personnelles (adresse e-mail, mot de passe haché, historique
+          de connexion) décrit à ce moment-là dans cette même page, selon les
+          règles déjà en vigueur pour le compte Quintessences côté mobile.
+        </li>
+      </ul>
+
+      <h2>Cookies</h2>
+      <p>
+        Ce site n'utilise pas de cookie de mesure d'audience ni de cookie
+        publicitaire. Cloudflare Turnstile, utilisé sur le formulaire de
+        contact, peut déposer un cookie technique nécessaire à son
+        fonctionnement.
+      </p>
+
+      <h2>Durée de conservation</h2>
+      <p>
+        Les messages reçus via le formulaire de contact sont conservés le
+        temps nécessaire au traitement de votre demande. [À COMPLÉTER —
+        durée précise selon la procédure interne retenue.]
+      </p>
+
+      <h2>Vos droits</h2>
+      <p>
+        Conformément au Règlement Général sur la Protection des Données
+        (RGPD), vous disposez d'un droit d'accès, de rectification,
+        d'effacement, de limitation et de portabilité de vos données, ainsi
+        que du droit de vous opposer à leur traitement. Vous pouvez exercer
+        ces droits en écrivant à
+        <a href="mailto:contact@quintessences-platform.com">contact@quintessences-platform.com</a>.
+        Vous disposez également du droit d'introduire une réclamation auprès
+        de la CNIL (www.cnil.fr).
+      </p>
+    </div>
+  </section>
+</BaseLayout>

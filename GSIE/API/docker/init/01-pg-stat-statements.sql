@@ -3,4 +3,5 @@
 -- Exécuté automatiquement à la première initialisation du volume
 -- (docker-entrypoint-initdb.d), après que shared_preload_libraries
 -- (docker-compose.yml) a chargé la bibliothèque.
+SET search_path = public, pg_catalog;
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;

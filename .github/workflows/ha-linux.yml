@@ -1,0 +1,172 @@
+name: GSIE HA Linux TLS
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/ha-linux.yml"
+      - "GSIE/API/docker-compose.ha*.yml"
+      - "GSIE/API/docker/ha/**"
+      - "GSIE/API/scripts/ha/**"
+      - "GSIE/API/scripts/profile_http_capacity.py"
+      - "GSIE/API/src/gsie_api/infrastructure/health.py"
+
+permissions:
+  contents: read
+
+jobs:
+  ha-linux-tls:
+    name: Deux replicas, TLS et drainage
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: GSIE/API
+    env:
+      GSIE_ENVIRONMENT: development
+      GSIE_DB_PASSWORD: gsie_ci_ha_admin
+      GSIE_API_DB_PASSWORD: gsie_ci_ha_api
+      GSIE_VIZ_DB_PASSWORD: gsie_ci_ha_viz
+      GSIE_REDIS_PASSWORD: gsie_ci_ha_redis
+      GSIE_MINIO_ROOT_USER: gsie-ci-ha
+      GSIE_MINIO_ROOT_PASSWORD: gsie-ci-ha-root-secret
+      GSIE_OBJECT_STORAGE_S3_ACCESS_KEY: gsie-ci-ha-app
+      GSIE_OBJECT_STORAGE_S3_SECRET_KEY: gsie-ci-ha-app-secret
+      PGBACKREST_REPO1_CIPHER_PASS: gsie-ci-ha-pgbackrest-cipher
+      GSIE_HA_API_IMAGE: api-api:latest
+      GSIE_HA_NETWORK: api_default
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Générer les clés JWT et le certificat TLS local
+        run: |
+          sh docker/generate-jwt-keys.sh
+          mkdir -p tests/perf/results/ha-certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout tests/perf/results/ha-certs/edge.key \
+            -out tests/perf/results/ha-certs/ca.crt \
+            -subj "/CN=127.0.0.1" \
+            -addext "subjectAltName=IP:127.0.0.1,DNS:api-ha-edge"
+          cat tests/perf/results/ha-certs/edge.key \
+              tests/perf/results/ha-certs/ca.crt \
+              > tests/perf/results/ha-certs/edge.pem
+          chmod 600 tests/perf/results/ha-certs/edge.key
+          # Le bundle est monté en lecture seule dans HAProxy, exécuté avec un
+          # UID distinct de celui du runner. Il est éphémère et supprimé en fin
+          # de job ; 0644 est requis pour que le processus non-root le lise.
+          chmod 644 tests/perf/results/ha-certs/edge.pem
+
+      - name: Construire et initialiser la plateforme jetable
+        run: |
+          docker compose up -d --build db redis minio minio-init mailpit
+          # Le healthcheck répond aussi pendant le serveur PostgreSQL temporaire
+          # d'initdb. Attendre le marqueur officiel de fin d'initialisation,
+          # puis la disponibilité du serveur final, avant de lancer Alembic.
+          for attempt in $(seq 1 120); do
+            docker compose logs --no-color db 2>&1 \
+              | grep -q 'PostgreSQL init process complete' && break
+            if [ "$attempt" -eq 120 ]; then
+              docker compose logs --no-color db
+              exit 1
+            fi
+            sleep 2
+          done
+          for attempt in $(seq 1 60); do
+            docker compose exec -T db pg_isready \
+              --username "${GSIE_DB_USER:-gsie}" \
+              --dbname "${GSIE_DB_NAME:-gsie}" && break
+            test "$attempt" -lt 60 || exit 1
+            sleep 2
+          done
+          docker compose run --rm \
+            -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true api true
+          # L'initdb PostgreSQL et le premier conteneur de migration peuvent se
+          # chevaucher sur un runner vierge. On réconcilie le compte jetable
+          # après les migrations, puis on prouve son authentification avant HA.
+          docker compose exec -T db psql \
+            --username "${GSIE_DB_USER:-gsie}" \
+            --dbname "${GSIE_DB_NAME:-gsie}" \
+            --set=ON_ERROR_STOP=1 \
+            --set=api_password="$GSIE_API_DB_PASSWORD" <<'SQL'
+          DO $$
+          BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gsie_api') THEN
+                  CREATE ROLE gsie_api LOGIN NOSUPERUSER NOCREATEDB
+                      NOCREATEROLE NOBYPASSRLS INHERIT;
+              END IF;
+          END
+          $$;
+          ALTER ROLE gsie_api PASSWORD :'api_password';
+          GRANT CONNECT ON DATABASE gsie TO gsie_api;
+          GRANT gsie_application TO gsie_api;
+          SQL
+          docker compose exec -T \
+            -e PGPASSWORD="$GSIE_API_DB_PASSWORD" db \
+            psql --host 127.0.0.1 --username gsie_api \
+            --dbname "${GSIE_DB_NAME:-gsie}" \
+            --set=ON_ERROR_STOP=1 \
+            --command 'SELECT 1' >/dev/null
+          docker compose build api
+
+      - name: Démarrer les replicas derrière TLS
+        run: |
+          if ! docker compose -f docker-compose.ha.yml \
+            -f docker-compose.ha-tls.yml up -d; then
+            docker compose -f docker-compose.ha.yml \
+              -f docker-compose.ha-tls.yml logs --no-color
+            exit 1
+          fi
+          for attempt in $(seq 1 90); do
+            curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
+              https://127.0.0.1:8443/ready >/dev/null && break
+            test "$attempt" -lt 90 || exit 1
+            sleep 2
+          done
+
+      - name: Charge TLS pendant drainage
+        run: |
+          docker run --rm --network host \
+            -v "$PWD/scripts/profile_http_capacity.py:/profile_http_capacity.py:ro" \
+            -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
+            --entrypoint python api-api:latest /profile_http_capacity.py \
+            --url https://127.0.0.1:8443/health \
+            --ca-file /certs/ca.crt \
+            --requests 6000 --concurrency 20 \
+            --max-p95-ms 250 --max-p99-ms 400 --min-rps 120 \
+            > tests/perf/results/ha-linux-drain.json &
+          load_pid=$!
+          sleep 3
+          sh scripts/ha/drain_replica.sh api-ha-a
+          wait "$load_pid"
+
+      - name: Vérifier le replica restant
+        run: |
+          curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
+            https://127.0.0.1:8443/ready >/dev/null
+
+      - name: Collecter les diagnostics
+        if: always()
+        run: |
+          docker compose logs --no-color \
+            > tests/perf/results/ha-linux-platform.log || true
+          docker compose -f docker-compose.ha.yml \
+            -f docker-compose.ha-tls.yml logs --no-color \
+            > tests/perf/results/ha-linux-containers.log || true
+
+      - name: Publier les métriques et diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ha-linux-tls-results
+          path: |
+            GSIE/API/tests/perf/results/ha-linux-*.json
+            GSIE/API/tests/perf/results/ha-linux-*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Nettoyer la plateforme jetable
+        if: always()
+        run: |
+          docker compose -f docker-compose.ha.yml \
+            -f docker-compose.ha-tls.yml down --remove-orphans || true
+          docker compose down --remove-orphans --volumes || true

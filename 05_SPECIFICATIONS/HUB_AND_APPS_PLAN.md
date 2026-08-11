@@ -4,19 +4,19 @@
 |---|---|
 | **Document** | HUB_AND_APPS_PLAN |
 | **Dossier** | 05_SPECIFICATIONS/ |
-| **Phase** | 3 — Connaissance (préparation Phase 4) |
+| **Phase** | 4 — Implémentation (plan de spécifications) |
 | **Statut** | Draft — plan de travail, à valider par le Fondateur |
 | **Date de création** | 2026-07-13 |
+| **Date de révision** | 2026-08-06 |
 | **Lois fondatrices** | GSIE-CON-003 (connaissance avant code), GSIE-CON-007 (modularité) |
 | **Directives liées** | GSIE-DIR-0005 (jumeau numérique vivant), GSIE-DIR-0009 (restructuration écosystème) |
 | **Décisions liées** | DEC-000010 (UE 5.8 + Cesium), DEC-000013 (restructuration GSIE) |
 | **Documents connexes** | `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` (211), `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` (212), `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` (208), `ROADMAP.md` |
 
-> **Rappel gouvernance :** le code métier reste interdit en Phase 3
-> (CLAUDE.md §2.3). Ce plan prépare la **Phase 4 (Implémentation)** en
-> structurant les spécifications du Hub et des apps prioritaires. Aucun
-> code n'est produit ici — uniquement des spécifications fonctionnelles
-> et non fonctionnelles, conformément au `05_SPECIFICATIONS/README.md`.
+> **Rappel gouvernance :** ce document reste une spécification et ne
+> contient pas de code métier. Le projet est en Phase 4 ; l'implémentation
+> doit suivre les contrats RFC-0037, HUB-002 et les spécifications propres
+> aux projections métier, conformément au `05_SPECIFICATIONS/README.md`.
 
 ---
 
@@ -51,13 +51,17 @@
           └────────────────────────────────────┘
 ```
 
-Le **Hub** (Centre de Commandement) est la couche de visualisation
-immersive qui surplombe toutes les apps. Il ne calcule rien — il
-**reflète** l'état calculé par les moteurs GSIE (CON-007, ADR-001
-livrable 208).
+Le **Hub** (Centre de Commandement) est l'environnement immersif qui
+surplombe les projections métier du jumeau numérique GSIE. Il ne réalise
+pas les calculs scientifiques dans Unreal : il explore, visualise,
+compare les scénarios et prépare des interactions contrôlées.
 
-Les **apps** sont des clientes de GSIE qui exposent leurs données via
-l'API GSIE (livrable 207). Le Hub consomme ces mêmes sorties validées.
+Les **apps** sont des projections métier de GSIE. Elles publient et
+consomment des ressources versionnées via les contrats de plateforme ;
+elles ne s'échangent jamais directement leurs bases internes.
+
+La référence supérieure est désormais `RFC-0037` et
+`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
 
 ---
 
@@ -74,13 +78,13 @@ conventions géospatiales) auquel toutes les apps devront se conformer.
 
 | Étape | Livrable | Statut | Priorité |
 |---|---|---|---|
-| **1** | **Hub — Spécification du Centre de Commandement** | À créer | **P0 — bloquant** |
-| 2 | **Ignis — Spécification fonctionnelle** | À créer | **P1 — priorité 1** (MVP visé) |
-| 3 | **GeoSylva — Spécification fonctionnelle** | À créer | **P1 — priorité 1** (app principale) |
-| 4 | Hydro — Spécification fonctionnelle | À créer | P2 |
-| 5 | Flora — Spécification fonctionnelle | À créer | P2 |
-| 6 | Artemis — Spécification fonctionnelle | À créer | P3 (stub Phase 4) |
-| 7 | QGISIA — Spécification fonctionnelle | À créer | P3 (plugin QGIS, repo externe) |
+| **1** | **Hub — Spécification du Centre de Commandement** | `HUB_001_SPECIFICATION.md` — Draft | **P0 — bloquant** |
+| 2 | **Ignis — Spécification fonctionnelle** | Architecture existante + RFC-0037 — à compléter | **P1 — priorité 1** (MVP visé) |
+| 3 | **GeoSylva — Spécification fonctionnelle** | `apps/GeoSylva/GEOSYLVA_3_SPECIFICATION_FONCTIONNELLE.md` — Frozen | **P1 — priorité 1** (app principale) |
+| 4 | Hydro — Spécification fonctionnelle | `apps/Hydro/` + RFC-0037 — cadrage | P2 |
+| 5 | Flora — Spécification fonctionnelle | `apps/Flora/` + RFC-0037 — cadrage | P2 |
+| 6 | Artemis — Spécification fonctionnelle | `apps/Artemis/` + RFC-0037 — cadrage | P3 (stub Phase 4) |
+| 7 | QGISIA — Spécification fonctionnelle | `apps/QGISIA/` + RFC-0037 — cadrage | P3 (plugin QGIS, repo externe) |
 
 > **Justification de l'ordre Ignis avant GeoSylva :** `DEC-000010` acte
 > qu'Ignis (livrable 211) est priorité 1 avec MVP visé, et que
@@ -269,8 +273,8 @@ HUB-001 (spec Hub) ──► HUB-002 (contrat interface)
 
 | Période | Activité | Livrables |
 |---|---|---|
-| Phase 3 (courante) | Finaliser specs Hub + Ignis + GeoSylva | HUB-001/002/003, IGNIS-001/002/003, GEO-001/002/003 |
-| Transition Phase 3 → 4 | Validation des specs par le Fondateur | Décision `DEC-` d'entrée en Phase 4 |
+| Phase 4 (courante) | Implémenter les contrats et la tranche verticale multi-domaines | RFC-0037, HUB-001/002/003, Ignis, GeoSylva, puis Hydro/Flora |
+| Transition cadrage → implémentation | Validation des contrats par le Fondateur | Décision `DEC-` et preuves d'acceptation de la tranche verticale |
 | Phase 4 — Sprint 1 | Prototype Hub (Cesium + WebSocket + globe) | Code (Phase 4 autorise le code métier) |
 | Phase 4 — Sprint 2 | MVP Ignis (combustible + météo + propagation + Niagara) | Code |
 | Phase 4 — Sprint 3 | GeoSylva-Unreal (LiDAR + PCG + segmentation) | Code |
@@ -366,6 +370,5 @@ Le MCP est configuré dans `.devin/config.json` (scope projet) :
 
 ---
 
-> Statut : *Draft — plan de travail Phase 3 (préparation Phase 4). À
-> valider par le Fondateur avant exécution. Aucun code métier produit
-> (CON-003).*
+> Statut : *Draft — plan de travail de la plateforme multi-domaines
+> RFC-0037. À valider par le Fondateur avant implémentation des contrats.*

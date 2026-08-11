@@ -1,5 +1,9 @@
 ---
+name: nouveau-client-api
 description: Checklist pour créer un nouveau client d'API externe GSIE — résilience automatique via ResilientHttpClient + factory de tests
+triggers:
+  - user
+  - model
 ---
 
 # Skill : Nouveau client d'API externe
@@ -7,9 +11,9 @@ description: Checklist pour créer un nouveau client d'API externe GSIE — rés
 ## Quand l'utiliser
 
 À la création de tout nouveau client d'API externe (HTTP) dans
-`gsie_api/engines/`. Le projet GSIE sera connecté à des centaines voire
-des milliers d'API — chaque client doit être résilient par construction,
-pas par accident.
+`GSIE/API/src/gsie_api/engines/`. Depuis `GSIE/API`, le projet GSIE sera
+connecté à des centaines voire des milliers d'API — chaque client doit être
+résilient par construction, pas par accident.
 
 ## Les 5 modes de panne à couvrir
 
@@ -87,10 +91,10 @@ vérifie qu'un test échoue.
 ### 5. Valider
 
 ```bash
-ruff check src/gsie_api/engines/.../mon_client.py
-mypy src/gsie_api/engines/.../mon_client.py
-pytest tests/unit/test_resilience_factory.py -q
-python tests/mutation/harnais.py
+.\.venv\Scripts\python.exe -m ruff check src/gsie_api/engines/.../mon_client.py
+.\.venv\Scripts\python.exe -m mypy src/gsie_api/engines/.../mon_client.py
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_resilience_factory.py -q
+.\.venv\Scripts\python.exe tests/mutation/harnais.py
 ```
 
 ## Anti-patterns

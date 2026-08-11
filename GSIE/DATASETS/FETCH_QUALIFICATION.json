@@ -1,0 +1,61 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-08-10",
+  "sources": [
+    {
+      "source_registry_id": "gbif",
+      "status": "blocked_pending_source_scoping",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "La licence doit être résolue pour chaque jeu constitutif avant archivage.",
+        "Les paramètres, quotas et limites d'occurrences restent à borner par cas d'usage."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:gbif-occurrences"]
+    },
+    {
+      "source_registry_id": "ign-apicarto-geopf",
+      "status": "blocked_pending_technical_limits",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "Les endpoints et couches autorisés doivent être énumérés sans URL arbitraire.",
+        "Les quotas, tailles maximales et règles d'attribution doivent être figés."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:ign-apicarto"]
+    },
+    {
+      "source_registry_id": "soilgrids",
+      "status": "blocked_pending_technical_limits",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "L'API REST v2.0 est officiellement en pause et ne doit pas porter un FETCH de production.",
+        "Le catalogue exact des couvertures WCS, propriétés, profondeurs et quantiles autorisés doit être figé.",
+        "La limite de 8 MiB est une borne GSIE candidate, pas une limite fournisseur publiée et validée."
+      ],
+      "evidence_refs": [
+        "SCI-001",
+        "RFC-0038",
+        "REGISTRY_MANIFEST.json:soilgrids-properties",
+        "https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs_02.html",
+        "https://docs.isric.org/globaldata/soilgrids/wcs.html"
+      ],
+      "allowed_hosts": ["maps.isric.org"],
+      "allowed_content_types": ["image/tiff"],
+      "max_bytes": 8388608,
+      "checksum_algorithm": "sha256"
+    },
+    {
+      "source_registry_id": "meteofrance-portail-api",
+      "status": "blocked_pending_credentials_and_quotas",
+      "fetch_enabled": false,
+      "legal_basis": "SCI-001:OPEN_COPY",
+      "blocking_reasons": [
+        "Chaque produit souscrit doit être associé à son endpoint et à son quota.",
+        "Les identifiants doivent provenir du gestionnaire de secrets et ne jamais entrer dans le manifeste."
+      ],
+      "evidence_refs": ["SCI-001", "RFC-0038", "REGISTRY_MANIFEST.json:meteofrance-services"]
+    }
+  ]
+}

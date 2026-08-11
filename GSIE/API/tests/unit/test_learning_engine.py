@@ -269,3 +269,62 @@ async def should_raise_when_retour_forestier_content_invalid(engine: LearningEng
     )
     with pytest.raises(Exception, match="Contenu de retour_forestier invalide"):
         await engine.process(signal)
+
+
+# --- Tests version() ---
+
+
+def should_return_version_string() -> None:
+    """version() retourne la version du moteur."""
+    assert LearningEngine.version() == "0.1.0"
+
+
+# --- Tests isolation de contexte ---
+
+
+@pytest.mark.asyncio
+async def should_not_cross_context_signals(engine: LearningEngine) -> None:
+    """Les refus sur un contexte A ne déclenchent pas de proposition sur le contexte B."""
+    contexte_a = uuid4()
+    contexte_b = uuid4()
+    # 4 refus sur A (sous le seuil)
+    for _ in range(4):
+        signal = _make_retour_signal(contexte=contexte_a)
+        result = await engine.process(signal)
+        assert result is None
+    # 1 refus sur B — ne doit pas déclencher (A a 4, B a 1)
+    signal_b = _make_retour_signal(contexte=contexte_b)
+    result = await engine.process(signal_b)
+    assert result is None, (
+        "un refus sur B ne doit pas déclencher de proposition : "
+        "les signaux de A ne doivent pas compter pour B"
+    )
+
+
+@pytest.mark.asyncio
+async def should_trigger_exactly_at_threshold(engine: LearningEngine) -> None:
+    """Le 5e refus déclenche, pas le 4e."""
+    contexte = uuid4()
+    for i in range(4):
+        result = await engine.process(_make_retour_signal(contexte=contexte))
+        assert result is None, f"le {i+1}e refus ne doit pas déclencher"
+    # 5e refus → déclenche
+    result = await engine.process(_make_retour_signal(contexte=contexte))
+    assert result is not None, "le 5e refus doit déclencher la proposition"
+
+
+@pytest.mark.asyncio
+async def should_isolate_state_between_instances() -> None:
+    """Deux instances distinctes ne partagent pas leur cache interne."""
+    engine_a = LearningEngine()
+    engine_b = LearningEngine()
+    contexte = uuid4()
+    # 4 refus sur engine_a
+    for _ in range(4):
+        await engine_a.process(_make_retour_signal(contexte=contexte))
+    # 1 refus sur engine_b — ne doit pas déclencher
+    result = await engine_b.process(_make_retour_signal(contexte=contexte))
+    assert result is None, (
+        "engine_b ne doit pas partager l'état de engine_a : "
+        "les caches d'accumulation sont par instance"
+    )

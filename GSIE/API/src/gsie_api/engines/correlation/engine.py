@@ -28,6 +28,7 @@ Knowledge Engine.
 """
 
 import math
+import warnings
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -41,7 +42,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gsie_api.core.logging import get_logger
 from gsie_api.engines.correlation.schemas import (
     CorrelationComputeRequest,
+    CorrelationMatrixRequest,
+    CorrelationMatrixResult,
     CorrelationResult,
+    PairwiseCorrelation,
     RefutationResult,
     TypeRelation,
 )
@@ -106,7 +110,9 @@ class CorrelationEngine:
                 f"— méthodes supportées : {[m.value for m in _METHOD_FUNCS]}"
             )
 
-        stat_result = method_func(request.variable_a.valeurs, request.variable_b.valeurs)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", scipy_stats.ConstantInputWarning)
+            stat_result = method_func(request.variable_a.valeurs, request.variable_b.valeurs)
         coefficient = float(stat_result.statistic)
         p_valeur = float(stat_result.pvalue)
 
@@ -217,6 +223,177 @@ class CorrelationEngine:
             date_calcul=now,
             refutation=refutation,
         )
+
+    async def compute_matrix(self, request: CorrelationMatrixRequest) -> CorrelationMatrixResult:
+        """Calcule une matrice de corrélations pairwise N×N.
+
+        Pour Pearson : utilise numpy.corrcoef (vectorisé BLAS) pour la
+        matrice de coefficients, puis scipy.stats.t.sf pour les p-valeurs
+        (formule t = r*sqrt((n-2)/(1-r²)), vectorisée). Gain : 326x à
+        1521x vs scipy pairwise (benchmark BENCHMARK_CORRELATION_ENGINE).
+
+        Pour Spearman/Kendall : scipy pairwise (plus lent mais nécessaire
+        — pas d'équivalent numpy vectorisé direct).
+
+        Ne persiste PAS les corrélations individuelles (une matrice 120
+        variables = 7140 paires — la persistance massive sera ajoutée
+        avec le graphe v7). Seules les paires significatives sont
+        retournées dans la réponse.
+
+        Raises:
+            CorrelationEngineError: si la méthode n'est pas supportée ou
+                si une variable est constante (variance nulle).
+        """
+        if request.methode not in _METHOD_FUNCS:
+            raise CorrelationEngineError(
+                f"Méthode {request.methode.value} non calculable par ce moteur "
+                f"— méthodes supportées : {[m.value for m in _METHOD_FUNCS]}"
+            )
+
+        n_vars = len(request.variables)
+        n_obs = len(request.variables[0].valeurs)
+        labels = [self._format_variable(var.variable, var.unite) for var in request.variables]
+
+        # Construction de la matrice de données (n_vars × n_obs)
+        data = np.array([var.valeurs for var in request.variables], dtype=float)
+
+        # Vérification variance nulle
+        stds = np.std(data, axis=1)
+        constant_vars = [labels[i] for i in range(n_vars) if stds[i] == 0]
+        if constant_vars:
+            raise CorrelationEngineError(
+                f"Variable(s) constante(s) (variance nulle) : {constant_vars} — "
+                f"aucune corrélation ne peut être établie sur une série sans variation"
+            )
+
+        # Calcul de la matrice de corrélation
+        if request.methode == CorrelationMethod.pearson:
+            corr_matrix, pval_matrix = self._pearson_matrix_vectorized(data, n_obs)
+        else:
+            corr_matrix, pval_matrix = self._pairwise_matrix_scipy(
+                data, request.methode, n_vars, n_obs
+            )
+
+        # Construction de la matrice de sortie (diagonale = None)
+        matrix_out: list[list[float | None]] = []
+        for i in range(n_vars):
+            row: list[float | None] = []
+            for j in range(n_vars):
+                if i == j:
+                    row.append(None)
+                else:
+                    row.append(round(float(corr_matrix[i, j]), 6))
+            matrix_out.append(row)
+
+        # Extraction des paires significatives
+        seuil_force_value = self._strength_threshold_value(request.seuil_force)
+        significant_pairs: list[PairwiseCorrelation] = []
+        for i in range(n_vars):
+            for j in range(i + 1, n_vars):
+                coeff = float(corr_matrix[i, j])
+                p_val = float(pval_matrix[i, j])
+                if math.isnan(coeff) or math.isnan(p_val):
+                    continue
+                abs_coeff = abs(coeff)
+                if abs_coeff < seuil_force_value:
+                    continue
+                if p_val >= request.seuil_significativite:
+                    continue
+                strength = self._classify_strength(abs_coeff)
+                type_rel = TypeRelation.positive if coeff > 0 else TypeRelation.negative
+                significant_pairs.append(
+                    PairwiseCorrelation(
+                        variable_a=labels[i],
+                        variable_b=labels[j],
+                        coefficient=round(coeff, 6),
+                        p_valeur=round(p_val, 6),
+                        type_relation=type_rel,
+                        strength=strength,
+                        n_observations=n_obs,
+                    )
+                )
+
+        # Tri par |coefficient| décroissant
+        significant_pairs.sort(key=lambda p: abs(p.coefficient), reverse=True)
+
+        n_pairs_total = n_vars * (n_vars - 1) // 2
+
+        logger.info(
+            "correlation_matrix_computed",
+            requete_id=str(request.requete_id),
+            methode=request.methode.value,
+            n_variables=n_vars,
+            n_observations=n_obs,
+            n_paires_total=n_pairs_total,
+            n_paires_significatives=len(significant_pairs),
+        )
+
+        return CorrelationMatrixResult(
+            requete_origine=request.requete_id,
+            methode=request.methode,
+            n_variables=n_vars,
+            n_observations=n_obs,
+            n_paires_total=n_pairs_total,
+            n_paires_significatives=len(significant_pairs),
+            matrice=matrix_out,
+            variables=labels,
+            paires_significatives=significant_pairs,
+            domaine_validite=request.domaine_validite,
+            source=request.source,
+            evidence_level=request.evidence_level,
+        )
+
+    @staticmethod
+    def _pearson_matrix_vectorized(data: np.ndarray, n_obs: int) -> tuple[np.ndarray, np.ndarray]:
+        """Calcule la matrice Pearson + p-valeurs vectorisées.
+
+        Utilise numpy.corrcoef (BLAS) pour les coefficients, puis
+        scipy.stats.t.sf pour les p-valeurs (formule t-distribution).
+        """
+        corr_matrix = np.corrcoef(data)
+        # p-valeur : p = 2 * t.sf(|t|, df=n-2) où t = r * sqrt((n-2)/(1-r²))
+        df = n_obs - 2
+        # Éviter division par zéro pour r = ±1
+        r_squared = corr_matrix**2
+        r_squared = np.clip(r_squared, 0.0, 0.999999)
+        t_stat = corr_matrix * np.sqrt(df / (1.0 - r_squared))
+        pval_matrix = 2.0 * scipy_stats.t.sf(np.abs(t_stat), df)
+        return corr_matrix, pval_matrix
+
+    @staticmethod
+    def _pairwise_matrix_scipy(
+        data: np.ndarray,
+        methode: CorrelationMethod,
+        n_vars: int,
+        n_obs: int,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Calcule la matrice Spearman/Kendall via scipy pairwise.
+
+        Fallback pour méthodes de rang — pas d'équivalent numpy vectorisé.
+        """
+        method_func = _METHOD_FUNCS[methode]
+        corr_matrix = np.full((n_vars, n_vars), np.nan)
+        pval_matrix = np.full((n_vars, n_vars), np.nan)
+        for i in range(n_vars):
+            corr_matrix[i, i] = 1.0
+            pval_matrix[i, i] = 0.0
+            for j in range(i + 1, n_vars):
+                result = method_func(data[i], data[j])
+                coeff = float(result.statistic)
+                p_val = float(result.pvalue)
+                corr_matrix[i, j] = coeff
+                corr_matrix[j, i] = coeff
+                pval_matrix[i, j] = p_val
+                pval_matrix[j, i] = p_val
+        return corr_matrix, pval_matrix
+
+    @staticmethod
+    def _strength_threshold_value(strength: CorrelationStrength) -> float:
+        """Retourne la valeur |r| minimale pour une force donnée."""
+        for threshold, s in _STRENGTH_THRESHOLDS:
+            if s == strength:
+                return threshold
+        return 0.0
 
     async def stats(self) -> dict[str, int]:
         """Retourne les statistiques des corrélations persistées."""

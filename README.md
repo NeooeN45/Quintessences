@@ -6,18 +6,26 @@
 
 **Un moteur. Des spécialisations. Zéro décision opaque.**
 
-GSIE (General System Intelligence Engine) est un moteur d'aide à la
-décision modulaire, traçable et explicable — conçu pour la forêt, le feu,
-le climat et les territoires.
+GSIE (General System Intelligence Engine) est une plateforme de jumeau
+numérique environnemental fédéré, construite autour d'un moteur d'aide à
+la décision modulaire, traçable et explicable — conçue pour la forêt, le
+feu, l'eau, la végétation, la faune, le climat et les territoires.
+
+**GSIE est le jumeau numérique environnemental fédéré. GeoSylva, Ignis,
+Hydro, Flora et Artemis sont des projections métier spécialisées de ce
+jumeau. Les Hubs Unreal sont les environnements immersifs permettant
+d'explorer, simuler et, sous contrôle humain, interagir avec les domaines
+concernés.** Voir RFC-0037 et
+`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
 
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-41%20DEC-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-30-lightgrey)](02_RFC/)
-[![Base](https://img.shields.io/badge/PostgreSQL%2016-27%20migrations%20%C2%B7%20120%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-44%20DEC-yellow)](03_DECISIONS/)
+[![RFC](https://img.shields.io/badge/RFC-37-lightgrey)](02_RFC/)
+[![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
@@ -104,6 +112,9 @@ graph TB
             HYDRO["Hydro<br/>eau"]
             FLORA["Flora<br/>végétation"]
             QGISIA["QGISIA<br/>plugin QGIS"]
+            TERRA["Terra<br/>sols / géologie"]
+            AERIS["Aeris<br/>atmosphère / météo"]
+            ATLAS["Atlas<br/>cartographie globale"]
             HUB["Centre de Commandement<br/>Unreal Engine 5.8"]
         end
 
@@ -225,6 +236,12 @@ de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
 données temps réel par drone, détection par vision embarquée. Positionné
 comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
 
+| Interface | Rôle |
+|---|---|
+| Ignis Mobile | Application terrain pour le suivi de sinistre, la remontée d'observations et la consultation des simulations en mode offline |
+| Ignis Commandement | Poste fixe / Centre de Commandement GSIE (Unreal Engine 5.8) |
+| API GSIE | Intégration dans des workflows tiers (SDIS, DDT, etc.) |
+
 **Garde-fous non négociables** : outil d'aide à la décision du COS/CODIS,
 jamais un système de commandement. Aucune alerte directe à la population
 (prérogative régale FR-Alert). La sortie « cause probable » reste une
@@ -273,18 +290,55 @@ du moteur GSIE pour les professionnels SIG.
 
 ### Centre de Commandement GSIE — Unreal Engine 5.8
 
-Poste de pilotage immersif où **toutes les données de l'écosystème
-convergent**. Construit sur Unreal Engine 5.8 + Cesium for Unreal, le
-Centre de Commandement offre une visualisation 3D temps réel du
-territoire : forêt (GeoSylva), incendies (Ignis), faune (Artemis), eau
-(Hydro) et végétation (Flora). Les données affluent via l'API GSIE
-(WebSocket/JSON) et sont rendues dans une scène géoréférencée unique.
+Ensemble de Hubs immersifs où **toutes les projections métier de GSIE
+peuvent explorer et simuler le même territoire**. Construits sur Unreal
+Engine 5.8 + Cesium for Unreal, ils proposent des modes Ignis, GeoSylva,
+Hydro, Flora et Artemis. Les données affluent via les contrats GSIE
+versionnés ; les scénarios sont séparés de l'état réel et les actions
+critiques restent soumises à validation humaine.
 
 - **Lien GSIE** : consomme les sorties validées de tous les moteurs via
   l'API GSIE (livrable 207).
 - **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
   (effets), WebSockets natifs (temps réel).
 - **Document de référence** : `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+
+### Terra — sols et géologie
+
+Application de caractérisation et de classification des sols. Texture,
+pH, profondeur, drainage, réserve utile en eau. Réservée par
+`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Terra/`
+- **Lien GSIE** : moteurs Pedology, Knowledge, Climate, Correlation
+  (caractéristiques et classification des sols, sourcées CON-002).
+- **Socle spécifique** : SoilGrids (ISRIC), RMQS (INRAE), Référentiel
+  Pédologique Français.
+
+### Aeris — atmosphère et météo
+
+Application de suivi météorologique et climatique. Observations,
+prévisions, variables bioclimatiques et projections climatiques
+scénarisées. Réservée par `GSIE-DIR-0009` §3/§227 (ex-Atmos), scaffolding
+activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Aeris/`
+- **Lien GSIE** : moteurs Climate, Knowledge, Correlation, Diagnostic
+  (données climatiques datées, projections avec scénario et incertitude).
+- **Socle spécifique** : Météo-France (SYNOP), Copernicus Climate
+  Change Service (C3S).
+
+### Atlas — cartographie globale
+
+Application de cartographie interactive multi-couches et d'analyse
+spatiale (relief, pente, exposition, distance). Réservée par
+`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
+
+- **Statut** : Planifiée (Phase 4) — stub dans `apps/Atlas/`
+- **Lien GSIE** : moteurs GIS, Knowledge, Correlation (couches
+  géospatiales de référence, services d'analyse spatiale communs).
+- **Socle spécifique** : IGN (BD Topo, BD Ortho, RGE ALTI), Cadastre,
+  OpenStreetMap.
 
 ### Futures spécialisations
 
@@ -373,18 +427,19 @@ complet.
 | Domaine | État |
 |---|---|
 | **Les 14 moteurs** | Implémentés, chacun avec son module, son routeur HTTP et ses tests. La chaîne complète Reasoning → Diagnostic → Recommendation → Validation s'exécute de bout en bout via l'Orchestration Engine. |
-| **API GSIE** | FastAPI — authentification JWT RS256 (login, refresh avec rotation, logout révocant le jeton), RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
-| **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 27 migrations Alembic, 120 tables, 7 schémas. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
-| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`), inaccessibles au rôle applicatif. RLS active et forcée sur les tables sensibles. |
+| **API GSIE** | FastAPI — compte Quintessences partagé, inscription/connexion locale Argon2id, Google OIDC configurable, JWT RS256 avec refresh rotatif et révocation, RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
+| **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 29 migrations Alembic, 124 tables SQLAlchemy. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
+| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`). Le rôle applicatif n’accède qu’aux quatre tables techniques nécessaires à l’authentification, jamais à `data_subject` ni aux consentements ; aucun droit `DELETE`. RLS active et forcée sur les tables sensibles. |
 | **Comptes de connexion** | L'API s'exécute sous un compte `NOSUPERUSER NOBYPASSRLS` sans `DELETE` (CON-010 rendu structurel). Les privilèges réels sont interrogés au démarrage, pas déduits du nom du compte. |
 | **Ingestion** | Pipeline unitaire et en lot (1 000 items), garde anti-invention RFC-0014 — une donnée d'origine IA est forcée au niveau de preuve D et mise en quarantaine. |
 | **SDK Python** | Client asynchrone `httpx`, JWT RS256 avec rafraîchissement automatique, wrappers des moteurs. |
 | **Tableau de contrôle** | Astro 5 + React 19 en îlots + Tailwind 4. |
 | **Visualisation** | Metabase, Superset et Dekart branchés sur un compte en lecture seule, sans aucun accès aux schémas RGPD — la barrière est en base, pas dans l'outil. |
 
-**Tests** : plus de 900 fonctions de test sur 129 fichiers (unitaires et
-intégration sur base réelle via testcontainers), harnais de mutation à
-100 % de mutants tués sur le périmètre couvert.
+**Tests** : 1 915 tests unitaires passent, 63 sont ignorés et la couverture
+atteint 100 % (9 338/9 338 instructions). L’intégration s’exécute sur base
+réelle via testcontainers ; le harnais de mutation tue 100 % des mutants de
+son périmètre.
 
 ### En cours
 
@@ -582,4 +637,3 @@ Voir `LICENSE` pour le texte complet.
 Pour toute question, réclamation ou collaboration :
 
 **5jvw9s5zj@mozmail.com**
-

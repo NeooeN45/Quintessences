@@ -42,6 +42,19 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "auth_dev_password": "mot_de_passe_reel_pour_tests_integration",
         "require_rust_backend": True,
         "db_ssl_mode": "require",
+        # MFA est active par défaut (mfa_enabled=True), la production exige
+        # une clé de chiffrement pour les secrets TOTP (DEC-000052).
+        "mfa_encryption_key": "test-integration-mfa-key-32bytes-min!!",
+        # La création de comptes locaux est active par défaut, la production
+        # exige un service SMTP configuré avec chiffrement.
+        "transactional_email_mode": "smtp",
+        "smtp_host": "smtp.example.com",
+        "smtp_starttls": True,
+        "object_storage_backend": "s3",
+        "object_storage_s3_endpoint": "https://s3.example.com",
+        "object_storage_s3_access_key": "test-access",
+        "object_storage_s3_secret_key": "test-secret",
+        "object_storage_s3_server_side_encryption": "AES256",
     } | overrides
 
 

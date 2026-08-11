@@ -675,8 +675,16 @@ MUTATIONS: tuple[Mutation, ...] = (
         fichier="gsie_api/infrastructure/object_storage.py",
         # Contournement de `_resolve_key` sur la seule methode de lecture :
         # c'est exactement le refactoring que seul `put` surveillait.
-        ancien="    async def get(self, key: str) -> BinaryIO:\n        path = self._resolve_key(key)",  # noqa: E501
-        nouveau="    async def get(self, key: str) -> BinaryIO:\n        path = self._base / key",
+        ancien=(
+            "    async def get(self, key: str, start: int | None = None, "
+            "end: int | None = None) -> BinaryIO:\n"
+            "        path = self._resolve_key(key)"
+        ),
+        nouveau=(
+            "    async def get(self, key: str, start: int | None = None, "
+            "end: int | None = None) -> BinaryIO:\n"
+            "        path = self._base / key"
+        ),
         defaut_reproduit=(
             "une cle `../../etc/passwd` fait lire un fichier hors du repertoire "
             "de stockage — traversee de repertoire en lecture"
@@ -874,8 +882,8 @@ MUTATIONS: tuple[Mutation, ...] = (
         # Bornes definitionnelles, jamais empiriques : une humidite relative de
         # 250 % n'est pas un record, c'est un pourcentage de saturation
         # depassant la saturation.
-        ancien="    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)\n    pression_hpa: float | None = Field(default=None, gt=0.0)\n    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)\n    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)\n    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
-        nouveau="    humidite_pct: float | None = None\n    pression_hpa: float | None = None\n    vent_direction_deg: float | None = None\n    vent_vitesse_ms: float | None = None\n    precipitations_1h_mm: float | None = None\n    source: SourceReference\n\n\nclass DangerFeuxDepartement",  # noqa: E501
+        ancien="    humidite_pct: float | None = Field(default=None, ge=0.0, le=100.0)\n    pression_hpa: float | None = Field(default=None, gt=0.0)\n    vent_direction_deg: float | None = Field(default=None, ge=0.0, le=360.0)\n    vent_vitesse_ms: float | None = Field(default=None, ge=0.0)\n    precipitations_1h_mm: float | None = Field(default=None, ge=0.0)\n    source: SourceReference\n\n\nclass ClimateIngestResult",  # noqa: E501
+        nouveau="    humidite_pct: float | None = None\n    pression_hpa: float | None = None\n    vent_direction_deg: float | None = None\n    vent_vitesse_ms: float | None = None\n    precipitations_1h_mm: float | None = None\n    source: SourceReference\n\n\nclass ClimateIngestResult",  # noqa: E501
         defaut_reproduit=(
             "une humidite de 250 %, un azimut de 999 degres ou une vitesse de "
             "vent negative alimentent un diagnostic sans objection"
@@ -1073,6 +1081,58 @@ MUTATIONS: tuple[Mutation, ...] = (
             "l'ingestion de Treekipedia prend ~200 jours au lieu de ~7 min"
         ),
         tests=("tests/unit/test_rate_limit_bulk.py",),
+    ),
+    Mutation(
+        cle="parsing_xml_capabilities_non_garde",
+        fichier="gsie_api/engines/gis/telechargement_client.py",
+        # L'API de téléchargement IGN retourne du Atom XML, pas du JSON.
+        # Si le XML est malformé (réponse tronquée, erreur proxy), ET.ParseError
+        # doit être capturé et wrapé dans TelechargementClientError — sans cette
+        # garde, l'exception Python brute fuit vers l'appelant (500 non géré).
+        ancien="""        try:
+            root = ET.fromstring(body)
+        except ET.ParseError as exc:
+            raise TelechargementClientError(
+                f"Échec du parsing XML GetCapabilities : {exc}"
+            ) from exc""",
+        nouveau="        root = ET.fromstring(body)",
+        defaut_reproduit=(
+            "un XML malformé fait fuir ET.ParseError au lieu de "
+            "TelechargementClientError — l'appelant voit un 500 non géré"
+        ),
+        tests=("tests/unit/test_telechargement_client.py",),
+    ),
+    # --- Bot protection : Turnstile (OWASP A07)
+    Mutation(
+        cle="turnstile_non_verifie_login",
+        fichier="gsie_api/auth/router.py",
+        ancien=(
+            "    turnstile = TurnstileClient(_settings)\n"
+            "    if not await turnstile.verify(credentials.turnstile_token, client_ip):"
+        ),
+        nouveau="    # garde Turnstile désactivée temporairement\n    if False:",
+        defaut_reproduit=(
+            "un login avec un token Turnstile rejeté passe quand même "
+            "— la bot protection est inactive"
+        ),
+        tests=("tests/unit/test_auth.py",),
+    ),
+    # --- Protection SSRF egress (RFC-0021 §4.3)
+    Mutation(
+        cle="ssrf_egress_desactive",
+        fichier="gsie_api/shared/http_client.py",
+        ancien=(
+            "        try:\n"
+            "            valider_url_egress(url)\n"
+            "        except ValueError as exc:\n"
+            '            raise self.exception_class(f"Échec {label} : {exc}") from exc'
+        ),
+        nouveau=("        # protection SSRF désactivée\n" "        pass"),
+        defaut_reproduit=(
+            "une requête vers http://169.254.169.254/ (metadata AWS) passe "
+            "sans blocage — un client compromis peut accéder aux services internes"
+        ),
+        tests=("tests/unit/test_ssrf_egress.py",),
     ),
 )
 

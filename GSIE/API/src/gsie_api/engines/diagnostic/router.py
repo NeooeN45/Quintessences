@@ -170,7 +170,7 @@ async def diagnostic_version(request: Request) -> EngineVersionResponse:
                 },
             },
         },
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": (
                 "La requête est invalide : champ manquant, type incorrect, "
                 "conclusion non qualifiée, qualification orpheline, ou "

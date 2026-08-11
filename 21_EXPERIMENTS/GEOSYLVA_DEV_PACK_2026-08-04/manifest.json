@@ -1,0 +1,29 @@
+{
+  "project": "GeoSylva - Quintessences",
+  "version": "2026-08-04",
+  "primary_document": "GeoSylva_Quintessences_Dossier_Maitre.docx",
+  "documents": [
+    "00_README.md",
+    "01_VISION_PRODUIT.md",
+    "02_ARCHITECTURE_GSIE_GEOSYLVA.md",
+    "03_IDENTITE_AUTHENTIFICATION.md",
+    "04_SYSTEME_DE_PACKS_QPIS.md",
+    "05_NOYAU_SCIENTIFIQUE_FORESTIER.md",
+    "06_METIERS_MISSIONS_PROTOCOLS.md",
+    "07_MOTEUR_GEOSPATIAL.md",
+    "08_TREEVISION.md",
+    "09_DONNEES_SYNCHRONISATION_SECURITE.md",
+    "10_ROADMAP_IMPLEMENTATION.md",
+    "11_PROMPT_DEVIN_GLM52.md",
+    "12_MODELES_RFC_ADR.md"
+  ],
+  "recommended_first_task": "Audit repository and produce RFC-0001 Forestry Scientific Core",
+  "core_constraints": [
+    "offline-first",
+    "single Quintessences identity",
+    "global UUID",
+    "GSIE pack distribution",
+    "scientific provenance",
+    "no deletion of unsynced data"
+  ]
+}

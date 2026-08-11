@@ -8,6 +8,7 @@ qu'un événement empoisonné n'empêche jamais les autres de sortir.
 
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
@@ -20,12 +21,14 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.sql.schema import DefaultClause
 
+from gsie_api import outbox_health
 from gsie_api.infrastructure.models.outbox import (
     OUTBOX_STATUS_DEAD_LETTER,
     OUTBOX_STATUS_PENDING,
     OUTBOX_STATUS_PUBLISHED,
     OutboxEvent,
 )
+from gsie_api.outbox_health import worker_heartbeat_is_fresh, write_worker_heartbeat
 from gsie_api.outbox_worker import (
     RetryPolicy,
     collect_outbox_stats,
@@ -159,6 +162,62 @@ class TestBackoff:
         for tirage in (0.0, 0.25, 0.5, 0.75, 0.999):
             delai = bruitee.delay_seconds(9, jitter=tirage)
             assert 0.0 <= delai <= 12.0
+
+
+class TestSanteWorker:
+    """Le healthcheck reflète un cycle réussi, pas un port HTTP absent."""
+
+    def test_should_write_an_atomic_fresh_heartbeat(self, tmp_path: Path) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+
+        write_worker_heartbeat(str(heartbeat))
+
+        assert heartbeat.is_file()
+        assert not heartbeat.with_suffix(".heartbeat.tmp").exists()
+        assert worker_heartbeat_is_fresh(
+            str(heartbeat),
+            max_age_seconds=30,
+            now_epoch=heartbeat.stat().st_mtime + 29,
+        )
+
+    def test_should_reject_missing_or_stale_heartbeat(self, tmp_path: Path) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+        assert not worker_heartbeat_is_fresh(str(heartbeat), max_age_seconds=30)
+
+        write_worker_heartbeat(str(heartbeat))
+        assert not worker_heartbeat_is_fresh(
+            str(heartbeat),
+            max_age_seconds=30,
+            now_epoch=heartbeat.stat().st_mtime + 31,
+        )
+
+    @pytest.mark.parametrize(("fresh", "exit_code"), [(True, 0), (False, 1)])
+    def test_should_expose_lightweight_healthcheck_as_process_exit_code(
+        self,
+        fresh: bool,
+        exit_code: int,
+    ) -> None:
+        with (
+            patch("gsie_api.outbox_health.worker_heartbeat_is_fresh", return_value=fresh),
+            pytest.raises(SystemExit) as raised,
+        ):
+            outbox_health.main()
+
+        assert raised.value.code == exit_code
+
+    @pytest.mark.parametrize("maximum", ["0", "301", "nan", "infinite"])
+    def test_should_reject_invalid_maximum_age_from_environment(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        maximum: str,
+    ) -> None:
+        heartbeat = tmp_path / "worker.heartbeat"
+        write_worker_heartbeat(str(heartbeat))
+        monkeypatch.setenv("GSIE_OUTBOX_HEALTHCHECK_PATH", str(heartbeat))
+        monkeypatch.setenv("GSIE_OUTBOX_HEALTHCHECK_MAX_AGE_SECONDS", maximum)
+
+        assert not worker_heartbeat_is_fresh()
 
 
 class TestEcheance:
@@ -670,3 +729,157 @@ class TestSelectionDuLot:
 
         assert delivered == 2
         assert len(restants) == 1
+
+
+# ===========================================================================
+# run_worker() — boucle principale du worker (mockée, sans DB/Redis réels)
+# ===========================================================================
+
+
+class _FakeSessionContext:
+    """Context manager async minimal simulant async_session_factory()."""
+
+    def __init__(self, session: AsyncMock) -> None:
+        self._session = session
+
+    async def __aenter__(self) -> AsyncMock:
+        return self._session
+
+    async def __aexit__(self, *exc_info: object) -> bool:
+        return False
+
+
+class TestRunWorker:
+    """run_worker() — un cycle isolé via mocks, interrompu par CancelledError."""
+
+    async def should_publish_heartbeat_and_stop_on_cancelled_error(self) -> None:
+        import asyncio as _asyncio
+
+        from gsie_api import outbox_worker
+
+        fake_session = AsyncMock()
+        fake_redis = AsyncMock()
+
+        with (
+            patch.object(outbox_worker, "setup_logging"),
+            patch.object(outbox_worker, "get_redis", AsyncMock(return_value=fake_redis)),
+            patch.object(
+                outbox_worker,
+                "async_session_factory",
+                lambda: _FakeSessionContext(fake_session),
+            ),
+            patch.object(
+                outbox_worker, "deliver_outbox_batch", AsyncMock(return_value=1)
+            ) as mock_deliver,
+            patch.object(outbox_worker, "collect_outbox_stats", AsyncMock()) as mock_stats,
+            patch.object(
+                outbox_worker,
+                "write_worker_heartbeat",
+                new=lambda *_a, **_kw: (_ for _ in ()).throw(_asyncio.CancelledError()),
+            ),
+            patch.object(outbox_worker.ws_manager, "shutdown", AsyncMock()) as mock_shutdown,
+        ):
+            with pytest.raises(_asyncio.CancelledError):
+                await outbox_worker.run_worker()
+
+            mock_deliver.assert_awaited_once()
+            # delivered != 0 — collect_outbox_stats n'est pas appelé sur ce cycle.
+            mock_stats.assert_not_awaited()
+            fake_redis.ping.assert_awaited_once()
+            fake_session.rollback.assert_awaited_once()
+            fake_redis.aclose.assert_awaited_once()
+            mock_shutdown.assert_awaited_once()
+
+    async def should_collect_stats_when_batch_empty_before_stopping(self) -> None:
+        import asyncio as _asyncio
+
+        from gsie_api import outbox_worker
+
+        fake_session = AsyncMock()
+        fake_redis = AsyncMock()
+
+        with (
+            patch.object(outbox_worker, "setup_logging"),
+            patch.object(outbox_worker, "get_redis", AsyncMock(return_value=fake_redis)),
+            patch.object(
+                outbox_worker,
+                "async_session_factory",
+                lambda: _FakeSessionContext(fake_session),
+            ),
+            patch.object(outbox_worker, "deliver_outbox_batch", AsyncMock(return_value=0)),
+            patch.object(outbox_worker, "collect_outbox_stats", AsyncMock()) as mock_stats,
+            patch.object(
+                outbox_worker,
+                "write_worker_heartbeat",
+                new=lambda *_a, **_kw: (_ for _ in ()).throw(_asyncio.CancelledError()),
+            ),
+            patch.object(outbox_worker.ws_manager, "shutdown", AsyncMock()),
+        ):
+            with pytest.raises(_asyncio.CancelledError):
+                await outbox_worker.run_worker()
+
+            mock_stats.assert_awaited_once()
+
+    async def should_rollback_and_continue_when_batch_delivery_raises(self) -> None:
+        import asyncio as _asyncio
+
+        from gsie_api import outbox_worker
+
+        fake_session = AsyncMock()
+        fake_redis = AsyncMock()
+
+        with (
+            patch.object(outbox_worker, "setup_logging"),
+            patch.object(outbox_worker, "get_redis", AsyncMock(return_value=fake_redis)),
+            patch.object(
+                outbox_worker,
+                "async_session_factory",
+                lambda: _FakeSessionContext(fake_session),
+            ),
+            patch.object(
+                outbox_worker,
+                "deliver_outbox_batch",
+                AsyncMock(side_effect=RuntimeError("panne base")),
+            ),
+            patch.object(outbox_worker, "collect_outbox_stats", AsyncMock()),
+            patch.object(
+                outbox_worker.asyncio,
+                "sleep",
+                AsyncMock(side_effect=_asyncio.CancelledError()),
+            ),
+            patch.object(outbox_worker.logger, "exception") as mock_exception,
+            patch.object(outbox_worker.ws_manager, "shutdown", AsyncMock()),
+        ):
+            with pytest.raises(_asyncio.CancelledError):
+                await outbox_worker.run_worker()
+
+            fake_session.rollback.assert_awaited_once()
+            mock_exception.assert_called_once_with("outbox_batch_failed")
+
+
+# ===========================================================================
+# outbox_health.py — point d'entrée __main__
+# ===========================================================================
+
+
+class TestOutboxHealthMainEntryPoint:
+    """if __name__ == "__main__": main() — exécution du point d'entrée."""
+
+    def should_execute_main_when_run_as_main(self, tmp_path: Path) -> None:
+        import runpy
+
+        # Écrit un battement réel et frais : la fonction fraîchement redéfinie
+        # par runpy.run_module (nouvel espace de noms) n'est pas affectée par
+        # un patch posé sur le module déjà importé — on rend donc la condition
+        # réelle vraie plutôt que de mocker un symbole qui sera réévalué.
+        heartbeat = tmp_path / "worker.heartbeat"
+        write_worker_heartbeat(str(heartbeat))
+        with (
+            patch.dict(
+                "os.environ",
+                {"GSIE_OUTBOX_HEALTHCHECK_PATH": str(heartbeat)},
+            ),
+            pytest.raises(SystemExit) as captured,
+        ):
+            runpy.run_module("gsie_api.outbox_health", run_name="__main__")
+        assert captured.value.code == 0

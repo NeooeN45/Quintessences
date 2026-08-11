@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimatedHeading from "../components/AnimatedHeading.tsx";
+import ContactForm from "../components/ContactForm.tsx";
+---
+
+<BaseLayout title="Contact" description="Contacter l'équipe Quintessences.">
+  <section class="mx-auto max-w-6xl px-6 py-20">
+    <AnimatedHeading client:load lines={[{ text: "Contact" }]} />
+    <p class="mt-3 max-w-xl text-[var(--color-fg-300)]">
+      Pour toute question, partenariat ou signalement de sécurité :
+      <a href="mailto:contact@quintessences-platform.com" class="underline decoration-[var(--color-border-strong)] underline-offset-4">
+        contact@quintessences-platform.com
+      </a>
+    </p>
+    <div class="mt-10">
+      <ContactForm client:load />
+    </div>
+  </section>
+</BaseLayout>

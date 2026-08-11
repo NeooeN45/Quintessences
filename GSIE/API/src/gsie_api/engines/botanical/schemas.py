@@ -19,6 +19,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from gsie_api.engines.evidence.schemas import EvidenceLevel as PipelineEvidenceLevel
 from gsie_api.engines.evidence.schemas import SourceReference
 from gsie_api.infrastructure.models.enums import EvidenceLevel
 
@@ -167,6 +168,59 @@ class TaxrefResult(BaseModel):
     source: SourceReference
 
 
+class BotanicalIngestResult(BaseModel):
+    """Résultat d'ingestion d'un taxon GBIF dans le Knowledge Engine."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom_scientifique: str
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: PipelineEvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class BotanicalIngestResponse(BaseModel):
+    """Résultat de `POST /botanical/query-and-ingest` — vide si GBIF ne trouve rien."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    resultats: list[BotanicalIngestResult] = Field(default_factory=list, max_length=1)
+
+
+class TaxrefIngestResult(BaseModel):
+    """Résultat d'ingestion d'une entrée TAXREF dans le Knowledge Engine."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    cd_nom: int
+    nom_scientifique: str
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: PipelineEvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class TaxrefIngestResponse(BaseModel):
+    """Résultat de `POST /botanical/taxref-and-ingest` — null si TAXREF ne trouve rien."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requete_id: UUID
+    resultat: TaxrefIngestResult | None = None
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # RFC-0016 — Schéma forestier spécialisé, tranche 1/10 (AutecologyProfile).
 # Lève partiellement la restriction documentée en tête de ce module :
@@ -261,3 +315,35 @@ class PlantNetIdentificationResponse(BaseModel):
             reference="https://my.plantnet.org/ — identification par image (78 810 espèces)",
         )
     )
+
+
+class PlantNetIngestResult(BaseModel):
+    """Résultat d'ingestion d'une correspondance PlantNet dans le Knowledge Engine.
+
+    Une correspondance par résultat : chaque espèce candidate devient une
+    connaissance atomique distincte, interrogeable indépendamment
+    (`par_concept`, `par_domaine`).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    nom_scientifique: str
+    score: float = Field(ge=0.0, lt=1.0)
+    statut: str = Field(description="ingested | quarantined | refused (EvidenceKnowledgePipeline)")
+    evidence_level: PipelineEvidenceLevel
+    connaissance_id: UUID
+    version: int | None = Field(
+        default=None, description="Version dans le graphe si ingérée (None sinon)"
+    )
+    raison: str | None = Field(
+        default=None, description="Motif si non ingérée (quarantaine ou refus)"
+    )
+
+
+class PlantNetIngestResponse(BaseModel):
+    """Résultat de `POST /botanical/identify-and-ingest` — une entrée par candidat."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    best_match: str | None = Field(description="Nom scientifique de la meilleure correspondance")
+    resultats: list[PlantNetIngestResult] = Field(default_factory=list, max_length=20)

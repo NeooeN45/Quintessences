@@ -62,7 +62,13 @@ Tu es un agent de veille technologique spécialisé dans les domaines de Quintes
 
 ## Après la veille
 
-1. Sauvegarder le rapport dans `GSIE/RESEARCH/VEILLE_[date].md`
-2. Si des publications sont pertinentes → créer une fiche dans `GSIE/RESEARCH/`
-3. Si des outils sont pertinents → évaluer l'intégration dans les moteurs concernés
-4. Mettre à jour `PROJECT_MEMORY.md` si une trouvaille est structurante
+1. Produire le rapport dans `GSIE/RESEARCH/VEILLE_[date].md` uniquement après
+   avoir vérifié qu'un rapport du même sujet n'existe pas.
+2. Pour chaque ressource utile, utiliser `/ingestion-ressource` afin de
+   qualifier provenance, version, licence, maturité et destination canonique.
+3. Ne pas télécharger, installer ou ingérer une ressource automatiquement.
+4. Une publication pertinente devient une proposition de fiche dans
+   `GSIE/RESEARCH/`, pas une connaissance validée sans revue.
+5. Un dataset dont la licence est absente reste catalogué mais n'est pas ingéré.
+6. Mettre à jour `PROJECT_MEMORY.md`, `ROADMAP.md` et `CHANGELOG.md` seulement
+   lorsqu'une décision ou un changement d'état est validé par le Fondateur.

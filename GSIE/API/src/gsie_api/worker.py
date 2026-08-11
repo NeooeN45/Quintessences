@@ -23,7 +23,7 @@ if sys.platform != "win32":  # pragma: no cover (Unix-only, testé dans Docker)
             # (veille techno 2026-08-02, RFC-0031 action 6, Linux uniquement)
             "loop": "uvloop",
         }
-else:
+else:  # pragma: no cover (Windows-only, gunicorn non disponible sur Windows)
     # Windows : fallback — SecureUvicornWorker non disponible
     # (gunicorn ne tourne pas sur Windows, uniquement dans Docker/Linux)
     SecureUvicornWorker = None

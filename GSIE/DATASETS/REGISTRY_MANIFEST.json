@@ -1,0 +1,86 @@
+{
+  "manifest_version": "1",
+  "generated_at": "2026-08-10",
+  "entries": [
+    {
+      "slug": "gbif-occurrences",
+      "title": "GBIF — occurrences de biodiversité",
+      "description": "Référence de catalogue et d'accès à l'API GBIF pour les occurrences biodiversité consommées par GSIE.",
+      "source_registry_id": "gbif",
+      "version": "metadata-2026-08-10",
+      "primary_domain": "biodiversity",
+      "domains": ["botany"],
+      "tags": ["gbif", "occurrence", "biodiversité"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://api.gbif.org",
+        "licence": "CC0 / CC-BY selon jeu de données constitutif",
+        "format": "json",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "ign-apicarto",
+      "title": "IGN — API Carto GeoPF",
+      "description": "Référence de l'API cartographique IGN utilisée pour les recherches géographiques et forestières de GSIE.",
+      "source_registry_id": "ign-apicarto-geopf",
+      "version": "metadata-2026-08-10",
+      "primary_domain": "gis",
+      "domains": ["land_cover", "forest_inventory"],
+      "tags": ["ign", "api-carto", "geopf"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://apicarto.ign.fr",
+        "licence": "Licence Ouverte / Etalab 2.0",
+        "format": "json",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "soilgrids-properties",
+      "title": "ISRIC — SoilGrids",
+      "description": "Référence de catalogue SoilGrids pour les propriétés pédologiques ponctuelles utilisées par GSIE.",
+      "source_registry_id": "soilgrids",
+      "version": "metadata-2026-08-10",
+      "primary_domain": "pedology",
+      "domains": ["soil_moisture"],
+      "tags": ["soilgrids", "isric", "sol"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://www.isric.org/explore/soilgrids",
+        "licence": "CC-BY 4.0",
+        "format": "json",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "meteofrance-services",
+      "title": "Météo-France — services de données",
+      "description": "Référence des services Météo-France souscrits par GSIE pour les contrôles météorologiques et le risque de feu.",
+      "source_registry_id": "meteofrance-portail-api",
+      "version": "metadata-2026-08-10",
+      "primary_domain": "weather",
+      "domains": ["climate"],
+      "tags": ["météo-france", "météorologie", "feu"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://portail-api.meteofrance.fr",
+        "licence": "Licence Ouverte / Etalab 2.0",
+        "format": "json",
+        "offline_pack": false
+      }
+    }
+  ]
+}
