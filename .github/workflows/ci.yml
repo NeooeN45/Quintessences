@@ -1,13 +1,9 @@
 name: CI
 
 on:
-  # Toute branche, pas seulement main/master : le travail se fait sur des
-  # branches de correction, et n'avoir aucun retour avant l'ouverture d'une
-  # pull request laisse les portes qualité rouges pendant des jours.
-  # `concurrency` ci-dessous annule les exécutions obsolètes, le coût reste
-  # celui d'une exécution par poussée utile.
-  push:
-    branches: ["**"]
+  # La pull request est le déclencheur canonique. Un déclencheur push en
+  # parallèle crée deux jeux de checks sur le même SHA ; l'annulation d'un
+  # des deux est ensuite interprétée comme un échec par la porte de merge.
   pull_request:
   workflow_dispatch:
 
@@ -15,9 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  # push et pull_request doivent partager le même groupe pour une branche.
-  # Sinon un run PR peut rester bloqué alors que le run push du même commit
-  # est vert, ce qui laisse la PR artificiellement UNSTABLE.
+  # Une nouvelle mise à jour de la PR remplace son exécution précédente.
   group: ci-${{ github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
