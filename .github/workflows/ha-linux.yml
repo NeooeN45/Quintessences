@@ -56,6 +56,15 @@ jobs:
       - name: Construire et initialiser la plateforme jetable
         run: |
           docker compose up -d --build db redis minio minio-init mailpit
+          # Le healthcheck répond aussi pendant le serveur PostgreSQL temporaire
+          # d'initdb. Attendre que l'entrypoint ait cédé la PID 1 au serveur final
+          # évite une fermeture de connexion au milieu des migrations Alembic.
+          for attempt in $(seq 1 120); do
+            docker compose exec -T db sh -c \
+              'test "$(cat /proc/1/comm)" = postgres' && break
+            test "$attempt" -lt 120 || exit 1
+            sleep 2
+          done
           docker compose run --rm \
             -e GSIE_RUN_MIGRATIONS_ON_STARTUP=true api true
           # L'initdb PostgreSQL et le premier conteneur de migration peuvent se
