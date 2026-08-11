@@ -78,6 +78,10 @@ Format : `## [version] - YYYY-MM-DD`
   lecture PostgreSQL authentifiée : 100/100. Les essais volontairement mal
   séquencés prouvent que le retour explicite du backend est une porte
   obligatoire. Les SLO de production restent non publiés.
+- DEC-000065 : workflow GitHub Actions Ubuntu pour reconstruire la plateforme,
+  terminer TLS avec une CA éphémère vérifiée, drainer un replica sous 6 000
+  requêtes et bloquer sur statuts, erreurs, p95, p99 ou débit. Le câblage TLS
+  local passe 500/500 ; la preuve distante attend le premier run après push.
 
 ## [GSIE DATA PLATFORM — CLÔTURE TECHNIQUE DATA REGISTRY] - 2026-08-10
 

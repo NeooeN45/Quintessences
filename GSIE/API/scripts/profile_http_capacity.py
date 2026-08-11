@@ -8,6 +8,7 @@ import json
 import os
 import statistics
 import time
+from typing import cast
 
 import httpx
 
@@ -17,6 +18,7 @@ async def run(
     requests: int,
     concurrency: int,
     bearer_token_env: str | None = None,
+    ca_file: str | None = None,
 ) -> dict[str, object]:
     semaphore = asyncio.Semaphore(concurrency)
     latencies: list[float] = []
@@ -41,6 +43,7 @@ async def run(
         trust_env=False,
         timeout=30.0,
         headers=headers,
+        verify=ca_file or True,
     ) as client:
 
         async def request_once() -> None:
@@ -96,15 +99,35 @@ def main() -> None:
         "--bearer-token-env",
         help="Nom de la variable contenant le jeton Bearer (jamais sa valeur)",
     )
+    parser.add_argument("--ca-file", help="Autorité TLS PEM approuvée")
+    parser.add_argument("--max-p95-ms", type=float)
+    parser.add_argument("--max-p99-ms", type=float)
+    parser.add_argument("--min-rps", type=float)
     args = parser.parse_args()
     if args.requests <= 0 or args.concurrency <= 0:
         parser.error("requests et concurrency doivent être positifs")
-    print(
-        json.dumps(
-            asyncio.run(run(args.url, args.requests, args.concurrency, args.bearer_token_env)),
-            indent=2,
+    result = asyncio.run(
+        run(
+            args.url,
+            args.requests,
+            args.concurrency,
+            args.bearer_token_env,
+            args.ca_file,
         )
     )
+    print(json.dumps(result, indent=2))
+    statuses = cast(dict[int, int], result["statuses"])
+    latency = cast(dict[str, float], result["latency_ms"])
+    error_count = cast(int, result["error_count"])
+    requests_per_second = cast(float, result["requests_per_second"])
+    if error_count or statuses != {200: args.requests}:
+        raise SystemExit("La campagne contient des erreurs ou des statuts non 200")
+    if args.max_p95_ms is not None and latency["p95"] > args.max_p95_ms:
+        raise SystemExit("Le p95 dépasse le seuil")
+    if args.max_p99_ms is not None and latency["p99"] > args.max_p99_ms:
+        raise SystemExit("Le p99 dépasse le seuil")
+    if args.min_rps is not None and requests_per_second < args.min_rps:
+        raise SystemExit("Le débit est inférieur au seuil")
 
 
 if __name__ == "__main__":

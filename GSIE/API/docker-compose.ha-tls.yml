@@ -1,0 +1,7 @@
+services:
+  edge:
+    ports:
+      - "127.0.0.1:${GSIE_HA_TLS_PORT:-8443}:8443"
+    volumes:
+      - ./docker/ha/haproxy-tls.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./tests/perf/results/ha-certs:/certs:ro

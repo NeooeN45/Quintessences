@@ -21,6 +21,9 @@
 - DEC-000064 : banc Linux conteneurisé à deux replicas derrière HAProxy,
   drainage sans coupure et rechargements séquencés validés. Une preuve Linux
   native/CI et l'analyse du maximum à 14,1 s restent requises avant les SLO.
+- DEC-000065 : workflow Ubuntu HA+TLS prêt avec portes automatiques. Le premier
+  run distant, le contrat d'idempotence HTTP et une vraie requête longue restent
+  nécessaires avant clôture de la qualification de production.
 
 ---
 

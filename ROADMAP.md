@@ -820,5 +820,11 @@ non encore implémentées.
   DEC-000064, sans publier de capacité de production.
 - [ ] Reproduire DEC-000064 sur hôte Linux natif/CI avec TLS réel, requêtes
   longues et écritures idempotentes ; expliquer le maximum à 14,1 secondes.
+- [x] DEC-000065 : workflow Ubuntu HA+TLS implémenté avec seuils bloquants et
+  artefact JSON ; smoke TLS local 500/500 validé.
+- [ ] Exécuter le workflow après push et rattacher l'identifiant du run et son
+  artefact avant de clôturer la preuve Linux native.
+- [ ] Définir par RFC l'idempotence HTTP des écritures et choisir une vraie
+  opération longue avant leurs tests de drainage.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
   DataAsset, normalisation et porte explicite STAGING → PRODUCTION.
