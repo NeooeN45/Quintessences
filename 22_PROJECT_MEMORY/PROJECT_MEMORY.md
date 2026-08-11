@@ -9,6 +9,19 @@
 
 ---
 
+## État de référence courant — 2026-08-11
+
+La tête `f12e3cd` clôture la tranche HA Linux/TLS et couverture multicouche.
+Les runs PR `31494308995`, push `31494302005` et HA `31494308961` sont verts.
+La preuve distante établit 6 000/6 000 réponses HTTP 200, zéro erreur,
+276,3 req/s, p95 175,58 ms et p99 252,82 ms. La couverture fusionnée est de
+16 086/16 386 instructions (98,17 %) et 70/70 mutations sont détectées.
+Data Registry passe ses trois campagnes distantes (165/165, 103/103 et
+121/121). La PR #28 est prête pour revue, mais aucun merge, SLO de production
+ou FETCH global n'est autorisé par cette preuve seule.
+
+Les sections historiques ci-dessous sont conservées sans réécriture.
+
 ## État opérationnel récent
 
 - Data Registry Phase 2, QualityAssessment et FETCH fail-closed validés.

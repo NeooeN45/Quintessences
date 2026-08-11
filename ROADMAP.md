@@ -2,6 +2,17 @@
 
 ## Haute disponibilité et couverture CI (2026-08-11)
 
+### Clôture de la tête finale `f12e3cd`
+
+- Les runs PR `31494308995`, push `31494302005` et HA `31494308961` sont
+  verts sur la tête finale `f12e3cd`.
+- La preuve HA distante atteint 6 000/6 000 réponses HTTP 200, zéro erreur,
+  276,3 req/s, p95 175,58 ms et p99 252,82 ms.
+- La couverture fusionnée atteint 16 086/16 386 instructions, soit 98,17 % ;
+  les portes multicouches sont validées et le harnais détecte 70/70 mutations.
+- La PR #28 est prête pour revue. Aucun merge ni SLO de production n'est
+  autorisé par cette preuve seule.
+
 - DEC-000065 est prouvée sur GitHub Actions par le run `31479643460` :
   6 000/6 000 réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et
   p99 245,58 ms derrière TLS vérifié et deux replicas drainables. Le run
@@ -25,9 +36,11 @@
   restent obligatoires ; les images DB et API sont reconstruites et
   smoke-testées localement après correction.
 
-Ordre restant : obtenir toute la CI verte sur la tête courante, relire le diff
-et les statuts GitHub, puis seulement sortir la PR du brouillon. Le merge et
-les SLO de production nécessitent des décisions séparées.
+Ordre suivant : revue et autorisation explicite du merge de la PR #28, smoke
+post-merge sur `main`, qualification de routes métier et de requêtes longues,
+tests de rolling restart et de dépendances, puis publication séparée de SLO
+de production. En parallèle contrôlé, le Data Registry doit recevoir son
+scheduler de santé avant toute nouvelle qualification FETCH source par source.
 
 ## Manifeste Data Registry (2026-08-10)
 

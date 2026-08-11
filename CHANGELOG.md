@@ -4,6 +4,19 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [CLÔTURE PR HA ET CI] - 2026-08-11
+
+- Tête finale `f12e3cd` validée par les runs PR `31494308995`, push
+  `31494302005` et HA Linux/TLS `31494308961`.
+- Banc HA distant : 6 000/6 000 réponses HTTP 200, zéro erreur, 276,3 req/s,
+  p95 175,58 ms et p99 252,82 ms.
+- Couverture fusionnée : 16 086/16 386 instructions, soit 98,17 % ; gate
+  multicouche et 70/70 mutations verts.
+- Data Registry PostgreSQL + MinIO : campagnes 165/165, 103/103 et 121/121
+  passantes ; Ruff, mypy strict, Docker, Bandit et Trivy verts.
+- La PR #28 est prête pour revue. Le merge, les SLO de production et
+  l'ouverture FETCH globale restent des décisions séparées.
+
 ## [HA LINUX/TLS ET COUVERTURE MULTICOUCHE] - 2026-08-11
 
 - DEC-000065 prouvée par le run GitHub Actions `31479643460` : 6 000/6 000
