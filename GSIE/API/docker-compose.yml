@@ -45,7 +45,9 @@ services:
       - -c
       - shared_preload_libraries=age,pg_stat_statements,pgaudit
       - -c
-      - search_path=ag_catalog,public,tiger
+      # `public` doit rester premier pendant initdb : `ag_catalog` n'existe
+      # qu'après CREATE EXTENSION age dans la migration baseline.
+      - search_path=public,ag_catalog,tiger
       - -c
       - max_connections=100
       - -c
