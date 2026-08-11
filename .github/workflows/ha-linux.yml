@@ -50,8 +50,11 @@ jobs:
           cat tests/perf/results/ha-certs/edge.key \
               tests/perf/results/ha-certs/ca.crt \
               > tests/perf/results/ha-certs/edge.pem
-          chmod 600 tests/perf/results/ha-certs/edge.key \
-                    tests/perf/results/ha-certs/edge.pem
+          chmod 600 tests/perf/results/ha-certs/edge.key
+          # Le bundle est monté en lecture seule dans HAProxy, exécuté avec un
+          # UID distinct de celui du runner. Il est éphémère et supprimé en fin
+          # de job ; 0644 est requis pour que le processus non-root le lise.
+          chmod 644 tests/perf/results/ha-certs/edge.pem
 
       - name: Construire et initialiser la plateforme jetable
         run: |

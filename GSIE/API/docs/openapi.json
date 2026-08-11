@@ -14,6 +14,23 @@
         "title": "AcceptedResponse",
         "type": "object"
       },
+      "AccessMethod": {
+        "enum": [
+          "api_rest",
+          "api_graphql",
+          "ogc_wms",
+          "ogc_wfs",
+          "ogc_wmts",
+          "ogc_wcs",
+          "stac_api",
+          "file_download",
+          "file_import",
+          "publication_text",
+          "knowledge_extraction"
+        ],
+        "title": "AccessMethod",
+        "type": "string"
+      },
       "AccountProfileResponse": {
         "additionalProperties": false,
         "description": "Profil du compte courant, sans jeton ni secret.",
@@ -118,6 +135,15 @@
         ],
         "title": "AdminMfaSetupRequiredResponse",
         "type": "object"
+      },
+      "AgentType": {
+        "enum": [
+          "person",
+          "organisation",
+          "software"
+        ],
+        "title": "AgentType",
+        "type": "string"
       },
       "AltitudeRequest": {
         "additionalProperties": false,
@@ -671,7 +697,7 @@
             "title": "Date Observation"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "source": {
             "$ref": "#/components/schemas/SourceReference"
@@ -808,7 +834,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "nom_scientifique": {
             "title": "Nom Scientifique",
@@ -1122,6 +1148,27 @@
         "title": "CaracteristiqueDendrometrique",
         "type": "object"
       },
+      "CatalogResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "CatalogResponse",
+        "type": "object"
+      },
       "CauseBlocage": {
         "additionalProperties": false,
         "description": "Cause de blocage d'une sortie (`§5`).",
@@ -1235,6 +1282,16 @@
         "title": "CheckoutResponse",
         "type": "object"
       },
+      "CitationRole": {
+        "enum": [
+          "primary",
+          "supporting",
+          "contradicting",
+          "cited"
+        ],
+        "title": "CitationRole",
+        "type": "string"
+      },
       "ClimateIngestResponse": {
         "additionalProperties": false,
         "description": "Résultat de `POST /climate/query-and-ingest` — une entrée par paramètre mesuré.",
@@ -1285,7 +1342,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "nom": {
             "description": "Ex. « temperature_c », « humidite_pct »",
@@ -1433,7 +1490,7 @@
             "type": "string"
           },
           "evidence_level_plancher": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Plus faible niveau de preuve de la chaîne, dérivé par ordre"
           },
           "methode_confiance": {
@@ -1506,7 +1563,7 @@
             "type": "string"
           },
           "evidence_level_plancher": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Plus faible niveau de preuve de la chaîne, dérivé par ordre"
           },
           "methode_confiance": {
@@ -1866,7 +1923,7 @@
             "title": "Domaine Validite"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Niveau de preuve de la SOURCE des données (pas de la corrélation elle-même — un coefficient statistique ne détermine pas la crédibilité de sa source, voir docstring engine.py)"
           },
           "methode": {
@@ -1940,7 +1997,7 @@
             "title": "Domaine Validite"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Niveau de preuve de la source des données"
           },
           "methode": {
@@ -2013,7 +2070,7 @@
             "title": "Domaine Validite"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "matrice": {
             "description": "Matrice N×N symétrique. Diagonale = None (auto-corrélation triviale). matrice[i][j] = coefficient entre variables[i] et variables[j].",
@@ -2153,7 +2210,7 @@
             "title": "Domaine Validite"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "methode": {
             "$ref": "#/components/schemas/CorrelationMethod"
@@ -2249,6 +2306,138 @@
         "title": "CoucheGeo",
         "type": "string"
       },
+      "CoverageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "area_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area M2"
+          },
+          "coverage_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Place Id"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crs"
+          },
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "distribution_id": {
+            "format": "uuid",
+            "title": "Distribution Id",
+            "type": "string"
+          },
+          "extent_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extent M2"
+          },
+          "grain_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grain M2"
+          },
+          "place_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Label"
+          },
+          "scale_context_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale Context Id"
+          }
+        },
+        "required": [
+          "distribution_id",
+          "dataset_version_id",
+          "coverage_place_id",
+          "place_label",
+          "area_m2",
+          "crs",
+          "scale_context_id",
+          "grain_m2",
+          "extent_m2"
+        ],
+        "title": "CoverageRead",
+        "type": "object"
+      },
+      "CoverageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CoverageRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "CoverageResponse",
+        "type": "object"
+      },
       "DangerFeuxDepartement": {
         "additionalProperties": false,
         "description": "Niveau de danger de feux de forêt réel d'un département (Météo des forêts).",
@@ -2287,6 +2476,514 @@
           "source"
         ],
         "title": "DangerFeuxDepartement",
+        "type": "object"
+      },
+      "DataRightsRead": {
+        "additionalProperties": false,
+        "properties": {
+          "ai_training_allowed": {
+            "title": "Ai Training Allowed",
+            "type": "boolean"
+          },
+          "attribution_required": {
+            "title": "Attribution Required",
+            "type": "boolean"
+          },
+          "commercial_use_allowed": {
+            "title": "Commercial Use Allowed",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "redistribution_allowed": {
+            "title": "Redistribution Allowed",
+            "type": "boolean"
+          },
+          "usage_rights": {
+            "$ref": "#/components/schemas/UsageRights"
+          }
+        },
+        "required": [
+          "id",
+          "licence",
+          "usage_rights",
+          "commercial_use_allowed",
+          "redistribution_allowed",
+          "attribution_required",
+          "ai_training_allowed",
+          "notes"
+        ],
+        "title": "DataRightsRead",
+        "type": "object"
+      },
+      "DatasetDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset": {
+            "$ref": "#/components/schemas/DatasetSummary"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetVersionRead"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset",
+          "versions"
+        ],
+        "title": "DatasetDetail",
+        "type": "object"
+      },
+      "DatasetHealthRead": {
+        "additionalProperties": false,
+        "properties": {
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "checksum_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum Verified"
+          },
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "distribution_id": {
+            "format": "uuid",
+            "title": "Distribution Id",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "health_status": {
+            "$ref": "#/components/schemas/DatasetHealthStatus"
+          },
+          "http_status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Http Status"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "observed_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Version"
+          },
+          "schema_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Hash"
+          }
+        },
+        "required": [
+          "id",
+          "dataset_version_id",
+          "distribution_id",
+          "checked_at",
+          "health_status",
+          "http_status",
+          "latency_ms",
+          "last_modified",
+          "observed_version",
+          "schema_hash",
+          "checksum_verified",
+          "error_code"
+        ],
+        "title": "DatasetHealthRead",
+        "type": "object"
+      },
+      "DatasetHealthStatus": {
+        "enum": [
+          "healthy",
+          "degraded",
+          "unavailable",
+          "invalid",
+          "unknown"
+        ],
+        "title": "DatasetHealthStatus",
+        "type": "string"
+      },
+      "DatasetPurpose": {
+        "enum": [
+          "production",
+          "training",
+          "evaluation",
+          "reference"
+        ],
+        "title": "DatasetPurpose",
+        "type": "string"
+      },
+      "DatasetResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/DatasetDetail"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "title": "DatasetResponse",
+        "type": "object"
+      },
+      "DatasetStatus": {
+        "enum": [
+          "discovered",
+          "link_checked",
+          "metadata_extracted",
+          "license_analyzed",
+          "coverage_analyzed",
+          "schema_analyzed",
+          "security_checked",
+          "validated",
+          "staging",
+          "production",
+          "deprecated",
+          "broken",
+          "unavailable",
+          "license_restricted",
+          "unknown_license",
+          "archived",
+          "experimental"
+        ],
+        "title": "DatasetStatus",
+        "type": "string"
+      },
+      "DatasetSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "domain_vocabulary_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Vocabulary Version"
+          },
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Domains",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "primary_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Domain"
+          },
+          "publisher_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher Id"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/DatasetPurpose"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "publisher_id",
+          "purpose",
+          "topic",
+          "primary_domain",
+          "domain_vocabulary_version"
+        ],
+        "title": "DatasetSummary",
+        "type": "object"
+      },
+      "DatasetVersionRead": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changes"
+          },
+          "dataset_id": {
+            "format": "uuid",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "distributions": {
+            "items": {
+              "$ref": "#/components/schemas/DistributionRead"
+            },
+            "title": "Distributions",
+            "type": "array"
+          },
+          "evidence_assessed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Assessed At"
+          },
+          "evidence_basis": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Basis"
+          },
+          "evidence_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/gsie_api__infrastructure__models__enums__EvidenceLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "release_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Date"
+          },
+          "schema_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Hash"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stats"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DatasetStatus"
+          },
+          "temporal_coverage_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporal Coverage End"
+          },
+          "temporal_coverage_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporal Coverage Start"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dataset_id",
+          "version",
+          "release_date",
+          "temporal_coverage_start",
+          "temporal_coverage_end",
+          "changes",
+          "schema_hash",
+          "stats",
+          "status",
+          "evidence_level",
+          "evidence_basis",
+          "evidence_assessed_at"
+        ],
+        "title": "DatasetVersionRead",
         "type": "object"
       },
       "DecisionForestier": {
@@ -2496,6 +3193,125 @@
         "title": "DiagnosticValidationStatus",
         "type": "string"
       },
+      "DistributionRead": {
+        "additionalProperties": false,
+        "properties": {
+          "access_method": {
+            "$ref": "#/components/schemas/AccessMethod"
+          },
+          "access_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Url"
+          },
+          "coverage_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Place Id"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crs"
+          },
+          "data_rights_statement_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Rights Statement Id"
+          },
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "rights": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataRightsRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale_context_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale Context Id"
+          }
+        },
+        "required": [
+          "id",
+          "dataset_version_id",
+          "access_method",
+          "access_url",
+          "licence",
+          "data_rights_statement_id",
+          "scale_context_id",
+          "coverage_place_id",
+          "format",
+          "crs"
+        ],
+        "title": "DistributionRead",
+        "type": "object"
+      },
       "Domaine": {
         "description": "Domaine scientifique, tous rôles confondus.\n\nUnion de `DomaineElement` et `DomaineRisque`. Le contrat §5 sépare les\ndeux parce qu'un risque ne se rattache pas aux mêmes disciplines qu'une\ncontrainte. Mais une contradiction, elle, oppose fréquemment un atout à\nun risque — « sol profond et fertile » contre « déficit hydrique\ncroissant » est exactement le cas que la garantie §6 demande de mettre en\névidence.\n\nSans domaine commun, ces oppositions seraient inexprimables et donc\ninvisibles. Ce type existe pour cela, et uniquement pour cela : les\néléments et les risques conservent leurs énumérations d'origine.",
         "enum": [
@@ -2670,7 +3486,7 @@
             "$ref": "#/components/schemas/DomaineElement"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "source": {
             "$ref": "#/components/schemas/SourceReference"
@@ -2893,7 +3709,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Plancher de preuve de l'étape : le plus faible entre la règle appliquée et les faits qu'elle consomme. Une étape ne peut pas être mieux établie que la mesure qui la fonde."
           },
           "ordre": {
@@ -2954,7 +3770,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Plancher de preuve de l'étape : le plus faible entre la règle appliquée et les faits qu'elle consomme. Une étape ne peut pas être mieux établie que la mesure qui la fonde."
           },
           "ordre": {
@@ -3012,7 +3828,7 @@
             "$ref": "#/components/schemas/DiagnosticGlobalState"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "justification": {
             "maxLength": 1000,
@@ -3051,19 +3867,6 @@
           "correlation.detected"
         ],
         "title": "EventType",
-        "type": "string"
-      },
-      "EvidenceLevel": {
-        "description": "Niveau de preuve scientifique (CON-002). A=meilleur, F=pire.",
-        "enum": [
-          "A",
-          "B",
-          "C",
-          "D",
-          "E",
-          "F"
-        ],
-        "title": "EvidenceLevel",
         "type": "string"
       },
       "FichierTelechargementResponse": {
@@ -3841,46 +4644,6 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
-      "HealthResponse": {
-        "additionalProperties": false,
-        "description": "Réponse des endpoints health/ready.",
-        "properties": {
-          "dependencies": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "État des dépendances (database, redis)",
-            "title": "Dependencies",
-            "type": "object"
-          },
-          "environment": {
-            "title": "Environment",
-            "type": "string"
-          },
-          "status": {
-            "description": "healthy|degraded|unhealthy",
-            "title": "Status",
-            "type": "string"
-          },
-          "timestamp": {
-            "format": "date-time",
-            "title": "Timestamp",
-            "type": "string"
-          },
-          "version": {
-            "title": "Version",
-            "type": "string"
-          }
-        },
-        "required": [
-          "status",
-          "version",
-          "environment",
-          "timestamp"
-        ],
-        "title": "HealthResponse",
-        "type": "object"
-      },
       "IndigenatQuery": {
         "additionalProperties": false,
         "description": "Requête de statut d'indigénat d'une essence pour une sylvoécorégion (SER) donnée.\n\nUne des deux identifications du taxon est requise : `cd_nom` (exact,\nréférentiel TAXREFv18.0) ou `nom_scientifique` (recherche exacte,\nsensible aux variantes de nomenclature — préférer cd_nom si connu).",
@@ -4237,7 +5000,7 @@
             "type": "array"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "moteurs_consommateurs": {
             "items": {
@@ -4345,7 +5108,7 @@
             "type": "array"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "description": "Niveau de preuve A-F"
           },
           "historique": {
@@ -4433,7 +5196,7 @@
           "evidence_min": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvidenceLevel"
+                "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
               },
               {
                 "type": "null"
@@ -4563,7 +5326,7 @@
           "nouveau_evidence_level": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvidenceLevel"
+                "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
               },
               {
                 "type": "null"
@@ -5720,6 +6483,31 @@
         "title": "OrganisationResponse",
         "type": "object"
       },
+      "PageInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "PageInfo",
+        "type": "object"
+      },
       "PageTelechargementResponse": {
         "additionalProperties": false,
         "description": "Métadonnées de pagination d'une réponse Atom.",
@@ -6071,7 +6859,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "nom": {
             "description": "Caractéristique concernée, ex. « ph »",
@@ -6417,7 +7205,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "nom_scientifique": {
             "title": "Nom Scientifique",
@@ -6556,22 +7344,91 @@
         "title": "ProviderCapability",
         "type": "object"
       },
-      "ProvidersResponse": {
+      "ProviderProjection": {
         "additionalProperties": false,
-        "description": "Capacités d'authentification réellement disponibles.",
+        "description": "Projection Agent/Source/Citation ; aucune ressource Provider.",
         "properties": {
-          "providers": {
-            "items": {
-              "$ref": "#/components/schemas/ProviderCapability"
-            },
-            "title": "Providers",
-            "type": "array"
+          "agent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id"
+          },
+          "agent_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Name"
+          },
+          "agent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "citation_role": {
+            "$ref": "#/components/schemas/CitationRole"
+          },
+          "dataset_id": {
+            "format": "uuid",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_nature": {
+            "$ref": "#/components/schemas/SourceNature"
+          },
+          "source_subtype": {
+            "$ref": "#/components/schemas/SourceSubtype"
+          },
+          "source_title": {
+            "title": "Source Title",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
           }
         },
         "required": [
-          "providers"
+          "agent_id",
+          "agent_name",
+          "agent_type",
+          "source_id",
+          "source_title",
+          "source_subtype",
+          "source_nature",
+          "source_url",
+          "citation_role",
+          "dataset_id"
         ],
-        "title": "ProvidersResponse",
+        "title": "ProviderProjection",
         "type": "object"
       },
       "QualificationConclusion": {
@@ -6735,7 +7592,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "source": {
             "$ref": "#/components/schemas/SourceReference"
@@ -7165,7 +8022,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "identifiant": {
             "description": "Identifiant unique, support du tri déterministe des règles",
@@ -7246,6 +8103,314 @@
           "current_password"
         ],
         "title": "RequestDeletionRequest",
+        "type": "object"
+      },
+      "ResolutionCandidate": {
+        "additionalProperties": false,
+        "description": "Évaluation explicable d'un candidat par le resolver.",
+        "properties": {
+          "blocking_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocking Reasons",
+            "type": "array"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/SearchCandidate"
+          },
+          "criteria": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Criteria",
+            "type": "object"
+          },
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "freshness_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness At"
+          },
+          "offline_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Available"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "candidate",
+          "eligible"
+        ],
+        "title": "ResolutionCandidate",
+        "type": "object"
+      },
+      "ResolutionResponse": {
+        "additionalProperties": false,
+        "description": "Décision rejouable du Data Selection Engine.",
+        "properties": {
+          "blocking_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocking Reasons",
+            "type": "array"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolutionCandidate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fallback_allowed": {
+            "title": "Fallback Allowed",
+            "type": "boolean"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolutionCandidate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "vocabulary_version": {
+            "title": "Vocabulary Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "selected",
+          "fallback",
+          "candidates",
+          "policy_version",
+          "vocabulary_version",
+          "fallback_allowed"
+        ],
+        "title": "ResolutionResponse",
+        "type": "object"
+      },
+      "ResolveRequest": {
+        "additionalProperties": false,
+        "description": "Requête POST du Data Selection Engine.\n\nLe fallback est opt-in : une application ne doit jamais croire qu'une\nsource de remplacement a été retenue sans l'avoir demandé explicitement.\nL'alias ``allow_fallback`` reste accepté pour les clients qui utilisent le\nnom du contrat HTTP plutôt que le nom historique Python.",
+        "properties": {
+          "allow_fallback": {
+            "default": false,
+            "title": "Allow Fallback",
+            "type": "boolean"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "maxItems": 4,
+                "minItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          },
+          "bbox_crs": {
+            "const": "EPSG:4326",
+            "default": "EPSG:4326",
+            "title": "Bbox Crs",
+            "type": "string"
+          },
+          "commercial_use_required": {
+            "default": false,
+            "title": "Commercial Use Required",
+            "type": "boolean"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          },
+          "date_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date End"
+          },
+          "date_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Start"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "max_grain_m2": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Grain M2"
+          },
+          "minimum_evidence_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/gsie_api__infrastructure__models__enums__EvidenceLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minimum_quality_score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Quality Score"
+          },
+          "prefer": {
+            "items": {
+              "enum": [
+                "freshness",
+                "quality",
+                "offline_availability"
+              ],
+              "type": "string"
+            },
+            "title": "Prefer",
+            "type": "array"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "use": {
+            "default": "display",
+            "enum": [
+              "display",
+              "inference"
+            ],
+            "title": "Use",
+            "type": "string"
+          }
+        },
+        "title": "ResolveRequest",
         "type": "object"
       },
       "ResourceCreate": {
@@ -7603,7 +8768,7 @@
             "$ref": "#/components/schemas/DomaineRisque"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "horizon": {
             "description": "Horizon temporel du risque, ex. « 5 ans », « une révolution »",
@@ -7691,6 +8856,56 @@
           "horizon"
         ],
         "title": "ScenarioSimulation",
+        "type": "object"
+      },
+      "SearchCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "blocking_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocking Reasons",
+            "type": "array"
+          },
+          "dataset": {
+            "$ref": "#/components/schemas/DatasetSummary"
+          },
+          "version": {
+            "$ref": "#/components/schemas/DatasetVersionRead"
+          }
+        },
+        "required": [
+          "dataset",
+          "version"
+        ],
+        "title": "SearchCandidate",
+        "type": "object"
+      },
+      "SearchResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchCandidate"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "policy_version"
+        ],
+        "title": "SearchResponse",
         "type": "object"
       },
       "SessionResponse": {
@@ -7830,7 +9045,7 @@
         "description": "Une caractéristique de sol (PEDOLOGY_ENGINE.md §5).",
         "properties": {
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel",
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel",
             "default": "B"
           },
           "nom": {
@@ -7886,6 +9101,18 @@
         "title": "SourceMoteurContexte",
         "type": "string"
       },
+      "SourceNature": {
+        "enum": [
+          "data_provider",
+          "knowledge_provider",
+          "reference",
+          "expert_statement",
+          "regulatory",
+          "model_output"
+        ],
+        "title": "SourceNature",
+        "type": "string"
+      },
       "SourceReference": {
         "additionalProperties": false,
         "description": "Référence à une source scientifique.",
@@ -7939,6 +9166,19 @@
         ],
         "title": "SourceReference",
         "type": "object"
+      },
+      "SourceSubtype": {
+        "enum": [
+          "publication",
+          "dataset",
+          "api",
+          "person",
+          "organisation",
+          "regulatory_text",
+          "expert_statement"
+        ],
+        "title": "SourceSubtype",
+        "type": "string"
       },
       "SourceType": {
         "description": "Type de source scientifique (EVIDENCE_FRAMEWORK.md).",
@@ -8186,7 +9426,7 @@
             "type": "string"
           },
           "evidence_level": {
-            "$ref": "#/components/schemas/EvidenceLevel"
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
           },
           "nom_scientifique": {
             "title": "Nom Scientifique",
@@ -8494,6 +9734,15 @@
         ],
         "title": "UpgradeRequest",
         "type": "object"
+      },
+      "UsageRights": {
+        "enum": [
+          "open",
+          "restricted",
+          "private"
+        ],
+        "title": "UsageRights",
+        "type": "string"
       },
       "ValidationError": {
         "properties": {
@@ -8952,6 +10201,131 @@
           "updated_at"
         ],
         "title": "WorkspaceResponse",
+        "type": "object"
+      },
+      "gsie_api__auth__schemas__ProvidersResponse": {
+        "additionalProperties": false,
+        "description": "Capacités d'authentification réellement disponibles.",
+        "properties": {
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderCapability"
+            },
+            "title": "Providers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "title": "ProvidersResponse",
+        "type": "object"
+      },
+      "gsie_api__data__schemas__HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetHealthRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "gsie_api__data__schemas__ProvidersResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderProjection"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "ProvidersResponse",
+        "type": "object"
+      },
+      "gsie_api__engines__evidence__schemas__EvidenceLevel": {
+        "description": "Niveau de preuve scientifique (CON-002). A=meilleur, F=pire.",
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "title": "EvidenceLevel",
+        "type": "string"
+      },
+      "gsie_api__infrastructure__models__enums__EvidenceLevel": {
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "title": "EvidenceLevel",
+        "type": "string"
+      },
+      "gsie_api__shared__schemas__HealthResponse": {
+        "additionalProperties": false,
+        "description": "Réponse des endpoints health/ready.",
+        "properties": {
+          "dependencies": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "État des dépendances (database, redis)",
+            "title": "Dependencies",
+            "type": "object"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "status": {
+            "description": "healthy|degraded|unhealthy",
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "environment",
+          "timestamp"
+        ],
+        "title": "HealthResponse",
         "type": "object"
       }
     },
@@ -10326,7 +11700,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProvidersResponse"
+                  "$ref": "#/components/schemas/gsie_api__auth__schemas__ProvidersResponse"
                 }
               }
             },
@@ -11858,6 +13232,716 @@
         "summary": "Version du moteur Correlation",
         "tags": [
           "correlation"
+        ]
+      }
+    },
+    "/api/v1/data/catalog": {
+      "get": {
+        "operationId": "catalog_api_v1_data_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DatasetStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          },
+          {
+            "in": "query",
+            "name": "publisher_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Publisher Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Catalogue paginé des datasets GSIE",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/coverage": {
+      "get": {
+        "operationId": "coverage_api_v1_data_coverage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Emprises, CRS et grains natifs par distribution",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}": {
+      "get": {
+        "operationId": "dataset_api_v1_data_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Détail d'un dataset et de ses versions",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/health": {
+      "get": {
+        "operationId": "health_api_v1_data_health_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "health_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DatasetHealthStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Health Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset_version_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dataset Version Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "distribution_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distribution Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/gsie_api__data__schemas__HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Historique de santé par distribution",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/providers": {
+      "get": {
+        "operationId": "providers_api_v1_data_providers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/gsie_api__data__schemas__ProvidersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Projection paginée Agent/Source/Citation",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/resolve": {
+      "post": {
+        "description": "Applique la politique Registry avant tout classement ou fallback.",
+        "operationId": "resolve_api_v1_data_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sélection déterministe d'un dataset avec décision explicable",
+        "tags": [
+          "data-registry"
+        ]
+      }
+    },
+    "/api/v1/data/search": {
+      "get": {
+        "operationId": "search_api_v1_data_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "theme",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Theme"
+            }
+          },
+          {
+            "description": "min_lon,min_lat,max_lon,max_lat",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "min_lon,min_lat,max_lon,max_lat",
+              "title": "Bbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_grain_m2",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Grain M2"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minimum_evidence_level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__infrastructure__models__enums__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Minimum Evidence Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minimum_quality_score",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Minimum Quality Score"
+            }
+          },
+          {
+            "in": "query",
+            "name": "commercial_use_required",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Commercial Use Required",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "use",
+            "required": false,
+            "schema": {
+              "default": "display",
+              "pattern": "^(display|inference)$",
+              "title": "Use",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "prefer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Prefer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Recherche catalogue déterministe (sans resolver)",
+        "tags": [
+          "data-registry"
         ]
       }
     },
@@ -14971,7 +17055,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
+                  "$ref": "#/components/schemas/gsie_api__shared__schemas__HealthResponse"
                 }
               }
             },
@@ -15039,7 +17123,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
+                  "$ref": "#/components/schemas/gsie_api__shared__schemas__HealthResponse"
                 }
               }
             },
@@ -15069,6 +17153,10 @@
     {
       "description": "CRUD générique — types enregistrés du métamodèle",
       "name": "resources"
+    },
+    {
+      "description": "Data Registry RFC-0038 — catalogue, qualification et couverture",
+      "name": "data-registry"
     },
     {
       "description": "Synchronisation hors ligne des parcelles privées GeoSylva",

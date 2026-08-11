@@ -66,7 +66,8 @@ def test_tout_endpoint_limite_declare_response() -> None:
             continue
         parametres = inspect.signature(endpoint).parameters
         parametre = parametres.get("response")
-        if parametre is None or parametre.annotation is not Response:
+        annotations = inspect.get_annotations(endpoint, eval_str=True)
+        if parametre is None or annotations.get("response") is not Response:
             manquants.append(cle)
 
     assert manquants == [], (
