@@ -23,6 +23,18 @@ Format : `## [version] - YYYY-MM-DD`
   testé, compatible Windows CP-1252 et intégré comme porte obligatoire de CI.
 - Dérive `QualityAssessment` détectée par la campagne Alembic puis corrigée par
   alignement du modèle sur la migration 0048 ; aucun écart n'est toléré.
+- Confirmation HA sur `e9743d8` par le run `31488527136` ; son premier essai a
+  subi une coupure GitHub Releases avant les tests, puis le rejeu du même SHA a
+  réussi sans contournement TLS.
+- Première preuve distante de la porte multicouche : le job dédié du run
+  `31488527209` passe à 98,169 %, avec 49/49 contrats publics à 100 %, 96,80 %
+  métier/application et 99,90 % infrastructure.
+- Deux dettes de harnais révélées par ce run sont corrigées sans affaiblissement
+  des portes : isolation explicite du test S3, génération JWT dans le job Data
+  Registry et mise à jour du motif ObjectStorage parmi les 70 mutations.
+- Reproduction avec l'environnement S3 du runner : 165/165 Data Registry,
+  103/103 P0/P1 et 121/121 infrastructure/lifespan ; Ruff et mypy strict verts,
+  mutation ObjectStorage ciblée tuée.
 
 ## [ARCHITECTURE — DURABILITÉ ÉVOLUTIVE ET INTÉGRATION IA] - 2026-08-10
 

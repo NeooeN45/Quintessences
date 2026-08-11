@@ -4,17 +4,23 @@
 
 - DEC-000065 est prouvée sur GitHub Actions par le run `31479643460` :
   6 000/6 000 réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et
-  p99 245,58 ms derrière TLS vérifié et deux replicas drainables.
+  p99 245,58 ms derrière TLS vérifié et deux replicas drainables. Le run
+  `31488527136` confirme la preuve sur `e9743d8` après un incident réseau
+  GitHub Releases antérieur aux tests.
 - DEC-000066 ajoute une porte de couverture fusionnée unités + intégration :
   global >= 97,10 %, chaque routeur/schéma public à 100 %, métier/application
   >= 80 % et infrastructure >= 60 %, avec refus des rapports invalides.
 - La preuve locale finale passe 2 873 tests unitaires et 349 intégrations ; la
   fusion atteint 98,18 %. Le modèle `QualityAssessment` est réaligné sur la
   migration 0048 et les cycles Alembic sont verts.
+- Le job de couverture du run `31488527209` est vert à 98,169 %. Ce premier run
+  complet a détecté une préparation S3/JWT non hermétique du harnais Registry
+  et un motif de mutation ObjectStorage périmé ; les deux corrections gardent
+  les campagnes, les 70 mutations et tous les seuils inchangés.
 
-Ordre restant : obtenir toute la CI verte sur le commit de couverture, relire
-le diff et les statuts GitHub, puis seulement sortir la PR du brouillon. Le
-merge et les SLO de production nécessitent des décisions séparées.
+Ordre restant : obtenir toute la CI verte sur la tête courante, relire le diff
+et les statuts GitHub, puis seulement sortir la PR du brouillon. Le merge et
+les SLO de production nécessitent des décisions séparées.
 
 ## Manifeste Data Registry (2026-08-10)
 

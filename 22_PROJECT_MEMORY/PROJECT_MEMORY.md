@@ -21,12 +21,19 @@
 - DEC-000064 et DEC-000065 : banc à deux replicas puis workflow Ubuntu/TLS
   validés. Le run distant `31479643460` passe 6 000/6 000 requêtes sans erreur,
   à 298,03 req/s, p95 164,71 ms et p99 245,58 ms. Les requêtes longues,
-  l'idempotence HTTP et les SLO de production restent hors preuve.
+  l'idempotence HTTP et les SLO de production restent hors preuve. Le run
+  `31488527136` confirme le banc sur `e9743d8` après un unique rejeu dû à une
+  coupure GitHub Releases antérieure aux tests.
 - DEC-000066 : couverture Python multicouche obligatoire. Les suites finales
   passent 2 873 unités et 349 intégrations ; la fusion atteint 98,18 %, les
   49 contrats publics sont à 100 %, métier/application à 96,80 % et
-  infrastructure à 99,97 %. Le run CI distant de cette nouvelle porte reste à
-  obtenir avant sortie de la PR du brouillon.
+  infrastructure à 99,97 %. Le job distant du run `31488527209` confirme
+  98,169 %, 49/49 contrats, 96,80 % métier et 99,90 % infrastructure. Le premier
+  run complet a aussi révélé puis fait corriger l'isolation S3/JWT du harnais
+  Data Registry et un motif de mutation périmé. La sortie du brouillon reste
+  conditionnée à un run complet vert sur la tête courante. La reproduction
+  locale corrigée passe 165/165 Registry, 103/103 P0/P1 et 121/121
+  infrastructure/lifespan ; la mutation ciblée est tuée.
 
 ---
 

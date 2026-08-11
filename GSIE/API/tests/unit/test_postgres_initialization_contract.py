@@ -6,6 +6,7 @@ from pathlib import Path
 COMPOSE_PATH = Path(__file__).resolve().parents[2] / "docker-compose.yml"
 INIT_DIRECTORY = Path(__file__).resolve().parents[2] / "docker" / "init"
 HA_WORKFLOW_PATH = Path(__file__).resolve().parents[4] / ".github" / "workflows" / "ha-linux.yml"
+CI_WORKFLOW_PATH = Path(__file__).resolve().parents[4] / ".github" / "workflows" / "ci.yml"
 
 
 def test_should_keep_public_schema_first_during_fresh_initdb() -> None:
@@ -53,3 +54,15 @@ def test_should_pin_the_ha_artifact_action_to_an_immutable_revision() -> None:
 
     assert "actions/upload-artifact@v4" not in workflow
     assert "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02" in workflow
+
+
+def test_should_generate_jwt_keys_before_registry_validation_campaigns() -> None:
+    """La campagne autonome doit préparer les clés requises par ses tests."""
+    workflow = CI_WORKFLOW_PATH.read_text(encoding="utf-8")
+    registry_job = workflow.split("  data-registry-validation:", maxsplit=1)[1].split(
+        "\n  rust-quality:", maxsplit=1
+    )[0]
+
+    key_generation = registry_job.index("sh docker/generate-jwt-keys.sh")
+    campaign = registry_job.index("scripts/validate_data_registry_release.py")
+    assert key_generation < campaign

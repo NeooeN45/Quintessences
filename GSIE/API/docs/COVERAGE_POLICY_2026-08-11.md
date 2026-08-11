@@ -67,8 +67,30 @@ Le vérificateur est testé sur les succès, les régressions globales, les cont
 publics incomplets, les couches sous leur seuil, les rapports mal formés et les
 consoles Windows CP-1252.
 
-## Réserve avant sortie de brouillon
+## Preuve distante et réserve avant sortie de brouillon
 
-Cette preuve locale est complète. Le workflow de couverture modifié doit encore
-réussir sur GitHub Actions après push avant que la pull request puisse sortir du
-brouillon. Le merge reste soumis à une autorisation distincte du Fondateur.
+Le job `Python couverture combinée` du run GitHub Actions `31488527209` est
+réussi sur le commit `e9743d8`. Son artefact opposable contient :
+
+```text
+16 086 / 16 386 lignes couvertes
+98,169 % global
+49 / 49 contrats publics à 100 %
+96,80 % métier/application
+99,90 % infrastructure
+```
+
+Le run complet a correctement maintenu la porte finale fermée à cause de deux
+autres jobs : une préparation non hermétique de la campagne Data Registry et
+un motif de mutation ObjectStorage périmé. Les clés JWT sont désormais générées
+dans le job autonome, le test de configuration force son backend attendu et la
+mutation cible la signature actuelle avec lectures partielles. Aucun seuil et
+aucune campagne ne sont réduits.
+
+La reproduction locale sous les variables S3 du job passe 165/165 scénarios
+Data Registry, 103/103 P0/P1 et 121/121 infrastructure/lifespan, puis Ruff et
+mypy strict. La mutation `lecture_hors_racine_de_stockage` est tuée isolément ;
+les 70 mutations complètes doivent encore être confirmées par le runner Linux.
+
+La pull request ne peut sortir du brouillon qu'après un run complet vert sur la
+tête courante. Le merge reste soumis à une autorisation distincte du Fondateur.

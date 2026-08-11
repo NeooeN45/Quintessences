@@ -270,9 +270,19 @@ def _valid_production_settings() -> dict[str, object]:
     }
 
 
-def should_require_s3_in_production() -> None:
+def should_require_s3_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le contrat reste hermétique aux variables S3 du job Data Registry."""
+    monkeypatch.setenv("GSIE_OBJECT_STORAGE_BACKEND", "s3")
+    monkeypatch.setenv("GSIE_OBJECT_STORAGE_S3_ENDPOINT", "http://127.0.0.1:59000")
+    monkeypatch.setenv("GSIE_OBJECT_STORAGE_S3_ACCESS_KEY", "ci-access")
+    monkeypatch.setenv("GSIE_OBJECT_STORAGE_S3_SECRET_KEY", "ci-secret")
+
     with pytest.raises(ValidationError, match="S3 object storage"):
-        Settings(**_valid_production_settings(), _env_file=None)
+        Settings(
+            **_valid_production_settings(),
+            object_storage_backend="local",
+            _env_file=None,
+        )
 
 
 def should_reject_http_s3_endpoint_in_production() -> None:

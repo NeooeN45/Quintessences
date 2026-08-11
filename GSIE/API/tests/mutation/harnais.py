@@ -675,8 +675,16 @@ MUTATIONS: tuple[Mutation, ...] = (
         fichier="gsie_api/infrastructure/object_storage.py",
         # Contournement de `_resolve_key` sur la seule methode de lecture :
         # c'est exactement le refactoring que seul `put` surveillait.
-        ancien="    async def get(self, key: str) -> BinaryIO:\n        path = self._resolve_key(key)",  # noqa: E501
-        nouveau="    async def get(self, key: str) -> BinaryIO:\n        path = self._base / key",
+        ancien=(
+            "    async def get(self, key: str, start: int | None = None, "
+            "end: int | None = None) -> BinaryIO:\n"
+            "        path = self._resolve_key(key)"
+        ),
+        nouveau=(
+            "    async def get(self, key: str, start: int | None = None, "
+            "end: int | None = None) -> BinaryIO:\n"
+            "        path = self._base / key"
+        ),
         defaut_reproduit=(
             "une cle `../../etc/passwd` fait lire un fichier hors du repertoire "
             "de stockage — traversee de repertoire en lecture"

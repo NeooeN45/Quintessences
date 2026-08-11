@@ -377,6 +377,14 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked --extra dev
 
+      # Le vérificateur rejoue aussi les tests d'infrastructure qui signent
+      # un jeton WebSocket. Les clés de test ne sont jamais versionnées.
+      - name: Generate JWT keys for registry validation
+        run: |
+          if [ ! -f keys/private.pem ]; then
+            sh docker/generate-jwt-keys.sh
+          fi
+
       - name: Build PostgreSQL 16 + PostGIS + AGE image
         run: docker build --file Dockerfile.db --tag gsie-db:supply-chain-hardened .
 
