@@ -60,11 +60,22 @@ jobs:
         run: |
           docker compose up -d --build db redis minio minio-init mailpit
           # Le healthcheck répond aussi pendant le serveur PostgreSQL temporaire
-          # d'initdb. Attendre que l'entrypoint ait cédé la PID 1 au serveur final
-          # évite une fermeture de connexion au milieu des migrations Alembic.
+          # d'initdb. Le rôle applicatif est créé par le dernier script init ;
+          # exiger cinq lectures consécutives évite de lancer Alembic pendant
+          # l'arrêt du serveur temporaire et le démarrage du serveur final.
+          stable=0
           for attempt in $(seq 1 120); do
-            docker compose exec -T db sh -c \
-              'test "$(cat /proc/1/comm)" = postgres' && break
+            role_count="$(docker compose exec -T db psql \
+              --username "${GSIE_DB_USER:-gsie}" \
+              --dbname "${GSIE_DB_NAME:-gsie}" --tuples-only --no-align \
+              --command "SELECT count(*) FROM pg_roles WHERE rolname = 'gsie_api'" \
+              2>/dev/null || true)"
+            if [ "$role_count" = "1" ]; then
+              stable=$((stable + 1))
+            else
+              stable=0
+            fi
+            test "$stable" -lt 5 || break
             test "$attempt" -lt 120 || exit 1
             sleep 2
           done
