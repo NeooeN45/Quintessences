@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import json
 import os
+import ssl
 import statistics
 import time
 from contextlib import suppress
@@ -239,7 +240,11 @@ async def _executer(args: argparse.Namespace) -> dict[str, Any]:
         max_keepalive_connections=args.concurrency,
     )
     debut_global = time.perf_counter()
-    verification_tls: bool | str = args.ca_file or True
+    verification_tls: bool | ssl.SSLContext
+    if args.ca_file is not None:
+        verification_tls = ssl.create_default_context(cafile=str(args.ca_file))
+    else:
+        verification_tls = True
     async with httpx.AsyncClient(
         timeout=args.timeout,
         limits=limites,
