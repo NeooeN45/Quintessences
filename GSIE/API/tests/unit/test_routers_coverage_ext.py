@@ -51,6 +51,54 @@ def _writer_headers() -> dict[str, str]:
     return _auth_headers(roles=["writer"])
 
 
+def _analyse_payload() -> dict[str, Any]:
+    """Requête complète minimale pour tester les gardes HTTP d'orchestration."""
+    source = {
+        "type_source": "peer_reviewed",
+        "auteur": "Test",
+        "reference": "DOI",
+    }
+    return {
+        "requete_id": str(uuid4()),
+        "station_id": str(uuid4()),
+        "contexte": {
+            "pedologie": {
+                "source_moteur": "PEDOLOGY",
+                "source": source,
+                "evidence_level": "B",
+                "valeurs": {"pH": 5.2},
+            }
+        },
+        "regles": [
+            {
+                "identifiant": "regle-01",
+                "condition": "pedologie_pH < 5.5",
+                "enonce_conclusion": "Le sol est acide.",
+                "source": source,
+                "evidence_level": "B",
+                "niveau_confiance": 0.85,
+            }
+        ],
+        "qualifications": [
+            {
+                "identifiant_regle": "regle-01",
+                "role": "contrainte",
+                "domaine_element": "pedologique",
+            }
+        ],
+        "etat_global": {
+            "etat": "vigueur_reduite",
+            "justification": "Acidité",
+            "source": source,
+            "evidence_level": "B",
+        },
+        "type_diagnostic": "stationnel",
+        "question": "Quelles essences ?",
+        "objectif_forestier": "production",
+        "alternatives_demandees": True,
+    }
+
+
 def _build_engine_app(router: Any, mock_db: Any = None) -> FastAPI:
     app = FastAPI()
     app.state.limiter = Limiter(key_func=get_remote_address)
@@ -617,6 +665,39 @@ class TestOrchestrationRouter:
             )
         assert resp.status_code == 400
         assert "aucune règle applicable" in resp.json()["detail"]
+
+    async def should_return_400_when_idempotency_key_does_not_match(
+        self, orchestration_client: AsyncClient
+    ) -> None:
+        payload = _analyse_payload()
+        resp = await orchestration_client.post(
+            f"{_API_PREFIX}/orchestration/analyse",
+            json=payload,
+            headers={**_writer_headers(), "Idempotency-Key": str(uuid4())},
+        )
+
+        assert resp.status_code == 400
+        assert "Idempotency-Key" in resp.json()["detail"]
+
+    async def should_return_409_when_idempotency_conflict_is_detected(
+        self, orchestration_client: AsyncClient
+    ) -> None:
+        from gsie_api.engines.orchestration.idempotency import (
+            AnalyseIdempotencyConflictError,
+        )
+
+        with patch("gsie_api.engines.orchestration.router.OrchestrationEngine") as mock_cls:
+            mock_cls.return_value.analyser_idempotente = AsyncMock(
+                side_effect=AnalyseIdempotencyConflictError("contenu différent")
+            )
+            resp = await orchestration_client.post(
+                f"{_API_PREFIX}/orchestration/analyse",
+                json=_analyse_payload(),
+                headers=_writer_headers(),
+            )
+
+        assert resp.status_code == 409
+        assert "contenu différent" in resp.json()["detail"]
 
 
 # ===========================================================================

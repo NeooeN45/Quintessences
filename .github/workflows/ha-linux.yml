@@ -134,6 +134,7 @@ jobs:
       - name: Rejeu idempotent de la route métier
         run: |
           docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD/scripts/benchmark_orchestration.py:/benchmark_orchestration.py:ro" \
             -v "$PWD/keys:/keys:ro" \
             -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
@@ -159,6 +160,7 @@ jobs:
       - name: Charge TLS et métier pendant drainage
         run: |
           docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD/scripts/benchmark_orchestration.py:/benchmark_orchestration.py:ro" \
             -v "$PWD/keys:/keys:ro" \
             -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
