@@ -1403,6 +1403,8 @@ et `/ready` ne sont désormais plus soumises au quota applicatif ; leur
 protection éventuelle relève de la bordure. Sur l'image reconstruite du banc
 `gsie-ha-test`, l'arrêt réel de Redis donne `/ready` HTTP 503, `/health`
 interne HTTP 200, puis `/ready` HTTP 200 après rétablissement. Les tests ciblés
-health/limiter passent à 22/22, Ruff et mypy strict sont propres. Le workflow
-GitHub doit encore être rejoué après intégration de cette correction ; aucun
-SLO général n'est publié.
+health/limiter passent à 22/22, Ruff et mypy strict sont propres. Le rejeu
+GitHub `31881933486` a confirmé le banc HA et le drainage, puis a révélé une
+erreur de câblage du test : la liveness était exécutée dans `api-ha-a`, déjà
+drainé. Le workflow est corrigé pour sonder `api-ha-b`, replica restant, et
+doit être rejoué avant clôture distante ; aucun SLO général n'est publié.

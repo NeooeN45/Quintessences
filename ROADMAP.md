@@ -870,8 +870,10 @@ non encore implémentées.
 - [ ] Ajouter à la preuve Linux une route métier longue/idempotente et tester
   les scénarios de dépendances indisponibles avant de publier un SLO général.
   Le scénario Redis est validé localement après correction : `/ready` 503,
-  `/health` interne 200, puis `/ready` 200 après rétablissement ; le rejeu CI
-  reste à effectuer sur une version intégrée.
+  `/health` interne 200, puis `/ready` 200 après rétablissement. Le premier
+  rejeu CI `31881933486` a échoué sur le câblage du test (liveness sondée dans
+  le replica A déjà drainé) ; le workflow est corrigé pour sonder B et reste
+  à rejouer.
 - [ ] Définir par RFC l'idempotence HTTP des écritures et choisir une vraie
   opération longue avant leurs tests de drainage.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW

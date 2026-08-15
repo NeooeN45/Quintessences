@@ -157,8 +157,10 @@ jobs:
             --cacert tests/perf/results/ha-certs/ca.crt \
             https://127.0.0.1:8443/ready || true)"
           test "$ready_status" = "503"
+          # api-ha-a a été drainé à l'étape précédente ; api-ha-b est le
+          # replica restant dont la vivacité doit rester indépendante de Redis.
           liveness_status="$(docker compose -f docker-compose.ha.yml \
-            exec -T api-ha-a python -c \
+            exec -T api-ha-b python -c \
             "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).status)")"
           test "$liveness_status" = "200"
           docker compose start redis

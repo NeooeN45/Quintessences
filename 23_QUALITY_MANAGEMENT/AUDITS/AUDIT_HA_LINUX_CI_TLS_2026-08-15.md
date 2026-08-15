@@ -82,3 +82,16 @@ passent à **22/22** en série, avec Ruff, mypy strict et `git diff --check`
 propres. Le run GitHub `31878560746` ne contient pas encore cette correction :
 le scénario doit être rejoué dans CI après intégration explicite de la
 modification. Aucun SLO général n'est publié à ce stade.
+
+## Premier rejeu CI — échec de câblage corrigé
+
+Le rejeu manuel `31881933486` a confirmé le banc HA et le drainage, mais a
+échoué uniquement dans le nouveau scénario Redis. La commande de liveness
+tentait d'exécuter `/health` dans `api-ha-a`, alors que cette étape avait
+intentionnellement drainé ce replica ; GitHub a donc retourné `service
+"api-ha-a" is not running`. Il s'agit d'une erreur du test, pas d'un défaut
+de l'application.
+
+Le workflow utilise désormais `api-ha-b`, replica restant, pour vérifier que
+la liveness demeure indépendante de Redis. Le scénario sera rejoué sous le
+nouveau commit avant toute clôture distante.
