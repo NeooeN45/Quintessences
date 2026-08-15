@@ -180,6 +180,12 @@
         "additionalProperties": false,
         "description": "Sortie de la chaîne — chaque étape reste lisible séparément.\n\nLes quatre sorties intermédiaires sont retournées, et non seulement la\ndernière. Un forestier à qui l'on présenterait la seule recommandation ne\npourrait ni voir le raisonnement qui la fonde, ni le diagnostic qu'elle\ninvoque, ni ce que la validation a contrôlé : `GSIE-CON-004` exige que la\nsortie soit explicable, et une explication qu'il faut redemander en\nplusieurs appels n'en est pas tout à fait une.",
         "properties": {
+          "analyse_id": {
+            "description": "Identifiant de l'exécution complète et de sa preuve persistée",
+            "format": "uuid",
+            "title": "Analyse Id",
+            "type": "string"
+          },
           "diagnostic": {
             "$ref": "#/components/schemas/Diagnostic"
           },
@@ -15133,8 +15139,26 @@
     },
     "/api/v1/orchestration/analyse": {
       "post": {
-        "description": "Enchaîne Reasoning → Diagnostic → Recommendation → Validation sur une session unique. Les qualifications de conclusions et l'état global sont déclarés par l'appelant : aucun moteur ne les devine (GSIE-CON-001, ADR-009).",
+        "description": "Enchaîne Reasoning → Diagnostic → Recommendation → Validation sur une session unique. Les qualifications de conclusions et l'état global sont déclarés par l'appelant : aucun moteur ne les devine (GSIE-CON-001, ADR-009). Le rejeu avec le même `requete_id` est idempotent et retourne la preuve existante.",
         "operationId": "orchestration_analyse_api_v1_orchestration_analyse_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
