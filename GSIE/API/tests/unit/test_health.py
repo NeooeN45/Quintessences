@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
+from gsie_api.core.limiter import limiter
 from gsie_api.infrastructure import health as health_module
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.redis_client import get_redis
@@ -62,6 +63,15 @@ def should_return_empty_dependencies_when_liveness(client: TestClient):
     response = client.get("/health")
     data = response.json()
     assert data["dependencies"] == {}
+
+
+def should_not_couple_health_probes_to_distributed_limiter():
+    """Les sondes restent disponibles si le stockage Redis du quota tombe."""
+    create_app()
+    routes_limitees = set(limiter._route_limits)
+
+    assert "gsie_api.infrastructure.health.liveness" not in routes_limitees
+    assert "gsie_api.infrastructure.health.readiness" not in routes_limitees
 
 
 def should_return_200_when_readiness_checked(client: TestClient):

@@ -1332,3 +1332,77 @@ DEC-000062 redéploie localement le commit `6986e80` et valide la chaîne active
 API/worker sains, migration 0048, manifeste idempotent, MinIO et DataAsset TIFF
 cohérents. La charge est stable sans erreur mais plafonne autour de 19 req/s
 via Docker Desktop ; ce point doit être profilé avant toute cible production.
+
+#### Audit tests et mesures — 2026-08-14
+
+La passe qualité confirme 2 935 tests unitaires, plus 55 tests ciblés de
+sécurité/configuration et de garde Docker, ainsi que les campagnes ciblées
+d’orchestration/migration, 14/14 moteurs, l’isolement des environnements, la
+compilation Python et le build JVM GeoSylva. La stack Docker de test est
+opérationnelle : six services `gsie-test` sains, PostgreSQL/PostGIS sur la
+migration `20260813_0049`, Redis et MinIO initialisés, API `/health` et
+`/ready` à 200. Une suite ciblée compte 33 passants en 117,78 s. La campagne
+complète de 349 tests a ensuite passé avec deux workers en 1393,34 s, après
+correction des fixtures de secrets, du TTL de test et de l’identité GBIF. La
+route d’orchestration avec écriture `analysis_run` doit encore être mesurée.
+La fixture Windows ferme désormais explicitement les boucles événementielles
+temporaires ; les avertissements connus sont filtrés par catégorie dans pytest.
+Bandit 1.7.10 ne relève aucun problème moyen ou haut sur 43 132 lignes (quatre
+alertes faibles restent sous le seuil CI).
+La dernière mesure de la route réelle `POST /api/v1/orchestration/analyse` a
+révélé puis corrigé une course concurrente lors de la création de l'agent
+Recommendation Engine (`GET` puis `INSERT` non atomique). La méthode utilise
+désormais `ON CONFLICT DO NOTHING` côté PostgreSQL. Les campagnes finales sur
+`gsie_test` sont vertes : 20/20 à concurrence 5 (p95 312,87 ms) et 40/40 à
+concurrence 10 (p95 586,89 ms), avec 100 % des `analysis_run` persistés.
+Le test PostgreSQL concurrent dédié et les cinq tests d'orchestration passent
+également après le correctif.
+Le rapport détaillé est `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_PERFORMANCE_ORCHESTRATION_2026-08-15.md`.
+Rapport détaillé :
+`23_QUALITY_MANAGEMENT/AUDITS/AUDIT_TESTS_MESURES_2026-08-14.md`.
+Les validations de configuration ont aussi été durcies : les marqueurs
+documentaires de secrets sont refusés en staging/production pour les URLs
+PostgreSQL/Redis, les identifiants S3 et la clé MFA, avant toute connexion.
+
+#### Haute disponibilité locale isolée — 2026-08-15
+
+La campagne `AUDIT_HA_LOCAL_2026-08-15.md` valide le drainage gracieux et la
+continuité d'un pool HAProxy à deux réplicas sur le projet Compose isolé
+`gsie-ha-test`. Sous charge, le retrait de `replica_a` a produit 200/200
+réponses HTTP 200, toutes servies par `replica_b`, puis le replica A a été
+arrêté avec une grâce de 45 secondes, recréé et réintégré ; la campagne de
+retour a produit 200/200 avec une répartition 100/100.
+Cette preuve reste locale Docker Desktop : les latences (p95 1,39–3,59 s)
+et le débit (6,46–13,91 req/s) ne constituent pas un SLO de production. La
+limitation de débit a été désactivée uniquement dans un override temporaire
+ignoré pour isoler la capacité ; la configuration produit n'a pas changé.
+La route métier `POST /api/v1/orchestration/analyse` a ensuite été vérifiée
+derrière le même proxy : 8/8 puis 20/20 réponses 200, avec 100 % des
+`analysis_run` persistés dans `gsie_ha_test` pendant le drainage de A. La
+configuration normale a enfin refusé le 21e appel par un 429 attendu
+(`20 per 1 minute`) après 20 écritures persistées. Le benchmark accepte
+désormais un namespace et une base attendus explicitement, avec `gsie-test`
+comme défaut, afin d'empêcher toute vérification croisée entre environnements.
+Le câblage TLS a aussi été rejoué localement avec un certificat éphémère
+vérifié par `curl` : 100/100 réponses 200 en nominal, puis 100/100 pendant le
+drainage de A, entièrement reprises par B. Le workflow Ubuntu
+`.github/workflows/ha-linux.yml` reste à exécuter sur GitHub avant toute
+publication de capacité ou de SLO.
+Le run GitHub Ubuntu/TLS `31878560746` sur le commit fusionné
+`22a1818471055d9f136a98c666b09bf58232780c` est ensuite passé au vert en
+6 min 25 s : 6 000/6 000 HTTP 200, zéro erreur, 271,32 req/s, p95
+177,68 ms et p99 267,17 ms pendant le drainage. La preuve Linux/TLS respecte
+les seuils du workflow ; elle ne transforme pas encore cette mesure en SLO
+général tant que les routes longues/idempotentes et les dépendances dégradées
+ne sont pas couvertes.
+
+Une régression de résilience a ensuite été trouvée en préparant le scénario
+Redis indisponible : le rate limiter partagé bloquait aussi `/health`, alors
+que cette sonde doit rester indépendante des dépendances. Les routes `/health`
+et `/ready` ne sont désormais plus soumises au quota applicatif ; leur
+protection éventuelle relève de la bordure. Sur l'image reconstruite du banc
+`gsie-ha-test`, l'arrêt réel de Redis donne `/ready` HTTP 503, `/health`
+interne HTTP 200, puis `/ready` HTTP 200 après rétablissement. Les tests ciblés
+health/limiter passent à 22/22, Ruff et mypy strict sont propres. Le workflow
+GitHub doit encore être rejoué après intégration de cette correction ; aucun
+SLO général n'est publié.

@@ -5349,3 +5349,88 @@ frontières, position) :
 - AI-CON : Constitution IA (livrable 009)
 - ARCH-D1 : Evidence Engine repositionné en amont de Knowledge Engine
 - ARCH-D2 : 14/14 moteurs officiels documentés
+## [FIELDINTAKE STATIONNEL ET QUALIFICATION METADATA-ONLY] - 2026-08-12
+
+- Ajout du contrat `field_intake_station.v0.1` : observations, calculs,
+  interprétations et recommandations séparés, unités explicites et formules
+  géométriques dendrométriques documentées.
+- Intégration optionnelle au payload JSONB `FieldIntake` existant, sans
+  migration ni promotion : les soumissions restent en quarantaine et
+  idempotentes.
+- Ajout du scénario `quarantine.farges.dendrometry.001` pour tester la
+  contradiction 325 tiges/ha, 20,5 m²/ha et 53 cm ; Silver/quarantaine,
+  abstention obligatoire, aucune vérité Gold implicite.
+- Ajout du manifeste spatial metadata-only et de la bibliothèque scientifique
+  candidate ; aucune copie d'octets, ingestion, IA ou promotion.
+- Validation : 13 tests ciblés passants, Ruff et mypy strict propres sur les
+  nouveaux modules.
+
+## [AUDIT TESTS ET MESURES] - 2026-08-14
+
+- 2 931 tests unitaires passants et campagnes ciblées migration/orchestration,
+  WebSocket, routeurs et GeoSylva confirmées.
+- 53 tests ciblés de configuration, sécurité et garde Docker passants.
+- Audit statique 14/14 moteurs, compilation Python et garde d’isolement
+  test/staging/production reproduits.
+- Campagne complète : 349 tests collectés, mais exécution classée
+  `BLOCKED_ENV` après timeout de 1 204 s faute de démon Docker répondant.
+- Mesure de la route d’orchestration réelle et contrôle Bandit reportés après
+  restauration de l’environnement Docker/CI.
+- Durcissement de configuration : refus des marqueurs de secrets documentaires
+  en staging/production pour PostgreSQL, Redis, S3 et MFA.
+- Ajout de `scripts/run_integration_guarded.py` : porte Docker de 30 secondes,
+  timeout pytest borné et codes de sortie distincts pour les campagnes locales.
+- Rapport : `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_TESTS_MESURES_2026-08-14.md`.
+
+## [HA LOCALE ISOLÉE] - 2026-08-15
+
+- Campagne HAProxy à deux réplicas sur `gsie-ha-test`, avec PostgreSQL,
+  Redis, MinIO et réseau dédiés.
+- Drainage de `replica_a` sous 200 requêtes : 200/200 HTTP 200, reprise
+  complète par `replica_b`, aucun 5xx ni erreur réseau.
+- Arrêt gracieux 45 s, recréation de A, retour `healthy` et répartition
+  100/100 après récupération.
+- Latences et débit Docker Desktop documentés comme mesure locale uniquement ; aucun
+  SLO de production publié.
+- Rapport : `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_HA_LOCAL_2026-08-15.md`.
+
+## [ROUTE MÉTIER SOUS HA] - 2026-08-15
+
+- `POST /api/v1/orchestration/analyse` testé derrière HAProxy avec namespace
+  et base attendus explicitement (`gsie-ha-test` / `gsie_ha_test`).
+- 20/20 réponses HTTP 200 et 20/20 `analysis_run` persistés pendant le
+  drainage de A ; trafic post-drainage routé vers B.
+- Configuration normale vérifiée : 20 appels acceptés, 21e refusé par HTTP
+  429 conformément à la limite `20 per 1 minute`.
+- Aucune écriture n'a ciblé une base hors du banc HA dédié.
+
+## [HA TLS LOCAL] - 2026-08-15
+
+- Certificat TLS éphémère avec SAN local généré et vérifié par `curl` via
+  `--cacert`.
+- 100/100 requêtes HTTPS réussies en nominal, puis 100/100 sous drainage de
+  `replica_a`, avec reprise complète par `replica_b`.
+- Le workflow Ubuntu `.github/workflows/ha-linux.yml` reste la preuve distante
+  requise avant publication d'un SLO de production.
+
+## [PREUVE HA LINUX CI] - 2026-08-15
+
+- Run GitHub `31878560746` vert sur `main` (`22a1818`), durée 6 min 25 s.
+- 6 000/6 000 HTTPS 200 pendant drainage, zéro erreur, 271,32 req/s,
+  p95 177,68 ms et p99 267,17 ms.
+- Artefacts JSON et journaux téléchargés et référencés dans
+  `AUDIT_HA_LINUX_CI_TLS_2026-08-15.md`.
+- La qualification d'un SLO général reste différée jusqu'aux routes longues,
+  écritures idempotentes et scénarios de dépendances dégradées.
+
+## [RÉSILIENCE DES SONDES SOUS PANNE REDIS] - 2026-08-15
+
+- Le scénario réel d'arrêt Redis a révélé que le rate limiter applicatif
+  bloquait également `/health`, contrairement au contrat de liveness.
+- `/health` et `/ready` ne sont plus soumis au quota applicatif ; une
+  protection éventuelle doit être portée par HAProxy, Cloudflare ou le réseau
+  de supervision.
+- Banc Docker isolé reconstruit et vérifié : Redis arrêté → `/ready` HTTP 503,
+  `/health` interne HTTP 200 ; Redis rétabli → `/ready` HTTP 200.
+- Tests ciblés health/limiter : 22/22 ; Ruff, mypy strict et contrôle de diff
+  propres. Le scénario reste à rejouer dans GitHub Actions après intégration.

@@ -864,8 +864,14 @@ non encore implémentées.
   longues et écritures idempotentes ; expliquer le maximum à 14,1 secondes.
 - [x] DEC-000065 : workflow Ubuntu HA+TLS implémenté avec seuils bloquants et
   artefact JSON ; smoke TLS local 500/500 validé.
-- [ ] Exécuter le workflow après push et rattacher l'identifiant du run et son
-  artefact avant de clôturer la preuve Linux native.
+- [x] Exécuter le workflow Ubuntu/TLS et rattacher le run `31878560746` ainsi
+  que son artefact : 6 000/6 000 HTTP 200, 271,32 req/s, p95 177,68 ms,
+  p99 267,17 ms pendant drainage.
+- [ ] Ajouter à la preuve Linux une route métier longue/idempotente et tester
+  les scénarios de dépendances indisponibles avant de publier un SLO général.
+  Le scénario Redis est validé localement après correction : `/ready` 503,
+  `/health` interne 200, puis `/ready` 200 après rétablissement ; le rejeu CI
+  reste à effectuer sur une version intégrée.
 - [ ] Définir par RFC l'idempotence HTTP des écritures et choisir une vraie
   opération longue avant leurs tests de drainage.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW

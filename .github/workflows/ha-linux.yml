@@ -144,6 +144,35 @@ jobs:
           curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
             https://127.0.0.1:8443/ready >/dev/null
 
+      - name: Dépendance Redis indisponible puis rétablie
+        run: |
+          set -euo pipefail
+          docker compose stop redis
+          # Le readiness possède un cache de cinq secondes : attendre sa
+          # purge avant de conclure sur l'état de Redis.
+          sleep 7
+          ready_status="$(curl --silent --show-error \
+            --output /tmp/gsie-ready-degraded.json \
+            --write-out '%{http_code}' \
+            --cacert tests/perf/results/ha-certs/ca.crt \
+            https://127.0.0.1:8443/ready || true)"
+          test "$ready_status" = "503"
+          liveness_status="$(docker compose -f docker-compose.ha.yml \
+            exec -T api-ha-a python -c \
+            "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).status)")"
+          test "$liveness_status" = "200"
+          docker compose start redis
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent \
+              --cacert tests/perf/results/ha-certs/ca.crt \
+              https://127.0.0.1:8443/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Redis n'a pas rétabli la readiness dans le délai attendu" >&2
+          exit 1
+
       - name: Collecter les diagnostics
         if: always()
         run: |
