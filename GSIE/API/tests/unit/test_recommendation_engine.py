@@ -322,14 +322,16 @@ async def should_create_forestier_agent_when_forestier_id_provided() -> None:
     session = AsyncMock()
     session.get = AsyncMock(return_value=None)  # Resource n'existe pas
     session.add = MagicMock()
+    session.execute = AsyncMock()
     session.flush = AsyncMock()
     engine = RecommendationEngine(session)
 
     forestier_id = uuid4()
     result = await engine._agent_forestier(forestier_id)
     assert result == forestier_id
-    # session.add doit avoir été appelé pour créer la resource + l'agent
-    assert session.add.call_count >= 2
+    # Les deux écritures passent par INSERT ... ON CONFLICT DO NOTHING afin
+    # de rester sûres sous concurrence : resource puis agent.
+    assert session.execute.await_count >= 2
 
 
 @pytest.mark.asyncio
