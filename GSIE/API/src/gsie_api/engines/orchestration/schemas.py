@@ -29,7 +29,7 @@ une conclusion à la place du forestier.
 """
 
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -158,6 +158,10 @@ class AnalyseComplete(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    analyse_id: UUID = Field(
+        default_factory=uuid4,
+        description="Identifiant de l'exécution complète et de sa preuve persistée",
+    )
     requete_origine: UUID
     inference: InferenceResult
     diagnostic: Diagnostic

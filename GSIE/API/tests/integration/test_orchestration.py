@@ -14,16 +14,22 @@ forestier, et le conseil sylvicole qui en découlerait porterait une chaîne
 complète — invisible (`GSIE-CON-001`, `ADR-009`).
 """
 
+import asyncio
 from collections.abc import AsyncGenerator
-from uuid import uuid4
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from gsie_api.core.auth import create_access_token
+from gsie_api.engines.orchestration.schemas import AnalyseRequest
+from gsie_api.engines.orchestration.service import OrchestrationEngine
 from gsie_api.infrastructure.database import get_db
+from gsie_api.infrastructure.models.enrichment import AnalysisRunModel
 from tests.conftest import requires_docker
 
 pytestmark = requires_docker
@@ -124,7 +130,9 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.mark.asyncio
-async def test_un_appel_deroule_la_chaine_entiere(client: AsyncClient) -> None:
+async def test_un_appel_deroule_la_chaine_entiere(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
     """Les quatre sorties reviennent dans une seule réponse.
 
     Les quatre, et pas seulement la dernière : un forestier à qui l'on
@@ -144,6 +152,11 @@ async def test_un_appel_deroule_la_chaine_entiere(client: AsyncClient) -> None:
         f"la chaîne est bloquée par sa propre validation : "
         f"{corps['validation']['causes_blocage']}"
     )
+    preuve = await db_session.get(AnalysisRunModel, UUID(corps["analyse_id"]))
+    assert preuve is not None
+    assert preuve.requete_origine == UUID(corps["requete_origine"])
+    assert preuve.contenu["analyse_id"] == corps["analyse_id"]
+    assert preuve.contenu["validation"]["statut"] == corps["validation"]["statut"]
 
 
 @pytest.mark.asyncio
@@ -214,3 +227,68 @@ async def test_aucune_regle_applicable_fait_refuser_avec_son_motif(
     assert (
         "aucune conclusion" in reponse.text.lower()
     ), f"le refus n'explique pas pourquoi : {reponse.text[:300]}"
+
+
+@pytest.mark.asyncio
+async def test_analyses_concurrentes_avec_sessions_independantes_sont_persistantes(
+    db_session: AsyncSession,
+) -> None:
+    """Deux sessions simultanées ne doivent pas se heurter sur l'agent moteur.
+
+    Ce test reproduit la concurrence réelle de Gunicorn. Un simple ``GET``
+    suivi d'un ``INSERT`` pour l'agent déterministe créait auparavant une
+    collision ``resource_pkey`` et des HTTP 500 intermittents.
+    """
+    assert db_session.bind is not None
+    fabrique = async_sessionmaker(db_session.bind, expire_on_commit=False)
+
+    async def executer() -> UUID:
+        async with fabrique() as session:
+            resultat = await OrchestrationEngine(session).analyser(
+                AnalyseRequest.model_validate(_corps()), datetime.now(UTC)
+            )
+            await session.commit()
+            return resultat.analyse_id
+
+    identifiants = await asyncio.gather(*(executer() for _ in range(8)))
+    assert len(set(identifiants)) == 8
+    for identifiant in identifiants:
+        assert await db_session.get(AnalysisRunModel, identifiant) is not None
+
+
+@pytest.mark.asyncio
+async def test_rejeu_meme_requete_est_idempotent(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Un retry réseau rend la même preuve sans réexécuter les moteurs."""
+    corps = _corps()
+    headers = {**_HEADERS, "Idempotency-Key": corps["requete_id"]}
+
+    premiere = await client.post("/api/v1/orchestration/analyse", json=corps, headers=headers)
+    seconde = await client.post("/api/v1/orchestration/analyse", json=corps, headers=headers)
+
+    assert premiere.status_code == 200, premiere.text
+    assert seconde.status_code == 200, seconde.text
+    assert seconde.json() == premiere.json()
+    total = await db_session.scalar(
+        select(func.count())
+        .select_from(AnalysisRunModel)
+        .where(AnalysisRunModel.requete_origine == UUID(corps["requete_id"]))
+    )
+    assert total == 1
+
+
+@pytest.mark.asyncio
+async def test_rejeu_meme_identifiant_avec_contenu_different_est_refuse(
+    client: AsyncClient,
+) -> None:
+    """Une clé réutilisée ne peut pas masquer une seconde demande métier."""
+    corps = _corps()
+    headers = {**_HEADERS, "Idempotency-Key": corps["requete_id"]}
+    premiere = await client.post("/api/v1/orchestration/analyse", json=corps, headers=headers)
+    corps["question"] = "Quelle essence éviter ?"
+    seconde = await client.post("/api/v1/orchestration/analyse", json=corps, headers=headers)
+
+    assert premiere.status_code == 200, premiere.text
+    assert seconde.status_code == 409, seconde.text
+    assert "contenu différent" in seconde.text

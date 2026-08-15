@@ -23,12 +23,13 @@ validation a contrôlé (`GSIE-CON-004`).
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.rbac import EngineWriteUser
 from gsie_api.engines.diagnostic.engine import DiagnosticEngineError
+from gsie_api.engines.orchestration.idempotency import AnalyseIdempotencyConflictError
 from gsie_api.engines.orchestration.schemas import AnalyseComplete, AnalyseRequest
 from gsie_api.engines.orchestration.service import (
     AnalyseImpossibleError,
@@ -76,7 +77,8 @@ async def orchestration_version(request: Request) -> EngineVersionResponse:
         "Enchaîne Reasoning → Diagnostic → Recommendation → Validation sur une "
         "session unique. Les qualifications de conclusions et l'état global "
         "sont déclarés par l'appelant : aucun moteur ne les devine "
-        "(GSIE-CON-001, ADR-009)."
+        "(GSIE-CON-001, ADR-009). Le rejeu avec le même `requete_id` est "
+        "idempotent et retourne la preuve existante."
     ),
 )
 @_limiter.limit("20/minute")
@@ -86,6 +88,7 @@ async def orchestration_analyse(
     response: Response,
     session: DbSession,
     _user: EngineWriteUser,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> AnalyseComplete:
     """Déroule la chaîne complète.
 
@@ -97,8 +100,18 @@ async def orchestration_analyse(
         400: requête incomplète — conclusion sans qualification déclarée,
             aucune règle applicable, ou refus d'un moteur.
     """
+    if idempotency_key is not None and idempotency_key != str(request_body.requete_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Idempotency-Key doit être égal à requete_id",
+        )
+    response.headers["Idempotency-Key"] = str(request_body.requete_id)
     try:
-        return await OrchestrationEngine(session).analyser(request_body, datetime.now(UTC))
+        return await OrchestrationEngine(session).analyser_idempotente(
+            request_body, datetime.now(UTC)
+        )
+    except AnalyseIdempotencyConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except (
         AnalyseImpossibleError,
         ReasoningEngineError,

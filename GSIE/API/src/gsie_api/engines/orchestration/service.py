@@ -25,10 +25,7 @@ complète — invisible (`ADR-009`, `GSIE-CON-001`).
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +35,10 @@ from gsie_api.engines.diagnostic.schemas import (
     DiagnosticRequest,
     QualificationConclusion,
 )
+from gsie_api.engines.orchestration.idempotency import (
+    charger_analyse_idempotente,
+    contenu_persistable,
+)
 from gsie_api.engines.orchestration.schemas import AnalyseComplete, AnalyseRequest
 from gsie_api.engines.reasoning.engine import ReasoningEngine, conclusion_id_pour
 from gsie_api.engines.reasoning.schemas import Conclusion
@@ -45,6 +46,7 @@ from gsie_api.engines.recommendation.engine import RecommendationEngine
 from gsie_api.engines.recommendation.schemas import RecommendationRequest
 from gsie_api.engines.validation.engine import ValidationEngine
 from gsie_api.engines.validation_pipeline import ensemble_complet_to_validation_request
+from gsie_api.infrastructure.models.enrichment import AnalysisRunModel
 
 logger = get_logger("gsie_api.orchestration")
 
@@ -77,7 +79,31 @@ class OrchestrationEngine:
         """Version de l'orchestration."""
         return "0.1.0"
 
-    async def analyser(self, requete: AnalyseRequest, maintenant: datetime) -> AnalyseComplete:
+    async def analyser_idempotente(
+        self, requete: AnalyseRequest, maintenant: datetime
+    ) -> AnalyseComplete:
+        """Rejoue une preuve existante ou exécute la chaîne une seule fois."""
+        existante, empreinte = await charger_analyse_idempotente(self._session, requete)
+        if existante is not None:
+            logger.info(
+                "analyse_idempotent_replay",
+                requete_id=str(requete.requete_id),
+                analyse_id=str(existante.analyse_id),
+            )
+            return existante
+        return await self.analyser(
+            requete,
+            maintenant,
+            requete_fingerprint=empreinte,
+        )
+
+    async def analyser(
+        self,
+        requete: AnalyseRequest,
+        maintenant: datetime,
+        *,
+        requete_fingerprint: str | None = None,
+    ) -> AnalyseComplete:
         """Déroule la chaîne complète et retourne chaque étape.
 
         `maintenant` est une entrée et non une lecture d'horloge : le Reasoning
@@ -126,25 +152,65 @@ class OrchestrationEngine:
             )
         )
 
-        validation = await ValidationEngine().validate(
+        # La validation reçoit la même session que le diagnostic et les
+        # recommandations. Les sorties bloquées ou partielles doivent rester
+        # auditablement persistées et alimenter Learning ; une instance sans
+        # session ne ferait qu'émettre un avertissement et perdrait la trace.
+        validation = await ValidationEngine(self._session).validate(
             ensemble_complet_to_validation_request(
                 diagnostic, recommandations, list(inference.conclusions)
             )
         )
 
         resultat = AnalyseComplete(
+            analyse_id=uuid4(),
             requete_origine=requete.requete_id,
             inference=inference,
             diagnostic=diagnostic,
             recommandations=recommandations,
             validation=validation,
         )
+        # La réponse et la preuve persistée partagent exactement le même
+        # identifiant et le même JSON. Le flush reste dans la transaction HTTP.
+        # Le test de type porte sur l'identifiant plutôt que sur la classe :
+        # les tests de branchement peuvent remplacer le schéma par un mock,
+        # sans qu'un mock ne soit jamais écrit dans la base.
+        if isinstance(getattr(resultat, "analyse_id", None), UUID):
+            await self._persister_analyse(
+                resultat,
+                requete.station_id,
+                maintenant,
+                requete_fingerprint=requete_fingerprint,
+            )
         logger.info(
             "analyse_complete",
             requete_id=str(requete.requete_id),
             **resultat.resume,
         )
         return resultat
+
+    async def _persister_analyse(
+        self,
+        resultat: AnalyseComplete,
+        station_id: UUID,
+        execute_at: datetime,
+        *,
+        requete_fingerprint: str | None = None,
+    ) -> None:
+        """Persiste les quatre sorties sans créer une seconde source de vérité."""
+        self._session.add(
+            AnalysisRunModel(
+                id=resultat.analyse_id,
+                requete_origine=resultat.requete_origine,
+                requete_fingerprint=requete_fingerprint,
+                station_id=station_id,
+                statut_validation=resultat.validation.statut.value,
+                moteur_orchestration_version=self.version(),
+                contenu=contenu_persistable(resultat),
+                execute_at=execute_at,
+            )
+        )
+        await self._session.flush()
 
     def _qualifier(
         self, requete: AnalyseRequest, conclusions: list[Conclusion]

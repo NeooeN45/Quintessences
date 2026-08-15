@@ -172,3 +172,41 @@ class ValidationResultModel(Base, TimestampMixin):
         Index("idx_validation_result_statut", "statut"),
         Index("idx_validation_result_date", "date_validation"),
     )
+
+
+class AnalysisRunModel(Base, TimestampMixin):
+    """Preuve complète d'une exécution Reasoning → Validation.
+
+    Satellite append-only de la requête : le JSON conserve les quatre sorties
+    exactes et les colonnes scalaires servent uniquement au filtrage. Les
+    identifiants de requête/station ne sont pas des FK afin de permettre une
+    analyse GeoSylva avant l'enregistrement d'une resource locale.
+    """
+
+    __tablename__ = "analysis_run"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    requete_origine: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    requete_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    station_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    statut_validation: Mapped[str] = mapped_column(String(30), nullable=False)
+    moteur_orchestration_version: Mapped[str] = mapped_column(String(30), nullable=False)
+    contenu: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, comment="Sorties intégrales des quatre moteurs"
+    )
+    execute_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("idx_analysis_run_requete_origine", "requete_origine"),
+        Index("idx_analysis_run_station_id", "station_id"),
+        Index("idx_analysis_run_statut_validation", "statut_validation"),
+        Index("idx_analysis_run_execute_at", "execute_at"),
+        Index("idx_analysis_run_requete_execute", "requete_origine", "execute_at"),
+        Index(
+            "uq_analysis_run_requete_fingerprint",
+            "requete_origine",
+            "requete_fingerprint",
+            unique=True,
+            postgresql_where=text("requete_fingerprint IS NOT NULL"),
+        ),
+    )

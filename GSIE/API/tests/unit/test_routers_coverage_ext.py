@@ -557,7 +557,7 @@ class TestOrchestrationRouter:
 
         with patch("gsie_api.engines.orchestration.router.OrchestrationEngine") as mock_cls:
             mock_engine = mock_cls.return_value
-            mock_engine.analyser = AsyncMock(
+            mock_engine.analyser_idempotente = AsyncMock(
                 side_effect=AnalyseImpossibleError("aucune règle applicable")
             )
             resp = await orchestration_client.post(
