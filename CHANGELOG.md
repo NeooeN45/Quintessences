@@ -5433,6 +5433,6 @@ frontières, position) :
 - Banc Docker isolé reconstruit et vérifié : Redis arrêté → `/ready` HTTP 503,
   `/health` interne HTTP 200 ; Redis rétabli → `/ready` HTTP 200.
 - Tests ciblés health/limiter : 22/22 ; Ruff, mypy strict et contrôle de diff
-  propres. Le premier rejeu `31881933486` a échoué car le test sondait le
-  replica A déjà drainé ; le workflow est corrigé pour sonder le replica B et
-  doit être rejoué avant clôture.
+  propres. Le rejeu final `31882759911` sur `0298d3f` est vert en 6 min 23 s :
+  drainage, panne Redis, liveness du replica B et rétablissement de readiness
+  validés. Les routes longues/idempotentes restent à couvrir avant tout SLO.

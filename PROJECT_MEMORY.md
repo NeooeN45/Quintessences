@@ -1404,7 +1404,7 @@ protection éventuelle relève de la bordure. Sur l'image reconstruite du banc
 `gsie-ha-test`, l'arrêt réel de Redis donne `/ready` HTTP 503, `/health`
 interne HTTP 200, puis `/ready` HTTP 200 après rétablissement. Les tests ciblés
 health/limiter passent à 22/22, Ruff et mypy strict sont propres. Le rejeu
-GitHub `31881933486` a confirmé le banc HA et le drainage, puis a révélé une
-erreur de câblage du test : la liveness était exécutée dans `api-ha-a`, déjà
-drainé. Le workflow est corrigé pour sonder `api-ha-b`, replica restant, et
-doit être rejoué avant clôture distante ; aucun SLO général n'est publié.
+GitHub `31882759911` sur `0298d3f` est vert en 6 min 23 s : le banc HA, le
+drainage, la panne Redis, la liveness du replica B et le rétablissement de
+readiness passent. Les routes longues/idempotentes restent à couvrir et aucun
+SLO général n'est encore publié.

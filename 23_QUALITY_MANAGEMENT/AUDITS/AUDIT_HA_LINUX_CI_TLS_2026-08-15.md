@@ -95,3 +95,18 @@ de l'application.
 Le workflow utilise désormais `api-ha-b`, replica restant, pour vérifier que
 la liveness demeure indépendante de Redis. Le scénario sera rejoué sous le
 nouveau commit avant toute clôture distante.
+
+## Rejeu CI final — validation
+
+Le run manuel `31882759911`, exécuté sur le commit `0298d3f`, est **vert** en
+6 min 23 s. Les étapes de construction, démarrage, charge TLS, drainage et
+vérification du replica restant passent. Le scénario Redis passe également :
+
+- Redis arrêté → `/ready` via HAProxy TLS attendu en HTTP 503 ;
+- `/health` exécuté sur `api-ha-b`, replica survivant, en HTTP 200 ;
+- Redis redémarré → `/ready` rétabli avant la fin du délai borné ;
+- collecte des diagnostics et nettoyage complet réussis.
+
+La correction de câblage est donc validée à la fois localement et sur Ubuntu
+GitHub Actions. Les routes longues/idempotentes et la publication d'un SLO
+général restent volontairement hors de cette preuve.
