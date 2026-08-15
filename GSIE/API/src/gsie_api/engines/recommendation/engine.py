@@ -43,6 +43,7 @@ from typing import Any
 from uuid import UUID, uuid4, uuid5
 
 from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.logging import get_logger
@@ -422,12 +423,24 @@ class RecommendationEngine:
         )
 
     async def _agent(self, agent_id: UUID, *, nom: str, type_agent: AgentType) -> UUID:
-        """Crée l'Agent et sa ligne `resource` s'ils manquent, puis retourne l'id."""
-        if await self._session.get(ResourceModel, agent_id) is not None:
-            return agent_id
-        self._session.add(ResourceModel(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}"))
+        """Crée l'Agent sans course entre deux requêtes concurrentes.
+
+        Le ``GET`` suivi d'un ``INSERT`` était correct en séquentiel mais deux
+        analyses simultanées pouvaient toutes deux observer l'agent absent et
+        provoquer une violation de ``resource_pkey``. L'insertion idempotente
+        PostgreSQL est atomique et conserve la stabilité des identifiants.
+        """
+        await self._session.execute(
+            pg_insert(ResourceModel)
+            .values(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}")
+            .on_conflict_do_nothing(index_elements=[ResourceModel.id])
+        )
         await self._session.flush()
-        self._session.add(AgentModel(id=agent_id, name=nom, type=type_agent))
+        await self._session.execute(
+            pg_insert(AgentModel)
+            .values(id=agent_id, name=nom, type=type_agent)
+            .on_conflict_do_nothing(index_elements=[AgentModel.id])
+        )
         await self._session.flush()
         return agent_id
 
