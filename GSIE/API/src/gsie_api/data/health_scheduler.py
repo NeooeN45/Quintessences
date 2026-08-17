@@ -35,12 +35,24 @@ if redis.call('get', KEYS[1]) == ARGV[1] then
 end
 return 0
 """
-_ADAPTER_TO_MANIFEST_SLUG = {
-    "gbif": "gbif-occurrences",
-    "ign": "ign-apicarto",
-    "soilgrids": "soilgrids-properties",
-    "meteofrance": "meteofrance-services",
+_ADAPTER_TO_MANIFEST_SLUGS: dict[str, tuple[str, ...]] = {
+    # Le premier slug est canonique ; le second permet seulement de continuer
+    # à mesurer l'ancienne base avant sa migration transactionnelle.
+    "gbif": ("gbif-species-api", "gbif-occurrences"),
+    "ign": ("ign-apicarto-cadastre", "ign-apicarto"),
+    "soilgrids": ("soilgrids-rest-beta", "soilgrids-properties"),
+    "meteofrance": ("meteofrance-meteo-forets", "meteofrance-services"),
 }
+
+
+def _resolve_manifest_slug(adapter_key: str, manifest_slugs: set[str]) -> str | None:
+    """Retourne le slug canonique présent, sinon le slug historique."""
+
+    for slug in _ADAPTER_TO_MANIFEST_SLUGS.get(adapter_key, ()):
+        if slug in manifest_slugs:
+            return slug
+    return None
+
 
 HEALTH_RUNS = Counter(
     "gsie_data_registry_health_runs_total",
@@ -157,14 +169,16 @@ class DataRegistryHealthScheduler:
             max_concurrency=self._settings.data_registry_health_max_concurrency,
         )
         snapshots: dict[str, ManifestHealthSnapshot] = {}
+        seen_adapters: set[str] = set()
         manifest_slugs = {entry.slug for entry in manifest.entries}
         for report in summary.reports:
-            slug = _ADAPTER_TO_MANIFEST_SLUG.get(report.adapter_key)
-            if slug is None or slug not in manifest_slugs:
+            slug = _resolve_manifest_slug(report.adapter_key, manifest_slugs)
+            if slug is None:
                 raise ValueError(f"adapter sans projection manifeste : {report.adapter_key}")
             snapshots[slug] = snapshot_from_report(report)
+            seen_adapters.add(report.adapter_key)
             HEALTH_REPORTS.labels(adapter=report.adapter_key, status=report.status.value).inc()
-        if set(snapshots) != set(_ADAPTER_TO_MANIFEST_SLUG.values()):
+        if seen_adapters != set(_ADAPTER_TO_MANIFEST_SLUGS):
             raise ValueError("campagne de santé incomplète")
         async with async_session_factory() as session, session.begin():
             await ManifestRegistryService(session).apply(

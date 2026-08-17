@@ -90,7 +90,7 @@ export default function ActivityPanel() {
 
     let ws: WebSocket;
     try {
-      ws = new WebSocket(`${API_URL.replace("http", "ws")}/api/v1/ws/events?token=${token}`);
+      ws = new WebSocket(`${API_URL.replace("http", "ws")}/api/v1/ws/events`, ["gsie.jwt", token]);
       wsRef.current = ws;
     } catch {
       setState("error");

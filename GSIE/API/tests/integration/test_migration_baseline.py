@@ -448,6 +448,24 @@ def _verifier_absence_de_derive(url: str) -> None:
     )
 
 
+def _verifier_analysis_run_append_only(url: str) -> None:
+    """Vérifie que la migration installe bien le trigger de non-mutation."""
+    from sqlalchemy import text
+
+    async def verifier() -> bool:
+        engine = create_async_engine(url)
+        try:
+            async with engine.connect() as conn:
+                result = await conn.execute(
+                    text("SELECT 1 FROM pg_trigger " "WHERE tgname = 'analysis_run_append_only'")
+                )
+                return result.scalar_one_or_none() == 1
+        finally:
+            await engine.dispose()
+
+    assert asyncio.run(verifier()), "le trigger append-only de analysis_run est absent"
+
+
 class TestBaselineGSIEV62:
     """La baseline est autonome, exacte et réversible sur une base jetable."""
 
@@ -460,6 +478,7 @@ class TestBaselineGSIEV62:
         assert _version(base_vierge) == _HEAD
         _verifier_schema_courant(base_vierge)
         _verifier_absence_de_derive(base_vierge)
+        _verifier_analysis_run_append_only(base_vierge)
 
         enums_apres_upgrade = _enum_names(base_vierge)
         command.downgrade(config, "base")

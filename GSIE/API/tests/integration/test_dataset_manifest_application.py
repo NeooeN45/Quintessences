@@ -88,7 +88,19 @@ async def test_manifest_persists_explicit_health_and_archive_asset_once(db_sessi
     assert await db_session.scalar(select(func.count()).select_from(DatasetHealthModel)) == 1
 
     archive_payload = manifest.entries[0].model_dump(mode="json")
-    archive_payload.update({"operation": "archive_copy", "version": "archive-2026-08-10"})
+    # Le manifeste historique utilise ``gbif`` pour rester lisible, mais toute
+    # nouvelle application doit porter l'identité canonique réconciliée.
+    archive_payload.update(
+        {
+            "operation": "archive_copy",
+            "version": "archive-2026-08-10",
+            "source_registry_id": "taxref-via-gbif",
+        }
+    )
+    archive_payload["distribution"]["licence"] = "Licence Ouverte / Etalab (TAXREF)"
+    archive_payload["distribution"]["access_url"] = (
+        "https://www.gbif.org/dataset/0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6"
+    )
     archive_manifest = DatasetManifest(
         manifest_version=manifest.manifest_version,
         generated_at=manifest.generated_at,

@@ -675,4 +675,24 @@ Utilisateurs et contributeurs de l'Encyclopédie. Rôles définis au
 ```sql
 CREATE TABLE utilisateurs (
     id                  SERIAL PRIMARY KEY,
-    nom_utilisateur     
+    nom_utilisateur     -- [TRONCATURE HISTORIQUE CONSTATEE]
+-- Le fragment original s'arrete au milieu de cette definition.
+-- Aucun SQL manquant n'a ete reconstitue.
+```
+
+## Note de restauration forensique — 2026-08-14
+
+Le document était matériellement tronqué dès son commit de création
+`990ae63`. Le fragment historique qui précède est conservé octet pour octet :
+son blob Git d'origine est
+`f1a68789752fe7751b20aa99fbdec0df587d6f96`. La présente intervention est
+strictement append-only : elle ferme le bloc Markdown sans inventer de colonne,
+de contrainte ni de section manquante. Le SQL historique demeure donc
+volontairement non exécutable.
+
+La reconstruction factuelle, séparée de cette archive, est documentée dans
+[ENCYCLOPEDIA_DATABASE_SCHEMA_RECONSTRUCTION.md](ENCYCLOPEDIA_DATABASE_SCHEMA_RECONSTRUCTION.md).
+Les sources canoniques actuelles restent le métamodèle adopté par RFC-0011 et
+DEC-000022, les modèles SQLAlchemy, la migration de référence et le schéma
+généré qui y sont recensés. Cette restauration ne change pas le statut
+**Supersédé** du livrable 309.

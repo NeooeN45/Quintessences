@@ -16,8 +16,9 @@ Directive.
 
 ## Ce qui peut y être ajouté
 
-- `ACTIVE/` : Directives en vigueur (ex. `GSIE-DIR-0001.md`)
-- `ARCHIVED/` : Directives remplacées ou obsolètes
+- `ACTIVE/` : directives validées et actuellement en vigueur
+- `PROPOSED/` : directives `Draft` ou `Review`, non applicables
+- `ARCHIVED/` : directives closes, remplacées ou obsolètes
 - Context Snapshots (toutes les 10 Directives)
 - Master Context Snapshots (toutes les 100 Directives)
 

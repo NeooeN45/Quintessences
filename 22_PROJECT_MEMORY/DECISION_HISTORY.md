@@ -136,4 +136,20 @@
 
 ---
 
+## 2026-08-11
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000067 | Adoption du contrat GSIE-Bench v0.1 ; trois diagnostics Gold, 30 cas, baselines non-IA, métriques par tâche et veto critiques | RFC-0039 | VALIDATED |
+
+---
+
+## 2026-08-14
+
+| ID | Décision | Origine | Statut |
+|---|---|---|---|
+| DEC-000070 | Phase 2 requalifiée « sortie de phase — validation documentaire pendante » ; douze Draft conservés et Phase 4 maintenue active | Audit Phase 2 + validation du Fondateur | VALIDATED |
+
+---
+
 > Chaque nouvelle décision ajoute une ligne datée ci-dessus.

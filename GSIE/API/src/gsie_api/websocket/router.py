@@ -4,13 +4,8 @@ WS /api/v1/ws/hub     — canal temps réel Hub (Centre de Commandement)
 WS /api/v1/ws/events  — events système (resource.created, etc.)
 
 Sécurité :
-- Token JWT obligatoire en query param (?token=xxx)
-  Note : Le protocole WebSocket natif ne permet pas de passer des headers
-  personnalisés lors du handshake (seuls les subprotocols sont supportés).
-  Le token en query param est le standard de facto pour WS auth (Socket.io,
-  SignalR, Action Cable). Mitigations : HTTPS en prod (token chiffré en
-  transit), tokens courts (15min access), pas de log des query params par
-  le middleware (configuré dans shared/middleware.py).
+- Token JWT obligatoire via ``Sec-WebSocket-Protocol: gsie.jwt, <token>``.
+  Il ne transite jamais dans l'URL, généralement journalisée par les proxies.
 - Rate limiting : max 10 messages/minute par client
 - Validation des canaux : canaux autorisés uniquement (16 canaux)
 """
@@ -107,11 +102,16 @@ def _is_origin_allowed(websocket: WebSocket) -> bool:
 
 
 async def _authenticate_ws(websocket: WebSocket) -> dict[str, Any] | None:
-    """Authentifie une connexion WebSocket via token en query param."""
+    """Authentifie une connexion WebSocket via un sous-protocole bearer."""
     if not _is_origin_allowed(websocket):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Origine interdite")
         return None
-    token = websocket.query_params.get("token")
+    protocols = [
+        item.strip()
+        for item in websocket.headers.get("sec-websocket-protocol", "").split(",")
+        if item.strip()
+    ]
+    token = protocols[1] if len(protocols) == 2 and protocols[0] == "gsie.jwt" else None
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token manquant")
         return None
@@ -132,9 +132,8 @@ async def ws_hub(
 ) -> None:
     """Canal WebSocket temps réel pour le Hub (Unreal Engine 5.8).
 
-    Query params :
-    - token : JWT access token (obligatoire)
-    - channels : canaux séparés par virgule (ex. phenomenon,alert,observation)
+    Le JWT est fourni par les sous-protocoles ``gsie.jwt, <token>``.
+    ``channels`` reste un query param non sensible.
     """
     user = await _authenticate_ws(websocket)
     if user is None:
@@ -143,7 +142,9 @@ async def ws_hub(
     channel_list = channels.split(",") if channels else None
     validated = _validate_channels(channel_list)
 
-    accepted = await manager.connect(websocket, validated, roles=get_user_roles(user))
+    accepted = await manager.connect(
+        websocket, validated, roles=get_user_roles(user), subprotocol="gsie.jwt"
+    )
     if not accepted:
         return
     ws_id = id(websocket)
@@ -199,7 +200,9 @@ async def ws_events(websocket: WebSocket) -> None:
     if user is None:
         return
 
-    accepted = await manager.connect(websocket, ["all"], roles=get_user_roles(user))
+    accepted = await manager.connect(
+        websocket, ["all"], roles=get_user_roles(user), subprotocol="gsie.jwt"
+    )
     if not accepted:
         return
     ws_id = id(websocket)

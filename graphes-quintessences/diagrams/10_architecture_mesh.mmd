@@ -1,0 +1,16 @@
+graph TD
+    ORCH["Orchestrateur de mesh<br/>graphe d'autorité, découpage spatial,<br/>transferts, audit immuable"]
+    ZONE["Serveurs de zone<br/>autorité spatiale<br/>(Landiras, Aquitaine, Corse, ...)"]
+    SPEC["Serveurs spécialisés<br/>autorité par type<br/>(Simulation, Learning, Knowledge, Drones)"]
+    PERSIST["Couche de persistance<br/>PostgreSQL/PostGIS — source de vérité<br/>métamodèle bitemporel"]
+    CLIENTS["Clients de rendu<br/>Hub UE5.8 · CesiumJS web · Apps terrain"]
+
+    ORCH -->|"Redis Pub/Sub, mTLS"| ZONE
+    ORCH -->|"Redis Pub/Sub, mTLS"| SPEC
+    ZONE -->|"écriture / lecture SQL"| PERSIST
+    SPEC -->|"écriture / lecture SQL"| PERSIST
+    PERSIST -->|"flux répliqué par pertinence"| CLIENTS
+
+    style ORCH fill:#1a5276,color:#fff,stroke:none
+    style PERSIST fill:#eafaf1,stroke:#1e8449
+    style CLIENTS fill:#fdebd0,stroke:#ca6f1e

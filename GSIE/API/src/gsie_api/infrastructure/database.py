@@ -40,6 +40,9 @@ def _build_engine_kwargs(settings: Settings) -> dict[str, Any]:
     """
     kwargs: dict[str, Any] = {
         "echo": settings.db_echo,
+        # Masque les valeurs liées dans les logs SQL et les messages d'erreur.
+        # Cela protège notamment mots de passe, jetons et données personnelles.
+        "hide_parameters": True,
         "pool_size": settings.db_pool_size,
         "max_overflow": settings.db_max_overflow,
         "pool_pre_ping": True,

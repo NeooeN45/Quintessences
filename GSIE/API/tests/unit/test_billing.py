@@ -1793,6 +1793,7 @@ def should_reject_google_play_purchase_when_token_invalid_over_http(
 
     assert response.status_code == 400
     assert session.rolled_back is True
+    assert session.executed_statements == []
 
 
 def should_validate_apple_purchase_successfully_over_http(

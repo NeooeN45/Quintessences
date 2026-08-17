@@ -68,6 +68,7 @@ jobs:
           python -m unittest discover -s tools/tests -p "test_*.py"
           python tools/check_ai_prompts.py
           python tools/check_build_consistency.py
+          python GSIE/API/scripts/audit_engines.py --root GSIE/API
 
       - name: Compile governance tools
         run: python -m compileall -q tools
@@ -101,6 +102,26 @@ jobs:
             --include='*.md' --include='*.py' --include='*.sh' --include='*.yml' --include='*.json' \
             . | grep -v '.git/' ; then
             echo "::error::Potential secret detected in tracked files!"
+            exit 1
+          fi
+
+      - name: Vérifier le cloisonnement des environnements de données
+        run: |
+          python GSIE/API/scripts/verify_data_environment.py \
+            --environment development \
+            --database-role test \
+            --namespace gsie-test \
+            --database-url postgresql+asyncpg://gsie_api:ci@localhost:5432/gsie_test \
+            --object-bucket gsie-assets-test \
+            --compose-project gsie-test
+          if python GSIE/API/scripts/verify_data_environment.py \
+            --environment production \
+            --database-role production \
+            --namespace gsie-staging \
+            --database-url postgresql+asyncpg://gsie_api:ci@db:5432/gsie_production \
+            --object-bucket gsie-assets-production \
+            --compose-project gsie-production; then
+            echo "::error::Le garde-fou a accepté un namespace de staging en production."
             exit 1
           fi
 
@@ -509,7 +530,7 @@ jobs:
 
       - name: Scan Trivy — image Docker
         if: steps.build_image.outcome == 'success'
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/neooen45/gsie-api:latest
           format: table
@@ -518,7 +539,7 @@ jobs:
 
       - name: Scan Trivy — image Docker (SARIF)
         if: steps.build_image.outcome == 'success'
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/neooen45/gsie-api:latest
           format: sarif
@@ -528,7 +549,7 @@ jobs:
 
       - name: Scan Trivy — filesystem du dépôt (repli)
         if: steps.build_image.outcome != 'success'
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -538,7 +559,7 @@ jobs:
 
       - name: Scan Trivy — filesystem du dépôt (SARIF, repli)
         if: steps.build_image.outcome != 'success'
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -552,17 +573,17 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
-      - name: Échec CI si vulnérabilité CRITICAL détectée
+      - name: Échec CI si vulnérabilité HIGH ou CRITICAL corrigible détectée
         if: always()
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: ${{ steps.build_image.outcome == 'success' && 'image' || 'fs' }}
           image-ref: ${{ steps.build_image.outcome == 'success' && 'ghcr.io/neooen45/gsie-api:latest' || '' }}
           scan-ref: ${{ steps.build_image.outcome == 'success' && '' || '.' }}
           format: table
-          severity: CRITICAL
+          severity: CRITICAL,HIGH
           exit-code: "1"
-          # ignore-unfixed : ne fail que sur les CRITICAL ayant un fix disponible.
+          # ignore-unfixed : ne bloque que sur les HIGH/CRITICAL ayant un correctif.
           # Les CVE Perl/Storable dans bookworm (CVE-2026-8376, CVE-2026-57433)
           # n'ont pas de fix dans bookworm — les ignorer évite de bloquer la CI
           # sur des vulnérabilités qu'on ne peut pas résoudre sans changer de
@@ -587,8 +608,8 @@ jobs:
       - name: Installer Bandit
         run: pip install bandit==1.7.10
 
-      # Les avertissements Bandit ne font pas échouer la CI (rapport SARIF
-      # informatif uniquement) ; B101 (assert) est ignoré car les tests
+      # Le rapport SARIF reste produit même si Bandit détecte une anomalie ; le gate
+      # bloquant ci-dessous tranche ensuite. B101 (assert) est ignoré car les tests
       # utilisent `assert` de façon légitime.
       - name: Analyse Bandit (SARIF)
         run: |
@@ -598,6 +619,9 @@ jobs:
           if [ ! -f bandit-results.sarif ] || [ ! -s bandit-results.sarif ]; then
             echo '{"version":"2.1.0","$schema":"https://json.schemastore.org/sarif-2.1.0.json","runs":[{"tool":{"driver":{"name":"Bandit","informationUri":"https://github.com/PyCQA/bandit"}},"results":[]}]}' > bandit-results.sarif
           fi
+
+      - name: Bloquer les vulnérabilités Bandit moyennes et hautes
+        run: bandit -r GSIE/API/src/gsie_api/ --severity-level medium --confidence-level medium --skip B101
 
       - name: Upload résultats SARIF vers GitHub Security
         uses: github/codeql-action/upload-sarif@v4.37.4
@@ -625,13 +649,25 @@ jobs:
           if [[ -n "$BASE_SHA" && "$BASE_SHA" != "0000000000000000000000000000000000000000" ]] \
             && git cat-file -e "$BASE_SHA^{commit}"; then
             CHANGED_FILES="$(git diff --name-only "$BASE_SHA" HEAD)"
-            if printf '%s\n' "$CHANGED_FILES" \
-              | grep -Fxq -f <(printf '%s\n' "${LOCKED_FILES[@]}"); then
-              if ! printf '%s\n' "$CHANGED_FILES" | grep -qE '^02_RFC/RFC-.*\.md$'; then
-                echo "::error::Un document Locked a changé sans RFC associé."
+            for locked_file in "${LOCKED_FILES[@]}"; do
+              if ! printf '%s\n' "$CHANGED_FILES" | grep -Fxq "$locked_file"; then
+                continue
+              fi
+
+              ASSOCIATED_RFC=""
+              while IFS= read -r rfc; do
+                if grep -qiE 'Statut.*(Adopté|Adopte|Validated|Validé)' "$rfc" \
+                  && grep -Fq "$locked_file" "$rfc"; then
+                  ASSOCIATED_RFC="$rfc"
+                  break
+                fi
+              done < <(printf '%s\n' "$CHANGED_FILES" | grep -E '^02_RFC/RFC-.*\.md$' || true)
+
+              if [[ -z "$ASSOCIATED_RFC" ]]; then
+                echo "::error::$locked_file a changé sans RFC adoptée qui le référence explicitement."
                 exit 1
               fi
-            fi
+            done
           fi
 
           for f in "${LOCKED_FILES[@]}"; do
@@ -666,7 +702,7 @@ jobs:
   ci-gate:
     name: CI Gate (bloque merge)
     runs-on: ubuntu-latest
-    needs: [markdown-lint, consistency-checks, python-quality, python-mutation, python-integration, python-coverage, data-registry-validation, rust-quality, docker-build, governance-check]
+    needs: [markdown-lint, consistency-checks, python-quality, python-mutation, python-integration, python-coverage, data-registry-validation, rust-quality, docker-build, security-scan, python-sast, governance-check]
     timeout-minutes: 5
     if: always()
     steps:
@@ -682,6 +718,8 @@ jobs:
           echo "  data-registry-validation: ${{ needs.data-registry-validation.result }}"
           echo "  rust-quality: ${{ needs.rust-quality.result }}"
           echo "  docker-build: ${{ needs.docker-build.result }}"
+          echo "  security-scan: ${{ needs.security-scan.result }}"
+          echo "  python-sast: ${{ needs.python-sast.result }}"
           echo "  governance-check: ${{ needs.governance-check.result }}"
           if [[ "${{ needs.markdown-lint.result }}" != "success" || \
                 "${{ needs.consistency-checks.result }}" != "success" || \
@@ -692,6 +730,8 @@ jobs:
                 "${{ needs.data-registry-validation.result }}" != "success" || \
                 "${{ needs.rust-quality.result }}" != "success" || \
                 "${{ needs.docker-build.result }}" != "success" || \
+                "${{ needs.security-scan.result }}" != "success" || \
+                "${{ needs.python-sast.result }}" != "success" || \
                 "${{ needs.governance-check.result }}" != "success" ]]; then
             echo "::error::Un ou plusieurs jobs CI ont échoué — merge bloqué."
             exit 1

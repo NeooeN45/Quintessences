@@ -75,6 +75,8 @@ class FetchSourceQualification(BaseModel):
                 missing.append("statut SCI-001 OPEN_CONFIRMED")
             if source.mode_ingestion is not IngestionMode.open_copy:
                 missing.append("mode SCI-001 OPEN_COPY")
+            if source.deprecated:
+                missing.append("identité SCI-001 canonique non dépréciée")
             if not self.allowed_hosts:
                 missing.append("allowed_hosts")
             if not self.allowed_content_types:

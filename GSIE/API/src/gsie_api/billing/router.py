@@ -281,16 +281,20 @@ async def validate_apple_purchase(
 
 
 @router.post("/webhooks/stripe", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("120/minute")
 async def stripe_webhook(
     request: Request,
+    response: Response,
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> Response:
     payload = await request.body()
     signature = request.headers.get("Stripe-Signature")
-    processor = StripeWebhookProcessor(session)
     try:
-        await session.execute(text("SELECT set_config('app.billing_webhook', 'true', true)"))
+        # Vérifier cryptographiquement la requête avant la première opération
+        # DB : une signature invalide ne doit pas pouvoir épuiser le pool.
+        processor = StripeWebhookProcessor(session)
         event = processor.parse_event(payload, signature)
+        await session.execute(text("SELECT set_config('app.billing_webhook', 'true', true)"))
         await processor.process(event)
         await session.commit()
     except StripeWebhookError:
@@ -299,7 +303,8 @@ async def stripe_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Webhook Stripe invalide",
         ) from None
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
 
 
 @router.get("/context", response_model=BillingContextResponse)

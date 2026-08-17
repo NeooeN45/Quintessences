@@ -25,7 +25,9 @@ l'historique est conservé (CON-010).
 - Ne produit pas de diagnostic — fournit des données taxonomiques et
   autécologiques
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir BOTANICAL_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/botanical/`. Elle couvre le périmètre
+> décrit ci-dessous, pas l’ensemble du périmètre fonctionnel du moteur.
 
 ## Contrat d'interface
 
@@ -38,11 +40,15 @@ n'est ingérée — RFC-0016 tranche 1/10).
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/botanical/status` | aucune | — | Statut du moteur (`router.py:38`) |
-| GET | `/botanical/version` | aucune | — | Version et backend (`router.py:49`) |
-| POST | `/botanical/query` | `engine:write` | `30/minute` | Résout une essence vers son taxon accepté (GBIF Backbone Taxonomy) (`router.py:62`) |
-| POST | `/botanical/indigenat` | `engine:read` | `30/minute` | Statut d'indigénat réel d'une essence pour une sylvoécorégion (dataset Bellifa et al., 2026) (`router.py:93`) |
-| POST | `/botanical/taxref` | `engine:read` | `30/minute` | Résout un nom scientifique vers son entrée TAXREF (miroir GBIF) (`router.py:125`) |
+| GET | `/botanical/status` | aucune | — | Statut du moteur |
+| GET | `/botanical/version` | aucune | — | Version et backend |
+| POST | `/botanical/query` | `engine:write` | `30/minute` | Résout une essence vers son taxon accepté (GBIF Backbone Taxonomy) |
+| POST | `/botanical/query-and-ingest` | `engine:write` | `30/minute` | Résout un taxon GBIF puis le soumet au pipeline Evidence → Knowledge. |
+| POST | `/botanical/indigenat` | `engine:read` | `30/minute` | Statut d'indigénat réel d'une essence pour une sylvoécorégion (dataset Bellifa et al., 2026) |
+| POST | `/botanical/taxref` | `engine:read` | `30/minute` | Résout un nom scientifique vers son entrée TAXREF (miroir GBIF) |
+| POST | `/botanical/taxref-and-ingest` | `engine:write` | `30/minute` | Résout une entrée TAXREF puis la soumet au pipeline Evidence → Knowledge. |
+| POST | `/botanical/identify` | `engine:read` | `10/minute` | Identifie une plante à partir d’une image via PlantNet ; retourne `null` sans correspondance. |
+| POST | `/botanical/identify-and-ingest` | `engine:write` | `10/minute` | Identifie des candidats puis les place en quarantaine dans le pipeline Evidence → Knowledge. |
 
 ### 2. Schémas d'entrée/sortie
 

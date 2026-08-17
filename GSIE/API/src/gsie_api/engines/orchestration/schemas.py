@@ -29,9 +29,9 @@ une conclusion à la place du forestier.
 """
 
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from gsie_api.engines.diagnostic.schemas import (
     Diagnostic,
@@ -41,6 +41,11 @@ from gsie_api.engines.diagnostic.schemas import (
     Probabilite,
     RoleDiagnostic,
     TypeDiagnostic,
+)
+from gsie_api.engines.evidence.schemas import EvidenceLevel
+from gsie_api.engines.orchestration.hydration import (
+    BLOCS_NIVEAU_DECLARABLE,
+    RapportHydratation,
 )
 from gsie_api.engines.reasoning.schemas import (
     InferenceResult,
@@ -99,7 +104,23 @@ class AnalyseRequest(BaseModel):
 
     requete_id: UUID
     station_id: UUID
-    contexte: StationContexte
+    contexte: StationContexte | None = Field(
+        default=None,
+        description=(
+            "Contexte stationnel complet. Absent, il est hydraté depuis "
+            "`station_id` (DEC-000072) : Place d'abord, soumission terrain "
+            "acceptée en repli tracé, aucune valeur inventée."
+        ),
+    )
+    niveaux_preuve_declares: dict[str, EvidenceLevel] = Field(
+        default_factory=dict,
+        description=(
+            "Niveaux de preuve déclarés par bloc, utilisés uniquement lorsque "
+            "le contexte est hydraté et que la donnée n'en porte pas. "
+            f"Blocs acceptés : {sorted(BLOCS_NIVEAU_DECLARABLE)}. Chaque niveau "
+            "déclaré utilisé est listé dans le rapport d'hydratation."
+        ),
+    )
     regles: list[RegleInference] = Field(
         min_length=1,
         description=(
@@ -133,12 +154,37 @@ class AnalyseRequest(BaseModel):
     alternatives_demandees: bool = True
     profondeur_max: int = Field(default=5, ge=1, le=20)
 
-    def vers_requete_raisonnement(self) -> ReasoningRequest:
-        """Extrait la requête du premier maillon, sans rien transformer."""
+    @model_validator(mode="after")
+    def _niveaux_declares_coherents(self) -> "AnalyseRequest":
+        inconnus = sorted(set(self.niveaux_preuve_declares) - BLOCS_NIVEAU_DECLARABLE)
+        if inconnus:
+            raise ValueError(
+                f"niveaux déclarés pour des blocs inconnus ou non déclarables : "
+                f"{inconnus} ; blocs acceptés : {sorted(BLOCS_NIVEAU_DECLARABLE)}"
+            )
+        if self.contexte is not None and self.niveaux_preuve_declares:
+            raise ValueError(
+                "niveaux_preuve_declares sans effet lorsque le contexte est fourni : "
+                "ils ne servent qu'à l'hydratation — les déclarer ici serait un silence"
+            )
+        return self
+
+    def vers_requete_raisonnement(
+        self, contexte: StationContexte | None = None
+    ) -> ReasoningRequest:
+        """Extrait la requête du premier maillon, sans rien transformer.
+
+        `contexte` est le contexte hydraté lorsque l'appelant n'en a pas
+        fourni ; sans lui ni contexte déclaré, la requête est incomplète et
+        le refus le dit.
+        """
+        resolu = contexte if contexte is not None else self.contexte
+        if resolu is None:
+            raise ValueError("contexte stationnel absent : ni fourni dans la requête ni hydraté")
         return ReasoningRequest(
             requete_id=self.requete_id,
             station_id=self.station_id,
-            contexte=self.contexte,
+            contexte=resolu,
             question=self.question,
             regles=list(self.regles),
             profondeur_max=self.profondeur_max,
@@ -158,11 +204,22 @@ class AnalyseComplete(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    analyse_id: UUID = Field(
+        default_factory=uuid4,
+        description="Identifiant de l'exécution complète et de sa preuve persistée",
+    )
     requete_origine: UUID
     inference: InferenceResult
     diagnostic: Diagnostic
     recommandations: RecommendationSet
     validation: ValidationResult
+    hydratation: RapportHydratation | None = Field(
+        default=None,
+        description=(
+            "Présent lorsque le contexte a été hydraté depuis `station_id` "
+            "(DEC-000072) : la preuve conserve le contexte exactement utilisé."
+        ),
+    )
 
     @property
     def resume(self) -> dict[str, Any]:

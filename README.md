@@ -23,8 +23,8 @@ concernés.** Voir RFC-0037 et
 [![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-44%20DEC-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-37-lightgrey)](02_RFC/)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-DEC--000073-yellow)](03_DECISIONS/)
+[![RFC](https://img.shields.io/badge/RFC-0041-lightgrey)](02_RFC/)
 [![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
@@ -228,6 +228,27 @@ adaptées au terrain.
 | API GSIE | Intégration dans des workflows tiers |
 | SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
 | Plugins SIG | Intégrations QGIS, ArcGIS |
+
+#### Intégration GeoSylva ↔ GSIE — état documentaire au 2026-08-17
+
+Le contrat client est en cours de clarification avant implémentation. RFC-0041
+(Draft) et DEC-000073 (Proposé) définissent une façade future
+`POST /api/v1/orchestration/analyse-geosylva` : GeoSylva enverra une intention,
+un `station_id` GSIE et des niveaux de preuve déclarés ; il ne fabriquera ni
+règles, ni qualifications, ni état global.
+
+Le lien `parcelleId` local → `gsie_resource_id` GSIE sera explicite,
+idempotent, contrôlé par compte et révocable. La préparation serveur devra
+sélectionner les règles et qualifications sourceées ou refuser avec une cause
+nommée. Tant que RFC-0041/DEC-000073 ne sont pas validées, la façade, la
+migration Room et le nouveau lien stationnel ne sont pas présentés comme
+livrés. La synchronisation actuelle reste limitée aux parcelles selon
+DEC-000048.
+
+Voir [RFC-0041](02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
+[DEC-000073](03_DECISIONS/DEC-000073.md),
+[DEC-000072](03_DECISIONS/DEC-000072.md) et
+[le graphe d'intégration](graphes-quintessances/README.md).
 
 ### Ignis — spécialisation incendie
 
@@ -443,9 +464,9 @@ son périmètre.
 
 ### En cours
 
-Sauvegardes de la base (pgBackRest + archivage WAL), SDK Kotlin pour
-GeoSylva, intégration GeoSylva et QGISIA via le SDK, Centre de
-Commandement Unreal Engine 5.8.
+Sauvegardes de la base (pgBackRest + archivage WAL), clarification du contrat
+GeoSylva–GSIE (RFC-0041/DEC-000073), puis SDK Kotlin et intégration via la
+façade validée, QGISIA via le SDK et Centre de Commandement Unreal Engine 5.8.
 
 Voir [ROADMAP.md](ROADMAP.md) pour le détail et
 [PROJECT_MEMORY.md](PROJECT_MEMORY.md) pour l'état courant — cette
@@ -549,7 +570,7 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | Phase | Statut | Description |
 |---|---|---|
 | **Phase 1 — Foundation** | Clôturée | Constitution, 14 moteurs documentés, gouvernance, mémoire |
-| **Phase 2 — Architecture** | Clôturée | Contrats d'interface, schémas de données, RFC d'architecture |
+| **Phase 2 — Architecture** | Sortie — validation pendante | Contrats d'interface, schémas de données, RFC d'architecture ; 12 Draft à remettre à niveau |
 | **Phase 3 — Connaissance** | Clôturée | Méthodes, ontologie, datasets, framework de preuve, base de connaissances |
 | **Phase 4 — Implémentation** | **Active 🚀** | Code métier des moteurs, API GSIE, Hub Unreal, applications clientes |
 | Phase 5 — Applications | À venir | Déploiement GeoSylva, Ignis et interfaces terrain |

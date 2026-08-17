@@ -17,6 +17,12 @@ from gsie_api.ingestion.manifest import (
     load_manifest,
     manifest_preview,
 )
+from gsie_api.ingestion.source_reconciliation import (
+    LegacySourceReference,
+    SourceReconciliationRequiredError,
+    find_legacy_source_references,
+    require_canonical_source_references,
+)
 
 __all__ = [
     "MANIFEST_VERSION",
@@ -24,6 +30,10 @@ __all__ = [
     "DatasetManifestEntry",
     "ManifestDistribution",
     "ManifestOperation",
+    "LegacySourceReference",
+    "SourceReconciliationRequiredError",
+    "find_legacy_source_references",
     "load_manifest",
     "manifest_preview",
+    "require_canonical_source_references",
 ]

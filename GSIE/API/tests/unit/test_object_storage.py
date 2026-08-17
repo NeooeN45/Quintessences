@@ -254,12 +254,14 @@ def should_reject_invalid_s3_configuration() -> None:
 def _valid_production_settings() -> dict[str, object]:
     return {
         "environment": "production",
-        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
+        "database_role": "production",
+        "data_namespace": "gsie-production",
+        "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie-production",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
-        "redis_url": "redis://:secret@redis-host:6379/0",
-        "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
-        "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
+        "redis_url": "redis://:redis-password-strong@redis-host:6379/0",
+        "rate_limit_storage_url": "redis://:redis-password-strong@redis-host:6379/1",
+        "refresh_token_storage_url": "redis://:redis-password-strong@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "require_rust_backend": True,
         "db_ssl_mode": "require",
@@ -292,7 +294,7 @@ def should_reject_http_s3_endpoint_in_production() -> None:
             object_storage_backend="s3",
             object_storage_s3_endpoint="http://s3.example.com",
             object_storage_s3_access_key=SecretStr("access"),
-            object_storage_s3_secret_key=SecretStr("secret"),
+            object_storage_s3_secret_key=SecretStr("s3-secret-strong"),
             _env_file=None,
         )
 
@@ -304,7 +306,7 @@ def should_require_s3_encryption_in_production() -> None:
             object_storage_backend="s3",
             object_storage_s3_endpoint="https://s3.example.com",
             object_storage_s3_access_key=SecretStr("access"),
-            object_storage_s3_secret_key=SecretStr("secret"),
+            object_storage_s3_secret_key=SecretStr("s3-secret-strong"),
             _env_file=None,
         )
 
@@ -315,7 +317,7 @@ def should_accept_configured_s3_encryption_in_production() -> None:
         object_storage_backend="s3",
         object_storage_s3_endpoint="https://s3.example.com",
         object_storage_s3_access_key=SecretStr("access"),
-        object_storage_s3_secret_key=SecretStr("secret"),
+        object_storage_s3_secret_key=SecretStr("s3-secret-strong"),
         object_storage_s3_server_side_encryption="AES256",
         _env_file=None,
     )

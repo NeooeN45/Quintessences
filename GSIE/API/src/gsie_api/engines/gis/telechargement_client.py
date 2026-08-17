@@ -17,15 +17,19 @@ Aucune authentification requise (open data, licence Etalab 2.0).
 Limite : 10 requêtes/s/IP. Résultats paginés (`page`, `limit` max 50).
 
 Les réponses sont au format Atom XML — pas JSON. Le parsing utilise
-`xml.etree.ElementTree` de la stdlib avec gestion des namespaces Atom
+`defusedxml.ElementTree` avec gestion des namespaces Atom
 et Géoplateforme (`gpf_dl`).
 """
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from defusedxml import ElementTree
+
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element
 
 from gsie_api.shared.http_client import ResilientHttpClient
 
@@ -89,7 +93,7 @@ class PageTelechargement:
     page_count: int
 
 
-def _parse_feed_metadata(root: ET.Element) -> PageTelechargement:
+def _parse_feed_metadata(root: Element) -> PageTelechargement:
     """Extrait les métadonnées de pagination du feed Atom."""
     return PageTelechargement(
         total_entries=int(root.get(f"{{{_NS['gpf_dl']}}}totalentries", "0")),
@@ -99,7 +103,7 @@ def _parse_feed_metadata(root: ET.Element) -> PageTelechargement:
     )
 
 
-def _parse_ressource(entry: ET.Element) -> RessourceTelechargement:
+def _parse_ressource(entry: Element) -> RessourceTelechargement:
     """Parse une <entry> de GetCapabilities en RessourceTelechargement."""
     nom = entry.findtext("atom:title", "", _NS) or ""
     link_elem = entry.find("atom:link", _NS)
@@ -118,7 +122,7 @@ def _parse_ressource(entry: ET.Element) -> RessourceTelechargement:
     )
 
 
-def _parse_dossier(entry: ET.Element) -> DossierTelechargement:
+def _parse_dossier(entry: Element) -> DossierTelechargement:
     """Parse une <entry> de GetResource en DossierTelechargement."""
     nom = entry.findtext("atom:title", "", _NS) or ""
     link_elem = entry.find("atom:link", _NS)
@@ -139,7 +143,7 @@ def _parse_dossier(entry: ET.Element) -> DossierTelechargement:
     )
 
 
-def _parse_fichier(entry: ET.Element) -> FichierTelechargement:
+def _parse_fichier(entry: Element) -> FichierTelechargement:
     """Parse une <entry> de GetSubResource en FichierTelechargement."""
     link_elem = entry.find("atom:link", _NS)
     url_download = link_elem.get("href", "") if link_elem is not None else ""
@@ -199,8 +203,8 @@ class TelechargementClient(ResilientHttpClient):
             error_label="de l'appel GetCapabilities Géoplateforme",
         )
         try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetCapabilities : {exc}"
             ) from exc
@@ -233,8 +237,8 @@ class TelechargementClient(ResilientHttpClient):
             error_label=f"de l'appel GetResource {resource_name}",
         )
         try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetResource {resource_name} : {exc}"
             ) from exc
@@ -261,8 +265,8 @@ class TelechargementClient(ResilientHttpClient):
             error_label=f"de l'appel GetSubResource {resource_name}/{subresource_name}",
         )
         try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetSubResource {resource_name}/{subresource_name} : {exc}"
             ) from exc

@@ -4,6 +4,7 @@
 # (CON-008 souveraineté, global_rules security).
 
 import os
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
@@ -45,6 +46,29 @@ _MOTS_DE_PASSE_DE_REMPLISSAGE = frozenset(
         "secret",
     }
 )
+
+# Marqueurs présents dans les fichiers `.env.*.example`. Ils ne doivent
+# jamais atteindre un service staging/production : leur présence signifie
+# que le gestionnaire de secrets n'a pas encore injecté la valeur réelle.
+_MARQUEURS_SECRET_NON_CONFIGURES = frozenset(
+    {
+        "remplacer_par_secret_manager",
+        "replace_with_secret_manager",
+        "replace-me",
+        "replace_me",
+        "change-me-in-.env",
+        "change-me",
+        "changeme",
+        "password",
+        "secret",
+        "todo",
+    }
+)
+
+
+def _secret_est_marqueur(secret: str | None) -> bool:
+    """Indique si une valeur non vide est un marqueur d'exemple."""
+    return (secret or "").strip().lower() in _MARQUEURS_SECRET_NON_CONFIGURES
 
 
 class _DecryptedEnvSource(PydanticBaseSettingsSource):
@@ -156,7 +180,9 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     # Format slowapi : "count/period" — défaut 60 req/min par IP
     rate_limit_default: str = "60/minute"
-    # Endpoints health/ready plus permissifs (monitoring)
+    # Réservé à une éventuelle protection de bordure. Les sondes /health et
+    # /ready ne l'utilisent volontairement pas : leur disponibilité doit rester
+    # indépendante de Redis lorsque le rate limiter distribué est indisponible.
     rate_limit_health: str = "300/minute"
     # Endpoints POST plus stricts (protection flood)
     rate_limit_evaluate: str = "30/minute"
@@ -169,6 +195,18 @@ class Settings(BaseSettings):
     # PostgreSQL + PostGIS
     # Format : postgresql+asyncpg://user:pass@host:5432/dbname
     database_url: str = "postgresql+asyncpg://gsie:gsie_dev@localhost:5432/gsie"
+    # Cloisonnement des données persistantes. Le rôle décrit la nature de la
+    # base ; le namespace doit être repris par Compose, MinIO et les rapports
+    # de benchmark. Le défaut ``gsie`` conserve le développement historique.
+    database_role: Literal["development", "test", "benchmark", "staging", "production"] = (
+        "development"
+    )
+    data_namespace: str = Field(
+        default="gsie",
+        min_length=3,
+        max_length=64,
+        pattern=r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+    )
     # URL de migration — distincte parce que le compte d'exécution ne doit
     # plus pouvoir faire de DDL. `gsie_application` n'a ni CREATE ni ALTER :
     # Alembic doit se connecter sous le compte d'administration. Vide, on
@@ -204,7 +242,7 @@ class Settings(BaseSettings):
     # Cache TTL pour /ready (secondes) — évite de pinger DB+Redis à chaque requête
     health_cache_ttl: int = 5
     # Fichier sentinelle créé avant SIGTERM pour retirer le replica de la bordure.
-    graceful_drain_file: str = "/tmp/gsie-draining"
+    graceful_drain_file: str = str(Path(tempfile.gettempdir()) / "gsie-draining")
     # Scheduler Data Registry — fermé par défaut, distribué via verrou Redis.
     data_registry_health_scheduler_enabled: bool = False
     data_registry_health_manifest_path: str = "/app/data/REGISTRY_MANIFEST.json"
@@ -235,7 +273,7 @@ class Settings(BaseSettings):
     # Évite que N workers rejouent le même lot à la même milliseconde.
     outbox_retry_jitter_ratio: float = Field(default=0.2, ge=0.0, le=1.0)
     # Battement écrit uniquement après un cycle PostgreSQL/Redis réussi.
-    outbox_healthcheck_path: str = "/tmp/gsie-outbox-worker.heartbeat"
+    outbox_healthcheck_path: str = str(Path(tempfile.gettempdir()) / "gsie-outbox-worker.heartbeat")
     outbox_healthcheck_max_age_seconds: float = Field(default=30.0, ge=2.0, le=300.0)
     # WebSocket (ADR-007)
     ws_max_connections: int = 1000
@@ -378,6 +416,19 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Valide que la configuration est sûre en production et staging."""
+        if self.environment in ("staging", "production") and self.database_role != self.environment:
+            raise ValueError(
+                "database_role doit correspondre à GSIE_ENVIRONMENT en staging/production"
+            )
+        if self.database_role in {"test", "benchmark", "staging", "production"}:
+            expected_suffix = f"-{self.database_role}"
+            if not self.data_namespace.endswith(expected_suffix):
+                raise ValueError(
+                    "data_namespace doit être dédié à database_role : "
+                    f"suffixe attendu {expected_suffix!r}"
+                )
+        elif self.data_namespace.endswith(("-test", "-benchmark", "-staging", "-production")):
+            raise ValueError("database_role=development ne peut pas utiliser un namespace réservé")
         if self.smtp_use_tls and self.smtp_starttls:
             raise ValueError("SMTP TLS direct et STARTTLS ne peuvent pas être activés ensemble")
         if self.transactional_email_mode == "smtp" and not self.smtp_host.strip():
@@ -404,8 +455,17 @@ class Settings(BaseSettings):
         if self.environment in ("production", "staging"):
             if self.debug:
                 raise ValueError("debug must be False in production")
-            if "gsie_dev" in self.database_url:
-                raise ValueError("Default database password not allowed in production")
+            for database_url in (self.database_url, self.migration_database_url):
+                if not database_url:
+                    continue
+                database_password = urlparse(database_url).password
+                if "gsie_dev" in database_url:
+                    raise ValueError("Default database password not allowed in production")
+                if _secret_est_marqueur(database_password):
+                    raise ValueError(
+                        "Mot de passe PostgreSQL absent ou marqueur documentaire interdit "
+                        "en staging/production"
+                    )
             utilisateur = urlparse(self.database_url).username or ""
             if utilisateur in _ROLES_PROPRIETAIRES:
                 raise ValueError(
@@ -423,14 +483,30 @@ class Settings(BaseSettings):
             redis_password = urlparse(self.redis_url).password
             if not redis_password:
                 raise ValueError("Redis without password not allowed in production")
+            if _secret_est_marqueur(redis_password):
+                raise ValueError("Redis sans secret réel interdit en staging/production")
+            for storage_url in (
+                self.rate_limit_storage_url,
+                self.refresh_token_storage_url,
+            ):
+                storage_password = urlparse(storage_url).password
+                if storage_url.startswith("redis://") and _secret_est_marqueur(storage_password):
+                    raise ValueError(
+                        "Un stockage Redis partagé doit avoir un secret réel "
+                        "en staging/production"
+                    )
             if self.rate_limit_storage_url == "memory://":
                 raise ValueError("Distributed rate-limit storage required in production")
             if self.refresh_token_storage_url == "memory://":
                 raise ValueError("Distributed refresh-token storage required in production")
             if self.auth_dev_login_enabled:
                 raise ValueError("Development login must be disabled in production")
-            if self.mfa_enabled and not self.mfa_encryption_key.get_secret_value().strip():
-                raise ValueError("MFA encryption key required in production")
+            if self.mfa_enabled:
+                mfa_key = self.mfa_encryption_key.get_secret_value()
+                if not mfa_key.strip():
+                    raise ValueError("MFA encryption key required in production")
+                if _secret_est_marqueur(mfa_key):
+                    raise ValueError("MFA encryption key réelle requise en production")
             if not self.require_rust_backend:
                 raise ValueError("Rust Evidence backend must be required in production")
             if "*" in self.ws_allowed_origins:
@@ -463,6 +539,12 @@ class Settings(BaseSettings):
         endpoint = (self.object_storage_s3_endpoint or "").strip()
         access_key = self.object_storage_s3_access_key.get_secret_value().strip()
         secret_key = self.object_storage_s3_secret_key.get_secret_value().strip()
+        if self.environment in ("staging", "production") and (
+            _secret_est_marqueur(access_key) or _secret_est_marqueur(secret_key)
+        ):
+            raise ValueError(
+                "Les identifiants S3 documentaires sont interdits en " "staging/production"
+            )
         if not all((endpoint, self.object_storage_s3_bucket.strip(), access_key, secret_key)):
             raise ValueError(
                 "S3 endpoint, bucket, access_key et secret_key sont requis pour le stockage S3"

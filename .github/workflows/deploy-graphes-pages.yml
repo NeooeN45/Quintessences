@@ -1,0 +1,65 @@
+name: Publier les graphes sur GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "graphes-quintessences/**"
+      - "02_RFC/**"
+      - "03_DECISIONS/**"
+      - "PROJECT_MEMORY.md"
+      - "ROADMAP.md"
+      - "CHANGELOG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages-graphes
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Construire le site des graphes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Installer Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Régénérer le site statique
+        working-directory: graphes-quintessences
+        run: python generate_site.py
+
+      - name: Vérifier le générateur
+        working-directory: graphes-quintessences
+        run: python -m py_compile generate_site.py
+
+      - name: Préparer GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Publier l'artefact Pages
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: graphes-quintessences/public
+
+  deploy:
+    name: Déployer les graphes
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

@@ -5,8 +5,8 @@
 | **Moteur** | Simulation Engine |
 | **Catégorie** | Moteur transverse (simulation de scénarios) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Architecture seule |
-| **Statut implémentation** | Architecture seule |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-004, GSIE-CON-005, GSIE-CON-007 |
 | **Ordre de développement** | Non listé (moteur transverse) |
 

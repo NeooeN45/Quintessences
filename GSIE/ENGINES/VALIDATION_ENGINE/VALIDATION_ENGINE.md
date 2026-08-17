@@ -5,8 +5,8 @@
 | **Moteur** | Validation Engine |
 | **Catégorie** | Chaîne d'intelligence (contrôle final) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Architecture seule |
-| **Statut implémentation** | Architecture seule |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004, GSIE-CON-005 |
 | **Ordre de développement** | 13 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

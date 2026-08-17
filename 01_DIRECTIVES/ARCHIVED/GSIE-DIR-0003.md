@@ -2,7 +2,7 @@
 # GSIE FOUNDATION DIRECTIVE
 # Directive ID : GSIE-DIR-0003
 # Version : 1.0
-# Statut : ACTIVE
+# Statut : CLOS (DEC-000004, 2026-07-12)
 # Priorité : CRITIQUE
 # Classification : FONDATION
 # Auteur : Camille Perraudeau
@@ -10,6 +10,14 @@
 # ============================================================================
 
 # Titre : Lancement officiel de la Phase 1 – Foundation
+
+## Amendement de clôture — 2026-07-12
+
+La Phase 1 est clôturée par `DEC-000004`, qui ouvre officiellement la Phase 2
+et désigne cette directive comme close. Le texte historique ci-dessous est
+conservé pour traçabilité ; il ne décrit plus la phase ni les restrictions
+opérationnelles courantes. La directive de phase applicable est
+`GSIE-DIR-0011` (Phase 4).
 
 ## Résumé exécutif
 

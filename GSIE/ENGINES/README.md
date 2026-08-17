@@ -9,25 +9,26 @@ interface claire.
 ## Responsabilités
 
 - Implémenter les capacités du système expert
-- Respecter les contrats d'interface définis dans `04_ARCHITECTURE`
+- Respecter les contrats d’interface documentés dans
+  [ENGINE_INTERFACE_CONTRACTS.md](../ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md),
+  en tenant compte de leur statut documentaire
 - Garantir l'explicabilité de chaque sortie
 
 ## Ce qui peut y être ajouté
 
-- Définitions et périmètres des moteurs (Phase 1 : documentation
-  uniquement)
-- Implémentations (Phase 4, après validation)
+- Définitions, périmètres et limites des moteurs
+- Implémentations autorisées par la gouvernance de la Phase 4
 
 ## Ce qui est interdit
 
-- Implémenter un moteur avant que son RFC et ses spécifications ne
-  soient validés (Phase 1)
+- Implémenter un moteur sans l’autorisation et les prérequis documentaires
+  exigés par la gouvernance courante
 - Ajouter des règles métiers non sourcées
 
 ## Liens
 
-- **04_ARCHITECTURE** : définit les contrats
-- **05_SPECIFICATIONS** : définit les exigences
-- **07_KNOWLEDGE** : source des règles
-- **10_ALGORITHMS** : méthodes formelles
-- **11_MODELS** : modèles utilisés
+- [ARCHITECTURE](../ARCHITECTURE/) : contrats et flux
+- [05_SPECIFICATIONS](../../05_SPECIFICATIONS/) : exigences
+- [KNOWLEDGE](../KNOWLEDGE/) : connaissances et règles sourcées
+- [ALGORITHMS](../ALGORITHMS/) : méthodes formelles
+- [MODELS](../MODELS/) : modèles utilisés

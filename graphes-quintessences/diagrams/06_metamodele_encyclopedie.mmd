@@ -1,0 +1,42 @@
+graph TB
+    subgraph N1["Niveau 1 — Noyau universel"]
+        R["resource<br/>racine (class-table inheritance)"]
+    end
+
+    subgraph N2["Niveau 2 — Profils écologiques"]
+        P1["Place · Instance · Unit"]
+        P2["Assertion · Citation"]
+        P3["Dataset · ModelRun"]
+        P4["ScaleContext · Phenomenon<br/>EcologicalProcess · Flow"]
+        P5["TraitDefinition · TraitValue<br/>Feature · FeatureSet · Inference"]
+    end
+
+    subgraph N3["Niveau 3 — Raisonnement"]
+        Q1["Question · Hypothesis"]
+        Q2["Decision · Recommendation"]
+        Q3["Scenario · Correlation"]
+        Q4["Goal · Constraint · Experiment"]
+    end
+
+    subgraph N4["Niveau 4 — Infrastructure"]
+        I1["Agent · Capability"]
+        I2["Temporal Engine<br/>Revision · Snapshot · ResourceDiff"]
+        I3["SamplingEvent · TerrainSession<br/>EcologicalState"]
+    end
+
+    subgraph N5["Niveau 5 — Conformité"]
+        F1["Sample (62) — SOSA/SSN"]
+        F2["Consent (63) · DataSubject (64) — RGPD"]
+        F3["PersistentIdentifier (65) — FAIR"]
+    end
+
+    R --> N2
+    R --> N3
+    R --> N4
+    R --> N5
+
+    style R fill:#1a5276,color:#fff,stroke:none
+    style N2 fill:#eaf2f8,stroke:#1a5276
+    style N3 fill:#eafaf1,stroke:#1e8449
+    style N4 fill:#fef9e7,stroke:#b7950b
+    style N5 fill:#fdebd0,stroke:#ca6f1e

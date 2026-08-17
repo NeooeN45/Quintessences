@@ -29,7 +29,10 @@ exécutoire (CON-001).
 Diagnostic Engine → Recommendation Engine → Validation Engine → Utilisateur
 ```
 
-> Statut : *implémentation partielle (Phase 4)* — stub/skeleton, voir RECOMMENDATION_ENGINE.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/recommendation/`. Elle implémente les
+> opérations décrites ci-dessous, sans constituer l’achèvement de tout
+> le périmètre de recommandation sylvicole.
 
 ## Contrat d'interface
 
@@ -39,10 +42,10 @@ Source : `GSIE/API/src/gsie_api/engines/recommendation/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/recommendation/status` | aucune | — | Statut du moteur (`router.py:41`) |
-| GET | `/recommendation/version` | aucune | — | Version et backend (`router.py:52`) |
-| POST | `/recommendation/recommend` | `engine:write` | `20/minute` | Génère un ensemble de recommandations avec alternatives justifiées à partir d'un diagnostic (`router.py:65`) |
-| POST | `/recommendation/decision` | `engine:write` | `30/minute` | Enregistre la décision du forestier (accepte/refuse/modifie/demande_alternative), attribuée à son auteur (`router.py:98`) |
+| GET | `/recommendation/status` | aucune | — | Statut du moteur |
+| GET | `/recommendation/version` | aucune | — | Version et backend |
+| POST | `/recommendation/recommend` | `engine:write` | `20/minute` | Génère un ensemble de recommandations avec alternatives justifiées à partir d'un diagnostic |
+| POST | `/recommendation/decision` | `engine:write` | `30/minute` | Enregistre la décision du forestier (accepte/refuse/modifie/demande_alternative), attribuée à son auteur |
 
 ### 2. Schémas d'entrée/sortie
 

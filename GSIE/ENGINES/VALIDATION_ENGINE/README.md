@@ -32,13 +32,14 @@ validation est le dernier rempart avant présentation.
 Recommendation Engine → Validation Engine → Utilisateur
 ```
 
-> Statut : *implémentation livrée (Phase 4)* — code actif dans `GSIE/API/src/gsie_api/engines/validation/`
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/validation/`. Elle exécute les contrôles
+> décrits ci-dessous ; cette présence ne vaut pas validation globale de
+> toute la chaîne GSIE.
 
 ## Contrat d'interface
 
-> Le code source (`GSIE/API/src/gsie_api/engines/validation/`) est livré
-> et actif (`PROJECT_MEMORY.md`, DEC-000021 et suivants). Cette section
-> documente le contrat effectif.
+> Cette section documente le contrat effectif du code présent.
 
 ### 1. Endpoints API
 
@@ -46,9 +47,9 @@ Source : `GSIE/API/src/gsie_api/engines/validation/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/validation/status` | aucune | — | Statut du moteur (`router.py:32`) |
-| GET | `/validation/version` | aucune | — | Version et backend (`router.py:43`) |
-| POST | `/validation/validate` | `engine:write` | `60/minute` | Valide une sortie (diagnostic, recommandation ou ensemble complet) et bloque toute sortie non conforme (`router.py:56`) |
+| GET | `/validation/status` | aucune | — | Statut du moteur |
+| GET | `/validation/version` | aucune | — | Version et backend |
+| POST | `/validation/validate` | `engine:write` | `60/minute` | Valide une sortie (diagnostic, recommandation ou ensemble complet) et bloque toute sortie non conforme |
 
 ### 2. Schémas d'entrée/sortie
 

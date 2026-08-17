@@ -26,7 +26,9 @@ cité (CON-002).
 - Ne produit pas de diagnostic — fournit des données et des
   classifications
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir PEDOLOGY_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/pedology/`. Elle couvre les
+> propriétés SoilGrids décrites ci-dessous, pas la classification RPF/WRB complète.
 
 ## Contrat d'interface
 
@@ -39,9 +41,10 @@ sable, limon 0-5cm) — pas de `ProfilSol` ni de `ClassificationSol`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/pedology/status` | aucune | — | Statut du moteur (`router.py:25`) |
-| GET | `/pedology/version` | aucune | — | Version et backend (`router.py:36`) |
-| POST | `/pedology/query` | `engine:read` | `30/minute` | Propriétés de sol réelles d'un point (SoilGrids, ISRIC) (`router.py:49`) |
+| GET | `/pedology/status` | aucune | — | Statut du moteur |
+| GET | `/pedology/version` | aucune | — | Version et backend |
+| POST | `/pedology/query` | `engine:read` | `30/minute` | Propriétés de sol réelles d'un point (SoilGrids, ISRIC) |
+| POST | `/pedology/query-and-ingest` | `engine:write` | `10/minute` | Récupère les propriétés SoilGrids puis les soumet au pipeline Evidence → Knowledge. |
 
 ### 2. Schémas d'entrée/sortie
 

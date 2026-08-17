@@ -1,0 +1,12 @@
+flowchart TD
+    V["Vision"] --> C["Constitution<br/>(primauté absolue)"]
+    C --> RFC["RFC<br/>(propositions d'évolution)"]
+    RFC --> DIR["Directive"]
+    DIR --> DEC["Décision<br/>(DEC-xxxxxx)"]
+    DEC --> ARCH["Architecture"]
+    ARCH --> SPEC["Spécification"]
+    SPEC --> IMPL["Implémentation"]
+    IMPL --> CODE["Code<br/>(dernier niveau)"]
+
+    style C fill:#cb4335,color:#fff,stroke:none
+    style CODE fill:#abebc6,stroke:#1e8449

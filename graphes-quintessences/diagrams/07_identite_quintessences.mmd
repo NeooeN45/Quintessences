@@ -1,0 +1,26 @@
+flowchart LR
+    WEB["Web"]
+    MOBILE["Applications mobiles"]
+    PC["Application PC"]
+    HUB["Centre de Commandement"]
+    AUTH["Module Identité GSIE"]
+    LOCAL["Identité locale<br/>Argon2id"]
+    GOOGLE["Google OpenID Connect"]
+    PRO["OIDC / SAML professionnel<br/>(futur)"]
+    ACCOUNT["Compte Quintessences<br/>canonique"]
+    JWT["Jetons GSIE RS256"]
+
+    WEB --> AUTH
+    MOBILE --> AUTH
+    PC --> AUTH
+    HUB --> AUTH
+    LOCAL --> AUTH
+    GOOGLE --> AUTH
+    PRO -.-> AUTH
+    AUTH --> ACCOUNT
+    ACCOUNT --> JWT
+
+    style AUTH fill:#1a5276,color:#fff,stroke:none
+    style ACCOUNT fill:#eaf2f8,stroke:#1a5276
+    style JWT fill:#eafaf1,stroke:#1e8449
+    style PRO fill:#f2f1ee,stroke:#5c5a55,stroke-dasharray: 4 3

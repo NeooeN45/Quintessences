@@ -4,6 +4,12 @@ Note : ce module vit dans infrastructure/ car /ready interroge directement
 PostgreSQL et Redis. Le core/ ne doit pas dépendre de l'infrastructure
 (clean architecture : dépendances vers l'intérieur).
 
+Les sondes ne sont volontairement pas soumises au rate limiter applicatif.
+Leur disponibilité doit rester indépendante de Redis : une panne Redis doit
+faire passer `/ready` à 503, sans empêcher `/health` de confirmer que le
+processus est vivant. Une éventuelle protection contre l'abus se fait à la
+bordure (HAProxy, Cloudflare ou réseau de supervision), pas dans le processus.
+
 Séparation liveness/readiness (recommandation stress test) :
 - /health (liveness) : instantané, sans DB — pour Kubernetes liveness probe
 - /ready (readiness) : avec DB+Redis + cache Redis 5s — pour Kubernetes readiness probe

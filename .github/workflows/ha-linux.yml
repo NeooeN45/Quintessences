@@ -9,6 +9,10 @@ on:
       - "GSIE/API/docker/ha/**"
       - "GSIE/API/scripts/ha/**"
       - "GSIE/API/scripts/profile_http_capacity.py"
+      - "GSIE/API/scripts/benchmark_orchestration.py"
+      - "GSIE/API/src/gsie_api/engines/orchestration/**"
+      - "GSIE/API/alembic/versions/20260813_0049_analysis_run.py"
+      - "GSIE/API/alembic/versions/20260815_0050_analysis_idempotency.py"
       - "GSIE/API/src/gsie_api/infrastructure/health.py"
 
 permissions:
@@ -35,6 +39,10 @@ jobs:
       PGBACKREST_REPO1_CIPHER_PASS: gsie-ci-ha-pgbackrest-cipher
       GSIE_HA_API_IMAGE: api-api:latest
       GSIE_HA_NETWORK: api_default
+      GSIE_DATABASE_ROLE: test
+      GSIE_DATA_NAMESPACE: gsie-test
+      GSIE_DB_NAME: gsie
+      GSIE_API_DB_USER: gsie_api
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -123,8 +131,58 @@ jobs:
             sleep 2
           done
 
-      - name: Charge TLS pendant drainage
+      - name: Rejeu idempotent de la route métier
         run: |
+          docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD/scripts/benchmark_orchestration.py:/benchmark_orchestration.py:ro" \
+            -v "$PWD/keys:/keys:ro" \
+            -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
+            -v "$PWD/tests/perf/results:/results" \
+            -e GSIE_JWT_PRIVATE_KEY_PATH=/keys/private.pem \
+            -e GSIE_JWT_ISSUER=gsie-api \
+            -e GSIE_JWT_AUDIENCE=gsie-clients \
+            -e GSIE_DATABASE_ROLE="$GSIE_DATABASE_ROLE" \
+            -e GSIE_DATA_NAMESPACE="$GSIE_DATA_NAMESPACE" \
+            -e GSIE_DB_NAME="$GSIE_DB_NAME" \
+            -e GSIE_DB_HOST=127.0.0.1 \
+            -e GSIE_DB_PORT=5432 \
+            -e GSIE_API_DB_USER="$GSIE_API_DB_USER" \
+            -e GSIE_API_DB_PASSWORD="$GSIE_API_DB_PASSWORD" \
+            --entrypoint python api-api:latest /benchmark_orchestration.py \
+            --url https://127.0.0.1:8443/api/v1/orchestration/analyse \
+            --ca-file /certs/ca.crt \
+            --replay \
+            --expected-namespace "$GSIE_DATA_NAMESPACE" \
+            --expected-database "$GSIE_DB_NAME" \
+            --output /results/ha-orchestration-idempotency.json
+
+      - name: Charge TLS et métier pendant drainage
+        run: |
+          docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD/scripts/benchmark_orchestration.py:/benchmark_orchestration.py:ro" \
+            -v "$PWD/keys:/keys:ro" \
+            -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
+            -v "$PWD/tests/perf/results:/results" \
+            -e GSIE_JWT_PRIVATE_KEY_PATH=/keys/private.pem \
+            -e GSIE_JWT_ISSUER=gsie-api \
+            -e GSIE_JWT_AUDIENCE=gsie-clients \
+            -e GSIE_DATABASE_ROLE="$GSIE_DATABASE_ROLE" \
+            -e GSIE_DATA_NAMESPACE="$GSIE_DATA_NAMESPACE" \
+            -e GSIE_DB_NAME="$GSIE_DB_NAME" \
+            -e GSIE_DB_HOST=127.0.0.1 \
+            -e GSIE_DB_PORT=5432 \
+            -e GSIE_API_DB_USER="$GSIE_API_DB_USER" \
+            -e GSIE_API_DB_PASSWORD="$GSIE_API_DB_PASSWORD" \
+            --entrypoint python api-api:latest /benchmark_orchestration.py \
+            --url https://127.0.0.1:8443/api/v1/orchestration/analyse \
+            --ca-file /certs/ca.crt \
+            --requests 12 --concurrency 4 --timeout 60 \
+            --expected-namespace "$GSIE_DATA_NAMESPACE" \
+            --expected-database "$GSIE_DB_NAME" \
+            --output /results/ha-orchestration-drain.json &
+          metier_pid=$!
           docker run --rm --network host \
             -v "$PWD/scripts/profile_http_capacity.py:/profile_http_capacity.py:ro" \
             -v "$PWD/tests/perf/results/ha-certs/ca.crt:/certs/ca.crt:ro" \
@@ -137,12 +195,44 @@ jobs:
           load_pid=$!
           sleep 3
           sh scripts/ha/drain_replica.sh api-ha-a
+          wait "$metier_pid"
           wait "$load_pid"
 
       - name: Vérifier le replica restant
         run: |
           curl --fail --silent --cacert tests/perf/results/ha-certs/ca.crt \
             https://127.0.0.1:8443/ready >/dev/null
+
+      - name: Dépendance Redis indisponible puis rétablie
+        run: |
+          set -euo pipefail
+          docker compose stop redis
+          # Le readiness possède un cache de cinq secondes : attendre sa
+          # purge avant de conclure sur l'état de Redis.
+          sleep 7
+          ready_status="$(curl --silent --show-error \
+            --output /tmp/gsie-ready-degraded.json \
+            --write-out '%{http_code}' \
+            --cacert tests/perf/results/ha-certs/ca.crt \
+            https://127.0.0.1:8443/ready || true)"
+          test "$ready_status" = "503"
+          # api-ha-a a été drainé à l'étape précédente ; api-ha-b est le
+          # replica restant dont la vivacité doit rester indépendante de Redis.
+          liveness_status="$(docker compose -f docker-compose.ha.yml \
+            exec -T api-ha-b python -c \
+            "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).status)")"
+          test "$liveness_status" = "200"
+          docker compose start redis
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent \
+              --cacert tests/perf/results/ha-certs/ca.crt \
+              https://127.0.0.1:8443/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Redis n'a pas rétabli la readiness dans le délai attendu" >&2
+          exit 1
 
       - name: Collecter les diagnostics
         if: always()
@@ -160,6 +250,7 @@ jobs:
           name: ha-linux-tls-results
           path: |
             GSIE/API/tests/perf/results/ha-linux-*.json
+            GSIE/API/tests/perf/results/ha-orchestration-*.json
             GSIE/API/tests/perf/results/ha-linux-*.log
           if-no-files-found: warn
           retention-days: 14

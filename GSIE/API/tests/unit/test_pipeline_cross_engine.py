@@ -168,6 +168,10 @@ def should_convert_recommendation_set_to_validation_request() -> None:
     request = recommendation_set_to_validation_request(reco_set)
     assert request.type_sortie == TypeSortie.recommandation
     assert len(request.contenu["recommandations"]) >= 1
+    assert request.contenu["evidence_level"] == "B"
+
+    request_c = recommendation_set_to_validation_request(reco_set, evidence_level="C")
+    assert request_c.contenu["evidence_level"] == "C"
     assert len(request.contenu["sources"]) >= 1
 
 

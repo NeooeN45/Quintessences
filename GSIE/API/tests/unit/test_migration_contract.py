@@ -12,7 +12,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260810_0048"
+_HEAD = "20260815_0050"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",

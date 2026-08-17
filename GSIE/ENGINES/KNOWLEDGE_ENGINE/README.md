@@ -22,7 +22,10 @@ Objets de connaissance normalisés.
 - Ne contient pas de logique d'inférence
 - Ne valide pas lui-même les connaissances (rôle de `EVIDENCE_ENGINE`)
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir KNOWLEDGE_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/knowledge/`. Elle couvre le périmètre
+> effectif décrit ci-dessous ; elle ne démontre pas à elle seule que
+> toutes les connaissances prévues sont intégrées.
 
 ## Contrat d'interface
 
@@ -32,12 +35,12 @@ Source : `GSIE/API/src/gsie_api/engines/knowledge/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/knowledge/status` | aucune | — | Statut du moteur (`router.py:47`) |
-| GET | `/knowledge/version` | aucune | — | Version et backend (`router.py:58`) |
-| POST | `/knowledge/ingest` | `engine:write` | `30/minute` | Ingère une connaissance qualifiée (statut `accepte` requis) dans le graphe (`router.py:71`) |
-| POST | `/knowledge/query` | `engine:read` | `60/minute` | Interroge le graphe (par_concept/par_relation/par_domaine/par_essence/par_station), résultats paginés (`router.py:104`) |
-| POST | `/knowledge/revise` | `engine:write` | `30/minute` | Révise une connaissance existante avec archivage de l'historique (CON-010) (`router.py:127`) |
-| GET | `/knowledge/stats` | `engine:read` | — | Statistiques du graphe (nombre d'objets par type) (`router.py:162`) |
+| GET | `/knowledge/status` | aucune | — | Statut du moteur |
+| GET | `/knowledge/version` | aucune | — | Version et backend |
+| POST | `/knowledge/ingest` | `engine:write` | `30/minute` | Ingère une connaissance qualifiée (statut `accepte` requis) dans le graphe |
+| POST | `/knowledge/query` | `engine:read` | `60/minute` | Interroge le graphe (par_concept/par_relation/par_domaine/par_essence/par_station), résultats paginés |
+| POST | `/knowledge/revise` | `engine:write` | `30/minute` | Révise une connaissance existante avec archivage de l'historique (CON-010) |
+| GET | `/knowledge/stats` | `engine:read` | — | Statistiques du graphe (nombre d'objets par type) |
 
 ### 2. Schémas d'entrée/sortie
 

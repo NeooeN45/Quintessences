@@ -1,0 +1,13 @@
+graph TD
+    FR["France<br/>NCP — National Control Plane"]
+    REG["Région<br/>RCH — coordination régionale"]
+    DEPT["Département<br/>DOD — autorité métier, source de vérité"]
+    TERR["Territoire opérationnel"]
+    CELL["Cellule spatiale<br/>simulation locale"]
+    EDGE["Edge<br/>capsule offline-first, SQLite/SQLCipher"]
+
+    FR --> REG --> DEPT --> TERR --> CELL --> EDGE
+
+    style FR fill:#1a5276,color:#fff,stroke:none
+    style DEPT fill:#eaf2f8,stroke:#1a5276
+    style EDGE fill:#fdebd0,stroke:#ca6f1e

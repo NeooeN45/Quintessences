@@ -9,6 +9,12 @@
 #   docker compose logs -f api    # suivre les logs API
 #   docker compose down           # arrêter
 
+# Le nom du projet et celui des volumes doivent être explicitement différents
+# pour test, benchmark, staging et production. Le défaut ``gsie`` conserve le
+# volume de développement historique ; les fichiers `.env.*.example` imposent
+# les namespaces dédiés pour les autres environnements.
+name: ${COMPOSE_PROJECT_NAME:-gsie}
+
 services:
   # PostgreSQL 16 + PostGIS 3.4 + Apache AGE (graphe Cypher)
   # Image personnalisée construite depuis Dockerfile.db
@@ -228,6 +234,8 @@ services:
       # est conditionné à cette valeur. Un défaut silencieux à `development`
       # désarmait TLS, le refus du dev login et le stockage distribué.
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
+      GSIE_DATABASE_ROLE: ${GSIE_DATABASE_ROLE:-development}
+      GSIE_DATA_NAMESPACE: ${GSIE_DATA_NAMESPACE:-gsie}
       GSIE_DEBUG: ${GSIE_DEBUG:-false}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
       # Recyclage désynchronisé : évite la sortie groupée des workers sous charge.
@@ -347,6 +355,8 @@ services:
     command: ["python", "-m", "gsie_api.outbox_worker"]
     environment:
       GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
+      GSIE_DATABASE_ROLE: ${GSIE_DATABASE_ROLE:-development}
+      GSIE_DATA_NAMESPACE: ${GSIE_DATA_NAMESPACE:-gsie}
       GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
@@ -472,11 +482,17 @@ networks:
 
 volumes:
   gsie_pgdata:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_pgdata
   gsie_redisdata:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_redisdata
   gsie_miniodata:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_miniodata
   gsie_kuma_data:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_kuma_data
   gsie_pgbackrest_repo:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_pgbackrest_repo
   gsie_pgbackrest_log:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_pgbackrest_log
 
 secrets:
   cloudflare_tunnel_token:

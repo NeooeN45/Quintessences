@@ -25,7 +25,9 @@ Matrice de corrélations justifiées et sourcées.
 - Alimente les moteurs de raisonnement (`REASONING_ENGINE`,
   `DIAGNOSTIC_ENGINE`)
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir CORRELATION_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/correlation/`. Elle couvre le périmètre
+> effectif décrit ci-dessous, pas l’ensemble des sources prévues.
 
 ## Contrat d'interface
 
@@ -35,10 +37,11 @@ Source : `GSIE/API/src/gsie_api/engines/correlation/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/correlation/status` | aucune | — | Statut du moteur (`router.py:32`) |
-| GET | `/correlation/version` | aucune | — | Version et backend (`router.py:43`) |
-| POST | `/correlation/compute` | `engine:write` | `30/minute` | Calcule et persiste une corrélation entre deux variables (`router.py:56`) |
-| GET | `/correlation/stats` | `engine:read` | — | Statistiques des corrélations persistées, par méthode (`router.py:87`) |
+| GET | `/correlation/status` | aucune | — | Statut du moteur |
+| GET | `/correlation/version` | aucune | — | Version et backend |
+| POST | `/correlation/compute` | `engine:write` | `30/minute` | Calcule et persiste une corrélation entre deux variables |
+| POST | `/correlation/matrix` | `engine:write` | `10/minute` | Calcule une matrice de corrélations N × N sans persister les corrélations individuelles. |
+| GET | `/correlation/stats` | `engine:read` | — | Statistiques des corrélations persistées, par méthode |
 
 ### 2. Schémas d'entrée/sortie
 

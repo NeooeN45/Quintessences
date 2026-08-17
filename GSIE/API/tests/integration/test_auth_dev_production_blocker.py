@@ -28,6 +28,8 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
     return {
         "environment": "production",
         "debug": False,
+        "database_role": "production",
+        "data_namespace": "gsie-production",
         # Role applicatif dedie, non proprietaire : `gsie` est le
         # proprietaire, et un proprietaire PostgreSQL contourne l'isolement
         # des donnees personnelles (20260728_0012). Une configuration de
@@ -35,9 +37,9 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
-        "redis_url": "redis://:secret@redis-host:6379/0",
-        "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
-        "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
+        "redis_url": "redis://:redis-test-integration-secret@redis-host:6379/0",
+        "rate_limit_storage_url": "redis://:redis-test-integration-secret@redis-host:6379/1",
+        "refresh_token_storage_url": "redis://:redis-test-integration-secret@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "auth_dev_password": "mot_de_passe_reel_pour_tests_integration",
         "require_rust_backend": True,

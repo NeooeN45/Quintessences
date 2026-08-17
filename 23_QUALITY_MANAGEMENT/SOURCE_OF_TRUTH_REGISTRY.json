@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-07-22",
+  "reviewed_at": "2026-08-14",
   "precedence": [
     "constitution",
     "directives_actives",
@@ -10,6 +10,7 @@
     "etat_projet",
     "qms",
     "agent_operations",
+    "archives_memory",
     "archives_sessions"
   ],
   "sources": [
@@ -27,12 +28,12 @@
     {
       "id": "directives_actives",
       "scope": "Instructions opérationnelles actuellement applicables",
-      "paths": ["01_DIRECTIVES/ACTIVE/*.md"],
+      "paths": ["01_DIRECTIVES/ACTIVE/GSIE-DIR-*.md"],
       "authority": 90,
       "owner": "Fondateur",
       "status": "canonique",
-      "last_reviewed": "2026-07-21",
-      "next_review": "2026-10-21",
+      "last_reviewed": "2026-08-14",
+      "next_review": "2026-11-14",
       "superseded_by": null
     },
     {
@@ -86,8 +87,8 @@
       "authority": 50,
       "owner": "Direction technique",
       "status": "canonique",
-      "last_reviewed": "2026-07-22",
-      "next_review": "2026-08-22",
+      "last_reviewed": "2026-08-14",
+      "next_review": "2026-09-14",
       "superseded_by": null
     },
     {
@@ -100,6 +101,17 @@
       "last_reviewed": "2026-07-22",
       "next_review": "2026-10-22",
       "superseded_by": null
+    },
+    {
+      "id": "archives_memory",
+      "scope": "Anciennes vues consolidées de l'état du projet",
+      "paths": ["22_PROJECT_MEMORY/PROJECT_MEMORY_ARCHIVE_*.md"],
+      "authority": 0,
+      "owner": "Direction technique",
+      "status": "archive",
+      "last_reviewed": "2026-08-14",
+      "next_review": null,
+      "superseded_by": "etat_projet"
     },
     {
       "id": "archives_sessions",

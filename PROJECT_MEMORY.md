@@ -6,11 +6,81 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-10 — **Data Registry clôturé techniquement : preuve unique, CI PostgreSQL/MinIO, scheduler borné, qualification FETCH fermée et redéploiement sain.** |
+| **Dernière mise à jour** | 2026-08-17 — **RFC-0041 et DEC-000073 proposés pour réconcilier le contrat GeoSylva–GSIE.** |
 
+### Fiabilisation environnements et moteurs (2026-08-13)
+
+Les environnements de données sont maintenant explicitement séparés par rôle et
+namespace : développement historique, test, benchmark, staging et production.
+Compose nomme les volumes avec ce namespace et le CI refuse un namespace de
+staging présenté comme production. Le vérificateur est sans réseau et sans
+écriture ; aucun volume existant n'a été supprimé.
+
+L'audit des 14 moteurs a été reproduit : 316 tests cœur, 166 tests domaine et
+14 tests de pipeline/orchestration passants (un test explicitement ignoré).
+L'orchestration transmet désormais sa session DB au Validation Engine pour ne
+plus perdre les sorties bloquées/partielles, et propage le niveau de preuve du
+diagnostic aux recommandations. L'hydratation automatique d'un `station_id` en
+contexte stationnel complet reste la prochaine tranche.
+
+Le contrat structurel automatisé confirme 14/14 moteurs (package, schémas,
+routeur, point d'entrée et montage FastAPI). La migration `20260813_0049`
+ajoute `analysis_run` : chaque appel d'orchestration terminé reçoit un
+`analyse_id` et conserve les quatre sorties intégrales dans une preuve
+append-only, dans la même transaction DB. La migration n'est pas exécutée
+implicitement par cette modification.
+La table est protégée côté PostgreSQL par le trigger
+`analysis_run_append_only`, vérifié sur une base jetable par upgrade/downgrade.
+
+L'audit API/GeoSylva est documenté dans
+`23_QUALITY_MANAGEMENT/AUDITS/AUDIT_API_GEOSYLVA_2026-08-13.md`. L'API et la
+persistance sont prouvées sur PostgreSQL réel ; GeoSylva possède l'identité et
+la synchronisation parcelles sécurisées, mais ne consomme pas encore
+`/orchestration/analyse`. Le client Kotlin sera ajouté après versionnement des
+DTO et hydratation stationnelle, sans pointer l'APK de test vers production.
+
+La campagne complète backend post-corrections passe 2 929 tests unitaires
+(63 ignorés explicitement, 13 avertissements non bloquants). Les tests
+WebSocket utilisent désormais le sous-protocole JWT, et les fixtures de
+production portent le rôle/namespace dédiés ; aucune règle de sécurité n'a
+été assouplie.
+
+### Assainissement transversal Phases 1 à 4 (2026-08-13)
+
+Les correctifs autonomes de sécurité, qualité Python, documentation et CI ont
+été appliqués et reproduits. Le livrable 309, tronqué depuis sa création, est
+désormais scellé de manière append-only : son fragment historique est protégé
+par l'empreinte du blob d'origine et un dossier de reconstruction distinct reste
+Draft. Aucun SQL manquant n'a été inventé et son statut Supersédé est inchangé.
+
+La mémoire racine est désormais l'unique vue canonique conformément au registre
+des sources de vérité. L'ancienne copie divergente de `22_PROJECT_MEMORY` est
+conservée intégralement comme archive datée, et son ancien chemin redirige vers
+la source canonique sans recopier d'état courant.
+
+Le classement des directives distingue désormais les documents applicables,
+les propositions `Draft`/`Review` et les archives. DIR-0005, DIR-0006 et
+DIR-0012 sont non applicables dans PROPOSED ; DIR-0007 est archivée avec son
+statut CLOS. DIR-0003 est close et archivée conformément à DEC-000004, ce qui
+supprime le conflit entre les directives de Phase 1 et de Phase 4.
+
+DEC-000070 requalifie la Phase 2 en « sortie de phase — validation
+documentaire pendante ». La transition vers les phases suivantes n'est plus
+présentée comme une clôture terminale. Les 12 livrables restent Draft et leurs
+12 dettes de validation continuent d'interdire le gel documentaire, même si le
+garde automatisé ne les classe plus comme contradictions de phase. Aucun
+document Locked n'a été modifié et la Phase 4 reste active.
+
+L'audit détaillé des livrables 201-212 est consigné dans
+`23_QUALITY_MANAGEMENT/AUDITS/AUDIT_PHASE2_LIVRABLES_2026-08-14.md`. Aucun
+livrable n'est prêt à passer immédiatement en Review : trois nécessitent des
+corrections bornées, quatre un rebaselining ou une supersession et cinq une
+décision ou un prérequis. L'option recommandée est de qualifier la Phase 2
+comme « sortie de phase, validation pendante », sans fermer la Phase 4 et sans
+promotion rétroactive.
 ### Graphes Mermaid de synthèse (2026-08-10)
 
-Site statique `graphes-quintessences/` : 13 diagrammes Mermaid répartis en
+Site statique `graphes-quintessences/` : 14 diagrammes Mermaid répartis en
 4 catégories (Écosystème, Gouvernance, Progression, Infrastructure), sourcés
 depuis `README.md`, `PROJECT_MEMORY.md`, `ROADMAP.md`, `03_DECISIONS/` et
 `GSIE/ARCHITECTURE/` (Server/Territorial Mesh, Identité). Généré par
@@ -19,7 +89,260 @@ depuis `README.md`, `PROJECT_MEMORY.md`, `ROADMAP.md`, `03_DECISIONS/` et
 recherche combinés, thème clair/sombre persistant, zoom/pan, plein écran,
 export SVG, bascule code source, copie du code. Port 4300. Skill Devin
 `.devin/skills/graphes-progression/` pour maintenir les graphes
-automatiquement après chaque grosse progression.
+automatiquement après chaque grosse progression. Le workflow
+`.github/workflows/deploy-graphes-pages.yml` régénère `public/` et le publie sur
+GitHub Pages après fusion sur `main`, lorsque la source GitHub Actions est
+activée dans les réglages du dépôt. Le dépôt ne disposait pas auparavant de
+workflow Pages ; l'activation GitHub reste une étape manuelle.
+
+### Guide de durabilité évolutive et intégration IA (2026-08-12, v1.2.0)
+
+Le document `GSIE/ARCHITECTURE/GSIE_EVOLUTION_AND_AI_INTEGRATION.md` (v1.2.0)
+formalise les règles pour les évolutions difficiles : migrations
+expand/backfill/contract, compatibilité des contrats, versionnement scientifique,
+invalidation des données dérivées, fraîcheur, santé, licences, performance et
+preuves de qualité. Il définit l'architecture Enterprise en quatre plans
+(Forge — Data Integration, GSIE Data Registry — Governance, GSIE-Bench —
+Evaluation, API/moteurs — Serving), le contrat Forge → GSIE, le cycle de vie des
+données `DATA_RAW/DATA_BRONZE/DATA_SILVER/DATA_GOLD/DATA_DERIVED`, la boucle bidirectionnelle
+applications/terrain, le bounded context Benchmark dans l'application Dataset et
+`GSIE-Norm-Bench`. Il précise la porte d'entrée des modèles IA spécialisés après
+la bêta : registre de modèles, jeu d'évaluation reproductible, shadow mode,
+incertitude, provenance, validation humaine, rollback, contraintes matérielles et
+confidentialité. Le guide reste `Draft` en attente de validation par le
+fondateur. La relecture d'intégrité sépare désormais l'implémenté de la cible,
+aligne QualityAssessment, DatasetHealth et FieldIntake sur le code réel, évite
+un quinzième moteur implicite et ajoute une porte stricte pour les ressources
+locales. L'audit associé est
+`GSIE/ARCHITECTURE/GSIE_EVOLUTION_AND_AI_INTEGRATION_AUDIT_2026-08-12.md`.
+
+### Inventaire qualifié de `E:\Documents` (2026-08-12, v2.0.0)
+
+Le registre reproductible voit 41 215 fichiers, en conserve 15 014 après
+exclusions techniques/personnelles et décrit 3 077 ressources logiques : 359
+documents, 256 tableurs, 460 textes, 85 vecteurs, 46 shapefiles logiques, 195
+rasters et 1 676 images. Il replie les sidecars, détecte 143 groupes de doublons
+exacts, signale 489 ressources potentiellement sensibles et 23 PDF probablement
+soumis à OCR. Aucun fichier source n'est copié ou ingéré. Les deux fiches
+stationnelles sont classées comme prototypes FieldIntake et candidats de tests
+de contradictions, non comme vérités Gold.
+
+### Catalogue exhaustif des ressources GSIE (2026-08-13, v1.0.0)
+
+Le rapport `GSIE/DATASETS/CATALOGUE_RESSOURCES_EXHAUSTIF_2026-08-13.md`
+réconcilie les quatre périmètres qui étaient jusque-là dispersés : 34 familles
+canoniques `DS-*`, 113 fiches spécialisées dans les dossiers scientifiques
+D1–D8, 12 sources officielles + 61 connecteurs supplémentaires + 83 entrées
+du catalogue QGISIA, et 3 077 ressources locales logiques. Il rappelle que
+les services cartographiques sont des `Distribution`/proxys et non des
+datasets supplémentaires, et que l'inventaire ne vaut ni licence, ni droit de
+copie, ni vérité Gold. Aucun octet local n'a été copié ou ingéré ; FETCH reste
+fermé hors autorisation ponctuelle déjà tracée.
+
+La relecture a confirmé une ressource externe oubliée dans la synthèse :
+Treekipedia/Silvi (`https://treekipedia.silvi.earth`). Le dépôt local
+`21_EXPERIMENTS/_treekipedia_inspection/` contient déjà une inspection avec
+67 928 taxons, des insights RDF, des indicateurs GRIIS/USDA, un schéma SQL et
+des archives GBIF. Treekipedia est cataloguée comme candidate
+`RESEARCH`/`metadata_only` pour Botanical et Knowledge ; ses droits, ses
+données agrégées et son accès API doivent être qualifiés avant toute ingestion
+ou utilisation comme vérité Gold.
+
+### Priorisation et fiches Registry externes (2026-08-13)
+
+Les sources externes sont maintenant classées par besoin d'intégration dans
+`GSIE/DATASETS/PRIORISATION_INTEGRATION_SOURCES_2026-08-13.md` : I0 socle
+Registry, I1 métier prioritaire, I2 scientifique contrôlé, I3 partenaires et
+benchmark, I4 ressources locales différées, X obsolète. Le catalogue de fiches
+`GSIE/DATASETS/REGISTRY_FICHES_SOURCES_EXTERNES_README.md` et ses fichiers JSON
+contiennent 158 fiches structurées pour les sources non locales. Les champs
+inconnus sont explicitement `à_qualifier`, le statut reste metadata-only et
+aucune fiche n'est appliquée à la base active. Les données de `E:\Documents`
+restent volontairement la dernière tranche.
+
+La qualification I0 a ensuite réconcilié les 15 pré-fiches avec les services
+réels et le manifeste actif. Elle sépare notamment Species API des occurrences
+GBIF, SoilGrids WCS de son REST suspendu, les produits Météo-France entre eux,
+et les datasets IGN de leurs distributions API/OGC. Cinq entrées strictement
+`metadata_only` forment un manifeste candidat conforme mais non appliqué : IFN,
+GBIF Species API, SoilGrids WCS, API Carto Cadastre et limites administratives.
+La revue a aussi identifié quatre identités actives trop agrégées ; leur
+correction exigera une migration dédiée, jamais un remplacement silencieux.
+
+DEC-000068 scinde maintenant SCI-001 sans muter la base : les quatre identités
+historiques GBIF, SoilGrids, IGN et Météo-France restent auditables mais sont
+dépréciées et refusées par `require_ingestible`. Des identités canoniques par
+produit/distribution sont déclarées, le manifeste I0 candidat les utilise, et
+le registre FETCH distingue `soilgrids-wcs` tout en le maintenant fermé. Un
+auditeur pur bloque tout rejeu silencieux du manifeste actif et prépare la
+future migration transactionnelle.
+
+L'audit SQL réel du 2026-08-13 a été exécuté en lecture seule sur PostgreSQL
+Docker (`20260810_0048`). Il trouve 36 ressources Registry actives (4 groupes
+de 9, les 4 agents expliquant l'écart avec l'ancien compteur de 32), 4
+datasets `discovered`, 4 snapshots de santé `healthy` et un seul DataAsset RAW.
+Ce DataAsset de 569 octets est rattaché à `soilgrids-properties`, avec checksum
+et URI MinIO conservés ; il ne doit pas être déplacé automatiquement vers
+`soilgrids-wcs`. Le mapping GBIF, IGN et Météo-France reste ambigu. Voir
+`GSIE/DATASETS/AUDIT_SQL_RECONCILIATION_I0_2026-08-13.md`.
+Le scan a aussi révélé que le scheduler de santé projetait encore uniquement
+les anciens slugs ; il préfère désormais les slugs canoniques et ne retombe sur
+les historiques que pour mesurer la base non migrée, sans réécriture.
+Les versions historiques ont `stats=null` et seulement `operation=metadata_only`;
+aucune opération adapter, couche IGN ou jeu d'occurrences n'est reconstructible
+depuis PostgreSQL.
+Le dry-run d'identité du 13 août 2026 confirme trois décisions `UNRESOLVED`,
+un `PRESERVE_LINEAGE` SoilGrids, deux propositions futures limitées aux
+adapters GBIF/Météo des forêts, et zéro écriture.
+DEC-000069 formalise cette porte non mutative : aucune migration n'est permise
+avant validation humaine des cas ambigus.
+
+### Implémentation FieldIntake stationnel et quarantaine (2026-08-12)
+
+Le contrat `gsie_api.data.field_intake_station` est maintenant implémenté et
+testé : observations, calculs, interprétations et recommandations sont
+séparés, les unités sont contrôlées, les formules géométriques sont versionnées
+et les contradictions ne réécrivent jamais les entrées. Il est intégré sans
+migration au JSONB `FieldIntake` via le champ optionnel `station`, qui reste
+quarantined et idempotent. La fiche `GSIE/ALGORITHMS/FIELD_INTAKE_STATION_V0_1.md`
+documente les limites scientifiques.
+
+Le scénario `quarantine.farges.dendrometry.001` formalise la contradiction
+325 tiges/ha, 20,5 m²/ha et 53 cm. Il reste Silver/quarantaine et exige une
+abstention jusqu'à relecture experte. Les candidats spatiaux et la bibliothèque
+scientifique sont catalogués metadata-only dans `GSIE/DATASETS/` et
+`GSIE/RESEARCH/` ; aucune copie, ingestion, IA ou promotion n'a été déclenchée.
+
+### Hydratation stationnelle fail-closed (2026-08-17)
+
+L'hydratation automatique `station_id → StationContexte` est implémentée dans
+`gsie_api/engines/orchestration/hydration.py` (DEC-000072). La résolution suit
+la priorité Place puis soumission FieldIntake `accepted` la plus récente ; les
+soumissions `quarantined` et `rejected` sont comptées, jamais lues pour leurs
+valeurs. Chaque bloc exige une source résolvable, une date et un niveau de
+preuve — déclaré par l'appelant lorsque la donnée n'en porte pas. Aucun bloc
+n'est inventé : un `StationContexte` partiel est accepté, un contexte vide est
+refusé avec le nom de chaque manque.
+
+Le module expose un endpoint de prévisualisation
+`GET /api/v1/orchestration/stations/{station_id}/contexte` et branche
+l'hydratation dans `POST /api/v1/orchestration/analyse` quand le contexte est
+absent. Le rapport d'hydratation est conservé dans `analysis_run` avec les
+quatre sorties, garantissant que le contexte effectivement utilisé reste
+rejouable et auditable.
+
+Les 58 tests unitaires et d'intégration ciblés passent sur PostgreSQL/PostGIS
+réel. La couverture du package `orchestration` atteint 100 % avec le traceur
+`COVERAGE_CORE=sysmon`. Le harnais de mutation intègre la garde anti-quarantaine
+(`quarantaine_lue_pour_ses_valeurs`) et est tué par le nouveau test
+`should_only_read_accepted_intake_and_ignore_quarantined_and_rejected`. La
+prochaine étape est le client Kotlin `/orchestration/analyse` dans GeoSylva,
+sans attendre les écrans martelage 3.0.
+
+### Clarification contractuelle GeoSylva–GSIE (2026-08-17)
+
+La revue des derniers RFC et registres a identifié un écart entre RFC-0033,
+qui adopte une enveloppe cliente et un SDK Kotlin, et la route actuelle
+`/api/v1/orchestration/analyse`, qui exige directement des règles, des
+qualifications et un état global. GeoSylva ne doit pas fabriquer ces éléments.
+
+RFC-0041 propose donc une façade `analyse-geosylva` : GeoSylva envoie une
+intention sans `contexte`, règles, qualifications ni état global ; le serveur
+prépare la chaîne ou refuse explicitement si la capacité de règles qualifiées
+ou l'état global sourcé n'existe pas. La façade appelle l'orchestrateur en
+processus, utilise un scope RBAC consommateur et sépare l'empreinte d'intention
+de l'empreinte interne d'`AnalyseRequest`. L'identité repose sur un endpoint
+`station-link` dédié, idempotent et révocable, reliant explicitement
+`parcelleId → gsie_resource_id`, sans réutiliser un identifiant local comme UUID
+GSIE et sans ajouter immédiatement des UUID à toutes les tables GeoSylva.
+
+DEC-000073 est la décision liée, au statut Proposé. Jusqu'à sa validation,
+aucune migration Room, aucune modification de synchronisation et aucun nouveau
+contrat public ne doivent être implémentés. Les registres d'opportunités restent
+Draft : ils orientent les benchmarks, mais n'autorisent aucune dépendance ou
+modèle en production.
+
+### Dossier de relecture experte Farges (2026-08-12)
+
+Le dossier `GSIE/TESTS/GSIE_BENCH/DOSSIER_RELECTURE_EXPERTE_FARGES_2026-08-12.md`
+formalise les contrôles scientifiques et juridiques du scénario contradictoire.
+La garde pure `assess_gold_qualification` exige deux avis indépendants, la
+vérification des revendications, des droits, des tolérances, des alternatives
+et des vetos. Elle ne promeut aucun scénario ; l'état reste
+`pending_expert_review` et le Closed reste bloqué.
+
+### Première chaîne d'enrichissement d'une base existante (2026-08-12)
+
+La tranche SoilGrids RAW → SILVER est maintenant contractuellement définie et
+testée dans `gsie_api.data.promotion`. Elle normalise le micro-extrait déjà
+autorisé (code métier `wv003`, code WCS `wv0033`, CRS EPSG:152160, GeoTIFF
+Int16, checksum et URI MinIO) sans inventer les unités ni lire les pixels.
+La garde exige asset RAW, schéma normalisé, checksum, droits, qualité complète
+et décision opérateur ; la production exige d'abord staging. `SilverPromotionService`
+écrit maintenant la transition `validated → staging` dans une transaction
+appelante après vérification du snapshot de preuves. Aucune promotion réelle
+SoilGrids n'est exécutée tant que ces preuves ne sont pas chargées depuis la
+base et validées par l'opérateur.
+
+Le dépôt `SilverPromotionEvidenceRepository` assemble maintenant ces preuves
+depuis PostgreSQL sans les fusionner entre runs QualityAssessment. Il refuse
+l'absence de version, d'asset, de droits ou de qualité ; le chemin complet
+`Registry → preuves → SilverPromotionService` est couvert par des tests, mais
+aucune promotion réelle ni commit de production n'a été lancé.
+
+### Expansion des scénarios GSIE-Bench (2026-08-12)
+
+La première ébauche Parelle ne couvrait que pH, profondeur et engorgement ; elle
+est conservée comme micro-suite historique et non comme trois diagnostics Gold
+complets. Les dossiers BTS fournis ont permis de préparer trois candidats v0.2
+plus réalistes : Longeyroux (pessière de plateau), diagnostic autoécologique du
+hêtre et hêtraie régulière de la Vergne avec inventaire et martelage. Chaque
+scénario contient onze sections et une provenance séparant observation,
+déduction, hypothèse, donnée manquante et point à relire. Les scénarios restent
+`pending_expert_review`, le Closed est bloqué et aucune IA, ingestion ou
+promotion n'est autorisée. La revue détaillée est dans
+`GSIE/TESTS/GSIE_BENCH/SCENARIO_EXPANSION_REVIEW_2026-08-12.md`.
+
+### Durcissement du runner GSIE-Bench (2026-08-15)
+
+Le runner déterministe transmet désormais une vue candidat aveugle : labels
+attendus, facteurs obligatoires, recommandations interdites, droits et statut
+de qualification restent hors de la frontière du candidat. Les entrées sont
+figées récursivement et le checksum SHA-256 du scénario est vérifié avant tout
+appel. Une divergence lève `ScenarioIntegrityError`. Les baselines ne se
+fondent plus sur le nom de variation ni sur `expected_behavior`. Quatorze tests
+ciblés passent, ainsi que Ruff et mypy strict. Chaque run produit aussi un
+`BenchmarkRunManifest` immuable et reproductible couvrant le candidat, les
+scénarios, les prédictions brutes, les évaluations et les checksums publics.
+Les scénarios restent
+`pending_expert_review`, donc Closed reste bloqué ; aucune IA, ingestion,
+FETCH ou promotion n'est autorisée. Preuve :
+`GSIE/TESTS/GSIE_BENCH/RUNNER_HARDENING_2026-08-15.md`.
+
+### Suite Open/Silver GSIE-Bench (2026-08-15)
+
+Une suite synthétique publique de trois scénarios Silver qualifiés est
+maintenant exécutable sans attendre la relecture Gold. `RunPolicy.open_silver`
+refuse les scénarios Gold et exige un statut de qualification explicite. Les
+métriques multilabel, ranking, latence et dégradation sont disponibles dans un
+module pur ; la CLI `GSIE/API/scripts/gsie_bench.py` produit un rapport JSON
+avec prédictions et manifeste. La baseline déterministe obtient `GO` sur les
+trois cas de contrat, sans portée scientifique. Les 14 contrats moteurs sont
+référencés dans `gsie_api.benchmark.adapters` et l'adaptateur injecté n'ouvre
+aucune dépendance externe ; l'exécution réelle moteur par moteur reste à
+raccorder. Preuve :
+`GSIE/TESTS/GSIE_BENCH/OPEN_SILVER_IMPLEMENTATION_2026-08-15.md`.
+
+### Veille LLM et pistes R&D futures (2026-08-12)
+
+La veille `GSIE/RESEARCH/VEILLE_LLM_ET_RD_GSIE_2026-08-12.md` conserve les
+candidats pour la normalisation locale et partenaire : GLiNER2, Qwen3 Embedding
+et Reranker, modèles documentaires, modèles géospatiaux, séries temporelles,
+petits LLM et NVIDIA NIM. Elle sépare les faits vérifiés, les candidats à tester
+et les affirmations à revalider. Elle enregistre également les pistes R&D IGNIS,
+Hydro, QGIS/IGN, Mesh et financements potentiels sans autoriser d'ingestion,
+de partenariat, d'achat ou d'implémentation. `GSIE-Norm-Bench` est identifié
+comme sous-benchmark distinct avant toute intégration IA.
 
 ### Manifeste Data Registry (2026-08-10)
 
@@ -494,9 +817,16 @@ brainstorming v5 n'est adoptée.
 
 ## RFC ouverts
 
-- **RFC-0003** — Architecture distribuée GSIE-Net (Proposé — 2026-07-07) :
-  capture la vision fondateur sur l'architecture offline-first, distribuée,
-  multi-couches et orientée données. Activé en Phase 2.
+- **RFC-0003** — Architecture distribuée GSIE-Net (Proposé — 2026-07-07,
+  reste globalement non adopté) : capture la vision fondateur sur
+  l'architecture offline-first, distribuée, multi-couches et orientée
+  données. **Addendum §6bis (2026-08-17)** : active explicitement, et
+  seulement, le principe du §6 (intelligence distribuée par nœud) pour la
+  chaîne de raisonnement — « local/distant selon complexité » désigne
+  l'exécution transparente du même moteur déterministe, jamais le
+  basculement vers un modèle statistique différent (cohérent avec
+  RFC-0020 et RFC-0040 §6.2). Topologie mesh, Meshtastic/LoRa et bundle
+  de mission restent hors périmètre de cet addendum, toujours « Proposé ».
 - **RFC-0004** — Ignis : Système autonome de surveillance et d'analyse
   des incendies (**ADOPTÉ** — 2026-07-12, DEC-000003) : nouvelle branche
   fonctionnelle dédiée au risque incendie, positionnée comme application
@@ -515,6 +845,11 @@ brainstorming v5 n'est adoptée.
   Correlation Engine v2 (pipeline causal 8 étapes), packs offline
   signés GeoSylva, progression par vertical slices. Issue de l'étude
   `GSIE/RESEARCH/ETUDE_MODELES_OPEN_SOURCE_QUINTESSENCES_2026-07-18.md`.
+  **Addendum §3.6bis (2026-08-17)** : précise la granularité des packs
+  (`scope_kind: region | mission_zone`), portée région par défaut pour
+  le pilote (12-20 essences, FR-NAQ), bascule vers `mission_zone` sur
+  seuil mesuré (30 Mo, sous le plafond mobile 50 Mo) — pas anticipée.
+  N'ajoute aucun schéma, ne rouvre pas DEC-000026.
   Voir `02_RFC/RFC-0015-environmental-model-fabric.md`.
 - **RFC-0016** — Schéma forestier spécialisé (**ADOPTÉ** — 2026-07-18,
   DEC-000027) : applique RFC-0014/RFC-0015 au domaine sylvicole. 10
@@ -597,6 +932,37 @@ brainstorming v5 n'est adoptée.
   (piste retenue comme prioritaire). Aucune implémentation avant
   Review puis décision.
   Voir `02_RFC/RFC-0020-carte-ignorance-reasoning-engine.md`.
+- **RFC-0040** — Contrôle qualité des modèles de perception embarqués,
+  sans mise à jour automatique (**Draft** — 2026-08-17) : issu d'une
+  discussion sur l'amélioration de la chaîne de raisonnement à partir de
+  propositions externes (« vibe coding »). Rejette formellement
+  l'apprentissage fédéré et le teacher-student sur la chaîne de décision
+  (contredisent ADR-009/CON-001, cité mot pour mot) ; retient le
+  teacher-student pour la perception (défauts, maladies, essences —
+  déjà légitime via le pattern Pl@ntNet `SUGGESTION_IA →
+  VALIDEE_UTILISATEUR`) et un mécanisme de rejeu serveur en contrôle
+  qualité, jamais en mise à jour automatique. Deux volets :
+  monitoring passif (agrège les corrections humaines déjà tracées par
+  l'Evidence Engine, activable immédiatement) et rejeu serveur (`
+  PerceptionReplayJob`/`PerceptionDeltaReport`), structurellement
+  inactif tant qu'aucun modèle lourd `Qualified`/`Approved` n'existe
+  pour la même tâche dans le registre RFC-0015 — précondition
+  d'intégrité, pas discipline procédurale. 4 tranches. Aucun modèle de
+  perception concret n'est encore en construction (voir
+  `GSIE/RESEARCH/REGISTRE_APPS_MOBILES.md` OPP-031/OPP-018,
+  `GSIE/RESEARCH/REGISTRE_APPS_CLIENTES.md` OPP-021 — tous
+  SURVEILLER/BENCHMARKER).
+  Voir `02_RFC/RFC-0040-controle-qualite-modeles-perception.md`.
+- **RFC-0041** — Contrat de façade GeoSylva et identité stationnelle GSIE
+  (**Draft** — 2026-08-17) : réconcilie RFC-0033 avec la route d'orchestration
+  actuellement implémentée, sans remplacer le contrat interne. GeoSylva envoie
+  une intention ; GSIE sélectionne les règles et qualifications sourceées,
+  refuse l'absence d'état global au lieu d'inventer `sain`, et relie explicitement
+  `parcelleId` local à un UUID `Place` GSIE. La file mobile conserve le JSON
+  complet et applique l'idempotence de DEC-000071. Aucune implémentation,
+  migration Room ou modification de synchronisation n'est autorisée avant
+  validation de DEC-000073.
+  Voir `02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md`.
 
 ---
 
@@ -641,6 +1007,8 @@ brainstorming v5 n'est adoptée.
 - **DEC-000033** — Orientation de la refondation constitutionnelle (décision d'orientation, **non** décision d'adoption)
 - **DEC-000034** — Réassignation de l'orchestration des agents IA (Review, 2026-07-25). Amende DEC-000032 (orchestration contrôlée) — RFC-0022 Adopté. Décision d'organisation sans effet constitutionnel : Codex conserve l'orchestration technique, le Fondateur l'autorité finale.
 - **DEC-000035** — Rust devient un critère de pertinence mesuré, non un plan de vague
+- **DEC-000070** — Phase 2 requalifiée « sortie de phase — validation
+  pendante » ; 12 Draft conservés, Phase 4 maintenue active
 - **DEC-000036** — Baseline Alembic v6.2 unique, lignée locale 0001-0013 remplacée
 - **DEC-000037** — Stratégie de fiabilisation et de sécurisation de la base de données GSIE
 - **DEC-000038** — Persistance des règles d'inférence (adoption `RFC-0028`). Une règle est une Assertion (`claim_kind` `rule`/`threshold`), aucune table nouvelle. La condition exécutable est **dérivée** du fait sourcé, jamais stockée — une chaîne persistée pourrait diverger du seuil qu'elle traduit et appliquer l'ancienne valeur en citant la source révisée. **Un domaine de validité non renseigné vaut « nulle part »** : le silence ne vaut pas universalité, et une conclusion fausse portant une citation vérifiable est pire qu'une absence de réponse. Corollaire : territoire obligatoire sur `silvicultural_rule` et `autecology_profile`, comme il l'est déjà sur `station_type`, `fertility_class` et `provenance_material`. Aucun plancher de preuve par défaut mais `evidence_level_plancher` obligatoire en réponse ; une source invalidée sort la règle du service **et** rend énumérables les conclusions passées qui la citaient. Premier lot : chêne sessile, réserve utile maximale, un territoire, de bout en bout.
@@ -697,15 +1065,21 @@ brainstorming v5 n'est adoptée.
 ## Documents structurants
 
 - **GSIE-DIR-0001** — Directive fondatrice (ACTIVE)
-- **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (ACTIVE)
+- **GSIE-DIR-0003** — Lancement officiel Phase 1 Foundation (CLOS —
+  DEC-000004, archivée)
 - **GSIE-DIR-0004** — GSIE Genesis Directive (ACTIVE)
-- **GSIE-DIR-0005** — Directive fondatrice Ignis (GCS / jumeau numérique vivant) (Review — DEC-000008, passage Draft→Review 2026-08-02 : livrables en pilote actif)
-- **GSIE-DIR-0006** — Vision du Moteur Cognitif Ignis (Review — DEC-000009, passage Draft→Review 2026-08-02 : livrables en pilote actif)
-- **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (ACTIVE — DEC-000011)
+- **GSIE-DIR-0005** — Directive fondatrice Ignis (Review — PROPOSED,
+  non applicable)
+- **GSIE-DIR-0006** — Vision du Moteur Cognitif Ignis (Review — PROPOSED,
+  non applicable)
+- **GSIE-DIR-0007** — Lancement officiel Phase 3 Connaissance (CLOS —
+  archivée)
 - **GSIE-DIR-0008** — L'Encyclopédie de l'Écosystème (ACTIVE — DEC-000012)
 - **GSIE-DIR-0009** — Restructuration écosystème : apps, Centre de Commandement, organisation (ACTIVE — DEC-000013)
 - **GSIE-DIR-0010** — Réorganisation arborescence : GSIE/ + apps/ (ACTIVE — DEC-000014)
 - **GSIE-DIR-0011** — Lancement officiel Phase 4 Implémentation (ACTIVE — DEC-000017)
+- **GSIE-DIR-0012** — Vision GSIE Server Meshing (Draft — PROPOSED,
+  non applicable)
 - **RFC-0001** — Méthodologie de rédaction de la Constitution (ADOPTÉ)
 - **RFC-0002** — Unification du système d'articles constitutionnels (**Adopté** — Option A, DEC-000015, 2026-07-13)
 - **RFC-0003** — Architecture distribuée GSIE-Net (Proposé)
@@ -1332,3 +1706,164 @@ DEC-000062 redéploie localement le commit `6986e80` et valide la chaîne active
 API/worker sains, migration 0048, manifeste idempotent, MinIO et DataAsset TIFF
 cohérents. La charge est stable sans erreur mais plafonne autour de 19 req/s
 via Docker Desktop ; ce point doit être profilé avant toute cible production.
+
+#### Audit tests et mesures — 2026-08-14
+
+La passe qualité confirme 2 935 tests unitaires, plus 55 tests ciblés de
+sécurité/configuration et de garde Docker, ainsi que les campagnes ciblées
+d’orchestration/migration, 14/14 moteurs, l’isolement des environnements, la
+compilation Python et le build JVM GeoSylva. La stack Docker de test est
+opérationnelle : six services `gsie-test` sains, PostgreSQL/PostGIS sur la
+migration `20260813_0049`, Redis et MinIO initialisés, API `/health` et
+`/ready` à 200. Une suite ciblée compte 33 passants en 117,78 s. La campagne
+complète de 349 tests a ensuite passé avec deux workers en 1393,34 s, après
+correction des fixtures de secrets, du TTL de test et de l’identité GBIF. La
+route d’orchestration avec écriture `analysis_run` doit encore être mesurée.
+La fixture Windows ferme désormais explicitement les boucles événementielles
+temporaires ; les avertissements connus sont filtrés par catégorie dans pytest.
+Bandit 1.7.10 ne relève aucun problème moyen ou haut sur 43 132 lignes (quatre
+alertes faibles restent sous le seuil CI).
+La dernière mesure de la route réelle `POST /api/v1/orchestration/analyse` a
+révélé puis corrigé une course concurrente lors de la création de l'agent
+Recommendation Engine (`GET` puis `INSERT` non atomique). La méthode utilise
+désormais `ON CONFLICT DO NOTHING` côté PostgreSQL. Les campagnes finales sur
+`gsie_test` sont vertes : 20/20 à concurrence 5 (p95 312,87 ms) et 40/40 à
+concurrence 10 (p95 586,89 ms), avec 100 % des `analysis_run` persistés.
+Le test PostgreSQL concurrent dédié et les cinq tests d'orchestration passent
+également après le correctif.
+Le rapport détaillé est `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_PERFORMANCE_ORCHESTRATION_2026-08-15.md`.
+Rapport détaillé :
+`23_QUALITY_MANAGEMENT/AUDITS/AUDIT_TESTS_MESURES_2026-08-14.md`.
+Les validations de configuration ont aussi été durcies : les marqueurs
+documentaires de secrets sont refusés en staging/production pour les URLs
+PostgreSQL/Redis, les identifiants S3 et la clé MFA, avant toute connexion.
+
+#### Haute disponibilité locale isolée — 2026-08-15
+
+La campagne `AUDIT_HA_LOCAL_2026-08-15.md` valide le drainage gracieux et la
+continuité d'un pool HAProxy à deux réplicas sur le projet Compose isolé
+`gsie-ha-test`. Sous charge, le retrait de `replica_a` a produit 200/200
+réponses HTTP 200, toutes servies par `replica_b`, puis le replica A a été
+arrêté avec une grâce de 45 secondes, recréé et réintégré ; la campagne de
+retour a produit 200/200 avec une répartition 100/100.
+Cette preuve reste locale Docker Desktop : les latences (p95 1,39–3,59 s)
+et le débit (6,46–13,91 req/s) ne constituent pas un SLO de production. La
+limitation de débit a été désactivée uniquement dans un override temporaire
+ignoré pour isoler la capacité ; la configuration produit n'a pas changé.
+La route métier `POST /api/v1/orchestration/analyse` a ensuite été vérifiée
+derrière le même proxy : 8/8 puis 20/20 réponses 200, avec 100 % des
+`analysis_run` persistés dans `gsie_ha_test` pendant le drainage de A. La
+configuration normale a enfin refusé le 21e appel par un 429 attendu
+(`20 per 1 minute`) après 20 écritures persistées. Le benchmark accepte
+désormais un namespace et une base attendus explicitement, avec `gsie-test`
+comme défaut, afin d'empêcher toute vérification croisée entre environnements.
+Le câblage TLS a aussi été rejoué localement avec un certificat éphémère
+vérifié par `curl` : 100/100 réponses 200 en nominal, puis 100/100 pendant le
+drainage de A, entièrement reprises par B. Le workflow Ubuntu
+`.github/workflows/ha-linux.yml` reste à exécuter sur GitHub avant toute
+publication de capacité ou de SLO.
+Le run GitHub Ubuntu/TLS `31878560746` sur le commit fusionné
+`22a1818471055d9f136a98c666b09bf58232780c` est ensuite passé au vert en
+6 min 25 s : 6 000/6 000 HTTP 200, zéro erreur, 271,32 req/s, p95
+177,68 ms et p99 267,17 ms pendant le drainage. La preuve Linux/TLS respecte
+les seuils du workflow ; elle ne transforme pas encore cette mesure en SLO
+général tant que les routes longues/idempotentes et les dépendances dégradées
+ne sont pas couvertes.
+
+Une régression de résilience a ensuite été trouvée en préparant le scénario
+Redis indisponible : le rate limiter partagé bloquait aussi `/health`, alors
+que cette sonde doit rester indépendante des dépendances. Les routes `/health`
+et `/ready` ne sont désormais plus soumises au quota applicatif ; leur
+protection éventuelle relève de la bordure. Sur l'image reconstruite du banc
+`gsie-ha-test`, l'arrêt réel de Redis donne `/ready` HTTP 503, `/health`
+interne HTTP 200, puis `/ready` HTTP 200 après rétablissement. Les tests ciblés
+health/limiter passent à 22/22, Ruff et mypy strict sont propres. Le rejeu
+GitHub `31882759911` sur `0298d3f` est vert en 6 min 23 s : le banc HA, le
+drainage, la panne Redis, la liveness du replica B et le rétablissement de
+readiness passent. Les routes longues/idempotentes restent à couvrir et aucun
+SLO général n'est encore publié.
+
+#### Route métier longue et idempotence — 2026-08-15
+
+La route `POST /api/v1/orchestration/analyse` porte désormais un contrat
+d'idempotence complet : empreinte SHA-256 du JSON canonique, clé HTTP alignée
+sur `requete_id`, verrou transactionnel PostgreSQL et index unique partiel.
+Un retry identique retourne la preuve `analysis_run` existante sans relancer
+les quatre moteurs ; un contenu différent sous le même identifiant est refusé
+HTTP 409. Les preuves historiques sans empreinte sont refusées par prudence.
+La sérialisation retire uniquement le champ calculé
+`Recommendation.contournable` avant persistance/relecture afin de conserver la
+validation stricte des autres dérives de schéma.
+
+La migration `20260815_0050` et le modèle SQLAlchemy sont alignés. Les tests
+réels PostgreSQL/PostGIS passent à 7/7 pour l'orchestration et 2/2 pour
+upgrade/downgrade/reupgrade Alembic ; 35 tests unitaires ciblés, Ruff et mypy
+strict passent également. Le benchmark CLI vérifie maintenant le replay et
+accepte un CA TLS explicite sans utiliser les variables proxy de l'hôte.
+Le workflow Ubuntu/TLS ajoute le replay idempotent et douze requêtes métier
+pendant le drainage d'un replica, en conservant le cloisonnement
+`GSIE_DATABASE_ROLE=test`, `GSIE_DATA_NAMESPACE=gsie-test`, `GSIE_DB_NAME=gsie`.
+La preuve distante et toute publication de SLO restent à obtenir.
+
+#### Consolidation de la veille en 5 registres d'opportunités — 2026-08-16
+
+Les ~20 fichiers de veille/étude/analyse dispersés dans `GSIE/RESEARCH/`
+étaient devenus impossibles à exploiter (doublons, contradictions non
+résolues, aucun classement). Consolidés en **5 registres par cible
+d'exécution** (pas par sujet) — chacun avec identifiants `OPP-xxx`
+stables, classement par intérêt (verrou décrit + action pour le lever,
+jamais une pénalité de rang), statuts INTÉGRER/BENCHMARKER/SURVEILLER/
+ÉCARTER, journal des reclassements :
+
+- `GSIE/RESEARCH/REGISTRE_GSIE_SERVEUR.md` — 23 opportunités + plateforme
+  data (§3bis). GSIE-Bench identifiée comme préalable à 6 autres lignes.
+- `GSIE/RESEARCH/REGISTRE_APPS_MOBILES.md` — 10 opportunités. Qwen3-ASR
+  en tête (biasing contextuel par prompt, vérifié).
+- `GSIE/RESEARCH/REGISTRE_GSIE_PC.md` — 20 opportunités. Particularité
+  juridique documentée (§2) : le copyleft GPL/AGPL est sans conséquence
+  en exécutable séparé sur poste de travail, contrairement à l'embarqué.
+- `GSIE/RESEARCH/REGISTRE_HUB_UNREAL.md` — 12 opportunités. Trouvaille :
+  la scène Unreal peut générer les données d'entraînement synthétiques
+  qui manquent à 3 autres registres (pack essences, perception drone,
+  fine-tuning DeepForest) — même verrou de corpus, trois registres.
+- `GSIE/RESEARCH/REGISTRE_APPS_CLIENTES.md` — 32 opportunités (Ignis,
+  Hydro, Flora, Terra, Aeris, Artemis). Motif transverse : la validité
+  d'un modèle environnemental est bornée à son territoire de
+  calibration — le corpus français commande plus que le modèle.
+
+Enrichi par recherche web ciblée le même jour (NOOA confirmé v0.0.8/
+82,2% SWE-bench, TreeLearn remontée de rang après benchmark Wytham
+Woods publié, WildFireGS identifié comme fusion native Splats+Niagara,
+ForeFire confirmé validé sur feux méditerranéens réels avec
+Météo-France partenaire). Sources absorbées archivées dans
+`GSIE/RESEARCH/ARCHIVE/` avec index. `GSIE/RESEARCH/README.md` pointe
+vers les 5 registres.
+
+#### Discussion chaîne de raisonnement et trois RFC touchés — 2026-08-17
+
+Cinq propositions externes (« vibe coding ») pour améliorer la chaîne
+de raisonnement GSIE examinées une à une contre le code et les RFC
+réels, pas en théorie :
+
+- **DAG orchestrator** (paralléliser les moteurs) — fausse prémisse.
+  Le code montre que GIS/Botanical/Pedology/Climate ne sont jamais
+  appelés en chaîne synchrone (ils écrivent en base à l'ingestion,
+  Correlation/Reasoning lisent la base directement) et que
+  Reasoning→Diagnostic→Recommendation→Validation est une dépendance de
+  données stricte, non parallélisable. Vérifié aussi côté ingestion
+  (`AdapterHealthService` — concurrence déjà bornée, séquentielle par
+  défaut) : rien à corriger.
+- **Micro-knowledge-graphs** — vide réel comblé par addendum RFC-0015
+  §3.6bis (voir ci-dessus).
+- **Teacher-student/shadow-reasoning/apprentissage fédéré** — tranché
+  par RFC-0040 (nouveau), avec citation directe d'ADR-009 pour le rejet
+  de l'apprentissage fédéré et du teacher-student sur la chaîne de
+  décision.
+- **Routage edge/cloud** — RFC-0003 §6bis (voir ci-dessus) : le
+  principe existait déjà (§6) mais RFC-0003 n'avait jamais été
+  formellement adopté ; désambiguïsé et activé pour ce seul principe.
+  Le mécanisme concret reste `ENGINE_COMMUNICATION_PROTOCOL.md` §6
+  (Draft), pas à reconstruire.
+
+Aucune ligne de code métier écrite — conforme à la Phase 4 (spécification
+avant code) et à RFC-0022 (le Fondateur tranche, l'agent contre-analyse).

@@ -6,6 +6,10 @@ x-api-ha: &api-ha
     GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis}
     GSIE_DEBUG: "false"
     GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+    # L'identité d'environnement est propagée aux replicas HA afin d'éviter
+    # qu'un banc de continuité puisse pointer par erreur vers un autre espace.
+    GSIE_DATABASE_ROLE: ${GSIE_DATABASE_ROLE:?GSIE_DATABASE_ROLE requis}
+    GSIE_DATA_NAMESPACE: ${GSIE_DATA_NAMESPACE:?GSIE_DATA_NAMESPACE requis}
     GSIE_GUNICORN_WORKERS: ${GSIE_HA_WORKERS:-2}
     GSIE_GUNICORN_MAX_REQUESTS: ${GSIE_HA_MAX_REQUESTS:-5000}
     GSIE_GUNICORN_MAX_REQUESTS_JITTER: ${GSIE_HA_MAX_REQUESTS_JITTER:-5000}

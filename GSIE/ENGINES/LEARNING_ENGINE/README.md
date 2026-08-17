@@ -18,13 +18,14 @@ Moteur d'**apprentissage**.
 - Toute sortie doit être explicable et traçable
 - L'IA assiste, elle ne décide pas (CON-001)
 
-> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/learning/`. Elle traite les signaux
+> décrits ci-dessous et ne valide ni n’applique automatiquement ses
+> propositions.
 
 ## Contrat d'interface
 
-> Note : le code source (`GSIE/API/src/gsie_api/engines/learning/`)
-> est livré et actif (`PROJECT_MEMORY.md`, RFC-0028) ; cette section
-> documente le contrat effectif malgré la mention ci-dessus.
+> Cette section documente le contrat effectif du code présent.
 
 ### 1. Endpoints API
 
@@ -32,9 +33,9 @@ Source : `GSIE/API/src/gsie_api/engines/learning/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/learning/status` | aucune | — | Statut du moteur (`router.py:32`) |
-| GET | `/learning/version` | aucune | — | Version et backend (`router.py:43`) |
-| POST | `/learning/process` | `engine:write` | `30/minute` | Traite un signal d'apprentissage et retourne éventuellement une proposition de révision (`router.py:56`) |
+| GET | `/learning/status` | aucune | — | Statut du moteur |
+| GET | `/learning/version` | aucune | — | Version et backend |
+| POST | `/learning/process` | `engine:write` | `30/minute` | Traite un signal d'apprentissage et retourne éventuellement une proposition de révision |
 
 ### 2. Schémas d'entrée/sortie
 

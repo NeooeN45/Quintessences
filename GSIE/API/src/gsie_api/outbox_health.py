@@ -2,10 +2,11 @@
 
 import math
 import os
+import tempfile
 import time
 from pathlib import Path
 
-DEFAULT_HEARTBEAT_PATH = "/tmp/gsie-outbox-worker.heartbeat"
+DEFAULT_HEARTBEAT_PATH = str(Path(tempfile.gettempdir()) / "gsie-outbox-worker.heartbeat")
 DEFAULT_MAX_AGE_SECONDS = 30.0
 
 

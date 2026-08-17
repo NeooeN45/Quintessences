@@ -1,7 +1,7 @@
 # GSIE Admin Web — Tableau de contrôle
 
 > Tableau de contrôle administrateur pour GSIE.
-> Astro 5 + React 19 Islands (hydratation sélective) + Tailwind CSS 4.
+> Astro 7 + React 19 Islands (hydratation sélective) + Tailwind CSS 4.
 > Design calqué sur [Tabler](https://github.com/tabler/tabler) (dashboard
 > open-source, Bootstrap 5) — reproduit en Tailwind 4 sans dépendance Bootstrap.
 

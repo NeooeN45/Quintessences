@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Garde-fou de gouvernance GSIE — vérifie que le dépôt ne se contredit pas lui-même.
 
-Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
+Six règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
 
 1. Intégrité des références : toute mention d'un RFC-XXXX / DEC-XXXXXX / ADR-XXX
    dans un document de gouvernance doit pointer vers un fichier qui existe,
@@ -52,6 +52,13 @@ Trois règles, dérivées directement de CLAUDE.md et de la Constitution GSIE :
    Audit complémentaire du dépôt entier, avec le détail :
    `GSIE/TOOLS/verifier_integrite_references.py`.
 
+6. Cohérence de clôture : les chemins de livrables déclarés doivent exister ;
+   une phase clôturée ne peut contenir de livrable `Draft` ; les métadonnées de
+   tête et de pied doivent s'accorder ; les fences Markdown doivent être
+   fermées ; les directives sont rangées selon leur statut dans `ACTIVE/`,
+   `PROPOSED/` ou `ARCHIVED/` ; les mémoires dites courantes doivent indiquer
+   la même phase et la même directive courante.
+
 Usage : python tools/check_governance_consistency.py
 Code de sortie : 0 si rien à signaler, 1 si au moins une violation trouvée.
 """
@@ -61,6 +68,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+from glob import glob
 from pathlib import Path
 
 if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
@@ -161,6 +169,224 @@ CITATION_PATTERN = re.compile(
 FLOAT_LITERAL_PATTERN = re.compile(r"\d+\.\d+")
 CONSTANT_DEF_PATTERN = re.compile(r"^(_[A-Z][A-Z0-9_]*)\s*(?::[^=]+)?=\s*(.+)$")
 _CITATION_LOOKBACK_LINES = 5
+
+# Métadonnées documentaires placées en tête ou en pied. Les mentions de statut
+# dans le corps (tableau de composants, exemple, historique) ne décrivent pas
+# le document lui-même et ne doivent donc pas créer de faux positif.
+_STATUT_TABLE_PATTERN = re.compile(
+    r"^\s*\|\s*\*\*Statut\*\*\s*\|\s*([^|\n]+)\|",
+    re.IGNORECASE | re.MULTILINE,
+)
+_STATUT_LIGNE_PATTERN = re.compile(
+    r"^\s*#{1,6}\s*Statut\s*:\s*([^\n]+)", re.IGNORECASE | re.MULTILINE
+)
+_STATUT_PIED_PATTERN = re.compile(
+    r"^\s*>\s*Statut\s*:\s*([^\n]+)", re.IGNORECASE | re.MULTILINE
+)
+_CHAMP_MEMOIRE_PATTERN = re.compile(
+    r"^\s*\|\s*\*\*(Phase|Directive courante)\*\*\s*\|\s*([^|]+)\|",
+    re.IGNORECASE | re.MULTILINE,
+)
+_ENTETE_PHASE_PATTERN = re.compile(
+    r"^##\s+Phase\s+(\d+)\b([^\n]*)$", re.IGNORECASE | re.MULTILINE
+)
+_LIGNE_LIVRABLE_PATTERN = re.compile(r"^\s*\|\s*(\d{3})\s*\|", re.MULTILINE)
+_CHEMIN_CODE_PATTERN = re.compile(r"`([^`]+)`")
+_FENCE_PATTERN = re.compile(r"^\s*(`{3,}|~{3,})", re.MULTILINE)
+
+
+def _normaliser_statut(valeur: str) -> str:
+    """Ramène une valeur de statut Markdown à son premier terme significatif."""
+    nettoyee = valeur.strip().strip("*_` ")
+    return re.split(r"[\s(—–,]", nettoyee, maxsplit=1)[0].casefold()
+
+
+def _statuts_documentaires(texte: str) -> list[str]:
+    """Extrait le statut du bloc de métadonnées initial uniquement."""
+    entete = texte.split("\n---", 1)[0]
+    correspondances = list(_STATUT_TABLE_PATTERN.finditer(entete))
+    correspondances.extend(_STATUT_LIGNE_PATTERN.finditer(entete))
+    return [
+        statut
+        for correspondance in correspondances
+        if (statut := _normaliser_statut(correspondance.group(1)))
+    ]
+
+
+def verifier_coherence_statuts(texte: str) -> list[str]:
+    """Détecte une contradiction entre métadonnées de tête et de pied.
+
+    Seules les 40 premières et 20 dernières lignes sont observées afin qu'un
+    tableau métier contenant une colonne « Statut » ne soit jamais interprété
+    comme la métadonnée du document.
+    """
+    lignes = texte.splitlines()
+    statuts = _statuts_documentaires(texte)
+    pied = "\n".join(lignes[-10:])
+    statuts.extend(
+        _normaliser_statut(correspondance.group(1))
+        for correspondance in _STATUT_PIED_PATTERN.finditer(pied)
+    )
+    statuts = sorted(set(statuts))
+    if len(statuts) <= 1:
+        return []
+    return [f"statuts contradictoires : {', '.join(statuts)}"]
+
+
+def verifier_fences_markdown(texte: str) -> list[str]:
+    """Signale les blocs Markdown non fermés, indice robuste de troncature."""
+    ouvertes: dict[str, int] = {"`": 0, "~": 0}
+    for correspondance in _FENCE_PATTERN.finditer(texte):
+        marqueur = correspondance.group(1)
+        ouvertes[marqueur[0]] += 1
+    violations: list[str] = []
+    for caractere, nombre in ouvertes.items():
+        if nombre % 2:
+            violations.append(
+                f"fence Markdown {caractere * 3} non fermée (troncature probable)"
+            )
+    return violations
+
+
+def _cellules_tableau(ligne: str) -> list[str]:
+    return [cellule.strip() for cellule in ligne.strip().strip("|").split("|")]
+
+
+def verifier_phases_cloturees(texte: str) -> list[str]:
+    """Interdit qu'une phase dite clôturée contienne un livrable `Draft`."""
+    violations: list[str] = []
+    entetes = list(_ENTETE_PHASE_PATTERN.finditer(texte))
+    for index, entete in enumerate(entetes):
+        if not re.search(r"cl[oô]tur", entete.group(2), re.IGNORECASE):
+            continue
+        fin = entetes[index + 1].start() if index + 1 < len(entetes) else len(texte)
+        section = texte[entete.end() : fin]
+        for ligne in section.splitlines():
+            if not _LIGNE_LIVRABLE_PATTERN.match(ligne):
+                continue
+            cellules = _cellules_tableau(ligne)
+            if len(cellules) < 4 or "draft" not in cellules[3].casefold():
+                continue
+            violations.append(
+                f"Phase {entete.group(1)} clôturée avec le livrable "
+                f"{cellules[0]} au statut Draft"
+            )
+    return violations
+
+
+def verifier_chemins_livrables(texte: str, racine: Path = ROOT) -> list[str]:
+    """Vérifie les chemins déclarés dans les lignes de livrables d'une roadmap."""
+    violations: list[str] = []
+    for ligne in texte.splitlines():
+        if not _LIGNE_LIVRABLE_PATTERN.match(ligne):
+            continue
+        cellules = _cellules_tableau(ligne)
+        if len(cellules) < 3:
+            continue
+        chemins = _CHEMIN_CODE_PATTERN.findall(cellules[2])
+        if not chemins:
+            continue
+        # Le premier chemin est la cible canonique. Les suivants peuvent être
+        # des bornes de plage relatives (ex. CON-000 à CON-010) ou des index.
+        chemin = chemins[0].replace("\\", "/").rstrip("/")
+        motif_absolu = str(racine / chemin)
+        existe = bool(glob(motif_absolu)) if any(c in chemin for c in "*?[") else (racine / chemin).exists()
+        if not existe:
+            violations.append(
+                f"livrable {cellules[0]} : chemin inexistant `{chemins[0]}`"
+            )
+    return violations
+
+
+def verifier_directives_actives(racine: Path = ROOT) -> list[str]:
+    """Vérifie le classement des directives selon leur statut documentaire."""
+    violations: list[str] = []
+    directives_phase_actives: list[str] = []
+    regles = {
+        "ACTIVE": {"active"},
+        "PROPOSED": {"draft", "review"},
+        "ARCHIVED": {"archive", "archived", "clos", "closed", "superseded"},
+    }
+    for nom_dossier, attendus in regles.items():
+        dossier = racine / "01_DIRECTIVES" / nom_dossier
+        if not dossier.is_dir():
+            continue
+        for chemin in sorted(dossier.glob("GSIE-DIR-*.md")):
+            texte = chemin.read_text(encoding="utf-8", errors="ignore")
+            statuts = _statuts_documentaires("\n".join(texte.splitlines()[:40]))
+            statut = statuts[0] if statuts else "absent"
+            if (
+                nom_dossier == "ACTIVE"
+                and statut == "active"
+                and re.search(
+                    r"^#\s*Classification\s*:\s*PHASE\s*$",
+                    texte,
+                    flags=re.IGNORECASE | re.MULTILINE,
+                )
+            ):
+                directives_phase_actives.append(chemin.name)
+            if statut in attendus:
+                continue
+            relatif = chemin.relative_to(racine).as_posix()
+            if nom_dossier == "ACTIVE":
+                violations.append(f"{relatif} : statut `{statut}` dans ACTIVE/")
+                continue
+            valeurs = ", ".join(sorted(attendus))
+            violations.append(
+                f"{relatif} : statut `{statut}` incompatible avec {nom_dossier}/ "
+                f"(attendus : {valeurs})"
+            )
+    if len(directives_phase_actives) > 1:
+        violations.append(
+            "plusieurs directives de phase actives : "
+            f"{', '.join(directives_phase_actives)}"
+        )
+    return violations
+
+
+def verifier_memoires_courantes(racine: Path = ROOT) -> list[str]:
+    """Compare les champs des mémoires courantes, en excluant les archives explicites."""
+    chemins = [
+        racine / "PROJECT_MEMORY.md",
+        racine / "22_PROJECT_MEMORY" / "PROJECT_MEMORY.md",
+    ]
+    valeurs: dict[str, set[str]] = {}
+    for chemin in chemins:
+        if not chemin.is_file():
+            continue
+        texte = chemin.read_text(encoding="utf-8", errors="ignore")
+        if chemin != chemins[0] and re.search(
+            r"\|\s*\*\*État documentaire\*\*\s*\|\s*Archive\s*\|",
+            texte,
+            flags=re.IGNORECASE,
+        ):
+            continue
+        for champ, valeur in _CHAMP_MEMOIRE_PATTERN.findall(texte):
+            valeurs.setdefault(champ.strip().casefold(), set()).add(valeur.strip())
+
+    libelles = {"phase": "Phase", "directive courante": "Directive courante"}
+    violations: list[str] = []
+    for champ, variantes in valeurs.items():
+        if len(variantes) > 1:
+            violations.append(
+                f"mémoires courantes contradictoires pour `{libelles[champ]}` : "
+                f"{', '.join(sorted(variantes))}"
+            )
+    return violations
+
+
+def _documents_markdown_suivis() -> list[Path]:
+    """Retourne les Markdown suivis par Git, hors dépôts imbriqués ignorés."""
+    resultat = subprocess.run(
+        ["git", "ls-files", "*.md"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+    if resultat.returncode != 0:
+        return []
+    return sorted(ROOT / ligne for ligne in resultat.stdout.splitlines() if ligne)
 
 
 def find_doc_file(doc_id: str) -> Path | None:
@@ -455,6 +681,34 @@ def main() -> int:
 
     # --- Règle 5 : intégrité des quatre autres familles d'identifiants ---
     violations.extend(verifier_familles_complementaires())
+
+    # --- Règle 6 : cohérence documentaire et état réellement gelable ---
+    # Les contrôles portent sur les Markdown suivis par Git : les caches et les
+    # dépôts imbriqués ne polluent pas le verdict, tandis qu'un livrable versionné
+    # ne peut plus être déclaré fini avec une fin de fichier tronquée.
+    for path in _documents_markdown_suivis():
+        try:
+            texte = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        relatif = path.relative_to(ROOT).as_posix()
+        for detail in verifier_coherence_statuts(texte):
+            violations.append(f"[statut contradictoire] {relatif} : {detail}.")
+        for detail in verifier_fences_markdown(texte):
+            violations.append(f"[document tronqué] {relatif} : {detail}.")
+
+    roadmap = ROOT / "ROADMAP.md"
+    if roadmap.is_file():
+        texte_roadmap = roadmap.read_text(encoding="utf-8", errors="ignore")
+        for detail in verifier_phases_cloturees(texte_roadmap):
+            violations.append(f"[phase incohérente] ROADMAP.md : {detail}.")
+        for detail in verifier_chemins_livrables(texte_roadmap):
+            violations.append(f"[livrable introuvable] ROADMAP.md : {detail}.")
+
+    for detail in verifier_directives_actives():
+        violations.append(f"[directive mal classée] {detail}.")
+    for detail in verifier_memoires_courantes():
+        violations.append(f"[mémoire contradictoire] {detail}.")
 
     violations.extend(verifier_qualite_python())
 

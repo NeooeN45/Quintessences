@@ -126,6 +126,22 @@ python_functions = ["should_*", "test_*"]
 # contrainte. Il se règle par `PYTEST_XDIST_AUTO_NUM_WORKERS`, que xdist lit
 # pour résoudre `auto`. Voir docs/TESTING_XDIST.md.
 addopts = "-v --tb=short -n auto --dist=loadfile --cov=gsie_api --cov-report=term-missing"
+filterwarnings = [
+    # FastAPI 0.134 importe encore TestClient depuis Starlette, qui signale
+    # cette transition malgré l'API de test inchangée.
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    # Windows/pytest-asyncio laisse parfois une attente interne de TestClient
+    # après les fixtures de lifespan mockées ; la boucle créée par GSIE est
+    # désormais fermée explicitement dans tests/conftest.py.
+    "ignore:coroutine 'Event.wait' was never awaited:RuntimeWarning",
+    # AGE expose des types PostgreSQL propriétaires que l'inspecteur SQLAlchemy
+    # ne sait pas comparer pendant le test de cycle Alembic.
+    "ignore:Did not recognize type .*:sqlalchemy.exc.SAWarning",
+    # Ces deux tests ré-exécutent volontairement un module déjà importé via
+    # runpy pour couvrir son point d'entrée CLI.
+    "ignore:'gsie_api.outbox_worker' found in sys.modules after import:RuntimeWarning",
+    "ignore:'gsie_api.seeds.run_seeds' found in sys.modules after import:RuntimeWarning",
+]
 markers = [
     "serial: tests à exécuter en série (pas de parallélisation) — concurrence DB réelle",
     "xdist_group(name): groupe de tests à exécuter sur le même worker xdist",

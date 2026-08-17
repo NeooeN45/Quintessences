@@ -26,7 +26,9 @@ Moteur d'**évaluation de la preuve scientifique**.
 Sources → Import → Validation → Evidence Engine → Knowledge Engine
 ```
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir EVIDENCE_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 et deux backends (Rust/PyO3 et
+> repli Python) sont présents. Le backend Rust reste optionnel en
+> développement local ; le contrat effectif est décrit ci-dessous.
 
 ## Build local du module Rust (PyO3)
 
@@ -68,9 +70,9 @@ Source : `GSIE/API/src/gsie_api/engines/evidence/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/evidence/status` | aucune | — | Statut du moteur (actif / dégradé selon disponibilité du module Rust) (`router.py:28`) |
-| POST | `/evidence/evaluate` | rôle `engine:write` (`EngineWriteUser`) | `30/minute` | Évalue une soumission de connaissance brute et attribue un niveau de preuve A-F (`router.py:40`) |
-| GET | `/evidence/version` | aucune | — | Version du moteur et backend utilisé (rust+pyo3 ou python-fallback) (`router.py:82`) |
+| GET | `/evidence/status` | aucune | — | Statut du moteur (actif / dégradé selon disponibilité du module Rust) |
+| POST | `/evidence/evaluate` | rôle `engine:write` (`EngineWriteUser`) | `30/minute` | Évalue une soumission de connaissance brute et attribue un niveau de preuve A-F |
+| GET | `/evidence/version` | aucune | — | Version du moteur et backend utilisé (rust+pyo3 ou python-fallback) |
 
 ### 2. Schémas d'entrée/sortie
 
