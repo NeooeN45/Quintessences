@@ -156,6 +156,37 @@ def _disable_turnstile_for_tests() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
+def _disable_turnstile_for_tests() -> Generator[None, None, None]:
+    """Désactive Turnstile par défaut pour les tests — sauf s'ils le réactivent.
+
+    Le module-level `_settings` des routers auth et identity est initialisé
+    depuis `.env` au chargement. Les tests de login couvrent la fonctionnelle
+    d'identité, non le challenge Turnstile ; ils échoueraient avec l'erreur
+    `Challenge anti-robot non résolu.` sans cette isolation.
+    """
+    from gsie_api.auth import identity_router
+    from gsie_api.auth import router as auth_router
+
+    previous_enabled = (
+        auth_router._settings.turnstile_enabled,
+        identity_router._settings.turnstile_enabled,
+    )
+    previous_secret = (
+        auth_router._settings.turnstile_secret_key,
+        identity_router._settings.turnstile_secret_key,
+    )
+    auth_router._settings.turnstile_enabled = False
+    identity_router._settings.turnstile_enabled = False
+    auth_router._settings.turnstile_secret_key = SecretStr("")
+    identity_router._settings.turnstile_secret_key = SecretStr("")
+    yield
+    auth_router._settings.turnstile_enabled = previous_enabled[0]
+    identity_router._settings.turnstile_enabled = previous_enabled[1]
+    auth_router._settings.turnstile_secret_key = previous_secret[0]
+    identity_router._settings.turnstile_secret_key = previous_secret[1]
+
+
+@pytest.fixture(autouse=True)
 def _reset_rate_limiter() -> object:
     """Réinitialise les compteurs du rate limiter (slowapi) avant chaque test.
 
