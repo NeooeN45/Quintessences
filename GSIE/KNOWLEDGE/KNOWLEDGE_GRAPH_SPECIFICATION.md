@@ -914,5 +914,5 @@ spécifier en Phase 4) :
 
 ---
 
-> Statut : *Validated — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Supersédé par RFC-0011 / DEC-000022 — contenu historique,
 > aucune implémentation (Phase 4).*

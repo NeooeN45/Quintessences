@@ -29,7 +29,10 @@ documentée.**
 Knowledge Engine → Correlation Engine → Reasoning Engine → Diagnostic Engine
 ```
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir REASONING_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/reasoning/`. Elle exploite les règles
+> fournies par l’appelant selon le contrat effectif décrit ci-dessous ;
+> le branchement direct aux moteurs amont reste à réaliser.
 
 ## Contrat d'interface
 
@@ -39,9 +42,9 @@ Source : `GSIE/API/src/gsie_api/engines/reasoning/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/reasoning/status` | aucune | — | Statut du moteur (`router.py:118`) |
-| GET | `/reasoning/version` | aucune | — | Version et backend (`router.py:139`) |
-| POST | `/reasoning/infer` | `engine:write` | `30/minute` | Applique les règles d'inférence sur un contexte stationnel et produit des conclusions expliquées (`router.py:156`) |
+| GET | `/reasoning/status` | aucune | — | Statut du moteur |
+| GET | `/reasoning/version` | aucune | — | Version et backend |
+| POST | `/reasoning/infer` | `engine:write` | `30/minute` | Applique les règles d'inférence sur un contexte stationnel et produit des conclusions expliquées |
 
 ### 2. Schémas d'entrée/sortie
 

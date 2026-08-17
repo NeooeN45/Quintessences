@@ -19,7 +19,7 @@ QUALIFICATION_PATH = Path(__file__).resolve().parents[3] / "DATASETS" / "FETCH_Q
 def test_canonical_registry_keeps_all_sources_closed() -> None:
     registry = load_fetch_qualification(QUALIFICATION_PATH)
 
-    assert len(registry.sources) == 4
+    assert len(registry.sources) == 5
     assert all(not item.fetch_enabled for item in registry.sources)
     for item in registry.sources:
         with pytest.raises(FetchQualificationError, match="FETCH fermé"):
@@ -36,7 +36,7 @@ def test_unknown_source_is_closed() -> None:
 def test_enabling_fetch_without_technical_bounds_is_rejected() -> None:
     with pytest.raises(ValidationError, match="max_bytes"):
         FetchSourceQualification(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             status="qualified",
             fetch_enabled=True,
             legal_basis="SCI-001:OPEN_COPY",

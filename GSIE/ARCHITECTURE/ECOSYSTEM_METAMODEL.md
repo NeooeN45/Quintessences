@@ -172,7 +172,6 @@ instances de la méta-ontologie (niveau 1), et les concepts du domaine
 (niveau 2) sont des instances des types du noyau. Un nouveau domaine
 (agriculture) ajoute des concepts (niveau 2) et un profil (niveau 4),
 mais ne modifie pas le métamodèle (niveau 3).
-```
 
 ### 2.1 Règle de séparation
 

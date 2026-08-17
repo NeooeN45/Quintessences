@@ -1,0 +1,21 @@
+flowchart LR
+    AGENT["Agent<br/>fournisseur de données"]
+    SOURCE["Source<br/>GBIF · IGN · SoilGrids · Météo-France"]
+    DATASET["Dataset<br/>catalogue versionné"]
+    VERSION["DatasetVersion"]
+    DIST["Distribution<br/>metadata_only / archive_copy"]
+    HEALTH["DatasetHealth<br/>contrôles périodiques réels"]
+    CITATION["Citation<br/>traçabilité PROV"]
+    RESOLVER["Data Selection Engine<br/>data-resolver-1"]
+    APP["Application cliente<br/>GeoSylva, ..."]
+
+    AGENT --> SOURCE --> DATASET --> VERSION --> DIST
+    DIST --> HEALTH
+    DIST --> CITATION
+    HEALTH --> RESOLVER
+    RESOLVER -->|"POST /api/v1/data/resolve"| APP
+
+    style RESOLVER fill:#1a5276,color:#fff,stroke:none
+    style HEALTH fill:#fef9e7,stroke:#b7950b
+    style DIST fill:#eaf2f8,stroke:#1a5276
+    style CITATION fill:#fdebd0,stroke:#ca6f1e

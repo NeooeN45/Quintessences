@@ -1,0 +1,55 @@
+graph TB
+    subgraph ECO["Quintessences (écosystème)"]
+        GSIE["GSIE<br/>General System Intelligence Engine"]
+
+        subgraph CHAIN["Chaîne d'intelligence (7 moteurs)"]
+            E["Evidence"] --> K["Knowledge"]
+            K --> C["Correlation"]
+            C --> R["Reasoning"]
+            R --> D["Diagnostic"]
+            D --> REC["Recommendation"]
+            REC --> V["Validation"]
+            V --> U["Utilisateur"]
+        end
+
+        subgraph DOMAIN["Moteurs domaine (5)"]
+            GIS["GIS"]
+            CLIM["Climate"]
+            PED["Pedology"]
+            BOT["Botanical"]
+            FD["Forest Dynamics"]
+        end
+
+        subgraph TRANS["Moteurs transverses (2)"]
+            LEARN["Learning"]
+            SIM["Simulation"]
+        end
+
+        DOMAIN -.-> CHAIN
+        TRANS -.-> CHAIN
+
+        subgraph APPS["Spécialisations (applications clientes)"]
+            GS_APP["GeoSylva<br/>forêt"]
+            IGNIS["Ignis<br/>incendies"]
+            ARTEMIS["Artemis<br/>faune"]
+            HYDRO["Hydro<br/>eau"]
+            FLORA["Flora<br/>végétation"]
+            QGISIA["QGISIA<br/>plugin QGIS"]
+            TERRA["Terra<br/>sols / géologie"]
+            AERIS["Aeris<br/>atmosphère / météo"]
+            ATLAS["Atlas<br/>cartographie globale"]
+            HUB["Centre de Commandement<br/>Unreal Engine 5.8"]
+        end
+
+        GSIE --- CHAIN
+        GSIE --- DOMAIN
+        GSIE --- TRANS
+        GSIE ===|API GSIE| APPS
+    end
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b
+    style APPS fill:#fdebd0,stroke:#ca6f1e
+    style HUB fill:#f5b7b1,stroke:#cb4335

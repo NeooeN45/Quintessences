@@ -65,7 +65,7 @@ FAMILLES = {
     "GSIE-DIR": re.compile(r"\bGSIE-DIR-(\d{4})\b"),
     "GSIE-CON": re.compile(r"\bGSIE-CON-(\d{3})\b"),
     "GSIE-FND": re.compile(r"\bGSIE-FND-(\d{3})\b"),
-    "ADR": re.compile(r"\bADR-(\d{3})(?!\d)"),
+    "ADR": re.compile(r"\bADR-(\d{3,4})(?!\d)"),
     "GSIE-PROMPT": re.compile(r"\bGSIE-PROMPT-(\d{4})\b"),
 }
 
@@ -89,8 +89,18 @@ PROMPTS_INTERNES_SANS_FICHIER = frozenset(
 # à créer — n'est pas une référence brisée mais une intention tracée. C'est le
 # cas des ADR-0008 à 0013, retirés avant rédaction et marqués « (différé) ».
 DECLARE_ABSENT = re.compile(
-    r"différ|differ|remplac|supersed|obsol|planifi|à créer|a creer|futur|abandonn",
+    r"différ|differ|remplac|supersed|obsol|planifi|à créer|a creer|futur|abandonn|absen|non attribu|non document",
     re.IGNORECASE,
+)
+
+# Un ADR peut être porté par une section d'un registre plutôt que par un fichier
+# dédié. La forme est volontairement stricte : un titre « Compatibilité avec
+# ADR-099 » reste une citation, tandis que « ## ADR-099 — Décision » ou une
+# ligne de métadonnée `**ID**` constitue une définition.
+ADR_INTERNE = re.compile(
+    r"(?:^#{1,6}\s+(?:\d+(?:\.\d+)*\.?\s+)?(ADR-\d{3,4})\s+[—-])"
+    r"|(?:^\s*\|\s*\*\*ID\*\*\s*\|\s*(ADR-\d{3,4})\s*\|)",
+    re.MULTILINE,
 )
 
 
@@ -136,6 +146,36 @@ def auditer(racine: Path) -> dict[str, object]:
                     str(chemin.relative_to(racine)).replace("\\", "/"),
                 )
 
+    # Deuxième passe : définitions internes de registres ADR. La première passe
+    # reste fondée sur les noms de fichiers pour toutes les autres familles.
+    for chemin in corpus:
+        try:
+            texte = chemin.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        relatif = str(chemin.relative_to(racine)).replace("\\", "/")
+        for groupes in ADR_INTERNE.findall(texte):
+            identifiant = groupes[0] or groupes[1]
+            portes.setdefault(identifiant, relatif)
+
+    # Un registre de supersession vaut résolution globale, pas seulement sur la
+    # ligne où il est énoncé. Sans cette passe, les anciens ADR-0008..0013 sont
+    # à nouveau signalés dans leur décision d'origine alors qu'une DEC ultérieure
+    # trace explicitement leur remplacement par ADR-001..006.
+    declares_absents: set[str] = set()
+    for chemin in corpus:
+        try:
+            lignes = chemin.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            continue
+        for ligne in lignes:
+            if not DECLARE_ABSENT.search(ligne):
+                continue
+            for famille, motif in FAMILLES.items():
+                declares_absents.update(
+                    f"{famille}-{numero}" for numero in motif.findall(ligne)
+                )
+
     brisees: list[dict[str, object]] = []
     citations: Counter[str] = Counter()
     entrants: Counter[str] = Counter()
@@ -166,6 +206,8 @@ def auditer(racine: Path) -> dict[str, object]:
                             entrants[identifiant] += 1
                         continue
                     if identifiant in PROMPTS_INTERNES_SANS_FICHIER:
+                        continue
+                    if identifiant in declares_absents:
                         continue
                     if DECLARE_ABSENT.search(ligne):
                         continue

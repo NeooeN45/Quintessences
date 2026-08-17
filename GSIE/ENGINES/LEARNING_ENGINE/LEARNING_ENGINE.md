@@ -5,8 +5,8 @@
 | **Moteur** | Learning Engine |
 | **Catégorie** | Moteur transverse (apprentissage) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Architecture seule |
-| **Statut implémentation** | Architecture seule |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004, GSIE-CON-005 |
 | **Ordre de développement** | Non listé (moteur transverse) |
 

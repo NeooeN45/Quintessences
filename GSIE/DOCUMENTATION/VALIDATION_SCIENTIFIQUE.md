@@ -4,6 +4,14 @@
 > **Date** : 2026-08-02
 > **Statut** : Validé — 3/3 scénarios validés, benchmark mesuré
 
+> **Erratum scientifique — 2026-08-11** : la référence Parelle et al. (2007)
+> est publiée dans *Tree Physiology*, volume 27, numéro 7, pages 1027–1034,
+> DOI `10.1093/treephys/27.7.1027`. L'ancienne mention *Annals of Forest
+> Science* était erronée. Les trois scénarios historiques combinent cette
+> publication avec des hypothèses pédologiques qui nécessitent une source
+> distincte ; ils ne sont donc pas automatiquement des scénarios Gold au sens
+> de RFC-0039.
+
 ## 1. Objectif
 
 Prouver que les prédictions du moteur sont cohérentes avec la
@@ -16,8 +24,8 @@ chaîne complète. Troisième livrable de la phase de stabilisation.
 
 > Parelle J., Brendel O., Jolivet Y. (2007), « Intra- and interspecific
 > diversity in the response to waterlogging of two co-occurring white
-> oak species (Quercus robur and Q. petraea) », Annals of Forest
-> Science, hal-02653679.
+> oak species (Quercus robur and Q. petraea) », *Tree Physiology*, 27(7),
+> 1027–1034, DOI `10.1093/treephys/27.7.1027`, notice HAL `hal-02653679`.
 
 29 faits vérifiés (citation retrouvée mot pour mot) sur 31 extraits.
 

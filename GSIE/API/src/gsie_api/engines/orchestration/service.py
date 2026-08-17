@@ -35,6 +35,10 @@ from gsie_api.engines.diagnostic.schemas import (
     DiagnosticRequest,
     QualificationConclusion,
 )
+from gsie_api.engines.orchestration.hydration import (
+    RapportHydratation,
+    StationContexteHydrator,
+)
 from gsie_api.engines.orchestration.idempotency import (
     charger_analyse_idempotente,
     contenu_persistable,
@@ -117,8 +121,22 @@ class OrchestrationEngine:
                 remontées telles quelles — l'orchestration ne les traduit pas,
                 et une erreur du Diagnostic Engine doit se lire comme telle.
         """
+        # Hydratation (DEC-000072) : le contexte non fourni est assemblé
+        # depuis `station_id`, dans la même transaction, et le rapport est
+        # persisté avec la preuve — le contexte exactement utilisé reste
+        # rejouable, jamais recombiné après coup.
+        contexte = requete.contexte
+        rapport: RapportHydratation | None = None
+        if contexte is None:
+            hydration = await StationContexteHydrator(self._session).hydrate(
+                requete.station_id,
+                niveaux_declares=dict(requete.niveaux_preuve_declares),
+            )
+            contexte = hydration.contexte
+            rapport = hydration.rapport
+
         inference = await ReasoningEngine(self._session).infer(
-            requete.vers_requete_raisonnement(), maintenant
+            requete.vers_requete_raisonnement(contexte), maintenant
         )
         if not inference.conclusions:
             raise AnalyseImpossibleError(
@@ -137,7 +155,7 @@ class OrchestrationEngine:
                 conclusions=list(inference.conclusions),
                 qualifications=qualifications,
                 etat_global=requete.etat_global,
-                contexte=requete.contexte,
+                contexte=contexte,
                 type_diagnostic=requete.type_diagnostic,
             ),
             maintenant,
@@ -169,6 +187,7 @@ class OrchestrationEngine:
             diagnostic=diagnostic,
             recommandations=recommandations,
             validation=validation,
+            hydratation=rapport,
         )
         # La réponse et la preuve persistée partagent exactement le même
         # identifiant et le même JSON. Le flush reste dans la transaction HTTP.

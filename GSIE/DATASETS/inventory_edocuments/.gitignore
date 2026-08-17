@@ -1,0 +1,4 @@
+# Le manifeste détaillé contient des chemins locaux et des indicateurs de
+# sensibilité. Il reste une preuve locale et ne doit pas être publié.
+*
+!.gitignore

@@ -1,0 +1,26 @@
+flowchart LR
+    SOURCES["Sources scientifiques<br/>datasets, terrain, littérature"]
+    E["Evidence Engine<br/>qualification A–F"]
+    K["Knowledge Engine<br/>connaissances qualifiées"]
+    C["Correlation Engine<br/>corrélations multiparamètres"]
+    R["Reasoning Engine<br/>raisonnement"]
+    D["Diagnostic Engine<br/>diagnostics"]
+    REC["Recommendation Engine<br/>recommandations contournables"]
+    V["Validation Engine<br/>validation sorties"]
+    USER["Forestier<br/>décideur final (CON-001)"]
+
+    SOURCES --> E
+    E -->|"preuve qualifiée"| K
+    K --> C
+    C --> R
+    R --> D
+    D --> REC
+    REC --> V
+    V --> USER
+    USER -.->|"feedback terrain"| LEARN["Learning Engine"]
+    LEARN -.-> K
+
+    style E fill:#abebc6,stroke:#1e8449
+    style K fill:#aed6f1,stroke:#1a5276
+    style USER fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style LEARN fill:#fadbd8,stroke:#cb4335

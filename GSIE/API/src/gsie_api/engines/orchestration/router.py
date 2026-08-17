@@ -22,13 +22,21 @@ validation a contrôlé (`GSIE-CON-004`).
 
 from datetime import UTC, datetime
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.core.limiter import limiter as _limiter
-from gsie_api.core.rbac import EngineWriteUser
+from gsie_api.core.rbac import EngineReadUser, EngineWriteUser
 from gsie_api.engines.diagnostic.engine import DiagnosticEngineError
+from gsie_api.engines.evidence.schemas import EvidenceLevel
+from gsie_api.engines.orchestration.hydration import (
+    HydratationVideError,
+    ResultatHydratation,
+    StationContexteHydrator,
+    StationIntrouvableError,
+)
 from gsie_api.engines.orchestration.idempotency import AnalyseIdempotencyConflictError
 from gsie_api.engines.orchestration.schemas import AnalyseComplete, AnalyseRequest
 from gsie_api.engines.orchestration.service import (
@@ -112,6 +120,10 @@ async def orchestration_analyse(
         )
     except AnalyseIdempotencyConflictError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except StationIntrouvableError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except HydratationVideError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except (
         AnalyseImpossibleError,
         ReasoningEngineError,
@@ -124,3 +136,48 @@ async def orchestration_analyse(
         # invalide » generique l'obligerait a deviner lequel des quatre moteurs
         # a refuse, et pourquoi.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get(
+    "/stations/{station_id}/contexte",
+    response_model=ResultatHydratation,
+    summary="Prévisualiser le contexte hydraté d'une station",
+    description=(
+        "Assemble le StationContexte depuis `station_id` (DEC-000072) sans "
+        "exécuter la chaîne : Place d'abord, soumission terrain acceptée en "
+        "repli tracé, provenance complète exigée pour chaque bloc. Le rapport "
+        "nomme chaque bloc construit, chaque manque et chaque niveau de "
+        "preuve déclaré utilisé."
+    ),
+)
+@_limiter.limit("30/minute")
+async def previsualiser_contexte_station(
+    station_id: UUID,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineReadUser,
+    niveau_geographie: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_climat: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_pedologie: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_botanique: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_peuplement: Annotated[EvidenceLevel | None, Query()] = None,
+) -> ResultatHydratation:
+    """Prévisualise l'hydratation — debug serveur et futur écran GeoSylva."""
+    niveaux = {
+        nom[7:]: niveau
+        for nom, niveau in (
+            ("niveau_geographie", niveau_geographie),
+            ("niveau_climat", niveau_climat),
+            ("niveau_pedologie", niveau_pedologie),
+            ("niveau_botanique", niveau_botanique),
+            ("niveau_peuplement", niveau_peuplement),
+        )
+        if niveau is not None
+    }
+    try:
+        return await StationContexteHydrator(session).hydrate(station_id, niveaux_declares=niveaux)
+    except StationIntrouvableError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except HydratationVideError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

@@ -23,7 +23,9 @@ sont affichées avec leur scénario (RCP/SSP) et leur incertitude.
 - Mode hors-ligne : cache local des données historiques (article T-8)
 - Mode dégradé documenté pour les projections temps réel
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir CLIMATE_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/climate/`. Elle couvre le périmètre
+> décrit ci-dessous, sans fournir les projections climatiques prévues.
 
 ## Contrat d'interface
 
@@ -36,15 +38,16 @@ Observations, Météo des forêts) — aucune projection climatique
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/climate/status` | aucune | — | Statut du moteur (`router.py:36`) |
-| GET | `/climate/version` | aucune | — | Version et backend (`router.py:47`) |
-| POST | `/climate/query` | `engine:read` | `20/minute` | Dernière observation réelle d'une station SYNOP (`router.py:60`) |
-| GET | `/climate/danger-feux` | `engine:read` | `20/minute` | Niveau de danger de feux de forêt, tous départements, J+1/J+2 (`router.py:90`) |
-| GET | `/climate/climatologie-stations` | `engine:read` | `20/minute` | Liste des stations DPClim d'un département (`router.py:118`) |
-| POST | `/climate/climatologie-quotidienne` | `engine:read` | `5/minute` | Données climatologiques quotidiennes DPClim (flux asynchrone, polling) (`router.py:153`) |
-| GET | `/climate/vigilance` | `engine:read` | `20/minute` | Carte de vigilance en cours, J et J+1 (`router.py:187`) |
-| GET | `/climate/observations-horaires` | `engine:read` | `20/minute` | Observations horaires des 24h, toutes stations d'un département (`router.py:215`) |
-| POST | `/climate/arome-temperature` | `engine:read` | — | Température 2 m du modèle AROME (décodage GRIB2) (`router.py:250`) |
+| GET | `/climate/status` | aucune | — | Statut du moteur |
+| GET | `/climate/version` | aucune | — | Version et backend |
+| POST | `/climate/query` | `engine:read` | `20/minute` | Dernière observation réelle d'une station SYNOP |
+| POST | `/climate/query-and-ingest` | `engine:write` | `10/minute` | Récupère une observation SYNOP puis la soumet en quarantaine au pipeline Evidence → Knowledge. |
+| GET | `/climate/danger-feux` | `engine:read` | `20/minute` | Niveau de danger de feux de forêt, tous départements, J+1/J+2 |
+| GET | `/climate/climatologie-stations` | `engine:read` | `20/minute` | Liste des stations DPClim d'un département |
+| POST | `/climate/climatologie-quotidienne` | `engine:read` | `5/minute` | Données climatologiques quotidiennes DPClim (flux asynchrone, polling) |
+| GET | `/climate/vigilance` | `engine:read` | `20/minute` | Carte de vigilance en cours, J et J+1 |
+| GET | `/climate/observations-horaires` | `engine:read` | `20/minute` | Observations horaires des 24h, toutes stations d'un département |
+| POST | `/climate/arome-temperature` | `engine:read` | — | Température 2 m du modèle AROME (décodage GRIB2) |
 
 ### 2. Schémas d'entrée/sortie
 

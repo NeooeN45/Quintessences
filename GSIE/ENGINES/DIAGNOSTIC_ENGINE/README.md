@@ -29,7 +29,10 @@ et les risques, il ne prescrit pas l'action.
 Reasoning Engine → Diagnostic Engine → Recommendation Engine
 ```
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir DIAGNOSTIC_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/diagnostic/`. Elle couvre le périmètre
+> effectif décrit ci-dessous ; son existence ne vaut pas achèvement du
+> périmètre fonctionnel complet.
 
 ## Contrat d'interface
 
@@ -39,9 +42,9 @@ Source : `GSIE/API/src/gsie_api/engines/diagnostic/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/diagnostic/status` | aucune | — | Statut du moteur (`router.py:101`) |
-| GET | `/diagnostic/version` | aucune | — | Version et backend (`router.py:122`) |
-| POST | `/diagnostic/diagnostiquer` | `engine:write` | `30/minute` | Assemble les conclusions du Reasoning Engine en un diagnostic stationnel structuré (`router.py:139`) |
+| GET | `/diagnostic/status` | aucune | — | Statut du moteur |
+| GET | `/diagnostic/version` | aucune | — | Version et backend |
+| POST | `/diagnostic/diagnostiquer` | `engine:write` | `30/minute` | Assemble les conclusions du Reasoning Engine en un diagnostic stationnel structuré |
 
 ### 2. Schémas d'entrée/sortie
 

@@ -517,7 +517,7 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]) as ws:
             ws.send_text("ping")
             data = ws.receive_json()
         assert data["event_type"] == "pong"
@@ -526,7 +526,7 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]) as ws:
             ws.send_text(json.dumps({"command": "ping"}))
             data = ws.receive_json()
         assert data["event_type"] == "pong"
@@ -535,7 +535,9 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}&channels=observation") as ws:
+        with client.websocket_connect(
+            "/api/v1/ws/hub?channels=observation", subprotocols=["gsie.jwt", token]
+        ) as ws:
             ws.send_text(json.dumps({"command": "subscribe", "channels": ["alert", "phenomenon"]}))
             data = ws.receive_json()
         assert data["event_type"] == "subscribed"
@@ -546,7 +548,7 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]) as ws:
             ws.send_text("not-json-not-ping")
             ws.send_text("ping")
             data = ws.receive_json()
@@ -564,7 +566,9 @@ class TestWebSocketRouterHub:
 
         with (
             pytest.raises(WebSocketDisconnect) as exc,
-            client.websocket_connect("/api/v1/ws/hub?token=invalid.jwt.token"),
+            client.websocket_connect(
+                "/api/v1/ws/hub", subprotocols=["gsie.jwt", "invalid.jwt.token"]
+            ),
         ):
             pass
         assert exc.value.code == 1008
@@ -573,7 +577,7 @@ class TestWebSocketRouterHub:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]) as ws:
             for _ in range(11):
                 ws.send_text("ping")
             responses = [ws.receive_json() for _ in range(11)]
@@ -589,7 +593,7 @@ class TestWebSocketRouterEvents:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/events?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/events", subprotocols=["gsie.jwt", token]) as ws:
             ws.send_text("ping")
             data = ws.receive_json()
         assert data["event_type"] == "pong"
@@ -608,7 +612,7 @@ class TestWebSocketRouterEvents:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/events?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/events", subprotocols=["gsie.jwt", token]) as ws:
             for _ in range(11):
                 ws.send_text("ping")
             responses = [ws.receive_json() for _ in range(11)]
@@ -629,7 +633,7 @@ class TestWebSocketRouterOrigin:
         client = TestClient(create_app())
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
-        with client.websocket_connect(f"/api/v1/ws/hub?token={token}") as ws:
+        with client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]) as ws:
             ws.send_text("ping")
             data = ws.receive_json()
         assert data["event_type"] == "pong"
@@ -646,8 +650,9 @@ class TestWebSocketRouterOrigin:
         with (
             pytest.raises(WebSocketDisconnect) as exc,
             client.websocket_connect(
-                f"/api/v1/ws/hub?token={token}",
+                "/api/v1/ws/hub",
                 headers={"Origin": "https://hub.example"},
+                subprotocols=["gsie.jwt", token],
             ),
         ):
             pass
@@ -664,8 +669,9 @@ class TestWebSocketRouterOrigin:
         token = create_access_token("reader", claims={"roles": ["reader"]})
 
         with client.websocket_connect(
-            f"/api/v1/ws/hub?token={token}",
+            "/api/v1/ws/hub",
             headers={"Origin": "https://hub.geosylva.example"},
+            subprotocols=["gsie.jwt", token],
         ) as ws:
             ws.send_text("ping")
             data = ws.receive_json()

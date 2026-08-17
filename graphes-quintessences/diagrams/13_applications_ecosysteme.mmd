@@ -1,0 +1,35 @@
+graph LR
+    GSIE["GSIE<br/>API + 14 moteurs"]
+
+    subgraph LIVREES["Livrées / en développement actif"]
+        GEOSYLVA["GeoSylva<br/>forêt — Android, desktop, web"]
+        QGISIA["QGISIA<br/>agent IA QGIS"]
+        IGNIS["Ignis<br/>incendies — mobile + Hub"]
+    end
+
+    subgraph PLANIFIEES["Planifiées Phase 4"]
+        ARTEMIS["Artemis<br/>faune"]
+        HYDRO["Hydro<br/>eau"]
+        FLORA["Flora<br/>végétation"]
+    end
+
+    subgraph SCAFFOLD["Scaffolding — DEC-000056"]
+        AERIS["Aeris<br/>atmosphère / météo"]
+        ATLAS["Atlas<br/>cartographie globale"]
+        TERRA["Terra<br/>sols / géologie"]
+    end
+
+    HUB["Centre de Commandement<br/>Unreal Engine 5.8 + Cesium"]
+
+    GSIE ===|API GSIE| LIVREES
+    GSIE -.->|Phase 4| PLANIFIEES
+    GSIE -.->|scaffolding| SCAFFOLD
+    LIVREES --- HUB
+    PLANIFIEES -.-> HUB
+    SCAFFOLD -.-> HUB
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style LIVREES fill:#eafaf1,stroke:#1e8449
+    style PLANIFIEES fill:#fef9e7,stroke:#b7950b
+    style SCAFFOLD fill:#f2f1ee,stroke:#5c5a55
+    style HUB fill:#f5b7b1,stroke:#cb4335

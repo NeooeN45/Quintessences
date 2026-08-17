@@ -30,6 +30,11 @@ os.environ.setdefault("GSIE_RATE_LIMIT_STORAGE_URL", "memory://")
 # memory:// utilise MemoryRefreshTokenStore (dict en mémoire), équivalent
 # fonctionnel pour les tests unitaires.
 os.environ.setdefault("GSIE_REFRESH_TOKEN_STORAGE_URL", "memory://")
+# Les tests d'intégration complets peuvent dépasser le TTL de production de
+# 15 minutes (création de schéma PostgreSQL et migrations réelles). Les modules
+# qui construisent un jeton au chargement doivent donc disposer d'un TTL de
+# test explicite ; cela ne modifie jamais la configuration de l'API déployée.
+os.environ.setdefault("GSIE_JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 
 from collections.abc import AsyncGenerator, Generator, Iterator, Sequence
 from contextlib import ExitStack
@@ -90,6 +95,7 @@ def _ensure_fresh_event_loop() -> object:
     crée sa propre loop (qui remplace celle-ci). Le coût est négligeable
     (un test ``is_closed()`` par test).
     """
+    boucle_creee: asyncio.AbstractEventLoop | None = None
     try:
         # Python 3.12+ : get_event_loop() est déprécié quand aucune loop
         # n'est en cours. On utilise get_running_loop() (non déprécié) qui
@@ -100,13 +106,22 @@ def _ensure_fresh_event_loop() -> object:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             # Pas de loop en cours — en créer une pour TestClient.
-            asyncio.set_event_loop(asyncio.new_event_loop())
+            boucle_creee = asyncio.new_event_loop()
+            asyncio.set_event_loop(boucle_creee)
         else:
             if loop.is_closed():
-                asyncio.set_event_loop(asyncio.new_event_loop())
+                boucle_creee = asyncio.new_event_loop()
+                asyncio.set_event_loop(boucle_creee)
     except RuntimeError:
-        asyncio.set_event_loop(asyncio.new_event_loop())
+        boucle_creee = asyncio.new_event_loop()
+        asyncio.set_event_loop(boucle_creee)
     yield
+    # Les TestClient synchrones ont besoin d'une boucle disponible avant le
+    # test, mais cette boucle créée par le fixture ne doit pas survivre à la
+    # session Windows (sinon ResourceWarning et coroutine non attendue).
+    if boucle_creee is not None and not boucle_creee.is_closed():
+        boucle_creee.close()
+        asyncio.set_event_loop(None)
 
 
 @pytest.fixture(autouse=True)

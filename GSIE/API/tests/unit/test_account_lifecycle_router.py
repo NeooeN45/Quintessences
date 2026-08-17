@@ -17,7 +17,11 @@ from gsie_api.auth.account_lifecycle import (
     ActionCodeDelivery,
     InvalidActionCodeError,
 )
-from gsie_api.auth.identity_router import get_account_lifecycle_service
+from gsie_api.auth.identity_router import (
+    get_account_lifecycle_service,
+    get_password_strength_service,
+)
+from gsie_api.auth.password_strength import CompromisedPasswordError
 from gsie_api.auth.transactional_email import get_transactional_email_sender
 from gsie_api.core.auth import create_access_token
 
@@ -54,6 +58,28 @@ def lifecycle_client(mock_lifespan: object) -> Generator[tuple[TestClient, Async
 def _authorization(account_id: object) -> dict[str, str]:
     token = create_access_token(subject=str(account_id), claims={"roles": ["user"]})
     return {"Authorization": f"Bearer {token}"}
+
+
+def should_reject_compromised_password_before_confirming_reset(
+    lifecycle_client: tuple[TestClient, AsyncMock],
+) -> None:
+    client, lifecycle = lifecycle_client
+    password_strength = AsyncMock()
+    password_strength.validate = AsyncMock(side_effect=CompromisedPasswordError)
+    client.app.dependency_overrides[get_password_strength_service] = lambda: password_strength
+
+    response = client.post(
+        "/api/v1/auth/password/reset/confirm",
+        json={
+            "email": "forestier@example.fr",
+            "code": "ABCD-EFGH",
+            "new_password": "mot-de-passe-compromis",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "PASSWORD_TOO_WEAK_OR_COMPROMISED"
+    lifecycle.confirm_password_reset.assert_not_awaited()
 
 
 async def should_build_the_account_lifecycle_dependency_lazily() -> None:

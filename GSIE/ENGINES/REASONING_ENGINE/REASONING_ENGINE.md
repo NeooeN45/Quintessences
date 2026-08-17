@@ -5,8 +5,8 @@
 | **Moteur** | Reasoning Engine |
 | **Catégorie** | Chaîne d'intelligence (inférence) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Livré |
-| **Statut implémentation** | Livré |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-002, GSIE-CON-004, GSIE-CON-005 |
 | **Ordre de développement** | 10 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

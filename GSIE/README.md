@@ -43,6 +43,18 @@ Evidence → Knowledge → Correlation → Reasoning → Diagnostic
 Moteurs domaine : GIS, Climate, Pedology, Botanical, Forest Dynamics.
 Moteurs transverses : Learning, Simulation.
 
+### Orchestration stationnelle — état au 2026-08-17
+
+L'API expose déjà l'orchestration interne et l'hydratation fail-closed par
+`station_id` : `Place` prioritaire, `FieldIntake accepted` en repli, quarantaine
+et rejet exclus. Le rapport d'hydratation est persisté avec la preuve d'analyse.
+
+La façade GeoSylva est cadrée mais non encore livrée : RFC-0041 est `Draft` et
+DEC-000073 est `Proposé`. La prochaine tranche doit d'abord fournir côté
+serveur les règles qualifiées, leurs sources et un état global sourcé ; en leur
+absence, l'analyse est bloquée sans valeur par défaut. Le lien entre identifiant
+local GeoSylva et UUID GSIE sera explicite, contrôlé par compte et révocable.
+
 Chaque moteur a **une responsabilité unique**, documentée dans
 `ENGINES/<NOM>_ENGINE/` (README + ENGINE.md + contrat d'interface).
 

@@ -1,0 +1,130 @@
+{
+  "manifest_version": "1",
+  "generated_at": "2026-08-13",
+  "entries": [
+    {
+      "slug": "ifn-donnees-brutes-campagnes",
+      "title": "IGN — Inventaire forestier national, données brutes",
+      "description": "Métadonnées des observations terrain des campagnes annuelles 2005 et suivantes. Les coordonnées sont volontairement imprécises et les poids statistiques absents : cette distribution ne peut pas produire de résultats d'inventaire officiels.",
+      "source_registry_id": "ifn-donnees-brutes",
+      "version": "metadata-2025-10-14",
+      "primary_domain": "forest_inventory",
+      "domains": ["gis"],
+      "tags": ["ifn", "ign", "placette", "inventaire forestier"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "release_date": "2025-10-14",
+      "changes": "Dernière mise à jour des données brutes affichée par dataIFN le 14 octobre 2025.",
+      "stats": {
+        "spatial_warning": "coordonnées au centre de la maille kilométrique ; point réel à 700 m maximum",
+        "statistical_warning": "poids de sondage non publiés ; résultats d'inventaire interdits"
+      },
+      "distribution": {
+        "access_method": "file_download",
+        "access_url": "https://inventaire-forestier.ign.fr/dataifn/data/export_dataifn_2005_2024.zip",
+        "licence": "Licence Ouverte / Etalab 2.0",
+        "format": "zip",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "gbif-species-api",
+      "title": "GBIF — Species API et Checklist Bank",
+      "description": "Service de résolution et d'appariement des noms taxonomiques utilisé par GSIE. Cette entrée ne représente pas les données d'occurrences GBIF, dont les licences doivent être évaluées jeu par jeu.",
+      "source_registry_id": "gbif-species-api",
+      "version": "api-v1-v2-metadata-2026-08-13",
+      "primary_domain": "biodiversity",
+      "domains": ["botany"],
+      "tags": ["gbif", "taxonomie", "species-api", "checklist-bank"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "stats": {
+        "scope": "résolution taxonomique uniquement",
+        "occurrence_data_included": false
+      },
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://api.gbif.org",
+        "licence": "Conditions d'utilisation GBIF ; licences des checklists conservées",
+        "format": "json",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "soilgrids-v2-wcs",
+      "title": "ISRIC — SoilGrids v2.0 par WCS",
+      "description": "Distribution WCS bornée des cartes mondiales SoilGrids à 250 m et six profondeurs. L'API REST bêta suspendue ne fait pas partie de cette distribution candidate.",
+      "source_registry_id": "soilgrids-wcs",
+      "version": "2.0-wcs-metadata-2026-08-13",
+      "primary_domain": "pedology",
+      "domains": ["soil_moisture"],
+      "tags": ["soilgrids", "isric", "wcs", "sol"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "stats": {
+        "native_resolution_m": 250,
+        "native_grain_m2": 62500,
+        "depth_interval_count": 6,
+        "rest_api_status": "paused"
+      },
+      "distribution": {
+        "access_method": "ogc_wcs",
+        "access_url": "https://maps.isric.org/mapserv",
+        "licence": "CC-BY 4.0",
+        "format": "geotiff_int16",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "ign-apicarto-cadastre",
+      "title": "IGN — API Carto, module Cadastre",
+      "description": "Distribution REST du module Cadastre d'API Carto. L'entrée reste metadata-only ; la version et la licence de la donnée cadastrale sous-jacente doivent accompagner tout futur actif archivé.",
+      "source_registry_id": "ign-apicarto-cadastre",
+      "version": "metadata-2026-08-13",
+      "primary_domain": "gis",
+      "domains": ["land_cover"],
+      "tags": ["ign", "api-carto", "cadastre", "parcelle"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "stats": {
+        "service_availability_commitment": "99.5% mensuel pour API Carto",
+        "underlying_dataset_version": "à qualifier avant copie"
+      },
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://apicarto.ign.fr/api/cadastre/parcelle",
+        "licence": "Licence Ouverte / Etalab 2.0",
+        "format": "geojson",
+        "offline_pack": false
+      }
+    },
+    {
+      "slug": "ign-apicarto-limites-administratives",
+      "title": "IGN — API Carto, module Limites administratives",
+      "description": "Distribution REST du module Limites administratives d'API Carto. Le service n'est pas une version immuable de la donnée administrative sous-jacente.",
+      "source_registry_id": "ign-apicarto-limites-administratives",
+      "version": "metadata-2026-08-13",
+      "primary_domain": "gis",
+      "domains": [],
+      "tags": ["ign", "api-carto", "limites administratives", "commune"],
+      "purpose": "reference",
+      "status": "discovered",
+      "operation": "metadata_only",
+      "stats": {
+        "service_availability_commitment": "99.5% mensuel pour API Carto",
+        "underlying_dataset_version": "à qualifier avant copie"
+      },
+      "distribution": {
+        "access_method": "api_rest",
+        "access_url": "https://apicarto.ign.fr/api/limites-administratives",
+        "licence": "Licence Ouverte / Etalab 2.0",
+        "format": "geojson",
+        "offline_pack": false
+      }
+    }
+  ]
+}

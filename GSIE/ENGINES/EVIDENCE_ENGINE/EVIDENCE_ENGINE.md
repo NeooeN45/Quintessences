@@ -5,8 +5,8 @@
 | **Moteur** | Evidence Engine |
 | **Catégorie** | Chaîne d'intelligence (filtre amont) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | En cours |
-| **Statut implémentation** | En cours (wrapper PyO3 + fallback Python) |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-002, GSIE-CON-005, GSIE-CON-010 |
 | **Ordre de développement** | 2 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

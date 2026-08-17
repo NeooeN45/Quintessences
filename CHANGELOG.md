@@ -4,6 +4,453 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [CHAÎNE DE RAISONNEMENT — TROIS RFC] - 2026-08-17
+
+- Discussion sur l'amélioration de la chaîne de raisonnement GSIE, à
+  partir de cinq propositions externes confrontées au code et aux RFC
+  réels plutôt qu'admises telles quelles.
+- `02_RFC/RFC-0015-environmental-model-fabric.md` §3.6bis (addendum) :
+  granularité des packs offline (`scope_kind: region | mission_zone`),
+  bascule sur seuil mesuré (30 Mo), sans rouvrir DEC-000026.
+- `02_RFC/RFC-0040-controle-qualite-modeles-perception.md` (nouveau,
+  Draft) : contrôle qualité des modèles de perception embarqués — rejet
+  motivé de l'apprentissage fédéré et du teacher-student sur la chaîne
+  de décision (ADR-009, CON-001 cités), mécanisme de rejeu serveur
+  structurellement inactif tant qu'aucun modèle lourd qualifié n'existe.
+- `02_RFC/RFC-0003.md` §6bis (addendum) : désambiguïsation et activation
+  partielle du principe d'intelligence distribuée par nœud pour la seule
+  chaîne de raisonnement — le reste du RFC reste non adopté.
+- Deux pistes examinées et écartées sans trace de code : parallélisation
+  des moteurs domaine (fausse prémisse, déjà découplés par construction)
+  et concurrence à l'ingestion (déjà bornée, séquentielle par défaut).
+- Aucune ligne de code métier — Phase 4 (spécification avant code).
+
+---
+
+## [VEILLE — 5 REGISTRES D'OPPORTUNITÉS] - 2026-08-16
+
+- Consolidation de ~20 fichiers de veille/étude dispersés dans
+  `GSIE/RESEARCH/` en 5 registres par cible d'exécution (Serveur, PC,
+  Applications mobiles, Hub Unreal, Applications clientes), chacun avec
+  identifiants `OPP-xxx` stables et classement par intérêt.
+- Sources absorbées archivées dans `GSIE/RESEARCH/ARCHIVE/` avec index ;
+  `GSIE/RESEARCH/README.md` mis à jour pour pointer vers les registres.
+- Enrichissement par recherche web ciblée par registre (NOOA, TreeLearn,
+  WildFireGS, ForeFire) le même jour.
+
+---
+
+## [CLARIFICATION CONTRAT GEOSYLVA–GSIE] - 2026-08-17
+
+- Revue croisée des RFC-0033, RFC-0015, RFC-0020, RFC-0040 et RFC-0003,
+  ainsi que des DEC-000048, DEC-000049, DEC-000071 et DEC-000072.
+- Identification d'un écart entre l'enveloppe cliente adoptée et la route
+  d'orchestration interne actuellement implémentée.
+- Création de RFC-0041 (Draft) : façade GeoSylva sans `contexte` client,
+  intention d'analyse, préparation serveur fail-closed, résolution explicite
+  `parcelleId → gsie_resource_id`, sélection des règles sourceées uniquement si
+  la capacité existe et refus sans état global inventé.
+- Contre-revue architecture/science/mobile : endpoint `station-link` dédié,
+  lien révocable contrôlé par compte, appel interne en processus, scope RBAC
+  consommateur, `contract_version` explicite et deux empreintes d'idempotence.
+- Création de DEC-000073 (Proposé) : aucune migration Room, modification de
+  synchronisation ou nouveau contrat public avant validation ; la capacité de
+  préparation des règles et de l'état global est une précondition nommée.
+- Les registres d'opportunités restent des documents Draft d'orientation ; ils
+  ne valent pas autorisation d'intégrer un modèle ou une dépendance.
+- Site des graphes mis à jour à 14 diagrammes, avec le flux GeoSylva–GSIE,
+  RFC-0041 et DEC-000073 ; workflow GitHub Pages ajouté mais publication
+  conditionnée à l'activation de la source GitHub Actions dans les réglages du
+  dépôt et à une fusion sur `main`.
+
+---
+
+## [HYDRATATION STATIONNELLE FAIL-CLOSED] - 2026-08-17
+
+- Ajout de `StationContexteHydrator` (`gsie_api/engines/orchestration/hydration.py`)
+  pour assembler `StationContexte` depuis `station_id` (DEC-000072).
+- Règles d'hydratation : Place d'abord, soumission FieldIntake `accepted` en
+  repli tracé, quarantaine étanche, provenance complète exigée pour chaque bloc.
+- Extension du contrat `AnalyseRequest` : `contexte` optionnel, niveaux de preuve
+  déclarés par bloc, refus des niveaux inconnus ou incompatibles avec un contexte
+  fourni.
+- Endpoint de prévisualisation `GET /api/v1/orchestration/stations/{station_id}/contexte`
+  et branchement de l'hydratation dans `POST /api/v1/orchestration/analyse`.
+- Persistance du rapport d'hydratation dans `analysis_run` : le contexte
+  effectivement utilisé reste rejouable et auditable.
+- Tests : 58 tests unitaires et d'intégration passants sur PostgreSQL/PostGIS
+  réel, couverture 100 % du package `orchestration` avec le traceur sysmon.
+- Harnais de mutation : ajout de la garde anti-quarantaine
+  (`quarantaine_lue_pour_ses_valeurs`) dans `tests/mutation/harnais.py`.
+- Prochaine étape : client Kotlin `/orchestration/analyse` dans GeoSylva, avec
+  file Room idempotente et écran minimal de résultats, sans attendre les pages
+  martelage 3.0.
+
+---
+
+## [GSIE-BENCH — RUNNER AVEUGLE] - 2026-08-15
+
+- Durcissement du runner déterministe GSIE-Bench v0.1 conformément à
+  RFC-0039 et DEC-000067.
+- Ajout d'une vue `CandidateScenario` qui empêche la fuite des labels
+  attendus, facteurs obligatoires, veto et statut de qualification vers les
+  candidats.
+- Vérification SHA-256 avant exécution et immutabilité récursive des entrées ;
+  checksum incohérent refusé avant tout appel candidat.
+- Manifeste de run immuable ajouté : candidat, suite, scénarios, évaluations et
+  checksums publics sont rejouables à l'identique.
+- 14 tests GSIE-Bench ciblés passants ; Ruff et mypy strict propres.
+- Les scénarios restent `pending_expert_review` : aucune exécution Closed,
+  intégration IA, ingestion, FETCH ou promotion n'est autorisée.
+- Preuve : `GSIE/TESTS/GSIE_BENCH/RUNNER_HARDENING_2026-08-15.md`.
+
+## [GSIE-BENCH — OPEN/SILVER] - 2026-08-15
+
+- Suite synthétique Open/Silver de trois scénarios qualifiés, sans prétention
+  Gold et sans accès aux données privées.
+- Politique dédiée refusant les scénarios Gold, métriques multilabel,
+  ranking, latence et dégradation relative.
+- CLI locale `GSIE/API/scripts/gsie_bench.py` avec rapport JSON incluant les
+  prédictions et le manifeste reproductible.
+- Campagne cumulée : **22 tests ciblés passants**, Ruff, formatage et mypy
+  strict propres.
+- Registre des 14 contrats moteurs et `EngineBenchmarkAdapter` injecté ajoutés
+  sans instanciation de DB, réseau ou boucle asynchrone ; l'exécution réelle
+  des moteurs reste à raccorder moteur par moteur.
+- Campagne mise à jour : **25 tests ciblés passants**.
+- Preuve : `GSIE/TESTS/GSIE_BENCH/OPEN_SILVER_IMPLEMENTATION_2026-08-15.md`.
+
+---
+
+## [VÉRIFICATION DOCKER DE TEST] - 2026-08-14
+
+- Docker Desktop vérifié (client/serveur 29.6.2, 6 CPU, environ 20 Gio de
+  mémoire) et configuration Compose de test validée.
+- Stack isolée `gsie-test` opérationnelle : PostgreSQL/PostGIS, Redis, MinIO,
+  Mailpit, API et outbox-worker tous sains.
+- Migration PostgreSQL `20260813_0049`, initialisation MinIO et sondes API
+  `/health`/`/ready` validées.
+- 33 tests d’intégration ciblés (base, migrations, E2E API) passants, avant la
+  campagne complète de référence.
+- La campagne complète a ensuite été rejouée avec Docker obligatoire :
+  **349/349 passants** en 1393,34 s. Les fixtures de production utilisent des
+  secrets Redis de test valides, les tokens d’intégration ont un TTL de test
+  borné à 60 minutes et l’archive GBIF respecte la réconciliation juridique.
+- La suite unitaire complète a été rejouée après correction du lanceur :
+  **2935 passants, 63 ignorés**, avec cinq tests dédiés au garde-fou
+  d’intégration.
+- Les boucles événementielles temporaires des tests Windows sont désormais
+  fermées explicitement ; les avertissements connus sont filtrés par catégorie
+  et Bandit 1.7.10 passe sans alerte moyenne ou haute.
+- La mesure réelle de l’orchestration a révélé une course concurrente sur la
+  création de l’agent Recommendation ; l’écriture est maintenant atomique avec
+  `ON CONFLICT DO NOTHING`. Les campagnes finales passent à 20/20 et 40/40,
+  avec persistance `analysis_run` vérifiée à 100 %. Voir
+  `AUDIT_PERFORMANCE_ORCHESTRATION_2026-08-15.md`.
+- Un test PostgreSQL concurrent dédié couvre désormais la course d’agent ; les
+  cinq tests d’orchestration passent après correction.
+
+---
+
+## [REQUALIFICATION DE LA PHASE 2 — DEC-000070] - 2026-08-14
+
+- Validation explicite par le Fondateur de l'état « sortie de phase —
+  validation documentaire pendante ».
+- Retrait de l'affirmation de clôture terminale dans la roadmap et le README.
+- Maintien des douze livrables 201-212 en Draft, sans promotion en bloc ni
+  validation rétroactive.
+- Phase 4 maintenue active conformément à DEC-000017 et GSIE-DIR-0011.
+- Distinction explicite entre zéro contradiction automatisée de phase et douze
+  dettes documentaires qui continuent de bloquer le gel de la Phase 2.
+
+## [AUDIT APPROFONDI DE LA PHASE 2] - 2026-08-14
+
+- Audit individuel des livrables 201 à 212 selon six portes : gouvernance,
+  complétude, traçabilité, cohérence, conformité effective et reproductibilité.
+- Conclusion : 0 livrable prêt pour Review sans correction, 3 corrections
+  bornées, 4 rebaselines ou supersessions et 5 blocages de décision ou de
+  prérequis.
+- Mise en évidence des écarts majeurs : RFC-0003 proposée, stack versionnée
+  différemment du lockfile, modèle 205 dépassé par RFC-0011, contrat 206 non
+  prouvé par l'orchestration, documentation 207 en dérive et citations brutes
+  du livrable 211.
+- Aucune promotion de statut ; recommandation de remplacer la clôture déclarée
+  par une sortie de phase avec validation pendante.
+- Rapport :
+  `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_PHASE2_LIVRABLES_2026-08-14.md`.
+
+## [CLASSEMENT DES DIRECTIVES] - 2026-08-14
+
+- Création de `01_DIRECTIVES/PROPOSED/` pour isoler les directives `Draft` et
+  `Review` de la source de vérité opérationnelle.
+- Déplacement sans promotion de DIR-0005 et DIR-0006 (`Review`) ainsi que de
+  DIR-0012 (`Draft`) dans PROPOSED.
+- Archivage de DIR-0007, déjà au statut CLOS.
+- Clôture tracée de DIR-0003 sur l'autorité existante de DEC-000004, puis
+  archivage ; DIR-0011 reste l'unique directive de phase applicable.
+- Extension du garde de gouvernance aux trois dossiers et ajout d'un contrôle
+  empêchant plusieurs directives de phase actives simultanément.
+- Le registre canonique des directives actives a été revu ; les 12 seuls
+  blocages de gouvernance restants concernent désormais la Phase 2.
+
+## [SOURCE CANONIQUE DE LA MÉMOIRE PROJET] - 2026-08-14
+
+- Confirmation de `PROJECT_MEMORY.md` à la racine comme unique mémoire
+  canonique, conformément au registre des sources de vérité.
+- Conservation intégrale de l'ancienne copie divergente sous
+  `22_PROJECT_MEMORY/PROJECT_MEMORY_ARCHIVE_2026-08-12.md`, avec statut
+  d'archive et lien `superseded_by` vers la source canonique.
+- Remplacement de l'ancien chemin par un pointeur non duplicatif et mise à jour
+  du README ainsi que du registre qualité.
+- Ajout d'un test empêchant une archive explicitement marquée d'être traitée
+  comme une seconde mémoire courante.
+- Le garde de gouvernance ne compte plus cette contradiction ; 16 blocages
+  restent avant tout gel du dépôt.
+
+## [RESTAURATION FORENSIQUE DU LIVRABLE 309] - 2026-08-14
+
+- Scellement append-only du bloc SQL tronqué, sans reconstitution spéculative
+  de la table `utilisateurs` ni des sections absentes.
+- Conservation octet pour octet du fragment historique, contrôlée par le blob
+  Git `f1a68789752fe7751b20aa99fbdec0df587d6f96`.
+- Création d'un dossier de reconstruction distinct en Draft, reliant les
+  intentions récupérables aux sources canoniques et au schéma effectif v6.2.
+- Statut **Supersédé** du livrable historique maintenu ; aucun document Locked
+  ni statut terminal modifié.
+- Le garde de gouvernance ne compte plus la troncature 309 ; 17 blocages de
+  gouvernance restent à traiter avant tout gel du dépôt.
+
+## [FIABILISATION ENVIRONNEMENTS ET MOTEURS] - 2026-08-13
+
+- Cloisonnement explicite des bases et stockages par rôle/namespace ; volumes
+  Compose dédiés, exemples d'environnements et garde CI anti-mélange.
+- Audit reproduit des 14 moteurs : 316 tests cœur, 166 tests domaine et 14 tests
+  de pipeline/orchestration passants.
+- Orchestration renforcée : session DB transmise à Validation et niveau de
+  preuve du diagnostic propagé aux contrôles des recommandations.
+- Audit structurel automatisé 14/14 moteurs ajouté à la CI ; profil HA isolé
+  par rôle et namespace.
+- Préparation de la migration 0049 : `analysis_run` append-only, `analyse_id`
+  et conservation transactionnelle des quatre sorties de l'orchestration.
+- Audit API/GeoSylva ajouté : chaîne HTTP et persistance vérifiées sur
+  PostgreSQL réel ; l'absence du client mobile orchestration est traitée comme
+  une porte d'intégration dédiée, non comme une capacité fictive.
+- Suite complète backend rejouée : 2 929 tests unitaires passants ; fixtures
+  d'isolation production et tests WebSocket réalignés sur les contrats actifs.
+- `analysis_run` est désormais réellement append-only côté PostgreSQL via un
+  trigger contrôlé par la campagne de migration.
+- Audit complet documenté dans
+  `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_14_MOTEURS_ET_CHAINE_2026-08-13.md`.
+
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
+## [QUALIFICATION REGISTRY I0] - 2026-08-13
+
+- Qualification détaillée des 15 pré-fiches I0 à partir des documentations
+  officielles : provenance, nature Source/Dataset/Distribution, accès, formats,
+  limites scientifiques, droits et blocages.
+- Identification de quatre entrées actives trop agrégées : occurrences versus
+  Species API GBIF, REST versus WCS SoilGrids, produits Météo-France et modules
+  IGN/API Carto.
+- Création d'un manifeste candidat de cinq distributions, toutes
+  `discovered`, `metadata_only` et sans pack hors ligne.
+- Aucune application en base, aucun FETCH, aucune copie, aucune promotion et
+  aucune utilisation des ressources de `E:\Documents`.
+- DEC-000068 scinde les identités SCI-001 agrégées et conserve leurs anciens
+  identifiants comme références historiques non ingestibles.
+- Ajout d'un auditeur de réconciliation pur : le manifeste actif historique
+  est signalé, tandis que le candidat I0 n'utilise que les identités canoniques.
+- Mise à jour de la qualification FETCH : les quatre anciennes identités restent
+  fermées et `soilgrids-wcs` est déclaré séparément, également fermé.
+- Audit PostgreSQL réel en lecture seule : 36 ressources Registry, 4 datasets,
+  4 snapshots de santé et 1 DataAsset RAW. Le micro-extrait SoilGrids reste
+  attaché à `soilgrids-properties` pour préserver DEC-000061 et son lineage.
+- Correction du scheduler de santé : projection canonique prioritaire avec
+  repli historique strictement opérationnel jusqu'à la migration transactionnelle.
+- Comparaison statique des adapters et des références historiques documentée ;
+  aucune migration ni ouverture FETCH n'en découle.
+- Lecture des métadonnées historiques confirmée : `stats=null` et
+  `operation=metadata_only`, donc aucune ventilation rétroactive implicite.
+- Exécution du dry-run d'identité fail-closed : trois `UNRESOLVED`, un
+  `PRESERVE_LINEAGE` SoilGrids, zéro écriture et FETCH fermé.
+- DEC-000069 formalise le dry-run non mutatif et interdit toute migration avant
+  validation humaine des cas ambigus.
+
+## [CATALOGUE RESSOURCES EXHAUSTIF] - 2026-08-13
+
+- Création de `GSIE/DATASETS/CATALOGUE_RESSOURCES_EXHAUSTIF_2026-08-13.md`.
+- Consolidation de 34 familles canoniques, 113 fiches scientifiques D1–D8,
+  des 12 sources officielles, 61 connecteurs additionnels et 83 entrées du
+  catalogue cartographique QGISIA.
+- Confirmation de l'inventaire local : 3 077 ressources logiques, 143 groupes
+  de doublons exacts, 489 ressources potentiellement sensibles et 2 350
+  ressources sans droits qualifiés. Aucune copie, ingestion ou promotion.
+- Ajout explicite de Treekipedia/Silvi comme ressource externe candidate :
+  inspection locale, taxonomie, RDF, indicateurs GRIIS/USDA, schéma SQL et
+  dépendance à un accès API/export autorisé documentés.
+- Classement des sources par besoin d'intégration (I0 à I4, X) et création de
+  158 fiches Registry externes en brouillon. Les ressources de `E:\Documents`
+  sont explicitement reportées à la dernière tranche ; aucune fiche n'est
+  appliquée au manifeste actif.
+
+## [RELECTURE EXPERTE GSIE-BENCH] - 2026-08-12
+
+- Création du dossier `DOSSIER_RELECTURE_EXPERTE_FARGES_2026-08-12.md` avec
+  contrôles dendrométriques, provenance, droits d'annotation, tolérances,
+  alternatives et vetos.
+- Ajout de la garde pure `assess_gold_qualification` : deux avis indépendants
+  complets sont nécessaires ; aucune promotion automatique n'est effectuée.
+- Validation : 17 tests ciblés passants, Ruff et mypy strict propres.
+
+## [PIPELINE DATA REGISTRY SOILGRIDS RAW-SILVER] - 2026-08-12
+
+- Ajout du contrat `gsie_api.data.promotion` pour normaliser le micro-extrait
+  SoilGrids déjà autorisé vers un schéma Silver metadata-only.
+- Conservation stricte du mapping métier `wv003` / WCS `wv0033`, du CRS
+  EPSG:152160, du format GeoTIFF Int16, de l'URI MinIO et du SHA-256.
+- Les unités restent non qualifiées et le résultat est explicitement `NOT_GOLD`.
+- Ajout de la garde de promotion fail-closed et de cinq tests contractuels.
+- Aucune écriture PostgreSQL, promotion réelle ou ouverture FETCH n'a été
+  déclenchée ; le service transactionnel est la prochaine sous-tranche.
+
+## [SERVICE PROMOTION SOILGRIDS VERS STAGING] - 2026-08-12
+
+- Ajout de `SilverPromotionService` et `PromotionEvidence` pour la transition
+  transactionnelle `validated → staging`.
+- Le service refuse avant `flush` si l'asset RAW, le checksum, les droits, les
+  cinq dimensions QualityAssessment ou la décision opérateur manquent.
+- La décision et les métadonnées normalisées sont conservées dans
+  `DatasetVersion.stats` ; aucun commit autonome ni endpoint public n'est créé.
+- Validation : tests unitaires ciblés, Ruff, mypy strict et `git diff --check`.
+
+## [LECTEUR DE PREUVES POSTGRESQL SOILGRIDS] - 2026-08-13
+
+- Ajout de `SilverPromotionEvidenceRepository` pour charger version, asset RAW,
+  DataRightsStatement et dernier run QualityAssessment cohérent.
+- Les campagnes QualityAssessment ne sont pas fusionnées : un run incomplet
+  reste incomplet et bloque la promotion.
+- Connexion du dépôt au chemin `SilverPromotionService.promote_from_registry`.
+- Validation : 7 tests dépôt/service, Ruff, mypy strict et git diff --check.
+- Aucune promotion réelle ni commit PostgreSQL n'a été exécuté.
+
+## [AUDIT RESSOURCES E:\\Documents V2] - 2026-08-12
+
+- Inventaire reproductible ajouté avec manifestes CSV/JSON, extraction bornée,
+  SHA-256 jusqu'à 256 Mio, lecture des couches GeoPackage et exclusions
+  techniques/personnelles explicites.
+- Sur 41 215 fichiers vus, 15 014 restent après exclusions et forment 3 077
+  ressources logiques : 359 documents, 256 tableurs, 460 textes, 85 vecteurs,
+  46 shapefiles logiques, 195 rasters et 1 676 images.
+- Correction du double comptage GeoTIFF/images et du comptage séparé des
+  sidecars shapefile. Détection de 143 groupes de doublons exacts, 489 ressources
+  potentiellement sensibles et 23 PDF probablement soumis à OCR.
+- Relecture visuelle des deux fiches stationnelles : la fiche vierge devient un
+  prototype FieldIntake à sourcer ; le diagnostic des Farges devient un candidat
+  de test `contradictory_data`, pas une vérité Gold.
+- Aucune donnée source n'est copiée, ingérée, entraînée ou promue.
+
+## [ARCHITECTURE — AUDIT D'INTÉGRITÉ V1.2.0] - 2026-08-12
+
+- Les applications clientes sont désormais documentées comme consommateurs et
+  producteurs : observations terrain, capteurs, corrections, annotations,
+  résultats d'actions et retours utilisateur.
+- Toute donnée entrante passe par quarantaine, schéma, droits, provenance et
+  qualité avant d'enrichir le Data Registry, les productions dérivées, le
+  benchmark ou les modèles ; aucune application n'écrit directement la vérité
+  canonique.
+- `GSIE-ARCH-EVOLUTION-001` passe en v1.2.0 : état implémenté séparé de la cible,
+  QualityAssessment et DatasetHealth alignés sur les enums/modèles, FieldIntake
+  décrit sans surpromesse, zones `DATA_*`, resolver distinct des 14 moteurs et
+  séparation Benchmark/Model Registry.
+- Readiness fournisseur, RLS, chiffrement au repos et hachage des mots de passe
+  sont reformulés sans transformer une exigence en preuve acquise.
+- Ajout d'une porte de qualification des ressources locales et d'un rapport
+  d'audit dédié. Le guide reste `Draft` en attente de validation du Fondateur.
+
+## [GSIE-BENCH - SCENARIOS STATIONNELS ENRICHIS] - 2026-08-12
+
+- Revue des documents BTS fournis dans `E:\Documents\bts` : fiches de
+  diagnostic stationnel, gradients autoécologiques, Longeyroux, diagnostic du
+  hêtre, hêtraie de la Vergne, martelage, pathogènes et principes de cubage.
+- Le catalogue initial Parelle est reclassé comme référence historique / micro-
+  suite technique : il ne suffit pas à constituer trois diagnostics stationnels
+  Gold complets.
+- Trois candidats v0.2 sont maintenant structurés en 11 sections : contexte,
+  topographie, climat, pédologie, flore/biodiversité, peuplement,
+  régénération, historique, gestion, calculs et provenance.
+- Les valeurs observées, déduites, hypothétiques, manquantes et à faire relire
+  sont séparées. Les trois candidats restent `pending_expert_review` et le
+  runner Closed demeure bloqué.
+- `GSIE_BENCH_RELECTURE_2026-08-12.pdf` est régénéré pour la relecture des
+  scénarios enrichis. Aucune IA, ingestion, FETCH ou promotion n'est déclenchée.
+
+## [VEILLE LLM ET R&D GSIE] - 2026-08-12
+
+- Enregistrement critique des candidats LLM locaux et partenaires pour la
+  normalisation : GLiNER2, Qwen3 Embedding/Reranker, modèles documentaires,
+  modèles géospatiaux, séries temporelles et petits modèles génératifs.
+- NVIDIA NIM est classé comme couche de déploiement ; ses endpoints gratuits
+  restent limités au prototypage et aux tests, sans fondation de production.
+- Création de la piste `GSIE-Norm-Bench` pour mesurer mapping, unités, CRS,
+  provenance, abstention, robustesse, latence et coût avant tout fine-tuning.
+- Enregistrement séparé des pistes R&D IGNIS, Hydro, QGIS/IGN, Mesh et des
+  financements potentiels ; aucune piste non vérifiée n'est déclarée validée.
+
+## [ADOPTION GSIE-BENCH V0.1] - 2026-08-11
+
+- Le Fondateur adopte formellement RFC-0039 et DEC-000067.
+- Sont autorisés, dans l'ordre : sélection des trois scénarios Gold,
+  qualification des références, runner déterministe et baselines non-IA.
+- Aucune intégration IA, ingestion non qualifiée ou promotion automatique n'est
+  autorisée par cette décision.
+- RFC-0039 et DEC-000067 passent au statut `Validated` ; la veille reste une
+  entrée de recherche en Draft.
+
+## [GSIE-BENCH — TRANCHE 1] - 2026-08-11
+
+- Trois diagnostics candidats et leurs dix variations contrôlées sont générés
+  de façon déterministe, soit 30 scénarios au total.
+- Le contrat `ScenarioSpec`/`CandidatePrediction`, le runner Closed fail-closed,
+  les checksums et les portes `GO`/`NO-GO`/`INCONCLUSIVE` sont implémentés.
+- Les baselines naïve et pédologique déterministe sont disponibles ; quatre
+  tests ciblés passent, Ruff et mypy strict sont verts.
+- La référence Parelle 2007 reste `pending_expert_review` : aucune mesure
+  Closed complète, ingestion, FETCH ou promotion n'est déclenchée.
+- La pré-relecture a corrigé la revue bibliographique : l'article est dans
+  *Tree Physiology* et les assertions pH/profondeur requièrent des références
+  pédologiques distinctes. La première tentative Closed est bloquée par la
+  garde de qualification, comme prévu.
+
+## [CADRAGE GSIE-BENCH V0.1] - 2026-08-11
+
+- Veille dédiée aux benchmarks forestiers, géospatiaux, scientifiques et IA
+  consolidée dans `GSIE/RESEARCH/VEILLE_2026-08-11_BENCHMARKS_GSIE.md`.
+- RFC-0039 créée en statut Draft : suites Closed/Open, niveaux
+  Gold/Silver/Bronze, jeux publics/privés, quarantaine territoriale, baselines
+  non-IA, métriques par tâche, robustesse, veto et artefacts reproductibles.
+- Première suite proposée limitée à trois diagnostics Gold et dix variations
+  contrôlées par diagnostic, soit 30 cas.
+- DEC-000067 créée en statut Draft. Aucune ingestion, implémentation du runner
+  ou intégration IA n'est autorisée avant validation explicite du Fondateur.
+- Le merge de la PR #28 dans `main` au commit
+  `22a1818471055d9f136a98c666b09bf58232780c` est enregistré comme nouvel état
+  de référence ; les contrôles post-fusion sont verts.
+
 ## [CLÔTURE PR HA ET CI] - 2026-08-11
 
 - Tête finale `f12e3cd` validée par les runs PR `31494308995`, push
@@ -1591,6 +2038,23 @@ la preuve de chaîne complète est faite, les restes sont documentés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-02 (soir) — CONSOLIDATION + DEC-000043] - 2026-08-02
 
 ### Consolidation mémoire
@@ -1620,6 +2084,23 @@ réelle, S3 validation scientifique + performance.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-02 — RFC-0031 PHASE 1 IMPLÉMENTÉE + PHASE 2 INTÉGRÉE] - 2026-08-02
 
 ### RFC-0031 Phase 1 — 3 quick wins restants implémentés
@@ -1652,6 +2133,23 @@ documenté dans `docs/TESTING_XDIST.md`).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-02 — VEILLE TECHNOLOGIQUE + SOURCING + RFC-0031 ADOPTÉ] - 2026-08-02
 
 ### Veille technologique (8 sous-agents en parallèle)
@@ -1717,6 +2215,23 @@ immédiatement.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-02 — CORRECTIONS AUDIT PHASE 4 + AUDIT CLAUDE] - 2026-08-02
 
 ### Gouvernance — DIR-0005 et DIR-0006 passent en Review
@@ -1764,6 +2279,23 @@ immédiatement.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-02 — CORRECTION P1/P2 AUDIT MOTEURS GSIE] - 2026-08-02
 
 Suite de l'audit Phase 4 du 2026-08-01. Correction des P1 et P2
@@ -1855,6 +2387,23 @@ refléter la réalité : « traçable sans être reproductible ».
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-01 — AUDIT PHASE 4 : CORRECTION P0/P1/P2] - 2026-08-01
 
 Audit Phase 4 strict mais juste. 5 dimensions, 22 preuves reproduites.
@@ -1908,6 +2457,23 @@ Score global 86%. Correction de tous les P1 et P2 actionnables.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-01 — AUDIT QUALITÉ BASE + AMÉLIORATIONS PIPELINE TREEKIPEDIA] - 2026-08-01
 
 Audit qualité de la base GSIE (post-ingestion 1000 espèces Treekipedia)
@@ -2024,6 +2590,23 @@ l'existant.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-01 — TREEKIPEDIA : INGESTION + ENRICHISSEMENT 1000 ESPÈCES] - 2026-08-01
 
 Ingestion et enrichissement d'un lot de 1000 espèces Treekipedia dans la
@@ -2077,6 +2660,23 @@ Treekipedia reste inaccessible — 404 sur tous les endpoints documentés).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SESSION 2026-08-01 — VISUALISATION DB + SDK PYTHON + TABLEAU DE CONTRÔLE] - 2026-08-01
 
 Déploiement des outils de visualisation DB, création du SDK Python GSIE
@@ -2159,6 +2759,23 @@ et du tableau de contrôle admin web.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [DEC-000041 — INGESTION BULK + PGVECTOR + GARDE ANTI-INVENTION] - 2026-07-31
 
 Préparation de l'API à recevoir des données externes massives (Treekipedia,
@@ -2206,6 +2823,23 @@ BD Forêt IGN, etc.) — débit 20x supérieur au mode unitaire.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [GSIE-PROMPT-0025 — INVENTAIRE SOURCES ÉLARGI] - 2026-07-30
 
 Extension de l'inventaire des sources de données GSIE à un état viable 5 ans.
@@ -2234,6 +2868,23 @@ Extension de l'inventaire des sources de données GSIE à un état viable 5 ans.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RFC-0028 — PERSISTANCE DES RÈGLES D'INFÉRENCE] - 2026-07-28
 
 Adoption de `RFC-0028` par `DEC-000038`. Le Reasoning Engine recevait ses règles
@@ -2267,6 +2918,23 @@ Chêne sessile, réserve utile maximale, un territoire — de bout en bout.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [FIABILITÉ API — AUDIT PAR RÉFUTATION] - 2026-07-28
 
 Audit de fiabilité de l'API GSIE : chaque constat prouvé par exécution réelle
@@ -2337,6 +3005,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [ENRICHISSEMENT V1 — DONNÉES RÉELLES] - 2026-07-27
 
 ### Phase 1 — Pipeline cross-moteurs Validation + Learning (commit 4930aa1)
@@ -2386,6 +3071,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [14/14 MOTEURS GSIE IMPLÉMENTÉS] - 2026-07-27
 
 ### Implémentation des 5 moteurs manquants (commit 4c64bcd)
@@ -2427,6 +3129,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [AUDIT + FIABILISATION DB GSIE] - 2026-07-27
 
 ### Audit complet base de données (score 43% -> campagne de fiabilisation)
@@ -2531,6 +3250,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RELIABILITY API GSIE] - 2026-07-27
 
 ### Fiabilité enterprise — API GSIE
@@ -2581,6 +3317,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [BASELINE ALEMBIC GSIE V6.2] - 2026-07-26
 
 ### Historique propre et immuable
@@ -2619,6 +3372,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [DEC-000035 — RUST COMME CRITÈRE DE PERTINENCE] - 2026-07-26
 
 ### Décision
@@ -2640,6 +3410,23 @@ vérifiés.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [VEILLE SOURCE GÉOSPATIALE — GEORCHESTRA] - 2026-07-26
 
 ### Source potentielle future, sans adoption
@@ -3130,6 +3917,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — RFC-0016 SCHÉMA FORESTIER SPÉCIALISÉ — PHASE A COMPLÈTE] - 2026-07-19
 
 ### RFC-0016 Phase A (schéma de données) — 10/10 entités implémentées
@@ -3173,6 +3977,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — RFC-0015 ENVIRONMENTAL MODEL FABRIC + CLIMATE ENGINE ÉTENDU] - 2026-07-18
 
 ### DEC-000028 — Incrément démontrable « territoire + capsule + Golden Bench »
@@ -3222,6 +4043,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — BOTANICAL ENGINE + PEDOLOGY ENGINE] - 2026-07-17
 
 ### Nouveaux moteurs — Botanical (GBIF) et Pedology (SoilGrids)
@@ -3252,6 +4090,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — GARDE-FOU ANTI-INVENTION + GIS ENGINE] - 2026-07-17
 
 ### Gouvernance — RFC-0014, ADR-009
@@ -3295,6 +4150,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — CORRELATION ENGINE (v1 réduite)] - 2026-07-17
 
 ### Nouveau moteur — Correlation Engine
@@ -3319,6 +4191,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — GOUVERNANCE : ADOPTION RFC-0011 / ADR-001-006 + FIX MIGRATION] - 2026-07-17
 
 ### Gouvernance
@@ -3360,6 +4249,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — CI 100% VERTE] - 2026-07-16
 
 ### CI GitHub Actions — tous jobs passent
@@ -3383,6 +4289,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — VAGUE 1 : STABILISATION DOCKER + AUTH + TESTS POSTGIS] - 2026-07-16
 
 ### Gate 2 — Docker reproductible
@@ -3425,6 +4348,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 4 — VAGUE 1 : QUALITÉ + GOUVERNANCE + INGESTION] - 2026-07-16
 
 ### Qualité API
@@ -3447,6 +4387,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [GOUVERNANCE — VALIDATIONS RÉTROACTIVES] - 2026-07-16
 
 ### Gouvernance
@@ -3459,6 +4416,23 @@ utilisable et aucune base partenaire n'en dépend.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [MIGRATION API V6.2 — RFC-0012 + DEC-000023 + ADR-007] - 2026-07-16
 
 Migration complète de l'API GSIE du schéma v6.1 (12 tables, `KnowledgeObject`)
@@ -3540,6 +4514,23 @@ vers le métamodèle v6.2 (73 types noyau, table racine `resource`).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [MÉTAMODÈLE V6.2 — RFC-0011 + DEC-000022 + 6 ADR] - 2026-07-15
 
 Rédaction complète du métamodèle v6.2 de l'Encyclopédie de l'Écosystème
@@ -3613,6 +4604,23 @@ du Fondateur. Gate documentaire Vague 0 avant toute implémentation.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [ARCHIVAGE PROPOSITION MÉTAMODÈLE V5] - 2026-07-15
 
 Archivage de la proposition non adoptée de métamodèle v5 ; préparation
@@ -3633,6 +4641,23 @@ décision après RFC.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [VEILLE TECHNOLOGIQUE GSIE — 6 DOMAINES] - 2026-07-15
 
 Rapport de veille technologique couvrant les 6 domaines GSIE (forestier,
@@ -3684,6 +4709,23 @@ requête → révision (CON-010).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [KNOWLEDGE ENGINE — SEMAINE 3] - 2026-07-15
 
 ### Implémentation du Knowledge Engine (DEC-000020)
@@ -3730,6 +4772,23 @@ et KNOWLEDGE_METHOD.md §2 (structure KnowledgeObject).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [STABILISATION QUALITE VAGUE 1] - 2026-07-14
 
 ### Passe qualité complète sur `GSIE/API` et `GSIE/ENGINES/EVIDENCE_ENGINE/rust`
@@ -3779,6 +4838,23 @@ Mémoire synchronisée : `PROJECT_MEMORY.md`, `ROADMAP.md`.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [CONFIGURATION CENTRE DE COMMANDEMENT UE5.8] - 2026-07-13
 
 ### Installation et configuration du poste de pilotage immersif (livrable 211)
@@ -3823,6 +4899,23 @@ Mémoire synchronisée : `PROJECT_MEMORY.md`.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [ÉTAT DE L'ART SOURCÉ — 14 MOTEURS + CENTRE DE COMMANDEMENT] - 2026-07-13
 
 ### Enrichissement documentaire par recherche sourcée multi-agents
@@ -3953,6 +5046,23 @@ Sources : `DC_LiDAR_HD_1-0.pdf` (46p, descriptif de contenu v1.0 juillet 2026),
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SPECS HUB + IGNIS + GEOSYLVA COMPLÈTES] - 2026-07-13
 
 ### 5 nouvelles spécifications Draft (HUB-003, IGNIS-002, IGNIS-003, GEO-002, GEO-003)
@@ -3986,6 +5096,23 @@ Mémoire synchronisée : `PROJECT_MEMORY.md`, `ROADMAP.md`.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 3 — LIVRABLES 301-310 EN REVIEW] - 2026-07-13
 
 ### Passage des 10 livrables Phase 3 de `Draft` à `Review`
@@ -4004,6 +5131,23 @@ rédigé, en attente de validation du Fondateur.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [VAULT OBSIDIAN IGNORÉ — NON CANONIQUE] - 2026-07-13
 
 ### Vault Obsidian `Quintessences/Quintessences/` exclu du dépôt
@@ -4021,6 +5165,23 @@ CON-008/009/010 absents).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 3 ÉTENDUE À 10 LIVRABLES] - 2026-07-13
 
 ### Extension du périmètre Phase 3 (8 → 10) — DEC-000016
@@ -4039,6 +5200,23 @@ formellement à la Phase 3.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RFC-0002 ADOPTÉ — UNIFICATION DES ARTICLES] - 2026-07-13
 
 ### Adoption de RFC-0002 (Option A) — DEC-000015
@@ -4063,6 +5241,23 @@ du corpus d'articles constitutionnels.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SPECS HUB + AUDIT PHASE 3] - 2026-07-13
 
 ### Spécifications créées (05_SPECIFICATIONS/)
@@ -4106,6 +5301,23 @@ du corpus d'articles constitutionnels.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SOURCES 3D + PLAN HUB] - 2026-07-13
 
 ### Enrichissement des sources de données (DATASET_CATALOG, livrable 305)
@@ -4157,6 +5369,23 @@ du corpus d'articles constitutionnels.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [INTÉGRATION REPOS EXTERNES] - 2026-07-13
 
 ### Déplacement des repos externes dans la structure Quintessences
@@ -4193,6 +5422,23 @@ parent Quintessences. Le `.gitignore` du parent les ignore.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RÉORGANISATION ARBORESCENCE] - 2026-07-13
 
 ### Réorganisation du dépôt (DEC-000014, GSIE-DIR-0010)
@@ -4234,6 +5480,23 @@ niveaux : **racine** (transverse), **GSIE/** (moteur), **apps/**
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RESTRUCTURATION ÉCOSYSTÈME] - 2026-07-13
 
 ### Restructuration Quintessences (DEC-000013, GSIE-DIR-0009)
@@ -4297,6 +5560,23 @@ Chronos, Nexus…
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [SCHÉMA DB + SOCLE MOTEURS] - 2026-07-13
 
 ### Livrables 309-310 — socle technique de l'Encyclopédie
@@ -4328,6 +5608,23 @@ Chronos, Nexus…
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [ENCYCLOPÉDIE DE L'ÉCOSYSTÈME] - 2026-07-13
 
 ### L'Encyclopédie de l'Écosystème (DEC-000012, GSIE-DIR-0008)
@@ -4362,6 +5659,23 @@ l'Encyclopédie, pas le produit final.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 3 — CONNAISSANCE] - 2026-07-13
 
 ### Lancement officiel Phase 3 (DEC-000011, GSIE-DIR-0007)
@@ -4413,6 +5727,23 @@ versionnée** — le véritable produit de GSIE (CON-003).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [UNREAL ENGINE — JUMEAU NUMÉRIQUE 3D] - 2026-07-12
 
 ### Adoption Unreal Engine 5.8 + Cesium (DEC-000010)
@@ -4463,6 +5794,23 @@ Recommandation : un seul projet Unreal en plugins internes (CON-007).
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 2 — QUICK WINS] - 2026-07-12
 
 ### Audit global des 10 livrables Phase 2
@@ -4541,6 +5889,23 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [GSIE-IGNIS — VISION MOTEUR COGNITIF] - 2026-07-12
 
 ### DEC-000009 — GSIE-DIR-0006 : le moteur cognitif Ignis
@@ -4575,6 +5940,23 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [GSIE-IGNIS — DIRECTIVE FONDATRICE GCS] - 2026-07-12
 
 ### DEC-000008 — GSIE-DIR-0005 : jumeau numérique vivant
@@ -4601,6 +5983,23 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [GSIE-IGNIS — BANC DE SIMULATION] - 2026-07-12
 
 ### Premier vol drone réussi + 4 tests de vol avancés
@@ -4623,6 +6022,23 @@ les directives fondatrices DIR-0005/0006 et les garde-fous RFC-0004 §8.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 2 — DÉMARRAGE EFFECTIF] - 2026-07-12
 
 ### Production de l'architecture (10 livrables)
@@ -4648,6 +6064,23 @@ constitutionnelle, roadmap, contributing.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RESTRUCTURATION IDENTITÉ] - 2026-07-12
 
 ### DEC-000006 — Quintessences, GSIE, GeoSylva
@@ -4667,6 +6100,23 @@ constitutionnelle, roadmap, contributing.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 2 — Architecture] - 2026-07-12
 
 ### DEC-000005 — Amendement : archivage du code du banc Ignis
@@ -4701,6 +6151,23 @@ constitutionnelle, roadmap, contributing.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [PHASE 1 CLÔTURÉE] - 2026-07-12
 
 ### Tous les livrables Validated ou Locked
@@ -4759,6 +6226,23 @@ démarrer indépendamment — il vit hors du dépôt GSIE.
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [Livrable 012 Validated] - 2026-07-12
 
 ### Mémoire du projet — livrable 012 passé en Validated
@@ -4790,6 +6274,23 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RFC-0004 Ignis — Registre d'idées] - 2026-07-11
 
 ### Registre d'idées opérationnelles
@@ -4809,6 +6310,23 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RFC-0004 Ignis] - 2026-07-11
 
 ### RFC ouvert
@@ -4843,6 +6361,23 @@ Le livrable 012 (Mémoire du projet et snapshots) passe de `Draft` à
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [Ignis gouvernance] - 2026-07-12
 
 ### Livrables 005-009 validés (Phase 1)
@@ -4922,6 +6457,23 @@ enrichissement par le Fondateur :
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [RFC-0003 + Review 005-009] - 2026-07-07
 
 ### RFC ouvert
@@ -4948,6 +6500,23 @@ validation du Fondateur :
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [Conformité] - 2026-07-06
 
 ### Audit de l'état réel
@@ -5002,6 +6571,23 @@ validation du Fondateur :
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [Outillage] - 2026-07-03
 
 ### Configuration Claude Code
@@ -5017,6 +6603,23 @@ validation du Fondateur :
 
 ---
 
+## [ASSAINISSEMENT TRANSVERSAL PHASES 1-4] - 2026-08-13
+
+- Ajout de gardes de cohérence pour les statuts documentaires, les phases
+  clôturées, les livrables absents, les directives actives et les documents
+  Markdown tronqués.
+- Durcissement API : paramètres SQL masqués, JWT WebSocket retiré des URL,
+  signature Stripe vérifiée avant accès DB, reset de mot de passe contrôlé,
+  désactivation MFA avec seconde preuve et sondes de santé limitées.
+- Bandit et Trivy deviennent bloquants dans la CI ; Trivy est épinglé sur un
+  SHA immuable et toute modification Locked exige une RFC adoptée qui référence
+  explicitement le document.
+- Dépendances Admin Web mises à niveau vers Astro 7 : audit npm sans
+  vulnérabilité, contrôle Astro sans erreur et build statique validé.
+- Documentation des moteurs bornée au périmètre API v1 réellement présent,
+  routes manquantes ajoutées et statuts d'architecture ramenés à Draft.
+- Le dépôt n'est pas déclaré figé : 18 blocages de gouvernance subsistent et
+  nécessitent une décision du Fondateur ou la reconstruction d'un livrable.
 ## [0.0.1] - 2026-07-01
 
 ### Fondation
@@ -5436,3 +7039,21 @@ frontières, position) :
   propres. Le rejeu final `31882759911` sur `0298d3f` est vert en 6 min 23 s :
   drainage, panne Redis, liveness du replica B et rétablissement de readiness
   validés. Les routes longues/idempotentes restent à couvrir avant tout SLO.
+
+## [ROUTE MÉTIER LONGUE ET IDEMPOTENCE] - 2026-08-15
+
+- Contrat d’idempotence de `POST /api/v1/orchestration/analyse` : empreinte
+  SHA-256 du JSON canonique, `Idempotency-Key` alignée sur `requete_id`, replay
+  sans réexécution et HTTP 409 sur contenu divergent.
+- Migration `20260815_0050` : empreinte nullable pour l’historique et index
+  unique partiel ; modèle SQLAlchemy aligné.
+- Persistance canonique corrigée pour exclure uniquement
+  `Recommendation.contournable`, propriété calculée de sortie ; les autres
+  champs inattendus restent refusés.
+- Benchmark orchestration étendu au replay, au CA TLS explicite et au contrôle
+  de persistance dans l’espace `test` uniquement.
+- Workflow HA Linux/TLS étendu : replay HTTPS et douze requêtes métier pendant
+  le drainage d’un replica, sans modification de FETCH ni publication de SLO.
+- Validation : 35 tests unitaires, 7 tests d’intégration PostgreSQL/PostGIS,
+  2 tests migration Alembic, Ruff et mypy strict passants.
+- Rapport : `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_ORCHESTRATION_IDEMPOTENCE_2026-08-15.md`.

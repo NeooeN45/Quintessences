@@ -42,7 +42,7 @@ def _qualified_registry(max_bytes: int = 1024) -> FetchQualificationRegistry:
         generated_at="2026-08-10",
         sources=[
             FetchSourceQualification(
-                source_registry_id="soilgrids",
+                source_registry_id="soilgrids-wcs",
                 status="qualified",
                 fetch_enabled=True,
                 legal_basis="SCI-001:OPEN_COPY",
@@ -90,7 +90,7 @@ async def test_closed_source_never_calls_adapter() -> None:
 
     with pytest.raises(FetchQualificationError, match="FETCH fermé"):
         await worker.fetch(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             adapter=adapter,
             request=_request(),
             context=AdapterContext(trace_id="test-fetch"),
@@ -113,7 +113,7 @@ async def test_streams_and_commits_only_after_sha256_validation() -> None:
     sink = _sink()
 
     receipt = await BoundedFetchWorker(_qualified_registry()).fetch(
-        source_registry_id="soilgrids",
+        source_registry_id="soilgrids-wcs",
         adapter=adapter,
         request=_request(checksum=checksum),
         context=AdapterContext(trace_id="fetch-ok", max_bytes=1024),
@@ -143,7 +143,7 @@ async def test_rejects_unexpected_content_or_real_size_and_aborts(
 
     with pytest.raises(AdapterSecurityError):
         await BoundedFetchWorker(_qualified_registry()).fetch(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             adapter=_adapter(result),
             request=_request(),
             context=AdapterContext(trace_id="fetch-reject", max_bytes=1024),
@@ -160,7 +160,7 @@ async def test_checksum_mismatch_aborts_without_commit() -> None:
 
     with pytest.raises(AdapterSecurityError, match="CHECKSUM_MISMATCH"):
         await BoundedFetchWorker(_qualified_registry()).fetch(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             adapter=_adapter(AdapterFetchResult(body=_body(b"data"), content_type="image/tiff")),
             request=_request(checksum="0" * 64),
             context=AdapterContext(trace_id="fetch-checksum"),
@@ -177,7 +177,7 @@ async def test_total_timeout_aborts_storage() -> None:
 
     with pytest.raises(AdapterSecurityError, match="FETCH_TIMEOUT"):
         await BoundedFetchWorker(_qualified_registry()).fetch(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             adapter=_adapter(
                 AdapterFetchResult(body=_body(b"data", delay=0.05), content_type="image/tiff")
             ),
@@ -200,7 +200,7 @@ async def test_abort_has_its_own_timeout() -> None:
 
     with pytest.raises(AdapterSecurityError, match="FETCH_ABORT_TIMEOUT"):
         await BoundedFetchWorker(_qualified_registry(), abort_timeout_seconds=0.01).fetch(
-            source_registry_id="soilgrids",
+            source_registry_id="soilgrids-wcs",
             adapter=_adapter(AdapterFetchResult(body=_body(b"data"), content_type="text/html")),
             request=_request(),
             context=AdapterContext(trace_id="fetch-abort-timeout"),

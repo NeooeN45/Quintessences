@@ -1,0 +1,114 @@
+[
+  {
+    "id": "01_ecosysteme",
+    "titre": "Vue d'ensemble — écosystème Quintessences",
+    "categorie": "Écosystème",
+    "description": "Le moteur GSIE, ses 14 moteurs (chaîne + domaine + transverses) et les applications clientes qu'il alimente via l'API GSIE.",
+    "source": "README.md §Architecture",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "02_chaine_intelligence",
+    "titre": "Chaîne d'intelligence — flux de preuve à décision",
+    "categorie": "Écosystème",
+    "description": "De la source scientifique à la recommandation contournable validée par le forestier, avec la boucle d'apprentissage terrain.",
+    "source": "README.md §Architecture",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "06_metamodele_encyclopedie",
+    "titre": "Métamodèle de l'Encyclopédie — 73 types noyau",
+    "categorie": "Écosystème",
+    "description": "5 niveaux de types (noyau universel → conformité RGPD/FAIR/SOSA) qui structurent toutes les connaissances GSIE.",
+    "source": "README.md §Architecture",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "13_applications_ecosysteme",
+    "titre": "Applications clientes — état de déploiement",
+    "categorie": "Écosystème",
+    "description": "Statut réel des 9 applications (livrées, planifiées, scaffolding) et du Centre de Commandement Unreal Engine 5.8.",
+    "source": "PROJECT_MEMORY.md, DEC-000056",
+    "date_maj": "2026-08-09"
+  },
+  {
+    "id": "03_hierarchie_documentaire",
+    "titre": "Hiérarchie documentaire",
+    "categorie": "Gouvernance",
+    "description": "Vision → Constitution → RFC → Directive → Décision → Architecture → Spécification → Implémentation → Code.",
+    "source": "README.md §Gouvernance",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "08_cycle_vie_document",
+    "titre": "Cycle de vie d'un document",
+    "categorie": "Gouvernance",
+    "description": "Draft → Review → Validated → Locked. Un document Locked ne change que par RFC dédiée.",
+    "source": "CLAUDE.md §5, AGENTS.md",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "07_identite_quintessences",
+    "titre": "Identité Quintessences — fournisseurs de connexion",
+    "categorie": "Gouvernance",
+    "description": "Compte canonique unique, moyens de connexion interchangeables (local, Google, futur OIDC/SAML), jetons GSIE RS256.",
+    "source": "GSIE/ARCHITECTURE/IDENTITE_QUINTESSENCES.md, DEC-000044",
+    "date_maj": "2026-08-03"
+  },
+  {
+    "id": "04_phases_projet",
+    "titre": "Phases du projet Quintessences",
+    "categorie": "Progression",
+    "description": "Foundation (clôturée) → Architecture (Draft) → Connaissance (clôturée) → Implémentation (active).",
+    "source": "PROJECT_MEMORY.md, ROADMAP.md",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "05_moteurs_gsie",
+    "titre": "État des 14 moteurs GSIE",
+    "categorie": "Progression",
+    "description": "14/14 moteurs implémentés — 8 codés sur données réelles, 4 en v1 déclarative (confidence=low, jamais validés automatiquement).",
+    "source": "PROJECT_MEMORY.md §État",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "12_timeline_decisions",
+    "titre": "Chronologie des décisions structurantes",
+    "categorie": "Progression",
+    "description": "Des décisions fondatrices de Phase 1 au manifeste Data Registry appliqué en Phase 4.",
+    "source": "03_DECISIONS/DEC-000002…DEC-000059",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "09_pipeline_data_registry",
+    "titre": "Pipeline du Data Registry GSIE",
+    "categorie": "Progression",
+    "description": "Agent → Source → Dataset → DatasetVersion → Distribution, santé et citation, jusqu'au Data Selection Engine.",
+    "source": "RFC-0038, PROJECT_MEMORY.md",
+    "date_maj": "2026-08-10"
+  },
+  {
+    "id": "10_architecture_mesh",
+    "titre": "Server Meshing — architecture de composants",
+    "categorie": "Infrastructure",
+    "description": "Orchestrateur de mesh, serveurs de zone/spécialisés, persistance PostgreSQL/PostGIS comme source de vérité unique.",
+    "source": "GSIE/ARCHITECTURE/SERVER_MESHING_DIAGRAMS.md, RFC-0035",
+    "date_maj": "2026-08-03"
+  },
+  {
+    "id": "11_hierarchie_territoriale",
+    "titre": "Territorial Mesh — hiérarchie territoriale",
+    "categorie": "Infrastructure",
+    "description": "France → Région (RCH) → Département (DOD) → Territoire → Cellule spatiale → Edge (offline-first).",
+    "source": "GSIE/ARCHITECTURE/TERRITORIAL_MESH_DIAGRAMS.md, RFC-0036",
+    "date_maj": "2026-08-06"
+  },
+  {
+    "id": "14_fascade_geosylva_gsie",
+    "titre": "Façade GeoSylva ↔ GSIE — identité et amplification",
+    "categorie": "Écosystème",
+    "description": "Intention mobile, lien stationnel révocable, préparation serveur fail-closed, orchestration déterministe, preuves et décision humaine.",
+    "source": "RFC-0041, DEC-000073, DEC-000072, RFC-0033",
+    "date_maj": "2026-08-17"
+  }
+]

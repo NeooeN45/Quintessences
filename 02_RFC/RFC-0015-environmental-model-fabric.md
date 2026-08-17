@@ -199,6 +199,35 @@ l'interface :
 - tout résultat produit hors ligne porte la version exacte du pack
   utilisé (traçabilité, cohérent avec §3.1).
 
+#### 3.6bis Addendum — portée des packs et seuil de bascule (2026-08-17)
+
+Complément à §3.6, sans rouvrir la décision d'adoption (DEC-000026) :
+§3.6 ne précisait pas la granularité géographique d'un pack. Ce point
+restait ouvert ; il est tranché ici, à l'issue d'une discussion sur
+l'amélioration de la chaîne de raisonnement engagée le 2026-08-17.
+
+- Le manifeste de pack porte un champ de portée : `scope_kind`
+  (`region` | `mission_zone`) et `scope_id`.
+- Portée de départ pour le pilote forestier (12-20 essences,
+  Nouvelle-Aquitaine — `PROJECT_MEMORY.md`) : `scope_kind: region`,
+  `scope_id: FR-NAQ`. À cette échelle, un pack région et un pack zone
+  de mission contiendraient quasiment les mêmes données — la
+  distinction n'a pas d'effet mesurable avant que la base de
+  connaissance grossisse.
+- **Seuil de déclenchement mesuré, pas anticipé** : quand la taille
+  d'un pack régional dépasse 30 Mo (marge sous le plafond de 50 Mo
+  mobile, `GSIE/ARCHITECTURE/ENGINE_COMMUNICATION_PROTOCOL.md` §6.6),
+  les packs suivants de cette région basculent en
+  `scope_kind: mission_zone`. Même principe que celui déjà retenu pour
+  Dafny/P dans le registre GSIE Serveur (`GSIE/RESEARCH/REGISTRE_GSIE_SERVEUR.md`) :
+  la complexité s'active sur un chiffre mesuré, pas par anticipation.
+- **Ce que cet addendum ne tranche pas** : le découpage géographique
+  exact d'une zone de mission (massif forestier, polygone de mission,
+  département) reste ouvert — il se décidera avec des données de
+  volume réelles au moment où le seuil est atteint. Aucun schéma de
+  données n'est créé ici ; l'implémentation reste portée par la
+  Phase A (§4), non encore réalisée.
+
 ### 3.7 Progression par vertical slices mesurables
 
 Cette RFC interdit explicitement l'ouverture d'un nouveau domaine

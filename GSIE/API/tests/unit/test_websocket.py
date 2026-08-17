@@ -80,6 +80,31 @@ class TestWebSocketOrigins:
 
         assert exc.value.code == 1008
 
+    def test_should_authenticate_with_bearer_subprotocol_without_url_token(self) -> None:
+        """Le JWT ne doit jamais transiter dans l'URL journalisable."""
+        client = TestClient(create_app())
+        token = create_access_token("reader", claims={"roles": ["reader"]})
+
+        with client.websocket_connect(
+            "/api/v1/ws/hub", subprotocols=["gsie.jwt", token]
+        ) as websocket:
+            assert websocket.accepted_subprotocol == "gsie.jwt"
+            websocket.send_text("ping")
+            assert websocket.receive_json() == {"event_type": "pong"}
+
+    def test_should_reject_legacy_url_token(self) -> None:
+        """Un token en query string fuit dans proxies, historique et métriques."""
+        client = TestClient(create_app())
+        token = create_access_token("reader", claims={"roles": ["reader"]})
+
+        with (
+            pytest.raises(WebSocketDisconnect) as exc,
+            client.websocket_connect(f"/api/v1/ws/hub?token={token}"),
+        ):
+            pass
+
+        assert exc.value.code == 1008
+
     def test_should_reject_valid_token_without_role(self) -> None:
         """Une signature valide sans autorisation ne suffit pas au handshake."""
         client = TestClient(create_app())
@@ -87,7 +112,7 @@ class TestWebSocketOrigins:
 
         with (
             pytest.raises(WebSocketDisconnect) as exc,
-            client.websocket_connect(f"/api/v1/ws/hub?token={token}"),
+            client.websocket_connect("/api/v1/ws/hub", subprotocols=["gsie.jwt", token]),
         ):
             pass
 

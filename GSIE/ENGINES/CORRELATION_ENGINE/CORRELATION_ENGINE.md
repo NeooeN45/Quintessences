@@ -5,8 +5,8 @@
 | **Moteur** | Correlation Engine |
 | **Catégorie** | Chaîne d'intelligence (détection de relations) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Livré |
-| **Statut implémentation** | Livré |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-002, GSIE-CON-005 |
 | **Ordre de développement** | 5 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

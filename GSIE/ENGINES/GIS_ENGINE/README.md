@@ -24,7 +24,9 @@ cartographiques portent leur origine et leur date de mise à jour.
 - Mode hors-ligne : cache local des données de référence (article T-8)
 - Ne produit pas de diagnostic — fournit des données
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir GIS_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/gis/`. Elle couvre uniquement les
+> couches et opérations explicitement documentées ci-dessous.
 
 ## Contrat d'interface
 
@@ -37,10 +39,14 @@ sol) sont hors périmètre v1 (aucune donnée simulée, ADR-009).
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/gis/status` | aucune | — | Statut du moteur (`router.py:38`) |
-| GET | `/gis/version` | aucune | — | Version et backend (`router.py:49`) |
-| POST | `/gis/cadastre/parcelle` | `engine:write` | `30/minute` | Récupère et persiste une parcelle cadastrale (API Carto IGN) — `null` si non trouvée (`router.py:62`) |
-| POST | `/gis/altitude` | `engine:read` | `60/minute` | Récupère l'altitude d'un point (API de calcul altimétrique IGN, RGE ALTI) (`router.py:94`) |
+| GET | `/gis/status` | aucune | — | Statut du moteur |
+| GET | `/gis/version` | aucune | — | Version et backend |
+| POST | `/gis/cadastre/parcelle` | `engine:write` | `30/minute` | Récupère et persiste une parcelle cadastrale (API Carto IGN) — `null` si non trouvée |
+| POST | `/gis/altitude` | `engine:read` | `60/minute` | Récupère l'altitude d'un point (API de calcul altimétrique IGN, RGE ALTI) |
+| GET | `/gis/telechargement/ressources` | `engine:read` | `10/minute` | Liste les ressources de téléchargement disponibles. |
+| GET | `/gis/telechargement/ressources/{resource_name}` | `engine:read` | `10/minute` | Liste les sous-ressources d’une ressource. |
+| GET | `/gis/telechargement/ressources/{resource_name}/{subresource_name}` | `engine:read` | `10/minute` | Liste les fichiers d’une sous-ressource. |
+| GET | `/gis/telechargement/telecharger/{resource_name}/{subresource_name}/{file_name:path}` | `engine:write` | `5/minute` | Télécharge un fichier binaire de la Géoplateforme. |
 
 ### 2. Schémas d'entrée/sortie
 

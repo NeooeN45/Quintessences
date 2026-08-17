@@ -128,7 +128,7 @@ class PasswordStrengthService:
         if self._settings.password_check_hibp_enabled:
             import hashlib
 
-            sha1 = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
+            sha1 = hashlib.sha1(password.encode("utf-8"), usedforsecurity=False).hexdigest().upper()
             prefix, suffix = sha1[:5], sha1[5:]
             try:
                 suffixes = await self._hibp_client.fetch_suffixes(prefix)

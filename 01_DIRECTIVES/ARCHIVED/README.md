@@ -11,7 +11,8 @@ Conserver l'historique des Directives remplacées ou obsolètes.
 
 ## Ce qui peut y être ajouté
 
-- Directives déplacées depuis `../ACTIVE/` lorsqu'elles sont remplacées
+- Directives déplacées depuis `../ACTIVE/` lorsqu'elles sont closes ou
+  remplacées
 
 ## Ce qui est interdit
 
@@ -21,3 +22,4 @@ Conserver l'historique des Directives remplacées ou obsolètes.
 
 - Parent : `01_DIRECTIVES/`
 - Sibling : `01_DIRECTIVES/ACTIVE/`
+- Sibling : `01_DIRECTIVES/PROPOSED/`

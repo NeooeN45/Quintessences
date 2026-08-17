@@ -90,12 +90,38 @@ l'isolement du plan de contrôle et la rotation sont décrits dans
 | DELETE | `/api/v1/resources/{id}` | Soft delete (Revision finale, CON-010) |
 | GET | `/api/v1/resources/{id}/revisions` | Historique des révisions |
 
+### Orchestration et hydratation stationnelle
+
+La route interne suivante est actuellement implémentée et testée :
+
+```text
+POST /api/v1/orchestration/analyse
+GET  /api/v1/orchestration/stations/{station_id}/contexte
+```
+
+Elle exécute la chaîne déterministe
+`Reasoning → Diagnostic → Recommendation → Validation`. `station_id` résout
+d'abord une `Place`, puis une soumission `FieldIntake accepted` ; les données
+`quarantined` ou `rejected` ne sont jamais consommées. Le rapport d'hydratation
+et le contexte effectivement utilisé sont conservés dans `analysis_run`.
+
+La façade GeoSylva n'est **pas encore livrée**. RFC-0041 (Draft) et DEC-000073
+(Proposé) prévoient une future route
+`POST /api/v1/orchestration/analyse-geosylva`, mais plusieurs préconditions
+restent à implémenter : sélection serveur de règles qualifiées, qualifications
+validées, état global sourcé et lien explicite
+`parcelleId local → gsie_resource_id`. Aucun état par défaut n'est autorisé.
+
+Voir [RFC-0041](../../02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
+[DEC-000073](../../03_DECISIONS/DEC-000073.md) et
+[DEC-000072](../../03_DECISIONS/DEC-000072.md).
+
 ### WebSocket (temps réel Hub UE5.8)
 
 | Endpoint | Description |
 |---|---|
-| `/api/v1/ws/hub` | Canal temps réel Hub (token JWT en query param) |
-| `/api/v1/ws/events` | Events système (resource.created, etc.) |
+| `/api/v1/ws/hub` | Canal temps réel Hub (JWT via Sec-WebSocket-Protocol) |
+| `/api/v1/ws/events` | Événements système, authentification par sous-protocole |
 
 ### Moteurs (legacy v6.1 — migration en Vague 2)
 

@@ -1,8 +1,101 @@
 # ROADMAP — Quintessences / GSIE
 
+## Fiabilisation des environnements et des moteurs (2026-08-13)
+
+- [x] Cloisonner les rôles et namespaces `development`, `test`, `benchmark`,
+  `staging` et `production` ; volumes Compose et buckets sont dédiés.
+- [x] Ajouter le vérificateur déclaratif `verify_data_environment.py` et son
+  contrôle CI anti-mélange production/staging.
+- [x] Auditer les 14 moteurs et exécuter 316 tests cœur, 166 tests domaine et
+  14 tests de pipeline/orchestration.
+- [x] Faire passer la session DB à Validation dans l'orchestration et propager
+  le niveau de preuve du diagnostic aux recommandations.
+- [x] Ajouter l'audit structurel CI `audit_engines.py` (14/14 moteurs) et
+  propager l'identité d'environnement au profil HA.
+- [x] Préparer la persistance append-only `analysis_run` (migration 0049,
+  `analyse_id`, quatre sorties intégrales, même transaction).
+- [x] Vérifier l'API et GeoSylva : 33 tests de routeurs, 4 tests HTTP
+  PostgreSQL, migration 0049 réellement rejouée ; l'absence de client mobile
+  orchestration est documentée comme porte dédiée.
+- [x] Rejouer la suite backend complète : 2 929 tests unitaires passants,
+  63 ignorés par environnement ; les avertissements restent visibles.
+- [x] Construire l'hydratation automatique `station_id → StationContexte`
+  (DEC-000072) : Place d'abord, FieldIntake `accepted` en repli, quarantaine
+  étanche, endpoint de prévisualisation et persistance du rapport dans
+  `analysis_run`. 58 tests, couverture 100 % du package `orchestration`.
+- [ ] Réconcilier RFC-0033 avec l'orchestration actuelle (RFC-0041 / DEC-000073,
+  Draft/Proposé) : préparer d'abord les règles/qualifications et l'état global
+  côté serveur, puis créer le `station-link` dédié, révocable et contrôlé par
+  compte. Aucune implémentation mobile ou migration Room avant validation.
+- [ ] Versionner puis implémenter le client Kotlin `/orchestration/analyse`
+  avec file Room idempotente ; les écrans martelage/résultats de GeoSylva 3.0
+  restent en parallèle et ne bloquent pas la première boucle.
+- [ ] Concevoir les templates et vérificateurs par domaine après stabilisation.
+
+## Assainissement transversal Phases 1 à 4 (2026-08-13)
+
+- [x] Durcir les chemins critiques API, les scans CI et la protection des
+  documents Locked.
+- [x] Rendre exécutables les contrôles de cohérence de gouvernance et de
+  références.
+- [x] Corriger les statuts documentaires contradictoires, les chemins Ignis et
+  la documentation effective des moteurs.
+- [x] DEC-000070 : requalifier la Phase 2 en « sortie de phase — validation
+  pendante » ; les 12/12 livrables restent Draft sans promotion rétroactive.
+- [x] Auditer individuellement les livrables 201-212 : 0 prêt pour Review sans
+  correction, 3 corrections bornées, 4 rebaselines et 5 blocages de décision
+  ou de prérequis.
+- [x] Sceller forensiquement le livrable 309 sans inventer son SQL manquant et
+  documenter séparément sa reconstruction factuelle en Draft.
+- [x] Conserver `PROJECT_MEMORY.md` à la racine comme mémoire canonique et
+  reclasser la copie divergente du dossier `22_PROJECT_MEMORY` en archive.
+- [x] Reclasser les directives selon leur état : DIR-0005/0006/0012 dans
+  PROPOSED, DIR-0007 dans ARCHIVED, et clore DIR-0003 conformément à
+  DEC-000004 avant archivage.
+## Catalogue exhaustif des ressources (2026-08-13)
+
+- Le rapport `GSIE/DATASETS/CATALOGUE_RESSOURCES_EXHAUSTIF_2026-08-13.md`
+  consolide le catalogue canonique `DS-*`, les 113 fiches scientifiques D1–D8,
+  les connecteurs QGISIA et l'inventaire local de 3 077 ressources logiques.
+- Cette tranche est documentaire : elle n'autorise aucune ingestion, aucune
+  promotion et aucune ouverture générale de FETCH. La prochaine étape est la
+  réconciliation des identifiants `Dataset`/`Distribution`/`Source`, puis la
+  qualification juridique et technique d'un lot limité.
+
+## Priorisation et fiches Registry externes (2026-08-13)
+
+- Les sources non locales sont classées I0/I1/I2/I3/I4/X dans
+  `GSIE/DATASETS/PRIORISATION_INTEGRATION_SOURCES_2026-08-13.md`.
+- 158 fiches Registry brouillon sont produites dans
+  `GSIE/DATASETS/REGISTRY_FICHES_SOURCES_*_2026-08-13.json` : aucune ne modifie
+  `REGISTRY_MANIFEST.json`, aucune n'ouvre FETCH et aucune ne contient les
+  ressources de `E:\Documents`.
+- [x] Première qualification détaillée des 15 pré-fiches I0 et séparation
+  Source/Dataset/Distribution dans
+  `GSIE/DATASETS/QUALIFICATION_REGISTRY_I0_2026-08-13.md`.
+- [x] Manifeste candidat I0 limité à cinq distributions `metadata_only`, sans
+  application ni ouverture FETCH.
+- [x] DEC-000068 : corriger SCI-001, fermer les identités historiques et
+  préparer la migration des quatre entrées actives trop agrégées.
+- [x] Audit SQL réel exécuté : 36 ressources, 4 datasets, 4 santés, 1 DataAsset
+  RAW ; SoilGrids rattaché à l'ancien slug et migration automatique interdite.
+- [x] Comparer statiquement les adapters : GBIF Species API et Météo des forêts
+  sont étayés ; IGN, occurrences GBIF et la lignée WCS SoilGrids restent à
+  résoudre par les traces et le contenu persisté.
+- [ ] Inspecter les traces et contenus persistés pour résoudre les cibles
+  restantes avant le `dry-run` transactionnel.
+- [x] Exécuter le dry-run d'identité fail-closed : trois `UNRESOLVED`, un
+  `PRESERVE_LINEAGE` SoilGrids et zéro écriture.
+- [x] DEC-000069 : formaliser la porte non mutative et l'interdiction de
+  migration avant validation humaine.
+- [ ] Valider humainement puis exécuter le `dry-run` transactionnel du manifeste
+  candidat.
+- [ ] Qualifier une seule distribution avec QualityAssessment complet avant
+  toute nouvelle décision FETCH. Les ressources locales restent en dernier.
+
 ## Haute disponibilité et couverture CI (2026-08-11)
 
-### Clôture de la tête finale `f12e3cd`
+### Clôture de la tête finale et fusion de la PR #28
 
 - Les runs PR `31494308995`, push `31494302005` et HA `31494308961` sont
   verts sur la tête finale `f12e3cd`.
@@ -10,8 +103,10 @@
   276,3 req/s, p95 175,58 ms et p99 252,82 ms.
 - La couverture fusionnée atteint 16 086/16 386 instructions, soit 98,17 % ;
   les portes multicouches sont validées et le harnais détecte 70/70 mutations.
-- La PR #28 est prête pour revue. Aucun merge ni SLO de production n'est
-  autorisé par cette preuve seule.
+- La PR #28 est fusionnée dans `main` au commit
+  `22a1818471055d9f136a98c666b09bf58232780c`. Les contrôles post-fusion sont
+  verts. Aucun SLO de production ni FETCH global n'est autorisé par cette
+  preuve seule.
 
 - DEC-000065 est prouvée sur GitHub Actions par le run `31479643460` :
   6 000/6 000 réponses 200, zéro erreur, 298,03 req/s, p95 164,71 ms et
@@ -24,6 +119,9 @@
 - La preuve locale finale passe 2 873 tests unitaires et 349 intégrations ; la
   fusion atteint 98,18 %. Le modèle `QualityAssessment` est réaligné sur la
   migration 0048 et les cycles Alembic sont verts.
+- La migration suivante `20260813_0049` prépare la preuve append-only
+  `analysis_run` de l'orchestration ; elle doit encore être rejouée sur une
+  base PostgreSQL de test dédiée avant toute promotion.
 - Le job de couverture du run `31488527209` est vert à 98,169 %. Ce premier run
   complet a détecté une préparation S3/JWT non hermétique du harnais Registry
   et un motif de mutation ObjectStorage périmé ; les deux corrections gardent
@@ -36,11 +134,13 @@
   restent obligatoires ; les images DB et API sont reconstruites et
   smoke-testées localement après correction.
 
-Ordre suivant : revue et autorisation explicite du merge de la PR #28, smoke
-post-merge sur `main`, qualification de routes métier et de requêtes longues,
-tests de rolling restart et de dépendances, puis publication séparée de SLO
-de production. En parallèle contrôlé, le Data Registry doit recevoir son
-scheduler de santé avant toute nouvelle qualification FETCH source par source.
+Ordre suivant : relecture experte indépendante, qualification juridique des
+annotations dérivées, manifeste Closed puis première mesure de référence,
+conformément à RFC-0039 et DEC-000067. Le runner déterministe, les 30 scénarios
+candidats et les baselines non-IA sont maintenant en place. Aucun modèle IA
+n'est intégré avant ces preuves. La qualification de routes métier,
+des requêtes longues, des rolling restarts et des dépendances reste nécessaire
+avant toute publication séparée de SLO de production.
 
 ## Manifeste Data Registry (2026-08-10)
 
@@ -435,12 +535,14 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 ---
 
-## Phase 2 — Architecture (clôturée ✅)
+## Phase 2 — Architecture (sortie de phase — validation pendante)
 
 > Lancée officiellement par **DEC-000004** le 2026-07-12.
 > Phase 1 clôturée — tous les livrables Validated ou Locked.
-> **Clôturée** par transition vers Phase 3 (DEC-000011) puis Phase 4
-> (DEC-000017). Les 12 livrables (201-212) sont en statut Draft.
+> La transition vers la Phase 3 (DEC-000011) puis la Phase 4 (DEC-000017) a
+> fait sortir le projet de la Phase 2 sans valider ses livrables. DEC-000070
+> requalifie donc son état : **non clôturée au sens documentaire**, avec
+> validation pendante. Les 12 livrables (201-212) restent en statut Draft.
 >
 > **Vision produit Ignis** fixée par **GSIE-DIR-0005** (Directive
 > fondatrice GCS / jumeau numérique vivant, DEC-000008) et **GSIE-DIR-0006**
@@ -460,9 +562,9 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | 205 | Modèle de données scientifique | `GSIE/ARCHITECTURE/SCIENTIFIC_DATA_MODEL.md` | Draft |
 | 206 | Contrats d'interface des 14 moteurs | `GSIE/ARCHITECTURE/ENGINE_INTERFACE_CONTRACTS.md` | Draft |
 | 207 | Documentation détaillée des 14 moteurs | `GSIE/ENGINES/*/` (14 dossiers) | Draft |
-| 208 | Architecture Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_ARCHITECTURE.md` | Draft |
-| 209 | Pipeline de données Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DATA_PIPELINE.md` | Draft |
-| 210 | Architecture drone Ignis | `GSIE/ARCHITECTURE/GSIE_IGNIS_DRONE_ARCHITECTURE.md` | Draft |
+| 208 | Architecture Ignis | `GSIE/ARCHITECTURE/IGNIS_ARCHITECTURE.md` | Draft |
+| 209 | Pipeline de données Ignis | `GSIE/ARCHITECTURE/IGNIS_DATA_PIPELINE.md` | Draft |
+| 210 | Architecture drone Ignis | `GSIE/ARCHITECTURE/IGNIS_DRONE_ARCHITECTURE.md` | Draft |
 | 211 | Centre de Commandement GSIE (Unreal Engine 5.8, ex GCS-Cinéma Ignis) | `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md` | Draft |
 | 212 | GeoSylva-Unreal Architecture (LiDAR + PCG) | `GSIE/ARCHITECTURE/GEOSYLVA_UNREAL_ARCHITECTURE.md` | Draft (attente MVP Ignis) |
 
@@ -570,8 +672,13 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **Synchronisation parcelles GeoSylva** — DEC-000048 | ✅ **Première tranche verticale livrée (2026-08-03)** | API dédiée et paginée, table RLS `gsie_synchronisation.geosylva_parcels`, version optimiste, idempotence et tombstones. GeoSylva v33 possède une file SQLCipher, WorkManager, reprise réseau et diagnostic. Activation explicite requise. Restent : pull serveur→mobile, comparaison/résolution des conflits et extension graduelle aux autres entités. |
 | **GSIE Server Meshing** — RFC-0035 / GSIE-DIR-0012 / DEC-000053 | 📐 **Cadrage Vagues 1-3 produit (2026-08-03)** | Chantier annexe d'architecture distribuée (inspiration Star Citizen Server Meshing) ouvert par décision Fondateur. Périmètre prototype v0 : mono-région Landiras, autorité hybride zone+type, compatibilité UE6 anticipée par interfaces abstraites. 17 documents Draft produits : RFC-0035, GSIE-DIR-0012, DEC-000053, architecture cible, prototype v0, roadmap dédiée, registre ADR (ADR-010 à ADR-019), registre de risques (16 risques), diagrammes, backlog phasé, critères d'acceptation, stratégie de test, stratégie migration UE6, features expérimentales, estimation complexité. **N'interrompt pas la Phase 4** — préparation par interfaces abstraites et persistance externe. Phase 5 (prototype Landiras) requiert validation préalable des documents par le Fondateur. Voir `GSIE/ARCHITECTURE/SERVER_MESHING_*.md`. |
 | **GSIE Territorial Mesh** — RFC-0036 / GSIE-DIR-0013 / DEC-000054 | 📐 **Cadrage Vagues 1-4 produit (2026-08-06)** | Chantier annexe complémentaire au Server Meshing : couche logique de gouvernance territoriale superposée à l'exécution technique. Hiérarchie France → Région → Département → Territoire Opérationnel → Cellule Spatiale → Sous-cellule, avec états Froid/Chaud/Opérationnel/Crise. Prototype v0 restreint à la Nouvelle-Aquitaine (Charente 16, Deux-Sèvres 79), 2 DOD, 2 cellules, 1 drone edge traversant, simulation IGNIS simplifiée. 20 livrables dédiés produits (RFC-0036 et 17 documents d'architecture/cadrage Draft, GSIE-DIR-0013 Active, DEC-000054 Validé), complétés par un lot de synchronisation des trois fichiers racine : RFC-0036, GSIE-DIR-0013, DEC-000054, architecture cible, NCP, RCH, DOD, cellules dynamiques, State Fabric fédéré, bus d'événements fédéré, matrices, diagrammes, roadmap dédiée, backlog phasé, registre ADR (ADR-020 à ADR-028), registre de risques (16 risques), critères d'acceptation, stratégie de test, prototype v0, estimation complexité. Orthogonalité actée avec le Server Meshing (ADR-021). **N'interrompt pas la Phase 4** — préparation par interfaces abstraites et réutilisation encadrée d'ADR-005/008/011/013/015/017 ; ADR-008 reste au statut Proposé jusqu'à validation de l'usage edge. Phase 5 (prototype Nouvelle-Aquitaine) requiert validation préalable des documents par le Fondateur. Voir `GSIE/ARCHITECTURE/TERRITORIAL_MESH_*.md`. |
-
 | **GSIE Environmental Digital Twin Platform** — RFC-0037 | 📐 **Cadrage fédérateur Draft (2026-08-06)** | Formalise GSIE comme un jumeau numérique environnemental fédéré : GeoSylva, Ignis, Hydro, Flora, Artemis et QGISIA sont des projections métier spécialisées ; les Hubs Unreal explorent, simulent et permettent des interactions contrôlées. Architecture de référence : `GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`. Contrat Hub HUB-002 version Draft 1.1.0. Aucun démarrage d'implémentation multi-domaines n'est autorisé avant validation des contrats et de la tranche verticale Ignis. |
+| **GSIE-Bench v0.1** — RFC-0039 / DEC-000067 | 🔄 **Open/Silver + registre des 14 moteurs (2026-08-15)** | Le premier lot Parelle est conservé comme micro-suite historique. Trois candidats stationnels v0.2 (Longeyroux, Hêtre, Vergne) × dix variations couvrent désormais 11 sections de diagnostic et une provenance observé/déduit/hypothèse/manquant. Le runner vérifie les checksums, fige les entrées, produit un manifeste reproductible et ne transmet plus les réponses privées au candidat. Une suite synthétique Open/Silver, des métriques multilabel/ranking/latence, une CLI JSON et un registre de 14 contrats avec adaptateur injecté sont disponibles ; 25 tests ciblés, Ruff et mypy passent. L'exécution réelle moteur par moteur reste à raccorder ; `pending_expert_review` reste bloquant ; **IA, ingestion non qualifiée et promotion automatique restent interdites.** |
+| **FieldIntake stationnel v0.1** | ✅ **Contrat implémenté et testé (2026-08-12)** | Observations, calculs, interprétations et recommandations séparés ; unités et formules dendrométriques contrôlées ; contradiction Farges conservée en Silver/quarantaine avec abstention obligatoire. Intégration JSONB optionnelle sans migration. |
+| **Ressources locales — quarantaine** | 🔒 **Metadata-only (2026-08-12)** | Candidats spatiaux et bibliothèque scientifique catalogués sans copie ni ingestion. Licences, provenance, CRS, sensibilité et droits d'annotation restent à qualifier avant toute utilisation. |
+| **Relecture experte Farges** | 📝 **Dossier Review (2026-08-12)** | Checklist scientifique/juridique et garde automatisée `assess_gold_qualification`. Deux avis indépendants requis ; Closed et promotion Gold restent bloqués. |
+| **Pipeline source existante — SoilGrids** | 🔄 **RAW → SILVER v0.1 + preuves PostgreSQL (2026-08-13)** | Normalisation metadata-only, mapping `wv003 → wv0033`, garde `SilverPromotionService` et `SilverPromotionEvidenceRepository` chargé depuis PostgreSQL. Reste à exécuter un test Docker réel contrôlé et qualifier les unités avant promotion effective. |
+| **Architecture évolutive et ressources locales** — GSIE-ARCH-EVOLUTION-001 | 🔎 **Audit v1.2.0 Draft (2026-08-12)** | Guide aligné sur les enums/modèles QualityAssessment, DatasetHealth et FieldIntake ; séparation implémenté/cible, zones `DATA_*`, resolver hors des 14 moteurs, Model Registry cible et porte des ressources locales. Inventaire `E:\Documents` v2 : 3 077 ressources logiques, 143 groupes de doublons, 489 sensibles à confirmer, aucune ingestion. Restent : arbitrages FieldIntake, promotion `DATA_GOLD`, chiffrement au repos/RLS et qualification experte des scénarios. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
 > Une étape est clôturée uniquement si lint, typage, tests unitaires,
@@ -857,6 +964,16 @@ non encore implémentées.
   DEC-000063.
 - [ ] Qualifier la capacité sous Linux avec plusieurs réplicas, retrait
   gracieux et routes représentatives avant de définir un SLO de production.
+- [x] Rejouer localement le drainage et le remplacement sur un pool HAProxy
+  isolé (`gsie-ha-test`) : 200/200 sans erreur pendant le retrait, arrêt
+  gracieux 45 s, recréation et répartition 100/100 au retour. Cette preuve
+  ne publie pas de SLO Docker Desktop.
+- [x] Tester une route métier réelle sous HA : `POST /api/v1/orchestration/
+  analyse`, 20/20 HTTP 200 et 20/20 `analysis_run` persistés pendant le
+  drainage ; vérifier séparément le quota normal 20/minute (20×200 puis 429).
+- [x] Rejouer localement le câblage TLS du workflow : certificat éphémère
+  vérifié par `curl`, 100/100 HTTP 200 en nominal et 100/100 sous drainage,
+  reprise complète par le replica B.
 - [x] Banc Linux conteneurisé à deux replicas : HAProxy, DNS dynamique,
   sentinelle de drainage, remplacement et rechargements séquencés validés par
   DEC-000064, sans publier de capacité de production.
@@ -877,3 +994,44 @@ non encore implémentées.
   opération longue avant leurs tests de drainage.
 - [ ] Implémenter après qualification : streaming borné, SHA-256, RAW
   DataAsset, normalisation et porte explicite STAGING → PRODUCTION.
+
+### Audit qualité du 14 août 2026
+
+- [x] Campagnes unitaires, moteurs, migration, orchestration ciblée et GeoSylva
+  JVM exécutées avec résultats conservés.
+- [x] Audit statique des 14 moteurs et vérification d’isolement test/staging/
+  production reproduits.
+- [x] Rétablir Docker et valider la stack Compose `gsie-test` isolée : six
+  services sains, migration `20260813_0049`, API `/health` et `/ready` à 200,
+  Redis/MinIO/PostGIS vérifiés, et 33 tests d’intégration ciblés passants.
+- [x] Rejouer les 349 tests d’intégration complets avec Docker obligatoire,
+  deux workers et `--durations=30` : 349 passants, 12 avertissements,
+  1393,34 s. Les fixtures de secrets, le TTL de test et l’identité GBIF ont
+  été corrigés avant la preuve finale.
+- [x] Mesurer débit, p50/p95/p99, erreurs et persistance `analysis_run` sur la
+  route d’orchestration réelle (20/20 puis 40/40 sous concurrence).
+- [x] Ajouter un lanceur d’intégration borné qui refuse rapidement un démon
+  Docker indisponible et distingue le blocage d’environnement du timeout test.
+- [x] Exécuter Bandit localement avec le même seuil que la CI : version 1.7.10,
+  aucun problème moyen ou haut ; l’archivage SARIF reste effectué par le
+  workflow distant.
+- [x] Mesurer la route d’orchestration avec persistance `analysis_run` :
+  20/20 puis 40/40 sous concurrence, course d’agent corrigée, persistance
+  vérifiée à 100 % sur `gsie_test`.
+
+### Route métier longue et idempotence — 2026-08-15
+
+- [x] Définir le contrat `Idempotency-Key = requete_id` et l’empreinte JSON
+  canonique SHA-256.
+- [x] Ajouter le verrou transactionnel PostgreSQL et l’index unique partiel
+  sur `analysis_run` (`20260815_0050`).
+- [x] Retourner la preuve persistée sans relancer les moteurs ; refuser HTTP 409
+  toute réutilisation avec un contenu différent.
+- [x] Corriger la relecture des propriétés Pydantic calculées sans relâcher la
+  validation stricte des autres champs.
+- [x] Valider PostgreSQL réel : 7/7 intégration orchestration, 2/2 cycle
+  migration upgrade/downgrade/reupgrade, 35 tests unitaires ciblés.
+- [x] Ajouter au benchmark la vérification de replay, le CA TLS explicite et
+  `trust_env=false` pour éviter les proxies de l’hôte.
+- [ ] Rejouer sur GitHub le workflow HA Linux/TLS avec replay idempotent et
+  douze écritures métier pendant drainage ; ne publier aucun SLO avant ce run.

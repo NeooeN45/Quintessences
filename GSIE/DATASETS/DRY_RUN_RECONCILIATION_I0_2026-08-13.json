@@ -1,0 +1,69 @@
+{
+  "mode": "DRY_RUN_ONLY",
+  "writes": 0,
+  "fetch_enabled": false,
+  "promotion_allowed": false,
+  "items": [
+    {
+      "legacy_slug": "gbif-occurrences",
+      "legacy_source_id": "gbif",
+      "candidate_source_ids": [
+        "gbif-species-api",
+        "gbif-occurrence-datasets"
+      ],
+      "decision": "UNRESOLVED",
+      "proposed_source_id": null,
+      "reason": "Le contenu persisté est metadata_only sans opération, couche ou jeu constitutif : preuve insuffisante pour migrer."
+    },
+    {
+      "legacy_slug": "ign-apicarto",
+      "legacy_source_id": "ign-apicarto-geopf",
+      "candidate_source_ids": [
+        "ign-apicarto-cadastre",
+        "ign-apicarto-limites-administratives",
+        "ign-apicarto-wfs-geoplateforme"
+      ],
+      "decision": "UNRESOLVED",
+      "proposed_source_id": null,
+      "reason": "Le contenu persisté est metadata_only sans opération, couche ou jeu constitutif : preuve insuffisante pour migrer."
+    },
+    {
+      "legacy_slug": "soilgrids-properties",
+      "legacy_source_id": "soilgrids",
+      "candidate_source_ids": [
+        "soilgrids-wcs",
+        "soilgrids-rest-beta"
+      ],
+      "decision": "PRESERVE_LINEAGE",
+      "proposed_source_id": "soilgrids-wcs",
+      "reason": "DataAsset DEC-000061 conservé sur l'identité historique ; aucun renommage automatique vers WCS."
+    },
+    {
+      "legacy_slug": "meteofrance-services",
+      "legacy_source_id": "meteofrance-portail-api",
+      "candidate_source_ids": [
+        "meteofrance-meteo-forets",
+        "meteofrance-safran",
+        "meteofrance-arpege-arome",
+        "meteofrance-observations-sol"
+      ],
+      "decision": "UNRESOLVED",
+      "proposed_source_id": null,
+      "reason": "Le contenu persisté est metadata_only sans opération, couche ou jeu constitutif : preuve insuffisante pour migrer."
+    }
+  ],
+  "adapter_proposals": [
+    {
+      "adapter_key": "gbif",
+      "target_source_id": "gbif-species-api",
+      "confidence": "high",
+      "scope": "nouvelles métadonnées Species API uniquement ; aucune occurrence historique"
+    },
+    {
+      "adapter_key": "meteofrance",
+      "target_source_id": "meteofrance-meteo-forets",
+      "confidence": "high",
+      "scope": "opération danger_feux_departements uniquement"
+    }
+  ]
+}

@@ -36,6 +36,8 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
     """Retourne les kwargs de base valides pour la production."""
     return {
         "environment": "production",
+        "database_role": "production",
+        "data_namespace": "gsie-production",
         "debug": False,
         # Role applicatif dedie : `gsie` est proprietaire de la base, et un
         # proprietaire contourne l'isolement des donnees personnelles
@@ -44,9 +46,9 @@ def _production_kwargs(**overrides: object) -> dict[str, object]:
         "database_url": "postgresql+asyncpg://gsie_app:secure@host:5432/gsie",
         "cors_origins": ["https://example.com"],
         "ws_allowed_origins": ["https://hub.example.com"],
-        "redis_url": "redis://:secret@redis-host:6379/0",
-        "rate_limit_storage_url": "redis://:secret@redis-host:6379/1",
-        "refresh_token_storage_url": "redis://:secret@redis-host:6379/2",
+        "redis_url": "redis://:redis-password-strong@redis-host:6379/0",
+        "rate_limit_storage_url": "redis://:redis-password-strong@redis-host:6379/1",
+        "refresh_token_storage_url": "redis://:redis-password-strong@redis-host:6379/2",
         "auth_dev_login_enabled": False,
         "transactional_email_mode": "smtp",
         "smtp_host": "smtp.example.com",
@@ -77,6 +79,24 @@ def should_reject_default_db_password_in_production():
         )
 
 
+def should_reject_secret_manager_placeholder_in_production():
+    """Un marqueur d'exemple ne doit jamais démarrer la production."""
+    with pytest.raises(ValidationError, match="marqueur documentaire"):
+        Settings(
+            **_production_kwargs(
+                database_url=(
+                    "postgresql+asyncpg://gsie_app:REMPLACER_PAR_SECRET_MANAGER" "@host:5432/gsie"
+                )
+            )
+        )
+
+
+def should_reject_s3_placeholder_in_production():
+    """Les identifiants S3 d'exemple sont refusés avant tout client réseau."""
+    with pytest.raises(ValidationError, match="identifiants S3 documentaires"):
+        Settings(**_production_kwargs(object_storage_s3_secret_key="REMPLACER_PAR_SECRET_MANAGER"))
+
+
 def should_reject_wildcard_cors_in_production():
     """Settings doit refuser wildcard CORS en production."""
     with pytest.raises(ValidationError, match="Wildcard CORS"):
@@ -98,7 +118,7 @@ def should_reject_redis_without_password_in_production():
 def should_accept_redis_with_password_in_production():
     """Settings doit accepter Redis avec mot de passe en production."""
     settings = Settings(**_production_kwargs())
-    assert "secret" in settings.redis_url
+    assert "redis-password-strong" in settings.redis_url
 
 
 def should_reject_incomplete_s3_configuration_in_production():
@@ -129,6 +149,23 @@ def should_accept_verify_full_tls_in_production():
     """Settings doit accepter verify-full comme mode TLS strict."""
     settings = Settings(**_production_kwargs(db_ssl_mode="verify-full"))
     assert settings.db_ssl_mode == "verify-full"
+
+
+def should_reject_production_namespace_mixing():
+    """La production ne doit jamais démarrer sur le namespace de développement."""
+    with pytest.raises(ValidationError, match="data_namespace"):
+        Settings(**_production_kwargs(data_namespace="gsie-staging"))
+
+
+def should_reject_development_using_benchmark_namespace():
+    """Une configuration de développement ne doit pas pointer vers benchmark."""
+    with pytest.raises(ValidationError, match="namespace réservé"):
+        Settings(
+            environment="development",
+            database_role="development",
+            data_namespace="gsie-benchmark",
+            _env_file=None,
+        )
 
 
 def should_reject_mfa_without_encryption_key_in_production():

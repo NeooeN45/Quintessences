@@ -16,7 +16,10 @@ Moteur de **dynamique des peuplements forestiers**.
   `RECOMMENDATION_ENGINE`
 - Ne produit pas de recommandation directe
 
-> Statut : *implémentation en cours (Phase 4)* — code livré, voir FOREST_DYNAMICS_ENGINE.md et PROJECT_MEMORY.md
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/forest_dynamics/`. Elle couvre le
+> calcul dendrométrique décrit ci-dessous et ne simule pas encore la
+> dynamique forestière à long terme.
 
 ## Contrat d'interface
 
@@ -30,9 +33,9 @@ ou calibration IFN, ADR-009).
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/forest-dynamics/status` | aucune | — | Statut du moteur (`router.py:25`) |
-| GET | `/forest-dynamics/version` | aucune | — | Version et backend (`router.py:36`) |
-| POST | `/forest-dynamics/dendrometrics` | `engine:read` | `60/minute` | Calcule la surface terrière (G = π/4 × D² × N) d'un peuplement mesuré (`router.py:49`) |
+| GET | `/forest-dynamics/status` | aucune | — | Statut du moteur |
+| GET | `/forest-dynamics/version` | aucune | — | Version et backend |
+| POST | `/forest-dynamics/dendrometrics` | `engine:read` | `60/minute` | Calcule la surface terrière (G = π/4 × D² × N) d'un peuplement mesuré |
 
 ### 2. Schémas d'entrée/sortie
 

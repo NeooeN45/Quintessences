@@ -375,7 +375,7 @@ territoires.
 
 # Références
 
-- `01_DIRECTIVES/ACTIVE/GSIE-DIR-0005.md` — Directive fondatrice Ignis
+- `01_DIRECTIVES/PROPOSED/GSIE-DIR-0005.md` — Directive fondatrice Ignis
   (GCS / jumeau numérique vivant) — vision côté rendu, compagnon de la
   présente
 - `00_CONSTITUTION/GSIE-CON-000.md` — Primauté de la Constitution

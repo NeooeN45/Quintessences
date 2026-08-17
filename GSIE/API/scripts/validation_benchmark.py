@@ -75,9 +75,9 @@ def step(msg: str) -> None:
 
 SOURCE_PARELLE = {
     "type_source": "peer_reviewed",
-    "auteur": "Parelle J., Brendel O., Jolivet Y.",
+    "auteur": "Parelle J., Brendel O., Jolivet Y., Dreyer E.",
     "date_publication": "2007",
-    "reference": "Annals of Forest Science, hal-02653679",
+    "reference": "Tree Physiology, 27(7), 1027-1034, DOI 10.1093/treephys/27.7.1027",
 }
 
 SOURCE_INRAE = {

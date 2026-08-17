@@ -811,6 +811,21 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_pipeline_cross_engine.py",),
     ),
+    # --- Hydratation stationnelle : la quarantaine reste etanche (DEC-000072)
+    Mutation(
+        cle="quarantaine_lue_pour_ses_valeurs",
+        fichier="gsie_api/engines/orchestration/hydration.py",
+        ancien='        acceptees = [s for s in soumissions if s.status == "accepted"]',
+        nouveau='        acceptees = [s for s in soumissions if s.status != "accepted"]',
+        defaut_reproduit=(
+            "une soumission en quarantaine est lue pour ses valeurs — la "
+            "quarantaine n'est plus etanche et alimente le raisonnement"
+        ),
+        tests=(
+            "tests/integration/test_station_hydration.py",
+            "tests/unit/test_station_hydration.py",
+        ),
+    ),
     # --- Orchestration : brancher, jamais decider
     Mutation(
         cle="conclusion_qualifiee_d_office",

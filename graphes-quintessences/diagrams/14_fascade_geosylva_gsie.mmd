@@ -1,0 +1,33 @@
+flowchart LR
+    LOCAL["GeoSylva local<br/>offline-first"]
+    LINK["station-link<br/>lien révocable et idempotent"]
+    PLACE["Place GSIE<br/>gsie_resource_id"]
+    INTENT["Intention d'analyse<br/>contract_version + requete_id"]
+    PREP["Préparation serveur<br/>règles + qualifications + état global"]
+    HYD["Hydratation fail-closed<br/>Place / FieldIntake accepted"]
+    ORCH["Orchestration déterministe<br/>Reasoning → Diagnostic → Recommendation → Validation"]
+    PROOF["Preuve persistée<br/>RapportHydratation + RapportPreparation"]
+    QUEUE["Room SQLCipher + WorkManager<br/>empreinte intention / retry borné"]
+    HUMAN["Forestier<br/>décideur final"]
+    BLOCK["Blocage nommé<br/>aucune invention"]
+
+    LOCAL --> LINK
+    LINK --> PLACE
+    PLACE --> INTENT
+    LOCAL --> INTENT
+    INTENT --> PREP
+    PREP --> HYD
+    HYD --> ORCH
+    ORCH --> PROOF
+    PROOF --> HUMAN
+    INTENT --> QUEUE
+    QUEUE -.-> INTENT
+    PREP -.-> BLOCK
+    HYD -.-> BLOCK
+
+    style LOCAL fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style PREP fill:#aed6f1,stroke:#1a5276
+    style ORCH fill:#abebc6,stroke:#1e8449
+    style PROOF fill:#d5f5e3,stroke:#1e8449
+    style BLOCK fill:#fadbd8,stroke:#cb4335
+    style HUMAN fill:#f9e79f,stroke:#b7950b,stroke-width:2px

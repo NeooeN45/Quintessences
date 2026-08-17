@@ -118,6 +118,8 @@ def diagnostic_to_validation_request(
 
 def recommendation_set_to_validation_request(
     reco_set: RecommendationSet,
+    *,
+    evidence_level: str = "B",
 ) -> ValidationRequest:
     """Transforme un `RecommendationSet` en `ValidationRequest`.
 
@@ -140,7 +142,7 @@ def recommendation_set_to_validation_request(
         "ensemble_id": str(reco_set.ensemble_id),
         "diagnostic_source": str(reco_set.diagnostic_source),
         "recommandations": recommandations_serialisees,
-        "evidence_level": "B",  # Les recommandations héritent du niveau du diagnostic
+        "evidence_level": evidence_level,
         "sources": sources,
         "justification": (
             f"{len(reco_set.recommandations)} recommandation(s) "
@@ -179,7 +181,10 @@ def ensemble_complet_to_validation_request(
         )
 
     contenu_diagnostic = diagnostic_to_validation_request(diagnostic, conclusions).contenu
-    contenu_recommandations = recommendation_set_to_validation_request(reco_set).contenu
+    contenu_recommandations = recommendation_set_to_validation_request(
+        reco_set,
+        evidence_level=diagnostic.evidence_level_plancher.value,
+    ).contenu
 
     contenu: dict[str, Any] = {
         "diagnostic": contenu_diagnostic,

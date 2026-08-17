@@ -17,11 +17,34 @@ def test_get_source_returns_none_for_unknown_identifier():
     assert get_source("source-totalement-inconnue") is None
 
 
-def test_require_ingestible_accepts_open_confirmed_source():
-    """Une source OPEN_CONFIRMED (ex. Météo-France) doit passer la porte."""
-    entry = require_ingestible("meteofrance-portail-api")
+def test_require_ingestible_accepts_open_confirmed_canonical_source():
+    """Une source ouverte et canonique doit passer la porte."""
+    entry = require_ingestible("ifn-donnees-brutes")
 
     assert entry.statut_juridique == SourceLegalStatus.open_confirmed
+
+
+@pytest.mark.parametrize(
+    "legacy_id",
+    ["gbif", "ign-apicarto-geopf", "meteofrance-portail-api", "soilgrids"],
+)
+def test_require_ingestible_rejects_legacy_aggregated_sources(legacy_id: str) -> None:
+    """Une identité historique ne peut jamais rouvrir une copie par compatibilité."""
+
+    with pytest.raises(SourceIngestionForbiddenError, match="historique et agrégée"):
+        require_ingestible(legacy_id)
+
+
+def test_all_legacy_successors_are_registered_and_canonical() -> None:
+    """Chaque cible de réconciliation doit exister et ne pas être dépréciée."""
+
+    for entry in SCIENTIFIC_SOURCES.values():
+        if not entry.deprecated:
+            continue
+        assert entry.successor_ids
+        for successor_id in entry.successor_ids:
+            successor = SCIENTIFIC_SOURCES[successor_id]
+            assert not successor.deprecated
 
 
 def test_require_ingestible_rejects_permission_required_source():

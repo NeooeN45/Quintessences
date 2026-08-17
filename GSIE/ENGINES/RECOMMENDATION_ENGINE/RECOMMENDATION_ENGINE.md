@@ -5,8 +5,8 @@
 | **Moteur** | Recommendation Engine |
 | **Catégorie** | Chaîne d'intelligence (proposition d'action) |
 | **Phase** | Phase 4 — Implémentation |
-| **Statut** | Stub |
-| **Statut implémentation** | Stub/skeleton |
+| **Statut** | Draft |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004 |
 | **Ordre de développement** | 12 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

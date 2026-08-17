@@ -6,7 +6,7 @@
 | **Catégorie** | Chaîne d'intelligence (analyse stationnelle) |
 | **Phase** | Phase 4 — Implémentation |
 | **Statut** | Draft |
-| **Statut implémentation** | Livré (persistance, DEC-000036, 2026-07-26) |
+| **Statut implémentation** | Partielle — API v1, périmètre borné dans README.md |
 | **Articles constitutionnels** | GSIE-CON-001, GSIE-CON-004 |
 | **Ordre de développement** | 11 (voir `ENGINE_DEVELOPMENT_ORDER.md`) |
 

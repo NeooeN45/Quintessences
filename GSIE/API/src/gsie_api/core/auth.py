@@ -321,7 +321,7 @@ async def verify_ws_token(token: str | None) -> dict[str, Any] | None:
     car on est dans un contexte WebSocket.
 
     Args:
-        token: Token JWT passé en query param (?token=xxx).
+        token: Token JWT extrait du sous-protocole WebSocket et jamais transmis dans URL.
 
     Returns:
         Payload du token si valide, None si invalide.

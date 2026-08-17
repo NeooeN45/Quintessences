@@ -21,4 +21,5 @@ Regrouper les Directives actuellement en vigueur.
 ## Liens
 
 - Parent : `01_DIRECTIVES/`
+- Sibling : `01_DIRECTIVES/PROPOSED/`
 - Sibling : `01_DIRECTIVES/ARCHIVED/`

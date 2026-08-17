@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> Draft : création
+    Draft --> Review : rédaction terminée
+    Review --> Draft : retour en rédaction
+    Review --> Validated : validation du Fondateur
+    Validated --> Locked : verrouillage explicite
+
+    note right of Locked
+        Modification interdite hors RFC dédiée.
+        GSIE-FND-001, GSIE-FND-002 et
+        GSIE-CON-000 sont Locked.
+    end note

@@ -34,6 +34,8 @@ def should_include_basic_kwargs_when_building_engine():
     assert kwargs["pool_size"] == 10
     assert kwargs["max_overflow"] == 5
     assert kwargs["pool_pre_ping"] is True
+    assert kwargs["hide_parameters"] is True
+    assert kwargs["hide_parameters"] is True
     assert "connect_args" not in kwargs
 
 

@@ -14,7 +14,9 @@ perdue.
 
 ## Ce qui peut y être ajouté
 
-- `PROJECT_MEMORY.md` — vue courante
+- `PROJECT_MEMORY.md` — pointeur vers la vue canonique à la racine
+- `PROJECT_MEMORY_ARCHIVE_2026-08-12.md` — ancienne vue, conservée comme
+  archive historique et non applicable
 - `VISION_HISTORY.md` — évolution des visions
 - `DECISION_HISTORY.md` — chronologie des décisions
 - `IDEA_BACKLOG.md` — idées non encore décidées
@@ -32,6 +34,7 @@ perdue.
 
 ## Liens
 
+- **../PROJECT_MEMORY.md** : source canonique de l'état courant
 - **01_DIRECTIVES** : source des Directives
 - **03_DECISIONS** : source des décisions
 - **02_RFC** : source des RFC

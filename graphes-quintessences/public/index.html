@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="clair">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphes — Quintessences / GSIE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="mise-en-page">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-entete">
+        <p class="sidebar-titre">Quintessences</p>
+        <p class="sidebar-soustitre">Graphes GSIE</p>
+      </div>
+      <div class="sidebar-recherche">
+        <input type="search" id="recherche" placeholder="Rechercher un graphe… (/)" aria-label="Rechercher un graphe">
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <div class="nav-groupe" data-groupe="écosystème">
+          <h3>Écosystème <span class="nav-compteur">5</span></h3>
+          <ul>
+          <li><a href="#01_ecosysteme" data-nav-id="01_ecosysteme" data-titre="vue d'ensemble — écosystème quintessences" data-categorie="écosystème">Vue d'ensemble — écosystème Quintessences</a></li>
+          <li><a href="#02_chaine_intelligence" data-nav-id="02_chaine_intelligence" data-titre="chaîne d'intelligence — flux de preuve à décision" data-categorie="écosystème">Chaîne d'intelligence — flux de preuve à décision</a></li>
+          <li><a href="#06_metamodele_encyclopedie" data-nav-id="06_metamodele_encyclopedie" data-titre="métamodèle de l'encyclopédie — 73 types noyau" data-categorie="écosystème">Métamodèle de l'Encyclopédie — 73 types noyau</a></li>
+          <li><a href="#13_applications_ecosysteme" data-nav-id="13_applications_ecosysteme" data-titre="applications clientes — état de déploiement" data-categorie="écosystème">Applications clientes — état de déploiement</a></li>
+          <li><a href="#14_fascade_geosylva_gsie" data-nav-id="14_fascade_geosylva_gsie" data-titre="façade geosylva ↔ gsie — identité et amplification" data-categorie="écosystème">Façade GeoSylva ↔ GSIE — identité et amplification</a></li>
+          </ul>
+        </div>
+        <div class="nav-groupe" data-groupe="gouvernance">
+          <h3>Gouvernance <span class="nav-compteur">3</span></h3>
+          <ul>
+          <li><a href="#03_hierarchie_documentaire" data-nav-id="03_hierarchie_documentaire" data-titre="hiérarchie documentaire" data-categorie="gouvernance">Hiérarchie documentaire</a></li>
+          <li><a href="#08_cycle_vie_document" data-nav-id="08_cycle_vie_document" data-titre="cycle de vie d'un document" data-categorie="gouvernance">Cycle de vie d'un document</a></li>
+          <li><a href="#07_identite_quintessences" data-nav-id="07_identite_quintessences" data-titre="identité quintessences — fournisseurs de connexion" data-categorie="gouvernance">Identité Quintessences — fournisseurs de connexion</a></li>
+          </ul>
+        </div>
+        <div class="nav-groupe" data-groupe="progression">
+          <h3>Progression <span class="nav-compteur">4</span></h3>
+          <ul>
+          <li><a href="#04_phases_projet" data-nav-id="04_phases_projet" data-titre="phases du projet quintessences" data-categorie="progression">Phases du projet Quintessences</a></li>
+          <li><a href="#05_moteurs_gsie" data-nav-id="05_moteurs_gsie" data-titre="état des 14 moteurs gsie" data-categorie="progression">État des 14 moteurs GSIE</a></li>
+          <li><a href="#12_timeline_decisions" data-nav-id="12_timeline_decisions" data-titre="chronologie des décisions structurantes" data-categorie="progression">Chronologie des décisions structurantes</a></li>
+          <li><a href="#09_pipeline_data_registry" data-nav-id="09_pipeline_data_registry" data-titre="pipeline du data registry gsie" data-categorie="progression">Pipeline du Data Registry GSIE</a></li>
+          </ul>
+        </div>
+        <div class="nav-groupe" data-groupe="infrastructure">
+          <h3>Infrastructure <span class="nav-compteur">2</span></h3>
+          <ul>
+          <li><a href="#10_architecture_mesh" data-nav-id="10_architecture_mesh" data-titre="server meshing — architecture de composants" data-categorie="infrastructure">Server Meshing — architecture de composants</a></li>
+          <li><a href="#11_hierarchie_territoriale" data-nav-id="11_hierarchie_territoriale" data-titre="territorial mesh — hiérarchie territoriale" data-categorie="infrastructure">Territorial Mesh — hiérarchie territoriale</a></li>
+          </ul>
+        </div>
+      </nav>
+      <div class="sidebar-pied">
+        <button type="button" id="bascule-theme" class="btn-theme">Thème sombre</button>
+      </div>
+    </aside>
+
+    <div class="contenu">
+      <header class="hero">
+        <h1>Graphes du projet Quintessences / GSIE</h1>
+        <p class="tagline">
+          14 diagrammes Mermaid répartis en 4 catégories,
+          générés depuis <code>README.md</code>, <code>ROADMAP.md</code>,
+          <code>PROJECT_MEMORY.md</code> et les architectures GSIE. Régénérés à
+          chaque grosse progression du projet — voir
+          <code>.devin/skills/graphes-progression/</code>.
+        </p>
+        <p class="meta">Dernière génération : 2026-08-17</p>
+        <div class="puces-filtre" id="puces-filtre">
+      <button type="button" class="puce actif" data-filtre-categorie="tout">Toutes</button>
+      <button type="button" class="puce" data-filtre-categorie="écosystème">Écosystème (5)</button>
+      <button type="button" class="puce" data-filtre-categorie="gouvernance">Gouvernance (3)</button>
+      <button type="button" class="puce" data-filtre-categorie="progression">Progression (4)</button>
+      <button type="button" class="puce" data-filtre-categorie="infrastructure">Infrastructure (2)</button>
+        </div>
+      </header>
+
+      <main id="contenu-principal">
+
+    <section class="carte" id="01_ecosysteme"
+             data-titre="vue d'ensemble — écosystème quintessences"
+             data-categorie="écosystème">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Écosystème</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>Vue d'ensemble — écosystème Quintessences</h2>
+          <p class="description">Le moteur GSIE, ses 14 moteurs (chaîne + domaine + transverses) et les applications clientes qu'il alimente via l'API GSIE.</p>
+          <p class="source">Source : README.md §Architecture
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="01_ecosysteme" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="01_ecosysteme" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="01_ecosysteme" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="01_ecosysteme" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="01_ecosysteme" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="01_ecosysteme">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="01_ecosysteme">Copier</button>
+          <a class="btn-lien" href="#01_ecosysteme" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="01_ecosysteme">
+        <div class="diagram-scale" data-scale="01_ecosysteme">
+          <pre class="mermaid" data-diagram-id="01_ecosysteme">
+graph TB
+    subgraph ECO[&quot;Quintessences (écosystème)&quot;]
+        GSIE[&quot;GSIE&lt;br/&gt;General System Intelligence Engine&quot;]
+
+        subgraph CHAIN[&quot;Chaîne d'intelligence (7 moteurs)&quot;]
+            E[&quot;Evidence&quot;] --&gt; K[&quot;Knowledge&quot;]
+            K --&gt; C[&quot;Correlation&quot;]
+            C --&gt; R[&quot;Reasoning&quot;]
+            R --&gt; D[&quot;Diagnostic&quot;]
+            D --&gt; REC[&quot;Recommendation&quot;]
+            REC --&gt; V[&quot;Validation&quot;]
+            V --&gt; U[&quot;Utilisateur&quot;]
+        end
+
+        subgraph DOMAIN[&quot;Moteurs domaine (5)&quot;]
+            GIS[&quot;GIS&quot;]
+            CLIM[&quot;Climate&quot;]
+            PED[&quot;Pedology&quot;]
+            BOT[&quot;Botanical&quot;]
+            FD[&quot;Forest Dynamics&quot;]
+        end
+
+        subgraph TRANS[&quot;Moteurs transverses (2)&quot;]
+            LEARN[&quot;Learning&quot;]
+            SIM[&quot;Simulation&quot;]
+        end
+
+        DOMAIN -.-&gt; CHAIN
+        TRANS -.-&gt; CHAIN
+
+        subgraph APPS[&quot;Spécialisations (applications clientes)&quot;]
+            GS_APP[&quot;GeoSylva&lt;br/&gt;forêt&quot;]
+            IGNIS[&quot;Ignis&lt;br/&gt;incendies&quot;]
+            ARTEMIS[&quot;Artemis&lt;br/&gt;faune&quot;]
+            HYDRO[&quot;Hydro&lt;br/&gt;eau&quot;]
+            FLORA[&quot;Flora&lt;br/&gt;végétation&quot;]
+            QGISIA[&quot;QGISIA&lt;br/&gt;plugin QGIS&quot;]
+            TERRA[&quot;Terra&lt;br/&gt;sols / géologie&quot;]
+            AERIS[&quot;Aeris&lt;br/&gt;atmosphère / météo&quot;]
+            ATLAS[&quot;Atlas&lt;br/&gt;cartographie globale&quot;]
+            HUB[&quot;Centre de Commandement&lt;br/&gt;Unreal Engine 5.8&quot;]
+        end
+
+        GSIE --- CHAIN
+        GSIE --- DOMAIN
+        GSIE --- TRANS
+        GSIE ===|API GSIE| APPS
+    end
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b
+    style APPS fill:#fdebd0,stroke:#ca6f1e
+    style HUB fill:#f5b7b1,stroke:#cb4335
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="01_ecosysteme" hidden><code>graph TB
+    subgraph ECO[&quot;Quintessences (écosystème)&quot;]
+        GSIE[&quot;GSIE&lt;br/&gt;General System Intelligence Engine&quot;]
+
+        subgraph CHAIN[&quot;Chaîne d'intelligence (7 moteurs)&quot;]
+            E[&quot;Evidence&quot;] --&gt; K[&quot;Knowledge&quot;]
+            K --&gt; C[&quot;Correlation&quot;]
+            C --&gt; R[&quot;Reasoning&quot;]
+            R --&gt; D[&quot;Diagnostic&quot;]
+            D --&gt; REC[&quot;Recommendation&quot;]
+            REC --&gt; V[&quot;Validation&quot;]
+            V --&gt; U[&quot;Utilisateur&quot;]
+        end
+
+        subgraph DOMAIN[&quot;Moteurs domaine (5)&quot;]
+            GIS[&quot;GIS&quot;]
+            CLIM[&quot;Climate&quot;]
+            PED[&quot;Pedology&quot;]
+            BOT[&quot;Botanical&quot;]
+            FD[&quot;Forest Dynamics&quot;]
+        end
+
+        subgraph TRANS[&quot;Moteurs transverses (2)&quot;]
+            LEARN[&quot;Learning&quot;]
+            SIM[&quot;Simulation&quot;]
+        end
+
+        DOMAIN -.-&gt; CHAIN
+        TRANS -.-&gt; CHAIN
+
+        subgraph APPS[&quot;Spécialisations (applications clientes)&quot;]
+            GS_APP[&quot;GeoSylva&lt;br/&gt;forêt&quot;]
+            IGNIS[&quot;Ignis&lt;br/&gt;incendies&quot;]
+            ARTEMIS[&quot;Artemis&lt;br/&gt;faune&quot;]
+            HYDRO[&quot;Hydro&lt;br/&gt;eau&quot;]
+            FLORA[&quot;Flora&lt;br/&gt;végétation&quot;]
+            QGISIA[&quot;QGISIA&lt;br/&gt;plugin QGIS&quot;]
+            TERRA[&quot;Terra&lt;br/&gt;sols / géologie&quot;]
+            AERIS[&quot;Aeris&lt;br/&gt;atmosphère / météo&quot;]
+            ATLAS[&quot;Atlas&lt;br/&gt;cartographie globale&quot;]
+            HUB[&quot;Centre de Commandement&lt;br/&gt;Unreal Engine 5.8&quot;]
+        end
+
+        GSIE --- CHAIN
+        GSIE --- DOMAIN
+        GSIE --- TRANS
+        GSIE ===|API GSIE| APPS
+    end
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b
+    style APPS fill:#fdebd0,stroke:#ca6f1e
+    style HUB fill:#f5b7b1,stroke:#cb4335</code></pre>
+      <script type="application/json" data-code-source="01_ecosysteme">"graph TB\n    subgraph ECO[\"Quintessences (\u00e9cosyst\u00e8me)\"]\n        GSIE[\"GSIE<br/>General System Intelligence Engine\"]\n\n        subgraph CHAIN[\"Cha\u00eene d'intelligence (7 moteurs)\"]\n            E[\"Evidence\"] --> K[\"Knowledge\"]\n            K --> C[\"Correlation\"]\n            C --> R[\"Reasoning\"]\n            R --> D[\"Diagnostic\"]\n            D --> REC[\"Recommendation\"]\n            REC --> V[\"Validation\"]\n            V --> U[\"Utilisateur\"]\n        end\n\n        subgraph DOMAIN[\"Moteurs domaine (5)\"]\n            GIS[\"GIS\"]\n            CLIM[\"Climate\"]\n            PED[\"Pedology\"]\n            BOT[\"Botanical\"]\n            FD[\"Forest Dynamics\"]\n        end\n\n        subgraph TRANS[\"Moteurs transverses (2)\"]\n            LEARN[\"Learning\"]\n            SIM[\"Simulation\"]\n        end\n\n        DOMAIN -.-> CHAIN\n        TRANS -.-> CHAIN\n\n        subgraph APPS[\"Sp\u00e9cialisations (applications clientes)\"]\n            GS_APP[\"GeoSylva<br/>for\u00eat\"]\n            IGNIS[\"Ignis<br/>incendies\"]\n            ARTEMIS[\"Artemis<br/>faune\"]\n            HYDRO[\"Hydro<br/>eau\"]\n            FLORA[\"Flora<br/>v\u00e9g\u00e9tation\"]\n            QGISIA[\"QGISIA<br/>plugin QGIS\"]\n            TERRA[\"Terra<br/>sols / g\u00e9ologie\"]\n            AERIS[\"Aeris<br/>atmosph\u00e8re / m\u00e9t\u00e9o\"]\n            ATLAS[\"Atlas<br/>cartographie globale\"]\n            HUB[\"Centre de Commandement<br/>Unreal Engine 5.8\"]\n        end\n\n        GSIE --- CHAIN\n        GSIE --- DOMAIN\n        GSIE --- TRANS\n        GSIE ===|API GSIE| APPS\n    end\n\n    style GSIE fill:#1a5276,color:#fff,stroke:none\n    style CHAIN fill:#eaf2f8,stroke:#1a5276\n    style DOMAIN fill:#eafaf1,stroke:#1e8449\n    style TRANS fill:#fef9e7,stroke:#b7950b\n    style APPS fill:#fdebd0,stroke:#ca6f1e\n    style HUB fill:#f5b7b1,stroke:#cb4335"</script>
+    </section>
+
+
+    <section class="carte" id="02_chaine_intelligence"
+             data-titre="chaîne d'intelligence — flux de preuve à décision"
+             data-categorie="écosystème">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Écosystème</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Chaîne d'intelligence — flux de preuve à décision</h2>
+          <p class="description">De la source scientifique à la recommandation contournable validée par le forestier, avec la boucle d'apprentissage terrain.</p>
+          <p class="source">Source : README.md §Architecture
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="02_chaine_intelligence" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="02_chaine_intelligence" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="02_chaine_intelligence" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="02_chaine_intelligence" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="02_chaine_intelligence" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="02_chaine_intelligence">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="02_chaine_intelligence">Copier</button>
+          <a class="btn-lien" href="#02_chaine_intelligence" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="02_chaine_intelligence">
+        <div class="diagram-scale" data-scale="02_chaine_intelligence">
+          <pre class="mermaid" data-diagram-id="02_chaine_intelligence">
+flowchart LR
+    SOURCES[&quot;Sources scientifiques&lt;br/&gt;datasets, terrain, littérature&quot;]
+    E[&quot;Evidence Engine&lt;br/&gt;qualification A–F&quot;]
+    K[&quot;Knowledge Engine&lt;br/&gt;connaissances qualifiées&quot;]
+    C[&quot;Correlation Engine&lt;br/&gt;corrélations multiparamètres&quot;]
+    R[&quot;Reasoning Engine&lt;br/&gt;raisonnement&quot;]
+    D[&quot;Diagnostic Engine&lt;br/&gt;diagnostics&quot;]
+    REC[&quot;Recommendation Engine&lt;br/&gt;recommandations contournables&quot;]
+    V[&quot;Validation Engine&lt;br/&gt;validation sorties&quot;]
+    USER[&quot;Forestier&lt;br/&gt;décideur final (CON-001)&quot;]
+
+    SOURCES --&gt; E
+    E --&gt;|&quot;preuve qualifiée&quot;| K
+    K --&gt; C
+    C --&gt; R
+    R --&gt; D
+    D --&gt; REC
+    REC --&gt; V
+    V --&gt; USER
+    USER -.-&gt;|&quot;feedback terrain&quot;| LEARN[&quot;Learning Engine&quot;]
+    LEARN -.-&gt; K
+
+    style E fill:#abebc6,stroke:#1e8449
+    style K fill:#aed6f1,stroke:#1a5276
+    style USER fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style LEARN fill:#fadbd8,stroke:#cb4335
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="02_chaine_intelligence" hidden><code>flowchart LR
+    SOURCES[&quot;Sources scientifiques&lt;br/&gt;datasets, terrain, littérature&quot;]
+    E[&quot;Evidence Engine&lt;br/&gt;qualification A–F&quot;]
+    K[&quot;Knowledge Engine&lt;br/&gt;connaissances qualifiées&quot;]
+    C[&quot;Correlation Engine&lt;br/&gt;corrélations multiparamètres&quot;]
+    R[&quot;Reasoning Engine&lt;br/&gt;raisonnement&quot;]
+    D[&quot;Diagnostic Engine&lt;br/&gt;diagnostics&quot;]
+    REC[&quot;Recommendation Engine&lt;br/&gt;recommandations contournables&quot;]
+    V[&quot;Validation Engine&lt;br/&gt;validation sorties&quot;]
+    USER[&quot;Forestier&lt;br/&gt;décideur final (CON-001)&quot;]
+
+    SOURCES --&gt; E
+    E --&gt;|&quot;preuve qualifiée&quot;| K
+    K --&gt; C
+    C --&gt; R
+    R --&gt; D
+    D --&gt; REC
+    REC --&gt; V
+    V --&gt; USER
+    USER -.-&gt;|&quot;feedback terrain&quot;| LEARN[&quot;Learning Engine&quot;]
+    LEARN -.-&gt; K
+
+    style E fill:#abebc6,stroke:#1e8449
+    style K fill:#aed6f1,stroke:#1a5276
+    style USER fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style LEARN fill:#fadbd8,stroke:#cb4335</code></pre>
+      <script type="application/json" data-code-source="02_chaine_intelligence">"flowchart LR\n    SOURCES[\"Sources scientifiques<br/>datasets, terrain, litt\u00e9rature\"]\n    E[\"Evidence Engine<br/>qualification A\u2013F\"]\n    K[\"Knowledge Engine<br/>connaissances qualifi\u00e9es\"]\n    C[\"Correlation Engine<br/>corr\u00e9lations multiparam\u00e8tres\"]\n    R[\"Reasoning Engine<br/>raisonnement\"]\n    D[\"Diagnostic Engine<br/>diagnostics\"]\n    REC[\"Recommendation Engine<br/>recommandations contournables\"]\n    V[\"Validation Engine<br/>validation sorties\"]\n    USER[\"Forestier<br/>d\u00e9cideur final (CON-001)\"]\n\n    SOURCES --> E\n    E -->|\"preuve qualifi\u00e9e\"| K\n    K --> C\n    C --> R\n    R --> D\n    D --> REC\n    REC --> V\n    V --> USER\n    USER -.->|\"feedback terrain\"| LEARN[\"Learning Engine\"]\n    LEARN -.-> K\n\n    style E fill:#abebc6,stroke:#1e8449\n    style K fill:#aed6f1,stroke:#1a5276\n    style USER fill:#f9e79f,stroke:#b7950b,stroke-width:2px\n    style LEARN fill:#fadbd8,stroke:#cb4335"</script>
+    </section>
+
+
+    <section class="carte" id="06_metamodele_encyclopedie"
+             data-titre="métamodèle de l'encyclopédie — 73 types noyau"
+             data-categorie="écosystème">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Écosystème</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>Métamodèle de l'Encyclopédie — 73 types noyau</h2>
+          <p class="description">5 niveaux de types (noyau universel → conformité RGPD/FAIR/SOSA) qui structurent toutes les connaissances GSIE.</p>
+          <p class="source">Source : README.md §Architecture
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="06_metamodele_encyclopedie" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="06_metamodele_encyclopedie" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="06_metamodele_encyclopedie" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="06_metamodele_encyclopedie" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="06_metamodele_encyclopedie" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="06_metamodele_encyclopedie">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="06_metamodele_encyclopedie">Copier</button>
+          <a class="btn-lien" href="#06_metamodele_encyclopedie" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="06_metamodele_encyclopedie">
+        <div class="diagram-scale" data-scale="06_metamodele_encyclopedie">
+          <pre class="mermaid" data-diagram-id="06_metamodele_encyclopedie">
+graph TB
+    subgraph N1[&quot;Niveau 1 — Noyau universel&quot;]
+        R[&quot;resource&lt;br/&gt;racine (class-table inheritance)&quot;]
+    end
+
+    subgraph N2[&quot;Niveau 2 — Profils écologiques&quot;]
+        P1[&quot;Place · Instance · Unit&quot;]
+        P2[&quot;Assertion · Citation&quot;]
+        P3[&quot;Dataset · ModelRun&quot;]
+        P4[&quot;ScaleContext · Phenomenon&lt;br/&gt;EcologicalProcess · Flow&quot;]
+        P5[&quot;TraitDefinition · TraitValue&lt;br/&gt;Feature · FeatureSet · Inference&quot;]
+    end
+
+    subgraph N3[&quot;Niveau 3 — Raisonnement&quot;]
+        Q1[&quot;Question · Hypothesis&quot;]
+        Q2[&quot;Decision · Recommendation&quot;]
+        Q3[&quot;Scenario · Correlation&quot;]
+        Q4[&quot;Goal · Constraint · Experiment&quot;]
+    end
+
+    subgraph N4[&quot;Niveau 4 — Infrastructure&quot;]
+        I1[&quot;Agent · Capability&quot;]
+        I2[&quot;Temporal Engine&lt;br/&gt;Revision · Snapshot · ResourceDiff&quot;]
+        I3[&quot;SamplingEvent · TerrainSession&lt;br/&gt;EcologicalState&quot;]
+    end
+
+    subgraph N5[&quot;Niveau 5 — Conformité&quot;]
+        F1[&quot;Sample (62) — SOSA/SSN&quot;]
+        F2[&quot;Consent (63) · DataSubject (64) — RGPD&quot;]
+        F3[&quot;PersistentIdentifier (65) — FAIR&quot;]
+    end
+
+    R --&gt; N2
+    R --&gt; N3
+    R --&gt; N4
+    R --&gt; N5
+
+    style R fill:#1a5276,color:#fff,stroke:none
+    style N2 fill:#eaf2f8,stroke:#1a5276
+    style N3 fill:#eafaf1,stroke:#1e8449
+    style N4 fill:#fef9e7,stroke:#b7950b
+    style N5 fill:#fdebd0,stroke:#ca6f1e
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="06_metamodele_encyclopedie" hidden><code>graph TB
+    subgraph N1[&quot;Niveau 1 — Noyau universel&quot;]
+        R[&quot;resource&lt;br/&gt;racine (class-table inheritance)&quot;]
+    end
+
+    subgraph N2[&quot;Niveau 2 — Profils écologiques&quot;]
+        P1[&quot;Place · Instance · Unit&quot;]
+        P2[&quot;Assertion · Citation&quot;]
+        P3[&quot;Dataset · ModelRun&quot;]
+        P4[&quot;ScaleContext · Phenomenon&lt;br/&gt;EcologicalProcess · Flow&quot;]
+        P5[&quot;TraitDefinition · TraitValue&lt;br/&gt;Feature · FeatureSet · Inference&quot;]
+    end
+
+    subgraph N3[&quot;Niveau 3 — Raisonnement&quot;]
+        Q1[&quot;Question · Hypothesis&quot;]
+        Q2[&quot;Decision · Recommendation&quot;]
+        Q3[&quot;Scenario · Correlation&quot;]
+        Q4[&quot;Goal · Constraint · Experiment&quot;]
+    end
+
+    subgraph N4[&quot;Niveau 4 — Infrastructure&quot;]
+        I1[&quot;Agent · Capability&quot;]
+        I2[&quot;Temporal Engine&lt;br/&gt;Revision · Snapshot · ResourceDiff&quot;]
+        I3[&quot;SamplingEvent · TerrainSession&lt;br/&gt;EcologicalState&quot;]
+    end
+
+    subgraph N5[&quot;Niveau 5 — Conformité&quot;]
+        F1[&quot;Sample (62) — SOSA/SSN&quot;]
+        F2[&quot;Consent (63) · DataSubject (64) — RGPD&quot;]
+        F3[&quot;PersistentIdentifier (65) — FAIR&quot;]
+    end
+
+    R --&gt; N2
+    R --&gt; N3
+    R --&gt; N4
+    R --&gt; N5
+
+    style R fill:#1a5276,color:#fff,stroke:none
+    style N2 fill:#eaf2f8,stroke:#1a5276
+    style N3 fill:#eafaf1,stroke:#1e8449
+    style N4 fill:#fef9e7,stroke:#b7950b
+    style N5 fill:#fdebd0,stroke:#ca6f1e</code></pre>
+      <script type="application/json" data-code-source="06_metamodele_encyclopedie">"graph TB\n    subgraph N1[\"Niveau 1 \u2014 Noyau universel\"]\n        R[\"resource<br/>racine (class-table inheritance)\"]\n    end\n\n    subgraph N2[\"Niveau 2 \u2014 Profils \u00e9cologiques\"]\n        P1[\"Place \u00b7 Instance \u00b7 Unit\"]\n        P2[\"Assertion \u00b7 Citation\"]\n        P3[\"Dataset \u00b7 ModelRun\"]\n        P4[\"ScaleContext \u00b7 Phenomenon<br/>EcologicalProcess \u00b7 Flow\"]\n        P5[\"TraitDefinition \u00b7 TraitValue<br/>Feature \u00b7 FeatureSet \u00b7 Inference\"]\n    end\n\n    subgraph N3[\"Niveau 3 \u2014 Raisonnement\"]\n        Q1[\"Question \u00b7 Hypothesis\"]\n        Q2[\"Decision \u00b7 Recommendation\"]\n        Q3[\"Scenario \u00b7 Correlation\"]\n        Q4[\"Goal \u00b7 Constraint \u00b7 Experiment\"]\n    end\n\n    subgraph N4[\"Niveau 4 \u2014 Infrastructure\"]\n        I1[\"Agent \u00b7 Capability\"]\n        I2[\"Temporal Engine<br/>Revision \u00b7 Snapshot \u00b7 ResourceDiff\"]\n        I3[\"SamplingEvent \u00b7 TerrainSession<br/>EcologicalState\"]\n    end\n\n    subgraph N5[\"Niveau 5 \u2014 Conformit\u00e9\"]\n        F1[\"Sample (62) \u2014 SOSA/SSN\"]\n        F2[\"Consent (63) \u00b7 DataSubject (64) \u2014 RGPD\"]\n        F3[\"PersistentIdentifier (65) \u2014 FAIR\"]\n    end\n\n    R --> N2\n    R --> N3\n    R --> N4\n    R --> N5\n\n    style R fill:#1a5276,color:#fff,stroke:none\n    style N2 fill:#eaf2f8,stroke:#1a5276\n    style N3 fill:#eafaf1,stroke:#1e8449\n    style N4 fill:#fef9e7,stroke:#b7950b\n    style N5 fill:#fdebd0,stroke:#ca6f1e"</script>
+    </section>
+
+
+    <section class="carte" id="13_applications_ecosysteme"
+             data-titre="applications clientes — état de déploiement"
+             data-categorie="écosystème">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Écosystème</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>Applications clientes — état de déploiement</h2>
+          <p class="description">Statut réel des 9 applications (livrées, planifiées, scaffolding) et du Centre de Commandement Unreal Engine 5.8.</p>
+          <p class="source">Source : PROJECT_MEMORY.md, DEC-000056
+            &middot; Mise à jour : 2026-08-09</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="13_applications_ecosysteme" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="13_applications_ecosysteme" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="13_applications_ecosysteme" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="13_applications_ecosysteme" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="13_applications_ecosysteme" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="13_applications_ecosysteme">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="13_applications_ecosysteme">Copier</button>
+          <a class="btn-lien" href="#13_applications_ecosysteme" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="13_applications_ecosysteme">
+        <div class="diagram-scale" data-scale="13_applications_ecosysteme">
+          <pre class="mermaid" data-diagram-id="13_applications_ecosysteme">
+graph LR
+    GSIE[&quot;GSIE&lt;br/&gt;API + 14 moteurs&quot;]
+
+    subgraph LIVREES[&quot;Livrées / en développement actif&quot;]
+        GEOSYLVA[&quot;GeoSylva&lt;br/&gt;forêt — Android, desktop, web&quot;]
+        QGISIA[&quot;QGISIA&lt;br/&gt;agent IA QGIS&quot;]
+        IGNIS[&quot;Ignis&lt;br/&gt;incendies — mobile + Hub&quot;]
+    end
+
+    subgraph PLANIFIEES[&quot;Planifiées Phase 4&quot;]
+        ARTEMIS[&quot;Artemis&lt;br/&gt;faune&quot;]
+        HYDRO[&quot;Hydro&lt;br/&gt;eau&quot;]
+        FLORA[&quot;Flora&lt;br/&gt;végétation&quot;]
+    end
+
+    subgraph SCAFFOLD[&quot;Scaffolding — DEC-000056&quot;]
+        AERIS[&quot;Aeris&lt;br/&gt;atmosphère / météo&quot;]
+        ATLAS[&quot;Atlas&lt;br/&gt;cartographie globale&quot;]
+        TERRA[&quot;Terra&lt;br/&gt;sols / géologie&quot;]
+    end
+
+    HUB[&quot;Centre de Commandement&lt;br/&gt;Unreal Engine 5.8 + Cesium&quot;]
+
+    GSIE ===|API GSIE| LIVREES
+    GSIE -.-&gt;|Phase 4| PLANIFIEES
+    GSIE -.-&gt;|scaffolding| SCAFFOLD
+    LIVREES --- HUB
+    PLANIFIEES -.-&gt; HUB
+    SCAFFOLD -.-&gt; HUB
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style LIVREES fill:#eafaf1,stroke:#1e8449
+    style PLANIFIEES fill:#fef9e7,stroke:#b7950b
+    style SCAFFOLD fill:#f2f1ee,stroke:#5c5a55
+    style HUB fill:#f5b7b1,stroke:#cb4335
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="13_applications_ecosysteme" hidden><code>graph LR
+    GSIE[&quot;GSIE&lt;br/&gt;API + 14 moteurs&quot;]
+
+    subgraph LIVREES[&quot;Livrées / en développement actif&quot;]
+        GEOSYLVA[&quot;GeoSylva&lt;br/&gt;forêt — Android, desktop, web&quot;]
+        QGISIA[&quot;QGISIA&lt;br/&gt;agent IA QGIS&quot;]
+        IGNIS[&quot;Ignis&lt;br/&gt;incendies — mobile + Hub&quot;]
+    end
+
+    subgraph PLANIFIEES[&quot;Planifiées Phase 4&quot;]
+        ARTEMIS[&quot;Artemis&lt;br/&gt;faune&quot;]
+        HYDRO[&quot;Hydro&lt;br/&gt;eau&quot;]
+        FLORA[&quot;Flora&lt;br/&gt;végétation&quot;]
+    end
+
+    subgraph SCAFFOLD[&quot;Scaffolding — DEC-000056&quot;]
+        AERIS[&quot;Aeris&lt;br/&gt;atmosphère / météo&quot;]
+        ATLAS[&quot;Atlas&lt;br/&gt;cartographie globale&quot;]
+        TERRA[&quot;Terra&lt;br/&gt;sols / géologie&quot;]
+    end
+
+    HUB[&quot;Centre de Commandement&lt;br/&gt;Unreal Engine 5.8 + Cesium&quot;]
+
+    GSIE ===|API GSIE| LIVREES
+    GSIE -.-&gt;|Phase 4| PLANIFIEES
+    GSIE -.-&gt;|scaffolding| SCAFFOLD
+    LIVREES --- HUB
+    PLANIFIEES -.-&gt; HUB
+    SCAFFOLD -.-&gt; HUB
+
+    style GSIE fill:#1a5276,color:#fff,stroke:none
+    style LIVREES fill:#eafaf1,stroke:#1e8449
+    style PLANIFIEES fill:#fef9e7,stroke:#b7950b
+    style SCAFFOLD fill:#f2f1ee,stroke:#5c5a55
+    style HUB fill:#f5b7b1,stroke:#cb4335</code></pre>
+      <script type="application/json" data-code-source="13_applications_ecosysteme">"graph LR\n    GSIE[\"GSIE<br/>API + 14 moteurs\"]\n\n    subgraph LIVREES[\"Livr\u00e9es / en d\u00e9veloppement actif\"]\n        GEOSYLVA[\"GeoSylva<br/>for\u00eat \u2014 Android, desktop, web\"]\n        QGISIA[\"QGISIA<br/>agent IA QGIS\"]\n        IGNIS[\"Ignis<br/>incendies \u2014 mobile + Hub\"]\n    end\n\n    subgraph PLANIFIEES[\"Planifi\u00e9es Phase 4\"]\n        ARTEMIS[\"Artemis<br/>faune\"]\n        HYDRO[\"Hydro<br/>eau\"]\n        FLORA[\"Flora<br/>v\u00e9g\u00e9tation\"]\n    end\n\n    subgraph SCAFFOLD[\"Scaffolding \u2014 DEC-000056\"]\n        AERIS[\"Aeris<br/>atmosph\u00e8re / m\u00e9t\u00e9o\"]\n        ATLAS[\"Atlas<br/>cartographie globale\"]\n        TERRA[\"Terra<br/>sols / g\u00e9ologie\"]\n    end\n\n    HUB[\"Centre de Commandement<br/>Unreal Engine 5.8 + Cesium\"]\n\n    GSIE ===|API GSIE| LIVREES\n    GSIE -.->|Phase 4| PLANIFIEES\n    GSIE -.->|scaffolding| SCAFFOLD\n    LIVREES --- HUB\n    PLANIFIEES -.-> HUB\n    SCAFFOLD -.-> HUB\n\n    style GSIE fill:#1a5276,color:#fff,stroke:none\n    style LIVREES fill:#eafaf1,stroke:#1e8449\n    style PLANIFIEES fill:#fef9e7,stroke:#b7950b\n    style SCAFFOLD fill:#f2f1ee,stroke:#5c5a55\n    style HUB fill:#f5b7b1,stroke:#cb4335"</script>
+    </section>
+
+
+    <section class="carte" id="03_hierarchie_documentaire"
+             data-titre="hiérarchie documentaire"
+             data-categorie="gouvernance">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Gouvernance</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Hiérarchie documentaire</h2>
+          <p class="description">Vision → Constitution → RFC → Directive → Décision → Architecture → Spécification → Implémentation → Code.</p>
+          <p class="source">Source : README.md §Gouvernance
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="03_hierarchie_documentaire" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="03_hierarchie_documentaire" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="03_hierarchie_documentaire" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="03_hierarchie_documentaire" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="03_hierarchie_documentaire" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="03_hierarchie_documentaire">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="03_hierarchie_documentaire">Copier</button>
+          <a class="btn-lien" href="#03_hierarchie_documentaire" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="03_hierarchie_documentaire">
+        <div class="diagram-scale" data-scale="03_hierarchie_documentaire">
+          <pre class="mermaid" data-diagram-id="03_hierarchie_documentaire">
+flowchart TD
+    V[&quot;Vision&quot;] --&gt; C[&quot;Constitution&lt;br/&gt;(primauté absolue)&quot;]
+    C --&gt; RFC[&quot;RFC&lt;br/&gt;(propositions d'évolution)&quot;]
+    RFC --&gt; DIR[&quot;Directive&quot;]
+    DIR --&gt; DEC[&quot;Décision&lt;br/&gt;(DEC-xxxxxx)&quot;]
+    DEC --&gt; ARCH[&quot;Architecture&quot;]
+    ARCH --&gt; SPEC[&quot;Spécification&quot;]
+    SPEC --&gt; IMPL[&quot;Implémentation&quot;]
+    IMPL --&gt; CODE[&quot;Code&lt;br/&gt;(dernier niveau)&quot;]
+
+    style C fill:#cb4335,color:#fff,stroke:none
+    style CODE fill:#abebc6,stroke:#1e8449
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="03_hierarchie_documentaire" hidden><code>flowchart TD
+    V[&quot;Vision&quot;] --&gt; C[&quot;Constitution&lt;br/&gt;(primauté absolue)&quot;]
+    C --&gt; RFC[&quot;RFC&lt;br/&gt;(propositions d'évolution)&quot;]
+    RFC --&gt; DIR[&quot;Directive&quot;]
+    DIR --&gt; DEC[&quot;Décision&lt;br/&gt;(DEC-xxxxxx)&quot;]
+    DEC --&gt; ARCH[&quot;Architecture&quot;]
+    ARCH --&gt; SPEC[&quot;Spécification&quot;]
+    SPEC --&gt; IMPL[&quot;Implémentation&quot;]
+    IMPL --&gt; CODE[&quot;Code&lt;br/&gt;(dernier niveau)&quot;]
+
+    style C fill:#cb4335,color:#fff,stroke:none
+    style CODE fill:#abebc6,stroke:#1e8449</code></pre>
+      <script type="application/json" data-code-source="03_hierarchie_documentaire">"flowchart TD\n    V[\"Vision\"] --> C[\"Constitution<br/>(primaut\u00e9 absolue)\"]\n    C --> RFC[\"RFC<br/>(propositions d'\u00e9volution)\"]\n    RFC --> DIR[\"Directive\"]\n    DIR --> DEC[\"D\u00e9cision<br/>(DEC-xxxxxx)\"]\n    DEC --> ARCH[\"Architecture\"]\n    ARCH --> SPEC[\"Sp\u00e9cification\"]\n    SPEC --> IMPL[\"Impl\u00e9mentation\"]\n    IMPL --> CODE[\"Code<br/>(dernier niveau)\"]\n\n    style C fill:#cb4335,color:#fff,stroke:none\n    style CODE fill:#abebc6,stroke:#1e8449"</script>
+    </section>
+
+
+    <section class="carte" id="08_cycle_vie_document"
+             data-titre="cycle de vie d'un document"
+             data-categorie="gouvernance">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Gouvernance</span>
+          <span class="badge badge-type">États</span>
+          <h2>Cycle de vie d'un document</h2>
+          <p class="description">Draft → Review → Validated → Locked. Un document Locked ne change que par RFC dédiée.</p>
+          <p class="source">Source : CLAUDE.md §5, AGENTS.md
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="08_cycle_vie_document" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="08_cycle_vie_document" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="08_cycle_vie_document" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="08_cycle_vie_document" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="08_cycle_vie_document" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="08_cycle_vie_document">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="08_cycle_vie_document">Copier</button>
+          <a class="btn-lien" href="#08_cycle_vie_document" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="08_cycle_vie_document">
+        <div class="diagram-scale" data-scale="08_cycle_vie_document">
+          <pre class="mermaid" data-diagram-id="08_cycle_vie_document">
+stateDiagram-v2
+    [*] --&gt; Draft : création
+    Draft --&gt; Review : rédaction terminée
+    Review --&gt; Draft : retour en rédaction
+    Review --&gt; Validated : validation du Fondateur
+    Validated --&gt; Locked : verrouillage explicite
+
+    note right of Locked
+        Modification interdite hors RFC dédiée.
+        GSIE-FND-001, GSIE-FND-002 et
+        GSIE-CON-000 sont Locked.
+    end note
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="08_cycle_vie_document" hidden><code>stateDiagram-v2
+    [*] --&gt; Draft : création
+    Draft --&gt; Review : rédaction terminée
+    Review --&gt; Draft : retour en rédaction
+    Review --&gt; Validated : validation du Fondateur
+    Validated --&gt; Locked : verrouillage explicite
+
+    note right of Locked
+        Modification interdite hors RFC dédiée.
+        GSIE-FND-001, GSIE-FND-002 et
+        GSIE-CON-000 sont Locked.
+    end note</code></pre>
+      <script type="application/json" data-code-source="08_cycle_vie_document">"stateDiagram-v2\n    [*] --> Draft : cr\u00e9ation\n    Draft --> Review : r\u00e9daction termin\u00e9e\n    Review --> Draft : retour en r\u00e9daction\n    Review --> Validated : validation du Fondateur\n    Validated --> Locked : verrouillage explicite\n\n    note right of Locked\n        Modification interdite hors RFC d\u00e9di\u00e9e.\n        GSIE-FND-001, GSIE-FND-002 et\n        GSIE-CON-000 sont Locked.\n    end note"</script>
+    </section>
+
+
+    <section class="carte" id="07_identite_quintessences"
+             data-titre="identité quintessences — fournisseurs de connexion"
+             data-categorie="gouvernance">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Gouvernance</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Identité Quintessences — fournisseurs de connexion</h2>
+          <p class="description">Compte canonique unique, moyens de connexion interchangeables (local, Google, futur OIDC/SAML), jetons GSIE RS256.</p>
+          <p class="source">Source : GSIE/ARCHITECTURE/IDENTITE_QUINTESSENCES.md, DEC-000044
+            &middot; Mise à jour : 2026-08-03</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="07_identite_quintessences" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="07_identite_quintessences" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="07_identite_quintessences" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="07_identite_quintessences" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="07_identite_quintessences" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="07_identite_quintessences">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="07_identite_quintessences">Copier</button>
+          <a class="btn-lien" href="#07_identite_quintessences" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="07_identite_quintessences">
+        <div class="diagram-scale" data-scale="07_identite_quintessences">
+          <pre class="mermaid" data-diagram-id="07_identite_quintessences">
+flowchart LR
+    WEB[&quot;Web&quot;]
+    MOBILE[&quot;Applications mobiles&quot;]
+    PC[&quot;Application PC&quot;]
+    HUB[&quot;Centre de Commandement&quot;]
+    AUTH[&quot;Module Identité GSIE&quot;]
+    LOCAL[&quot;Identité locale&lt;br/&gt;Argon2id&quot;]
+    GOOGLE[&quot;Google OpenID Connect&quot;]
+    PRO[&quot;OIDC / SAML professionnel&lt;br/&gt;(futur)&quot;]
+    ACCOUNT[&quot;Compte Quintessences&lt;br/&gt;canonique&quot;]
+    JWT[&quot;Jetons GSIE RS256&quot;]
+
+    WEB --&gt; AUTH
+    MOBILE --&gt; AUTH
+    PC --&gt; AUTH
+    HUB --&gt; AUTH
+    LOCAL --&gt; AUTH
+    GOOGLE --&gt; AUTH
+    PRO -.-&gt; AUTH
+    AUTH --&gt; ACCOUNT
+    ACCOUNT --&gt; JWT
+
+    style AUTH fill:#1a5276,color:#fff,stroke:none
+    style ACCOUNT fill:#eaf2f8,stroke:#1a5276
+    style JWT fill:#eafaf1,stroke:#1e8449
+    style PRO fill:#f2f1ee,stroke:#5c5a55,stroke-dasharray: 4 3
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="07_identite_quintessences" hidden><code>flowchart LR
+    WEB[&quot;Web&quot;]
+    MOBILE[&quot;Applications mobiles&quot;]
+    PC[&quot;Application PC&quot;]
+    HUB[&quot;Centre de Commandement&quot;]
+    AUTH[&quot;Module Identité GSIE&quot;]
+    LOCAL[&quot;Identité locale&lt;br/&gt;Argon2id&quot;]
+    GOOGLE[&quot;Google OpenID Connect&quot;]
+    PRO[&quot;OIDC / SAML professionnel&lt;br/&gt;(futur)&quot;]
+    ACCOUNT[&quot;Compte Quintessences&lt;br/&gt;canonique&quot;]
+    JWT[&quot;Jetons GSIE RS256&quot;]
+
+    WEB --&gt; AUTH
+    MOBILE --&gt; AUTH
+    PC --&gt; AUTH
+    HUB --&gt; AUTH
+    LOCAL --&gt; AUTH
+    GOOGLE --&gt; AUTH
+    PRO -.-&gt; AUTH
+    AUTH --&gt; ACCOUNT
+    ACCOUNT --&gt; JWT
+
+    style AUTH fill:#1a5276,color:#fff,stroke:none
+    style ACCOUNT fill:#eaf2f8,stroke:#1a5276
+    style JWT fill:#eafaf1,stroke:#1e8449
+    style PRO fill:#f2f1ee,stroke:#5c5a55,stroke-dasharray: 4 3</code></pre>
+      <script type="application/json" data-code-source="07_identite_quintessences">"flowchart LR\n    WEB[\"Web\"]\n    MOBILE[\"Applications mobiles\"]\n    PC[\"Application PC\"]\n    HUB[\"Centre de Commandement\"]\n    AUTH[\"Module Identit\u00e9 GSIE\"]\n    LOCAL[\"Identit\u00e9 locale<br/>Argon2id\"]\n    GOOGLE[\"Google OpenID Connect\"]\n    PRO[\"OIDC / SAML professionnel<br/>(futur)\"]\n    ACCOUNT[\"Compte Quintessences<br/>canonique\"]\n    JWT[\"Jetons GSIE RS256\"]\n\n    WEB --> AUTH\n    MOBILE --> AUTH\n    PC --> AUTH\n    HUB --> AUTH\n    LOCAL --> AUTH\n    GOOGLE --> AUTH\n    PRO -.-> AUTH\n    AUTH --> ACCOUNT\n    ACCOUNT --> JWT\n\n    style AUTH fill:#1a5276,color:#fff,stroke:none\n    style ACCOUNT fill:#eaf2f8,stroke:#1a5276\n    style JWT fill:#eafaf1,stroke:#1e8449\n    style PRO fill:#f2f1ee,stroke:#5c5a55,stroke-dasharray: 4 3"</script>
+    </section>
+
+
+    <section class="carte" id="04_phases_projet"
+             data-titre="phases du projet quintessences"
+             data-categorie="progression">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Progression</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Phases du projet Quintessences</h2>
+          <p class="description">Foundation (clôturée) → Architecture (Draft) → Connaissance (clôturée) → Implémentation (active).</p>
+          <p class="source">Source : PROJECT_MEMORY.md, ROADMAP.md
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="04_phases_projet" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="04_phases_projet" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="04_phases_projet" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="04_phases_projet" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="04_phases_projet" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="04_phases_projet">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="04_phases_projet">Copier</button>
+          <a class="btn-lien" href="#04_phases_projet" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="04_phases_projet">
+        <div class="diagram-scale" data-scale="04_phases_projet">
+          <pre class="mermaid" data-diagram-id="04_phases_projet">
+flowchart LR
+    P1[&quot;Phase 1 — Foundation&lt;br/&gt;Clôturée · 9 Validated + 3 Locked / 12&quot;]
+    P2[&quot;Phase 2 — Architecture&lt;br/&gt;12 livrables Draft (201-212)&quot;]
+    P3[&quot;Phase 3 — Connaissance&lt;br/&gt;Clôturée · 10/10 Validated (301-310)&quot;]
+    P4[&quot;Phase 4 — Implémentation&lt;br/&gt;Active · DEC-000017 / GSIE-DIR-0011&quot;]
+
+    P1 --&gt; P2 --&gt; P3 --&gt; P4
+
+    style P1 fill:#abebc6,stroke:#1e8449
+    style P2 fill:#d6dbdf,stroke:#5c5a55
+    style P3 fill:#abebc6,stroke:#1e8449
+    style P4 fill:#1a5276,color:#fff,stroke:none
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="04_phases_projet" hidden><code>flowchart LR
+    P1[&quot;Phase 1 — Foundation&lt;br/&gt;Clôturée · 9 Validated + 3 Locked / 12&quot;]
+    P2[&quot;Phase 2 — Architecture&lt;br/&gt;12 livrables Draft (201-212)&quot;]
+    P3[&quot;Phase 3 — Connaissance&lt;br/&gt;Clôturée · 10/10 Validated (301-310)&quot;]
+    P4[&quot;Phase 4 — Implémentation&lt;br/&gt;Active · DEC-000017 / GSIE-DIR-0011&quot;]
+
+    P1 --&gt; P2 --&gt; P3 --&gt; P4
+
+    style P1 fill:#abebc6,stroke:#1e8449
+    style P2 fill:#d6dbdf,stroke:#5c5a55
+    style P3 fill:#abebc6,stroke:#1e8449
+    style P4 fill:#1a5276,color:#fff,stroke:none</code></pre>
+      <script type="application/json" data-code-source="04_phases_projet">"flowchart LR\n    P1[\"Phase 1 \u2014 Foundation<br/>Cl\u00f4tur\u00e9e \u00b7 9 Validated + 3 Locked / 12\"]\n    P2[\"Phase 2 \u2014 Architecture<br/>12 livrables Draft (201-212)\"]\n    P3[\"Phase 3 \u2014 Connaissance<br/>Cl\u00f4tur\u00e9e \u00b7 10/10 Validated (301-310)\"]\n    P4[\"Phase 4 \u2014 Impl\u00e9mentation<br/>Active \u00b7 DEC-000017 / GSIE-DIR-0011\"]\n\n    P1 --> P2 --> P3 --> P4\n\n    style P1 fill:#abebc6,stroke:#1e8449\n    style P2 fill:#d6dbdf,stroke:#5c5a55\n    style P3 fill:#abebc6,stroke:#1e8449\n    style P4 fill:#1a5276,color:#fff,stroke:none"</script>
+    </section>
+
+
+    <section class="carte" id="05_moteurs_gsie"
+             data-titre="état des 14 moteurs gsie"
+             data-categorie="progression">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Progression</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>État des 14 moteurs GSIE</h2>
+          <p class="description">14/14 moteurs implémentés — 8 codés sur données réelles, 4 en v1 déclarative (confidence=low, jamais validés automatiquement).</p>
+          <p class="source">Source : PROJECT_MEMORY.md §État
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="05_moteurs_gsie" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="05_moteurs_gsie" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="05_moteurs_gsie" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="05_moteurs_gsie" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="05_moteurs_gsie" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="05_moteurs_gsie">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="05_moteurs_gsie">Copier</button>
+          <a class="btn-lien" href="#05_moteurs_gsie" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="05_moteurs_gsie">
+        <div class="diagram-scale" data-scale="05_moteurs_gsie">
+          <pre class="mermaid" data-diagram-id="05_moteurs_gsie">
+graph TB
+    subgraph CHAIN[&quot;Chaîne principale&quot;]
+        EV[&quot;Evidence ✓&quot;]
+        KN[&quot;Knowledge ✓&quot;]
+        CO[&quot;Correlation ✓&quot;]
+        RE[&quot;Reasoning ✓&quot;]
+        DI[&quot;Diagnostic ✓&quot;]
+        REC[&quot;Recommendation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+        VA[&quot;Validation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+    end
+
+    subgraph DOMAIN[&quot;Moteurs domaine&quot;]
+        GIS[&quot;GIS ✓&quot;]
+        BOT[&quot;Botanical ✓&quot;]
+        PED[&quot;Pedology ✓&quot;]
+        FD[&quot;Forest Dynamics ✓&quot;]
+        CLI[&quot;Climate ✓&quot;]
+    end
+
+    subgraph TRANS[&quot;Moteurs transverses&quot;]
+        LEA[&quot;Learning ✓&lt;br/&gt;(v1 déclarative)&quot;]
+        SIM[&quot;Simulation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+    end
+
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="05_moteurs_gsie" hidden><code>graph TB
+    subgraph CHAIN[&quot;Chaîne principale&quot;]
+        EV[&quot;Evidence ✓&quot;]
+        KN[&quot;Knowledge ✓&quot;]
+        CO[&quot;Correlation ✓&quot;]
+        RE[&quot;Reasoning ✓&quot;]
+        DI[&quot;Diagnostic ✓&quot;]
+        REC[&quot;Recommendation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+        VA[&quot;Validation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+    end
+
+    subgraph DOMAIN[&quot;Moteurs domaine&quot;]
+        GIS[&quot;GIS ✓&quot;]
+        BOT[&quot;Botanical ✓&quot;]
+        PED[&quot;Pedology ✓&quot;]
+        FD[&quot;Forest Dynamics ✓&quot;]
+        CLI[&quot;Climate ✓&quot;]
+    end
+
+    subgraph TRANS[&quot;Moteurs transverses&quot;]
+        LEA[&quot;Learning ✓&lt;br/&gt;(v1 déclarative)&quot;]
+        SIM[&quot;Simulation ✓&lt;br/&gt;(v1 déclarative)&quot;]
+    end
+
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b</code></pre>
+      <script type="application/json" data-code-source="05_moteurs_gsie">"graph TB\n    subgraph CHAIN[\"Cha\u00eene principale\"]\n        EV[\"Evidence \u2713\"]\n        KN[\"Knowledge \u2713\"]\n        CO[\"Correlation \u2713\"]\n        RE[\"Reasoning \u2713\"]\n        DI[\"Diagnostic \u2713\"]\n        REC[\"Recommendation \u2713<br/>(v1 d\u00e9clarative)\"]\n        VA[\"Validation \u2713<br/>(v1 d\u00e9clarative)\"]\n    end\n\n    subgraph DOMAIN[\"Moteurs domaine\"]\n        GIS[\"GIS \u2713\"]\n        BOT[\"Botanical \u2713\"]\n        PED[\"Pedology \u2713\"]\n        FD[\"Forest Dynamics \u2713\"]\n        CLI[\"Climate \u2713\"]\n    end\n\n    subgraph TRANS[\"Moteurs transverses\"]\n        LEA[\"Learning \u2713<br/>(v1 d\u00e9clarative)\"]\n        SIM[\"Simulation \u2713<br/>(v1 d\u00e9clarative)\"]\n    end\n\n    style CHAIN fill:#eaf2f8,stroke:#1a5276\n    style DOMAIN fill:#eafaf1,stroke:#1e8449\n    style TRANS fill:#fef9e7,stroke:#b7950b"</script>
+    </section>
+
+
+    <section class="carte" id="12_timeline_decisions"
+             data-titre="chronologie des décisions structurantes"
+             data-categorie="progression">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Progression</span>
+          <span class="badge badge-type">Chronologie</span>
+          <h2>Chronologie des décisions structurantes</h2>
+          <p class="description">Des décisions fondatrices de Phase 1 au manifeste Data Registry appliqué en Phase 4.</p>
+          <p class="source">Source : 03_DECISIONS/DEC-000002…DEC-000059
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="12_timeline_decisions" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="12_timeline_decisions" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="12_timeline_decisions" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="12_timeline_decisions" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="12_timeline_decisions" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="12_timeline_decisions">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="12_timeline_decisions">Copier</button>
+          <a class="btn-lien" href="#12_timeline_decisions" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="12_timeline_decisions">
+        <div class="diagram-scale" data-scale="12_timeline_decisions">
+          <pre class="mermaid" data-diagram-id="12_timeline_decisions">
+timeline
+    title Décisions structurantes — Quintessences / GSIE
+    2026-07-01 : DEC-000002 — Phase 1 Fondation
+    2026-07-12 : DEC-000004 — Entrée Phase 2 Architecture
+    2026-07-13 : DEC-000011 — Entrée Phase 3 Connaissance : DEC-000017 — Clôture Phase 3, lancement Phase 4 : DEC-000019 — Architecture Phase 4 validée
+    2026-08-02 : DEC-000043 — Phase de stabilisation
+    2026-08-03 : DEC-000044 — Identité Quintessences multi-fournisseurs
+    2026-08-09 : DEC-000056 — Scaffolding Aeris/Atlas/Terra : DEC-000059 — RFC-0038 Data Registry Validated
+    2026-08-10 : Manifeste Data Registry appliqué, santé persistée
+    2026-08-17 : DEC-000072 — Hydratation stationnelle fail-closed : RFC-0041 — Façade GeoSylva et identité stationnelle (Draft) : DEC-000073 — Proposition liée, validation requise
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="12_timeline_decisions" hidden><code>timeline
+    title Décisions structurantes — Quintessences / GSIE
+    2026-07-01 : DEC-000002 — Phase 1 Fondation
+    2026-07-12 : DEC-000004 — Entrée Phase 2 Architecture
+    2026-07-13 : DEC-000011 — Entrée Phase 3 Connaissance : DEC-000017 — Clôture Phase 3, lancement Phase 4 : DEC-000019 — Architecture Phase 4 validée
+    2026-08-02 : DEC-000043 — Phase de stabilisation
+    2026-08-03 : DEC-000044 — Identité Quintessences multi-fournisseurs
+    2026-08-09 : DEC-000056 — Scaffolding Aeris/Atlas/Terra : DEC-000059 — RFC-0038 Data Registry Validated
+    2026-08-10 : Manifeste Data Registry appliqué, santé persistée
+    2026-08-17 : DEC-000072 — Hydratation stationnelle fail-closed : RFC-0041 — Façade GeoSylva et identité stationnelle (Draft) : DEC-000073 — Proposition liée, validation requise</code></pre>
+      <script type="application/json" data-code-source="12_timeline_decisions">"timeline\n    title D\u00e9cisions structurantes \u2014 Quintessences / GSIE\n    2026-07-01 : DEC-000002 \u2014 Phase 1 Fondation\n    2026-07-12 : DEC-000004 \u2014 Entr\u00e9e Phase 2 Architecture\n    2026-07-13 : DEC-000011 \u2014 Entr\u00e9e Phase 3 Connaissance : DEC-000017 \u2014 Cl\u00f4ture Phase 3, lancement Phase 4 : DEC-000019 \u2014 Architecture Phase 4 valid\u00e9e\n    2026-08-02 : DEC-000043 \u2014 Phase de stabilisation\n    2026-08-03 : DEC-000044 \u2014 Identit\u00e9 Quintessences multi-fournisseurs\n    2026-08-09 : DEC-000056 \u2014 Scaffolding Aeris/Atlas/Terra : DEC-000059 \u2014 RFC-0038 Data Registry Validated\n    2026-08-10 : Manifeste Data Registry appliqu\u00e9, sant\u00e9 persist\u00e9e\n    2026-08-17 : DEC-000072 \u2014 Hydratation stationnelle fail-closed : RFC-0041 \u2014 Fa\u00e7ade GeoSylva et identit\u00e9 stationnelle (Draft) : DEC-000073 \u2014 Proposition li\u00e9e, validation requise"</script>
+    </section>
+
+
+    <section class="carte" id="09_pipeline_data_registry"
+             data-titre="pipeline du data registry gsie"
+             data-categorie="progression">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Progression</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Pipeline du Data Registry GSIE</h2>
+          <p class="description">Agent → Source → Dataset → DatasetVersion → Distribution, santé et citation, jusqu'au Data Selection Engine.</p>
+          <p class="source">Source : RFC-0038, PROJECT_MEMORY.md
+            &middot; Mise à jour : 2026-08-10</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="09_pipeline_data_registry" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="09_pipeline_data_registry" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="09_pipeline_data_registry" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="09_pipeline_data_registry" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="09_pipeline_data_registry" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="09_pipeline_data_registry">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="09_pipeline_data_registry">Copier</button>
+          <a class="btn-lien" href="#09_pipeline_data_registry" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="09_pipeline_data_registry">
+        <div class="diagram-scale" data-scale="09_pipeline_data_registry">
+          <pre class="mermaid" data-diagram-id="09_pipeline_data_registry">
+flowchart LR
+    AGENT[&quot;Agent&lt;br/&gt;fournisseur de données&quot;]
+    SOURCE[&quot;Source&lt;br/&gt;GBIF · IGN · SoilGrids · Météo-France&quot;]
+    DATASET[&quot;Dataset&lt;br/&gt;catalogue versionné&quot;]
+    VERSION[&quot;DatasetVersion&quot;]
+    DIST[&quot;Distribution&lt;br/&gt;metadata_only / archive_copy&quot;]
+    HEALTH[&quot;DatasetHealth&lt;br/&gt;contrôles périodiques réels&quot;]
+    CITATION[&quot;Citation&lt;br/&gt;traçabilité PROV&quot;]
+    RESOLVER[&quot;Data Selection Engine&lt;br/&gt;data-resolver-1&quot;]
+    APP[&quot;Application cliente&lt;br/&gt;GeoSylva, ...&quot;]
+
+    AGENT --&gt; SOURCE --&gt; DATASET --&gt; VERSION --&gt; DIST
+    DIST --&gt; HEALTH
+    DIST --&gt; CITATION
+    HEALTH --&gt; RESOLVER
+    RESOLVER --&gt;|&quot;POST /api/v1/data/resolve&quot;| APP
+
+    style RESOLVER fill:#1a5276,color:#fff,stroke:none
+    style HEALTH fill:#fef9e7,stroke:#b7950b
+    style DIST fill:#eaf2f8,stroke:#1a5276
+    style CITATION fill:#fdebd0,stroke:#ca6f1e
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="09_pipeline_data_registry" hidden><code>flowchart LR
+    AGENT[&quot;Agent&lt;br/&gt;fournisseur de données&quot;]
+    SOURCE[&quot;Source&lt;br/&gt;GBIF · IGN · SoilGrids · Météo-France&quot;]
+    DATASET[&quot;Dataset&lt;br/&gt;catalogue versionné&quot;]
+    VERSION[&quot;DatasetVersion&quot;]
+    DIST[&quot;Distribution&lt;br/&gt;metadata_only / archive_copy&quot;]
+    HEALTH[&quot;DatasetHealth&lt;br/&gt;contrôles périodiques réels&quot;]
+    CITATION[&quot;Citation&lt;br/&gt;traçabilité PROV&quot;]
+    RESOLVER[&quot;Data Selection Engine&lt;br/&gt;data-resolver-1&quot;]
+    APP[&quot;Application cliente&lt;br/&gt;GeoSylva, ...&quot;]
+
+    AGENT --&gt; SOURCE --&gt; DATASET --&gt; VERSION --&gt; DIST
+    DIST --&gt; HEALTH
+    DIST --&gt; CITATION
+    HEALTH --&gt; RESOLVER
+    RESOLVER --&gt;|&quot;POST /api/v1/data/resolve&quot;| APP
+
+    style RESOLVER fill:#1a5276,color:#fff,stroke:none
+    style HEALTH fill:#fef9e7,stroke:#b7950b
+    style DIST fill:#eaf2f8,stroke:#1a5276
+    style CITATION fill:#fdebd0,stroke:#ca6f1e</code></pre>
+      <script type="application/json" data-code-source="09_pipeline_data_registry">"flowchart LR\n    AGENT[\"Agent<br/>fournisseur de donn\u00e9es\"]\n    SOURCE[\"Source<br/>GBIF \u00b7 IGN \u00b7 SoilGrids \u00b7 M\u00e9t\u00e9o-France\"]\n    DATASET[\"Dataset<br/>catalogue versionn\u00e9\"]\n    VERSION[\"DatasetVersion\"]\n    DIST[\"Distribution<br/>metadata_only / archive_copy\"]\n    HEALTH[\"DatasetHealth<br/>contr\u00f4les p\u00e9riodiques r\u00e9els\"]\n    CITATION[\"Citation<br/>tra\u00e7abilit\u00e9 PROV\"]\n    RESOLVER[\"Data Selection Engine<br/>data-resolver-1\"]\n    APP[\"Application cliente<br/>GeoSylva, ...\"]\n\n    AGENT --> SOURCE --> DATASET --> VERSION --> DIST\n    DIST --> HEALTH\n    DIST --> CITATION\n    HEALTH --> RESOLVER\n    RESOLVER -->|\"POST /api/v1/data/resolve\"| APP\n\n    style RESOLVER fill:#1a5276,color:#fff,stroke:none\n    style HEALTH fill:#fef9e7,stroke:#b7950b\n    style DIST fill:#eaf2f8,stroke:#1a5276\n    style CITATION fill:#fdebd0,stroke:#ca6f1e"</script>
+    </section>
+
+
+    <section class="carte" id="10_architecture_mesh"
+             data-titre="server meshing — architecture de composants"
+             data-categorie="infrastructure">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Infrastructure</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>Server Meshing — architecture de composants</h2>
+          <p class="description">Orchestrateur de mesh, serveurs de zone/spécialisés, persistance PostgreSQL/PostGIS comme source de vérité unique.</p>
+          <p class="source">Source : GSIE/ARCHITECTURE/SERVER_MESHING_DIAGRAMS.md, RFC-0035
+            &middot; Mise à jour : 2026-08-03</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="10_architecture_mesh" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="10_architecture_mesh" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="10_architecture_mesh" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="10_architecture_mesh" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="10_architecture_mesh" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="10_architecture_mesh">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="10_architecture_mesh">Copier</button>
+          <a class="btn-lien" href="#10_architecture_mesh" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="10_architecture_mesh">
+        <div class="diagram-scale" data-scale="10_architecture_mesh">
+          <pre class="mermaid" data-diagram-id="10_architecture_mesh">
+graph TD
+    ORCH[&quot;Orchestrateur de mesh&lt;br/&gt;graphe d'autorité, découpage spatial,&lt;br/&gt;transferts, audit immuable&quot;]
+    ZONE[&quot;Serveurs de zone&lt;br/&gt;autorité spatiale&lt;br/&gt;(Landiras, Aquitaine, Corse, ...)&quot;]
+    SPEC[&quot;Serveurs spécialisés&lt;br/&gt;autorité par type&lt;br/&gt;(Simulation, Learning, Knowledge, Drones)&quot;]
+    PERSIST[&quot;Couche de persistance&lt;br/&gt;PostgreSQL/PostGIS — source de vérité&lt;br/&gt;métamodèle bitemporel&quot;]
+    CLIENTS[&quot;Clients de rendu&lt;br/&gt;Hub UE5.8 · CesiumJS web · Apps terrain&quot;]
+
+    ORCH --&gt;|&quot;Redis Pub/Sub, mTLS&quot;| ZONE
+    ORCH --&gt;|&quot;Redis Pub/Sub, mTLS&quot;| SPEC
+    ZONE --&gt;|&quot;écriture / lecture SQL&quot;| PERSIST
+    SPEC --&gt;|&quot;écriture / lecture SQL&quot;| PERSIST
+    PERSIST --&gt;|&quot;flux répliqué par pertinence&quot;| CLIENTS
+
+    style ORCH fill:#1a5276,color:#fff,stroke:none
+    style PERSIST fill:#eafaf1,stroke:#1e8449
+    style CLIENTS fill:#fdebd0,stroke:#ca6f1e
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="10_architecture_mesh" hidden><code>graph TD
+    ORCH[&quot;Orchestrateur de mesh&lt;br/&gt;graphe d'autorité, découpage spatial,&lt;br/&gt;transferts, audit immuable&quot;]
+    ZONE[&quot;Serveurs de zone&lt;br/&gt;autorité spatiale&lt;br/&gt;(Landiras, Aquitaine, Corse, ...)&quot;]
+    SPEC[&quot;Serveurs spécialisés&lt;br/&gt;autorité par type&lt;br/&gt;(Simulation, Learning, Knowledge, Drones)&quot;]
+    PERSIST[&quot;Couche de persistance&lt;br/&gt;PostgreSQL/PostGIS — source de vérité&lt;br/&gt;métamodèle bitemporel&quot;]
+    CLIENTS[&quot;Clients de rendu&lt;br/&gt;Hub UE5.8 · CesiumJS web · Apps terrain&quot;]
+
+    ORCH --&gt;|&quot;Redis Pub/Sub, mTLS&quot;| ZONE
+    ORCH --&gt;|&quot;Redis Pub/Sub, mTLS&quot;| SPEC
+    ZONE --&gt;|&quot;écriture / lecture SQL&quot;| PERSIST
+    SPEC --&gt;|&quot;écriture / lecture SQL&quot;| PERSIST
+    PERSIST --&gt;|&quot;flux répliqué par pertinence&quot;| CLIENTS
+
+    style ORCH fill:#1a5276,color:#fff,stroke:none
+    style PERSIST fill:#eafaf1,stroke:#1e8449
+    style CLIENTS fill:#fdebd0,stroke:#ca6f1e</code></pre>
+      <script type="application/json" data-code-source="10_architecture_mesh">"graph TD\n    ORCH[\"Orchestrateur de mesh<br/>graphe d'autorit\u00e9, d\u00e9coupage spatial,<br/>transferts, audit immuable\"]\n    ZONE[\"Serveurs de zone<br/>autorit\u00e9 spatiale<br/>(Landiras, Aquitaine, Corse, ...)\"]\n    SPEC[\"Serveurs sp\u00e9cialis\u00e9s<br/>autorit\u00e9 par type<br/>(Simulation, Learning, Knowledge, Drones)\"]\n    PERSIST[\"Couche de persistance<br/>PostgreSQL/PostGIS \u2014 source de v\u00e9rit\u00e9<br/>m\u00e9tamod\u00e8le bitemporel\"]\n    CLIENTS[\"Clients de rendu<br/>Hub UE5.8 \u00b7 CesiumJS web \u00b7 Apps terrain\"]\n\n    ORCH -->|\"Redis Pub/Sub, mTLS\"| ZONE\n    ORCH -->|\"Redis Pub/Sub, mTLS\"| SPEC\n    ZONE -->|\"\u00e9criture / lecture SQL\"| PERSIST\n    SPEC -->|\"\u00e9criture / lecture SQL\"| PERSIST\n    PERSIST -->|\"flux r\u00e9pliqu\u00e9 par pertinence\"| CLIENTS\n\n    style ORCH fill:#1a5276,color:#fff,stroke:none\n    style PERSIST fill:#eafaf1,stroke:#1e8449\n    style CLIENTS fill:#fdebd0,stroke:#ca6f1e"</script>
+    </section>
+
+
+    <section class="carte" id="11_hierarchie_territoriale"
+             data-titre="territorial mesh — hiérarchie territoriale"
+             data-categorie="infrastructure">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Infrastructure</span>
+          <span class="badge badge-type">Graphe</span>
+          <h2>Territorial Mesh — hiérarchie territoriale</h2>
+          <p class="description">France → Région (RCH) → Département (DOD) → Territoire → Cellule spatiale → Edge (offline-first).</p>
+          <p class="source">Source : GSIE/ARCHITECTURE/TERRITORIAL_MESH_DIAGRAMS.md, RFC-0036
+            &middot; Mise à jour : 2026-08-06</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="11_hierarchie_territoriale" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="11_hierarchie_territoriale" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="11_hierarchie_territoriale" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="11_hierarchie_territoriale" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="11_hierarchie_territoriale" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="11_hierarchie_territoriale">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="11_hierarchie_territoriale">Copier</button>
+          <a class="btn-lien" href="#11_hierarchie_territoriale" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="11_hierarchie_territoriale">
+        <div class="diagram-scale" data-scale="11_hierarchie_territoriale">
+          <pre class="mermaid" data-diagram-id="11_hierarchie_territoriale">
+graph TD
+    FR[&quot;France&lt;br/&gt;NCP — National Control Plane&quot;]
+    REG[&quot;Région&lt;br/&gt;RCH — coordination régionale&quot;]
+    DEPT[&quot;Département&lt;br/&gt;DOD — autorité métier, source de vérité&quot;]
+    TERR[&quot;Territoire opérationnel&quot;]
+    CELL[&quot;Cellule spatiale&lt;br/&gt;simulation locale&quot;]
+    EDGE[&quot;Edge&lt;br/&gt;capsule offline-first, SQLite/SQLCipher&quot;]
+
+    FR --&gt; REG --&gt; DEPT --&gt; TERR --&gt; CELL --&gt; EDGE
+
+    style FR fill:#1a5276,color:#fff,stroke:none
+    style DEPT fill:#eaf2f8,stroke:#1a5276
+    style EDGE fill:#fdebd0,stroke:#ca6f1e
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="11_hierarchie_territoriale" hidden><code>graph TD
+    FR[&quot;France&lt;br/&gt;NCP — National Control Plane&quot;]
+    REG[&quot;Région&lt;br/&gt;RCH — coordination régionale&quot;]
+    DEPT[&quot;Département&lt;br/&gt;DOD — autorité métier, source de vérité&quot;]
+    TERR[&quot;Territoire opérationnel&quot;]
+    CELL[&quot;Cellule spatiale&lt;br/&gt;simulation locale&quot;]
+    EDGE[&quot;Edge&lt;br/&gt;capsule offline-first, SQLite/SQLCipher&quot;]
+
+    FR --&gt; REG --&gt; DEPT --&gt; TERR --&gt; CELL --&gt; EDGE
+
+    style FR fill:#1a5276,color:#fff,stroke:none
+    style DEPT fill:#eaf2f8,stroke:#1a5276
+    style EDGE fill:#fdebd0,stroke:#ca6f1e</code></pre>
+      <script type="application/json" data-code-source="11_hierarchie_territoriale">"graph TD\n    FR[\"France<br/>NCP \u2014 National Control Plane\"]\n    REG[\"R\u00e9gion<br/>RCH \u2014 coordination r\u00e9gionale\"]\n    DEPT[\"D\u00e9partement<br/>DOD \u2014 autorit\u00e9 m\u00e9tier, source de v\u00e9rit\u00e9\"]\n    TERR[\"Territoire op\u00e9rationnel\"]\n    CELL[\"Cellule spatiale<br/>simulation locale\"]\n    EDGE[\"Edge<br/>capsule offline-first, SQLite/SQLCipher\"]\n\n    FR --> REG --> DEPT --> TERR --> CELL --> EDGE\n\n    style FR fill:#1a5276,color:#fff,stroke:none\n    style DEPT fill:#eaf2f8,stroke:#1a5276\n    style EDGE fill:#fdebd0,stroke:#ca6f1e"</script>
+    </section>
+
+
+    <section class="carte" id="14_fascade_geosylva_gsie"
+             data-titre="façade geosylva ↔ gsie — identité et amplification"
+             data-categorie="écosystème">
+      <header class="carte-entete">
+        <div>
+          <span class="badge">Écosystème</span>
+          <span class="badge badge-type">Flowchart</span>
+          <h2>Façade GeoSylva ↔ GSIE — identité et amplification</h2>
+          <p class="description">Intention mobile, lien stationnel révocable, préparation serveur fail-closed, orchestration déterministe, preuves et décision humaine.</p>
+          <p class="source">Source : RFC-0041, DEC-000073, DEC-000072, RFC-0033
+            &middot; Mise à jour : 2026-08-17</p>
+        </div>
+        <div class="carte-actions">
+          <button type="button" class="btn-icone" data-action="zoom-in" data-cible="14_fascade_geosylva_gsie" title="Zoomer">+</button>
+          <button type="button" class="btn-icone" data-action="zoom-out" data-cible="14_fascade_geosylva_gsie" title="Dézoomer">&minus;</button>
+          <button type="button" class="btn-icone" data-action="zoom-reset" data-cible="14_fascade_geosylva_gsie" title="Réinitialiser le zoom">&#8634;</button>
+          <button type="button" class="btn-icone" data-action="plein-ecran" data-cible="14_fascade_geosylva_gsie" title="Plein écran">&#9974;</button>
+          <button type="button" class="btn-icone" data-action="telecharger-svg" data-cible="14_fascade_geosylva_gsie" title="Télécharger en SVG">&#11015;</button>
+          <button type="button" class="btn-copier" data-action="basculer-code" data-cible="14_fascade_geosylva_gsie">Voir le code</button>
+          <button type="button" class="btn-copier" data-action="copier" data-cible="14_fascade_geosylva_gsie">Copier</button>
+          <a class="btn-lien" href="#14_fascade_geosylva_gsie" title="Lien direct">#</a>
+        </div>
+      </header>
+      <div class="diagram-viewport" data-viewport="14_fascade_geosylva_gsie">
+        <div class="diagram-scale" data-scale="14_fascade_geosylva_gsie">
+          <pre class="mermaid" data-diagram-id="14_fascade_geosylva_gsie">
+flowchart LR
+    LOCAL[&quot;GeoSylva local&lt;br/&gt;offline-first&quot;]
+    LINK[&quot;station-link&lt;br/&gt;lien révocable et idempotent&quot;]
+    PLACE[&quot;Place GSIE&lt;br/&gt;gsie_resource_id&quot;]
+    INTENT[&quot;Intention d'analyse&lt;br/&gt;contract_version + requete_id&quot;]
+    PREP[&quot;Préparation serveur&lt;br/&gt;règles + qualifications + état global&quot;]
+    HYD[&quot;Hydratation fail-closed&lt;br/&gt;Place / FieldIntake accepted&quot;]
+    ORCH[&quot;Orchestration déterministe&lt;br/&gt;Reasoning → Diagnostic → Recommendation → Validation&quot;]
+    PROOF[&quot;Preuve persistée&lt;br/&gt;RapportHydratation + RapportPreparation&quot;]
+    QUEUE[&quot;Room SQLCipher + WorkManager&lt;br/&gt;empreinte intention / retry borné&quot;]
+    HUMAN[&quot;Forestier&lt;br/&gt;décideur final&quot;]
+    BLOCK[&quot;Blocage nommé&lt;br/&gt;aucune invention&quot;]
+
+    LOCAL --&gt; LINK
+    LINK --&gt; PLACE
+    PLACE --&gt; INTENT
+    LOCAL --&gt; INTENT
+    INTENT --&gt; PREP
+    PREP --&gt; HYD
+    HYD --&gt; ORCH
+    ORCH --&gt; PROOF
+    PROOF --&gt; HUMAN
+    INTENT --&gt; QUEUE
+    QUEUE -.-&gt; INTENT
+    PREP -.-&gt; BLOCK
+    HYD -.-&gt; BLOCK
+
+    style LOCAL fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style PREP fill:#aed6f1,stroke:#1a5276
+    style ORCH fill:#abebc6,stroke:#1e8449
+    style PROOF fill:#d5f5e3,stroke:#1e8449
+    style BLOCK fill:#fadbd8,stroke:#cb4335
+    style HUMAN fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+          </pre>
+        </div>
+      </div>
+      <pre class="code-source" data-code-affiche="14_fascade_geosylva_gsie" hidden><code>flowchart LR
+    LOCAL[&quot;GeoSylva local&lt;br/&gt;offline-first&quot;]
+    LINK[&quot;station-link&lt;br/&gt;lien révocable et idempotent&quot;]
+    PLACE[&quot;Place GSIE&lt;br/&gt;gsie_resource_id&quot;]
+    INTENT[&quot;Intention d'analyse&lt;br/&gt;contract_version + requete_id&quot;]
+    PREP[&quot;Préparation serveur&lt;br/&gt;règles + qualifications + état global&quot;]
+    HYD[&quot;Hydratation fail-closed&lt;br/&gt;Place / FieldIntake accepted&quot;]
+    ORCH[&quot;Orchestration déterministe&lt;br/&gt;Reasoning → Diagnostic → Recommendation → Validation&quot;]
+    PROOF[&quot;Preuve persistée&lt;br/&gt;RapportHydratation + RapportPreparation&quot;]
+    QUEUE[&quot;Room SQLCipher + WorkManager&lt;br/&gt;empreinte intention / retry borné&quot;]
+    HUMAN[&quot;Forestier&lt;br/&gt;décideur final&quot;]
+    BLOCK[&quot;Blocage nommé&lt;br/&gt;aucune invention&quot;]
+
+    LOCAL --&gt; LINK
+    LINK --&gt; PLACE
+    PLACE --&gt; INTENT
+    LOCAL --&gt; INTENT
+    INTENT --&gt; PREP
+    PREP --&gt; HYD
+    HYD --&gt; ORCH
+    ORCH --&gt; PROOF
+    PROOF --&gt; HUMAN
+    INTENT --&gt; QUEUE
+    QUEUE -.-&gt; INTENT
+    PREP -.-&gt; BLOCK
+    HYD -.-&gt; BLOCK
+
+    style LOCAL fill:#f9e79f,stroke:#b7950b,stroke-width:2px
+    style PREP fill:#aed6f1,stroke:#1a5276
+    style ORCH fill:#abebc6,stroke:#1e8449
+    style PROOF fill:#d5f5e3,stroke:#1e8449
+    style BLOCK fill:#fadbd8,stroke:#cb4335
+    style HUMAN fill:#f9e79f,stroke:#b7950b,stroke-width:2px</code></pre>
+      <script type="application/json" data-code-source="14_fascade_geosylva_gsie">"flowchart LR\n    LOCAL[\"GeoSylva local<br/>offline-first\"]\n    LINK[\"station-link<br/>lien r\u00e9vocable et idempotent\"]\n    PLACE[\"Place GSIE<br/>gsie_resource_id\"]\n    INTENT[\"Intention d'analyse<br/>contract_version + requete_id\"]\n    PREP[\"Pr\u00e9paration serveur<br/>r\u00e8gles + qualifications + \u00e9tat global\"]\n    HYD[\"Hydratation fail-closed<br/>Place / FieldIntake accepted\"]\n    ORCH[\"Orchestration d\u00e9terministe<br/>Reasoning \u2192 Diagnostic \u2192 Recommendation \u2192 Validation\"]\n    PROOF[\"Preuve persist\u00e9e<br/>RapportHydratation + RapportPreparation\"]\n    QUEUE[\"Room SQLCipher + WorkManager<br/>empreinte intention / retry born\u00e9\"]\n    HUMAN[\"Forestier<br/>d\u00e9cideur final\"]\n    BLOCK[\"Blocage nomm\u00e9<br/>aucune invention\"]\n\n    LOCAL --> LINK\n    LINK --> PLACE\n    PLACE --> INTENT\n    LOCAL --> INTENT\n    INTENT --> PREP\n    PREP --> HYD\n    HYD --> ORCH\n    ORCH --> PROOF\n    PROOF --> HUMAN\n    INTENT --> QUEUE\n    QUEUE -.-> INTENT\n    PREP -.-> BLOCK\n    HYD -.-> BLOCK\n\n    style LOCAL fill:#f9e79f,stroke:#b7950b,stroke-width:2px\n    style PREP fill:#aed6f1,stroke:#1a5276\n    style ORCH fill:#abebc6,stroke:#1e8449\n    style PROOF fill:#d5f5e3,stroke:#1e8449\n    style BLOCK fill:#fadbd8,stroke:#cb4335\n    style HUMAN fill:#f9e79f,stroke:#b7950b,stroke-width:2px"</script>
+    </section>
+
+      </main>
+
+      <p class="aucun-resultat" id="aucun-resultat" hidden>
+        Aucun graphe ne correspond à la recherche.
+      </p>
+
+      <footer>
+        <p>© 2026 Quintessences. Généré par <code>generate_site.py</code> —
+        voir <code>graphes-quintessences/README.md</code>.</p>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modale" id="modale-plein-ecran" hidden>
+    <div class="modale-barre">
+      <span id="modale-titre"></span>
+      <button type="button" id="modale-fermer" title="Fermer (Échap)">&times;</button>
+    </div>
+    <div class="modale-corps" id="modale-corps"></div>
+  </div>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.min.js"
+    integrity="sha384-aBQXj4hK6Jm05i7aQAsUV3bLdSUrHX1BGYfMB0166TtWt/RRaw+h0Eelme9OCOvy"
+    crossorigin="anonymous"
+  ></script>
+  <script src="/js/site.js"></script>
+</body>
+</html>

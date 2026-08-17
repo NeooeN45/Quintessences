@@ -1391,9 +1391,14 @@ def should_reject_mfa_verification_when_not_enabled(client_identite: TestClient)
 
 def should_reject_mfa_disable_when_not_enabled(client_identite: TestClient) -> None:
     mfa_service = AsyncMock()
-    mfa_service.disable = AsyncMock(side_effect=MfaNotEnabledError)
+    mfa_service.verify_totp = AsyncMock(side_effect=MfaNotEnabledError)
     client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
-    response = client_identite.delete("/api/v1/auth/mfa", headers=_bearer())
+    response = client_identite.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers=_bearer(),
+        json={"code": "123456", "is_recovery_code": False},
+    )
     assert response.status_code == 404
     assert response.json()["detail"] == "MFA_NON_ACTIVE"
 
@@ -1402,9 +1407,24 @@ def should_disable_mfa_successfully(client_identite: TestClient) -> None:
     mfa_service = AsyncMock()
     mfa_service.disable = AsyncMock(return_value=None)
     client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
-    response = client_identite.delete("/api/v1/auth/mfa", headers=_bearer())
+    response = client_identite.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers=_bearer(),
+        json={"code": "123456", "is_recovery_code": False},
+    )
     assert response.status_code == 200
     assert response.json()["enabled"] is False
+
+
+def should_reject_mfa_disable_without_step_up_code(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client_identite.delete("/api/v1/auth/mfa", headers=_bearer())
+
+    assert response.status_code == 422
+    mfa_service.disable.assert_not_awaited()
 
 
 @pytest.mark.parametrize(("record", "expected"), [(None, False), (SimpleNamespace(), True)])

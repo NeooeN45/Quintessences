@@ -11,7 +11,11 @@ import pytest
 
 from gsie_api.core.config import Settings
 from gsie_api.data.adapters import AdapterHealthReport
-from gsie_api.data.health_scheduler import DataRegistryHealthScheduler, snapshot_from_report
+from gsie_api.data.health_scheduler import (
+    DataRegistryHealthScheduler,
+    _resolve_manifest_slug,
+    snapshot_from_report,
+)
 from gsie_api.infrastructure.models.enums import DatasetHealthStatus
 
 
@@ -94,3 +98,18 @@ def test_snapshot_preserves_operational_health_fields() -> None:
     assert snapshot.health_status is DatasetHealthStatus.healthy
     assert snapshot.latency_ms == 12.5
     assert snapshot.http_status == 200
+
+
+def test_health_scheduler_prefers_canonical_manifest_slug() -> None:
+    assert (
+        _resolve_manifest_slug("gbif", {"gbif-species-api", "gbif-occurrences"})
+        == "gbif-species-api"
+    )
+
+
+def test_health_scheduler_keeps_historical_slug_as_read_only_fallback() -> None:
+    assert _resolve_manifest_slug("gbif", {"gbif-occurrences"}) == "gbif-occurrences"
+
+
+def test_health_scheduler_rejects_unknown_adapter_projection() -> None:
+    assert _resolve_manifest_slug("unknown", {"gbif-species-api"}) is None

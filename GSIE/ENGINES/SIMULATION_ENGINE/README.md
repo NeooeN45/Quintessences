@@ -18,13 +18,14 @@ Moteur de **simulation de scénarios**.
 - Les résultats sont des **scénarios**, pas des décisions (CON-001)
 - Chaque scénario est explicable (CON-004)
 
-> Statut : *architecture finalisée (Phase 2→4)* — documentation uniquement, implémentation à venir
+> État d’implémentation : une API v1 est présente dans
+> `GSIE/API/src/gsie_api/engines/simulation/`. Elle exécute le modèle
+> simplifié décrit ci-dessous ; les modèles scientifiques complets et
+> leur calibration restent hors de ce périmètre.
 
 ## Contrat d'interface
 
-> Note : le code source (`GSIE/API/src/gsie_api/engines/simulation/`)
-> est livré et actif (`PROJECT_MEMORY.md`) ; cette section documente le
-> contrat effectif malgré la mention ci-dessus.
+> Cette section documente le contrat effectif du code présent.
 
 ### 1. Endpoints API
 
@@ -32,9 +33,9 @@ Source : `GSIE/API/src/gsie_api/engines/simulation/router.py`
 
 | Méthode | Route | Auth | Rate limiting | Description |
 |---|---|---|---|---|
-| GET | `/simulation/status` | aucune | — | Statut du moteur (`router.py:32`) |
-| GET | `/simulation/version` | aucune | — | Version et backend (`router.py:43`) |
-| POST | `/simulation/run` | `engine:write` | `10/minute` | Simule un scénario d'intervention sur un horizon donné (`router.py:56`) |
+| GET | `/simulation/status` | aucune | — | Statut du moteur |
+| GET | `/simulation/version` | aucune | — | Version et backend |
+| POST | `/simulation/run` | `engine:write` | `10/minute` | Simule un scénario d'intervention sur un horizon donné |
 
 ### 2. Schémas d'entrée/sortie
 

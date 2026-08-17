@@ -1,0 +1,27 @@
+graph TB
+    subgraph CHAIN["Chaîne principale"]
+        EV["Evidence ✓"]
+        KN["Knowledge ✓"]
+        CO["Correlation ✓"]
+        RE["Reasoning ✓"]
+        DI["Diagnostic ✓"]
+        REC["Recommendation ✓<br/>(v1 déclarative)"]
+        VA["Validation ✓<br/>(v1 déclarative)"]
+    end
+
+    subgraph DOMAIN["Moteurs domaine"]
+        GIS["GIS ✓"]
+        BOT["Botanical ✓"]
+        PED["Pedology ✓"]
+        FD["Forest Dynamics ✓"]
+        CLI["Climate ✓"]
+    end
+
+    subgraph TRANS["Moteurs transverses"]
+        LEA["Learning ✓<br/>(v1 déclarative)"]
+        SIM["Simulation ✓<br/>(v1 déclarative)"]
+    end
+
+    style CHAIN fill:#eaf2f8,stroke:#1a5276
+    style DOMAIN fill:#eafaf1,stroke:#1e8449
+    style TRANS fill:#fef9e7,stroke:#b7950b

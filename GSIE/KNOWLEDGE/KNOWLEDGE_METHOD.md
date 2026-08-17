@@ -355,5 +355,5 @@ relation est créée avec sa source et son niveau de preuve.
 
 ---
 
-> Statut : *Validated — Phase 3 (Connaissance). Documentation uniquement,
+> Statut : *Supersédé par RFC-0011 / DEC-000022 — contenu historique,
 > aucune implémentation (Phase 4).*

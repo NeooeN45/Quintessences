@@ -181,6 +181,7 @@ class ConnectionManager:
         channels: list[str] | None = None,
         *,
         roles: Collection[str] = (),
+        subprotocol: str | None = None,
     ) -> bool:
         """Accepte une connexion WebSocket et l'abonne à des canaux.
 
@@ -196,7 +197,7 @@ class ConnectionManager:
             await websocket.close(code=1013)  # Try Again Later
             return False
 
-        await websocket.accept()
+        await websocket.accept(subprotocol=subprotocol)
         subs = set(channels) if channels else {"all"}
         self._connections[websocket] = subs
         self._roles[websocket] = frozenset(roles)

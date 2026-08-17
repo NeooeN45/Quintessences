@@ -1216,14 +1216,24 @@ async def confirm_password_reset(
     response: Response,
     confirmation: PasswordResetConfirmRequest,
     lifecycle: Annotated[AccountLifecycleService, Depends(get_account_lifecycle_service)],
+    password_strength: Annotated[PasswordStrengthService, Depends(get_password_strength_service)],
 ) -> CompletedResponse:
     del request, response
     try:
+        await password_strength.validate(
+            confirmation.new_password.get_secret_value(),
+            user_inputs=[str(confirmation.email)],
+        )
         await lifecycle.confirm_password_reset(
             email=str(confirmation.email),
             code=confirmation.code,
             new_password=confirmation.new_password.get_secret_value(),
         )
+    except (CompromisedPasswordError, WeakPasswordError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="PASSWORD_TOO_WEAK_OR_COMPROMISED",
+        ) from exc
     except InvalidActionCodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1342,6 +1352,7 @@ async def verify_mfa(
 async def disable_mfa(
     request: Request,
     response: Response,
+    verification: MfaVerifyRequest,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
     mfa_service: Annotated[MfaService, Depends(get_mfa_service)],
     db_session: Annotated[AsyncSession, Depends(get_db)],
@@ -1349,7 +1360,22 @@ async def disable_mfa(
     del request, response
     account_id = _account_id(current_user)
     try:
+        if verification.is_recovery_code:
+            await mfa_service.verify_recovery_code(account_id, verification.code)
+        elif not await mfa_service.verify_totp(account_id, verification.code):
+            raise InvalidTotpCodeError
         await mfa_service.disable(account_id)
+    except (InvalidTotpCodeError, InvalidRecoveryCodeError):
+        await log_auth_event(
+            db_session,
+            action="mfa_disable_step_up_failed",
+            actor_id=account_id,
+            status_code=401,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="PREUVE_MFA_INVALIDE",
+        ) from None
     except MfaNotEnabledError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
