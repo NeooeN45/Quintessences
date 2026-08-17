@@ -337,13 +337,13 @@ jobs:
         run: uv sync --locked --extra dev
 
       - name: Télécharger la couverture unitaire
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: python-unit-coverage
           path: GSIE/API/tests/perf/results/coverage-input
 
       - name: Télécharger la couverture d'intégration
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: python-integration-coverage
           path: GSIE/API/tests/perf/results/coverage-input
