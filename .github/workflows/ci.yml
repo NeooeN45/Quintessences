@@ -187,6 +187,7 @@ jobs:
             echo "::error::docs/openapi.json a dérivé — régénérez-le avec :"
             echo "::error::  uv run python scripts/extract_openapi.py"
             git diff --stat docs/openapi.json
+            git diff docs/openapi.json | head -300
             exit 1
           fi
 
