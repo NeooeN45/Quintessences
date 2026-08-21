@@ -29,3 +29,4 @@ Décrire l'architecture logicielle, modulaire et scientifique de GSIE.
 - `GSIE_ENVIRONMENTAL_DIGITAL_TWIN_USE_CASES.md` : catalogue de cas d'usage réels fédérés
 - `HUB_UNREAL_TECHNOLOGY_STACK.md` : langages et technologies autour du Hub Unreal
 - **02_RFC** : toute décision architecturale passe par un RFC
+- **AZURE_POC_STRATEGY.md** : proposition de POC cloud frugal et réversible
