@@ -32,11 +32,6 @@ GSIE (14 moteurs) → API FastAPI → Hub Unreal 5.8 + apps clientes
         Forge (usine de données) alimente les moteurs
 ```
 
-**Un moteur. Des spécialisations. Zéro décision opaque.** GSIE est une
-plateforme de jumeau numérique environnemental fédéré — modulaire, traçable,
-explicable, conçu pour la forêt, le feu, l'eau, la végétation, la faune, le
-climat et les territoires.
-
 ---
 
 [Qu'est-ce que](#quest-ce-que-quintessences) · [Pourquoi](#pourquoi-quintessences-existe) · [Différences](#ce-qui-différencie-quintessences) · [Moteurs](#les-14-moteurs-gsie) · [Spécialisations](#spécialisations) · [Architecture](#architecture) · [Avancement](#avancement-phase-4) · [Gouvernance](#gouvernance) · [Roadmap](#roadmap) · [Contribuer](#contribuer) · [Licence](#licence)
