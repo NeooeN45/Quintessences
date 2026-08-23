@@ -13,13 +13,29 @@ la végétation, la faune, le climat et les territoires.
 
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue?style=for-the-badge)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-propriétaire-red?style=for-the-badge)](LICENSE)
-[![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green?style=for-the-badge)](00_CONSTITUTION/)
 [![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange?style=for-the-badge)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple?style=for-the-badge)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions](https://img.shields.io/badge/décisions%20tracées-DEC--000073-yellow?style=for-the-badge)](03_DECISIONS/)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
+
+---
+
+## Aperçu
+
+<!-- TODO: ajouter un diagramme de l'écosystème ou screenshot du Centre de Commandement Unreal dans docs/assets/quintessences-hero.png -->
+<!-- <p align="center"><img src="docs/assets/quintessences-hero.png" alt="Quintessences — architecture de l'écosystème" width="800"></p> -->
+
+```
+GSIE (14 moteurs) → API FastAPI → Hub Unreal 5.8 + apps clientes
+                    ↑
+        Forge (usine de données) alimente les moteurs
+```
+
+**Un moteur. Des spécialisations. Zéro décision opaque.** GSIE est une
+plateforme de jumeau numérique environnemental fédéré — modulaire, traçable,
+explicable, conçu pour la forêt, le feu, l'eau, la végétation, la faune, le
+climat et les territoires.
 
 ---
 
