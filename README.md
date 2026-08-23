@@ -7,28 +7,43 @@
 **Un moteur. Des spécialisations. Zéro décision opaque.**
 
 GSIE (General System Intelligence Engine) est une plateforme de jumeau
-numérique environnemental fédéré, construite autour d'un moteur d'aide à
-la décision modulaire, traçable et explicable — conçue pour la forêt, le
-feu, l'eau, la végétation, la faune, le climat et les territoires.
+numérique environnemental fédéré — un moteur d'aide à la décision
+modulaire, traçable et explicable, conçu pour la forêt, le feu, l'eau,
+la végétation, la faune, le climat et les territoires.
 
-**GSIE est le jumeau numérique environnemental fédéré. GeoSylva, Ignis,
-Hydro, Flora et Artemis sont des projections métier spécialisées de ce
-jumeau. Les Hubs Unreal sont les environnements immersifs permettant
-d'explorer, simuler et, sous contrôle humain, interagir avec les domaines
-concernés.** Voir RFC-0037 et
-`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
-
-[![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
-[![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
-[![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
-[![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
-[![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-DEC--000073-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-0041-lightgrey)](02_RFC/)
-[![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
+[![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue?style=for-the-badge)](ROADMAP.md)
+[![Licence](https://img.shields.io/badge/licence-propriétaire-red?style=for-the-badge)](LICENSE)
+[![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green?style=for-the-badge)](00_CONSTITUTION/)
+[![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange?style=for-the-badge)](GSIE/ENGINES/)
+[![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple?style=for-the-badge)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
+[![Décisions](https://img.shields.io/badge/décisions%20tracées-DEC--000073-yellow?style=for-the-badge)](03_DECISIONS/)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
+
+---
+
+[Qu'est-ce que](#quest-ce-que-quintessences) · [Pourquoi](#pourquoi-quintessences-existe) · [Différences](#ce-qui-différencie-quintessences) · [Moteurs](#les-14-moteurs-gsie) · [Spécialisations](#spécialisations) · [Architecture](#architecture) · [Avancement](#avancement-phase-4) · [Gouvernance](#gouvernance) · [Roadmap](#roadmap) · [Contribuer](#contribuer) · [Licence](#licence)
+
+---
+
+## Qu'est-ce que Quintessences ?
+
+**Quintessences** est un écosystème d'applications environnementales
+fondé sur le moteur **GSIE** (General System Intelligence Engine) — un
+moteur central de données, IA, simulations et interopérabilité.
+
+**GSIE est le jumeau numérique environnemental fédéré.** GeoSylva,
+Ignis, Hydro, Flora et Artemis sont des projections métier spécialisées
+de ce jumeau. Les Hubs Unreal sont les environnements immersifs
+permettant d'explorer, simuler et, sous contrôle humain, interagir avec
+les domaines concernés. Voir RFC-0037 et
+`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
+
+**Phase actuelle : Phase 4 — Implémentation** (ouverte par
+`DEC-000017` / `GSIE-DIR-0011`). Le code métier est désormais autorisé.
+Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement
+Unreal Engine 5.8, applications clientes.
 
 ---
 
@@ -67,6 +82,159 @@ contournable.
 | **Architecture** | Monolithique | 14 moteurs indépendants, responsabilité unique |
 | **Méthodologie** | Ad hoc | Hiérarchie documentaire formelle (Vision → Code) |
 | **Rôle de l'IA** | Décide ou suggère | **Assiste, ne décide jamais** (GSIE-CON-001) |
+
+---
+
+## Les 14 moteurs GSIE
+
+Chaque moteur a une **responsabilité unique**. Aucun moteur ne connaît
+les détails internes d'un autre. Cette modularité garantit la
+maintenabilité, la testabilité et l'extensibilité.
+
+### Chaîne d'intelligence (7 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| Evidence Engine | Évalue la preuve scientifique en amont |
+| Knowledge Engine | Centralise les connaissances qualifiées |
+| Correlation Engine | Détecte les corrélations multiparamètres |
+| Reasoning Engine | Raisonne sur les connaissances et corrélations |
+| Diagnostic Engine | Produit les diagnostics (stationnels, sylvicoles, risque) |
+| Recommendation Engine | Génère des recommandations **contournables** |
+| Validation Engine | Valide les sorties avant présentation à l'utilisateur |
+
+### Moteurs domaine (5 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| GIS Engine | Données géospatiales (MNT, parcels, infra) |
+| Climate Engine | Données climatiques et bioclimatiques |
+| Pedology Engine | Données pédologiques (sols, texture, drainage) |
+| Botanical Engine | Flore, taxonomie, autécologie |
+| Forest Dynamics Engine | Dynamique des peuplements, croissance, mortalité |
+
+### Moteurs transverses (2 moteurs)
+
+| Moteur | Rôle |
+|---|---|
+| Learning Engine | Apprentissage encadré (retours terrain, feedback) |
+| Simulation Engine | Simulation de scénarios (interventions, évolutions) |
+
+> **Implémentation Phase 4** : les 14 moteurs ont leur module, leur
+> routeur HTTP et leurs tests. L'Evidence Engine garde un cœur Rust
+> (bindings PyO3) ; les autres sont en Python. L'Orchestration Engine
+> exécute la chaîne Reasoning → Diagnostic → Recommendation →
+> Validation de bout en bout. Voir [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
+> pour l'état courant, moteur par moteur.
+
+---
+
+## Spécialisations
+
+| Spécialisation | Domaine | Statut | Repo |
+|---|---|---|---|
+| **GeoSylva** | Forêt | Active | [NeooeN45/GeoSylva](https://github.com/NeooeN45/GeoSylva) |
+| **Ignis** | Incendies | Phase 4 | Dans le repo parent |
+| **Artemis** | Faune | Planifiée (Phase 4) | Stub dans `apps/Artemis/` |
+| **Hydro** | Eau | Planifiée (Phase 4) | Stub dans `apps/Hydro/` |
+| **Flora** | Végétation | Planifiée (Phase 4) | Stub dans `apps/Flora/` |
+| **QGISIA** | Plugin QGIS | Actif | [NeooeN45/QGISIAPRO](https://github.com/NeooeN45/QGISIAPRO) |
+| **Terra** | Sols / géologie | Planifiée (Phase 4) | Stub dans `apps/Terra/` |
+| **Aeris** | Atmosphère / météo | Planifiée (Phase 4) | Stub dans `apps/Aeris/` |
+| **Atlas** | Cartographie globale | Planifiée (Phase 4) | Stub dans `apps/Atlas/` |
+
+### GeoSylva — application forestière
+
+La première spécialisation de Quintessences. Diagnostics stationnels,
+analyse des sols, interprétation de la flore, recommandations de gestion
+adaptées au terrain.
+
+| Interface | Rôle |
+|---|---|
+| GeoSylva Mobile | Client Android terrain (offline) |
+| GeoSylva Desktop | Poste fixe d'analyse |
+| GeoSylva Web | Interface en ligne |
+| API GSIE | Intégration dans des workflows tiers |
+| SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
+| Plugins SIG | Intégrations QGIS, ArcGIS |
+
+#### Intégration GeoSylva ↔ GSIE — état documentaire au 2026-08-17
+
+Le contrat client est en cours de clarification avant implémentation. RFC-0041
+(Draft) et DEC-000073 (Proposé) définissent une façade future
+`POST /api/v1/orchestration/analyse-geosylva` : GeoSylva enverra une intention,
+un `station_id` GSIE et des niveaux de preuve déclarés ; il ne fabriquera ni
+règles, ni qualifications, ni état global.
+
+Le lien `parcelleId` local → `gsie_resource_id` GSIE sera explicite,
+idempotent, contrôlé par compte et révocable. La préparation serveur devra
+sélectionner les règles et qualifications sourcées ou refuser avec une cause
+nommée. Tant que RFC-0041/DEC-000073 ne sont pas validées, la façade, la
+migration Room et le nouveau lien stationnel ne sont pas présentés comme
+livrés. La synchronisation actuelle reste limitée aux parcelles selon
+DEC-000048.
+
+Voir [RFC-0041](02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
+[DEC-000073](03_DECISIONS/DEC-000073.md),
+[DEC-000072](03_DECISIONS/DEC-000072.md) et
+[le graphe d'intégration](graphes-quintessences/README.md).
+
+### Ignis — spécialisation incendie
+
+Système d'aide à la décision pour la surveillance et l'analyse des feux
+de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
+données temps réel par drone, détection par vision embarquée. Positionné
+comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
+
+| Interface | Rôle |
+|---|---|
+| Ignis Mobile | Application terrain pour le suivi de sinistre, la remontée d'observations et la consultation des simulations en mode offline |
+| Ignis Commandement | Poste fixe / Centre de Commandement GSIE (Unreal Engine 5.8) |
+| API GSIE | Intégration dans des workflows tiers (SDIS, DDT, etc.) |
+
+**Garde-fous non négociables** : outil d'aide à la décision du COS/CODIS,
+jamais un système de commandement. Aucune alerte directe à la population
+(prérogative régale FR-Alert). La sortie « cause probable » reste une
+hypothèse exploratoire, jamais une conclusion.
+
+### QGISIA — agent IA QGIS (« GeoSylva AI »)
+
+Agent IA intelligent pour QGIS. Route les demandes en langage naturel
+vers le meilleur modèle, appelle les outils QGIS, interroge le web et
+l'imagerie satellite, génère et exécute du PyQGIS. Interface desktop
+du moteur GSIE pour les professionnels SIG.
+
+- **Repo** : [github.com/NeooeN45/QGISIAPRO](https://github.com/NeooeN45/QGISIAPRO)
+- **Lien GSIE** : moteurs GIS, Climate, Pedology, Botanical, Reasoning
+  (analyses environnementales expertes dans QGIS).
+
+### Centre de Commandement GSIE — Unreal Engine 5.8
+
+Ensemble de Hubs immersifs où **toutes les projections métier de GSIE
+peuvent explorer et simuler le même territoire**. Construits sur Unreal
+Engine 5.8 + Cesium for Unreal, ils proposent des modes Ignis, GeoSylva,
+Hydro, Flora et Artemis. Les données affluent via les contrats GSIE
+versionnés ; les scénarios sont séparés de l'état réel et les actions
+critiques restent soumises à validation humaine.
+
+- **Lien GSIE** : consomme les sorties validées de tous les moteurs via
+  l'API GSIE (livrable 207).
+- **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
+  (effets), WebSockets natifs (temps réel).
+- **Document de référence** : `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
+
+### Spécialisations planifiées
+
+- **Artemis** (faune) — Application Android native, API NestJS, backoffice Next.js. Moteurs GIS, Knowledge, Correlation, Learning.
+- **Hydro** (eau) — Cartographie du réseau hydrographique, zones humides, régimes hydriques. Moteurs GIS, Climate, Knowledge, Correlation. Socle : BD Carthage, BD TOPAGE, Sandre.
+- **Flora** (végétation) — Flore, taxonomie, cartographie végétale, phénologie. Moteurs Botanical, Knowledge, GIS, Climate. Socle : GBIF, Tela Botanica, BDNFF, INPN.
+- **Terra** (sols) — Caractérisation et classification des sols. Moteurs Pedology, Knowledge, Climate, Correlation. Socle : SoilGrids (ISRIC), RMQS (INRAE), Référentiel Pédologique Français.
+- **Aeris** (atmosphère) — Suivi météorologique et climatique. Moteurs Climate, Knowledge, Correlation, Diagnostic. Socle : Météo-France, Copernicus C3S.
+- **Atlas** (cartographie) — Cartographie interactive multi-couches et analyse spatiale. Moteurs GIS, Knowledge, Correlation. Socle : IGN, Cadastre, OpenStreetMap.
+
+L'architecture modulaire de GSIE permet d'étendre Quintessences à
+d'autres domaines. Chaque nouvelle spécialisation fait l'objet d'un RFC
+dédié.
 
 ---
 
@@ -165,6 +333,13 @@ flowchart LR
 
 ### Métamodèle de l'Encyclopédie — 73 types noyau
 
+Le métamodèle v6.2 (livrable 213, RFC-0011, DEC-000022) définit un
+**noyau universel de 73 types** organisés en 5 niveaux, avec
+PostgreSQL 16 + PostGIS + Apache AGE comme vérité canonique. Il
+remplace la structure `KnowledgeObject` à 6 types (livrable 302) et
+unifie données, connaissances, modèles, simulations, décisions et
+observations de terrain.
+
 ```mermaid
 graph TB
     subgraph N1["Niveau 1 — Noyau universel"]
@@ -210,218 +385,6 @@ graph TB
     style N5 fill:#fdebd0,stroke:#ca6f1e
 ```
 
----
-
-## Spécialisations
-
-### GeoSylva — application forestière
-
-La première spécialisation de Quintessences. Diagnostics stationnels,
-analyse des sols, interprétation de la flore, recommandations de gestion
-adaptées au terrain.
-
-| Interface | Rôle |
-|---|---|
-| GeoSylva Mobile | Client Android terrain (offline) |
-| GeoSylva Desktop | Poste fixe d'analyse |
-| GeoSylva Web | Interface en ligne |
-| API GSIE | Intégration dans des workflows tiers |
-| SDK | Bibliothèques clientes (Kotlin, Python, TypeScript) |
-| Plugins SIG | Intégrations QGIS, ArcGIS |
-
-#### Intégration GeoSylva ↔ GSIE — état documentaire au 2026-08-17
-
-Le contrat client est en cours de clarification avant implémentation. RFC-0041
-(Draft) et DEC-000073 (Proposé) définissent une façade future
-`POST /api/v1/orchestration/analyse-geosylva` : GeoSylva enverra une intention,
-un `station_id` GSIE et des niveaux de preuve déclarés ; il ne fabriquera ni
-règles, ni qualifications, ni état global.
-
-Le lien `parcelleId` local → `gsie_resource_id` GSIE sera explicite,
-idempotent, contrôlé par compte et révocable. La préparation serveur devra
-sélectionner les règles et qualifications sourceées ou refuser avec une cause
-nommée. Tant que RFC-0041/DEC-000073 ne sont pas validées, la façade, la
-migration Room et le nouveau lien stationnel ne sont pas présentés comme
-livrés. La synchronisation actuelle reste limitée aux parcelles selon
-DEC-000048.
-
-Voir [RFC-0041](02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
-[DEC-000073](03_DECISIONS/DEC-000073.md),
-[DEC-000072](03_DECISIONS/DEC-000072.md) et
-[le graphe d'intégration](graphes-quintessances/README.md).
-
-### Ignis — spécialisation incendie
-
-Système d'aide à la décision pour la surveillance et l'analyse des feux
-de forêt. Jumeau numérique de propagation (ForeFire), assimilation de
-données temps réel par drone, détection par vision embarquée. Positionné
-comme **application cliente** de GSIE (RFC-0004, ADOPTÉ).
-
-| Interface | Rôle |
-|---|---|
-| Ignis Mobile | Application terrain pour le suivi de sinistre, la remontée d'observations et la consultation des simulations en mode offline |
-| Ignis Commandement | Poste fixe / Centre de Commandement GSIE (Unreal Engine 5.8) |
-| API GSIE | Intégration dans des workflows tiers (SDIS, DDT, etc.) |
-
-**Garde-fous non négociables** : outil d'aide à la décision du COS/CODIS,
-jamais un système de commandement. Aucune alerte directe à la population
-(prérogative régale FR-Alert). La sortie « cause probable » reste une
-hypothèse exploratoire, jamais une conclusion.
-
-### Artemis — suivi faune
-
-Plateforme de suivi de la faune premium orientée terrain. Application
-Android native, API NestJS et backoffice Next.js. Gestion des
-observations, zones, espèces and synchronisation hors-ligne.
-
-- **Statut** : Planifiée (Phase 4) — stub dans `apps/Artemis/`
-- **Lien GSIE** : moteurs GIS, Knowledge, Correlation, Learning (analyse
-  des populations, prédiction de présence, gestion durable).
-
-### Hydro — gestion de l'eau
-
-Application de gestion et de visualisation de l'eau. Cartographie du
-réseau hydrographique, des zones humides et analyse des régimes
-hydriques. Consomme les moteurs GIS, Climate, Knowledge et Correlation.
-
-- **Lien GSIE** : moteurs GIS, Climate, Knowledge, Correlation (réseau
-  hydrographique, régimes hydriques, corrélations hydro-climatiques).
-- **Socle spécifique** : BD Carthage (IGN), BD TOPAGE, Sandre.
-
-### Flora — végétation
-
-Application de cartographie et d'analyse de la végétation. Flore,
-taxonomie, cartographie végétale et phénologie. Consomme les moteurs
-Botanical, Knowledge, GIS et Climate.
-
-- **Lien GSIE** : moteurs Botanical, Knowledge, GIS, Climate (flore,
-  taxonomie, cartographie végétale, phénologie).
-- **Socle spécifique** : GBIF, Tela Botanica, BDNFF, INPN.
-
-### QGISIA — agent IA QGIS (« GeoSylva AI »)
-
-Agent IA intelligent pour QGIS. Route les demandes en langage naturel
-vers le meilleur modèle, appelle les outils QGIS, interroge le web et
-l'imagerie satellite, génère et exécute du PyQGIS. Interface desktop
-du moteur GSIE pour les professionnels SIG.
-
-- **Repo** : [github.com/NeooeN45/QGISIAPRO](https://github.com/NeooeN45/QGISIAPRO)
-- **Lien GSIE** : moteurs GIS, Climate, Pedology, Botanical, Reasoning
-  (analyses environnementales expertes dans QGIS).
-
-### Centre de Commandement GSIE — Unreal Engine 5.8
-
-Ensemble de Hubs immersifs où **toutes les projections métier de GSIE
-peuvent explorer et simuler le même territoire**. Construits sur Unreal
-Engine 5.8 + Cesium for Unreal, ils proposent des modes Ignis, GeoSylva,
-Hydro, Flora et Artemis. Les données affluent via les contrats GSIE
-versionnés ; les scénarios sont séparés de l'état réel et les actions
-critiques restent soumises à validation humaine.
-
-- **Lien GSIE** : consomme les sorties validées de tous les moteurs via
-  l'API GSIE (livrable 207).
-- **Stack** : Unreal Engine 5.8, Cesium for Unreal (3D Tiles), Niagara
-  (effets), WebSockets natifs (temps réel).
-- **Document de référence** : `GSIE/ARCHITECTURE/COMMAND_CENTER_UNREAL.md`
-
-### Terra — sols et géologie
-
-Application de caractérisation et de classification des sols. Texture,
-pH, profondeur, drainage, réserve utile en eau. Réservée par
-`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
-
-- **Statut** : Planifiée (Phase 4) — stub dans `apps/Terra/`
-- **Lien GSIE** : moteurs Pedology, Knowledge, Climate, Correlation
-  (caractéristiques et classification des sols, sourcées CON-002).
-- **Socle spécifique** : SoilGrids (ISRIC), RMQS (INRAE), Référentiel
-  Pédologique Français.
-
-### Aeris — atmosphère et météo
-
-Application de suivi météorologique et climatique. Observations,
-prévisions, variables bioclimatiques et projections climatiques
-scénarisées. Réservée par `GSIE-DIR-0009` §3/§227 (ex-Atmos), scaffolding
-activé par `DEC-000056`.
-
-- **Statut** : Planifiée (Phase 4) — stub dans `apps/Aeris/`
-- **Lien GSIE** : moteurs Climate, Knowledge, Correlation, Diagnostic
-  (données climatiques datées, projections avec scénario et incertitude).
-- **Socle spécifique** : Météo-France (SYNOP), Copernicus Climate
-  Change Service (C3S).
-
-### Atlas — cartographie globale
-
-Application de cartographie interactive multi-couches et d'analyse
-spatiale (relief, pente, exposition, distance). Réservée par
-`GSIE-DIR-0009` §3/§227, scaffolding activé par `DEC-000056`.
-
-- **Statut** : Planifiée (Phase 4) — stub dans `apps/Atlas/`
-- **Lien GSIE** : moteurs GIS, Knowledge, Correlation (couches
-  géospatiales de référence, services d'analyse spatiale communs).
-- **Socle spécifique** : IGN (BD Topo, BD Ortho, RGE ALTI), Cadastre,
-  OpenStreetMap.
-
-### Futures spécialisations
-
-L'architecture modulaire de GSIE permet d'étendre Quintessences à
-d'autres domaines. Chaque nouvelle spécialisation fait l'objet d'un RFC
-dédié.
-
----
-
-## Les 14 moteurs GSIE
-
-Chaque moteur a une **responsabilité unique**. Aucun moteur ne connaît
-les détails internes d'un autre. Cette modularité garantit la
-maintenabilité, la testabilité et l'extensibilité.
-
-### Chaîne d'intelligence (7 moteurs)
-
-| Moteur | Rôle |
-|---|---|
-| Evidence Engine | Évalue la preuve scientifique en amont |
-| Knowledge Engine | Centralise les connaissances qualifiées |
-| Correlation Engine | Détecte les corrélations multiparamètres |
-| Reasoning Engine | Raisonne sur les connaissances et corrélations |
-| Diagnostic Engine | Produit les diagnostics (stationnels, sylvicoles, risque) |
-| Recommendation Engine | Génère des recommandations **contournables** |
-| Validation Engine | Valide les sorties avant présentation à l'utilisateur |
-
-### Moteurs domaine (5 moteurs)
-
-| Moteur | Rôle |
-|---|---|
-| GIS Engine | Données géospatiales (MNT, parcels, infra) |
-| Climate Engine | Données climatiques et bioclimatiques |
-| Pedology Engine | Données pédologiques (sols, texture, drainage) |
-| Botanical Engine | Flore, taxonomie, autécologie |
-| Forest Dynamics Engine | Dynamique des peuplements, croissance, mortalité |
-
-### Moteurs transverses (2 moteurs)
-
-| Moteur | Rôle |
-|---|---|
-| Learning Engine | Apprentissage encadré (retours terrain, feedback) |
-| Simulation Engine | Simulation de scénarios (interventions, évolutions) |
-
-> **Implémentation Phase 4** : les 14 moteurs ont leur module, leur
-> routeur HTTP et leurs tests. L'Evidence Engine garde un cœur Rust
-> (bindings PyO3) ; les autres sont en Python. L'Orchestration Engine
-> exécute la chaîne Reasoning → Diagnostic → Recommendation →
-> Validation de bout en bout. Voir [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> pour l'état courant, moteur par moteur.
-
----
-
-## Métamodèle de l'Encyclopédie de l'Écosystème
-
-Le métamodèle v6.2 (livrable 213, RFC-0011, DEC-000022) définit un
-**noyau universel de 73 types** organisés en 5 niveaux, avec
-PostgreSQL 16 + PostGIS + Apache AGE comme vérité canonique. Il
-remplace la structure `KnowledgeObject` à 6 types (livrable 302) et
-unifie données, connaissances, modèles, simulations, décisions et
-observations de terrain.
-
 | Niveau | Types | Exemples |
 |---|---|---|
 | **Noyau universel** | `resource` (racine, class-table inheritance) | Type 1 |
@@ -450,7 +413,7 @@ complet.
 | **Les 14 moteurs** | Implémentés, chacun avec son module, son routeur HTTP et ses tests. La chaîne complète Reasoning → Diagnostic → Recommendation → Validation s'exécute de bout en bout via l'Orchestration Engine. |
 | **API GSIE** | FastAPI — compte Quintessences partagé, inscription/connexion locale Argon2id, Google OIDC configurable, JWT RS256 avec refresh rotatif et révocation, RBAC fermé par défaut, limitation de débit, RFC 7807, WebSocket temps réel, observabilité OpenTelemetry + Prometheus. |
 | **Base de données** | PostgreSQL 16 + PostGIS + pgvector + Apache AGE. 29 migrations Alembic, 124 tables SQLAlchemy. Schéma documenté dans [SCHEMA_DB.md](GSIE/DOCUMENTATION/SCHEMA_DB.md). |
-| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`). Le rôle applicatif n’accède qu’aux quatre tables techniques nécessaires à l’authentification, jamais à `data_subject` ni aux consentements ; aucun droit `DELETE`. RLS active et forcée sur les tables sensibles. |
+| **Isolement RGPD** | Les données personnelles vivent dans deux schémas séparés (`gsie_rgpd`, `gsie_rgpd_identites`). Le rôle applicatif n'accède qu'aux quatre tables techniques nécessaires à l'authentification, jamais à `data_subject` ni aux consentements ; aucun droit `DELETE`. RLS active et forcée sur les tables sensibles. |
 | **Comptes de connexion** | L'API s'exécute sous un compte `NOSUPERUSER NOBYPASSRLS` sans `DELETE` (CON-010 rendu structurel). Les privilèges réels sont interrogés au démarrage, pas déduits du nom du compte. |
 | **Ingestion** | Pipeline unitaire et en lot (1 000 items), garde anti-invention RFC-0014 — une donnée d'origine IA est forcée au niveau de preuve D et mise en quarantaine. |
 | **SDK Python** | Client asynchrone `httpx`, JWT RS256 avec rafraîchissement automatique, wrappers des moteurs. |
@@ -458,7 +421,7 @@ complet.
 | **Visualisation** | Metabase, Superset et Dekart branchés sur un compte en lecture seule, sans aucun accès aux schémas RGPD — la barrière est en base, pas dans l'outil. |
 
 **Tests** : 1 915 tests unitaires passent, 63 sont ignorés et la couverture
-atteint 100 % (9 338/9 338 instructions). L’intégration s’exécute sur base
+atteint 100 % (9 338/9 338 instructions). L'intégration s'exécute sur base
 réelle via testcontainers ; le harnais de mutation tue 100 % des mutants de
 son périmètre.
 
@@ -572,7 +535,7 @@ des RFC (`02_RFC/`). **Aucune décision n'est perdue.**
 | **Phase 1 — Foundation** | Clôturée | Constitution, 14 moteurs documentés, gouvernance, mémoire |
 | **Phase 2 — Architecture** | Sortie — validation pendante | Contrats d'interface, schémas de données, RFC d'architecture ; 12 Draft à remettre à niveau |
 | **Phase 3 — Connaissance** | Clôturée | Méthodes, ontologie, datasets, framework de preuve, base de connaissances |
-| **Phase 4 — Implémentation** | **Active 🚀** | Code métier des moteurs, API GSIE, Hub Unreal, applications clientes |
+| **Phase 4 — Implémentation** | **Active** | Code métier des moteurs, API GSIE, Hub Unreal, applications clientes |
 | Phase 5 — Applications | À venir | Déploiement GeoSylva, Ignis et interfaces terrain |
 
 Voir `ROADMAP.md` pour le détail des livrables.
