@@ -1149,6 +1149,17 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
         tests=("tests/unit/test_ssrf_egress.py",),
     ),
+    Mutation(
+        cle="version_regle_non_figee",
+        fichier="gsie_api/engines/orchestration/preparation.py",
+        ancien="    if manquantes:\n        raise VersionRegleManquanteError(",
+        nouveau="    if False:\n        raise VersionRegleManquanteError(",
+        defaut_reproduit=(
+            "une règle sans version persistée entre dans le snapshot et rend "
+            "le rejeu dépendant d'une connaissance non figée"
+        ),
+        tests=("tests/unit/test_orchestration_preparation.py",),
+    ),
 )
 
 

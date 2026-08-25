@@ -68,6 +68,13 @@ Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
 du relais et STARTTLS ou TLS direct ; Mailpit ne doit jamais recevoir de
 données réelles.
 
+Le contact public du site est exposé par
+`POST /api/v1/public/contact`. Il ne persiste pas le message dans GSIE : après
+validation serveur de Turnstile, il le transmet au relais SMTP vers
+`GSIE_PUBLIC_CONTACT_RECIPIENT` et positionne l'adresse du visiteur en
+`Reply-To`. `GSIE_PUBLIC_CONTACT_ENABLED` reste `false` par défaut et ne peut
+être activé qu'avec un destinataire réel, un SMTP chiffré et Turnstile actif.
+
 La publication de production passe par le profil `edge` :
 
 ```bash
@@ -92,25 +99,53 @@ l'isolement du plan de contrôle et la rotation sont décrits dans
 
 ### Orchestration et hydratation stationnelle
 
-La route interne suivante est actuellement implémentée et testée :
+Les routes internes suivantes sont actuellement implémentées et testées :
 
 ```text
 POST /api/v1/orchestration/analyse
 GET  /api/v1/orchestration/stations/{station_id}/contexte
+GET  /api/v1/orchestration/stations/{station_id}/preparation
 ```
 
-Elle exécute la chaîne déterministe
+`POST /orchestration/analyse` exécute la chaîne déterministe
 `Reasoning → Diagnostic → Recommendation → Validation`. `station_id` résout
 d'abord une `Place`, puis une soumission `FieldIntake accepted` ; les données
 `quarantined` ou `rejected` ne sont jamais consommées. Le rapport d'hydratation
 et le contexte effectivement utilisé sont conservés dans `analysis_run`.
 
+`GET /orchestration/stations/{station_id}/preparation` prévisualise les
+entrées qualifiées d'une analyse sans lancer les moteurs : hydratation du
+contexte, sélection des règles `accepted` applicables via le Knowledge
+Engine, chargement des qualifications réelles, résolution de l'état global
+depuis un `FieldIntake` `accepted` et figement d'un `RapportPreparation`
+immuable. Le rapport conserve les snapshots du contexte, des règles et de
+l'état global, les versions des règles, les qualifications, les sources et
+les empreintes SHA-256 correspondantes. Refuse explicitement avec
+`AUCUNE_REGLE_QUALIFIEE`, `QUALIFICATION_REGLE_MANQUANTE`,
+`VERSION_REGLE_MANQUANTE` ou `ETAT_GLOBAL_NON_SOURCE` si une précondition
+scientifique manque.
+
+### Import GSIE TEST (bundle Forge)
+
+L'importeur `gsie_api.data.gsie_test_bundle` accepte un bundle Forge typé
+`gsie_test_preparation.v0.1` (règles explicitement qualifiées, état global
+sourcé, observations, place, identité station) et l'applique **uniquement**
+sur une base dont `database_role == "test"`. Il valide le WKT et le SRID
+Lambert-93 2154, crée la `Place`, ingère les règles `accepted` via le
+Knowledge Engine et crée les ressources PROV `Source`/`Citation` primaires
+nécessaires à leur sélection. Il crée aussi un `FieldIntake` `accepted`
+portant l'état global versionné `global_state.v0.1`, sa source d'origine et
+les empreintes SHA-256 du bundle et du payload. Une station ou une
+connaissance déjà présente est refusée ; aucun remplacement silencieux n'est
+fait. La CLI `scripts/import_gsie_test_bundle.py` permet un import manuel.
+Ce chemin est la précondition nommée par DEC-000073 pour qu'une préparation
+serveur puisse assembler règles et état global sans les inventer.
+
 La façade GeoSylva n'est **pas encore livrée**. RFC-0041 (Draft) et DEC-000073
 (Proposé) prévoient une future route
 `POST /api/v1/orchestration/analyse-geosylva`, mais plusieurs préconditions
-restent à implémenter : sélection serveur de règles qualifiées, qualifications
-validées, état global sourcé et lien explicite
-`parcelleId local → gsie_resource_id`. Aucun état par défaut n'est autorisé.
+restent à valider puis compléter : endpoint `station-link` dédié, révocable
+et contrôlé par compte. Aucun état par défaut n'est autorisé.
 
 Voir [RFC-0041](../../02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
 [DEC-000073](../../03_DECISIONS/DEC-000073.md) et
@@ -196,6 +231,10 @@ pytest
   doit être recréée, aucune donnée historique n'étant à conserver.
 - Toute évolution future crée une nouvelle révision Alembic autonome ; la
   baseline ne doit jamais être réécrite ni importer les modèles applicatifs.
+- `20260823_0051` crée le sas `field_intake` (provenance, statut, empreinte,
+  cible stationnelle, contraintes et index de lecture) requis par la
+  préparation Forge → GSIE TEST ; son upgrade/downgrade est testé sur
+  PostgreSQL/PostGIS réel.
 - La CI exécute réellement `upgrade head`, `downgrade base`, puis un second
   `upgrade head` sur PostgreSQL 16 avec PostGIS et Apache AGE.
 
