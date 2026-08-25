@@ -141,6 +141,17 @@ fait. La CLI `scripts/import_gsie_test_bundle.py` permet un import manuel.
 Ce chemin est la précondition nommée par DEC-000073 pour qu'une préparation
 serveur puisse assembler règles et état global sans les inventer.
 
+### Vertical Data Registry — SoilGrids replay
+
+Le scénario `tests/integration/test_soilgrids_registry_vertical.py` rejoue
+l'actif de 569 octets autorisé par DEC-000061, sans effectuer de nouvel appel
+à ISRIC. Il applique le manifeste `archive_copy`, conserve l'actif RAW dans
+le Registry, persiste les cinq dimensions de `QualityAssessment` via
+`QualityAssessmentPersistenceService`, puis rejoue exactement le même rapport
+sans créer de doublon. La tentative de promotion est volontairement refusée
+avec `SOURCE_NOT_VALIDATED` tant que la version reste `discovered` : aucune
+promotion vers `staging` ou `production` n'est implicite.
+
 La façade GeoSylva n'est **pas encore livrée**. RFC-0041 (Draft) et DEC-000073
 (Proposé) prévoient une future route
 `POST /api/v1/orchestration/analyse-geosylva`, mais plusieurs préconditions
