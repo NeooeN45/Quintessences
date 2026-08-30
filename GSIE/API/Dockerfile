@@ -88,6 +88,7 @@ WORKDIR /app
 RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
     && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     libgeos-c1v5 \
+    libexpat1 \
     libproj25 \
     libpq5 \
     && rm -rf /var/lib/apt/lists/* \
