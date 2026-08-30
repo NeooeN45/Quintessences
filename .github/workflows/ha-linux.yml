@@ -115,6 +115,7 @@ jobs:
             --set=ON_ERROR_STOP=1 \
             --command 'SELECT 1' >/dev/null
           docker compose build api
+          docker image inspect "$GSIE_HA_API_IMAGE" >/dev/null
 
       - name: Démarrer les replicas derrière TLS
         run: |
