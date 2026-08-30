@@ -1,0 +1,49 @@
+name: Source governance
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-governance-${{ github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  registry-and-engine-matrix:
+    name: Registry, qualification et matrice moteurs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: GSIE/API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Installer Python et uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances verrouillées
+        run: uv sync --locked --extra dev
+
+      - name: Auditer les 23 sources SCI-001
+        run: PYTHONPATH=src uv run python scripts/audit_source_coverage.py
+
+      - name: Réconcilier les fiches de recherche D1 à D8
+        run: PYTHONPATH=src uv run python scripts/audit_research_source_inventory.py
+
+      - name: Auditer les dépendances des 14 moteurs
+        run: PYTHONPATH=src uv run python scripts/audit_engine_source_matrix.py
+
+      - name: Tester les portes de gouvernance sans réseau
+        run: >-
+          PYTHONPATH=src uv run pytest
+          tests/unit/test_source_coverage.py
+          tests/unit/test_engine_source_matrix.py
+          tests/unit/test_source_qualification.py
+          tests/unit/test_research_source_inventory.py
+          --confcutdir=tests/unit
