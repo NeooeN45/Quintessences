@@ -699,6 +699,90 @@ class TestOrchestrationRouter:
         assert resp.status_code == 409
         assert "contenu différent" in resp.json()["detail"]
 
+    @pytest.mark.parametrize(
+        ("error_type", "expected_status"),
+        [
+            ("StationIntrouvableError", 404),
+            ("HydratationVideError", 400),
+        ],
+    )
+    async def should_map_context_preview_errors(
+        self,
+        orchestration_client: AsyncClient,
+        error_type: str,
+        expected_status: int,
+    ) -> None:
+        from gsie_api.engines.orchestration.hydration import (
+            HydratationVideError,
+            StationIntrouvableError,
+        )
+
+        exception_type = {
+            "StationIntrouvableError": StationIntrouvableError,
+            "HydratationVideError": HydratationVideError,
+        }[error_type]
+        with patch("gsie_api.engines.orchestration.router.StationContexteHydrator") as mock_cls:
+            mock_cls.return_value.hydrate = AsyncMock(
+                side_effect=exception_type("station indisponible")
+            )
+            resp = await orchestration_client.get(
+                f"{_API_PREFIX}/orchestration/stations/{uuid4()}/contexte",
+                headers=_auth_headers(),
+                params={"niveau_pedologie": "B"},
+            )
+
+        assert resp.status_code == expected_status
+        assert "station indisponible" in resp.json()["detail"]
+
+    @pytest.mark.parametrize(
+        ("error_type", "expected_status"),
+        [
+            ("StationIntrouvableError", 404),
+            ("HydratationVideError", 400),
+            ("ReglesQualifieesAbsentesError", 400),
+            ("QualificationRegleManquanteError", 400),
+            ("EtatGlobalNonSourceError", 400),
+            ("VersionRegleManquanteError", 400),
+        ],
+    )
+    async def should_map_station_preparation_errors(
+        self,
+        orchestration_client: AsyncClient,
+        error_type: str,
+        expected_status: int,
+    ) -> None:
+        from gsie_api.engines.orchestration.hydration import (
+            HydratationVideError,
+            StationIntrouvableError,
+        )
+        from gsie_api.engines.orchestration.preparation import (
+            EtatGlobalNonSourceError,
+            QualificationRegleManquanteError,
+            ReglesQualifieesAbsentesError,
+            VersionRegleManquanteError,
+        )
+
+        exception_type = {
+            "StationIntrouvableError": StationIntrouvableError,
+            "HydratationVideError": HydratationVideError,
+            "ReglesQualifieesAbsentesError": ReglesQualifieesAbsentesError,
+            "QualificationRegleManquanteError": QualificationRegleManquanteError,
+            "EtatGlobalNonSourceError": EtatGlobalNonSourceError,
+            "VersionRegleManquanteError": VersionRegleManquanteError,
+        }[error_type]
+        with patch("gsie_api.engines.orchestration.router.StationPreparationService") as mock_cls:
+            mock_cls.return_value.prepare = AsyncMock(
+                side_effect=exception_type("préparation refusée")
+            )
+            resp = await orchestration_client.get(
+                f"{_API_PREFIX}/orchestration/stations/{uuid4()}/preparation",
+                headers=_auth_headers(),
+                params={"niveau_pedologie": "B"},
+            )
+
+        assert resp.status_code == expected_status
+        assert "préparation refusée" in resp.json()["detail"]
+
 
 # ===========================================================================
 # Reasoning Router

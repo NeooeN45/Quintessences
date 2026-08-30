@@ -95,6 +95,10 @@ RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https
 
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+# uv/uvx servent uniquement à construire l'image. Les laisser dans runtime
+# augmente inutilement la surface d'attaque et embarque des dépendances Rust
+# qui ne sont pas nécessaires au service (dont quinn-proto).
+RUN rm -f /usr/local/bin/uv /usr/local/bin/uvx
 COPY --chown=gsie:gsie --from=builder /build/api/src/ ./src/
 COPY --chown=gsie:gsie --from=builder /build/api/pyproject.toml /build/api/gunicorn.conf.py ./
 # Alembic — migrations du schéma (opération explicite, jamais automatique)

@@ -1105,8 +1105,8 @@ MUTATIONS: tuple[Mutation, ...] = (
         # doit être capturé et wrapé dans TelechargementClientError — sans cette
         # garde, l'exception Python brute fuit vers l'appelant (500 non géré).
         ancien="""        try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetCapabilities : {exc}"
             ) from exc""",

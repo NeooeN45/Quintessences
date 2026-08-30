@@ -20,6 +20,7 @@ from gsie_api.auth.identity import (
 )
 from gsie_api.auth.identity_router import (
     get_identity_service,
+    get_mfa_service,
     get_onboarding_billing_service,
     get_personal_organisation_service,
     get_session_service,
@@ -196,6 +197,53 @@ def should_link_google_to_subject_of_current_gsie_session(client: TestClient) ->
     called_account_id = service.link_google.await_args.kwargs["account_id"]
     assert isinstance(called_account_id, UUID)
     assert called_account_id == account.account_id
+
+
+def should_disable_mfa_with_a_recovery_code(client: TestClient) -> None:
+    account_id = uuid4()
+    mfa_service = AsyncMock()
+    mfa_service.verify_recovery_code = AsyncMock(return_value=None)
+    mfa_service.disable = AsyncMock(return_value=None)
+    client.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers={
+            "Authorization": (
+                "Bearer " + create_access_token(subject=str(account_id), claims={"roles": ["user"]})
+            )
+        },
+        json={"code": "RECOVERY-CODE", "is_recovery_code": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"enabled": False}
+    mfa_service.verify_recovery_code.assert_awaited_once_with(account_id, "RECOVERY-CODE")
+    mfa_service.disable.assert_awaited_once_with(account_id)
+
+
+def should_reject_mfa_disable_with_an_invalid_totp(client: TestClient) -> None:
+    account_id = uuid4()
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(return_value=False)
+    mfa_service.disable = AsyncMock(return_value=None)
+    client.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers={
+            "Authorization": (
+                "Bearer " + create_access_token(subject=str(account_id), claims={"roles": ["user"]})
+            )
+        },
+        json={"code": "000000", "is_recovery_code": False},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "PREUVE_MFA_INVALIDE"
+    mfa_service.disable.assert_not_awaited()
 
 
 def test_should_build_pkce_authorization_url_for_registered_redirect() -> None:
