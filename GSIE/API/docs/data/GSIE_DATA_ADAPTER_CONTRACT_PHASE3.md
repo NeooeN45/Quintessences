@@ -4,24 +4,25 @@
 |---|---|
 | **Identifiant** | GSIE-DATA-ADAPTER-0001 |
 | **Statut** | Draft |
-| **Version** | 1.2.0 |
-| **Date** | 2026-08-10 |
+| **Version** | 1.3.0 |
+| **Date** | 2026-08-30 |
 | **Auteur** | Codex — sous contrôle du Fondateur |
 | **Décision de rattachement** | RFC-0038 v1.2.0 / DEC-000059 — Validated |
 
 ## 1. Résumé
 
 La tranche Phase 3 stabilise l’interface commune des fournisseurs externes,
-le registre lazy de plugins et quatre façades non enregistrées par défaut.
-Les façades IGN, SoilGrids, GBIF et Météo-France délèguent aux clients
-résilients existants ; elles n’effectuent aucun appel réseau à leur
-construction. Leur activation reste une décision explicite du bootstrap,
-après allowlist et configuration opérateur.
+le registre lazy de plugins et les façades fournisseurs. Les façades IGN,
+SoilGrids WCS, GBIF, TAXREF et Météo-France délèguent aux clients résilients
+existants ; l’Indigénat Bellifa délègue au dataset local versionné. Aucun
+appel réseau n’est effectué à leur construction. Leur activation reste une
+décision explicite du bootstrap, après allowlist et configuration opérateur.
 
 ## 2. Contexte
 
-Le Data Registry est maintenant disponible en lecture. Les clients IGN,
-SoilGrids, GBIF et Météo-France restent attachés à leurs moteurs, mais sont
+Le Data Registry est maintenant disponible en lecture. Les clients fournisseurs
+historiques restent réutilisables derrière leurs façades, tandis que Bellifa
+est lu localement et SoilGrids passe par son client WCS dédié ; tous sont
 désormais accessibles par des façades compatibles avec le contrat commun. Un
 adapter doit devenir l’unique façade autorisée pour la découverte, la santé,
 la requête, le fetch et la normalisation d’un fournisseur. Le resolver n’est
@@ -46,6 +47,9 @@ Les objets immuables du contrat bornent :
 - les candidats découverts (`external_id`, version, domaine, licence et
   distribution) ;
 - les résultats de requête et leurs curseurs ;
+- les paramètres fournisseur structurés de `AdapterFetchRequest.parameters`,
+  séparés de l’URL distribuée et soumis à la validation propre de chaque
+  adapter ;
 - les flux de fetch, jamais chargés entièrement en mémoire par le contrat ;
 - les rapports de santé avec statut, horodatage, latence et statut HTTP.
 
@@ -65,19 +69,25 @@ une source et ne contourne aucune licence.
 
 ### 3.4 Façades livrées et limites de cette tranche
 
-Les quatre façades suivantes sont disponibles mais ne sont pas enregistrées
-par défaut :
+Les six façades suivantes sont disponibles et enregistrées par le bootstrap
+standard :
 
 - `GBIFAdapter` : rapprochement d’espèce et nom vernaculaire ;
 - `IGNAdapter` : parcelle cadastrale et altitude RGE ALTI, avec deux hôtes
   IGN explicitement allowlistés ;
-- `SoilGridsAdapter` : propriétés pédologiques ponctuelles et profondeur,
-  en conservant la conversion `d_factor` du client ;
+- `SoilGridsAdapter` : emprise, propriété, profondeur et quantile via WCS
+  2.0.1 `maps.isric.org/mapserv`, avec allowlist des couvertures et flux
+  GeoTIFF borné ; le registre de qualification garde FETCH fermé par défaut ;
+- `TaxrefAdapter` : résolution TAXREF via le miroir GBIF explicitement déclaré
+  dans SCI-001 ;
+- `IndigenatBellifaAdapter` : lecture exacte du TSV Bellifa versionné, sans
+  appel réseau ni statut complété par inférence ;
 - `MeteoFranceAdapter` : niveau de danger de feux de forêt par département.
 
-Chaque façade délègue au client résilient existant, renvoie `unknown` en mode
-offline pour le contrôle de santé, convertit les erreurs fournisseur en
-statuts `DatasetHealth` stables et n’invente aucune valeur absente. Les ports
+Chaque façade délègue à un client résilient ou au loader local versionné,
+renvoie `unknown` en mode offline pour le contrôle de santé, convertit les
+erreurs fournisseur en statuts `DatasetHealth` stables et n’invente aucune
+valeur absente. Les ports
 simulés des tests ne sont pas des connexions de production : ils vérifient la
 validation et la normalisation sans réseau. Le bootstrap, les jobs périodiques,
 le cache partagé, le resolver, les fetchs volumineux et la migration des
@@ -86,11 +96,11 @@ ajouté directement à une application cliente.
 
 ### 3.5 Vérification
 
-Vingt-neuf tests unitaires couvrent le descripteur, la sécurité URL, les
-bornes de requête, la création lazy, le cache, les doublons, les factories
-incohérentes, le refus explicite des capacités absentes et les quatre façades
-avec des clients simulés. Ruff et mypy strict passent sur le contrat, les
-façades et leurs tests ; aucun appel fournisseur n’est réalisé.
+Les tests unitaires couvrent le descripteur, la sécurité URL, les bornes de
+requête, la création lazy, le cache, les doublons, les factories incohérentes,
+le refus explicite des capacités absentes et les six façades avec des clients
+simulés. Ruff et mypy strict passent sur le contrat, les façades et leurs
+tests ; aucun appel fournisseur n’est réalisé.
 
 ## 4. Sources et références
 
@@ -99,12 +109,15 @@ façades et leurs tests ; aucun appel fournisseur n’est réalisé.
 - `GSIE/API/src/gsie_api/data/adapters.py` — contrat et registre ;
 - `GSIE/API/src/gsie_api/data/gbif_adapter.py` — façade GBIF ;
 - `GSIE/API/src/gsie_api/data/ign_adapter.py` — façade IGN ;
-- `GSIE/API/src/gsie_api/data/soilgrids_adapter.py` — façade SoilGrids ;
+- `GSIE/API/src/gsie_api/data/soilgrids_adapter.py` — façade SoilGrids WCS ;
+- `GSIE/API/src/gsie_api/data/soilgrids_wcs_client.py` — client WCS et flux borné ;
+- `GSIE/API/src/gsie_api/data/taxref_adapter.py` — façade TAXREF ;
+- `GSIE/API/src/gsie_api/data/indigenat_adapter.py` — façade Indigénat Bellifa ;
 - `GSIE/API/src/gsie_api/data/meteofrance_adapter.py` — façade Météo-France ;
 - `GSIE/API/src/gsie_api/shared/http_client.py` — résilience HTTP et protection SSRF ;
 - `GSIE/API/src/gsie_api/engines/gis/ign_client.py` — client IGN à encapsuler ;
 - `GSIE/API/src/gsie_api/engines/botanical/gbif_client.py` — client GBIF à encapsuler ;
-- `GSIE/API/src/gsie_api/engines/pedology/soilgrids_client.py` — client SoilGrids à encapsuler ;
+- `GSIE/API/src/gsie_api/engines/pedology/soilgrids_client.py` — client SoilGrids historique conservé hors du Data Registry ; il ne doit plus servir de cible d’adapter ni réintroduire le REST bêta ;
 - `GSIE/API/tests/unit/test_data_registry_adapters.py` — tests de contrat.
 
 ## 5. Historique des modifications
@@ -114,3 +127,4 @@ façades et leurs tests ; aucun appel fournisseur n’est réalisé.
 | 1.0.0 | 2026-08-10 | Création du contrat commun et du registre lazy Phase 3. |
 | 1.1.0 | 2026-08-10 | Ajout de la façade GBIF non activée par défaut et de ses tests simulés. |
 | 1.2.0 | 2026-08-10 | Ajout des façades IGN, SoilGrids et Météo-France, de leurs ports simulés et de la vérification hors réseau. |
+| 1.3.0 | 2026-08-30 | Branchement Registry de TAXREF et Bellifa ; remplacement de la façade SoilGrids REST par WCS 2.0.1 et ajout du fetch structuré borné. |

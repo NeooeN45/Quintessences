@@ -29,13 +29,13 @@ cd E:\Projets\Quintessences\GSIE\API
 python scripts\audit_source_coverage.py
 ```
 
-La commande doit rester bloquante tant qu'un adapter n'est pas relié à une
-source autorisée. Au 2026-08-30, elle recense 23 sources et signale
-`ADAPTER_WITHOUT_SOURCE_BINDING:soilgrids` : l'adapter actuel cible encore le
-REST bêta interdit, alors que la voie canonique déclarée est le WCS. Cette
-erreur n'autorise ni FETCH ni promotion ; elle doit être levée par un adapter
-WCS qualifié, avec allowlist des couvertures, puis par une preuve d'intégration
-rejouable.
+La commande reste bloquante tant qu'un adapter n'est pas relié à une source
+autorisée. Au 2026-08-30, elle recense 23 sources et valide le branchement de
+TAXREF via le miroir GBIF, de l'Indigénat Bellifa sur son TSV versionné et de
+SoilGrids via WCS 2.0.1. Le REST bêta `soilgrids-rest-beta` reste explicitement
+`BLOCKED` et sans liaison d'adapter. Le branchement WCS ne lève pas le verrou
+FETCH : `GSIE/DATASETS/FETCH_QUALIFICATION.json` doit toujours être ouvert par
+une décision opérateur distincte avant tout téléchargement ou promotion.
 
 ## Première verticale : IFN
 

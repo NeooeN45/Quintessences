@@ -19,11 +19,11 @@ def test_la_matrice_couvre_exactement_le_registre_scientifique() -> None:
     assert len(SOURCE_COVERAGE) == len(SCIENTIFIC_SOURCES)
 
 
-def test_le_controle_signale_l_adapter_soilgrids_interdit_et_non_lie() -> None:
+def test_le_controle_valide_les_trois_adapters_ouverts_et_bloque_le_rest() -> None:
     audit = audit_source_coverage(adapter_registry=build_adapter_registry())
 
-    assert not audit.valid
-    assert "ADAPTER_WITHOUT_SOURCE_BINDING:soilgrids" in audit.errors
+    assert audit.valid
+    assert not any(error.startswith("ADAPTER_WITHOUT_SOURCE_BINDING:") for error in audit.errors)
     assert "soilgrids-rest-beta" in {
         item.source_id for item in audit.entries if item.status is SourceOperationalStatus.BLOCKED
     }
@@ -40,7 +40,10 @@ def test_les_trois_requetes_actuelles_exigent_query_et_mode_metadata() -> None:
     assert set(query_entries) == {
         "gbif-species-api",
         "ign-apicarto-cadastre",
+        "indigenat-bellifa-2026",
         "meteofrance-meteo-forets",
+        "soilgrids-wcs",
+        "taxref-via-gbif",
     }
     assert all(item.adapter_key is not None for item in query_entries.values())
     assert all(

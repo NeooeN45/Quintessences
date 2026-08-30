@@ -140,26 +140,28 @@ SOURCE_COVERAGE: tuple[SourceCoverage, ...] = (
     ),
     _coverage(
         "taxref-via-gbif",
-        SourceOperationalStatus.UNWIRED_OPEN_COPY,
-        "source ouverte sans adapter Data Registry ni handoff Forge dédié",
+        SourceOperationalStatus.ADAPTER_QUERY,
+        "Data Registry adapter TaxrefAdapter via miroir GBIF",
+        adapter_key="taxref",
+        required_capability=AdapterCapability.QUERY,
         canonical_surface="jeu TAXREF miroir GBIF",
-        blocking_reason="preuve d'acquisition, version et branchement Registry manquants",
     ),
     _coverage("soilgrids", SourceOperationalStatus.HISTORICAL, "identité agrégée obsolète"),
     _coverage(
         "soilgrids-wcs",
-        SourceOperationalStatus.UNWIRED_OPEN_COPY,
-        "voie canonique WCS déclarée mais adapter actuel absent",
+        SourceOperationalStatus.ADAPTER_QUERY,
+        "Data Registry adapter SoilGridsAdapter via WCS ISRIC",
+        adapter_key="soilgrids",
+        required_capability=AdapterCapability.QUERY,
         canonical_surface="WCS 2.0.1 maps.isric.org/mapserv",
-        blocking_reason="allowlist des couvertures et FETCH qualifié restent à activer",
+        blocking_reason="FETCH reste fermé par le registre de qualification opérateur",
     ),
     _coverage(
         "soilgrids-rest-beta",
         SourceOperationalStatus.BLOCKED,
         "aucune ingestion",
-        adapter_key="soilgrids",
         canonical_surface="REST bêta suspendu",
-        blocking_reason="source DO_NOT_INGEST ; l'adapter REST existant ne peut pas être promu",
+        blocking_reason="source DO_NOT_INGEST ; aucun adapter de production ne doit la cibler",
     ),
     _coverage(
         "ign-apicarto-geopf", SourceOperationalStatus.HISTORICAL, "identité agrégée obsolète"
@@ -190,10 +192,11 @@ SOURCE_COVERAGE: tuple[SourceCoverage, ...] = (
     ),
     _coverage(
         "indigenat-bellifa-2026",
-        SourceOperationalStatus.UNWIRED_OPEN_COPY,
-        "source ouverte documentée sans connecteur reproductible",
+        SourceOperationalStatus.ADAPTER_QUERY,
+        "Data Registry adapter IndigenatBellifaAdapter sur fichier versionné",
+        adapter_key="indigenat-bellifa",
+        required_capability=AdapterCapability.QUERY,
         canonical_surface="jeu Recherche Data Gouv / DOI",
-        blocking_reason="connecteur, version, empreinte et validation métier manquants",
     ),
     _coverage(
         "climessences",
@@ -289,8 +292,11 @@ def audit_source_coverage(
                 errors.append(
                     f"SOURCE_ADAPTER_CAPABILITY_MISSING:{item.source_id}:{item.adapter_key}:{item.required_capability.value}"
                 )
-            if entry.mode_ingestion is not IngestionMode.metadata_link:
-                errors.append(f"SOURCE_ADAPTER_QUERY_REQUIRES_METADATA_MODE:{item.source_id}")
+            if entry.mode_ingestion not in {
+                IngestionMode.metadata_link,
+                IngestionMode.open_copy,
+            }:
+                errors.append(f"SOURCE_ADAPTER_QUERY_REQUIRES_METADATA_OR_OPEN_COPY:{item.source_id}")
 
     for descriptor in adapters.descriptors():
         if descriptor.key not in bound_adapter_keys:
