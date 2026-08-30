@@ -111,5 +111,13 @@ def test_health_scheduler_keeps_historical_slug_as_read_only_fallback() -> None:
     assert _resolve_manifest_slug("gbif", {"gbif-occurrences"}) == "gbif-occurrences"
 
 
+def test_health_scheduler_ne_cible_jamais_le_rest_beta_soilgrids() -> None:
+    assert (
+        _resolve_manifest_slug("soilgrids", {"soilgrids-rest-beta", "soilgrids-wcs"})
+        == "soilgrids-wcs"
+    )
+    assert _resolve_manifest_slug("soilgrids", {"soilgrids-rest-beta"}) is None
+
+
 def test_health_scheduler_rejects_unknown_adapter_projection() -> None:
     assert _resolve_manifest_slug("unknown", {"gbif-species-api"}) is None
