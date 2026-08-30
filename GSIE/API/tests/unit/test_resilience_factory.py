@@ -233,7 +233,7 @@ CLIENT_REGISTRY: list[ClientSpec] = [
         exception=SoilGridsClientError,
         call=lambda c: c.get_properties(44.8, -0.6, ["phh2o"]),
         auth=False,
-        body_format=BodyFormat.JSON,
+        body_format=BodyFormat.BINARY,
     ),
     ClientSpec(
         name="ign_altitude",

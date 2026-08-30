@@ -184,15 +184,15 @@ MUTATIONS: tuple[Mutation, ...] = (
         tests=("tests/unit/test_botanical_taxref.py",),
     ),
     Mutation(
-        cle="soilgrids_json_invalide_non_garde",
-        fichier="gsie_api/shared/http_client.py",
-        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
-        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        cle="soilgrids_geotiff_invalide_non_garde",
+        fichier="gsie_api/data/soilgrids_wcs_client.py",
+        ancien='                    if dataset.dtypes[0] != "int16":',
+        nouveau="                    if False:",
         defaut_reproduit=(
-            "un JSON malformé de l'API SoilGrids fait planter le client en "
-            "JSONDecodeError non wrappé au lieu de lever SoilGridsClientError"
+            "un GeoTIFF WCS d'un type différent d'INT16 est accepté par le "
+            "moteur et peut contaminer un diagnostic pédologique"
         ),
-        tests=("tests/unit/test_soilgrids_client.py",),
+        tests=("tests/unit/test_soilgrids_wcs_client.py",),
     ),
     Mutation(
         cle="ign_cadastre_json_invalide_non_garde",

@@ -1,6 +1,6 @@
 """Tests unitaires — Pedology Engine (couverture 70% → 100%).
 
-Couvre la méthode `query` qui appelle SoilGridsClient et construit
+Couvre la méthode `query` qui appelle le client SoilGrids WCS et construit
 les caractéristiques du sol. Le client est mocké.
 """
 
@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from gsie_api.data.soilgrids_wcs_client import SoilGridsWcsClient, SoilGridsWcsClientError
 from gsie_api.engines.evidence.schemas import (
     EvidenceLevel,
     KnowledgeStatus,
@@ -20,7 +21,6 @@ from gsie_api.engines.knowledge.engine import KnowledgeEngineError
 from gsie_api.engines.knowledge.schemas import DomaineScientifique, KnowledgeObject, KnowledgeType
 from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
 from gsie_api.engines.pedology.schemas import PedologyQuery
-from gsie_api.engines.pedology.soilgrids_client import SoilGridsClientError
 
 
 def _make_query() -> PedologyQuery:
@@ -38,7 +38,7 @@ class TestPedologyEngineQuery:
         from unittest.mock import MagicMock
 
         mock_client = MagicMock()
-        mock_client.get_properties = AsyncMock(
+        mock_client.query_properties = AsyncMock(
             return_value={"phh2o": 5.5, "clay": 30.0, "sand": 40.0, "silt": 30.0}
         )
         mock_client.unit_for = MagicMock(
@@ -64,7 +64,7 @@ class TestPedologyEngineQuery:
         from unittest.mock import MagicMock
 
         mock_client = MagicMock()
-        mock_client.get_properties = AsyncMock(return_value={"phh2o": 5.5, "unknown_prop": 42.0})
+        mock_client.query_properties = AsyncMock(return_value={"phh2o": 5.5, "unknown_prop": 42.0})
         mock_client.unit_for = MagicMock(return_value="unit")
 
         engine = PedologyEngine(soilgrids_client=mock_client)
@@ -78,7 +78,7 @@ class TestPedologyEngineQuery:
         from unittest.mock import MagicMock
 
         mock_client = MagicMock()
-        mock_client.get_properties = AsyncMock(return_value={})
+        mock_client.query_properties = AsyncMock(return_value={})
         mock_client.unit_for = MagicMock(return_value="unit")
 
         engine = PedologyEngine(soilgrids_client=mock_client)
@@ -90,20 +90,26 @@ class TestPedologyEngineQuery:
         from unittest.mock import MagicMock
 
         mock_client = MagicMock()
-        mock_client.get_properties = AsyncMock(side_effect=SoilGridsClientError("API indisponible"))
+        mock_client.query_properties = AsyncMock(
+            side_effect=SoilGridsWcsClientError("API indisponible")
+        )
 
         engine = PedologyEngine(soilgrids_client=mock_client)
         with pytest.raises(PedologyEngineError, match="API indisponible"):
             await engine.query(_make_query())
 
-    def should_return_version_0_1_0(self) -> None:
-        assert PedologyEngine.version() == "0.1.0"
+    def should_return_version_0_2_0(self) -> None:
+        assert PedologyEngine.version() == "0.2.0"
+
+    def should_use_the_qualified_wcs_client_by_default(self) -> None:
+        engine = PedologyEngine()
+        assert isinstance(engine._soilgrids_client, SoilGridsWcsClient)
 
 
 def _make_soilgrids_engine() -> PedologyEngine:
     """PedologyEngine avec un client SoilGrids mocké (4 propriétés standard)."""
     mock_client = MagicMock()
-    mock_client.get_properties = AsyncMock(
+    mock_client.query_properties = AsyncMock(
         return_value={"phh2o": 5.5, "clay": 30.0, "sand": 40.0, "silt": 30.0}
     )
     mock_client.unit_for = MagicMock(
@@ -211,7 +217,9 @@ class TestPedologyEngineQueryAndIngest:
     ) -> None:
         """query_and_ingest propage l'échec SoilGrids comme query() (même garde)."""
         mock_client = MagicMock()
-        mock_client.get_properties = AsyncMock(side_effect=SoilGridsClientError("API indisponible"))
+        mock_client.query_properties = AsyncMock(
+            side_effect=SoilGridsWcsClientError("API indisponible")
+        )
         engine = PedologyEngine(soilgrids_client=mock_client)
 
         with pytest.raises(PedologyEngineError, match="API indisponible"):

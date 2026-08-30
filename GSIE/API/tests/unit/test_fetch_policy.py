@@ -41,7 +41,7 @@ def test_enabling_fetch_without_technical_bounds_is_rejected() -> None:
             fetch_enabled=True,
             legal_basis="SCI-001:OPEN_COPY",
             evidence_refs=["SCI-001"],
-            allowed_hosts=["rest.isric.org"],
+            allowed_hosts=["maps.isric.org"],
             allowed_content_types=["application/json"],
             checksum_algorithm="sha256",
             reviewed_by="Fondateur",

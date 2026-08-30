@@ -117,7 +117,7 @@ tests ; aucun appel fournisseur n’est réalisé.
 - `GSIE/API/src/gsie_api/shared/http_client.py` — résilience HTTP et protection SSRF ;
 - `GSIE/API/src/gsie_api/engines/gis/ign_client.py` — client IGN à encapsuler ;
 - `GSIE/API/src/gsie_api/engines/botanical/gbif_client.py` — client GBIF à encapsuler ;
-- `GSIE/API/src/gsie_api/engines/pedology/soilgrids_client.py` — client SoilGrids historique conservé hors du Data Registry ; il ne doit plus servir de cible d’adapter ni réintroduire le REST bêta ;
+- `GSIE/API/src/gsie_api/engines/pedology/soilgrids_client.py` — façade de compatibilité historique ; elle délègue exclusivement au client WCS qualifié et ne doit jamais réintroduire le REST bêta. Le chemin actif de `PedologyEngine` est `GSIE/API/src/gsie_api/data/soilgrids_wcs_client.py` ;
 - `GSIE/API/tests/unit/test_data_registry_adapters.py` — tests de contrat.
 
 ## 5. Historique des modifications

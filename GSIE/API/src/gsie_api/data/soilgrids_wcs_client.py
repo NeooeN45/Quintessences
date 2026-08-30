@@ -2,19 +2,72 @@
 
 from __future__ import annotations
 
+import math
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 import httpx
+import pyproj
+import rasterio
+from rasterio.io import MemoryFile
 
 from gsie_api.data.adapters import AdapterFetchResult, AdapterSecurityError
 from gsie_api.data.soilgrids_wcs_policy import (
+    SOILGRIDS_FETCH_MAX_BYTES,
+    SOILGRIDS_FETCH_TIMEOUT_SECONDS,
+    SOILGRIDS_POINT_HALF_SIZE_METERS,
+    SOILGRIDS_PROPERTY_TO_WCS_CODE,
     SOILGRIDS_WCS_ENDPOINT,
+    SOILGRIDS_WCS_PROJ4,
     SoilGridsWcsRequest,
 )
 from gsie_api.shared.http_client import ResilientHttpClient, valider_url_egress
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
+
+_SOILGRIDS_CONVERSION_FACTORS = MappingProxyType(
+    {
+        "bdod": 100.0,
+        "cec": 10.0,
+        "cfvo": 10.0,
+        "clay": 10.0,
+        "nitrogen": 100.0,
+        "ocd": 10.0,
+        "ocs": 10.0,
+        "phh2o": 10.0,
+        "sand": 10.0,
+        "silt": 10.0,
+        "soc": 10.0,
+        "wv003": 10.0,
+        "wv1500": 10.0,
+    }
+)
+
+_SOILGRIDS_UNITS = MappingProxyType(
+    {
+        "bdod": "kg/dm³",
+        "cec": "cmol(c)/kg",
+        "cfvo": "%",
+        "clay": "%",
+        "nitrogen": "g/kg",
+        "ocd": "kg/m³",
+        "ocs": "kg/m²",
+        "phh2o": "pH",
+        "sand": "%",
+        "silt": "%",
+        "soc": "g/kg",
+        "wv003": "%",
+        "wv1500": "%",
+    }
+)
+
+_TO_SOILGRIDS = pyproj.Transformer.from_crs(
+    "EPSG:4326",
+    SOILGRIDS_WCS_PROJ4,
+    always_xy=True,
+)
 
 
 class SoilGridsWcsClientError(Exception):
@@ -127,6 +180,132 @@ class SoilGridsWcsClient(ResilientHttpClient):
             content_type=response.headers.get("content-type"),
             content_length=content_length,
         )
+
+    @staticmethod
+    def _point_bbox(latitude: float, longitude: float) -> tuple[float, float, float, float]:
+        """Construit une emprise d'une cellule autour d'un point WGS84."""
+
+        if not (-90.0 <= latitude <= 90.0 and -180.0 <= longitude <= 180.0):
+            raise SoilGridsWcsClientError("Coordonnées WGS84 hors limites")
+        x, y = _TO_SOILGRIDS.transform(longitude, latitude)
+        if not math.isfinite(x) or not math.isfinite(y):
+            raise SoilGridsWcsClientError("Projection du point SoilGrids impossible")
+        half = SOILGRIDS_POINT_HALF_SIZE_METERS
+        return (x - half, y - half, x + half, y + half)
+
+    @staticmethod
+    async def _read_bounded_body(result: AdapterFetchResult, max_bytes: int) -> bytes:
+        """Matérialise une petite couverture après application des bornes."""
+
+        chunks: list[bytes] = []
+        size = 0
+        try:
+            async for chunk in result.body:
+                size += len(chunk)
+                if size > max_bytes:
+                    raise AdapterSecurityError("SOILGRIDS_WCS_SIZE_LIMIT_EXCEEDED")
+                chunks.append(chunk)
+        finally:
+            close = getattr(result.body, "aclose", None)
+            if close is not None:
+                await close()
+        return b"".join(chunks)
+
+    @staticmethod
+    def _decode_point_value(
+        payload: bytes,
+        request: SoilGridsWcsRequest,
+        *,
+        latitude: float,
+        longitude: float,
+    ) -> float | None:
+        """Lit la cellule couvrant le point et applique le facteur SoilGrids."""
+
+        try:
+            with MemoryFile(payload) as memory_file, memory_file.open() as dataset:
+                if dataset.count != 1:
+                    raise SoilGridsWcsClientError(
+                        "La couverture WCS SoilGrids doit contenir une seule bande"
+                    )
+                if dataset.crs is None:
+                    raise SoilGridsWcsClientError(
+                        "La couverture WCS SoilGrids ne déclare pas de projection"
+                    )
+                if dataset.dtypes[0] != "int16":
+                    raise SoilGridsWcsClientError(
+                        "La couverture WCS SoilGrids n'est pas de type INT16"
+                    )
+                x, y = _TO_SOILGRIDS.transform(longitude, latitude)
+                row, column = dataset.index(x, y)
+                if not (0 <= row < dataset.height and 0 <= column < dataset.width):
+                    return None
+                value = dataset.read(1, masked=True)[row, column]
+                if getattr(value, "mask", False):
+                    return None
+                raw_value = float(value)
+        except SoilGridsWcsClientError:
+            raise
+        except (IndexError, OSError, rasterio.errors.RasterioError, TypeError, ValueError) as exc:
+            raise SoilGridsWcsClientError(
+                "La réponse WCS SoilGrids n'est pas un GeoTIFF exploitable"
+            ) from exc
+
+        if not math.isfinite(raw_value):
+            return None
+        facteur = _SOILGRIDS_CONVERSION_FACTORS[request.property_code]
+        return raw_value / facteur
+
+    async def query_properties(
+        self,
+        latitude: float,
+        longitude: float,
+        properties: list[str],
+        depth: str = "0-5cm",
+        quantile: str = "mean",
+    ) -> dict[str, float]:
+        """Récupère les valeurs ponctuelles SoilGrids par WCS et GeoTIFF.
+
+        Le WCS expose une couverture par propriété. Chaque appel est donc
+        borné à une cellule de 250 m, lu en mémoire après contrôle de taille,
+        puis converti selon les facteurs officiels de SoilGrids. Une cellule
+        NoData est omise ; elle n'est jamais remplacée par une valeur par
+        défaut.
+        """
+
+        bbox = self._point_bbox(latitude, longitude)
+        values: dict[str, float] = {}
+        for property_code in dict.fromkeys(properties):
+            if property_code not in SOILGRIDS_PROPERTY_TO_WCS_CODE:
+                raise SoilGridsWcsClientError(
+                    f"Propriété SoilGrids absente de l'allowlist : {property_code}"
+                )
+            request = SoilGridsWcsRequest(
+                property_code=property_code,
+                depth=depth,
+                quantile=quantile,
+                bbox=bbox,
+            )
+            result = await self.fetch_coverage(
+                request,
+                timeout_seconds=SOILGRIDS_FETCH_TIMEOUT_SECONDS,
+                max_bytes=SOILGRIDS_FETCH_MAX_BYTES,
+            )
+            payload = await self._read_bounded_body(result, SOILGRIDS_FETCH_MAX_BYTES)
+            value = self._decode_point_value(
+                payload,
+                request,
+                latitude=latitude,
+                longitude=longitude,
+            )
+            if value is not None:
+                values[property_code] = value
+        return values
+
+    @staticmethod
+    def unit_for(property_name: str) -> str:
+        """Retourne l'unité conventionnelle d'une propriété SoilGrids."""
+
+        return _SOILGRIDS_UNITS.get(property_name, "")
 
 
 __all__ = ["SoilGridsWcsClient", "SoilGridsWcsClientError"]
