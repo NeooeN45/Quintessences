@@ -53,7 +53,11 @@ async def should_accept_a_field_intake_with_http_metadata() -> None:
 
     with patch("gsie_api.data.field_intake_router.FieldIntakeService", return_value=service):
         response = await submit_field_intake(
-            _submission(), request, Response(), {"sub": str(submitted_by)}, MagicMock()
+            payload=_submission(),
+            request=request,
+            response=Response(),
+            user={"sub": str(submitted_by)},
+            session=MagicMock(),
         )
 
     assert response == result
@@ -68,7 +72,13 @@ async def should_accept_a_field_intake_with_http_metadata() -> None:
 @pytest.mark.asyncio
 async def should_reject_field_intake_without_a_jwt_subject() -> None:
     with pytest.raises(HTTPException) as captured:
-        await submit_field_intake(_submission(), _request({}), Response(), {}, MagicMock())
+        await submit_field_intake(
+            payload=_submission(),
+            request=_request({}),
+            response=Response(),
+            user={},
+            session=MagicMock(),
+        )
 
     assert captured.value.status_code == 401
     assert captured.value.detail == "Sujet JWT absent"
@@ -84,11 +94,11 @@ async def should_map_field_intake_idempotency_conflict_to_http_409() -> None:
         pytest.raises(HTTPException) as captured,
     ):
         await submit_field_intake(
-            _submission(),
-            _request({}),
-            Response(),
-            {"sub": str(uuid4())},
-            MagicMock(),
+            payload=_submission(),
+            request=_request({}),
+            response=Response(),
+            user={"sub": str(uuid4())},
+            session=MagicMock(),
         )
 
     assert captured.value.status_code == 409
