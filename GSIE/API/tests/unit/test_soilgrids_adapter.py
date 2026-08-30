@@ -142,16 +142,12 @@ async def test_soilgrids_adapter_refuse_les_parametres_invalides() -> None:
 
     with pytest.raises(ValueError, match="propriété"):
         await adapter.query(
-            AdapterQueryRequest(
-                parameters={**_parameters(), "property_code": "unknown"}
-            ),
+            AdapterQueryRequest(parameters={**_parameters(), "property_code": "unknown"}),
             context,
         )
     with pytest.raises(ValueError, match="emprise"):
         await adapter.query(
-            AdapterQueryRequest(
-                parameters={**_parameters(), "bbox": (0.0, 0.0, 0.0, 1.0)}
-            ),
+            AdapterQueryRequest(parameters={**_parameters(), "bbox": (0.0, 0.0, 0.0, 1.0)}),
             context,
         )
     with pytest.raises(ValueError, match="inconnue"):

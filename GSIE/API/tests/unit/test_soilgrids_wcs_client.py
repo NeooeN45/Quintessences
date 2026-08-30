@@ -90,6 +90,4 @@ async def test_wcs_client_refuse_un_flux_superieur_a_la_borne() -> None:
     )
 
     with pytest.raises(AdapterSecurityError, match="SIZE_LIMIT"):
-        await SoilGridsWcsClient().fetch_coverage(
-            _request(), timeout_seconds=30.0, max_bytes=10
-        )
+        await SoilGridsWcsClient().fetch_coverage(_request(), timeout_seconds=30.0, max_bytes=10)

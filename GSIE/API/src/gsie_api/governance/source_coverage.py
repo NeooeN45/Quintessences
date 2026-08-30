@@ -296,7 +296,9 @@ def audit_source_coverage(
                 IngestionMode.metadata_link,
                 IngestionMode.open_copy,
             }:
-                errors.append(f"SOURCE_ADAPTER_QUERY_REQUIRES_METADATA_OR_OPEN_COPY:{item.source_id}")
+                errors.append(
+                    f"SOURCE_ADAPTER_QUERY_REQUIRES_METADATA_OR_OPEN_COPY:{item.source_id}"
+                )
 
     for descriptor in adapters.descriptors():
         if descriptor.key not in bound_adapter_keys:
