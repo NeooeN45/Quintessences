@@ -7,8 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 from starlette.requests import Request
+from starlette.responses import Response
 
 from gsie_api.data.field_intake import (
     FieldIntakeConflict,
