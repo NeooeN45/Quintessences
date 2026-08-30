@@ -706,6 +706,41 @@ class TestOrchestrationRouter:
             ("HydratationVideError", 400),
         ],
     )
+    async def should_map_analyse_hydration_errors(
+        self,
+        orchestration_client: AsyncClient,
+        error_type: str,
+        expected_status: int,
+    ) -> None:
+        from gsie_api.engines.orchestration.hydration import (
+            HydratationVideError,
+            StationIntrouvableError,
+        )
+
+        exception_type = {
+            "StationIntrouvableError": StationIntrouvableError,
+            "HydratationVideError": HydratationVideError,
+        }[error_type]
+        with patch("gsie_api.engines.orchestration.router.OrchestrationEngine") as mock_cls:
+            mock_cls.return_value.analyser_idempotente = AsyncMock(
+                side_effect=exception_type("contexte stationnel indisponible")
+            )
+            resp = await orchestration_client.post(
+                f"{_API_PREFIX}/orchestration/analyse",
+                json=_analyse_payload(),
+                headers=_writer_headers(),
+            )
+
+        assert resp.status_code == expected_status
+        assert "contexte stationnel indisponible" in resp.json()["detail"]
+
+    @pytest.mark.parametrize(
+        ("error_type", "expected_status"),
+        [
+            ("StationIntrouvableError", 404),
+            ("HydratationVideError", 400),
+        ],
+    )
     async def should_map_context_preview_errors(
         self,
         orchestration_client: AsyncClient,
