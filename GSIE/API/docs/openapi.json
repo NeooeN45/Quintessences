@@ -7895,10 +7895,22 @@
             "title": "Contexte Fingerprint",
             "type": "string"
           },
+          "contexte_snapshot": {
+            "$ref": "#/components/schemas/StationContexte-Output"
+          },
           "etat_global_field_intake": {
             "format": "uuid",
             "title": "Etat Global Field Intake",
             "type": "string"
+          },
+          "etat_global_fingerprint": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Etat Global Fingerprint",
+            "type": "string"
+          },
+          "etat_global_snapshot": {
+            "$ref": "#/components/schemas/EtatGlobalDeclare-Output"
           },
           "qualifications_utilisees": {
             "items": {
@@ -7914,12 +7926,33 @@
             "title": "Regles Ecartees",
             "type": "array"
           },
+          "regles_fingerprint": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Regles Fingerprint",
+            "type": "object"
+          },
           "regles_selectionnees": {
             "items": {
               "type": "string"
             },
             "title": "Regles Selectionnees",
             "type": "array"
+          },
+          "regles_snapshot": {
+            "items": {
+              "$ref": "#/components/schemas/RegleInference-Output"
+            },
+            "title": "Regles Snapshot",
+            "type": "array"
+          },
+          "regles_versions": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Regles Versions",
+            "type": "object"
           },
           "schema_version": {
             "const": "analyse_preparation.v0.1",
@@ -7936,6 +7969,9 @@
         "required": [
           "station_id",
           "etat_global_field_intake",
+          "etat_global_snapshot",
+          "etat_global_fingerprint",
+          "contexte_snapshot",
           "contexte_fingerprint"
         ],
         "title": "RapportPreparation",
