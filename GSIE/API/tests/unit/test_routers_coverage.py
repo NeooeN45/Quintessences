@@ -1691,7 +1691,7 @@ async def should_return_200_when_pedology_version(pedology_client: AsyncClient):
     """GET /pedology/version retourne la version."""
     response = await pedology_client.get(f"{_API_PREFIX}/pedology/version")
     assert response.status_code == 200
-    assert response.json()["backend"] == "soilgrids"
+    assert response.json()["backend"] == "soilgrids-wcs"
 
 
 async def should_return_401_when_pedology_query_without_token(pedology_client: AsyncClient):

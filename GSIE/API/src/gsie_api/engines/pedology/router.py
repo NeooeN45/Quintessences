@@ -54,7 +54,7 @@ async def pedology_version(request: Request) -> EngineVersionResponse:
     """Retourne la version du moteur et le backend utilisé."""
     return EngineVersionResponse(
         version=PedologyEngine.version(),
-        backend="soilgrids",
+        backend="soilgrids-wcs",
     )
 
 

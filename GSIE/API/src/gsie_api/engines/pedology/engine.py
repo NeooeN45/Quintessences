@@ -15,9 +15,11 @@ remplacée par une valeur par défaut.
 """
 
 from datetime import UTC, datetime
+from typing import Protocol
 from uuid import uuid4
 
 from gsie_api.core.logging import get_logger
+from gsie_api.data.soilgrids_wcs_client import SoilGridsWcsClient, SoilGridsWcsClientError
 from gsie_api.engines.evidence.schemas import (
     ContentType,
     EvidenceLevel,
@@ -34,7 +36,6 @@ from gsie_api.engines.pedology.schemas import (
     PedologyQuery,
     SolCaracteristique,
 )
-from gsie_api.engines.pedology.soilgrids_client import SoilGridsClient, SoilGridsClientError
 from gsie_api.engines.pipeline import EvidenceKnowledgePipeline
 
 logger = get_logger("gsie_api.pedology.engine")
@@ -46,7 +47,7 @@ _SOILGRIDS_SOURCE = SourceReference(
     reference=(
         "SoilGrids 2.0: producing soil information for the globe with "
         "quantified spatial uncertainty, SOIL, 7, 217-240 "
-        "(rest.isric.org/soilgrids/v2.0)"
+        "(WCS 2.0.1, maps.isric.org/mapserv)"
     ),
 )
 
@@ -67,6 +68,22 @@ class PedologyEngineError(Exception):
     """Erreur de base du Pedology Engine."""
 
 
+class _SoilGridsClientPort(Protocol):
+    """Port minimal du client WCS injecté par le moteur et ses tests."""
+
+    async def query_properties(
+        self,
+        latitude: float,
+        longitude: float,
+        properties: list[str],
+        depth: str,
+        quantile: str = "mean",
+    ) -> dict[str, float]: ...
+
+    @staticmethod
+    def unit_for(property_name: str) -> str: ...
+
+
 class PedologyEngine:
     """Moteur Pedology — `query()` ne persiste pas ; `query_and_ingest()` si.
 
@@ -83,13 +100,13 @@ class PedologyEngine:
     au lieu de rester une valeur jetable renvoyée au seul appelant HTTP.
     """
 
-    def __init__(self, soilgrids_client: SoilGridsClient | None = None) -> None:
-        self._soilgrids_client = soilgrids_client or SoilGridsClient()
+    def __init__(self, soilgrids_client: _SoilGridsClientPort | None = None) -> None:
+        self._soilgrids_client = soilgrids_client or SoilGridsWcsClient()
 
     @staticmethod
     def version() -> str:
         """Version du moteur."""
-        return "0.1.0"
+        return "0.2.0"
 
     async def query(self, request: PedologyQuery) -> PedologyData:
         """Récupère les propriétés de sol réelles pour un point (SoilGrids).
@@ -98,17 +115,17 @@ class PedologyEngine:
             PedologyEngineError: si l'API SoilGrids est indisponible.
         """
         try:
-            values = await self._soilgrids_client.get_properties(
+            values = await self._soilgrids_client.query_properties(
                 request.latitude, request.longitude, _V1_PROPERTIES, request.profondeur
             )
-        except SoilGridsClientError as exc:
+        except SoilGridsWcsClientError as exc:
             raise PedologyEngineError(str(exc)) from exc
 
         caracteristiques = [
             SolCaracteristique(
                 nom=_PROPERTY_LABELS[prop],
                 valeur=valeur,
-                unite=SoilGridsClient.unit_for(prop),
+                unite=self._soilgrids_client.unit_for(prop),
                 source=_SOILGRIDS_SOURCE,
                 evidence_level=EvidenceLevel.B,
             )
