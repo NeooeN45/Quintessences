@@ -46,4 +46,5 @@ jobs:
           tests/unit/test_engine_source_matrix.py
           tests/unit/test_source_qualification.py
           tests/unit/test_research_source_inventory.py
+          tests/unit/test_analysis_bundle.py
           --confcutdir=tests/unit
