@@ -44,9 +44,7 @@ _KNOWN_PARAMETER_SOURCES = {
 def _identifier(value: str, *, label: str) -> str:
     normalized = value.strip().lower()
     if not _IDENTIFIER_PATTERN.fullmatch(normalized):
-        raise ValueError(
-            f"{label} doit respecter ^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
-        )
+        raise ValueError(f"{label} doit respecter ^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
     return normalized
 
 
@@ -273,9 +271,7 @@ class ForgeAnalysisBundle(BaseModel):
         for source in self.sources:
             expected_adapter = _KNOWN_SOURCE_ADAPTERS.get(source.source_id)
             if expected_adapter is not None and source.adapter_key != expected_adapter:
-                raise ValueError(
-                    f"adapter {source.adapter_key} incohérent pour {source.source_id}"
-                )
+                raise ValueError(f"adapter {source.adapter_key} incohérent pour {source.source_id}")
             if source.source_id == "soilgrids-wcs":
                 reference = source.reference.lower()
                 if "rest" in reference or "beta" in reference:
@@ -318,12 +314,17 @@ class ForgeAnalysisBundle(BaseModel):
         """Calcule l'empreinte canonique identique à celle de Forge."""
 
         encoded = json.dumps(
-            _canonical_payload(self),
+            self.canonical_payload(),
             ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),
         )
         return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+    def canonical_payload(self) -> dict[str, Any]:
+        """Retourne la représentation stable à persister et à rejouer."""
+
+        return _canonical_payload(self)
 
 
 def validate_analysis_bundle(payload: object) -> ForgeAnalysisBundle:
@@ -333,6 +334,12 @@ def validate_analysis_bundle(payload: object) -> ForgeAnalysisBundle:
         return ForgeAnalysisBundle.model_validate(payload)
     except (TypeError, ValueError) as exc:
         raise AnalysisBundleContractError(f"bundle Forge non conforme : {exc}") from exc
+
+
+def canonical_analysis_bundle_payload(bundle: ForgeAnalysisBundle) -> dict[str, Any]:
+    """Expose la représentation canonique commune au stockage et au hash."""
+
+    return bundle.canonical_payload()
 
 
 def load_analysis_bundle(path: str | Path) -> ForgeAnalysisBundle:
@@ -369,9 +376,7 @@ def _ensure_acyclic(graph: dict[str, tuple[str, ...]]) -> None:
 def _canonical_payload(bundle: ForgeAnalysisBundle) -> dict[str, Any]:
     payload = bundle.model_dump(mode="json")
     payload["sources"] = sorted(payload["sources"], key=lambda item: item["source_id"])
-    payload["parameters"] = sorted(
-        payload["parameters"], key=lambda item: item["parameter_id"]
-    )
+    payload["parameters"] = sorted(payload["parameters"], key=lambda item: item["parameter_id"])
     payload["derived_features"] = sorted(
         payload["derived_features"], key=lambda item: item["feature_id"]
     )
@@ -390,6 +395,7 @@ __all__ = [
     "ForgeAnalysisBundle",
     "ParameterValue",
     "SourceEvidence",
+    "canonical_analysis_bundle_payload",
     "load_analysis_bundle",
     "validate_analysis_bundle",
 ]

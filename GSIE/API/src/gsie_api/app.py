@@ -35,6 +35,7 @@ from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import limiter
 from gsie_api.core.logging import get_logger, setup_logging
 from gsie_api.core.rbac import require_roles
+from gsie_api.data.analysis_bundle_router import router as analysis_bundle_router
 from gsie_api.data.router import router as data_registry_router
 from gsie_api.engines.botanical.router import router as botanical_router
 from gsie_api.engines.climate.router import router as climate_router
@@ -425,6 +426,10 @@ def create_app() -> FastAPI:
     app.include_router(identity_router, prefix=_settings.api_v1_prefix)
     app.include_router(resources_router, prefix=_settings.api_v1_prefix)
     app.include_router(data_registry_router, prefix=_settings.api_v1_prefix)
+    # Le chemin d'import Forge n'est publié que par l'application GSIE TEST.
+    # En staging/production, il n'existe même pas comme surface HTTP.
+    if _settings.database_role == "test":
+        app.include_router(analysis_bundle_router, prefix=_settings.api_v1_prefix)
     app.include_router(organisations_router, prefix=_settings.api_v1_prefix)
     app.include_router(sync_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)

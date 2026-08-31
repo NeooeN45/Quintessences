@@ -201,6 +201,14 @@ class Settings(BaseSettings):
     database_role: Literal["development", "test", "benchmark", "staging", "production"] = (
         "development"
     )
+    # Profils Forge recevables par l'importeur TEST. La liste est une
+    # allowlist de configuration : un profil absent ne peut pas être activé
+    # par le seul contenu d'un bundle.
+    forge_analysis_bundle_allowed_profiles: list[str] = Field(
+        default_factory=lambda: ["geosylva.station.analysis"],
+        min_length=1,
+        max_length=50,
+    )
     data_namespace: str = Field(
         default="gsie",
         min_length=3,
