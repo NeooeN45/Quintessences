@@ -1,0 +1,197 @@
+version: 1
+updated_at: 2026-09-08
+purpose: >-
+  Registre machine-readable des invariants transversaux de Quintessences.
+  Un invariant n'est considéré couvert que lorsqu'au moins un test reproductible
+  ou une preuve automatisée est relié explicitement à son identifiant.
+
+statuses:
+  - DRAFT
+  - ACTIVE
+  - DEPRECATED
+
+test_statuses:
+  - MISSING
+  - PARTIAL
+  - COVERED
+  - UNKNOWN
+
+severity_levels:
+  P0: sécurité critique, corruption ou perte silencieuse de données
+  P1: intégrité, autorisation, concurrence ou régression majeure
+  P2: robustesse, performance ou dette structurante
+  P3: qualité interne ou ergonomie technique
+
+invariants:
+  - id: INV-001
+    title: Aucune décision métier légitime ne disparaît silencieusement
+    category: traceability
+    severity: P0
+    status: ACTIVE
+    statement: >-
+      Toute décision forestière ou métier acceptée par l'application doit être
+      persistée ou rejetée explicitement ; un succès apparent sans persistance
+      durable est interdit.
+    modules: [GSIE_API, GeoSylva, RecommendationEngine]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: [GSIE-CON-005]
+
+  - id: INV-002
+    title: Aucun accès inter-tenant non autorisé
+    category: security
+    severity: P0
+    status: ACTIVE
+    statement: >-
+      Une organisation ou un workspace ne doit jamais pouvoir lire, modifier,
+      supprimer logiquement ou inférer une ressource appartenant à un autre
+      périmètre sans autorisation explicite.
+    modules: [GSIE_API, PostgreSQL, RLS]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: []
+
+  - id: INV-003
+    title: Le soft-delete reste effectif dans tous les chemins d'accès
+    category: data_integrity
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Une ressource marquée supprimée logiquement ne doit pas réapparaître via
+      un endpoint, un moteur, une relation secondaire, un cache ou un export
+      sauf opération de restauration explicitement autorisée.
+    modules: [GSIE_API, PostgreSQL]
+    test_status: UNKNOWN
+    test_references: []
+    evidence_references: [CON-010]
+
+  - id: INV-004
+    title: Les opérations rejouables sont idempotentes
+    category: concurrency
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Une requête documentée comme rejouable, un retry réseau ou une ingestion
+      répétée ne doit pas créer de doublon métier, de divergence ni de perte de
+      relation.
+    modules: [GSIE_API, Ingestion, RecommendationEngine, Sync]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: []
+
+  - id: INV-005
+    title: ResourceModel et sous-type restent cohérents
+    category: data_integrity
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Lorsqu'un UUID identifie une resource, son type racine et la table de
+      sous-type correspondante doivent rester cohérents ; une collision UUID ne
+      doit jamais être masquée par un ON CONFLICT silencieux.
+    modules: [GSIE_API, PostgreSQL, RecommendationEngine]
+    test_status: MISSING
+    test_references: []
+    evidence_references: [AUD-001]
+
+  - id: INV-006
+    title: Toute recommandation scientifique importante est traçable
+    category: provenance
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Tout résultat scientifique ou recommandation à impact métier doit pouvoir
+      être relié aux données, règles, versions de modèles et sources nécessaires
+      pour comprendre sa production.
+    modules: [EvidenceEngine, RecommendationEngine, QMF, Atmos, IGNIS, Hydro, Terra]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: [GSIE-CON-004, GSIE-CON-005]
+
+  - id: INV-007
+    title: Une confiance dérivée n'excède pas sa preuve sans justification
+    category: scientific_integrity
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Un moteur aval ne doit pas annoncer une confiance supérieure à celle de
+      l'entrée ou de la preuve source sans méthode documentée, sourcée et testée.
+    modules: [RecommendationEngine, EvidenceEngine, QMF]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: []
+
+  - id: INV-008
+    title: Une synchronisation offline ne perd aucune donnée terrain légitime
+    category: offline_first
+    severity: P0
+    status: ACTIVE
+    statement: >-
+      Après perte réseau, redémarrage, retry ou résolution de conflit, aucune
+      saisie terrain valide ne doit être perdue silencieusement ; toute donnée
+      rejetée doit avoir une cause observable.
+    modules: [GeoSylva, GSIE_Server, Sync]
+    test_status: MISSING
+    test_references: []
+    evidence_references: []
+
+  - id: INV-009
+    title: Les contrats API, modèles et migrations restent synchronisés
+    category: contract
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Le code FastAPI/Pydantic, le contrat OpenAPI, les modèles SQLAlchemy et les
+      migrations Alembic ne doivent pas diverger sur les structures publiques ou
+      persistées.
+    modules: [GSIE_API, OpenAPI, Alembic]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: []
+
+  - id: INV-010
+    title: Les traitements critiques échouent de manière explicite
+    category: resilience
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Une dépendance indisponible, une donnée incohérente ou une erreur de
+      transaction ne doit pas être convertie en succès apparent ni en résultat
+      plausible non traçable.
+    modules: [GSIE_API, Ingestion, Engines]
+    test_status: PARTIAL
+    test_references: []
+    evidence_references: []
+
+  - id: INV-011
+    title: Les données scientifiques conservent unités, CRS et temporalité
+    category: scientific_integrity
+    severity: P1
+    status: ACTIVE
+    statement: >-
+      Toute transformation géospatiale ou scientifique doit préserver ou rendre
+      explicites CRS, unités, date/heure, version de source et incertitude utiles
+      à l'interprétation.
+    modules: [GIS, GeoSylva, Atmos, IGNIS, Hydro, Terra]
+    test_status: UNKNOWN
+    test_references: []
+    evidence_references: []
+
+  - id: INV-012
+    title: Une régression de performance critique est détectable
+    category: performance
+    severity: P2
+    status: ACTIVE
+    statement: >-
+      Les chemins critiques doivent disposer d'une baseline reproductible et
+      d'un seuil de régression explicite afin qu'une dégradation significative ne
+      puisse être fusionnée sans signal.
+    modules: [GSIE_API, PostgreSQL, Ingestion, GIS, QMF]
+    test_status: MISSING
+    test_references: []
+    evidence_references: []
+
+maintenance_rules:
+  - Toute nouvelle fonctionnalité critique doit déclarer les invariants qu'elle affecte.
+  - Tout P0/P1 corrigé doit ajouter ou renforcer au moins une preuve automatisée.
+  - Un invariant ACTIVE avec test_status MISSING est une dette technique explicite.
+  - Une modification d'invariant métier structurant requiert une décision d'architecture appropriée.
