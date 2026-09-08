@@ -426,6 +426,11 @@ async def db_session(postgres_url: str) -> AsyncGenerator[AsyncSession, None]:
     # une table `place` qui entre en conflit avec notre PlaceModel.
     # pgvector est installé à la volée dans le fixture postgres_url (ci-dessus).
     async with engine.begin() as conn:
+        # L’image DB construite par la CI fournit AGE, mais testcontainers
+        # ne rejoue pas les scripts d’initialisation du conteneur. Créer
+        # explicitement l’extension garantit que son schéma `ag_catalog`
+        # existe aussi pendant le nettoyage SQLAlchemy de la fixture.
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS age"))
         await conn.execute(text("DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE"))
         await conn.execute(text("DROP EXTENSION IF EXISTS postgis_topology CASCADE"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
