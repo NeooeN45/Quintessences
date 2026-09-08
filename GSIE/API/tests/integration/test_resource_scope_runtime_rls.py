@@ -56,10 +56,7 @@ _RUNTIME_PASSWORD = "rls_proof_only"
 def _runtime_url(owner_url: str) -> str:
     _, rest = owner_url.split("://", 1)
     _, host_and_db = rest.split("@", 1)
-    return (
-        f"postgresql+asyncpg://{_RUNTIME_ROLE}:{_RUNTIME_PASSWORD}@"
-        f"{host_and_db}"
-    )
+    return f"postgresql+asyncpg://{_RUNTIME_ROLE}:{_RUNTIME_PASSWORD}@" f"{host_and_db}"
 
 
 async def _execute(url: str, *statements: str) -> None:
@@ -88,9 +85,7 @@ def migrated_database() -> Generator[str, None, None]:
         username="gsie",
         password="gsie_test",
         dbname="gsie_runtime_rls",
-    ).with_command(
-        "postgres -c shared_preload_libraries=age -c search_path=public"
-    )
+    ).with_command("postgres -c shared_preload_libraries=age -c search_path=public")
     with container as postgres:
         owner_url = postgres.get_connection_url().replace(
             "postgresql+psycopg2",
@@ -258,10 +253,7 @@ def tenant_ids(migrated_database: str) -> dict[str, UUID]:
 
 
 def _request(**headers: str) -> Request:
-    raw_headers = [
-        (name.lower().encode(), value.encode())
-        for name, value in headers.items()
-    ]
+    raw_headers = [(name.lower().encode(), value.encode()) for name, value in headers.items()]
     return Request(
         {
             "type": "http",
@@ -295,9 +287,7 @@ async def _activate_context(
 ) -> tuple[str, str | None]:
     """Rejoue la résolution sécurisée utilisée par ``get_db_resource``."""
     await set_rls_context(session, str(user_id), "reader,writer")
-    org_request = _request(
-        **{"X-Organisation-Id": str(organisation_id)}
-    )
+    org_request = _request(**{"X-Organisation-Id": str(organisation_id)})
     resolved_org = await _resolve_active_organisation(
         session,
         str(user_id),
@@ -332,19 +322,23 @@ async def test_runtime_role_is_non_owner_and_cannot_bypass_rls(
     try:
         async with engine.connect() as connection:
             row = (
-                await connection.execute(
-                    text(
-                        "SELECT r.rolsuper, r.rolbypassrls, "
-                        "pg_has_role(current_user, 'gsie_application', "
-                        "'member') AS app_member, "
-                        "pg_get_userbyid(c.relowner) = current_user "
-                        "AS owns_resource "
-                        "FROM pg_roles r CROSS JOIN pg_class c "
-                        "WHERE r.rolname = current_user "
-                        "AND c.oid = 'public.resource'::regclass"
+                (
+                    await connection.execute(
+                        text(
+                            "SELECT r.rolsuper, r.rolbypassrls, "
+                            "pg_has_role(current_user, 'gsie_application', "
+                            "'member') AS app_member, "
+                            "pg_get_userbyid(c.relowner) = current_user "
+                            "AS owns_resource "
+                            "FROM pg_roles r CROSS JOIN pg_class c "
+                            "WHERE r.rolname = current_user "
+                            "AND c.oid = 'public.resource'::regclass"
+                        )
                     )
                 )
-            ).mappings().one()
+                .mappings()
+                .one()
+            )
         assert row["rolsuper"] is False
         assert row["rolbypassrls"] is False
         assert row["app_member"] is True
@@ -364,9 +358,7 @@ async def test_foreign_organisation_header_is_rejected_before_context(
             str(tenant_ids["user_a"]),
             "reader,writer",
         )
-        request = _request(
-            **{"X-Organisation-Id": str(tenant_ids["org_b"])}
-        )
+        request = _request(**{"X-Organisation-Id": str(tenant_ids["org_b"])})
         with pytest.raises(HTTPException) as exc_info:
             await _resolve_active_organisation(
                 session,
@@ -389,11 +381,7 @@ async def test_runtime_rls_hides_foreign_tenant_and_other_workspace(
             tenant_ids["workspace_a"],
         )
         visible = set(
-            (
-                await session.execute(
-                    text("SELECT id FROM public.resource ORDER BY id")
-                )
-            ).scalars()
+            (await session.execute(text("SELECT id FROM public.resource ORDER BY id"))).scalars()
         )
         assert tenant_ids["resource_a"] in visible
         assert tenant_ids["global"] in visible
@@ -414,10 +402,7 @@ async def test_runtime_cannot_soft_delete_foreign_resource(
             tenant_ids["workspace_a"],
         )
         result = await session.execute(
-            text(
-                "UPDATE public.resource SET deleted_at = :now "
-                "WHERE id = :id"
-            ),
+            text("UPDATE public.resource SET deleted_at = :now " "WHERE id = :id"),
             {
                 "now": datetime.now(UTC),
                 "id": tenant_ids["resource_b"],
@@ -480,10 +465,7 @@ async def test_rls_context_does_not_leak_between_transactions(
                 tenant_ids["workspace_a"],
             )
             visible = await first.scalar(
-                text(
-                    "SELECT count(*) FROM public.resource "
-                    "WHERE id = :id"
-                ),
+                text("SELECT count(*) FROM public.resource " "WHERE id = :id"),
                 {"id": tenant_ids["resource_a"]},
             )
             assert visible == 1
@@ -492,32 +474,20 @@ async def test_rls_context_does_not_leak_between_transactions(
         # Le contexte transaction-local doit avoir disparu.
         async with factory() as second, second.begin():
             organisation = await second.scalar(
-                text(
-                    "SELECT current_setting("
-                    "'app.current_organisation_id', true)"
-                )
+                text("SELECT current_setting(" "'app.current_organisation_id', true)")
             )
             workspace = await second.scalar(
-                text(
-                    "SELECT current_setting("
-                    "'app.current_workspace_id', true)"
-                )
+                text("SELECT current_setting(" "'app.current_workspace_id', true)")
             )
             assert organisation in (None, "")
             assert workspace in (None, "")
 
             tenant_visible = await second.scalar(
-                text(
-                    "SELECT count(*) FROM public.resource "
-                    "WHERE id = :id"
-                ),
+                text("SELECT count(*) FROM public.resource " "WHERE id = :id"),
                 {"id": tenant_ids["resource_a"]},
             )
             global_visible = await second.scalar(
-                text(
-                    "SELECT count(*) FROM public.resource "
-                    "WHERE id = :id"
-                ),
+                text("SELECT count(*) FROM public.resource " "WHERE id = :id"),
                 {"id": tenant_ids["global"]},
             )
             assert tenant_visible == 0
