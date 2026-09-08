@@ -1100,19 +1100,21 @@ MUTATIONS: tuple[Mutation, ...] = (
     Mutation(
         cle="parsing_xml_capabilities_non_garde",
         fichier="gsie_api/engines/gis/telechargement_client.py",
+        # Le motif reste aligné sur l'alias ElementTree utilisé par le client,
+        # afin que la campagne atteigne réellement la mutation de garde XML.
         # L'API de téléchargement IGN retourne du Atom XML, pas du JSON.
         # Si le XML est malformé (réponse tronquée, erreur proxy), ET.ParseError
         # doit être capturé et wrapé dans TelechargementClientError — sans cette
         # garde, l'exception Python brute fuit vers l'appelant (500 non géré).
         ancien="""        try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetCapabilities : {exc}"
             ) from exc""",
-        nouveau="        root = ET.fromstring(body)",
+        nouveau="        root = ElementTree.fromstring(body)",
         defaut_reproduit=(
-            "un XML malformé fait fuir ET.ParseError au lieu de "
+            "un XML malformé fait fuir ElementTree.ParseError au lieu de "
             "TelechargementClientError — l'appelant voit un 500 non géré"
         ),
         tests=("tests/unit/test_telechargement_client.py",),
