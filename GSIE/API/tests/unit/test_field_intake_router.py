@@ -1,5 +1,6 @@
 """Contrat HTTP du point d'entrée field-intake."""
 
+from inspect import unwrap
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -56,7 +57,7 @@ async def should_submit_field_intake_with_authenticated_subject(
         lambda _session: service,
     )
 
-    result = await submit_field_intake(
+    result = await unwrap(submit_field_intake)(
         _submission(),
         request=_request(),
         response=Response(),
