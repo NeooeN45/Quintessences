@@ -23,8 +23,10 @@ from gsie_api.data.adapters import (
 )
 from gsie_api.data.gbif_adapter import GBIFAdapter
 from gsie_api.data.ign_adapter import IGNAdapter
+from gsie_api.data.indigenat_adapter import IndigenatBellifaAdapter
 from gsie_api.data.meteofrance_adapter import MeteoFranceAdapter
 from gsie_api.data.soilgrids_adapter import SoilGridsAdapter
+from gsie_api.data.taxref_adapter import TaxrefAdapter
 from gsie_api.infrastructure.models.enums import DatasetHealthStatus
 
 
@@ -37,8 +39,10 @@ def default_adapter_plugins() -> tuple[AdapterPlugin, ...]:
     return (
         AdapterPlugin(GBIFAdapter._DESCRIPTOR, GBIFAdapter),  # noqa: SLF001
         AdapterPlugin(IGNAdapter._DESCRIPTOR, IGNAdapter),  # noqa: SLF001
+        AdapterPlugin(IndigenatBellifaAdapter._DESCRIPTOR, IndigenatBellifaAdapter),  # noqa: SLF001
         AdapterPlugin(MeteoFranceAdapter._DESCRIPTOR, MeteoFranceAdapter),  # noqa: SLF001
         AdapterPlugin(SoilGridsAdapter._DESCRIPTOR, SoilGridsAdapter),  # noqa: SLF001
+        AdapterPlugin(TaxrefAdapter._DESCRIPTOR, TaxrefAdapter),  # noqa: SLF001
     )
 
 

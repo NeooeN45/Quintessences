@@ -16,6 +16,7 @@ qu'il échoue si on lui donne une classe qui n'hérite pas de la base.
 
 from __future__ import annotations
 
+from gsie_api.data.soilgrids_wcs_client import SoilGridsWcsClient
 from gsie_api.engines.botanical.gbif_client import GBIFClient
 from gsie_api.engines.botanical.taxref_client import TaxrefClient
 from gsie_api.engines.climate.arome_client import AromeClient
@@ -25,14 +26,13 @@ from gsie_api.engines.climate.paquet_observation_client import PaquetObservation
 from gsie_api.engines.climate.synop_client import SynopClient
 from gsie_api.engines.climate.vigilance_client import VigilanceClient
 from gsie_api.engines.gis.ign_client import IGNClient
-from gsie_api.engines.pedology.soilgrids_client import SoilGridsClient
 from gsie_api.shared.http_client import ResilientCsvClient, ResilientHttpClient
 
 # Clients d'API externes — tout nouveau client doit être ajouté ici.
 CLIENTS_API_EXTERNES: dict[str, type] = {
     "GBIFClient": GBIFClient,
     "TaxrefClient": TaxrefClient,
-    "SoilGridsClient": SoilGridsClient,
+    "SoilGridsWcsClient": SoilGridsWcsClient,
     "IGNClient": IGNClient,
     "VigilanceClient": VigilanceClient,
     "MeteoFranceClient": MeteoFranceClient,

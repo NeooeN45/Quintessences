@@ -25,10 +25,10 @@ dependencies = [
     # Cache & temps réel
     "redis[hiredis]==5.2.1",
     "websockets==14.1",
-    # Géospatial — shapely/pyproj dès la semaine 1 (léger)
-    # rasterio + geopandas ajoutés en semaine 5 (GIS Engine, nécessite GDAL)
+    # Géospatial — Rasterio fournit le décodage GeoTIFF WCS SoilGrids.
     "shapely==2.0.6",
     "pyproj==3.7.0",
+    "rasterio==1.5.1",
     # Observabilité
     "structlog==24.4.0",
     "prometheus-fastapi-instrumentator==8.0.2",
@@ -190,6 +190,11 @@ ignore_missing_imports = true
 # n'est pas encore ajouté aux dépendances dev) — GIS Engine (v1)
 [[tool.mypy.overrides]]
 module = "shapely.*"
+ignore_missing_imports = true
+
+# Rasterio expose des extensions GDAL sans stubs complets.
+[[tool.mypy.overrides]]
+module = "rasterio.*"
 ignore_missing_imports = true
 
 # cfgrib/defusedxml n'ont pas de stubs officiels installés — Climate

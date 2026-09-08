@@ -38,7 +38,11 @@ jobs:
       GSIE_OBJECT_STORAGE_S3_SECRET_KEY: gsie-ci-ha-app-secret
       PGBACKREST_REPO1_CIPHER_PASS: gsie-ci-ha-pgbackrest-cipher
       GSIE_HA_API_IMAGE: api-api:latest
-      GSIE_HA_NETWORK: api_default
+      # Le nom du réseau provient du nom de projet canonique `gsie` déclaré
+      # dans docker-compose.yml ; `api_default` était un reliquat d'un ancien
+      # nom de projet et rendait le banc HA incapable de joindre PostgreSQL,
+      # Redis et MinIO.
+      GSIE_HA_NETWORK: gsie_default
       GSIE_DATABASE_ROLE: test
       GSIE_DATA_NAMESPACE: gsie-test
       GSIE_DB_NAME: gsie
@@ -115,6 +119,7 @@ jobs:
             --set=ON_ERROR_STOP=1 \
             --command 'SELECT 1' >/dev/null
           docker compose build api
+          docker image inspect "$GSIE_HA_API_IMAGE" >/dev/null
 
       - name: Démarrer les replicas derrière TLS
         run: |

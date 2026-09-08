@@ -330,6 +330,7 @@ class AdapterFetchRequest:
     distribution_url: str
     max_bytes: int = _DEFAULT_FETCH_MAX_BYTES
     expected_checksum: str | None = None
+    parameters: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.external_id.strip():
@@ -348,6 +349,7 @@ class AdapterFetchRequest:
             "expected_checksum",
             self.expected_checksum.lower() if self.expected_checksum is not None else None,
         )
+        object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
 
 
 @dataclass(frozen=True, slots=True)

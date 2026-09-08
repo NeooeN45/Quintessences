@@ -189,6 +189,17 @@
           "diagnostic": {
             "$ref": "#/components/schemas/Diagnostic"
           },
+          "hydratation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RapportHydratation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Présent lorsque le contexte a été hydraté depuis `station_id` (DEC-000072) : la preuve conserve le contexte exactement utilisé."
+          },
           "inference": {
             "$ref": "#/components/schemas/InferenceResult"
           },
@@ -224,11 +235,27 @@
             "type": "boolean"
           },
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StationContexte-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Contexte stationnel complet. Absent, il est hydraté depuis `station_id` (DEC-000072) : Place d'abord, soumission terrain acceptée en repli tracé, aucune valeur inventée."
           },
           "etat_global": {
-            "$ref": "#/components/schemas/EtatGlobalDeclare",
+            "$ref": "#/components/schemas/EtatGlobalDeclare-Input",
             "description": "Déclaré et sourcé. Le Diagnostic Engine ne le déduit pas des contraintes : cela exigerait une fonction de score qu'il n'a pas."
+          },
+          "niveaux_preuve_declares": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+            },
+            "description": "Niveaux de preuve déclarés par bloc, utilisés uniquement lorsque le contexte est hydraté et que la donnée n'en porte pas. Blocs acceptés : ['botanique', 'climat', 'geographie', 'pedologie', 'peuplement']. Chaque niveau déclaré utilisé est listé dans le rapport d'hydratation.",
+            "title": "Niveaux Preuve Declares",
+            "type": "object"
           },
           "objectif_forestier": {
             "$ref": "#/components/schemas/ObjectifForestier"
@@ -259,7 +286,7 @@
           "regles": {
             "description": "Règles d'inférence, chacune avec sa source et son niveau de preuve. Fournies dans la requête en v1, comme pour le Reasoning Engine appelé seul ; une version ultérieure les récupérera du Knowledge Engine à partir du territoire.",
             "items": {
-              "$ref": "#/components/schemas/RegleInference"
+              "$ref": "#/components/schemas/RegleInference-Input"
             },
             "minItems": 1,
             "title": "Regles",
@@ -283,7 +310,6 @@
         "required": [
           "requete_id",
           "station_id",
-          "contexte",
           "regles",
           "qualifications",
           "etat_global",
@@ -685,7 +711,7 @@
         "title": "BillingOperationResponse",
         "type": "object"
       },
-      "BlocContexte": {
+      "BlocContexte-Input": {
         "additionalProperties": false,
         "description": "Un bloc de contexte stationnel, avec sa provenance obligatoire.\n\n`ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc\nest donc inconstructible sans `source_moteur`, `source` et\n`evidence_level`.",
         "properties": {
@@ -741,6 +767,88 @@
           "valeurs"
         ],
         "title": "BlocContexte",
+        "type": "object"
+      },
+      "BlocContexte-Output": {
+        "additionalProperties": false,
+        "description": "Un bloc de contexte stationnel, avec sa provenance obligatoire.\n\n`ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc\nest donc inconstructible sans `source_moteur`, `source` et\n`evidence_level`.",
+        "properties": {
+          "date_observation": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Horodatage de l'observation lorsqu'il existe",
+            "title": "Date Observation"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          },
+          "source_moteur": {
+            "$ref": "#/components/schemas/SourceMoteurContexte"
+          },
+          "valeurs": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "description": "Variables observées du bloc, unités portées par la clé",
+            "minProperties": 1,
+            "title": "Valeurs",
+            "type": "object"
+          }
+        },
+        "required": [
+          "source_moteur",
+          "source",
+          "evidence_level",
+          "valeurs"
+        ],
+        "title": "BlocContexte",
+        "type": "object"
+      },
+      "BlocNonConstructible": {
+        "additionalProperties": false,
+        "description": "Un bloc demandé par les données mais faute de provenance complète.",
+        "properties": {
+          "motif": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Motif",
+            "type": "string"
+          },
+          "nom_bloc": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Nom Bloc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nom_bloc",
+          "motif"
+        ],
+        "title": "BlocNonConstructible",
         "type": "object"
       },
       "Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post": {
@@ -3119,7 +3227,7 @@
             "type": "array"
           },
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "$ref": "#/components/schemas/StationContexte-Input"
           },
           "contradictions": {
             "items": {
@@ -3129,7 +3237,7 @@
             "type": "array"
           },
           "etat_global": {
-            "$ref": "#/components/schemas/EtatGlobalDeclare"
+            "$ref": "#/components/schemas/EtatGlobalDeclare-Input"
           },
           "peuplement_id": {
             "anyOf": [
@@ -3826,7 +3934,36 @@
         "title": "EtapeInference",
         "type": "object"
       },
-      "EtatGlobalDeclare": {
+      "EtatGlobalDeclare-Input": {
+        "additionalProperties": false,
+        "description": "État global déclaré par l'appelant, avec sa justification.\n\nDéduire « dépérissement » d'un ensemble de contraintes exigerait une\nfonction de score que le moteur ne possède pas et ne peut pas inventer.\nL'état est donc déclaré et sourcé comme n'importe quelle affirmation.",
+        "properties": {
+          "etat": {
+            "$ref": "#/components/schemas/DiagnosticGlobalState"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+          },
+          "justification": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Justification",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          }
+        },
+        "required": [
+          "etat",
+          "justification",
+          "source",
+          "evidence_level"
+        ],
+        "title": "EtatGlobalDeclare",
+        "type": "object"
+      },
+      "EtatGlobalDeclare-Output": {
         "additionalProperties": false,
         "description": "État global déclaré par l'appelant, avec sa justification.\n\nDéduire « dépérissement » d'un ensemble de contraintes exigerait une\nfonction de score que le moteur ne possède pas et ne peut pas inventer.\nL'état est donc déclaré et sourcé comme n'importe quelle affirmation.",
         "properties": {
@@ -5024,6 +5161,15 @@
             "title": "Mots Cles",
             "type": "array"
           },
+          "qualificateurs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Qualificateurs déclarés pour une règle dérivable et diagnostiquable",
+            "maxProperties": 20,
+            "title": "Qualificateurs",
+            "type": "object"
+          },
           "relations": {
             "items": {
               "$ref": "#/components/schemas/RelationRef"
@@ -5034,6 +5180,19 @@
           },
           "source": {
             "$ref": "#/components/schemas/SourceReference"
+          },
+          "spatial_scope_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Place ou territoire portant le domaine spatial de la règle",
+            "title": "Spatial Scope Id"
           },
           "statut": {
             "$ref": "#/components/schemas/KnowledgeStatus"
@@ -7636,6 +7795,188 @@
         "title": "QueryType",
         "type": "string"
       },
+      "RapportHydratation": {
+        "additionalProperties": false,
+        "description": "Trace complète de l'assemblage — persistée avec la preuve d'analyse.",
+        "properties": {
+          "ancre_field_intake": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ancre Field Intake"
+          },
+          "ancre_place": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ancre Place"
+          },
+          "blocs_construits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocs Construits",
+            "type": "array"
+          },
+          "blocs_non_constructibles": {
+            "items": {
+              "$ref": "#/components/schemas/BlocNonConstructible"
+            },
+            "title": "Blocs Non Constructibles",
+            "type": "array"
+          },
+          "niveaux_declares_utilises": {
+            "description": "Blocs dont le niveau de preuve est déclaré par l'appelant",
+            "items": {
+              "type": "string"
+            },
+            "title": "Niveaux Declares Utilises",
+            "type": "array"
+          },
+          "observations_non_mappees": {
+            "description": "observation_type absents du mapping déclaré, jamais rangés d'office",
+            "items": {
+              "type": "string"
+            },
+            "title": "Observations Non Mappees",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "hydratation_station.v0.1",
+            "default": "hydratation_station.v0.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "soumissions_quarantaine_ignorees": {
+            "default": 0,
+            "description": "Soumissions non relues, jamais lues pour leurs valeurs",
+            "minimum": 0.0,
+            "title": "Soumissions Quarantaine Ignorees",
+            "type": "integer"
+          },
+          "station_id": {
+            "format": "uuid",
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id"
+        ],
+        "title": "RapportHydratation",
+        "type": "object"
+      },
+      "RapportPreparation": {
+        "additionalProperties": false,
+        "description": "Preuve immuable de la sélection qui précède l'orchestration.",
+        "properties": {
+          "causes_blocage": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Causes Blocage",
+            "type": "array"
+          },
+          "contexte_fingerprint": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Contexte Fingerprint",
+            "type": "string"
+          },
+          "contexte_snapshot": {
+            "$ref": "#/components/schemas/StationContexte-Output"
+          },
+          "etat_global_field_intake": {
+            "format": "uuid",
+            "title": "Etat Global Field Intake",
+            "type": "string"
+          },
+          "etat_global_fingerprint": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Etat Global Fingerprint",
+            "type": "string"
+          },
+          "etat_global_snapshot": {
+            "$ref": "#/components/schemas/EtatGlobalDeclare-Output"
+          },
+          "qualifications_utilisees": {
+            "items": {
+              "$ref": "#/components/schemas/QualificationParRegle"
+            },
+            "title": "Qualifications Utilisees",
+            "type": "array"
+          },
+          "regles_ecartees": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Regles Ecartees",
+            "type": "array"
+          },
+          "regles_fingerprint": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Regles Fingerprint",
+            "type": "object"
+          },
+          "regles_selectionnees": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Regles Selectionnees",
+            "type": "array"
+          },
+          "regles_snapshot": {
+            "items": {
+              "$ref": "#/components/schemas/RegleInference-Output"
+            },
+            "title": "Regles Snapshot",
+            "type": "array"
+          },
+          "regles_versions": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Regles Versions",
+            "type": "object"
+          },
+          "schema_version": {
+            "const": "analyse_preparation.v0.1",
+            "default": "analyse_preparation.v0.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "station_id": {
+            "format": "uuid",
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id",
+          "etat_global_field_intake",
+          "etat_global_snapshot",
+          "etat_global_fingerprint",
+          "contexte_snapshot",
+          "contexte_fingerprint"
+        ],
+        "title": "RapportPreparation",
+        "type": "object"
+      },
       "RawKnowledgeSubmission": {
         "additionalProperties": false,
         "description": "Soumission de connaissance brute — entrée de l'Evidence Engine.",
@@ -7684,7 +8025,7 @@
         "description": "Entrée du Reasoning Engine (`REASONING_ENGINE.md` §5).",
         "properties": {
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "$ref": "#/components/schemas/StationContexte-Input"
           },
           "profondeur_max": {
             "description": "Profondeur maximale de la chaîne d'inférence. Bornée pour garantir la terminaison : une inférence non bornée ne peut pas être auditée.",
@@ -7702,7 +8043,7 @@
           "regles": {
             "description": "Règles applicables (extension v1). Une liste vide est légitime : elle produit un résultat sans conclusion, ce qui est honnête.",
             "items": {
-              "$ref": "#/components/schemas/RegleInference"
+              "$ref": "#/components/schemas/RegleInference-Input"
             },
             "title": "Regles",
             "type": "array"
@@ -7997,7 +8338,70 @@
         "title": "RegistrationRequest",
         "type": "object"
       },
-      "RegleInference": {
+      "RegleInference-Input": {
+        "additionalProperties": false,
+        "description": "Une règle d'inférence fournie par l'appelant (extension v1).\n\nLe contrat §5 prévoit que les règles proviennent du Knowledge Engine.\nTant que ce branchement n'existe pas, elles sont portées par la requête,\nexactement comme le Correlation Engine porte ses valeurs numériques.\n\nCe type vit dans le module de contrat, et non dans le moteur, parce que\n`ReasoningRequest` en dépend : une requête qui ne transporterait pas ses\nrègles serait ininterprétable par l'API.\n\nLa condition est une expression restreinte portant sur les variables du\n`StationContexte` aplati. Elle est évaluée par un parcours d'arbre à liste\nblanche, jamais par `eval`.",
+        "properties": {
+          "condition": {
+            "description": "Expression restreinte sur les variables du StationContexte. Opérateurs autorisés : ==, !=, <, <=, >, >=, and, or, not.",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Condition",
+            "type": "string"
+          },
+          "contredit_regle_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Règle explicitement contredite. Une contradiction est déclarée par les règles ou n'existe pas : le moteur n'en devine aucune.",
+            "title": "Contredit Regle Id"
+          },
+          "enonce_conclusion": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Enonce Conclusion",
+            "type": "string"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+          },
+          "identifiant": {
+            "description": "Identifiant unique, support du tri déterministe des règles",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Identifiant",
+            "type": "string"
+          },
+          "niveau_confiance": {
+            "description": "Confiance portée par la règle. Bornes du contrat §5. Jamais calculée par le moteur — voir la docstring du module.",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Niveau Confiance",
+            "type": "number"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference",
+            "description": "Source scientifique de la règle (`GSIE-CON-002`, `ADR-009`)"
+          }
+        },
+        "required": [
+          "identifiant",
+          "condition",
+          "enonce_conclusion",
+          "source",
+          "evidence_level",
+          "niveau_confiance"
+        ],
+        "title": "RegleInference",
+        "type": "object"
+      },
+      "RegleInference-Output": {
         "additionalProperties": false,
         "description": "Une règle d'inférence fournie par l'appelant (extension v1).\n\nLe contrat §5 prévoit que les règles proviennent du Knowledge Engine.\nTant que ce branchement n'existe pas, elles sont portées par la requête,\nexactement comme le Correlation Engine porte ses valeurs numériques.\n\nCe type vit dans le module de contrat, et non dans le moteur, parce que\n`ReasoningRequest` en dépend : une requête qui ne transporterait pas ses\nrègles serait ininterprétable par l'API.\n\nLa condition est une expression restreinte portant sur les variables du\n`StationContexte` aplati. Elle est évaluée par un parcours d'arbre à liste\nblanche, jamais par `eval`.",
         "properties": {
@@ -8671,6 +9075,68 @@
         "title": "ResultatControle",
         "type": "string"
       },
+      "ResultatHydratation": {
+        "additionalProperties": false,
+        "description": "Contexte assemblé et son rapport — indissociables (`GSIE-CON-004`).",
+        "properties": {
+          "contexte": {
+            "$ref": "#/components/schemas/StationContexte-Output"
+          },
+          "rapport": {
+            "$ref": "#/components/schemas/RapportHydratation"
+          }
+        },
+        "required": [
+          "contexte",
+          "rapport"
+        ],
+        "title": "ResultatHydratation",
+        "type": "object"
+      },
+      "ResultatPreparation": {
+        "additionalProperties": false,
+        "description": "Entrées figées prêtes pour le contrat interne d'orchestration.",
+        "properties": {
+          "contexte": {
+            "$ref": "#/components/schemas/StationContexte-Output"
+          },
+          "etat_global": {
+            "$ref": "#/components/schemas/EtatGlobalDeclare-Output"
+          },
+          "etat_global_field_intake": {
+            "format": "uuid",
+            "title": "Etat Global Field Intake",
+            "type": "string"
+          },
+          "qualifications": {
+            "items": {
+              "$ref": "#/components/schemas/QualificationParRegle"
+            },
+            "title": "Qualifications",
+            "type": "array"
+          },
+          "rapport": {
+            "$ref": "#/components/schemas/RapportPreparation"
+          },
+          "regles": {
+            "items": {
+              "$ref": "#/components/schemas/RegleInference-Output"
+            },
+            "title": "Regles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contexte",
+          "rapport",
+          "regles",
+          "qualifications",
+          "etat_global",
+          "etat_global_field_intake"
+        ],
+        "title": "ResultatPreparation",
+        "type": "object"
+      },
       "RevisionRead": {
         "description": "Révision d'une resource (Temporal Engine).",
         "properties": {
@@ -9232,14 +9698,14 @@
         "title": "StationCharacteristics",
         "type": "object"
       },
-      "StationContexte": {
+      "StationContexte-Input": {
         "additionalProperties": false,
         "description": "Contexte stationnel complet (`REASONING_ENGINE.md` §5).\n\nChaque bloc est optionnel — une station peut être partiellement\ncaractérisée — mais au moins un bloc est exigé : on ne raisonne pas\nsur le vide.",
         "properties": {
           "botanique": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9249,7 +9715,7 @@
           "climat": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9258,7 +9724,7 @@
           },
           "correlations": {
             "items": {
-              "$ref": "#/components/schemas/BlocContexte"
+              "$ref": "#/components/schemas/BlocContexte-Input"
             },
             "title": "Correlations",
             "type": "array"
@@ -9266,7 +9732,7 @@
           "geographie": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9276,7 +9742,7 @@
           "pedologie": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9286,7 +9752,72 @@
           "peuplement": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "StationContexte",
+        "type": "object"
+      },
+      "StationContexte-Output": {
+        "additionalProperties": false,
+        "description": "Contexte stationnel complet (`REASONING_ENGINE.md` §5).\n\nChaque bloc est optionnel — une station peut être partiellement\ncaractérisée — mais au moins un bloc est exigé : on ne raisonne pas\nsur le vide.",
+        "properties": {
+          "botanique": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "climat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlations": {
+            "items": {
+              "$ref": "#/components/schemas/BlocContexte-Output"
+            },
+            "title": "Correlations",
+            "type": "array"
+          },
+          "geographie": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedologie": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "peuplement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
               },
               {
                 "type": "null"
@@ -11313,6 +11844,16 @@
     "/api/v1/auth/mfa": {
       "delete": {
         "operationId": "disable_mfa_api_v1_auth_mfa_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -11323,6 +11864,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -15197,6 +15748,264 @@
           }
         ],
         "summary": "Dérouler la chaîne complète et retourner chaque étape",
+        "tags": [
+          "orchestration"
+        ]
+      }
+    },
+    "/api/v1/orchestration/stations/{station_id}/contexte": {
+      "get": {
+        "description": "Assemble le StationContexte depuis `station_id` (DEC-000072) sans exécuter la chaîne : Place d'abord, soumission terrain acceptée en repli tracé, provenance complète exigée pour chaque bloc. Le rapport nomme chaque bloc construit, chaque manque et chaque niveau de preuve déclaré utilisé.",
+        "operationId": "previsualiser_contexte_station_api_v1_orchestration_stations__station_id__contexte_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "station_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Station Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_geographie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Geographie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_climat",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Climat"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_pedologie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Pedologie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_botanique",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Botanique"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_peuplement",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Peuplement"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultatHydratation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Prévisualiser le contexte hydraté d'une station",
+        "tags": [
+          "orchestration"
+        ]
+      }
+    },
+    "/api/v1/orchestration/stations/{station_id}/preparation": {
+      "get": {
+        "description": "Hydrate la station, sélectionne les règles accepted applicables et récupère l'état global d'un FieldIntake accepted. N'exécute aucun moteur et refuse toute absence de provenance ou de qualification.",
+        "operationId": "preparer_analyse_station_api_v1_orchestration_stations__station_id__preparation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "station_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Station Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_geographie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Geographie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_climat",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Climat"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_pedologie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Pedologie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_botanique",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Botanique"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_peuplement",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Peuplement"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultatPreparation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Préparer les entrées qualifiées d'une analyse stationnelle",
         "tags": [
           "orchestration"
         ]

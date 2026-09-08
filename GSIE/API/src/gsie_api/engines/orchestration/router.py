@@ -38,6 +38,14 @@ from gsie_api.engines.orchestration.hydration import (
     StationIntrouvableError,
 )
 from gsie_api.engines.orchestration.idempotency import AnalyseIdempotencyConflictError
+from gsie_api.engines.orchestration.preparation import (
+    EtatGlobalNonSourceError,
+    QualificationRegleManquanteError,
+    ReglesQualifieesAbsentesError,
+    ResultatPreparation,
+    StationPreparationService,
+    VersionRegleManquanteError,
+)
 from gsie_api.engines.orchestration.schemas import AnalyseComplete, AnalyseRequest
 from gsie_api.engines.orchestration.service import (
     AnalyseImpossibleError,
@@ -180,4 +188,56 @@ async def previsualiser_contexte_station(
     except StationIntrouvableError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except HydratationVideError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.get(
+    "/stations/{station_id}/preparation",
+    response_model=ResultatPreparation,
+    summary="Préparer les entrées qualifiées d'une analyse stationnelle",
+    description=(
+        "Hydrate la station, sélectionne les règles accepted applicables et "
+        "récupère l'état global d'un FieldIntake accepted. N'exécute aucun moteur "
+        "et refuse toute absence de provenance ou de qualification."
+    ),
+)
+@_limiter.limit("20/minute")
+async def preparer_analyse_station(
+    station_id: UUID,
+    request: Request,
+    response: Response,
+    session: DbSession,
+    _user: EngineReadUser,
+    niveau_geographie: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_climat: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_pedologie: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_botanique: Annotated[EvidenceLevel | None, Query()] = None,
+    niveau_peuplement: Annotated[EvidenceLevel | None, Query()] = None,
+) -> ResultatPreparation:
+    """Prépare et expose les entrées, sans lancer Reasoning ou Diagnostic."""
+    niveaux = {
+        nom[7:]: niveau
+        for nom, niveau in (
+            ("niveau_geographie", niveau_geographie),
+            ("niveau_climat", niveau_climat),
+            ("niveau_pedologie", niveau_pedologie),
+            ("niveau_botanique", niveau_botanique),
+            ("niveau_peuplement", niveau_peuplement),
+        )
+        if niveau is not None
+    }
+    try:
+        return await StationPreparationService(session).prepare(
+            station_id, niveaux_declares=niveaux
+        )
+    except StationIntrouvableError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except HydratationVideError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except (
+        ReglesQualifieesAbsentesError,
+        QualificationRegleManquanteError,
+        EtatGlobalNonSourceError,
+        VersionRegleManquanteError,
+    ) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

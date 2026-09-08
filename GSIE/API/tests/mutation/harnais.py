@@ -184,15 +184,15 @@ MUTATIONS: tuple[Mutation, ...] = (
         tests=("tests/unit/test_botanical_taxref.py",),
     ),
     Mutation(
-        cle="soilgrids_json_invalide_non_garde",
-        fichier="gsie_api/shared/http_client.py",
-        ancien='        except json.JSONDecodeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
-        nouveau='        except RuntimeError as exc:\n            raise self.exception_class(f"Échec {label} : {exc}") from exc',  # noqa: E501
+        cle="soilgrids_geotiff_invalide_non_garde",
+        fichier="gsie_api/data/soilgrids_wcs_client.py",
+        ancien='                if dataset.dtypes[0] != "int16":',
+        nouveau="                if False:",
         defaut_reproduit=(
-            "un JSON malformé de l'API SoilGrids fait planter le client en "
-            "JSONDecodeError non wrappé au lieu de lever SoilGridsClientError"
+            "un GeoTIFF WCS d'un type différent d'INT16 est accepté par le "
+            "moteur et peut contaminer un diagnostic pédologique"
         ),
-        tests=("tests/unit/test_soilgrids_client.py",),
+        tests=("tests/unit/test_soilgrids_wcs_client.py",),
     ),
     Mutation(
         cle="ign_cadastre_json_invalide_non_garde",
@@ -878,18 +878,18 @@ MUTATIONS: tuple[Mutation, ...] = (
     ),
     Mutation(
         cle="echelle_pedologique_supposee",
-        fichier="gsie_api/engines/pedology/soilgrids_client.py",
-        # Retour au repli sur l'identite. SoilGrids renvoie le pH multiplie par
+        fichier="gsie_api/data/soilgrids_wcs_client.py",
+        # Retour au facteur identite. SoilGrids renvoie le pH multiplie par
         # dix ; supposer un facteur de 1 sort un pH de 52, hors de l'echelle
         # physique 0-14. La regle `pedologie_pH < 5.5` evalue alors 52 < 5.5 —
         # Faux — et un sol acide se diagnostique basique, sans erreur levee.
-        ancien="    if facteur is None:",
-        nouveau="    if False:",
+        ancien="        facteur = _SOILGRIDS_CONVERSION_FACTORS[request.property_code]",
+        nouveau="        facteur = 1.0",
         defaut_reproduit=(
             "une valeur pedologique sort mise a l'echelle brute, d'un facteur "
             "dix, et inverse silencieusement le diagnostic qui en depend"
         ),
-        tests=("tests/unit/test_soilgrids_client.py",),
+        tests=("tests/unit/test_soilgrids_wcs_client.py",),
     ),
     Mutation(
         cle="mesure_hors_definition_admise",
@@ -1105,8 +1105,8 @@ MUTATIONS: tuple[Mutation, ...] = (
         # doit être capturé et wrapé dans TelechargementClientError — sans cette
         # garde, l'exception Python brute fuit vers l'appelant (500 non géré).
         ancien="""        try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetCapabilities : {exc}"
             ) from exc""",
@@ -1148,6 +1148,17 @@ MUTATIONS: tuple[Mutation, ...] = (
             "sans blocage — un client compromis peut accéder aux services internes"
         ),
         tests=("tests/unit/test_ssrf_egress.py",),
+    ),
+    Mutation(
+        cle="version_regle_non_figee",
+        fichier="gsie_api/engines/orchestration/preparation.py",
+        ancien="    if manquantes:\n        raise VersionRegleManquanteError(",
+        nouveau="    if False:\n        raise VersionRegleManquanteError(",
+        defaut_reproduit=(
+            "une règle sans version persistée entre dans le snapshot et rend "
+            "le rejeu dépendant d'une connaissance non figée"
+        ),
+        tests=("tests/unit/test_orchestration_preparation.py",),
     ),
 )
 

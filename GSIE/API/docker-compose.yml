@@ -224,6 +224,9 @@ services:
   # Context = racine du projet (le Dockerfile COPY des fichiers depuis GSIE/API/
   # et GSIE/ENGINES/EVIDENCE_ENGINE/rust/)
   api:
+    # Tag explicite partage avec le banc HA : le nom implicite de Compose
+    # depend du nom de projet et ne doit pas alimenter un decalage d'image.
+    image: ${GSIE_HA_API_IMAGE:-gsie-api:latest}
     build:
       context: ../..
       dockerfile: GSIE/API/Dockerfile

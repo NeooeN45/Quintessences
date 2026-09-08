@@ -1,161 +1,147 @@
-"""Tests d'intégration — Pedology Engine.
+"""Tests d'intégration hors réseau du Pedology Engine sur SoilGrids WCS.
 
-Pas de dépendance à Postgres (v1 sans persistance, voir docstring
-engine.py) — les appels à SoilGrids sont mockés via respx avec la
-forme de réponse réelle (vérifiée manuellement contre rest.isric.org
-le 2026-07-17, lon=1.0/lat=44.0, France) — pas de donnée inventée.
+Les réponses sont des GeoTIFF INT16 construits avec la projection et la
+structure attendues par le service WCS. Aucun appel au service REST bêta
+n'est autorisé par ces tests.
 """
 
-import pytest
-import respx
-from httpx import Response
+from __future__ import annotations
 
+from io import BytesIO
+
+import httpx
+import numpy as np
+import pytest
+import rasterio
+import respx
+from rasterio.transform import from_bounds
+
+from gsie_api.data.soilgrids_wcs_client import SoilGridsWcsClient
+from gsie_api.data.soilgrids_wcs_policy import SOILGRIDS_WCS_ENDPOINT, SOILGRIDS_WCS_PROJ4
 from gsie_api.engines.pedology.engine import PedologyEngine, PedologyEngineError
 from gsie_api.engines.pedology.schemas import PedologyQuery
-from gsie_api.engines.pedology.soilgrids_client import (
-    _SOILGRIDS_URL,
-    SoilGridsClient,
-    SoilGridsClientError,
-)
+from gsie_api.engines.pedology.soilgrids_client import SoilGridsClient, SoilGridsClientError
 
-# Réponse réelle capturée (rest.isric.org, lon=1.0, lat=44.0, 2026-07-17).
-_REAL_RESPONSE = {
-    "type": "Feature",
-    "geometry": {"type": "Point", "coordinates": [1.0, 44.0]},
-    "properties": {
-        "layers": [
-            {
-                "name": "clay",
-                "unit_measure": {"d_factor": 10, "mapped_units": "g/kg", "target_units": "%"},
-                "depths": [
-                    {
-                        "range": {"top_depth": 0, "bottom_depth": 5, "unit_depth": "cm"},
-                        "label": "0-5cm",
-                        "values": {"mean": 283},
-                    }
-                ],
-            },
-            {
-                "name": "phh2o",
-                "unit_measure": {"d_factor": 10, "mapped_units": "pH*10", "target_units": "-"},
-                "depths": [
-                    {
-                        "range": {"top_depth": 0, "bottom_depth": 5, "unit_depth": "cm"},
-                        "label": "0-5cm",
-                        "values": {"mean": 69},
-                    }
-                ],
-            },
-            {
-                "name": "sand",
-                "unit_measure": {"d_factor": 10, "mapped_units": "g/kg", "target_units": "%"},
-                "depths": [
-                    {
-                        "range": {"top_depth": 0, "bottom_depth": 5, "unit_depth": "cm"},
-                        "label": "0-5cm",
-                        "values": {"mean": 233},
-                    }
-                ],
-            },
-            {
-                "name": "silt",
-                "unit_measure": {"d_factor": 10, "mapped_units": "g/kg", "target_units": "%"},
-                "depths": [
-                    {
-                        "range": {"top_depth": 0, "bottom_depth": 5, "unit_depth": "cm"},
-                        "label": "0-5cm",
-                        "values": {"mean": 483},
-                    }
-                ],
-            },
-        ]
-    },
-    "query_time_s": 1.0,
-}
 
-_NULL_RESPONSE = {
-    "type": "Feature",
-    "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
-    "properties": {
-        "layers": [
-            {
-                "name": "phh2o",
-                "unit_measure": {"d_factor": 10, "mapped_units": "pH*10", "target_units": "-"},
-                "depths": [
-                    {
-                        "range": {"top_depth": 0, "bottom_depth": 5, "unit_depth": "cm"},
-                        "label": "0-5cm",
-                        "values": {"mean": None},
-                    }
-                ],
-            }
-        ]
-    },
-}
+def _geotiff(
+    latitude: float,
+    longitude: float,
+    raw_value: int,
+    *,
+    nodata: int | None = None,
+) -> bytes:
+    """Crée une couverture WCS d'une cellule centrée sur un point."""
+
+    bbox = SoilGridsWcsClient._point_bbox(latitude, longitude)
+    buffer = BytesIO()
+    profile: dict[str, object] = {
+        "driver": "GTiff",
+        "height": 1,
+        "width": 1,
+        "count": 1,
+        "dtype": "int16",
+        "crs": SOILGRIDS_WCS_PROJ4,
+        "transform": from_bounds(*bbox, 1, 1),
+    }
+    if nodata is not None:
+        profile["nodata"] = nodata
+    with rasterio.open(buffer, mode="w", **profile) as dataset:
+        dataset.write(np.array([[raw_value]], dtype="int16"), 1)
+    return buffer.getvalue()
+
+
+def _wcs_response(latitude: float, longitude: float) -> object:
+    """Retourne une réponse WCS dépendant de la propriété demandée."""
+
+    raw_values = {"phh2o": 69, "clay": 283, "sand": 233, "silt": 483}
+
+    def response(request: httpx.Request) -> httpx.Response:
+        property_code = request.url.params["COVERAGEID"].split("_", maxsplit=1)[0]
+        return httpx.Response(
+            200,
+            content=_geotiff(latitude, longitude, raw_values[property_code]),
+            headers={"content-type": "image/tiff"},
+        )
+
+    return response
 
 
 @pytest.fixture
 def engine() -> PedologyEngine:
-    return PedologyEngine(soilgrids_client=SoilGridsClient())
+    return PedologyEngine(soilgrids_client=SoilGridsWcsClient())
 
 
+@pytest.mark.asyncio
 @respx.mock
-async def test_query_returns_real_scaled_values(engine: PedologyEngine):
-    """Les valeurs retournées doivent être mises à l'échelle par d_factor (pH=6.9, argile=28.3%)."""
-    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=_REAL_RESPONSE))
+async def test_query_returns_values_scaled_from_wcs_geotiff(engine: PedologyEngine) -> None:
+    route = respx.get(SOILGRIDS_WCS_ENDPOINT).mock(side_effect=_wcs_response(44.0, 1.0))
 
     result = await engine.query(PedologyQuery(latitude=44.0, longitude=1.0))
 
-    by_nom = {c.nom: c.valeur for c in result.caracteristiques}
-    assert by_nom["ph"] == pytest.approx(6.9)
-    assert by_nom["argile_pct"] == pytest.approx(28.3)
-    assert by_nom["sable_pct"] == pytest.approx(23.3)
-    assert by_nom["limon_pct"] == pytest.approx(48.3)
-    # argile + sable + limon doivent sommer à ~100% (vérification de cohérence physique)
-    assert by_nom["argile_pct"] + by_nom["sable_pct"] + by_nom["limon_pct"] == pytest.approx(
+    by_name = {
+        characteristic.nom: characteristic.valeur for characteristic in result.caracteristiques
+    }
+    assert by_name["ph"] == pytest.approx(6.9)
+    assert by_name["argile_pct"] == pytest.approx(28.3)
+    assert by_name["sable_pct"] == pytest.approx(23.3)
+    assert by_name["limon_pct"] == pytest.approx(48.3)
+    assert by_name["argile_pct"] + by_name["sable_pct"] + by_name["limon_pct"] == pytest.approx(
         99.9, abs=0.1
     )
+    assert route.call_count == 4
+    assert all("rest.isric.org" not in str(call.request.url) for call in route.calls)
 
 
+@pytest.mark.asyncio
 @respx.mock
-async def test_query_evidence_level_is_b_not_a(engine: PedologyEngine):
-    """SoilGrids est une source unique peer-reviewed — plafond B, jamais A."""
-    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=_REAL_RESPONSE))
+async def test_query_evidence_level_is_b_and_source_is_wcs(engine: PedologyEngine) -> None:
+    respx.get(SOILGRIDS_WCS_ENDPOINT).mock(side_effect=_wcs_response(44.0, 1.0))
 
     result = await engine.query(PedologyQuery(latitude=44.0, longitude=1.0))
 
-    assert all(c.evidence_level.value == "B" for c in result.caracteristiques)
-    assert all(c.source.auteur == "Poggio, L. et al." for c in result.caracteristiques)
+    assert all(
+        characteristic.evidence_level.value == "B" for characteristic in result.caracteristiques
+    )
+    assert all(
+        characteristic.source.auteur == "Poggio, L. et al."
+        for characteristic in result.caracteristiques
+    )
+    assert "maps.isric.org/mapserv" in result.source.reference
 
 
+@pytest.mark.asyncio
 @respx.mock
-async def test_query_omits_properties_without_coverage(engine: PedologyEngine):
-    """Une propriété sans donnée (mean=null) doit être omise — jamais une valeur par défaut."""
-    respx.get(_SOILGRIDS_URL).mock(return_value=Response(200, json=_NULL_RESPONSE))
+async def test_query_omits_wcs_nodata_without_default(engine: PedologyEngine) -> None:
+    respx.get(SOILGRIDS_WCS_ENDPOINT).mock(
+        side_effect=lambda request: httpx.Response(
+            200,
+            content=_geotiff(0.0, 0.0, -32768, nodata=-32768),
+            headers={"content-type": "image/tiff"},
+        )
+    )
 
     result = await engine.query(PedologyQuery(latitude=0.0, longitude=0.0))
 
     assert result.caracteristiques == []
 
 
+@pytest.mark.asyncio
 @respx.mock
-async def test_query_raises_on_soilgrids_api_failure(engine: PedologyEngine):
-    """Une panne de l'API SoilGrids doit lever PedologyEngineError."""
-    respx.get(_SOILGRIDS_URL).mock(return_value=Response(503))
+async def test_query_raises_on_wcs_failure(engine: PedologyEngine) -> None:
+    respx.get(SOILGRIDS_WCS_ENDPOINT).mock(return_value=httpx.Response(503))
 
     with pytest.raises(PedologyEngineError):
         await engine.query(PedologyQuery(latitude=44.0, longitude=1.0))
 
 
-async def test_soilgrids_client_raises_on_network_error():
-    """Une erreur HTTP doit lever SoilGridsClientError, pas une exception générique."""
-    client = SoilGridsClient()
-    with respx.mock:
-        respx.get(_SOILGRIDS_URL).mock(return_value=Response(500))
-        with pytest.raises(SoilGridsClientError):
-            await client.get_properties(44.0, 1.0, ["phh2o"])
+@pytest.mark.asyncio
+@respx.mock
+async def test_compatibility_client_wraps_wcs_failure() -> None:
+    respx.get(SOILGRIDS_WCS_ENDPOINT).mock(return_value=httpx.Response(500))
+
+    with pytest.raises(SoilGridsClientError):
+        await SoilGridsClient().get_properties(44.0, 1.0, ["phh2o"])
 
 
-def test_return_engine_version():
-    """version() doit retourner une chaîne non vide."""
-    assert len(PedologyEngine.version()) > 0
+def test_return_engine_version() -> None:
+    assert PedologyEngine.version() == "0.2.0"
