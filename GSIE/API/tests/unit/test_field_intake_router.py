@@ -76,7 +76,7 @@ async def should_submit_field_intake_with_authenticated_subject(
 @pytest.mark.asyncio
 async def should_reject_missing_subject() -> None:
     with pytest.raises(HTTPException) as error:
-        await submit_field_intake(
+        await unwrap(submit_field_intake)(
             _submission(),
             request=_request(),
             response=Response(),
@@ -100,7 +100,7 @@ async def should_translate_idempotency_conflict(
     )
 
     with pytest.raises(HTTPException) as error:
-        await submit_field_intake(
+        await unwrap(submit_field_intake)(
             _submission(),
             request=_request(trace_id="trace-conflict"),
             response=Response(),
