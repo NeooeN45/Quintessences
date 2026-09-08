@@ -20,8 +20,8 @@ from gsie_api.infrastructure.models import (
     dynamics,  # noqa: F401
     ecology,  # noqa: F401
     enrichment,  # noqa: F401 — entity_image, entity_description, ingestion_progress
-    field_intake,  # noqa: F401 — intake applicatif en quarantaine
     fair_rgpd,  # noqa: F401
+    field_intake,  # noqa: F401 — intake applicatif en quarantaine
     forestry,  # noqa: F401 — types RFC-0016 (schéma forestier spécialisé)
     governance,  # noqa: F401
     identification,  # noqa: F401 — 3 types RFC-0018 (identification botanique Pl@ntNet)
