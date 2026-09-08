@@ -757,7 +757,9 @@ class TestOrchestrationRouter:
             if error == "station"
             else HydratationVideError("aucun bloc exploitable")
         )
-        with patch("gsie_api.engines.orchestration.router.StationContexteHydrator") as mock_cls:
+        with patch(
+            "gsie_api.engines.orchestration.router.StationContexteHydrator"
+        ) as mock_cls:
             mock_cls.return_value.hydrate = AsyncMock(side_effect=exception)
             response = await orchestration_client.get(
                 f"{_API_PREFIX}/orchestration/stations/{uuid4()}/contexte",
