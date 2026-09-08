@@ -22,6 +22,17 @@ severity_levels:
   P2: robustesse, performance ou dette structurante
   P3: qualité interne ou ergonomie technique
 
+coverage_policy:
+  COVERED: >-
+    Une preuve automatisée directe exerce l'invariant dans son périmètre déclaré
+    sans lacune matérielle connue.
+  PARTIAL: >-
+    Une ou plusieurs preuves automatisées exercent une partie significative de
+    l'invariant, mais un chemin ou module matériel reste non prouvé.
+  MISSING: >-
+    Aucune preuve automatisée directe suffisante n'a été identifiée lors de la
+    dernière cartographie.
+
 invariants:
   - id: INV-001
     title: Aucune décision métier légitime ne disparaît silencieusement
@@ -33,9 +44,15 @@ invariants:
       persistée ou rejetée explicitement ; un succès apparent sans persistance
       durable est interdit.
     modules: [GSIE_API, GeoSylva, RecommendationEngine]
-    test_status: PARTIAL
-    test_references: []
+    test_status: COVERED
+    test_references:
+      - GSIE/API/tests/integration/test_recommendation_persistance.py::test_la_decision_est_ecrite_et_reliee_a_sa_recommandation
+      - GSIE/API/tests/integration/test_recommendation_persistance.py::test_une_decision_sur_une_recommandation_absente_est_refusee
     evidence_references: [GSIE-CON-005]
+    coverage_note: >-
+      PostgreSQL réel vérifie que l'accusé « enregistre » correspond à une
+      DecisionModel persistée, à son auteur et à sa jonction de recommandation ;
+      une recommandation absente est rejetée explicitement.
 
   - id: INV-002
     title: Aucun accès inter-tenant non autorisé
@@ -48,8 +65,16 @@ invariants:
       périmètre sans autorisation explicite.
     modules: [GSIE_API, PostgreSQL, RLS]
     test_status: PARTIAL
-    test_references: []
+    test_references:
+      - GSIE/API/tests/integration/test_isolement_rgpd.py::test_resource_porte_le_perimetre_et_sa_policy
+      - GSIE/API/tests/integration/test_isolement_rgpd.py::test_un_moteur_de_domaine_est_refuse_sur_les_schemas_personnels
+      - GSIE/API/tests/integration/test_geosylva_sync_repository.py::test_deux_comptes_peuvent_utiliser_le_meme_identifiant_local
     evidence_references: []
+    coverage_note: >-
+      Les schémas sensibles, les rôles PostgreSQL et le cloisonnement GeoSylva
+      sont testés. Le test d'isolement documente toutefois que le propriétaire
+      PostgreSQL contourne les GRANT ; la preuve d'un rôle applicatif non
+      propriétaire réellement soumis à toutes les politiques reste nécessaire.
 
   - id: INV-003
     title: Le soft-delete reste effectif dans tous les chemins d'accès
@@ -61,9 +86,12 @@ invariants:
       un endpoint, un moteur, une relation secondaire, un cache ou un export
       sauf opération de restauration explicitement autorisée.
     modules: [GSIE_API, PostgreSQL]
-    test_status: UNKNOWN
+    test_status: MISSING
     test_references: []
     evidence_references: [CON-010]
+    coverage_note: >-
+      Aucun test direct suffisamment transversal du cycle deleted_at -> lecture,
+      liste, relation, export et restauration n'a été identifié dans cette passe.
 
   - id: INV-004
     title: Les opérations rejouables sont idempotentes
@@ -76,8 +104,14 @@ invariants:
       relation.
     modules: [GSIE_API, Ingestion, RecommendationEngine, Sync]
     test_status: PARTIAL
-    test_references: []
+    test_references:
+      - GSIE/API/tests/integration/test_geosylva_sync_repository.py::test_deux_creations_concurrentes_ne_produisent_jamais_une_erreur_sql
+      - GSIE/API/tests/integration/test_treekipedia_performance.py::test_should_lookup_alias_by_index_with_200_aliases
     evidence_references: []
+    coverage_note: >-
+      La création concurrente GeoSylva est éprouvée sur PostgreSQL avec un seul
+      succès et un conflit métier explicite. L'invariant reste plus large :
+      retries API, ingestion et RecommendationEngine ne sont pas tous prouvés ici.
 
   - id: INV-005
     title: ResourceModel et sous-type restent cohérents
@@ -91,7 +125,11 @@ invariants:
     modules: [GSIE_API, PostgreSQL, RecommendationEngine]
     test_status: MISSING
     test_references: []
-    evidence_references: [AUD-001]
+    evidence_references: [AUD-001, ISSUE-38]
+    coverage_note: >-
+      Le risque de collision sémantique ResourceModel/sous-type est suivi, mais
+      aucun test de collision UUID avec type racine incompatible n'a encore été
+      identifié.
 
   - id: INV-006
     title: Toute recommandation scientifique importante est traçable
@@ -104,8 +142,16 @@ invariants:
       pour comprendre sa production.
     modules: [EvidenceEngine, RecommendationEngine, QMF, Atmos, IGNIS, Hydro, Terra]
     test_status: PARTIAL
-    test_references: []
+    test_references:
+      - GSIE/API/tests/integration/test_evidence_engine.py::should_reject_when_source_candidate_missing
+      - GSIE/API/tests/integration/test_recommendation_diagnostic.py::test_un_diagnostic_absent_fait_refuser
+      - GSIE/API/tests/integration/test_e2e_api.py::TestCorrelationComputeE2E::should_compute_and_persist_correlation
+      - GSIE/API/tests/integration/test_e2e_api.py::TestPipelineE2E::should_evaluate_and_preserve_evidence_level
     evidence_references: [GSIE-CON-004, GSIE-CON-005]
+    coverage_note: >-
+      Les sources et diagnostics invoqués sont contrôlés et plusieurs chaînes
+      préservent source/niveau de preuve. La traçabilité complète jusqu'aux
+      versions de modèles et aux autres moteurs scientifiques reste à prouver.
 
   - id: INV-007
     title: Une confiance dérivée n'excède pas sa preuve sans justification
@@ -117,8 +163,14 @@ invariants:
       l'entrée ou de la preuve source sans méthode documentée, sourcée et testée.
     modules: [RecommendationEngine, EvidenceEngine, QMF]
     test_status: PARTIAL
-    test_references: []
+    test_references:
+      - GSIE/API/tests/integration/test_recommendation_diagnostic.py::test_la_confiance_vient_du_diagnostic
+      - GSIE/API/tests/integration/test_recommendation_persistance.py::test_la_confiance_persistee_est_celle_du_diagnostic
     evidence_references: []
+    coverage_note: >-
+      Toutes les recommandations et alternatives du RecommendationEngine sont
+      contraintes par la confiance du diagnostic, y compris après persistance.
+      La règle n'est pas encore démontrée transversalement pour EvidenceEngine/QMF.
 
   - id: INV-008
     title: Une synchronisation offline ne perd aucune donnée terrain légitime
@@ -130,9 +182,15 @@ invariants:
       saisie terrain valide ne doit être perdue silencieusement ; toute donnée
       rejetée doit avoir une cause observable.
     modules: [GeoSylva, GSIE_Server, Sync]
-    test_status: MISSING
-    test_references: []
+    test_status: PARTIAL
+    test_references:
+      - GSIE/API/tests/integration/test_geosylva_sync_repository.py::test_deux_comptes_peuvent_utiliser_le_meme_identifiant_local
+      - GSIE/API/tests/integration/test_geosylva_sync_repository.py::test_deux_creations_concurrentes_ne_produisent_jamais_une_erreur_sql
     evidence_references: []
+    coverage_note: >-
+      La persistance serveur, le cloisonnement des comptes et un conflit
+      concurrent sont testés. Les pertes réseau, redémarrages, reprises après
+      interruption et longues périodes offline ne sont pas encore simulés.
 
   - id: INV-009
     title: Les contrats API, modèles et migrations restent synchronisés
@@ -144,9 +202,16 @@ invariants:
       migrations Alembic ne doivent pas diverger sur les structures publiques ou
       persistées.
     modules: [GSIE_API, OpenAPI, Alembic]
-    test_status: PARTIAL
-    test_references: []
+    test_status: COVERED
+    test_references:
+      - GSIE/API/tests/integration/test_migration_baseline.py
+      - GSIE/API/tests/integration/test_e2e_api.py::TestOpenAPI::should_return_200_on_openapi
+      - .github/workflows/ci.yml::Check OpenAPI spec is up to date
     evidence_references: []
+    coverage_note: >-
+      Une base PostgreSQL vierge est migrée puis comparée au registre SQLAlchemy,
+      avec downgrade/re-upgrade. La CI régénère aussi OpenAPI depuis l'application
+      et échoue si docs/openapi.json diverge.
 
   - id: INV-010
     title: Les traitements critiques échouent de manière explicite
@@ -159,8 +224,16 @@ invariants:
       plausible non traçable.
     modules: [GSIE_API, Ingestion, Engines]
     test_status: PARTIAL
-    test_references: []
+    test_references:
+      - GSIE/API/tests/integration/test_recommendation_diagnostic.py::test_un_diagnostic_absent_fait_refuser
+      - GSIE/API/tests/integration/test_recommendation_diagnostic.py::test_l_api_refuse_un_diagnostic_absent
+      - GSIE/API/tests/integration/test_resources_fiabilite.py::TestCoercitionDesTypes::test_une_valeur_mal_typee_donne_422_et_non_500
+      - GSIE/API/tests/integration/test_e2e_api.py::TestHealthAndReady::should_return_200_on_ready
     evidence_references: []
+    coverage_note: >-
+      Plusieurs erreurs critiques deviennent des refus 4xx/503 explicites plutôt
+      que des succès plausibles. La preuve n'est pas encore exhaustive sur toutes
+      les dépendances et tous les moteurs.
 
   - id: INV-011
     title: Les données scientifiques conservent unités, CRS et temporalité
@@ -172,9 +245,16 @@ invariants:
       explicites CRS, unités, date/heure, version de source et incertitude utiles
       à l'interprétation.
     modules: [GIS, GeoSylva, Atmos, IGNIS, Hydro, Terra]
-    test_status: UNKNOWN
-    test_references: []
+    test_status: PARTIAL
+    test_references:
+      - GSIE/API/tests/integration/test_resources_fiabilite.py::TestCoercitionDesTypes::test_une_geometrie_reste_lisible_apres_ecriture
+      - GSIE/API/tests/integration/test_resources_fiabilite.py::TestCoercitionDesTypes::test_une_valeur_mal_typee_donne_422_et_non_500
+      - GSIE/API/tests/integration/test_resources_fiabilite.py::TestResolutionNativeDeclaree::test_une_echelle_sans_grain_est_refusee
     evidence_references: []
+    coverage_note: >-
+      SRID, géométrie, timestamps avec fuseau et granularité spatiale disposent de
+      gardes automatisées. L'invariant englobe toutefois unités, incertitudes et
+      transformations de plusieurs moteurs non encore reliées à une preuve unique.
 
   - id: INV-012
     title: Une régression de performance critique est détectable
@@ -186,12 +266,21 @@ invariants:
       d'un seuil de régression explicite afin qu'une dégradation significative ne
       puisse être fusionnée sans signal.
     modules: [GSIE_API, PostgreSQL, Ingestion, GIS, QMF]
-    test_status: MISSING
-    test_references: []
-    evidence_references: []
+    test_status: PARTIAL
+    test_references:
+      - GSIE/API/tests/integration/test_treekipedia_performance.py::test_should_use_index_scan_not_seq_scan_on_entity_alias_lookup
+      - GSIE/API/tests/integration/test_treekipedia_performance.py::test_should_respect_concurrency_limit_with_semaphore
+    evidence_references: [GSIE/QUALITY/BENCHMARK_BASELINE.md, ISSUE-39]
+    coverage_note: >-
+      Des propriétés de performance structurelles (plans d'index et plafond de
+      concurrence) sont testées, mais le fichier de test indique explicitement
+      qu'aucun seuil de temps n'est asserté. Les baselines p50/p95/p99 et seuils
+      de régression globaux restent à mesurer.
 
 maintenance_rules:
   - Toute nouvelle fonctionnalité critique doit déclarer les invariants qu'elle affecte.
   - Tout P0/P1 corrigé doit ajouter ou renforcer au moins une preuve automatisée.
   - Un invariant ACTIVE avec test_status MISSING est une dette technique explicite.
+  - Un invariant PARTIAL doit conserver au moins une référence de test concrète.
+  - Un invariant COVERED doit conserver une preuve automatisée directe et vérifiable.
   - Une modification d'invariant métier structurant requiert une décision d'architecture appropriée.
