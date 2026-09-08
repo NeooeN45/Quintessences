@@ -9,9 +9,9 @@ import pytest
 from hypothesis import given, settings, strategies as st
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.resources.router import _extract_author_id
 from gsie_api.resources.service import ResourceService
-from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.sync.geosylva import (
     GeoSylvaParcelMutation,
     GeoSylvaParcelRecord,
@@ -58,7 +58,7 @@ client_ids = st.text(min_size=1, max_size=40).filter(lambda value: value.strip()
     forbidden_value=json_scalar,
     safe_value=json_scalar,
 )
-def test_mass_assignment_ne_laisse_jamais_passser_deleted_at(
+def test_mass_assignment_ne_laisse_jamais_passer_deleted_at(
     forbidden_value: Any,
     safe_value: Any,
 ) -> None:
