@@ -1,0 +1,41 @@
+name: API benchmark baseline
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'GSIE/API/scripts/benchmark_api_health.py'
+      - '.github/workflows/benchmark-api.yml'
+      - 'GSIE/QUALITY/BENCHMARK_BASELINE.md'
+
+permissions:
+  contents: read
+
+jobs:
+  api-health-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: GSIE/API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev
+      - name: Record runner environment
+        run: |
+          uname -a
+          lscpu | grep -E 'Model name|CPU\(s\)|Thread|Core|Socket' || true
+          free -h
+      - name: Benchmark /health in-process
+        run: uv run python scripts/benchmark_api_health.py --requests 1000 --warmup 100
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: benchmark-api-health
+          path: GSIE/API/tests/perf/results/benchmark-api-health.json
+          retention-days: 90
