@@ -64,6 +64,7 @@ RUN maturin build --release && \
 WORKDIR /build/api
 
 # Dépendances Python
+# uv 0.12.10 embarque quinn-proto >= 0.11.15 (GHSA-4w2j-m93h-cj5j).
 RUN pip install --no-cache-dir "uv==0.12.10"
 
 # Copie du projet API et installation des dépendances + wheel Rust
