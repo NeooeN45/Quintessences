@@ -11,6 +11,7 @@ from gsie_api.data.field_intake import (
     FieldIntakeConflict,
     FieldIntakeResponse,
     FieldIntakeSubmission,
+    _submitted_by,
 )
 from gsie_api.data.field_intake_router import submit_field_intake
 
@@ -68,7 +69,7 @@ async def should_submit_field_intake_with_authenticated_subject(
     kwargs = service.submit.await_args.kwargs
     assert kwargs["application_version"] == "1.2.3"
     assert kwargs["trace_id"] == "trace-test"
-    assert kwargs["submitted_by"] == uuid4  # placeholder replaced below
+    assert kwargs["submitted_by"] == _submitted_by("user-1")
 
 
 @pytest.mark.asyncio
