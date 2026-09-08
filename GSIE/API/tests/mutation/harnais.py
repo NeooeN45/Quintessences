@@ -1105,14 +1105,14 @@ MUTATIONS: tuple[Mutation, ...] = (
         # doit être capturé et wrapé dans TelechargementClientError — sans cette
         # garde, l'exception Python brute fuit vers l'appelant (500 non géré).
         ancien="""        try:
-            root = ET.fromstring(body)
-        except ET.ParseError as exc:
+            root = ElementTree.fromstring(body)
+        except ElementTree.ParseError as exc:
             raise TelechargementClientError(
                 f"Échec du parsing XML GetCapabilities : {exc}"
             ) from exc""",
-        nouveau="        root = ET.fromstring(body)",
+        nouveau="        root = ElementTree.fromstring(body)",
         defaut_reproduit=(
-            "un XML malformé fait fuir ET.ParseError au lieu de "
+            "un XML malformé fait fuir ElementTree.ParseError au lieu de "
             "TelechargementClientError — l'appelant voit un 500 non géré"
         ),
         tests=("tests/unit/test_telechargement_client.py",),
