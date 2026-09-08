@@ -38,13 +38,17 @@ async def test_rejouer_la_meme_operation_ne_duplique_pas_et_n_incremente_pas(
     assert rejouee.last_operation_id == operation_id
 
     lignes = (
-        await db_session.execute(
-            select(GeoSylvaParcelSyncModel).where(
-                GeoSylvaParcelSyncModel.account_id == account.id,
-                GeoSylvaParcelSyncModel.client_id == "parcelle-retry",
+        (
+            await db_session.execute(
+                select(GeoSylvaParcelSyncModel).where(
+                    GeoSylvaParcelSyncModel.account_id == account.id,
+                    GeoSylvaParcelSyncModel.client_id == "parcelle-retry",
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(lignes) == 1
 
 
@@ -83,13 +87,17 @@ async def test_operation_rollbackee_peut_etre_rejouee_sans_perte(
 
     async with sessions() as verification:
         lignes = (
-            await verification.execute(
-                select(GeoSylvaParcelSyncModel).where(
-                    GeoSylvaParcelSyncModel.account_id == account.id,
-                    GeoSylvaParcelSyncModel.client_id == "parcelle-coupure",
+            (
+                await verification.execute(
+                    select(GeoSylvaParcelSyncModel).where(
+                        GeoSylvaParcelSyncModel.account_id == account.id,
+                        GeoSylvaParcelSyncModel.client_id == "parcelle-coupure",
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(lignes) == 1
         assert lignes[0].server_version == 1
         assert lignes[0].last_operation_id == operation_id
@@ -131,3 +139,4 @@ async def test_retry_de_suppression_conserve_un_tombstone_unique(
     assert rejouee.version == 2
     assert rejouee.deleted_at is not None
     assert rejouee.last_operation_id == operation_id
+
