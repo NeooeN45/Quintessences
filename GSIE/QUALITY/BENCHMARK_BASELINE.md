@@ -38,14 +38,32 @@ Un seul run anormal ne suffit pas : utiliser médiane et dispersion, puis confir
 
 | Métrique | Baseline | Seuil | Statut |
 |---|---:|---:|---|
-| Latence GET simple p50 | UNMEASURED | - | À mesurer |
-| Latence GET simple p95 | UNMEASURED | - | À mesurer |
-| Latence GET simple p99 | UNMEASURED | - | À mesurer |
+| Latence `/health` ASGI in-process p50 | 1,166 ms | - | 1 campagne — provisoire |
+| Latence `/health` ASGI in-process p95 | 1,449 ms | - | 1 campagne — provisoire |
+| Latence `/health` ASGI in-process p99 | 1,547 ms | - | 1 campagne — provisoire |
 | Latence écriture simple p95 | UNMEASURED | - | À mesurer |
-| Débit requêtes/s | UNMEASURED | - | À mesurer |
+| Débit `/health` ASGI in-process | 830,22 req/s | - | 1 campagne — provisoire |
 | Taux d'erreur sous charge | UNMEASURED | - | À mesurer |
 | Temps de démarrage API | UNMEASURED | - | À mesurer |
 | RSS mémoire au repos | UNMEASURED | - | À mesurer |
+
+
+### BENCH-20260908-001 — `/health` ASGI in-process
+
+| Champ | Valeur |
+|---|---|
+| Commit | `640998a7d03a9cf88debcefff9e766eeac558538` |
+| Preuve | GitHub Actions run `34253592149`, job `api-health-baseline` réussi |
+| Environnement | Linux 6.17.0-1022-azure x86_64, Python 3.12.3 |
+| Méthode | ASGI in-process, sans réseau, PostgreSQL ni Redis |
+| Échantillon | 100 warm-ups puis 1 000 requêtes |
+| Latences | p50 1,166 ms ; p95 1,449 ms ; p99 1,547 ms ; min 1,098 ms ; max 1,831 ms |
+| Débit | 830,22 req/s |
+| Durée mesurée | 1,204502 s |
+| RSS maximal du processus | 375,16 MiB |
+| Statut | Première observation ; seuil de régression différé jusqu'à 3 campagnes comparables |
+
+Cette campagne mesure uniquement le coût applicatif du chemin `/health`. Elle ne prouve aucune performance end-to-end, base de données, cache, réseau ou charge concurrente.
 
 ## PostgreSQL / persistance
 
