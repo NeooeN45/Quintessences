@@ -699,7 +699,6 @@ class TestOrchestrationRouter:
         assert resp.status_code == 409
         assert "contenu différent" in resp.json()["detail"]
 
-
     @pytest.mark.parametrize(
         ("error", "expected_status"),
         [
