@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
-import pytest
 from hypothesis import given, settings, strategies as st
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.infrastructure.models.base import ResourceModel
