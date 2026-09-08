@@ -1,0 +1,49 @@
+name: INV-005 patch temp
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'fix/inv-005-agent-resource-coherence'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          python-version: "3.12"
+      - name: Install locked dependencies
+        working-directory: GSIE/API
+        run: uv sync --locked --extra dev
+      - name: Patch agent coherence guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('GSIE/API/src/gsie_api/engines/recommendation/engine.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''        await self._session.execute(\n            pg_insert(ResourceModel)\n            .values(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}")\n            .on_conflict_do_nothing(index_elements=[ResourceModel.id])\n        )\n        await self._session.flush()\n        await self._session.execute(\n            pg_insert(AgentModel)\n            .values(id=agent_id, name=nom, type=type_agent)\n            .on_conflict_do_nothing(index_elements=[AgentModel.id])\n        )\n        await self._session.flush()\n        return agent_id\n'''
+          new = '''        await self._session.execute(\n            pg_insert(ResourceModel)\n            .values(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}")\n            .on_conflict_do_nothing(index_elements=[ResourceModel.id])\n        )\n        await self._session.flush()\n\n        racine = await self._session.get(ResourceModel, agent_id)\n        if racine is None or racine.type != "agent":\n            type_racine = racine.type if racine is not None else "absent"\n            raise RecommendationEngineError(\n                f"agent {agent_id} incohérent : type racine {type_racine!r}, "\n                "attendu 'agent'"\n            )\n\n        await self._session.execute(\n            pg_insert(AgentModel)\n            .values(id=agent_id, name=nom, type=type_agent)\n            .on_conflict_do_nothing(index_elements=[AgentModel.id])\n        )\n        await self._session.flush()\n\n        agent = await self._session.get(AgentModel, agent_id)\n        if agent is None:\n            raise RecommendationEngineError(\n                f"agent {agent_id} incohérent : sous-type Agent absent"\n            )\n        if agent.name != nom or agent.type != type_agent:\n            raise RecommendationEngineError(\n                f"agent {agent_id} incompatible : existant "\n                f"(name={agent.name!r}, type={agent.type.value!r}), demandé "\n                f"(name={nom!r}, type={type_agent.value!r})"\n            )\n        return agent_id\n'''
+          if old not in text:
+              raise SystemExit('bloc _agent attendu introuvable ; patch refusé')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          cd GSIE/API
+          uv run ruff format src/gsie_api/engines/recommendation/engine.py tests/integration/test_agent_resource_coherence.py
+          uv run ruff check src/gsie_api/engines/recommendation/engine.py tests/integration/test_agent_resource_coherence.py
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GSIE/API/src/gsie_api/engines/recommendation/engine.py GSIE/API/tests/integration/test_agent_resource_coherence.py
+          git commit -m "fix(recommendation): garantir la cohérence Resource/Agent"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
