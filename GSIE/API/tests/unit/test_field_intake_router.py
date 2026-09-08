@@ -1,7 +1,7 @@
 """Contrat HTTP du point d'entrée field-intake."""
 
-from inspect import unwrap
 from datetime import UTC, datetime
+from inspect import unwrap
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
