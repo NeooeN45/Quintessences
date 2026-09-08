@@ -12,9 +12,9 @@ Issue : #40.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Generator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -43,6 +43,9 @@ from tests.integration.test_migration_baseline import (
     _image_disponible,
     _nettoyer_extensions_preinstallees,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Generator
 
 pytestmark = requires_docker
 
