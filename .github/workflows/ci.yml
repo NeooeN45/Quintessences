@@ -411,6 +411,9 @@ jobs:
       - name: Build PostgreSQL 16 + PostGIS + AGE image
         run: docker build --file Dockerfile.db --tag gsie-db:supply-chain-hardened .
 
+      - name: Expose built image to testcontainers
+        run: docker tag gsie-db:supply-chain-hardened gsie-testdb:latest
+
       - name: Start disposable PostgreSQL and MinIO
         run: |
           docker run --detach --name gsie-registry-db \
