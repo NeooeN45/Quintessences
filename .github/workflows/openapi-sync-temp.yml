@@ -1,0 +1,43 @@
+name: OpenAPI sync temp
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: openapi-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync-openapi:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: GSIE/API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          python-version: "3.12"
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev
+      - name: Generate OpenAPI
+        run: uv run python scripts/extract_openapi.py
+      - name: Commit generated spec when changed
+        working-directory: .
+        run: |
+          if git diff --quiet GSIE/API/docs/openapi.json; then
+            echo "OpenAPI already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GSIE/API/docs/openapi.json
+          git commit -m "docs(openapi): resynchroniser la spec générée"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
