@@ -1,0 +1,38 @@
+name: Hypothesis lock temp
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  add-hypothesis:
+    if: github.event.pull_request.head.ref == 'test/property-based-invariants'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          python-version: "3.12"
+      - name: Add Hypothesis to dev optional dependencies
+        working-directory: GSIE/API
+        run: |
+          uv add --optional dev 'hypothesis==6.165.10'
+          uv sync --locked --extra dev
+          uv run ruff format tests/unit/test_property_invariants.py
+          uv run ruff check tests/unit/test_property_invariants.py
+          uv run pytest tests/unit/test_property_invariants.py -q -n 0 --no-cov
+      - name: Commit dependency and formatted tests
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GSIE/API/pyproject.toml GSIE/API/uv.lock GSIE/API/tests/unit/test_property_invariants.py
+          git commit -m "test(quality): activer Hypothesis pour les invariants"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
