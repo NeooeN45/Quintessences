@@ -1100,6 +1100,8 @@ MUTATIONS: tuple[Mutation, ...] = (
     Mutation(
         cle="parsing_xml_capabilities_non_garde",
         fichier="gsie_api/engines/gis/telechargement_client.py",
+        # Le motif reste aligné sur l'alias ElementTree utilisé par le client,
+        # afin que la campagne atteigne réellement la mutation de garde XML.
         # L'API de téléchargement IGN retourne du Atom XML, pas du JSON.
         # Si le XML est malformé (réponse tronquée, erreur proxy), ET.ParseError
         # doit être capturé et wrapé dans TelechargementClientError — sans cette
