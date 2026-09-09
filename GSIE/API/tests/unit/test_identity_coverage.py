@@ -1417,6 +1417,40 @@ def should_disable_mfa_successfully(client_identite: TestClient) -> None:
     assert response.json()["enabled"] is False
 
 
+def should_disable_mfa_with_recovery_code(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_recovery_code = AsyncMock(return_value=None)
+    mfa_service.disable = AsyncMock(return_value=None)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client_identite.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers=_bearer(),
+        json={"code": "RECOVERY-123", "is_recovery_code": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["enabled"] is False
+    mfa_service.verify_recovery_code.assert_awaited_once()
+
+
+def should_reject_mfa_disable_with_invalid_totp(client_identite: TestClient) -> None:
+    mfa_service = AsyncMock()
+    mfa_service.verify_totp = AsyncMock(return_value=False)
+    client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
+
+    response = client_identite.request(
+        "DELETE",
+        "/api/v1/auth/mfa",
+        headers=_bearer(),
+        json={"code": "000000", "is_recovery_code": False},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "PREUVE_MFA_INVALIDE"
+
+
 def should_reject_mfa_disable_without_step_up_code(client_identite: TestClient) -> None:
     mfa_service = AsyncMock()
     client_identite.app.dependency_overrides[get_mfa_service] = lambda: mfa_service
