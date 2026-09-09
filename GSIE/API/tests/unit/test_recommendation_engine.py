@@ -319,6 +319,10 @@ async def should_create_forestier_agent_when_forestier_id_provided() -> None:
     """_agent_forestier doit créer un agent quand forestier_id est fourni."""
     from unittest.mock import AsyncMock, MagicMock
 
+    from gsie_api.infrastructure.models.base import ResourceModel
+    from gsie_api.infrastructure.models.enums import AgentType
+    from gsie_api.infrastructure.models.prov import AgentModel
+
     forestier_id = uuid4()
     session = AsyncMock()
     session.get = AsyncMock(
