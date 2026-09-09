@@ -699,6 +699,73 @@ class TestOrchestrationRouter:
         assert resp.status_code == 409
         assert "contenu différent" in resp.json()["detail"]
 
+    @pytest.mark.parametrize(
+        ("error", "expected_status"),
+        [
+            ("station", 404),
+            ("empty", 400),
+        ],
+    )
+    async def should_translate_hydration_errors_during_analyse(
+        self,
+        orchestration_client: AsyncClient,
+        error: str,
+        expected_status: int,
+    ) -> None:
+        from gsie_api.engines.orchestration.hydration import (
+            HydratationVideError,
+            StationIntrouvableError,
+        )
+
+        exception = (
+            StationIntrouvableError("station inconnue")
+            if error == "station"
+            else HydratationVideError("aucun bloc exploitable")
+        )
+        with patch("gsie_api.engines.orchestration.router.OrchestrationEngine") as mock_cls:
+            mock_cls.return_value.analyser_idempotente = AsyncMock(side_effect=exception)
+            response = await orchestration_client.post(
+                f"{_API_PREFIX}/orchestration/analyse",
+                json=_analyse_payload(),
+                headers=_writer_headers(),
+            )
+
+        assert response.status_code == expected_status
+        assert response.json()["detail"] == str(exception)
+
+    @pytest.mark.parametrize(
+        ("error", "expected_status"),
+        [
+            ("station", 404),
+            ("empty", 400),
+        ],
+    )
+    async def should_translate_hydration_errors_during_preview(
+        self,
+        orchestration_client: AsyncClient,
+        error: str,
+        expected_status: int,
+    ) -> None:
+        from gsie_api.engines.orchestration.hydration import (
+            HydratationVideError,
+            StationIntrouvableError,
+        )
+
+        exception = (
+            StationIntrouvableError("station inconnue")
+            if error == "station"
+            else HydratationVideError("aucun bloc exploitable")
+        )
+        with patch("gsie_api.engines.orchestration.router.StationContexteHydrator") as mock_cls:
+            mock_cls.return_value.hydrate = AsyncMock(side_effect=exception)
+            response = await orchestration_client.get(
+                f"{_API_PREFIX}/orchestration/stations/{uuid4()}/contexte",
+                headers=_auth_headers(),
+            )
+
+        assert response.status_code == expected_status
+        assert response.json()["detail"] == str(exception)
+
 
 # ===========================================================================
 # Reasoning Router

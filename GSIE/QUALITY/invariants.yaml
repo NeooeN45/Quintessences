@@ -44,15 +44,17 @@ invariants:
       persistée ou rejetée explicitement ; un succès apparent sans persistance
       durable est interdit.
     modules: [GSIE_API, GeoSylva, RecommendationEngine]
-    test_status: COVERED
+    test_status: PARTIAL
     test_references:
       - GSIE/API/tests/integration/test_recommendation_persistance.py::test_la_decision_est_ecrite_et_reliee_a_sa_recommandation
       - GSIE/API/tests/integration/test_recommendation_persistance.py::test_une_decision_sur_une_recommandation_absente_est_refusee
     evidence_references: [GSIE-CON-005]
     coverage_note: >-
-      PostgreSQL réel vérifie que l'accusé « enregistre » correspond à une
-      DecisionModel persistée, à son auteur et à sa jonction de recommandation ;
-      une recommandation absente est rejetée explicitement.
+      PostgreSQL réel vérifie que l'accusé « enregistre » du RecommendationEngine
+      correspond à une DecisionModel persistée, à son auteur et à sa jonction de
+      recommandation ; une recommandation absente est rejetée explicitement.
+      La persistance de toutes les autres décisions métier GSIE_API/GeoSylva et
+      les chemins offline/retry ne sont pas encore prouvés transversalement.
 
   - id: INV-002
     title: Aucun accès inter-tenant non autorisé

@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.7
-# Dockerfile DB — PostgreSQL 16 + PostGIS 3.4 + Apache AGE
-# Construit Apache AGE par-dessus l'image postgis/postgis officielle.
+# Dockerfile DB — PostgreSQL 16 + PostGIS + Apache AGE
+# Construit Apache AGE sur l'image PostgreSQL officielle Debian Bookworm.
 # AGE ajoute le support des requêtes Cypher (graphe) dans PostgreSQL.
 
-FROM postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
+FROM postgres:16-bookworm@sha256:64154d0babcb1741988719e703419af0382b19953706149f9872fbd0f438efa8
 
 # Arguments de build pour la version d'Apache AGE
 ARG AGE_VERSION=1.5.0
@@ -22,6 +22,8 @@ RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https
     ca-certificates \
     flex \
     postgresql-server-dev-16 \
+    postgresql-16-postgis-3 \
+    postgresql-16-postgis-3-scripts \
     postgresql-16-pgaudit \
     postgresql-16-pgvector \
     pgbackrest \
