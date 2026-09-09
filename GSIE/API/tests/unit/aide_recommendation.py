@@ -18,8 +18,10 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID  # noqa: TC003 — annotation evaluee par SQLAlchemy
 
+from gsie_api.infrastructure.models.base import ResourceModel
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
-from gsie_api.infrastructure.models.enums import DiagnosticGlobalState
+from gsie_api.infrastructure.models.enums import AgentType, DiagnosticGlobalState
+from gsie_api.infrastructure.models.prov import AgentModel
 from gsie_api.infrastructure.models.reasoning import RecommendationModel
 
 __all__ = ["CONFIANCE_DIAGNOSTIC_FICTIF", "SessionDiagnosticFictif"]
@@ -48,6 +50,8 @@ class SessionDiagnosticFictif:
         self._confiance = confiance
         self._etat_global = etat_global
         self._recommandation_existe = recommandation_existe
+        self._resources: dict[UUID, ResourceModel] = {}
+        self._agents: dict[UUID, AgentModel] = {}
 
     async def get(self, modele: type[Any], identifiant: UUID) -> Any:
         if modele is DiagnosticModel:
@@ -61,8 +65,10 @@ class SessionDiagnosticFictif:
             if not self._recommandation_existe:
                 return None
             return RecommendationModel(id=identifiant, confidence=self._confiance)
-        # Tout autre modele est absent : c'est ce qui fait materialiser les
-        # Agents, comme sur une base vierge.
+        if modele is ResourceModel:
+            return self._resources.get(identifiant)
+        if modele is AgentModel:
+            return self._agents.get(identifiant)
         return None
 
     # --- Ecritures avalees : la persistance se verifie sur PostgreSQL ---
@@ -85,7 +91,32 @@ class SessionDiagnosticFictif:
         """Ne fait rien : aucune contrainte n'est evaluee."""
 
     async def execute(self, *args: Any, **kwargs: Any) -> None:
-        """Avale les insertions dans les tables de jonction."""
+        """Rejoue les upserts Agent minimaux requis par la lecture après écriture."""
+        if not args:
+            return
+        statement = args[0]
+        table_name = getattr(getattr(statement, "table", None), "name", None)
+        if table_name not in {"resource", "agent"}:
+            return
+        params = statement.compile().params
+        identifiant = params["id"]
+        if table_name == "resource":
+            self._resources.setdefault(
+                identifiant,
+                ResourceModel(
+                    id=identifiant,
+                    type=params["type"],
+                    gsie_id=params["gsie_id"],
+                ),
+            )
+            return
+        type_agent = params["type"]
+        if not isinstance(type_agent, AgentType):
+            type_agent = AgentType(type_agent)
+        self._agents.setdefault(
+            identifiant,
+            AgentModel(id=identifiant, name=params["name"], type=type_agent),
+        )
 
 
 class SessionEspion(SessionDiagnosticFictif):
