@@ -189,6 +189,17 @@
           "diagnostic": {
             "$ref": "#/components/schemas/Diagnostic"
           },
+          "hydratation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RapportHydratation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Présent lorsque le contexte a été hydraté depuis `station_id` (DEC-000072) : la preuve conserve le contexte exactement utilisé."
+          },
           "inference": {
             "$ref": "#/components/schemas/InferenceResult"
           },
@@ -224,11 +235,27 @@
             "type": "boolean"
           },
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StationContexte-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Contexte stationnel complet. Absent, il est hydraté depuis `station_id` (DEC-000072) : Place d'abord, soumission terrain acceptée en repli tracé, aucune valeur inventée."
           },
           "etat_global": {
             "$ref": "#/components/schemas/EtatGlobalDeclare",
             "description": "Déclaré et sourcé. Le Diagnostic Engine ne le déduit pas des contraintes : cela exigerait une fonction de score qu'il n'a pas."
+          },
+          "niveaux_preuve_declares": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+            },
+            "description": "Niveaux de preuve déclarés par bloc, utilisés uniquement lorsque le contexte est hydraté et que la donnée n'en porte pas. Blocs acceptés : ['botanique', 'climat', 'geographie', 'pedologie', 'peuplement']. Chaque niveau déclaré utilisé est listé dans le rapport d'hydratation.",
+            "title": "Niveaux Preuve Declares",
+            "type": "object"
           },
           "objectif_forestier": {
             "$ref": "#/components/schemas/ObjectifForestier"
@@ -283,7 +310,6 @@
         "required": [
           "requete_id",
           "station_id",
-          "contexte",
           "regles",
           "qualifications",
           "etat_global",
@@ -685,7 +711,7 @@
         "title": "BillingOperationResponse",
         "type": "object"
       },
-      "BlocContexte": {
+      "BlocContexte-Input": {
         "additionalProperties": false,
         "description": "Un bloc de contexte stationnel, avec sa provenance obligatoire.\n\n`ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc\nest donc inconstructible sans `source_moteur`, `source` et\n`evidence_level`.",
         "properties": {
@@ -741,6 +767,88 @@
           "valeurs"
         ],
         "title": "BlocContexte",
+        "type": "object"
+      },
+      "BlocContexte-Output": {
+        "additionalProperties": false,
+        "description": "Un bloc de contexte stationnel, avec sa provenance obligatoire.\n\n`ADR-009` : aucune valeur ne circule sans provenance résolvable. Le bloc\nest donc inconstructible sans `source_moteur`, `source` et\n`evidence_level`.",
+        "properties": {
+          "date_observation": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Horodatage de l'observation lorsqu'il existe",
+            "title": "Date Observation"
+          },
+          "evidence_level": {
+            "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceReference"
+          },
+          "source_moteur": {
+            "$ref": "#/components/schemas/SourceMoteurContexte"
+          },
+          "valeurs": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "description": "Variables observées du bloc, unités portées par la clé",
+            "minProperties": 1,
+            "title": "Valeurs",
+            "type": "object"
+          }
+        },
+        "required": [
+          "source_moteur",
+          "source",
+          "evidence_level",
+          "valeurs"
+        ],
+        "title": "BlocContexte",
+        "type": "object"
+      },
+      "BlocNonConstructible": {
+        "additionalProperties": false,
+        "description": "Un bloc demandé par les données mais faute de provenance complète.",
+        "properties": {
+          "motif": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Motif",
+            "type": "string"
+          },
+          "nom_bloc": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Nom Bloc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nom_bloc",
+          "motif"
+        ],
+        "title": "BlocNonConstructible",
         "type": "object"
       },
       "Body_botanical_identify_and_ingest_api_v1_botanical_identify_and_ingest_post": {
@@ -3119,7 +3227,7 @@
             "type": "array"
           },
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "$ref": "#/components/schemas/StationContexte-Input"
           },
           "contradictions": {
             "items": {
@@ -7636,6 +7744,89 @@
         "title": "QueryType",
         "type": "string"
       },
+      "RapportHydratation": {
+        "additionalProperties": false,
+        "description": "Trace complète de l'assemblage — persistée avec la preuve d'analyse.",
+        "properties": {
+          "ancre_field_intake": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ancre Field Intake"
+          },
+          "ancre_place": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ancre Place"
+          },
+          "blocs_construits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocs Construits",
+            "type": "array"
+          },
+          "blocs_non_constructibles": {
+            "items": {
+              "$ref": "#/components/schemas/BlocNonConstructible"
+            },
+            "title": "Blocs Non Constructibles",
+            "type": "array"
+          },
+          "niveaux_declares_utilises": {
+            "description": "Blocs dont le niveau de preuve est déclaré par l'appelant",
+            "items": {
+              "type": "string"
+            },
+            "title": "Niveaux Declares Utilises",
+            "type": "array"
+          },
+          "observations_non_mappees": {
+            "description": "observation_type absents du mapping déclaré, jamais rangés d'office",
+            "items": {
+              "type": "string"
+            },
+            "title": "Observations Non Mappees",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "hydratation_station.v0.1",
+            "default": "hydratation_station.v0.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "soumissions_quarantaine_ignorees": {
+            "default": 0,
+            "description": "Soumissions non relues, jamais lues pour leurs valeurs",
+            "minimum": 0.0,
+            "title": "Soumissions Quarantaine Ignorees",
+            "type": "integer"
+          },
+          "station_id": {
+            "format": "uuid",
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id"
+        ],
+        "title": "RapportHydratation",
+        "type": "object"
+      },
       "RawKnowledgeSubmission": {
         "additionalProperties": false,
         "description": "Soumission de connaissance brute — entrée de l'Evidence Engine.",
@@ -7684,7 +7875,7 @@
         "description": "Entrée du Reasoning Engine (`REASONING_ENGINE.md` §5).",
         "properties": {
           "contexte": {
-            "$ref": "#/components/schemas/StationContexte"
+            "$ref": "#/components/schemas/StationContexte-Input"
           },
           "profondeur_max": {
             "description": "Profondeur maximale de la chaîne d'inférence. Bornée pour garantir la terminaison : une inférence non bornée ne peut pas être auditée.",
@@ -8671,6 +8862,24 @@
         "title": "ResultatControle",
         "type": "string"
       },
+      "ResultatHydratation": {
+        "additionalProperties": false,
+        "description": "Contexte assemblé et son rapport — indissociables (`GSIE-CON-004`).",
+        "properties": {
+          "contexte": {
+            "$ref": "#/components/schemas/StationContexte-Output"
+          },
+          "rapport": {
+            "$ref": "#/components/schemas/RapportHydratation"
+          }
+        },
+        "required": [
+          "contexte",
+          "rapport"
+        ],
+        "title": "ResultatHydratation",
+        "type": "object"
+      },
       "RevisionRead": {
         "description": "Révision d'une resource (Temporal Engine).",
         "properties": {
@@ -9232,14 +9441,14 @@
         "title": "StationCharacteristics",
         "type": "object"
       },
-      "StationContexte": {
+      "StationContexte-Input": {
         "additionalProperties": false,
         "description": "Contexte stationnel complet (`REASONING_ENGINE.md` §5).\n\nChaque bloc est optionnel — une station peut être partiellement\ncaractérisée — mais au moins un bloc est exigé : on ne raisonne pas\nsur le vide.",
         "properties": {
           "botanique": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9249,7 +9458,7 @@
           "climat": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9258,7 +9467,7 @@
           },
           "correlations": {
             "items": {
-              "$ref": "#/components/schemas/BlocContexte"
+              "$ref": "#/components/schemas/BlocContexte-Input"
             },
             "title": "Correlations",
             "type": "array"
@@ -9266,7 +9475,7 @@
           "geographie": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9276,7 +9485,7 @@
           "pedologie": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
               },
               {
                 "type": "null"
@@ -9286,7 +9495,72 @@
           "peuplement": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BlocContexte"
+                "$ref": "#/components/schemas/BlocContexte-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "StationContexte",
+        "type": "object"
+      },
+      "StationContexte-Output": {
+        "additionalProperties": false,
+        "description": "Contexte stationnel complet (`REASONING_ENGINE.md` §5).\n\nChaque bloc est optionnel — une station peut être partiellement\ncaractérisée — mais au moins un bloc est exigé : on ne raisonne pas\nsur le vide.",
+        "properties": {
+          "botanique": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "climat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlations": {
+            "items": {
+              "$ref": "#/components/schemas/BlocContexte-Output"
+            },
+            "title": "Correlations",
+            "type": "array"
+          },
+          "geographie": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedologie": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "peuplement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlocContexte-Output"
               },
               {
                 "type": "null"
@@ -11313,6 +11587,16 @@
     "/api/v1/auth/mfa": {
       "delete": {
         "operationId": "disable_mfa_api_v1_auth_mfa_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -11323,6 +11607,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -15197,6 +15491,135 @@
           }
         ],
         "summary": "Dérouler la chaîne complète et retourner chaque étape",
+        "tags": [
+          "orchestration"
+        ]
+      }
+    },
+    "/api/v1/orchestration/stations/{station_id}/contexte": {
+      "get": {
+        "description": "Assemble le StationContexte depuis `station_id` (DEC-000072) sans exécuter la chaîne : Place d'abord, soumission terrain acceptée en repli tracé, provenance complète exigée pour chaque bloc. Le rapport nomme chaque bloc construit, chaque manque et chaque niveau de preuve déclaré utilisé.",
+        "operationId": "previsualiser_contexte_station_api_v1_orchestration_stations__station_id__contexte_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "station_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Station Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_geographie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Geographie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_climat",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Climat"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_pedologie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Pedologie"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_botanique",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Botanique"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niveau_peuplement",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niveau Peuplement"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultatHydratation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Prévisualiser le contexte hydraté d'une station",
         "tags": [
           "orchestration"
         ]

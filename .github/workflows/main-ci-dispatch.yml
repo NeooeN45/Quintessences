@@ -1,0 +1,23 @@
+name: Main CI dispatcher
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: main-ci-dispatch-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  dispatch-full-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch canonical CI on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ci.yml --repo "${{ github.repository }}" --ref main
