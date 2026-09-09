@@ -319,14 +319,23 @@ async def should_create_forestier_agent_when_forestier_id_provided() -> None:
     """_agent_forestier doit créer un agent quand forestier_id est fourni."""
     from unittest.mock import AsyncMock, MagicMock
 
+    forestier_id = uuid4()
     session = AsyncMock()
-    session.get = AsyncMock(return_value=None)  # Resource n'existe pas
+    session.get = AsyncMock(
+        side_effect=[
+            ResourceModel(id=forestier_id, type="agent", gsie_id=f"agent:{forestier_id}"),
+            AgentModel(
+                id=forestier_id,
+                name=str(forestier_id),
+                type=AgentType.person,
+            ),
+        ]
+    )
     session.add = MagicMock()
     session.execute = AsyncMock()
     session.flush = AsyncMock()
     engine = RecommendationEngine(session)
 
-    forestier_id = uuid4()
     result = await engine._agent_forestier(forestier_id)
     assert result == forestier_id
     # Les deux écritures passent par INSERT ... ON CONFLICT DO NOTHING afin
@@ -340,17 +349,23 @@ async def should_return_agent_id_when_resource_already_exists() -> None:
     from unittest.mock import AsyncMock, MagicMock
 
     from gsie_api.infrastructure.models.base import ResourceModel
+    from gsie_api.infrastructure.models.enums import AgentType
+    from gsie_api.infrastructure.models.prov import AgentModel
 
+    agent_id = uuid4()
     session = AsyncMock()
-    # Resource existe déjà
-    existing = MagicMock(spec=ResourceModel)
-    session.get = AsyncMock(return_value=existing)
+    session.get = AsyncMock(
+        side_effect=[
+            ResourceModel(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}"),
+            AgentModel(id=agent_id, name="Test", type=AgentType.software),
+        ]
+    )
     session.add = MagicMock()
+    session.execute = AsyncMock()
     session.flush = AsyncMock()
     engine = RecommendationEngine(session)
 
-    agent_id = uuid4()
-    result = await engine._agent(agent_id, nom="Test", type_agent=MagicMock())
+    result = await engine._agent(agent_id, nom="Test", type_agent=AgentType.software)
     assert result == agent_id
     # session.add ne doit pas avoir été appelé
     session.add.assert_not_called()
