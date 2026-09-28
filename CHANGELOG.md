@@ -1,5 +1,10 @@
 # CHANGELOG — Quintessences / GSIE
 
+## [préparation] - 2026-09-28
+
+- Remplacement proposé des images MinIO/mc indisponibles par construction
+  depuis sources épinglées, pour développement/CI ; qualification en attente.
+
 Format : `## [version] - YYYY-MM-DD`
 
 ---

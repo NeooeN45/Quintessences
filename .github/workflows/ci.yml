@@ -428,11 +428,13 @@ jobs:
             --volume "$PWD/docker/init:/docker-entrypoint-initdb.d:ro" \
             --volume "$PWD/docker/comptes-de-connexion.sql:/gsie/comptes-de-connexion.sql:ro" \
             gsie-db:supply-chain-hardened
+          docker build --target server --tag gsie-minio:source-9e49d5e docker/minio
+          docker build --target client --tag gsie-mc:source-7394ce0 docker/minio
           docker run --detach --name gsie-registry-minio \
             --publish 127.0.0.1:59000:9000 \
             --env MINIO_ROOT_USER=gsie-registry-ci \
             --env MINIO_ROOT_PASSWORD=gsie-registry-ci-secret \
-            minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+            gsie-minio:source-9e49d5e server /data
           for attempt in $(seq 1 60); do
             docker exec gsie-registry-db pg_isready -U gsie -d gsie && break
             test "$attempt" -lt 60 || exit 1
@@ -445,7 +447,7 @@ jobs:
           done
           docker run --rm --network host --entrypoint /bin/sh \
             --env MC_CONFIG_DIR=/tmp/mc \
-            minio/mc:RELEASE.2025-08-13T08-35-41Z \
+            gsie-mc:source-7394ce0 \
             -c 'mc alias set ci http://127.0.0.1:59000 gsie-registry-ci gsie-registry-ci-secret && mc mb --ignore-existing ci/gsie-registry-ci'
 
       - name: Apply migrations to the disposable database
