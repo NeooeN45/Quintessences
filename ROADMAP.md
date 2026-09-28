@@ -1,5 +1,50 @@
 # ROADMAP — Quintessences / GSIE
 
+## Priorité produit fixée le 2026-09-28
+
+GeoSylva **V3.0** est la refonte actuelle ; **V3.1** vise Google Play avec
+l'abonnement Quintessences. Ordre demandé : GeoSylva V3.1 → GSIE → Artemis →
+Ignis → Hub → conversation environnementale → autres mobiles → drones IA.
+Le socle serveur nécessaire à GeoSylva appartient au premier jalon.
+Les anciens lots décrivent des capacités ; ils ne fixent pas un autre ordre produit.
+Voir les [portes de sortie et preuves](GSIE/API/docs/development/RELEASE_GATES.md).
+
+## Trajectoire territoriale proposée (2026-09-27)
+
+Référence : [RFC-0042](02_RFC/RFC-0042-observation-territoriale-simulation-environnementale.md)
+et [DEC-000074](03_DECISIONS/DEC-000074.md), toutes deux Draft.
+Ces lots décrivent la cible ; ils ne remplacent pas les portes des RFC
+existantes et ne constituent pas une annonce de livraison.
+
+- [x] Inspecter les chemins de synchronisation, d'orchestration et de simulation.
+- [x] Documenter référentiels cadastraux/ONF/DDT/GPS, comptes, versions,
+  agrégation autorisée, dialogue PC environnemental et évaluation prospective.
+- [ ] Adopter le cadrage et qualifier les contrats manquants avec RFC-0041.
+- [ ] L1 : ancrage explicite, journal de relevés, reprise et restauration complète.
+- [ ] L2 : rapport territorial reproductible, multi-parcelles et daté.
+- [ ] L3 : application PC de dialogue métier avec outils GSIE et citations.
+- [ ] L4 : pilote scientifique eau/sol/peuplement évalué sur observations indépendantes.
+- [ ] L5 : prévisions figées, retours qualifiés, extension à d'autres territoires/risques.
+
+Limites constatées : le compteur de version de la copie GeoSylva n'est pas
+un historique complet ; la pagination actuelle nécessite une spécification
+de restauration cohérente sous écritures concurrentes ; la projection de
+simulation actuelle n'est pas une prévision environnementale validée.
+
+## Préparation de réalisation coordonnée (2026-09-28)
+
+- [x] Préparer `GSIE/API/docs/development/` : lots backend B00-B10, contrats,
+  brief frontend Claude et architecture candidate OVHcloud.
+- [x] Préparer les missions GSIE-PROMPT-0030 (Codex) et GSIE-PROMPT-0031 (Claude).
+- [ ] B00 : établir la baseline reproductible et régénérer OpenAPI.
+- [x] B00 partiel : comparer les noms du DTO de parcelle (29 alignés),
+  inventorier les tables Room et distinguer copies locales/GitHub.
+- [ ] B01-B06 : livrer comptes qualifiés, relevés versionnés, restauration et médias.
+- [ ] B07 : qualifier OVHcloud sur données synthétiques et sauvegarde hors hôte.
+- [ ] B08 et rapports GeoSylva de B09 : analyse raccordée pour GeoSylva V3.1.
+- [ ] B09 : corrélations et rapports multi-échelles du jalon GSIE.
+- [ ] B10 : conversation PC après Artemis, Ignis et Hub.
+
 ## Fiabilisation des environnements et des moteurs (2026-08-13)
 
 - [x] Cloisonner les rôles et namespaces `development`, `test`, `benchmark`,

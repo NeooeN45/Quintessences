@@ -8,7 +8,10 @@
 ## Phase et périmètre courant
 
 **Phase 4 — Implémentation** (lancée par DEC-000017). Le code métier est désormais autorisé.
-Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement UE5.8, GeoSylva, Ignis.
+Priorité produit demandée le 2026-09-28 : GeoSylva V3.1 et son serveur requis,
+puis GSIE, Artemis, Ignis, Hub, conversation environnementale, autres mobiles,
+drones IA. V3.0 est la refonte actuelle ; V3.1 vise Google Play avec abonnement
+Quintessences. Voir DEC-000076 et `GSIE/API/docs/development/RELEASE_GATES.md`.
 
 ---
 

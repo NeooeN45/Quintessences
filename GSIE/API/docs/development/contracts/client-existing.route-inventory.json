@@ -1,0 +1,53 @@
+{
+  "source": "../../openapi.json",
+  "generated_for": "GSIE-DEV-003",
+  "status": "snapshot-documentaire",
+  "api_prefix": "/api/v1",
+  "paths": {
+    "/auth/providers": [
+      "GET"
+    ],
+    "/auth/register": [
+      "POST"
+    ],
+    "/auth/login/password": [
+      "POST"
+    ],
+    "/auth/me": [
+      "GET",
+      "PATCH"
+    ],
+    "/auth/refresh": [
+      "POST"
+    ],
+    "/auth/logout": [
+      "POST"
+    ],
+    "/auth/sessions": [
+      "GET",
+      "DELETE"
+    ],
+    "/auth/sessions/revoke": [
+      "POST"
+    ],
+    "/sync/geosylva/parcelles": [
+      "GET"
+    ],
+    "/sync/geosylva/parcelles/{client_id}": [
+      "PUT",
+      "DELETE"
+    ],
+    "/orchestration/analyse": [
+      "POST"
+    ],
+    "/orchestration/stations/{station_id}/contexte": [
+      "GET"
+    ]
+  },
+  "limitations": [
+    "La synchronisation exposée est une projection courante et non un journal complet.",
+    "La façade GeoSylva, la restauration et la conversation PC ne sont pas des routes existantes dans ce snapshot.",
+    "Régénérer depuis FastAPI au lot B00 et comparer au code réel."
+  ],
+  "format": "route-inventory-not-openapi"
+}

@@ -4,6 +4,33 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [PRÉPARATION DÉVELOPPEMENT ET OVHCLOUD] - 2026-09-28
+
+- Ajout du dossier GSIE-DEV-001 à 005 : lots backend B00-B10, contrat de
+  passage backend/frontend, brief Claude et états de synchronisation.
+- Préparation des prompts GSIE-PROMPT-0030 et 0031.
+- Architecture OVHcloud documentée comme option à qualifier ; compatibilité
+  PostgreSQL managé/Apache AGE et attribution des crédits non revendiquées.
+- Aucun service cloud, déploiement, migration ou donnée réelle n'a été utilisé.
+
+---
+
+## [TRAJECTOIRE TERRITORIALE — PROPOSITION] - 2026-09-27
+
+- RFC-0042 et DEC-000074 Draft : ancrage parcellaire multi-référentiels,
+  relevés par compte, historique, rapports multi-échelles, dialogue PC
+  environnemental et trajectoire de simulation évaluée au réel.
+- README recentré sur l'ambition, les capacités observables et les preuves
+  restantes ; retrait des comparaisons concurrentielles non étayées.
+- Limites de la copie courante GeoSylva et de la simulation simplifiée
+  documentées ; aucune nouvelle API ni migration dans ce lot.
+- Tests de régression et correction du rejeu : une collision d'identifiant
+  avec contenu, date, version de base ou type différents devient un conflit,
+  sans acquittement silencieux ni modification des données conservées.
+- Index d'architecture, roadmap, mémoire projet et prompt de tâche synchronisés.
+
+---
+
 ## [CHAÎNE DE RAISONNEMENT — TROIS RFC] - 2026-08-17
 
 - Discussion sur l'amélioration de la chaîne de raisonnement GSIE, à
@@ -7057,3 +7084,13 @@ frontières, position) :
 - Validation : 35 tests unitaires, 7 tests d’intégration PostgreSQL/PostGIS,
   2 tests migration Alembic, Ruff et mypy strict passants.
 - Rapport : `23_QUALITY_MANAGEMENT/AUDITS/AUDIT_ORCHESTRATION_IDEMPOTENCE_2026-08-15.md`.
+
+## 2026-09-28 — priorité GeoSylva V3.1
+
+- Inventaire B00 mobile/serveur : correspondance des noms du DTO, tables Room
+  et écarts de restauration/analyse ; publication GitHub autorisée.
+
+- Clarification V3.0 refonte / V3.1 Google Play avec abonnement Quintessences.
+- Portes de sortie terrain, serveur, récupération, analyses et abonnement.
+- Ordre produit aligné ; dialogue PC reporté à son jalon.
+- Inventaire de routes renommé pour ne plus être présenté comme OpenAPI.

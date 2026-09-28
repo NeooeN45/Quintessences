@@ -116,6 +116,30 @@ Voir [RFC-0041](../../02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationne
 [DEC-000073](../../03_DECISIONS/DEC-000073.md) et
 [DEC-000072](../../03_DECISIONS/DEC-000072.md).
 
+### Synchronisation GeoSylva : portée du rejeu et de l'historique
+
+Le durcissement décrit ci-dessous est publié dans la
+[PR #61](https://github.com/NeooeN45/Quintessences/pull/61) ; il n'est pas
+encore fusionné dans `main`. Ses preuves unitaires ne valent pas validation
+de la restauration complète ni de l'isolation PostgreSQL en production.
+
+La copie privée de parcelle conserve son état courant, un compteur de version
+et l'identifiant de la dernière opération. Un rejeu de cette opération n'est
+acquitté que si son type, sa version de base, son instant client et son contenu
+(pour un upsert) sont identiques. Les fuseaux différents représentant le même
+instant restent équivalents. Une collision utilise le conflit existant
+`409 SYNC_VERSION_CONFLICT` et ne modifie pas l'état conservé.
+
+Cette garantie porte sur la dernière opération : un ancien identifiant rejoué
+après une nouvelle mutation n'a pas de réponse historique stockée. Le compteur
+ne constitue pas une archive consultable des anciennes versions. La pagination
+actuelle par date mutable et décalage ne constitue pas non plus un instantané
+de restauration pendant des écritures concurrentes.
+
+Le journal des relevés, la restauration complète et le rattachement aux
+référentiels cadastraux/ONF/DDT/GPS sont des chantiers explicités dans
+[RFC-0042](../../02_RFC/RFC-0042-observation-territoriale-simulation-environnementale.md).
+
 ### WebSocket (temps réel Hub UE5.8)
 
 | Endpoint | Description |
