@@ -55,6 +55,7 @@ Suivi GitHub : [données et restauration #63](https://github.com/NeooeN45/Quinte
 [raccordement Android #11](https://github.com/NeooeN45/GeoSylva/issues/11).
 Les documents sont proposés dans [#62](https://github.com/NeooeN45/Quintessences/pull/62)
 et [GeoSylva #10](https://github.com/NeooeN45/GeoSylva/pull/10).
+Prérequis d'exécution : [baseline CI #65](https://github.com/NeooeN45/Quintessences/issues/65).
 
 B02/B03 : inventorier d'abord les objets terrain qui doivent survivre à une
 réinstallation et les rapprocher du Data Registry. Produire des exemples
@@ -75,3 +76,10 @@ commit `d82f217`, non fusionné au moment de cet inventaire.
 Les contrôles documentaires portent sur gouvernance, catalogue des prompts,
 JSON et liens ; le registre général des sources de vérité signalait déjà une
 revue expirée depuis le 2026-09-14. Ne pas antidater son renouvellement.
+
+CI distante du correctif `d82f217` : lint/tests Python et Governance Guard
+réussis ; Consistency Checks échoue au registre expiré. Le job Data Registry
+échoue au téléchargement de l'image MinIO, avant de produire sa preuve.
+La décision DEC-000076 du dossier documentaire a été corrigée pour respecter
+les champs en gras exigés par le workflow ; son statut métier est inchangé.
+La CI des derniers commits reste à vérifier. Aucun « tout vert » n'est annoncé.

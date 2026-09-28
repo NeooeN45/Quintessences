@@ -1918,6 +1918,10 @@ GeoSylva PR #10 (cadrage mobile). Prochaines tâches : Quintessences #63
 Choix commercial reçu : terrain hors ligne gratuit ; synchronisation et
 analyses avec abonnement Quintessences. Publications sur branches, non fusionnées.
 
+Suivi B00 #65 : revue etat_projet expirée et image MinIO inaccessible dans la
+CI Data Registry. Correctif sync : lint/tests Python distants réussis, CI complète
+non acquise. DEC-000076 a été conformée au format exigé par Governance Guard.
+
 GeoSylva V3.0 est la refonte actuelle. La V3.1 vise Google Play avec abonnement
 Quintessences. Ordre : GeoSylva V3.1, GSIE, Artemis, Ignis, Hub, conversation
 environnementale, autres mobiles, drones IA. Le serveur requis par GeoSylva

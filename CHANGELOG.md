@@ -7087,6 +7087,8 @@ frontières, position) :
 
 ## 2026-09-28 — priorité GeoSylva V3.1
 
+- Format DEC-000076 conforme au contrôle CI ; blocages baseline consignés #65.
+
 - Publications GitHub séparées : Quintessences #61/#62 et GeoSylva #10 ;
   tâches suivantes Quintessences #63/#64 et GeoSylva #11.
 - Choix Fondateur : terrain hors ligne gratuit, synchronisation/analyses
