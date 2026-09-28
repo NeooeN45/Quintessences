@@ -4,28 +4,33 @@
 
 ### Écosystème d'intelligence environnementale
 
-**Un moteur. Des spécialisations. Zéro décision opaque.**
+**Observer les territoires, relier les connaissances, simuler des évolutions.**
 
-GSIE (General System Intelligence Engine) est une plateforme de jumeau
-numérique environnemental fédéré, construite autour d'un moteur d'aide à
-la décision modulaire, traçable et explicable — conçue pour la forêt, le
-feu, l'eau, la végétation, la faune, le climat et les territoires.
+Quintessences vise une infrastructure d'observation, de connaissance et de
+simulation environnementale ancrée dans les territoires réels. Son moteur
+GSIE (General System Intelligence Engine) relie les relevés datés du terrain,
+les référentiels géographiques et les connaissances scientifiques pour
+construire des analyses explicables. La cible couvre la forêt, le feu, l'eau,
+les sols, la végétation, la faune et le climat.
 
-**GSIE est le jumeau numérique environnemental fédéré. GeoSylva, Ignis,
-Hydro, Flora et Artemis sont des projections métier spécialisées de ce
-jumeau. Les Hubs Unreal sont les environnements immersifs permettant
-d'explorer, simuler et, sous contrôle humain, interagir avec les domaines
-concernés.** Voir RFC-0037 et
-`GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md`.
+**La cible est un jumeau numérique environnemental fédéré.** GeoSylva et les
+autres applications en sont les projections métier et les points de collecte.
+Une application PC de dialogue avec l'IA environnementale d'HorizonOrigin
+et les Hubs doivent permettre d'interroger, comparer et explorer les états
+et scénarios. Ces parcours et la prévision territoriale restent à construire
+et à valider : un module de code présent ne prouve pas une capacité scientifique.
+
+Voir [l'architecture existante](GSIE/ARCHITECTURE/GSIE_ENVIRONMENTAL_DIGITAL_TWIN_PLATFORM.md)
+et [la trajectoire territoriale proposée — RFC-0042](02_RFC/RFC-0042-observation-territoriale-simulation-environnementale.md).
 
 [![Phase](https://img.shields.io/badge/phase-4%20Implémentation-blue)](ROADMAP.md)
 [![Licence](https://img.shields.io/badge/licence-proprietary-red)](LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-11%20articles%20%2B%203%20sectorielles-green)](00_CONSTITUTION/)
-[![Moteurs](https://img.shields.io/badge/moteurs-14%20implémentés-orange)](GSIE/ENGINES/)
+[![Moteurs](https://img.shields.io/badge/moteurs-14%20modules-orange)](GSIE/ENGINES/)
 [![Métamodèle](https://img.shields.io/badge/métamodèle-v6.2%20%C2%B7%2073%20types-purple)](GSIE/ARCHITECTURE/ECOSYSTEM_METAMODEL.md)
-[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-DEC--000073-yellow)](03_DECISIONS/)
-[![RFC](https://img.shields.io/badge/RFC-0041-lightgrey)](02_RFC/)
-[![Base](https://img.shields.io/badge/PostgreSQL%2016-29%20migrations%20%C2%B7%20124%20tables-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
+[![Décisions tracées](https://img.shields.io/badge/décisions%20tracées-DEC--000074%20Draft-yellow)](03_DECISIONS/)
+[![RFC](https://img.shields.io/badge/RFC-0042%20Draft-lightgrey)](02_RFC/)
+[![Base](https://img.shields.io/badge/base-PostgreSQL%20%2B%20PostGIS-336791)](GSIE/DOCUMENTATION/SCHEMA_DB.md)
 [![CI](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml/badge.svg)](https://github.com/NeooeN45/Quintessences/actions/workflows/ci.yml)
 
 </div>
@@ -34,39 +39,40 @@ concernés.** Voir RFC-0037 et
 
 ## Pourquoi Quintessences existe
 
-La gestion environnementale repose sur des **décisions qui engagent des
-décennies** : choix d'essences, interventions sylvicoles, lutte contre
-les incendies, adaptation climatique. Ces décisions sont prises par des
-professionnels de terrain avec des outils **inadaptés** :
+Les décisions environnementales peuvent engager des décennies. Quintessences
+vise à rendre exploitables ensemble les relevés de terrain, les cartes, les
+inventaires et les études, tout en conservant leurs sources et leurs limites.
+Le projet cherche à soutenir l'adaptation climatique, la compréhension des
+écosystèmes et l'évaluation des interventions par des résultats vérifiables.
 
-- **Données fragmentées** — sol, climat, flore, satellite éparpillés
-  dans des silos incompatibles.
-- **Outils d'IA opaques** — boîtes noires qui produisent des
-  recommandations sans explication, sans source, sans traçabilité.
-- **Pas de hors-ligne** — les outils existants supposent une
-  connexion permanente, impossible en forêt ou en zone isolée.
-- **Pas de gouvernance** — aucun cadre ne garantit que l'IA reste un
-  outil d'aide et non une autorité qui décide à la place de l'humain.
+Le parcours cible commence par une unité géographique choisie : cadastre,
+parcellaire ONF, jeu fourni par une DDT, autre référentiel qualifié ou contour
+GPS déclaré. Les relevés sont datés et liés au compte de leur auteur. Leur
+synchronisation doit permettre la récupération de l'historique et alimenter,
+selon les droits accordés, des analyses à plusieurs échelles.
 
-**Quintessences résout ces quatre problèmes** avec une approche
-radicalement différente : un moteur d'intelligence **fondé sur une
-Constitution**, où chaque recommandation est sourcée, explicable et
-contournable.
+La même parcelle peut être observée sur plusieurs années ; plusieurs comptes
+peuvent contribuer sur une forêt. GSIE doit distinguer versions, événements,
+observations, calculs et scénarios, éviter les doubles comptes et expliciter
+les données manquantes. Les prévisions futures devront être confrontées aux
+observations réelles avant toute revendication de performance.
 
 ---
 
-## Ce qui différencie Quintessences
+## Lire la maturité du projet
 
-| Critère | Concurrents (SilvIA, ForestNet, EcoAudit-AI…) | Quintessences |
+| Élément | État observable dans ce dépôt | Preuve encore nécessaire |
 |---|---|---|
-| **Gouvernance** | Aucun cadre formel | Constitution de 11 articles + 3 sectorielles |
-| **Traçabilité** | Décisions non tracées | Chaque décision a un identifiant (DEC-xxx) et un historique |
-| **Explicabilité** | Boîte noire | Chaque recommandation cite ses sources et son raisonnement |
-| **Hors-ligne** | Supposent une connexion | Conçu pour le terrain isolé (offline-first) |
-| **Périmètre** | Un domaine (forêt OU feu OU carbone) | Multi-spécialisations (forêt + feu + futur climat/eau) |
-| **Architecture** | Monolithique | 14 moteurs indépendants, responsabilité unique |
-| **Méthodologie** | Ad hoc | Hiérarchie documentaire formelle (Vision → Code) |
-| **Rôle de l'IA** | Décide ou suggère | **Assiste, ne décide jamais** (GSIE-CON-001) |
+| Données et connaissances | Métamodèle, Data Registry, ingestion terrain et contrats | Qualification continue de chaque source et de chaque usage |
+| Synchronisation GeoSylva | Copie courante par compte avec contrôle de version | Historique complet et restauration cohérente après réinstallation |
+| Analyse GSIE | Chaîne d'orchestration et hydratation stationnelle présentes | Façade GeoSylva selon RFC-0041 et parcours multi-parcelles de bout en bout |
+| Simulation | Projection simplifiée dans le Simulation Engine | Couplages scientifiques, calibration et évaluation prospective |
+| Dialogue PC et Hubs | Cible produit et architectures documentées | Parcours authentifiés reliés aux preuves, scénarios et historiques |
+
+Les détails et chemins de code sont dans la matrice de
+[RFC-0042](02_RFC/RFC-0042-observation-territoriale-simulation-environnementale.md).
+Les partenariats institutionnels sont des perspectives à construire ; aucune
+supériorité scientifique ni validation nationale n'est revendiquée ici.
 
 ---
 

@@ -6,7 +6,43 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-17 — **RFC-0041 et DEC-000073 proposés pour réconcilier le contrat GeoSylva–GSIE.** |
+| **Dernière mise à jour** | 2026-09-28 — GSIE-DEV-001 à 005 : lots backend Codex, passage frontend Claude et option OVHcloud à qualifier ; DEC-000075 Draft. |
+
+### Préparation du développement coordonné (2026-09-28)
+
+Le dossier `GSIE/API/docs/development/` prépare les lots B00 à B10. Codex
+conserve les contrats, migrations, droits, synchronisation, restauration et
+outils serveur ; Claude prépare le frontend avec des données synthétiques selon
+`CONTRACT_HANDOFF.md`. Les prompts 0030 et 0031 sont prêts, sans exécution
+revendiquée. OVHcloud est envisagé pour une préproduction, mais l'admission,
+les crédits et la compatibilité PostgreSQL managé/Apache AGE ne sont pas
+confirmés ; une VM privée reste compatible avec l'image actuelle.
+
+### Trajectoire territoriale et conversation environnementale (2026-09-27)
+
+Le Fondateur précise la cible : relevés datés par compte rattachés à des
+référentiels parcellaires (cadastre, ONF, DDT, GPS ou autres sources
+qualifiées), récupération des versions après réinstallation, analyses
+multi-échelles et application PC de dialogue environnemental d'HorizonOrigin.
+La cible à long terme est une simulation de territoires réels évaluée par
+confrontation aux observations futures. RFC-0042 décline cette vision et
+ses portes de preuve ; DEC-000074 est une proposition, non une adoption.
+
+Inspection au commit `d7b400cb` : la synchronisation conserve un état courant
+par compte/client et un compteur ; elle ne démontre pas la restauration des
+anciennes versions. Sa pagination par date mutable nécessite un protocole
+cohérent de restauration. La simulation est une projection simplifiée sans
+mortalité ni couplage climatique. Le correctif borné de collision de rejeu
+ne prétend résoudre aucun de ces chantiers structurants.
+
+Validation locale de cette tranche : 7 régressions reproduites avant correction,
+puis 20 tests du service de synchronisation réussis en Python 3.12, sans
+fixtures applicatives ni base réelle ; lint et typage ciblés conformes.
+La revue indépendante du diff n'a relevé aucun blocage et a fait préciser
+l'activation initiale par compte. La vérification du registre des sources
+signale une revue de l'état projet expirée le 2026-09-14 : elle n'est pas
+renouvelée artificiellement par cet audit ciblé. CI globale, base réelle et
+restauration mobile complète non vérifiées dans cette tranche.
 
 ### Fiabilisation environnements et moteurs (2026-08-13)
 
@@ -1867,3 +1903,28 @@ réels, pas en théorie :
 
 Aucune ligne de code métier écrite — conforme à la Phase 4 (spécification
 avant code) et à RFC-0022 (le Fondateur tranche, l'agent contre-analyse).
+
+## Priorité produit — demande du Fondateur, 2026-09-28
+
+L'inventaire B00 initial compare 29 noms de champs parcelle sans écart et
+recense 38 tables Room ; types et restauration non qualifiés. Serveur distant
+`d7b400c`, GeoSylva distant `c59ba7c`, copie Android locale `b795b2e` modifiée.
+Les publications serveur/documentation/mobile sont séparées. Le Fondateur
+autorise la synchronisation GitHub dans sa demande du 2026-09-28.
+
+Publications ouvertes : Quintessences PR #61 (fix), #62 (préparation),
+GeoSylva PR #10 (cadrage mobile). Prochaines tâches : Quintessences #63
+(données/restauration), #64 (abonnement), GeoSylva #11 (raccordement Android).
+Choix commercial reçu : terrain hors ligne gratuit ; synchronisation et
+analyses avec abonnement Quintessences. Publications sur branches, non fusionnées.
+
+Suivi B00 #65 : revue etat_projet expirée et image MinIO inaccessible dans la
+CI Data Registry. Correctif sync : lint/tests Python distants réussis, CI complète
+non acquise. DEC-000076 a été conformée au format exigé par Governance Guard.
+
+GeoSylva V3.0 est la refonte actuelle. La V3.1 vise Google Play avec abonnement
+Quintessences. Ordre : GeoSylva V3.1, GSIE, Artemis, Ignis, Hub, conversation
+environnementale, autres mobiles, drones IA. Le serveur requis par GeoSylva
+fait partie du premier jalon. Critères proposés et inventaire ciblé :
+`GSIE/API/docs/development/RELEASE_GATES.md`. Aucun lancement ni paiement
+réel effectué ; modifications GeoSylva existantes préservées.

@@ -2,6 +2,9 @@
 
 | ID | Agent cible | Objet | État | Dépendance | Revue |
 |---|---|---|---|---|---|
+| GSIE-PROMPT-0028 | Codex | Trajectoire territoriale, dialogue PC et rejeu fiable | EN_REVUE | Snapshot d7b400cb, RFC-0042 / DEC-000074 Draft | Revue indépendante sans blocage ; validation locale ciblée |
+| GSIE-PROMPT-0030 | Codex | Baseline backend et environnement collaboratif | PRÊTE | Docs GSIE-DEV-001 à 005 | À exécuter sur snapshot relevé |
+| GSIE-PROMPT-0031 | Claude | Préparation frontend et parcours de preuve | PRÊTE | GSIE-DEV-003/004 + contrat client | À exécuter sur frontend identifié |
 | GSIE-PROMPT-0001 | Claude via Devin | Contre-audit du jalon de fiabilité | BLOQUÉE | Snapshot local à rendre accessible | Codex |
 | GSIE-PROMPT-0002 | GLM 5.2 via Devin | Matrice de validation des trois dépôts | BLOQUÉE | Snapshot local à rendre accessible | Codex |
 | GSIE-PROMPT-0003 | Claude via Devin | Contre-audit de la refondation constitutionnelle | VALIDÉE | Rapport `694d81d`, snapshot `3616b78` | Codex — RFC en revue |

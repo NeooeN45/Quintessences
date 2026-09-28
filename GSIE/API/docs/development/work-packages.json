@@ -1,0 +1,112 @@
+{
+  "version": "0.1.0",
+  "date": "2026-09-28",
+  "status": "draft",
+  "owner": "Codex",
+  "packages": [
+    {
+      "id": "B00",
+      "title": "Baseline backend",
+      "depends_on": [],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B01",
+      "title": "Comptes, droits et sessions",
+      "depends_on": [
+        "B00"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B02",
+      "title": "Lieux, limites et relevés",
+      "depends_on": [
+        "B00"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B03",
+      "title": "Persistance des relevés",
+      "depends_on": [
+        "B01",
+        "B02"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B04",
+      "title": "Journal, reprise et restauration",
+      "depends_on": [
+        "B03"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B05",
+      "title": "Pièces jointes et stockage",
+      "depends_on": [
+        "B03"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B06",
+      "title": "Récupération et incident",
+      "depends_on": [
+        "B04",
+        "B05"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B07",
+      "title": "Préproduction OVHcloud",
+      "depends_on": [
+        "B01",
+        "B06"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B08",
+      "title": "Façade d’analyse GeoSylva",
+      "depends_on": [
+        "B02",
+        "B03",
+        "B06"
+      ],
+      "product_scope": "GeoSylva-V3.1"
+    },
+    {
+      "id": "B09",
+      "title": "Rapports territoriaux",
+      "depends_on": [
+        "B08"
+      ],
+      "product_scope": "GeoSylva-V3.1-et-GSIE"
+    },
+    {
+      "id": "B10",
+      "title": "Outils du dialogue environnemental PC",
+      "depends_on": [
+        "B01",
+        "B09"
+      ],
+      "product_scope": "conversation-environnementale"
+    }
+  ],
+  "active_product": "GeoSylva V3.1",
+  "product_order": [
+    "GeoSylva V3.1",
+    "GSIE",
+    "Artemis",
+    "Ignis",
+    "Hub",
+    "Conversation environnementale",
+    "Autres applications mobiles",
+    "Drones IA"
+  ],
+  "release_gates": "RELEASE_GATES.md"
+}
