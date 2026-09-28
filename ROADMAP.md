@@ -1,5 +1,11 @@
 # ROADMAP — Quintessences / GSIE
 
+## Baseline stockage local/CI — 2026-09-28
+
+- [x] Préparer une construction MinIO/mc depuis sources officielles épinglées.
+- [ ] Qualifier compilation et scénario Data Registry en CI.
+- [ ] Revue générale expirée et corrections Trivy : suivi GitHub #65.
+
 ## Fiabilisation des environnements et des moteurs (2026-08-13)
 
 - [x] Cloisonner les rôles et namespaces `development`, `test`, `benchmark`,

@@ -1,5 +1,13 @@
 # PROJECT_MEMORY — Vue courante du projet Quintessences
 
+## Baseline stockage local/CI — 2026-09-28
+
+Suivi #65 : images MinIO/mc amont introuvables. Construction locale/CI proposée
+depuis sources officielles et bases épinglées, UID 10001, sondes et comptes S3
+préservés. Daemon Docker local arrêté ; compilation et scénario Data Registry
+restent à confirmer en CI. La revue etat_projet expirée et les échecs Trivy ne
+sont pas contournés. Aucun déploiement ni changement de volume existant.
+
 | Champ | Valeur |
 |---|---|
 | **Écosystème** | Quintessences |

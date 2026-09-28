@@ -159,7 +159,10 @@ services:
   # MinIO — stockage objet S3 local pour le développement
   # Les ports sont bindés sur localhost : aucun accès externe au daemon.
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: gsie-minio:source-9e49d5e
+    build:
+      context: ./docker/minio
+      target: server
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${GSIE_MINIO_ROOT_USER:?GSIE_MINIO_ROOT_USER requis dans .env}
@@ -188,7 +191,10 @@ services:
   # Initialisation idempotente du bucket S3 de développement.
   # Le runtime API n'a pas besoin du droit de créer des buckets.
   minio-init:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    image: gsie-mc:source-7394ce0
+    build:
+      context: ./docker/minio
+      target: client
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
