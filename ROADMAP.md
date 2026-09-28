@@ -2,6 +2,12 @@
 
 ## Priorité produit fixée le 2026-09-28
 
+Suivi : [préparation #62](https://github.com/NeooeN45/Quintessences/pull/62),
+[correctif sync #61](https://github.com/NeooeN45/Quintessences/pull/61),
+[données #63](https://github.com/NeooeN45/Quintessences/issues/63),
+[abonnement #64](https://github.com/NeooeN45/Quintessences/issues/64),
+[Android #11](https://github.com/NeooeN45/GeoSylva/issues/11).
+
 GeoSylva **V3.0** est la refonte actuelle ; **V3.1** vise Google Play avec
 l'abonnement Quintessences. Ordre demandé : GeoSylva V3.1 → GSIE → Artemis →
 Ignis → Hub → conversation environnementale → autres mobiles → drones IA.

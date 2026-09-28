@@ -7087,6 +7087,11 @@ frontières, position) :
 
 ## 2026-09-28 — priorité GeoSylva V3.1
 
+- Publications GitHub séparées : Quintessences #61/#62 et GeoSylva #10 ;
+  tâches suivantes Quintessences #63/#64 et GeoSylva #11.
+- Choix Fondateur : terrain hors ligne gratuit, synchronisation/analyses
+  avec abonnement ; prix non fixé.
+
 - Inventaire B00 mobile/serveur : correspondance des noms du DTO, tables Room
   et écarts de restauration/analyse ; publication GitHub autorisée.
 

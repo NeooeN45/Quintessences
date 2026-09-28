@@ -1912,6 +1912,12 @@ recense 38 tables Room ; types et restauration non qualifiés. Serveur distant
 Les publications serveur/documentation/mobile sont séparées. Le Fondateur
 autorise la synchronisation GitHub dans sa demande du 2026-09-28.
 
+Publications ouvertes : Quintessences PR #61 (fix), #62 (préparation),
+GeoSylva PR #10 (cadrage mobile). Prochaines tâches : Quintessences #63
+(données/restauration), #64 (abonnement), GeoSylva #11 (raccordement Android).
+Choix commercial reçu : terrain hors ligne gratuit ; synchronisation et
+analyses avec abonnement Quintessences. Publications sur branches, non fusionnées.
+
 GeoSylva V3.0 est la refonte actuelle. La V3.1 vise Google Play avec abonnement
 Quintessences. Ordre : GeoSylva V3.1, GSIE, Artemis, Ignis, Hub, conversation
 environnementale, autres mobiles, drones IA. Le serveur requis par GeoSylva

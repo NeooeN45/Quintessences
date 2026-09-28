@@ -50,6 +50,12 @@ synchronisée implique que les tables liées le sont aussi.
 
 ## Prochaine tranche de réalisation
 
+Suivi GitHub : [données et restauration #63](https://github.com/NeooeN45/Quintessences/issues/63),
+[abonnement #64](https://github.com/NeooeN45/Quintessences/issues/64),
+[raccordement Android #11](https://github.com/NeooeN45/GeoSylva/issues/11).
+Les documents sont proposés dans [#62](https://github.com/NeooeN45/Quintessences/pull/62)
+et [GeoSylva #10](https://github.com/NeooeN45/GeoSylva/pull/10).
+
 B02/B03 : inventorier d'abord les objets terrain qui doivent survivre à une
 réinstallation et les rapprocher du Data Registry. Produire des exemples
 synthétiques de deux utilisateurs, deux parcelles et deux campagnes avec
