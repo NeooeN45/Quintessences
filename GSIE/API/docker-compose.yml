@@ -156,6 +156,39 @@ services:
           cpus: "0.5"
           memory: 512M
 
+  # Redis dédié à l'état d'authentification (refresh tokens, nonces OIDC,
+  # verrouillage anti-bruteforce). Une instance séparée avec `noeviction`
+  # garantit qu'une pression mémoire sur le cache ne provoque ni
+  # déconnexion silencieuse ni perte de l'état anti-rejeu : en cas de
+  # saturation, l'écriture échoue explicitement plutôt que d'évincer une
+  # clé de sécurité.
+  redis-auth:
+    image: redis:7.2-alpine
+    command: >
+      redis-server
+      --requirepass ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
+      --maxmemory 128mb
+      --maxmemory-policy noeviction
+      --appendonly yes
+      --appendfsync everysec
+    user: "999:1000"
+    expose:
+      - "6379"
+    environment:
+      REDISCLI_AUTH: ${GSIE_REDIS_PASSWORD:?GSIE_REDIS_PASSWORD requis dans .env}
+    volumes:
+      - gsie_redis_auth_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   # MinIO — stockage objet S3 local pour le développement
   # Les ports sont bindés sur localhost : aucun accès externe au daemon.
   minio:
@@ -268,7 +301,8 @@ services:
       GSIE_MIGRATION_DATABASE_URL: postgresql+asyncpg://${GSIE_DB_USER:-gsie}:${GSIE_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
-      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
+      # État d'authentification isolé sur l'instance noeviction dédiée.
+      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis-auth:6379/0
       GSIE_OTEL_ENABLED: ${GSIE_OTEL_ENABLED:-false}
       GSIE_RATE_LIMIT_ENABLED: ${GSIE_RATE_LIMIT_ENABLED:-true}
       # Auth JWT RS256 — clés montées depuis le host (générées via docker/generate-jwt-keys.sh)
@@ -314,6 +348,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      redis-auth:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
@@ -364,7 +400,7 @@ services:
       GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
       GSIE_REDIS_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/0
       GSIE_RATE_LIMIT_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/1
-      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis:6379/2
+      GSIE_REFRESH_TOKEN_STORAGE_URL: redis://:${GSIE_REDIS_PASSWORD}@redis-auth:6379/0
       GSIE_OUTBOX_BATCH_SIZE: ${GSIE_OUTBOX_BATCH_SIZE:-100}
       GSIE_OUTBOX_POLL_INTERVAL_SECONDS: ${GSIE_OUTBOX_POLL_INTERVAL_SECONDS:-1.0}
       GSIE_OUTBOX_HEALTHCHECK_PATH: /tmp/gsie-outbox-worker.heartbeat
@@ -373,6 +409,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      redis-auth:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -568,6 +606,8 @@ volumes:
     name: ${GSIE_DATA_NAMESPACE:-gsie}_pgdata
   gsie_redisdata:
     name: ${GSIE_DATA_NAMESPACE:-gsie}_redisdata
+  gsie_redis_auth_data:
+    name: ${GSIE_DATA_NAMESPACE:-gsie}_redis_auth_data
   gsie_miniodata:
     name: ${GSIE_DATA_NAMESPACE:-gsie}_miniodata
   gsie_kuma_data:
