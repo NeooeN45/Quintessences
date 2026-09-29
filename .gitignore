@@ -52,6 +52,15 @@ stderr.txt
 /_tmp_*.py
 /_tmp_*.sh
 
+# Captures d'écran et fichiers personnels déposés par erreur à la racine.
+# Les preuves de recette vont dans 23_QUALITY_MANAGEMENT/AUDITS/ (texte) ou
+# tmp/ (binaires non versionnés) ; jamais à la racine du dépôt.
+/*.png
+/*.jpg
+/*.html
+/*.docx
+/*.pdf
+
 # Rust — build artifacts et venv maturin
 **/target/
 **/.venv/
