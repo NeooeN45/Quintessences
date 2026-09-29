@@ -1,8 +1,10 @@
+import { PUBLIC_API_V1 } from "./publicConfig";
+
 // Client minimal contre l'API GSIE réelle (IDENTITE-001). Les jetons
 // sont stockés en sessionStorage — même choix qu'ADMIN_WEB, avec le
 // même compromis documenté (SITE-001 §9) : à revoir avant une vraie
 // ouverture publique de cette zone (httpOnly cookie serait plus sûr).
-const API_BASE = "https://api.quintessences-platform.com/api/v1/auth";
+const API_BASE = `${PUBLIC_API_V1}/auth`;
 const SESSION_KEY = "quintessences_session";
 
 export interface Session {
@@ -104,7 +106,7 @@ export async function logout(): Promise<void> {
   clearSession();
   if (!session) return;
   try {
-    await fetch(`${API_BASE.replace("/auth", "")}/auth/logout`, {
+    await fetch(`${PUBLIC_API_V1}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

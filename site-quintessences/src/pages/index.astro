@@ -4,13 +4,12 @@ import Hero from "../components/Hero.astro";
 import Principles from "../components/Principles.astro";
 import EngineChain from "../components/EngineChain.tsx";
 import AppGrid from "../components/AppGrid.tsx";
-import LiveStat from "../components/LiveStat.tsx";
 ---
 
 <BaseLayout title="Intelligence environnementale fédérée">
   <Hero />
 
-  <section class="border-b border-[var(--color-border)]">
+  <section id="moteur" class="border-b border-[var(--color-border)] scroll-mt-24">
     <div class="mx-auto max-w-6xl px-6 py-20">
       <h2 class="eyebrow">
         Le moteur GSIE
@@ -30,19 +29,37 @@ import LiveStat from "../components/LiveStat.tsx";
 
   <section class="border-b border-[var(--color-border)] bg-[var(--color-bg-100)]">
     <div class="mx-auto max-w-6xl px-6 py-20">
-      <h2 class="eyebrow">
-        En chiffres
-      </h2>
-      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <LiveStat client:load label="Connaissances validées" field="connaissances_validees" />
-        <LiveStat client:load label="Datasets catalogués" field="datasets_catalogues" />
-        <LiveStat client:load label="Moteurs actifs" field="moteurs_actifs" />
-        <LiveStat client:load label="Applications" field="applications" />
+      <h2 class="eyebrow">Quelques repères</h2>
+      <div class="mt-6 grid gap-6 sm:grid-cols-3">
+        <article>
+          <p class="font-mono text-3xl font-medium text-[var(--color-signature)]">01</p>
+          <h3 class="mt-3 font-medium text-[var(--color-fg-100)]">Un socle commun</h3>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--color-fg-400)]">
+            GSIE relie preuves, données, raisonnement, simulation et validation
+            dans un même cadre traçable.
+          </p>
+        </article>
+        <article>
+          <p class="font-mono text-3xl font-medium text-[var(--color-signature)]">02</p>
+          <h3 class="mt-3 font-medium text-[var(--color-fg-100)]">Des projections métier</h3>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--color-fg-400)]">
+            Forêt, feu, eau, végétation, faune et climat partagent une lecture
+            cohérente du territoire.
+          </p>
+        </article>
+        <article>
+          <p class="font-mono text-3xl font-medium text-[var(--color-signature)]">03</p>
+          <h3 class="mt-3 font-medium text-[var(--color-fg-100)]">Un humain aux commandes</h3>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--color-fg-400)]">
+            Les recommandations éclairent l'action ; elles ne remplacent ni
+            l'expertise ni la décision de terrain.
+          </p>
+        </article>
       </div>
     </div>
   </section>
 
-  <section class="border-b border-[var(--color-border)]">
+  <section id="applications" class="border-b border-[var(--color-border)] scroll-mt-24">
     <div class="mx-auto max-w-6xl px-6 py-20">
       <h2 class="eyebrow">
         Applications

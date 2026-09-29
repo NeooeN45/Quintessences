@@ -21,6 +21,8 @@ export default function AppGrid() {
               key={app.slug}
               type="button"
               aria-pressed={isSelected}
+              aria-expanded={isSelected}
+              {...(isSelected ? { "aria-controls": `application-detail-${app.slug}` } : {})}
               onClick={() => setSelected(isSelected ? null : app)}
               className="group flex w-full items-center gap-6 py-5 text-left transition-colors hover:bg-[var(--color-bg-100)]"
             >
@@ -35,6 +37,7 @@ export default function AppGrid() {
 
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-[var(--color-fg-100)]">{app.name}</p>
+                <p className="mt-1 text-sm text-[var(--color-fg-400)] sm:hidden">{app.domain}</p>
               </div>
 
               <div className="hidden shrink-0 sm:block">
@@ -74,6 +77,9 @@ export default function AppGrid() {
         {selected && (
           <motion.div
             key={selected.slug}
+            id={`application-detail-${selected.slug}`}
+            role="region"
+            aria-label={`Détails de ${selected.name}`}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
