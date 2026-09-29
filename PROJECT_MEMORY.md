@@ -6,7 +6,368 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-17 — **RFC-0041 et DEC-000073 proposés pour réconcilier le contrat GeoSylva–GSIE.** |
+| **Dernière mise à jour** | 2026-09-29 — Baseline de conformité des exigences produite ; registre vivant créé ; DEC-000089 proposée. |
+
+### Baseline de conformité des exigences — 2026-09-29
+
+- Audit baseline global déposé :
+  `23_QUALITY_MANAGEMENT/AUDITS/2026-09-29_CONFORMITE_EXIGENCES_BASELINE.md`.
+  337 exigences croisées avec les preuves disponibles : 79 `CONFORME`,
+  91 `PARTIEL`, 47 `NON DÉMARRÉ`, 9 `NON MESURÉ`, 5 `BLOQUÉ`,
+  106 `DIFFÉRÉ` (Hub et Ignis hors chemin critique V1 selon DEC-000083).
+- Registre vivant créé : `23_QUALITY_MANAGEMENT/REGISTRE_CONFORMITE_EXIGENCES.md`
+  (source de vérité par exigence, niveaux de preuve N0 à N3). DEC-000089
+  propose d'en faire la référence unique de conformité ; statut Proposé.
+- Faits saillants : IDENTITE-001 est le domaine le plus avancé (37 conformes,
+  cycle compte→suppression prouvé sur compte synthétique) ; le pipeline
+  scientifique GeoSylva (LiDAR, segmentation, biomasse) reste entièrement
+  `NON DÉMARRÉ` ; Pl@ntNet bloqué par la confirmation commerciale ; aucune
+  preuve staging distant, production ou publication Play.
+- Rappel de vérité : les statuts du registre citent leur niveau de preuve ;
+  aucune conformité locale ne vaut validation terrain ou production.
+
+### Priorité lancement GeoSylva — 2026-09-07
+
+- Cartographie ciblée des calculs : `23_QUALITY_MANAGEMENT/AUDITS/2026-09-07_GEOSYLVA_CALCULS_CARTOGRAPHIE.md` ; DEC-000088 propose Kotlin mobile / Python serveur et extraction progressive du noyau. Campagne Android ciblée : 357 tests réussis, 23 suites, aucun ignoré ; aucun E2E ni validation scientifique globale. Chemin martelage encore historique ; persistance des runs non démontrée comme branchée. Aucun code métier modifié par cet audit.
+
+- DEC-000087 : socle GSIE mobile offline-first, vérification serveur au retour
+  réseau, corrections versionnées et information utilisateur, packs IA après
+  benchmark matériel et étude de saisie vocale mains libres. Revue ciblée dans
+  `23_QUALITY_MANAGEMENT/AUDITS/2026-09-07_GEOSYLVA_OFFLINE_SYNC_IA.md` : file
+  parcelles et packs territoriaux présents ; routes cubage non trouvées,
+  vérification cubage absente du service, benchmark/runtime IA non trouvés
+  dans les chemins inspectés. Aucun E2E ni modèle exécuté ; exigences documentées.
+- DEC-000085 : un seul essai gratuit de 14 jours pour tout Quintessences,
+  lié au compte Google ; ensuite abonnement. Testeurs activés par le Fondateur
+  exemptés ; futur mode entreprise administré sans essai. Politique documentée,
+  pas encore implémentée ; périmètre des abonnements ouvert. DEC-000086 fixe
+  le départ au bouton « Démarrer mon essai », confirmé une seule fois par GSIE.
+- DEC-000084 transcrit la clarification du Fondateur : 3.0 termine
+  l'interface ; 3.1 rend backend, calculs hors ligne, comptes et synchronisation
+  fiables pour la commercialisation. Application gratuite avec abonnement.
+- GEO-005 §11 porte les lots L0–L6 et leurs critères ; le registre de campagnes
+  conserve les preuves. TEST Docker sur le poste et compte Play personnel
+  existant sont déclarés par le Fondateur, sans inspection live dans ce tour.
+- La CI serveur produit désormais JUnit et les durées des tests unitaires et
+  d'intégration, avec garde Docker obligatoire. Modification locale seulement ;
+  aucune exécution GitHub ni publication n'est revendiquée.
+- Validation locale : 25 tests ciblés réussis en 4,64 s, JUnit généré ;
+  configuration synthétique du destinataire contact pour contourner une valeur
+  locale vide. Ni suite complète, ni recette Docker/E2E dans cette campagne.
+- Le client Android d'analyse et le billing Google Play existent ; leur
+  présence ne valide pas les parcours appareil ni le cycle d'abonnement.
+- Prochaine tranche : baseline CI complète et recette G2 sur TEST, puis
+  synchronisation, staging distant et distribution Play. DEC-000083 reste proposé.
+
+### Analyse d'état et de vision — 2026-09-02
+
+- L'audit `23_QUALITY_MANAGEMENT/AUDITS/2026-09-02_ANALYSE_ETAT_ET_VISION.md`
+  mesure l'état réel : ~50 000 lignes source / ~58 000 lignes de tests API,
+  56 migrations, 81 DEC, 42 RFC, mais **un seul DataAsset réel (569 octets)**,
+  **30 scénarios GSIE-Bench toujours `pending_expert_review`** et **aucun
+  usage terrain** de GeoSylva. Le goulot n'est plus logiciel : il est humain
+  (experts) et données (FETCH fermé alors que SoilGrids WCS est qualifié).
+- Constat de traçabilité : deux décisions portaient l'identifiant
+  `DEC-000078`. La décision « Cubage offline-first dans GeoSylva » est
+  renumérotée `DEC-000082` ; RFC-0042 reste sa RFC d'origine.
+- 83 fichiers non suivis par git, dont DEC-000074 à DEC-000082, RFC-0042,
+  GEO-005 et six migrations Alembic : une semaine de gouvernance et de schéma
+  n'existe que sur le poste. Commits scindés par sujet à réaliser en priorité.
+- `DEC-000083` (Proposé) place hors chemin critique V1 : Hub Unreal, Mesh,
+  cascade LLM, LoRa, WeatherNext/Atmos, Aeris/Atlas/Terra/Hydro/Flora/Artemis,
+  Ignis, Orchestre auto-évolutif. Réexamen à la clôture de G4 ou le 2026-12-01.
+- Un format de mémoire en **tableau de bord d'une page** avec niveaux de
+  preuve N0 structurel / N1 local / N2 TEST / N3 terrain est proposé dans
+  `22_PROJECT_MEMORY/DRAFT_PROJECT_MEMORY_TABLEAU_DE_BORD.md`. Tant qu'il
+  n'est pas validé, le présent fichier reste la mémoire canonique.
+- Hygiène : rapports de sécurité déplacés vers `23_QUALITY_MANAGEMENT/AUDITS/`,
+  racine nettoyée, `.gitignore` durci, `GSIE/API/AGENTS.md` aligné.
+
+### Fiabilisation GSIE + Forge — 2026-08-30
+
+- La documentation et le code ont été réconciliés avant nouvelle intégration.
+  Le Data Registry GSIE reste l'autorité unique ; Forge produit des handoffs
+  versionnés et ne contourne ni la qualification ni la promotion humaine.
+- `GSIE/API/src/gsie_api/governance/source_coverage.py` couvre explicitement
+  les 23 entrées de `SCIENTIFIC_SOURCES`. L'audit sans réseau est prouvé par
+  4 tests ; il a identifié puis la migration DEC-000078 a levé le branchement
+  orphelin de `soilgrids` vers le REST bêta interdit.
+- Le chemin actif de `PedologyEngine` utilise désormais
+  `SoilGridsWcsClient`, avec GeoTIFF borné, conversions officielles, façade de
+  compatibilité WCS-only et tests d’invariant anti-REST. TAXREF et Indigénat
+  Bellifa restent raccordés par leurs adapters Registry qualifiés. FETCH,
+  téléchargement fournisseur et promotion demeurent fail-closed ; aucune
+  preuve de SLO fournisseur ou de production n’est déduite de ces tests.
+
+### Import persistant Forge → GSIE TEST — 2026-08-31
+
+- Le bundle forge_analysis_bundle.v1 est maintenant importable par API et
+  CLI dans le field_intake existant, avec kind=analysis_bundle, statut
+  quarantined, profil allowlisté, rôles writer/admin, empreinte canonique
+  et idempotence concurrente sur bundle_id.
+- Le type analysis_bundle est explicitement exclu de l'hydratation : aucune
+  acceptation manuelle ne transforme implicitement les paramètres Forge en
+  contexte stationnel. La production reste fermée et exigera une décision de
+  promotion séparée.
+
+### Contrat extensible Forge → GSIE — 2026-08-31
+
+- `Forge/src/dataset_forge/analysis_bundle.py` publie désormais le contrat
+  versionné `forge_analysis_bundle.v1`, avec sources qualifiées, paramètres,
+  features dérivées, provenance, qualité, incertitude et trace de calcul.
+- Le catalogue initial réutilise les identifiants Registry de TAXREF via GBIF,
+  SoilGrids WCS, Indigénat Bellifa, IGN et Météo-France. Les sources inconnues
+  peuvent être ajoutées sans changer le schéma ; l'adapter connu doit rester
+  cohérent avec son identifiant Registry.
+- `GSIE/API/src/gsie_api/data/analysis_bundle.py` calcule la même empreinte
+  canonique et refuse les sources non qualifiées, les dépendances absentes,
+  les cycles et toute référence REST bêta SoilGrids. Le gate est sans réseau,
+  sans écriture et distinct de la promotion.
+- Preuves locales : Forge 251/251 ; contrat Forge 6/6 ; contrat GSIE 5/5 ;
+  3 116 tests GSIE réussis, 371 ignorés ; deux intégrations PostgreSQL restent
+  conditionnées à Docker Desktop. L'exemple Forge est accepté par les deux
+  validateurs avec l'empreinte `1fa66fd3c24ae1575059ee52c2f9122cc50346022e8996a880ca65d902369959`.
+- Ne jamais annoncer les 14 moteurs, une source ou un modèle comme “connecté”
+  sur la seule présence d'un module, d'un client ou d'un test de contrat ; il
+  faut la preuve d'egress contrôlé, de qualification, de rejouabilité, de
+  persistance et de validation métier.
+
+### Nouveau cadrage V1 — GeoSylva, comptes, Data Acquisition Fabric et verticale GSIE (2026-08-26)
+
+Le Fondateur a réordonné le chemin critique de la V1 par DEC-000074. GeoSylva
+3.0 → 3.1 est le pilote : l'interface, le cœur de calcul/synthèse, le
+martelage et la persistance doivent être validés sur le Samsung S25 Ultra.
+Ignis reste une spécialisation GSIE, mais ne constitue plus la première
+verticale de démonstration.
+
+Le deuxième gate est le compte Quintessences. La recette Codex se fera par ADB
+sur téléphone réel et couvrira création, connexion locale, Google, refresh,
+logout, récupération, restauration, changement d'adresse, sessions, MFA si
+activé, consentements, export, annulation de suppression, suppression finale,
+purge locale et isolation de deux comptes. Le code possède déjà plusieurs
+services correspondants. Le finaliseur serveur est maintenant implémenté par
+DEC-000075 ; sa migration et sa fonction SQL ont été validées sur un compte
+synthétique dédié, avec tombstone, purge des données liées et audit anonymisé.
+L'isolation multi-compte locale reste ouverte.
+`DeleteAllUserDataUseCase` purge
+actuellement des ensembles DAO globaux : ce point est une porte de conformité,
+pas une fonctionnalité déclarée terminée.
+
+Le troisième gate est la finalisation du Data Acquisition Fabric, en
+réutilisant le handoff Forge → Registry existant et sans dupliquer les
+connecteurs. Le quatrième est la verticale GeoSylva 3.1 ↔ GSIE, après
+validation de RFC-0041 et DEC-000073. La boucle d'amélioration vient ensuite,
+avec benchmark et validation humaine avant tout entraînement ou fine-tuning.
+
+Le plan opérationnel, la matrice des données de compte, les scénarios ADB et
+les critères de sortie sont centralisés dans
+`05_SPECIFICATIONS/GEOSYLVA/GEO_005_V1_PILOTAGE_GEOSYLVA_GSIE.md`.
+
+Le 2026-08-30, le parcours natif GeoSylva a été relié aux contrats de
+consentement existants sans dupliquer le dépôt ni les routes : les deux cases
+obligatoires sont vierges par défaut, leur absence bloque la création, puis
+`terms` et `privacy` en `v1` sont enregistrés séparément. La carte Compte relit
+ces consentements et permet leur retrait avec historique. La ressource
+`app_icon.png` a aussi été remplacée par une copie octet pour octet de
+`Geosylva.png`, et les ressources adaptatives de nuit pointent désormais sur
+la même feuille au lieu de l'ancien vecteur d'arbre.
+
+L’audit G0 du 2026-08-29 a établi une première matrice des écrans, calculs,
+tables Room, endpoints, fichiers et données personnelles. Le S25 Ultra est
+détecté en ADB avec GeoSylva 3.0.0 installé. Après le recontrôle, la matrice est
+approuvée, l’environnement `gsie-test` est sain jusqu’à la revision Alembic
+`20260826_0055` et les WIP des trois dépôts sont enregistrés séparément ; G0 est
+clôturé pour la réconciliation uniquement. Le rapport et le registre sont
+déposés dans `23_QUALITY_MANAGEMENT/AUDITS/` :
+`2026-08-29_G0_RECONCILIATION_GEOSYLVA.md` et
+`REGISTRE_CAMPAGNES_RECETTE.md`.
+
+Le 2026-08-26, les Android Platform-Tools officiels ont été installés dans le
+SDK utilisateur (`adb` 36.0.0). Le daemon ADB démarre correctement et le
+Samsung S25 Ultra est maintenant autorisé et listé avec l'état `device` sur le
+profil Android principal. GeoSylva 3.0.0 est installé et son activité principale
+est lancée ; le Dossier sécurisé Samsung (utilisateur 150) reste un profil
+distinct et hors périmètre de cette première recette.
+
+La même recette a ensuite validé, sur le téléphone réel et l'API locale reliée
+par `adb reverse`, la connexion locale GeoSylva, l'affichage du profil et la
+déconnexion avec retour à `Aucun compte connecté`. Après relance de l'activité,
+la session révoquée n'est pas réinjectée. Le compte synthétique de recette a
+également validé l'export, la liste de sessions, la vérification d'adresse
+e-mail par code Mailpit et la récupération de mot de passe : l'ancien mot de
+passe renvoie `401` et le nouveau `200`. La base contient une identité locale,
+un credential, un rôle, des sessions, une organisation/workspace, un abonnement,
+des entitlements, les consentements versionnés/révocables et les événements
+d'audit attendus. Google, restauration, purge locale complète et isolation
+multi-compte restent à prouver avant de fermer le gate RGPD. La finalisation
+retient un tombstone désactivé pour préserver les
+organisations partagées, purge les données d'identité, sessions, billing
+personnel et répliques `geosylva_parcels`, et masque les e-mails historiques de
+l'audit. La preuve CPT-16 est déposée dans
+`23_QUALITY_MANAGEMENT/AUDITS/2026-08-26_G2_CPT16_FINALISATION_COMPTE_SYNTHETIQUE.md` ;
+le smoke test non destructif du worker reste ouvert.
+
+Les migrations API locales `20260826_0052`, `20260826_0053`, `20260826_0054` et
+`20260826_0055` ont corrigé respectivement l'usage du schéma facturation, les
+actions d'audit d'identité, les politiques RLS explicites d'insertion/lecture
+et la finalisation RGPD différée. Le worker
+`gsie_api.account_deletion_worker` est séparé de l'API, borné par lots et
+exécute la fonction PostgreSQL `SECURITY DEFINER` uniquement après échéance.
+Les événements
+d'audit sont insérés dans une transaction imbriquée afin qu'un échec de
+traçabilité ne rende pas la transaction métier inutilisable.
+
+Le client Kotlin GeoSylva consomme désormais les contrats de compte pour
+l’export RGPD, les consentements, l’e-mail, le mot de passe, la suppression
+différée/annulation, les sessions et le MFA. L’APK debug a été recompilé et
+installé sur le Samsung S25 Ultra ; l’interface reste travaillée séparément
+avec Claude.
+
+Le 2026-08-29, Docker Desktop a été rétabli sans toucher aux images, volumes
+ou données WSL : les seuls répertoires de sockets Docker corrompus ont été
+déplacés avec sauvegarde des préférences, puis `/health` et `/ready` ont
+répondu 200. Le chemin Android d’une session expirée renouvelle maintenant la
+session avant de relire le profil ; si le refresh est invalide, la session et
+le profil locaux sont purgés. Une build propre de l’APK a été installée par
+ADB avec conservation des données, et l’écran Compte montre bien `Aucun compte
+connecté` avec le bouton de reconnexion, sans faux message d’identifiants.
+
+La création de compte GeoSylva est désormais une route native dédiée
+`settings/account/register` : le bouton de connexion ne lance plus Chrome. La
+page Compose partage `LoginViewModel`, `LoginMode.REGISTER`,
+`IdentityRepository.register` et le stockage de session existants ; elle expose
+le nom affiché facultatif, l’e-mail, le mot de passe, sa confirmation et une
+aide locale de robustesse. Sur le S25, l’UI native et le refus d’un envoi vide
+sont prouvés par ADB. La création avec une adresse de test est maintenant
+validée sur l’API réelle. Les consentements versionnés sont acceptés et
+révoqués explicitement par le test, sans simulation automatique ; leur
+historique est inclus dans l’export RGPD. Le raccordement de cette étape au
+parcours natif d’inscription GeoSylva reste à recetter sur le S25.
+
+La recette a aussi révélé puis corrigé l'absence de contexte RLS sur les trois
+routes de consentement. Après correction, l'acceptation répond `201`, l'historique
+reste lisible et la révocation répond `200` avec la ligne effectivement marquée
+révoquée. Le service API reconstruit est sain (`health=200`, `ready=200`,
+Alembic `20260826_0055` en tête) ; l'outbox est saine. Le démarrage lourd des
+moteurs impose environ deux minutes avant le passage de la sonde API.
+
+Le scénario complet du 2026-08-29 a aussi validé la vérification e-mail par
+Mailpit, l’annulation de suppression et la reconnexion avec le même compte ;
+un second compte ne voit ni l’adresse ni les consentements du premier. Google
+publie `not_configured` et refuse le faux jeton en `503` tant que les
+identifiants OAuth ne sont pas présents. La recette Android de bout en bout,
+la purge locale complète et le smoke test non destructif du worker restent
+ouverts.
+
+### Verticale Data Registry — handoff Forge → GSIE IFN (2026-08-26)
+
+La première tranche d'acquisition réelle réutilise le connecteur IFN existant
+de Forge et le `DatasetManifest` déjà autoritatif du Data Registry. Le nouveau
+document `gsie_acquisition_handoff.v1` transporte uniquement la preuve de
+l'archive locale : chemin relatif POSIX, taille, type MIME, URI originale,
+horodatage et SHA-256. Il ne crée pas de source, de registre ou de base
+concurrente.
+
+Forge rejette les archives IFN trop volumineuses, les chemins ZIP traversants
+et les liens symboliques. L'importeur GSIE vérifie à nouveau le staging et les
+octets, réutilise `TransactionalObjectStorageSink`, écrit sous une clé
+déterministe `raw/fetch/forge/`, puis applique le manifeste existant dans la
+transaction PostgreSQL appelante. Un rejeu d'un objet identique ne le réécrit
+pas ; une divergence est refusée et les objets nouvellement créés sont
+nettoyés en cas d'échec Registry.
+
+La source reste juridiquement contrôlée par `ifn-donnees-brutes`, la version
+reste `discovered` et la mise en Gold/production demeure impossible sans les
+portes de qualification et de promotion déjà prévues par RFC-0038. Le
+connecteur IFN n'est pas dupliqué dans GSIE : cette verticale établit une
+frontière Forge → Registry, les futures sources devront réutiliser ce contrat.
+
+Preuves locales : 22 tests Forge et 3 tests API ciblés passants ; Ruff et
+mypy strict propres sur les fichiers modifiés. Aucun téléchargement IFN réel,
+appel PostgreSQL d'application, déploiement ou promotion n'a été lancé dans
+cette tranche.
+
+### Site public Astro — contact conditionnel (2026-08-23)
+
+Le formulaire Astro transmet maintenant l'adresse, la catégorie et le message
+à `POST /api/v1/public/contact`. L'API valide le contrat, vérifie Turnstile
+une seule fois côté serveur, applique une limite de 5 requêtes par minute et
+rejette silencieusement le champ piège. Le transport SMTP réutilisé transmet le
+message à `GSIE_PUBLIC_CONTACT_RECIPIENT` avec `Reply-To`, sans enregistrer le
+contenu dans GSIE.
+
+`GSIE_PUBLIC_CONTACT_ENABLED=false` par défaut : l'activation exige un
+destinataire réel, un SMTP chiffré, Turnstile actif et une durée de conservation
+validée. La page de confidentialité contient encore les marqueurs explicites
+à compléter pour les durées et l'identité juridique ;
+`npm run verify:public` doit donc continuer à bloquer la publication. Preuves
+locales : 16 tests API ciblés passants, Ruff propre, compilation Python
+réussie, `astro check` sans erreur et build Astro sur 13 routes.
+
+L'URL API du site est maintenant pilotable par `PUBLIC_API_ORIGIN` : le mode
+développement prend localhost par défaut et un build de production prend
+`api.quintessences-platform.com` si aucune valeur n'est injectée.
+
+### Site public Astro — socle de production (2026-08-23)
+
+Le site public possède maintenant les éléments techniques de publication :
+`robots.txt`, sitemap dynamique `/sitemap.xml`, en-têtes de sécurité
+Cloudflare Pages et `/.well-known/security.txt`. Le script
+`site-quintessences/scripts/verify-public-readiness.mjs`, exposé par
+`npm run verify:public`, bloque la mise en production tant que les mentions
+légales contiennent des placeholders, qu'une section juridique essentielle
+manque ou qu'un fichier public requis manque.
+La politique de confidentialité a été réalignée sur le comportement réel : le
+formulaire contact dispose maintenant d'un routage API conditionnel, sans
+persistance dans GSIE, et décrit le traitement Turnstile. Le build Astro
+reste vert sur 13 routes sans avertissement de collection vide : la Galerie
+reste une page statique fermée, sans chargement de médias, tant que le processus
+de publication vie privée n'est pas défini. `npm run deploy:pages` prépare le
+déploiement Cloudflare Pages, mais exige le nom exact du projet et ne contourne
+pas `verify:public` ; il vérifie aussi les liens internes produits par le build
+via `npm run verify:static`. La bascule Cloudflare Pages et la suppression du
+verrou juridique restent des étapes humaines dépendantes des données de
+l'éditeur et de la configuration externe. La politique de confidentialité
+couvre maintenant séparément les bases juridiques, les destinataires et les
+prestataires ; les éléments non confirmés restent volontairement bloquants.
+Les CGU indiquent que l'ouverture complète de la zone Compte dépend encore de
+la validation de son stockage de session et de ses mesures de sécurité.
+Le build public garde cette zone fermée par défaut via
+`PUBLIC_ACCOUNT_ENABLED`, y compris sur les URLs directes ; l'activation reste
+réservée à une recette contrôlée.
+La porte `verify:public` refuse également toute tentative de déploiement avec
+ce drapeau activé tant que la session web n'a pas été approuvée.
+Le fichier `site-quintessences/.env.example` documente cette configuration
+publique sans secret.
+`verify:static` vérifie également que le build fermé n'embarque ni lien public
+vers Compte ni formulaire d'authentification.
+Le script `npm run verify:live` formalise aussi la recette externe. Le relevé du
+23 août 2026 montre que le domaine sert encore l'ancienne landing, que
+`robots.txt` et `security.txt` sont renvoyés en HTML, que la CSP manque et que
+`api.quintessences-platform.com/health` renvoie 530 ; aucun déploiement n'a été
+déclenché pour corriger cela sans validation légale et autorisation Cloudflare.
+La procédure d'opération est maintenant centralisée dans
+`site-quintessences/RELEASE_CHECKLIST.md`, avec un `NO-GO` explicite pour une
+API en 530, des fichiers publics HTML ou des headers de sécurité manquants.
+
+### Site public Astro — première passe UX (2026-08-23)
+
+`site-quintessences/` est confirmé comme la base de la future bascule du
+domaine `quintessences-platform.com`, en remplacement progressif de
+`landing-quintessences/`. La navigation mobile expose désormais Accueil,
+Applications, Actualités, Galerie, Contact et Compte ; les liens actifs sont
+signalés aux technologies d'assistance. L'accueil mène vers la chaîne GSIE et
+les applications, et remplace les quatre statistiques publiques non alimentées
+par trois repères éditoriaux non dynamiques. Les cartes d'applications exposent
+leur état d'expansion et un focus clavier visible. Le formulaire de contact ne
+promet plus de mise en file d'un message tant que le routage automatique n'est
+pas branché ; l'adresse directe reste le canal fiable.
+
+Validation reproductible : `ASTRO_TELEMETRY_DISABLED=1 npm run check` retourne
+0 erreur et 3 hints React préexistants ; `ASTRO_TELEMETRY_DISABLED=1 npm run
+build` produit 13 routes. Le build signale toujours la collection `galerie`
+vide. Aucun document Locked n'a été modifié et aucune nouvelle décision de
+gouvernance n'est nécessaire pour cette passe bornée dans SITE-001/SITE-002.
 
 ### Fiabilisation environnements et moteurs (2026-08-13)
 
@@ -262,6 +623,58 @@ contrat public ne doivent être implémentés. Les registres d'opportunités res
 Draft : ils orientent les benchmarks, mais n'autorisent aucune dépendance ou
 modèle en production.
 
+### Tranche préparation Forge → GSIE TEST (2026-08-23)
+
+La précondition nommée par DEC-000073 — capacité serveur à préparer règles
+qualifiées et état global sourcé — est implémentée et prouvée sur PostgreSQL /
+PostGIS réel, sans pour autant valider RFC-0041 ou DEC-000073 :
+
+- `StationPreparationService` (`engines/orchestration/preparation.py`)
+  hydrate la station, sélectionne les règles `accepted` applicables via
+  `KnowledgeEngine.regles_applicables(...)`, charge les qualifications
+  réelles via `qualifications_regles(...)`, récupère les versions persistées,
+  résout l'état global depuis un `FieldIntake` `accepted` et fige un
+  `RapportPreparation` immuable avec snapshots du contexte, des règles et de
+  l'état global, sources, versions et empreintes SHA-256.
+- Codes d'erreur fail-closed : `AUCUNE_REGLE_QUALIFIEE`,
+  `QUALIFICATION_REGLE_MANQUANTE`, `VERSION_REGLE_MANQUANTE` et
+  `ETAT_GLOBAL_NON_SOURCE`.
+- Endpoint de prévisualisation
+  `GET /api/v1/orchestration/stations/{station_id}/preparation` (RBAC
+  `EngineReadUser`) — n'exécute aucun moteur.
+- Knowledge Engine étendu : persistance et exposition des qualificateurs et
+  versions de règles.
+- Bundle Forge typé `gsie_test_preparation.v0.1` : règles explicitement
+  qualifiées, état global versionné `global_state.v0.1`, observations, place
+  Lambert-93 SRID 2154 et identité station.
+- Importeur GSIE TEST : refuse tout `database_role ≠ "test"`, valide la
+  géométrie, crée la `Place` et les ressources PROV `Source`/`Citation`
+  primaires, ingère les règles `accepted`, puis crée un `FieldIntake`
+  `accepted` avec source et empreintes SHA-256. Les stations ou connaissances
+  déjà présentes sont refusées ; aucun remplacement silencieux n'est fait.
+- Validations : 7 tests unitaires GSIE, 6 tests Forge, 1 intégration
+  PostgreSQL/PostGIS passante ; Ruff, formatage et mypy strict passent sur les
+  sources touchées. La suite GSIE complète sans couverture reste à rejouer
+  après la reprise de session.
+- Aucune façade GeoSylva, endpoint `station-link`, migration Room ou worker
+  WorkManager n'est livré.
+
+### Vertical Data Registry — SoilGrids replay (2026-08-25)
+
+La première preuve verticale du Data Registry réutilise l'actif SoilGrids de
+569 octets autorisé par DEC-000061, sans nouvel appel à ISRIC ni ouverture de
+FETCH. Le manifeste `archive_copy` crée l'actif RAW et sa provenance ;
+`QualityAssessmentPersistenceService` persiste les cinq dimensions de qualité
+avec la politique `registry-quality-1`, sans inventer de score global pour un
+rapport incomplet et sans fusionner les campagnes.
+
+Le rejeu du même rapport reste idempotent sur
+`target_id + assessment_run_id + dimension` ; une divergence est refusée.
+La normalisation `soilgrids.normalized.v0.1` reste marquée avec unités à
+qualifier, et toute promotion demeure bloquée par `SOURCE_NOT_VALIDATED` tant
+que la version Registry reste `discovered`. La preuve Docker du vertical est
+passante ; aucune promotion vers staging/production n'a été effectuée.
+
 ### Dossier de relecture experte Farges (2026-08-12)
 
 Le dossier `GSIE/TESTS/GSIE_BENCH/DOSSIER_RELECTURE_EXPERTE_FARGES_2026-08-12.md`
@@ -343,6 +756,32 @@ et les affirmations à revalider. Elle enregistre également les pistes R&D IGNI
 Hydro, QGIS/IGN, Mesh et financements potentiels sans autoriser d'ingestion,
 de partenariat, d'achat ou d'implémentation. `GSIE-Norm-Bench` est identifié
 comme sous-benchmark distinct avant toute intégration IA.
+
+### Mission WeatherNext 2 → Atmos (2026-08-18)
+
+Le dépôt officiel Google DeepMind WeatherNext a été analysé sur le tag `v0.3.0`
+(commit `89c4b2a77a1c57b328b909c575550fd2e5aadc9c`). WN2 est un modèle global
+probabiliste FGN à 0,25°, 6 h et jusqu'à 15 jours, avec code de recherche Alpha,
+rollout autorégressif, xarray/JAX, maillage icosaédrique, ensemble et perte
+CRPS. Le dépôt fournit aussi WeatherNext Cyclones, Cyclones Mini, GraphCast et
+GenCast legacy.
+
+La stratégie retenue dans les livrables R&D est **flux d'abord** : Atmos doit
+consommer WeatherNext 2 via les flux autorisés Google Cloud/BigQuery/Earth
+Engine/GCS Zarr, comparer les résultats à ECMWF et Météo-France, puis seulement
+étudier l'auto-hébergement GPU. WN2 ne doit pas être appelé directement par
+IGNIS ou Hydro et 0,25° ne doit jamais être présenté comme une résolution
+micro-météorologique forestière.
+
+Livrables créés : `GSIE/RESEARCH/WEATHERNEXT2_DEEP_DIVE.md`,
+`GSIE/ARCHITECTURE/ATMOS_WEATHERNEXT_ARCHITECTURE.md`,
+`GSIE/ARCHITECTURE/IGNIS_PROBABILISTIC_WEATHER_INTEGRATION.md`,
+`GSIE/RESEARCH/QUINTESSENCES_SCIENTIFIC_TECHNOLOGY_HORIZON.md`,
+`GSIE/RESEARCH/TOP_20_WEATHERNEXT_LIKE_TECHNOLOGIES.md` et
+`GSIE/RESEARCH/WEATHERNEXT_ATMOS_POC_PLAN.md`, ainsi que la proposition
+`GSIE/ARCHITECTURE/ADR_WEATHERNEXT_ATMOS.md`. Aucun poids, modèle ou appel
+fournisseur n'a été intégré ; les opportunités restent soumises à GSIE-Bench,
+aux licences et à une validation territoriale.
 
 ### Manifeste Data Registry (2026-08-10)
 
