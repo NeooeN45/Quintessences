@@ -6,7 +6,25 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-09-29 — Baseline de conformité des exigences produite ; registre vivant créé ; DEC-000089 proposée. |
+| **Dernière mise à jour** | 2026-09-29 — Diagnostic sécurité continu installé sur les 4 dépôts (hooks bloquants) ; premier cycle exécuté ; DEC-000091 proposée. |
+
+### Diagnostic sécurité continu — 2026-09-29
+
+- DEC-000091 propose le dispositif `tools/security_diag.py` + hooks Git locaux
+  sur les quatre dépôts (parent, GeoSylva, QGISIA, Forge) : `pre-commit`
+  bloque les secrets du diff stagé (sonde positive/négative vérifiée),
+  `post-commit` lance un diagnostic rapide, `pre-push` bloque sur diagnostic
+  complet. Installateur : `tools/install_hooks.sh`.
+- Premier cycle : `23_QUALITY_MANAGEMENT/AUDITS/SECURITY_DIAG_2026-09-29.md`.
+  Aucune clé réelle dans l'historique ; corrections appliquées : `shell=True`
+  supprimé dans QGISIA, arXiv en HTTPS + `defusedxml` dans Forge, 33 CVE de
+  dépendances Forge réduites à 2 résiduelles (`diskcache`, `idna`), marqueurs
+  `nosec`/`usedforsecurity` justifiés dans l'API et les outils.
+- Risques acceptés documentés : `ws_allowed_origins=["*"]` gardé par le
+  validateur de production, images `:latest` de la stack viz dev, 5 highs npm
+  transitifs QGISIA (fix npm recommandé, `pdfjs-dist` majeur à valider).
+- Rapports ignorés par git sous `output/security-diag/` dans chaque dépôt ;
+  `cargo-audit` absent du poste (check reporté sans blocage).
 
 ### Baseline de conformité des exigences — 2026-09-29
 

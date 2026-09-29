@@ -4,6 +4,27 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DIAGNOSTIC SECURITE CONTINU] - 2026-09-29
+
+- DEC-000091 proposée : orchestrateur `tools/security_diag.py` et hooks Git
+  locaux (`pre-commit` secrets bloquants, `post-commit` rapide, `pre-push`
+  complet bloquant) installés sur le parent et les trois dépôts externes
+  (`apps/GeoSylva`, `apps/QGISIA`, `Forge`) ; installateur `tools/install_hooks.sh`.
+- Premier cycle complet dans
+  `23_QUALITY_MANAGEMENT/AUDITS/SECURITY_DIAG_2026-09-29.md` :
+  `shell=True` corrigé dans QGISIA, endpoints arXiv passés en HTTPS et
+  parsing XML durci (`defusedxml`) dans Forge, 6 paquets vulnérables mis à
+  jour (33 CVE → 2 résiduelles), findings Bandit traités dans l'API
+  (`nosec` justifié, `usedforsecurity=False`).
+- Risques acceptés tracés : wildcard WS gardé par le validateur de
+  production, tags `:latest` de la stack viz dev, highs npm transitifs et
+  `diskcache`/`idna` sans correctif applicable.
+- Faux positifs calibrés dans le scanner : variables psql `:'var'` et env,
+  placeholders canoniques, namespaces XML/OGC, `client.eval()` Redis,
+  `loop.exec()` Qt, sandbox QGISIA documentée.
+
+---
+
 ## [BASELINE CONFORMITE DES EXIGENCES] - 2026-09-29
 
 - Audit baseline global de conformité : 337 exigences croisées avec les

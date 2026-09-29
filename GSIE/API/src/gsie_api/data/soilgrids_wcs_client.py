@@ -132,7 +132,7 @@ class SoilGridsWcsClient(ResilientHttpClient):
         except ValueError as exc:
             raise SoilGridsWcsClientError(f"Échec du fetch WCS SoilGrids : {exc}") from exc
 
-        client = httpx.AsyncClient(
+        client = httpx.AsyncClient(  # nosec B113 — timeout explicite ci-dessous
             timeout=min(self._timeout, timeout_seconds),
             follow_redirects=False,
             verify=True,

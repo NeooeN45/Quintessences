@@ -239,6 +239,7 @@ CONFIG_CHECKS: list[tuple[str, str, re.Pattern[str], re.Pattern[str] | None]] = 
         r"georss\.org|purl\.org|apache\.org|maven\.|json-schema\.org|"
         r"spdx\.|osgeo\.org|qgis\.org|gnu\.org|ietf\.org|unicode\.org|"
         r"kernel\.org|exslt\.org|openoffice\.org|docs\.oasis-open\.org|"
+        r"sitemaps\.org|"
         r"schemas\.|example\.(?:com|org|net))\b)[A-Za-z0-9]"),
      re.compile(r"\.(py|kt|ts|tsx|js|json|ya?ml)$")),
     ("P1", "android", re.compile(r"usesCleartextTraffic\s*=\s*[\"']true"),
