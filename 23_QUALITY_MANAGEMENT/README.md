@@ -12,6 +12,7 @@ Définir, piloter et améliorer en continu le système de management de la quali
 ├── QUALITY_POLICY.md          ← Politique qualité (intentions, principes, KPIs)
 ├── QUALITY_MANUAL.md          ← Manuel qualité (processus, audits, revues)
 ├── KPI_DASHBOARD.md           ← Tableau de bord des indicateurs
+├── REGISTRE_CONFORMITE_EXIGENCES.md ← Conformité par exigence (statut + preuve)
 ├── SOURCE_OF_TRUTH_REGISTRY.json ← Registre contrôlé des sources de vérité
 ├── PROCESSES/                 ← Processus documentés
 │   ├── CODE_REVIEW.md         ← Revue de code
@@ -35,6 +36,7 @@ Définir, piloter et améliorer en continu le système de management de la quali
 | `QUALITY_MANUAL.md` | Manuel qualité (catalogue des processus, processus détaillés, KPIs, audits, revues, contrôle doc) | 1.2.0 |
 | `KPI_DASHBOARD.md` | Tableau de bord des indicateurs | 1.0.0 |
 | `SOURCE_OF_TRUTH_REGISTRY.json` | Sources autorisées, propriétaires et dates de revue | 1 |
+| `REGISTRE_CONFORMITE_EXIGENCES.md` | Registre vivant de conformité des exigences (statut + niveau de preuve par exigence) | Draft |
 | `PROCESSES/CODE_REVIEW.md` | Porte de revue par les pairs | 1.0.0 |
 | `PROCESSES/CI_CD.md` | Portes automatiques de livraison | 1.0.0 |
 | `PROCESSES/DOCUMENT_CONTROL.md` | Hiérarchie, fraîcheur, archivage et contradictions | 1.0.0 |
