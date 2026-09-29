@@ -1,4 +1,6 @@
 ---
+import { PUBLIC_ACCOUNT_ENABLED } from "../lib/publicConfig";
+
 const currentPath = Astro.url.pathname;
 const links = [
   { href: "/", label: "Accueil" },
@@ -7,11 +9,15 @@ const links = [
   { href: "/galerie/", label: "Galerie" },
   { href: "/contact/", label: "Contact" },
 ];
+
+function isActive(href: string) {
+  return currentPath === href || (href !== "/" && currentPath.startsWith(href));
+}
 ---
 
 <header class="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-bg-000)]/90 backdrop-blur">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-    <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--color-fg-100)]">
+    <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--color-fg-100)]" aria-label="Quintessences, accueil">
       <span class="inline-block h-2 w-2 rounded-full" style="background: var(--color-accent)"></span>
       Quintessences
     </a>
@@ -22,19 +28,53 @@ const links = [
           href={link.href}
           class:list={[
             "eyebrow transition-colors hover:text-[var(--color-fg-100)]",
-            currentPath === link.href && "text-[var(--color-fg-100)]",
+            isActive(link.href) && "text-[var(--color-fg-100)]",
           ]}
+          aria-current={isActive(link.href) ? "page" : undefined}
         >
           {link.label}
         </a>
       ))}
     </nav>
 
-    <a
-      href="/compte/"
-      class="eyebrow rounded-full border border-[var(--color-border-strong)] px-4 py-2 transition-colors hover:border-[var(--color-fg-100)] hover:text-[var(--color-fg-100)]"
-    >
-      Compte
-    </a>
+    {PUBLIC_ACCOUNT_ENABLED && (
+      <a
+        href="/compte/"
+        class="eyebrow hidden rounded-full border border-[var(--color-border-strong)] px-4 py-2 transition-colors hover:border-[var(--color-fg-100)] hover:text-[var(--color-fg-100)] md:inline-flex"
+      >
+        Compte
+      </a>
+    )}
+
+    <details class="relative md:hidden">
+      <summary class="list-none rounded-full border border-[var(--color-border-strong)] px-4 py-2 text-xs font-medium text-[var(--color-fg-200)] [&::-webkit-details-marker]:hidden">
+        Menu
+      </summary>
+      <div class="absolute right-0 top-full mt-3 w-[min(20rem,calc(100vw-3rem))] rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-000)] p-2 shadow-xl">
+        <nav aria-label="Navigation principale" class="flex flex-col">
+          {links.map((link) => (
+            <a
+              href={link.href}
+              class:list={[
+                "rounded-xl px-4 py-3 text-sm transition-colors hover:bg-[var(--color-bg-100)]",
+                isActive(link.href) && "bg-[var(--color-bg-100)] font-medium text-[var(--color-fg-100)]",
+                !isActive(link.href) && "text-[var(--color-fg-300)]",
+              ]}
+              aria-current={isActive(link.href) ? "page" : undefined}
+            >
+              {link.label}
+            </a>
+          ))}
+          {PUBLIC_ACCOUNT_ENABLED && (
+            <a
+              href="/compte/"
+              class="mt-1 rounded-xl border-t border-[var(--color-border-light)] px-4 py-3 text-sm font-medium text-[var(--color-fg-200)]"
+            >
+              Compte
+            </a>
+          )}
+        </nav>
+      </div>
+    </details>
   </div>
 </header>

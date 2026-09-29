@@ -60,6 +60,12 @@ async def should_export_full_account_payload_with_populated_fields() -> None:
         email_verified=True,
         last_authenticated_at=_NOW,
     )
+    consent = SimpleNamespace(
+        consent_type="terms",
+        document_version="v1",
+        accepted_at=_NOW,
+        revoked_at=None,
+    )
     role = SimpleNamespace(application="geosylva", role="admin")
     organisation = SimpleNamespace(slug="gsie", display_name="GSIE")
     member = SimpleNamespace(organisation_id=uuid4(), role="owner", joined_at=_NOW)
@@ -99,6 +105,7 @@ async def should_export_full_account_payload_with_populated_fields() -> None:
     session.execute = AsyncMock(
         side_effect=[
             _scalars_result((identity_link,)),
+            _scalars_result((consent,)),
             _scalars_result((role,)),
             _join_result(((member, organisation),)),
             _join_result(((subscription, plan),)),
@@ -121,6 +128,14 @@ async def should_export_full_account_payload_with_populated_fields() -> None:
             "email": "forestier@example.com",
             "email_verified": True,
             "last_authenticated_at": _NOW.isoformat(),
+        }
+    ]
+    assert result["consents"] == [
+        {
+            "consent_type": "terms",
+            "document_version": "v1",
+            "accepted_at": _NOW.isoformat(),
+            "revoked_at": None,
         }
     ]
     assert result["roles"] == [{"application": "geosylva", "role": "admin"}]
@@ -180,6 +195,7 @@ async def should_export_empty_collections_with_null_optional_fields() -> None:
         side_effect=[
             _scalars_result((identity_link,)),
             _scalars_result(()),
+            _scalars_result(()),
             _join_result(()),
             _join_result(((subscription, plan),)),
             _scalars_result((entitlement,)),
@@ -192,6 +208,7 @@ async def should_export_empty_collections_with_null_optional_fields() -> None:
     result = await service.export(account_id)
 
     assert result["identity_links"][0]["last_authenticated_at"] is None
+    assert result["consents"] == []
     assert result["roles"] == []
     assert result["organisations"] == []
     assert result["subscriptions"][0]["current_period_start"] is None

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Quintessences — post-commit (repo externe) : diag rapide en arrière-plan.
+
+DIAG="__DIAG_RELPATH__"
+
+if [ -f "$DIAG" ]; then
+  python "$DIAG" --root "$(git rev-parse --show-toplevel)" \
+    --mode quick --commit HEAD >/dev/null 2>&1 &
+fi

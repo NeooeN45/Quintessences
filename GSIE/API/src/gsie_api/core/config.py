@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import EmailStr, Field, SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -171,6 +171,8 @@ class Settings(BaseSettings):
             "http://localhost:4000",
             "http://localhost:8080",
             "http://127.0.0.1:4000",
+            "https://quintessences-platform.com",
+            "https://www.quintessences-platform.com",
         ]
     )
     # Limite taille corps de requête (bytes) — défaut 1 MiB (OWASP A04)
@@ -222,7 +224,7 @@ class Settings(BaseSettings):
     migration_database_url: str = ""
     # Pool sizing par worker Gunicorn :
     # workers × (pool_size + max_overflow) = connexions max applicatives.
-    # Doit rester <= db_max_connections - 6 (reserve outbox-worker + admin).
+    # Doit rester <= db_max_connections - 7 (réserve outbox + suppression + admin).
     db_pool_size: int = 4
     db_max_overflow: int = 10
     db_echo: bool = False
@@ -259,6 +261,16 @@ class Settings(BaseSettings):
     data_registry_health_max_concurrency: int = Field(default=1, ge=1, le=4)
     data_registry_health_max_bytes: int = Field(default=1024 * 1024, ge=1024, le=32 * 1024 * 1024)
     data_registry_health_lock_ttl_seconds: int = Field(default=600, ge=120, le=3600)
+    # Finalisation RGPD différée — worker séparé, fermé par défaut hors
+    # déploiement explicitement opéré. Le service Compose dédié le surcharge
+    # à true dans son environnement local/staging.
+    account_deletion_worker_enabled: bool = False
+    account_deletion_batch_size: int = Field(default=10, ge=1, le=1000)
+    account_deletion_poll_interval_seconds: float = Field(default=60.0, ge=1.0, le=3600.0)
+    account_deletion_healthcheck_path: str = str(
+        Path(tempfile.gettempdir()) / "gsie-account-deletion-worker.heartbeat"
+    )
+    account_deletion_healthcheck_max_age_seconds: float = Field(default=120.0, ge=2.0, le=300.0)
     # Rate limit stocké dans Redis (DB 1) pour distribution entre workers
     # En développement/test, "memory://" est utilisé (pas de Redis requis)
     rate_limit_storage_url: str = "memory://"
@@ -338,6 +350,10 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = False
     smtp_starttls: bool = True
     email_sender: str = "noreply@quintessences-platform.com"
+    # Contact public : désactivé par défaut tant que le destinataire réel et
+    # le transport n'ont pas été injectés dans le gestionnaire de secrets.
+    public_contact_enabled: bool = False
+    public_contact_recipient: EmailStr | None = None
     identity_action_code_expire_minutes: int = Field(default=15, ge=5, le=60)
     organisation_invitation_base_url: str = "http://localhost:4000/invitations/accept"
     organisation_invitation_expire_hours: int = Field(default=72, ge=1, le=168)
@@ -441,14 +457,24 @@ class Settings(BaseSettings):
             raise ValueError("SMTP TLS direct et STARTTLS ne peuvent pas être activés ensemble")
         if self.transactional_email_mode == "smtp" and not self.smtp_host.strip():
             raise ValueError("GSIE_SMTP_HOST est requis lorsque les e-mails SMTP sont activés")
+        if self.public_contact_enabled:
+            if self.transactional_email_mode != "smtp":
+                raise ValueError(
+                    "Le contact public exige un transport SMTP transactionnel configuré"
+                )
+            if self.public_contact_recipient is None:
+                raise ValueError("GSIE_PUBLIC_CONTACT_RECIPIENT est requis pour le contact public")
+            turnstile_secret = self.turnstile_secret_key.get_secret_value().strip()
+            if not self.turnstile_enabled or not turnstile_secret:
+                raise ValueError("Turnstile doit être activé pour le contact public")
         # Cohérence pool vs max_connections (toujours vérifié, pas seulement en prod)
         max_app_connections = self.gunicorn_workers * (self.db_pool_size + self.db_max_overflow)
-        # +1 pour outbox-worker, +5 reserve admin
-        if max_app_connections + 6 > self.db_max_connections:
+        # +1 pour outbox-worker, +1 pour account-deletion-worker, +5 reserve admin
+        if max_app_connections + 7 > self.db_max_connections:
             raise ValueError(
                 f"Pool sizing incoherent: {self.gunicorn_workers} workers × "
                 f"{self.db_pool_size + self.db_max_overflow} connexions = "
-                f"{max_app_connections} + 6 reserve > max_connections={self.db_max_connections}"
+                f"{max_app_connections} + 7 reserve > max_connections={self.db_max_connections}"
             )
         # Contrôle valable partout : le dev login ouvre un compte `admin`.
         if (

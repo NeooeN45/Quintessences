@@ -8,7 +8,11 @@
     "dev": "astro dev --port 4100",
     "build": "astro build",
     "preview": "astro preview --port 4100",
-    "check": "astro check"
+    "check": "astro check",
+    "verify:public": "node scripts/verify-public-readiness.mjs",
+    "verify:static": "node scripts/verify-static-links.mjs",
+    "verify:live": "node scripts/verify-live-site.mjs",
+    "deploy:pages": "npm run verify:public && npm run build && npm run verify:static && node scripts/deploy-pages.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.3.0",

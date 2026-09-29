@@ -53,8 +53,10 @@ from gsie_api.engines.recommendation.router import router as recommendation_rout
 from gsie_api.engines.simulation.router import router as simulation_router
 from gsie_api.engines.validation.router import router as validation_router
 from gsie_api.gamification.router import router as gamification_router
+from gsie_api.geosylva.router import router as geosylva_router
 from gsie_api.infrastructure.health import router as health_router
 from gsie_api.organisations.router import router as organisations_router
+from gsie_api.public_contact.router import router as public_contact_router
 from gsie_api.resources.router import router as resources_router
 from gsie_api.shared.middleware import (
     RequestBodyLimitMiddleware,
@@ -109,6 +111,7 @@ _OPENAPI_TAGS = [
     },
     {"name": "health", "description": "Health checks — liveness (/health) et readiness (/ready)"},
     {"name": "metrics", "description": "Prometheus metrics endpoint (/metrics)"},
+    {"name": "public", "description": "Contact public du site Quintessences"},
     {"name": "resources", "description": "CRUD générique — types enregistrés du métamodèle"},
     {
         "name": "data-registry",
@@ -117,6 +120,10 @@ _OPENAPI_TAGS = [
     {
         "name": "sync-geosylva",
         "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
+    },
+    {
+        "name": "geosylva-bff",
+        "description": "Analyses serveur et bibliothèque scientifique pour GeoSylva",
     },
     {"name": "evidence", "description": "Evidence Engine — collecte et validation de sources"},
     {"name": "knowledge", "description": "Knowledge Engine — structuration des connaissances"},
@@ -431,7 +438,9 @@ def create_app() -> FastAPI:
     if _settings.database_role == "test":
         app.include_router(analysis_bundle_router, prefix=_settings.api_v1_prefix)
     app.include_router(organisations_router, prefix=_settings.api_v1_prefix)
+    app.include_router(public_contact_router, prefix=_settings.api_v1_prefix)
     app.include_router(sync_router, prefix=_settings.api_v1_prefix)
+    app.include_router(geosylva_router, prefix=_settings.api_v1_prefix)
     app.include_router(gamification_router, prefix=_settings.api_v1_prefix)
     app.include_router(audit_router, prefix=_settings.api_v1_prefix)
     app.include_router(billing_router, prefix=_settings.api_v1_prefix)

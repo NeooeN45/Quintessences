@@ -15,7 +15,7 @@ logger = get_logger("gsie_api.auth.transactional_email")
 
 
 class TransactionalEmailSender(Protocol):
-    """Contrat de livraison des deux messages de sécurité."""
+    """Contrat de livraison des messages transactionnels et du contact public."""
 
     @property
     def is_configured(self) -> bool: ...
@@ -40,6 +40,8 @@ class TransactionalEmailSender(Protocol):
     ) -> bool: ...
 
     async def send_deletion_cancellation_code(self, email: str, code: str) -> bool: ...
+
+    async def send_contact(self, sender_email: str, category: str, message: str) -> bool: ...
 
 
 class DisabledTransactionalEmailSender:
@@ -76,6 +78,10 @@ class DisabledTransactionalEmailSender:
 
     async def send_deletion_cancellation_code(self, email: str, code: str) -> bool:
         del email, code
+        return False
+
+    async def send_contact(self, sender_email: str, category: str, message: str) -> bool:
+        del sender_email, category, message
         return False
 
 
@@ -163,11 +169,39 @@ class SmtpTransactionalEmailSender:
             purpose="cancel_deletion",
         )
 
-    async def _send(self, email: str, subject: str, body: str, purpose: str) -> bool:
+    async def send_contact(self, sender_email: str, category: str, message: str) -> bool:
+        """Transmet un message public sans l'enregistrer dans GSIE."""
+
+        recipient = self._settings.public_contact_recipient
+        if recipient is None:
+            return False
+        return await self._send(
+            email=str(recipient),
+            subject=f"[Quintessences] Nouveau message — {category}",
+            body=(
+                "Un message a été envoyé depuis le site public Quintessences.\n\n"
+                f"Catégorie : {category}\n"
+                f"Adresse de réponse : {sender_email}\n\n"
+                f"Message :\n{message}\n"
+            ),
+            purpose="public_contact",
+            reply_to=sender_email,
+        )
+
+    async def _send(
+        self,
+        email: str,
+        subject: str,
+        body: str,
+        purpose: str,
+        reply_to: str | None = None,
+    ) -> bool:
         message = EmailMessage()
         message["From"] = self._settings.email_sender
         message["To"] = email
         message["Subject"] = subject
+        if reply_to:
+            message["Reply-To"] = reply_to
         message.set_content(body)
         try:
             await asyncio.to_thread(self._send_sync, message)

@@ -205,6 +205,7 @@ jobs:
         run: |
           mkdir -p tests/perf/results
           uv run pytest tests/unit --cov=gsie_api \
+            --junitxml=tests/perf/results/junit-unit.xml --durations=20 \
             --cov-report=term-missing \
             --cov-report=json:tests/perf/results/coverage-unit.json \
             --cov-fail-under=0
@@ -217,6 +218,7 @@ jobs:
           path: |
             GSIE/API/tests/perf/results/.coverage.unit
             GSIE/API/tests/perf/results/coverage-unit.json
+            GSIE/API/tests/perf/results/junit-unit.xml
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
@@ -295,12 +297,15 @@ jobs:
         run: |
           mkdir -p tests/perf/results
           uv run pytest tests/integration -q --tb=short -v \
+            --junitxml=tests/perf/results/junit-integration.xml --durations=20 \
             --cov=gsie_api \
             --cov-report=term-missing \
             --cov-report=json:tests/perf/results/coverage-integration.json \
             --cov-fail-under=0
         env:
           COVERAGE_FILE: tests/perf/results/.coverage.integration
+          # Active le garde-fou existant : Docker absent ne doit pas produire des skips verts.
+          GSIE_REQUIRE_DOCKER: "1"
           # testcontainers utilise le socket Docker de l'hôte (déjà disponible sur ubuntu-latest)
           TESTCONTAINERS_RYUK_DISABLED: "true"
           GSIE_REQUIRE_MIGRATION_IMAGE: "true"
@@ -313,6 +318,7 @@ jobs:
           path: |
             GSIE/API/tests/perf/results/.coverage.integration
             GSIE/API/tests/perf/results/coverage-integration.json
+            GSIE/API/tests/perf/results/junit-integration.xml
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14

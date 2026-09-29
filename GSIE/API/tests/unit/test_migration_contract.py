@@ -12,7 +12,7 @@ from gsie_api.infrastructure.models import Base
 from gsie_api.seeds.run_seeds import run_seeds
 
 _BASELINE = "20260726_0001"
-_HEAD = "20260823_0051"
+_HEAD = "20260831_0056"
 _LEGACY_TABLES = frozenset(
     {
         "knowledge_mots_cles",
@@ -76,6 +76,7 @@ def test_modeles_legacy_isoles_du_schema_courant() -> None:
         "gsie_billing.plan",
         "gsie_billing.subscription",
         "gsie_billing.entitlement",
+        "gsie_rgpd_identites.geosylva_analysis_job",
     }
     assert expected_new_tables <= set(Base.metadata.tables)
     assert frozenset(LegacyBase.metadata.tables) == _LEGACY_TABLES

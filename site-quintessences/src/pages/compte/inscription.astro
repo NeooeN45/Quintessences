@@ -1,14 +1,16 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import AnimatedHeading from "../../components/AnimatedHeading.tsx";
+import AccountUnavailable from "../../components/AccountUnavailable.astro";
 import RegisterForm from "../../components/RegisterForm.tsx";
+import { PUBLIC_ACCOUNT_ENABLED } from "../../lib/publicConfig";
 ---
 
 <BaseLayout title="Créer un compte" description="Créer un compte Quintessences.">
   <section class="mx-auto max-w-md px-6 py-20">
     <AnimatedHeading client:load lines={[{ text: "Créer un" }, { text: "compte" }]} />
     <div class="mt-10">
-      <RegisterForm client:load />
+      {PUBLIC_ACCOUNT_ENABLED ? <RegisterForm client:load /> : <AccountUnavailable />}
     </div>
   </section>
 </BaseLayout>

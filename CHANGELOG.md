@@ -4,6 +4,400 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [BASELINE CONFORMITE DES EXIGENCES] - 2026-09-29
+
+- Audit baseline global de conformité : 337 exigences croisées avec les
+  preuves disponibles (registre de campagnes, audits, mémoire, code) dans
+  `23_QUALITY_MANAGEMENT/AUDITS/2026-09-29_CONFORMITE_EXIGENCES_BASELINE.md`.
+- Création du registre vivant `23_QUALITY_MANAGEMENT/REGISTRE_CONFORMITE_EXIGENCES.md`
+  : statut par exigence (CONFORME/PARTIEL/NON DÉMARRÉ/NON MESURÉ/BLOQUÉ/
+  DIFFÉRÉ), niveau de preuve maximal N0–N3 et écart résiduel.
+- DEC-000089 proposée : faire du registre la source de vérité unique de
+  conformité, distincte du registre de campagnes de recette.
+- Constat : IDENTITE-001 domaine le plus avancé ; pipeline scientifique
+  GeoSylva non démarré ; Hub et Ignis différés (DEC-000083) ; Pl@ntNet
+  bloqué juridiquement ; aucune preuve staging/production/Play.
+- Modifications documentaires uniquement ; aucun code, aucune exécution.
+
+---
+
+## [PILOTAGE LANCEMENT GEOSYLVA ET PREUVES CI] - 2026-09-07
+
+- Cartographie calculs GeoSylva et DEC-000088 proposé : noyau Kotlin, serveur Python, migration progressive et preuves hors ligne. Vérification locale de 357 tests ciblés Android (23 suites, aucun échec ni ignoré). Audit documentaire ; aucun changement de formule ni de branchement.
+
+- DEC-000087 et revue ciblée offline-first : calcul/persistance locale,
+  synchronisation et correction traçable, notifications, benchmark et packs IA,
+  voix terrain. Contrats à compléter ; aucun modèle ni correction métier activé.
+- DEC-000086 : départ de l'essai par « Démarrer mon essai », activation
+  unique confirmée côté serveur ; documentation uniquement, sans activation réelle.
+- DEC-000085 : essai unique de 14 jours pour l'écosystème, testeurs activés
+  par le Fondateur exemptés et futur mode entreprise sans essai. Règles et
+  critères de recette documentés ; aucune activation ni modification du billing.
+- DEC-000084 : clarification 3.0 interface / 3.1 commercialisable et modèle
+  gratuit avec abonnement, selon le Fondateur.
+- GEO-005 étendu avec lots de lancement, critères, stratégie CI/E2E et
+  parcours d'abonnement ; mémoire et roadmap liées au même plan.
+- CI serveur : JUnit unitaire/intégration archivé avec la couverture,
+  20 tests les plus lents affichés, garde existant GSIE_REQUIRE_DOCKER activé.
+- Validation : 25 tests ciblés réussis, JUnit local généré. Configuration
+  synthétique de contact requise ; suite complète et Docker non exécutés.
+- Modifications locales ; aucune publication, migration ni exécution GitHub.
+
+---
+
+## [IMPORT PERSISTANT FORGE → GSIE TEST] - 2026-08-31
+
+- Ajout de POST /api/v1/data/analysis-bundles/import et de la CLI dédiée,
+  limités à database_role=test, à un profil allowlisté et aux rôles
+  writer/admin.
+- Persistance sans nouvelle table dans field_intake, en quarantaine, avec
+  payload canonique, empreinte SHA-256, idempotence sur bundle_id et gestion
+  des courses concurrentes par contrainte unique/savepoint.
+- Les bundles analysis_bundle restent exclus de l'hydratation jusqu'à une
+  promotion scientifique dédiée ; la production demeure fermée.
+
+---
+
+## [CONTRAT BUNDLE D'ANALYSE FORGE → GSIE] - 2026-08-31
+
+- Ajout du contrat versionné `forge_analysis_bundle.v1` pour transporter des
+  paramètres normalisés et dérivés sans dépendre de la structure interne des
+  sources ni ajouter une colonne par fournisseur.
+- Ajout du catalogue initial des sources et paramètres, avec TAXREF via GBIF,
+  SoilGrids WCS uniquement, Indigénat Bellifa, IGN et Météo-France.
+- Ajout de la provenance, des niveaux de preuve, de la qualité, de
+  l'incertitude, des méthodes, des dépendances de calcul et de l'empreinte
+  canonique partagée Forge/GSIE.
+- Ajout du validateur GSIE sans réseau ni écriture en base, du gate CLI et d'un
+  exemple interopérable ; le REST bêta SoilGrids est explicitement refusé.
+- Validation : Forge 251/251 tests ; contrat Forge 6/6 ; contrat GSIE 5/5 ;
+  campagne GSIE 3 116 réussis, 371 ignorés et 2 tests PostgreSQL Docker
+  bloqués par l'absence du démon Docker local.
+
+---
+
+## [CORRECTION ICÔNE GEOSYLVA] - 2026-08-30
+
+- La ressource `app_icon.png` est maintenant strictement identique au fichier
+  fondateur `Geosylva.png` fourni dans Downloads.
+- Les variantes adaptatives jour et nuit utilisent la même feuille ; l'ancien
+  vecteur d'arbre blanc n'est plus sélectionné en thème sombre.
+
+---
+
+## [MIGRATION PEDOLOGY SOILGRIDS WCS] - 2026-08-30
+
+- Migration du chemin actif `PedologyEngine` vers le client WCS SoilGrids
+  qualifié (`GetCoverage` borné, GeoTIFF `int16`, conversions officielles et
+  unités explicites) ; aucun appel REST bêta ne subsiste dans ce chemin.
+- Conservation d’une façade de compatibilité historique, désormais
+  exclusivement déléguée au WCS, et indication `soilgrids-wcs` exposée par la
+  route de version du moteur.
+- Ajout de la dépendance Rasterio et de `libexpat1` dans l’image runtime afin
+  que le décodage GeoTIFF soit disponible dans le conteneur de production.
+- Contrôles ajoutés pour les erreurs WCS, le NoData, le type GeoTIFF, la
+  projection ponctuelle, l’allowlist, l’invariant anti-REST et la mutation.
+  TAXREF et Indigénat Bellifa restent raccordés par leurs adapters Registry
+  qualifiés.
+- FETCH, téléchargement fournisseur et promotion restent fermés ; cette
+  migration ne crée ni DataAsset ni preuve de SLO fournisseur.
+
+---
+
+## [AUDIT DE COUVERTURE GSIE + FORGE] - 2026-08-30
+
+- Lecture croisée des contrats et de la documentation Forge, Data Registry,
+  sourcing, droits, handoff, GSIE-Bench et des 14 moteurs avant évolution.
+- Ajout d'une matrice exhaustive et déterministe des 23 sources, avec
+  distinction entre requête, ingestion, handoff Forge, métadonnées, TDM,
+  partenariat, blocage et branchement manquant.
+- Ajout de l'auditeur sans réseau `scripts/audit_source_coverage.py` et de
+  quatre tests unitaires ; Ruff passe.
+- L'audit reste bloquant sur `soilgrids` : l'adapter présent n'est pas lié à la
+  voie WCS autorisée et ne peut donc pas être compté comme opérationnel.
+
+## [RECETTE API COMPTES RGPD] - 2026-08-29
+
+- Reconstruction et redémarrage de l'image API de test après correction du
+  contexte RLS des routes de consentement et de l'export RGPD.
+- Scénario réel réussi sur deux comptes synthétiques : création locale (`201`),
+  acceptation `terms` et `privacy` (`201`), lecture (`200`), révocation avec
+  historique (`200`), export avec deux consentements (`200`), vérification
+  e-mail par Mailpit (`202` puis `200`), demande de suppression (`202`),
+  annulation par code e-mail (`200`) et reconnexion restaurée (`200`).
+- L'export du compte B ne contient pas l'adresse du compte A et ne reçoit
+  aucun consentement ; les identifiants de compte sont distincts.
+- La capacité Google est explicitement `not_configured` ; le nonce est créé
+  (`201`) et un faux jeton est refusé en `503`. Le chemin Google réel reste
+  ouvert jusqu'à la configuration des identifiants OAuth.
+- Décision `DEC-000077` ajoutée pour tracer la réutilisation de
+  `get_db_user_rls` et l'inclusion des consentements dans l'export.
+
+---
+
+## [AUDIT G0 — RÉCONCILIATION GEOSYLVA] - 2026-08-29
+
+- Première matrice technique des routes, écrans, calculs, entités Room,
+  stockages locaux, endpoints et données personnelles.
+- Premier contrôle G0 : S25 Ultra détecté par ADB avec GeoSylva 3.0.0 installé ;
+  l’environnement API de test n’était alors pas chargé dans Compose.
+- Après remédiation, le stack `gsie-test`, la matrice approuvée, le README Room
+  réaligné et les WIP concurrents enregistrés permettent de clôturer G0 pour la
+  réconciliation uniquement ; G1 et G2 restent ouverts.
+- Docker Desktop a été rétabli par déplacement réversible des seuls répertoires
+  de sockets corrompus et désactivation du composant Inference Manager ; les
+  services Compose, `/health` et `/ready` répondent de nouveau correctement.
+- Correction du client Kotlin : une session expirée tente désormais une rotation
+  avant de relire le profil ; un refresh invalide purge la session locale et
+  l’écran Compte revient à `Aucun compte connecté`, sans faux bandeau d’e-mail
+  ou de mot de passe incorrect.
+- Création d’une route native dédiée GeoSylva pour l’inscription : le bouton
+  depuis la connexion ouvre `RegisterScreen` dans l’application, sans Chrome ni
+  formulaire web dupliqué. Le formulaire réutilise le ViewModel, le dépôt
+  d’identité et la validation existants ; il ajoute le nom affiché facultatif,
+  la confirmation du mot de passe et une aide locale de robustesse.
+- Build propre `assembleDebug` réussie puis APK installé par ADB sur le S25 Ultra
+  avec conservation des données ; la preuve UI de l’état déconnecté puis de la
+  page native d’inscription est établie. Le formulaire vide est refusé par le
+  garde-fou local. La création réelle avec adresse de test et le raccordement
+  RGPD au moment de l’inscription restent à recetter.
+- Rapport : `23_QUALITY_MANAGEMENT/AUDITS/2026-08-29_G0_RECONCILIATION_GEOSYLVA.md`.
+
+---
+
+## [V1 — PILOTE GEOSYLVA ET CYCLE DE COMPTE RGPD] - 2026-08-26
+
+- DEC-000074 réordonne le chemin critique : GeoSylva 3.0 → 3.1 sur Samsung
+  S25 Ultra, compte Quintessences et recette RGPD par ADB, Data Acquisition
+  Fabric, verticale GeoSylva ↔ GSIE, puis boucle d’amélioration.
+- Ajout de `GEO-005`, document opérationnel unique qui trace les gates G0 à G5,
+  les responsabilités Claude/Codex, le registre des données du compte, la
+  restauration, l’export, la suppression et la matrice de tests CPT.
+- L’isolation multi-compte locale reste une porte ouverte ; la migration 0055
+  et la fonction SQL de finalisation serveur sont prouvées sur un compte
+  synthétique dédié (CPT-16), tandis que le smoke test opératoire du worker
+  reste à faire.
+- Ignis reste au portefeuille mais sort du chemin critique de la V1.
+- Installation des Android Platform-Tools officiels 36.0.0 pour la recette ADB ;
+  le Samsung S25 Ultra est désormais autorisé et listé sur le profil Android
+  principal, avec GeoSylva 3.0.0 installé et lancé.
+- Validation sur S25 par ADB de la connexion locale GeoSylva, de l'affichage du
+  profil, de la déconnexion et de la non-réinjection de session après relance.
+- Validation API du parcours e-mail : vérification par code (`202` puis `200`),
+  export, sessions et récupération de mot de passe ; l'ancien mot de passe est
+  refusé (`401`) après rotation et le nouveau est accepté (`200`).
+- Validation de la demande puis de l'annulation d'une suppression différée
+  (`202` puis `200`) et des consentements versionnés (`201`, historique conservé,
+  révocation `200`). Correction des trois routes de consentement afin qu'elles
+  injectent le contexte RLS du compte ; une révocation sans effet silencieux est
+  ainsi évitée.
+- Ajout de la migration `20260826_0055` et du worker
+  `gsie_api.account_deletion_worker` : finalisation RGPD par lots, tombstone
+  désactivé, purge des données d'identité/billing/synchronisation et masquage
+  des e-mails historiques d’audit, sans casser les organisations partagées.
+- Preuve CPT-16 : un compte synthétique arrivé à échéance devient un tombstone
+  désactivé ; les identités, sessions, secrets, droits, données GeoSylva,
+  facturation et appartenance d’organisation sont absents, et les e-mails
+  historiques de l’audit sont masqués. Rapport :
+  `23_QUALITY_MANAGEMENT/AUDITS/2026-08-26_G2_CPT16_FINALISATION_COMPTE_SYNTHETIQUE.md`.
+- Extension du client Kotlin GeoSylva aux contrats de compte déjà exposés par
+  l'API : export RGPD, consentements, changement d'e-mail et de mot de passe,
+  suppression différée/annulation, sessions et MFA. L'APK debug est compilé
+  et installé sur le Samsung S25 Ultra.
+- Les gates Google, restauration, preuve de suppression finale, purge locale complète et
+  isolation multi-compte restent ouverts ; cette recette ne constitue pas une
+  validation RGPD complète.
+
+---
+
+## [DATA REGISTRY — HANDOFF FORGE → GSIE IFN] - 2026-08-26
+
+- Ajout du contrat versionné `gsie_acquisition_handoff.v1` entre Forge et le
+  Data Registry GSIE ; il réutilise `DatasetManifest` et n'introduit ni
+  registre, ni fournisseur, ni base parallèle.
+- Le connecteur IFN existant produit désormais la preuve de l'archive brute :
+  chemin contrôlé, taille, type MIME, URL originale et SHA-256 ; l'extraction
+  refuse les chemins traversants et les liens symboliques.
+- Ajout de l'importeur GSIE en dry-run ou application : vérification du staging,
+  archivage transactionnel sous `raw/fetch/forge/`, clé déterministe,
+  rejeu idempotent et nettoyage en cas d'échec PostgreSQL.
+- La première verticale reste `discovered` et conserve l'avertissement
+  scientifique IFN ; aucune promotion vers staging, production ou Gold n'est
+  automatique.
+- Validation : 22 tests Forge, 3 tests API ciblés, Ruff et mypy strict propres
+  sur les fichiers touchés. Aucun téléchargement réel ni déploiement n'a été
+  exécuté.
+
+---
+
+## [DATA REGISTRY — SOILGRIDS REPLAY] - 2026-08-25
+
+- Ajout de `QualityAssessmentPersistenceService`, persistance append-only des
+  rapports de qualité avec idempotence sur `target_id`, `assessment_run_id` et
+  dimension ; toute divergence au rejeu est refusée.
+- Le vertical de preuve rejoue l'actif SoilGrids autorisé par DEC-000061 sans
+  nouvel appel fournisseur : manifeste `archive_copy`, actif RAW référencé,
+  cinq dimensions de qualité persistées, rejeu sans doublon.
+- La promotion reste refusée avec `SOURCE_NOT_VALIDATED` tant que la version
+  Registry demeure `discovered` ; aucune promotion implicite vers staging ou
+  production.
+- Tests : 5 unitaires de persistance et 1 intégration PostgreSQL/PostGIS
+  passants. Aucun nouveau modèle ni fournisseur n'est activé.
+
+---
+
+## [SITE PUBLIC — QUALITÉ LOCALE ET DÉPLOIEMENT PRÉPARÉS] - 2026-08-23
+
+- Complétion des métadonnées sociales et SEO de base, des libellés ARIA des
+  cartes d'applications et du pied de page sans liens externes non vérifiés.
+- Maintien de la Galerie en mode fermé : la collection de contenu vide n'est
+  plus chargée par Astro tant que le processus de publication vie privée n'est
+  pas défini.
+- Ajout de `npm run deploy:pages`, qui impose d'abord `verify:public`,
+  reconstruit `dist/` et exige `CLOUDFLARE_PAGES_PROJECT` avant d'appeler
+  Wrangler ; aucun déploiement n'a été exécuté.
+- Ajout de `npm run verify:static`, qui vérifie les liens internes réellement
+  produits dans `dist/` ; `deploy:pages` l'exécute avant d'appeler Wrangler.
+- Renforcement de `verify:public` : la garde vérifie maintenant aussi la
+  présence des sections juridiques essentielles (éditeur, hébergeur, bases,
+  destinataires, conservation et droits).
+- Révision de la politique de confidentialité et des CGU : distinction entre
+  consultation publique, contact, compte et prestataires ; les bases,
+  conservations et garanties encore inconnues restent explicitement bloquantes.
+- Fermeture fail-closed de la zone Compte dans les builds publics via
+  `PUBLIC_ACCOUNT_ENABLED` : aucun formulaire d'authentification web n'est
+  exposé par défaut tant que le stockage de session n'est pas validé.
+- La porte `verify:public` refuse désormais aussi toute tentative de
+  déploiement avec `PUBLIC_ACCOUNT_ENABLED=true` avant l'approbation sécurité.
+- Ajout de `site-quintessences/.env.example` pour rendre explicites l'origine
+  API et le verrou Compte sans introduire de secret côté navigateur.
+- Renforcement de `verify:static` : le build public doit aussi prouver l'absence
+  du lien Compte et des îlots d'authentification lorsque le verrou est actif.
+- Ajout de `npm run verify:live` pour distinguer la version effectivement servie
+  par Cloudflare de l'artefact local ; l'audit live actuel révèle l'ancienne
+  landing, des fichiers publics retombant en HTML et une API en 530.
+- Ajout de `site-quintessences/RELEASE_CHECKLIST.md` : préconditions légales,
+  préparation de l'artefact, déploiement contrôlé, recette live et rollback.
+- Validation : `astro check` à 0 erreur, 0 avertissement et 0 hint ; build
+  réussi sur 13 routes sans avertissement applicatif ; 13 fichiers HTML et
+  leurs liens internes vérifiés. Les données légales réelles restent
+  nécessaires pour franchir la porte de publication.
+
+---
+
+## [SITE PUBLIC — CONTACT CONDITIONNEL LIVRÉ] - 2026-08-23
+
+- Ajout de `POST /api/v1/public/contact` dans l'API GSIE : validation Pydantic
+  bornée, Turnstile côté serveur, champ piège, limite de 5 envois par minute et
+  erreurs génériques sans divulgation du destinataire interne.
+- Extension du transport SMTP transactionnel : message transmis au
+  destinataire configuré avec `Reply-To` visiteur, sans persistance dans GSIE.
+- Le formulaire Astro transmet désormais réellement l'adresse, la catégorie et
+  le message ; le double usage d'un jeton Turnstile a été supprimé.
+- Ajout de `PUBLIC_API_ORIGIN` pour que les builds de développement et de
+  staging ciblent leur API propre, sans pointer implicitement vers la production.
+- Ajout des paramètres `GSIE_PUBLIC_CONTACT_ENABLED` et
+  `GSIE_PUBLIC_CONTACT_RECIPIENT`, avec activation fail-closed tant que SMTP,
+  Turnstile, destinataire et politique de conservation ne sont pas validés.
+- Validation : 16 tests API ciblés passants, Ruff propre, compilation Python
+  réussie ; `astro check` à 0 erreur et build réussi sur 13 routes.
+
+---
+
+## [SITE PUBLIC — SOCLE DE PRODUCTION] - 2026-08-23
+
+- Ajout de `robots.txt`, d'un sitemap dynamique `/sitemap.xml`, des
+  en-têtes de sécurité Cloudflare Pages et de `/.well-known/security.txt`.
+- Ajout de `npm run verify:public`, garde qui bloque les placeholders
+  juridiques et les fichiers publics indispensables absents.
+- Correction de la politique de confidentialité : elle décrit désormais
+  fidèlement le fait que le formulaire de contact ne transmet ni ne conserve
+  encore les messages.
+- Validation : `astro check` à 0 erreur, build réussi sur 13 routes et
+  artefacts publics présents dans `dist/`.
+- La publication reste bloquée jusqu'à réception et validation des données
+  légales réelles de l'éditeur.
+
+---
+
+## [SITE PUBLIC — PREMIÈRE PASSE UX] - 2026-08-23
+
+- Navigation mobile complète ajoutée au site Astro (`site-quintessences/`) :
+  les cinq rubriques et le compte restent accessibles sur petit écran.
+- Parcours d'accueil clarifié : appels à l'action internes vers la chaîne GSIE
+  et les applications, repères éditoriaux honnêtes à la place de statistiques
+  publiques non alimentées.
+- Cartes d'applications enrichies pour l'accessibilité (`aria-expanded`,
+  `aria-controls`, état actif de navigation) et focus clavier plus visible.
+- Formulaire de contact rendu transparent sur sa limite actuelle : le
+  routage automatique n'est pas présenté comme livré tant que l'endpoint de
+  transmission n'existe pas.
+- Validation : `astro check` sans erreur (3 hints React préexistants), build
+  Astro réussi sur 13 routes ; la collection Galerie reste vide et signalée.
+
+---
+
+## [FORGE → GSIE TEST — PRÉPARATION FAIL-CLOSED] - 2026-08-18
+
+- Mise en place du tranche préparation serveur décrite par RFC-0041 /
+  DEC-000073 (tous deux restés Draft / Proposé) : aucune invention de
+  règles, qualifications, état global ou provenance.
+- `GSIE/API/src/gsie_api/engines/orchestration/preparation.py` :
+  `StationPreparationService` hydrate la station, sélectionne les règles
+  `accepted` applicables via `KnowledgeEngine.regles_applicables(...)`,
+  charge les qualifications réelles, résout l'état global depuis un
+  `FieldIntake` accepté et fige un `RapportPreparation` immuable
+  (snapshots du contexte, des règles et de l'état global, versions des règles,
+  qualifications, sources et empreintes SHA-256).
+- Codes d'erreur nommés fail-closed : `AUCUNE_REGLE_QUALIFIEE`,
+  `QUALIFICATION_REGLE_MANQUANTE`, `ETAT_GLOBAL_NON_SOURCE`.
+- Endpoint de prévisualisation
+  `GET /api/v1/orchestration/stations/{station_id}/preparation` (lecture
+  seule, RBAC `EngineReadUser`) — n'exécute aucun moteur.
+- Extension du Knowledge Engine : persistance et exposition des
+  qualificateurs de règles via `qualifications_regles(...)`.
+- Bundle Forge typé `gsie_test_preparation.v0.1`
+  (`Forge/src/dataset_forge/gsie_preparation.py`) : règles explicitement
+  qualifiées, état global sourcé, observations, place, identité station.
+  Validation Pydantic `extra="forbid"` ; refuse les doublons de règles,
+  les qualificateurs requis manquants et les horodatages sans fuseau.
+- Importeur GSIE TEST
+  (`GSIE/API/src/gsie_api/data/gsie_test_bundle.py`) : refuse tout
+  `database_role` différent de `"test"`, valide le WKT et le SRID 2154,
+  crée la `Place`, les ressources PROV `Source`/`Citation` primaires, ingère
+  les règles acceptées et crée un `FieldIntake` `accepted` avec état global
+  versionné, source d'origine et empreintes SHA-256. Toute station ou
+  connaissance déjà présente est refusée.
+- CLI `scripts/import_gsie_test_bundle.py` pour import manuel.
+- Tests ciblés : 3 préparation, 4 bundle importeur, 6 Forge bundle, plus
+  1 intégration PostgreSQL/PostGIS ; tous passants. Ruff, formatage et mypy
+  strict OK sur les fichiers touchés.
+- Test d'intégration PostgreSQL/PostGIS ajouté
+  (`tests/integration/test_gsie_test_preparation.py`) — requiert Docker.
+- `.gitignore` : exclusion de `GSIE/API/tests/perf/results/` et
+  `/output/` pour éviter de committer des artefacts générés.
+- Aucune façade GeoSylva, endpoint `station-link`, migration Room ou
+  worker WorkManager n'est livré : ces éléments restent conditionnés à
+  la validation de RFC-0041 / DEC-000073 par le Fondateur.
+
+---
+
+## [R&D WEATHERNext 2 → ATMOS] - 2026-08-18
+
+- Analyse du dépôt officiel WeatherNext `v0.3.0`
+  (`89c4b2a77a1c57b328b909c575550fd2e5aadc9c`) : FGN, grille/mesh, xarray/JAX,
+  rollout, ensembles, CRPS, checkpoints, variantes et licences.
+- Décision R&D proposée : commencer par les flux WeatherNext 2 autorisés
+  (GCS Zarr/BigQuery/Earth Engine), comparer ECMWF/Météo-France et ne pas
+  auto-héberger les poids avant benchmark français, qualification juridique et
+  preuve de coût/latence.
+- Création des architectures Atmos et IGNIS probabiliste, du plan POC,
+  de l'ADR proposée, du Top 20 de technologies scientifiques et de l'horizon
+  multi-domaines (Hydro, forêt, EO, biodiversité, sols, drones, simulation).
+- Aucun modèle, poids, fournisseur ou dataset n'a été intégré au code.
+
+---
+
 ## [CHAÎNE DE RAISONNEMENT — TROIS RFC] - 2026-08-17
 
 - Discussion sur l'amélioration de la chaîne de raisonnement GSIE, à

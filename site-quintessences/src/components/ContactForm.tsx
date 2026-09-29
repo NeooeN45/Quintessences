@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
+
+import { PUBLIC_API_V1 } from "../lib/publicConfig";
 
 // Migration directe du formulaire de landing-quintessences/ (DEC-000055).
 // Le site key Turnstile est public par conception (pas un secret).
 const TURNSTILE_SITE_KEY = "0x4AAAAAAEIpP0qaRpOz5IdW";
-const VERIFY_URL = "https://api.quintessences-platform.com/api/v1/auth/turnstile/verify";
+const CONTACT_URL = `${PUBLIC_API_V1}/public/contact`;
 
 const CATEGORIES = [
   { value: "partenariat", label: "Partenariat" },
@@ -44,36 +46,54 @@ export default function ContactForm() {
     return input?.value?.trim() ?? "";
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setFeedback(null);
     const token = getToken();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
     try {
       if (!token) {
         throw new Error("Veuillez valider le défi Turnstile.");
       }
-      const response = await fetch(VERIFY_URL, {
+      const response = await fetch(CONTACT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({
+          email: formData.get("email"),
+          category: formData.get("category"),
+          message: formData.get("message"),
+          turnstile_token: token,
+          website: formData.get("website") ?? "",
+        }),
       });
-      const data = await response.json();
-      if (!response.ok || !data.valid) {
-        throw new Error("Vérification Turnstile échouée.");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          typeof data.detail === "string"
+            ? data.detail
+            : "Le service de contact est temporairement indisponible. Écrivez directement à contact@quintessences-platform.com.",
+        );
       }
-      setFeedback({ message: "Merci. Votre message est en file d'attente d'intégration.", isError: false });
-      (event.target as HTMLFormElement).reset();
+      setFeedback({
+        message: "Votre message a bien été transmis. Une réponse vous sera envoyée à cette adresse.",
+        isError: false,
+      });
+      form.reset();
     } catch (err) {
-      setFeedback({ message: err instanceof Error ? err.message : "Une erreur est survenue.", isError: true });
+      setFeedback({
+        message: err instanceof Error ? err.message : "Une erreur est survenue.",
+        isError: true,
+      });
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mx-auto max-w-lg space-y-4">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-[var(--color-fg-200)]">
           Adresse e-mail
@@ -87,6 +107,11 @@ export default function ContactForm() {
           placeholder="vous@exemple.com"
           className="mt-1.5 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-100)] px-3 py-2 text-sm text-[var(--color-fg-100)] outline-none focus-visible:border-[var(--color-signature)]"
         />
+      </div>
+
+      <div aria-hidden="true" className="sr-only">
+        <label htmlFor="website">Ne pas remplir ce champ</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
       <div>

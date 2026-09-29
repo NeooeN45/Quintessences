@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { loginPassword, friendlyErrorMessage } from "../lib/authApi.ts";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAAEIpP0qaRpOz5IdW";
@@ -19,7 +19,7 @@ export default function LoginForm() {
     };
   }, []);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError(null);

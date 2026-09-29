@@ -394,6 +394,86 @@ services:
           cpus: "0.5"
           memory: 256M
 
+  # Worker des analyses GeoSylva — file SQL durable, aucun accès mobile direct.
+  geosylva-analysis-worker:
+    build:
+      context: ../..
+      dockerfile: GSIE/API/Dockerfile
+    command: ["python", "-m", "gsie_api.geosylva.worker"]
+    environment:
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
+      GSIE_DATABASE_ROLE: ${GSIE_DATABASE_ROLE:-development}
+      GSIE_DATA_NAMESPACE: ${GSIE_DATA_NAMESPACE:-gsie}
+      GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      GSIE_GEOSYLVA_WORKER_HEALTHCHECK_PATH: /tmp/gsie-geosylva-worker.heartbeat
+      GSIE_GEOSYLVA_WORKER_HEALTHCHECK_MAX_AGE_SECONDS: ${GSIE_GEOSYLVA_WORKER_HEALTHCHECK_MAX_AGE_SECONDS:-30}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os; from gsie_api.outbox_health import worker_heartbeat_is_fresh; raise SystemExit(0 if worker_heartbeat_is_fresh(os.environ.get('GSIE_GEOSYLVA_WORKER_HEALTHCHECK_PATH'), max_age_seconds=float(os.environ.get('GSIE_GEOSYLVA_WORKER_HEALTHCHECK_MAX_AGE_SECONDS', '30'))) else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  # Worker de finalisation RGPD — aucune route HTTP, purge uniquement après
+  # le délai de grâce et via la fonction PostgreSQL SECURITY DEFINER.
+  account-deletion-worker:
+    build:
+      context: ../..
+      dockerfile: GSIE/API/Dockerfile
+    command: ["python", "-m", "gsie_api.account_deletion_worker"]
+    environment:
+      GSIE_ENVIRONMENT: ${GSIE_ENVIRONMENT:?GSIE_ENVIRONMENT requis — development, staging ou production}
+      GSIE_DATABASE_ROLE: ${GSIE_DATABASE_ROLE:-development}
+      GSIE_DATA_NAMESPACE: ${GSIE_DATA_NAMESPACE:-gsie}
+      GSIE_LOG_LEVEL: ${GSIE_LOG_LEVEL:-INFO}
+      GSIE_DATABASE_URL: postgresql+asyncpg://${GSIE_API_DB_USER:-gsie_api}:${GSIE_API_DB_PASSWORD}@db:5432/${GSIE_DB_NAME:-gsie}
+      # Le service dédié est activé par défaut dès qu'il est démarré ; le
+      # réglage reste explicite pour les environnements opérés.
+      GSIE_ACCOUNT_DELETION_WORKER_ENABLED: ${GSIE_ACCOUNT_DELETION_WORKER_ENABLED:-true}
+      GSIE_ACCOUNT_DELETION_BATCH_SIZE: ${GSIE_ACCOUNT_DELETION_BATCH_SIZE:-10}
+      GSIE_ACCOUNT_DELETION_POLL_INTERVAL_SECONDS: ${GSIE_ACCOUNT_DELETION_POLL_INTERVAL_SECONDS:-60}
+      GSIE_ACCOUNT_DELETION_HEALTHCHECK_PATH: /tmp/gsie-account-deletion-worker.heartbeat
+      GSIE_ACCOUNT_DELETION_HEALTHCHECK_MAX_AGE_SECONDS: ${GSIE_ACCOUNT_DELETION_HEALTHCHECK_MAX_AGE_SECONDS:-120}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os; from gsie_api.outbox_health import worker_heartbeat_is_fresh; raise SystemExit(0 if worker_heartbeat_is_fresh(os.environ.get('GSIE_ACCOUNT_DELETION_HEALTHCHECK_PATH'), max_age_seconds=float(os.environ.get('GSIE_ACCOUNT_DELETION_HEALTHCHECK_MAX_AGE_SECONDS', '120'))) else 1)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
   # Boîte SMTP locale pour tester vérification d'adresse et mot de passe oublié.
   # Interface strictement locale : http://127.0.0.1:8025
   mailpit:

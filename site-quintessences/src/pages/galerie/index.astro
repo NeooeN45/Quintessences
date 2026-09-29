@@ -1,13 +1,22 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import AnimatedHeading from "../../components/AnimatedHeading.tsx";
-import { getCollection } from "astro:content";
 
 // SITE-F-018 à SITE-F-021 : aucun média n'apparaît sans publication
 // manuelle explicite. Le processus de vérification vie privée (§9
 // SITE-001) n'est pas encore défini — cette zone reste en
 // construction tant qu'il ne l'est pas (DEC-000057 §2).
-const entries = await getCollection("galerie");
+type GalleryEntry = {
+  data: {
+    title: string;
+    context: string;
+    mediaUrl: string;
+    isDemo: boolean;
+  };
+};
+
+// Aucun média n'est chargé tant que la collection Galerie n'est pas autorisée.
+const entries: GalleryEntry[] = [];
 ---
 
 <BaseLayout title="Galerie" description="Images et vidéos de démonstration Quintessences.">

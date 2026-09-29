@@ -23,18 +23,6 @@ const actualites = defineCollection({
   }),
 });
 
-// SITE-F-018 à SITE-F-021 : chaque média porte une légende, une date,
-// un contexte et une mention explicite si ce n'est pas une opération réelle.
-const galerie = defineCollection({
-  type: "content",
-  schema: z.object({
-    title: z.string(),
-    date: z.coerce.date(),
-    context: z.string(),
-    app: z.string().optional(),
-    mediaUrl: z.string(),
-    isDemo: z.boolean(),
-  }),
-});
-
-export const collections = { actualites, galerie };
+// La collection Galerie reste volontairement absente tant que le processus
+// de vérification vie privée et de publication des médias n'est pas validé.
+export const collections = { actualites };

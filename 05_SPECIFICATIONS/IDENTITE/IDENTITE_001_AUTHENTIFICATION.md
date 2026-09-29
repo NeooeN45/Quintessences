@@ -4,7 +4,7 @@
 |---|---|
 | **Identifiant** | IDENTITE-001 |
 | **Statut** | Draft |
-| **Version** | 1.3.0 |
+| **Version** | 1.4.0 |
 | **Date** | 2026-08-03 |
 | **Auteur** | Direction technique (assistée par Codex) |
 | **Décision** | DEC-000044, DEC-000045, DEC-000046, DEC-000058 |
@@ -100,16 +100,48 @@ GSIE et d'une vérification serveur sur chaque requête.
 
 ## 6. Hors périmètre de la tranche initiale
 
-- authentification multifacteur et passkeys ;
+- passkeys et fédération OIDC/SAML d'entreprise ;
 - administration des organisations ;
-- fédération OIDC/SAML ;
 - usage de logos institutionnels — institutions partenaires (ONF, CNPF,
   collectivités), dont l'usage engage une relation contractuelle. Les logos
   des fournisseurs d'identité en sont exclus : leurs règles de marque
   imposent au contraire la présence du logo (DEC-000058) ;
 - synchronisation hors-ligne de nouveaux comptes.
 
-## 7. Traçabilité
+L'authentification multifacteur TOTP existe désormais côté API et doit être
+recettée dans la campagne V1. Elle n'est pas une condition pour créer un
+compte utilisateur standard, mais toute activation doit passer par les
+endpoints MFA, une preuve d'étape renforcée et des secrets protégés.
+
+## 7. Complément V1 — cycle de vie, portabilité et effacement
+
+La V1 GeoSylva ajoute aux exigences initiales les parcours suivants :
+
+| ID | Exigence | Critère d'acceptation |
+|---|---|---|
+| ID-F-021 | L'utilisateur peut consulter ses sessions et les révoquer | La session courante, une autre session et la révocation globale sont testées sur appareil réel |
+| ID-F-022 | L'utilisateur peut exporter ses données personnelles | L'export est lisible, daté, sans mot de passe, hash, token, nonce ou secret, et est comparé à l'inventaire des données |
+| ID-F-023 | L'utilisateur peut accepter et retirer séparément les consentements versionnés | `terms`, `privacy` et `marketing` restent distincts et historisés |
+| ID-F-024 | L'utilisateur peut demander la suppression différée du compte | Le compte passe en `pending_deletion`, les sessions sont révoquées et le délai est tracé |
+| ID-F-025 | L'utilisateur peut annuler une suppression avant l'échéance | Le code est à usage unique, expirant et ne réactive que le compte concerné |
+| ID-F-026 | La suppression arrivée à échéance est finalisée | Le compte, les liens, les données liées, les caches, les files et les fichiers concernés sont purgés ou anonymisés selon une politique documentée |
+| ID-F-027 | La récupération du compte est distincte de la restauration des données | Reset de mot de passe, annulation de suppression et restauration de sauvegarde possèdent chacun un test et une preuve |
+| ID-F-028 | Les données GeoSylva sont isolées par compte ou espace de travail | Deux comptes sur le même appareil ne peuvent ni lire, ni exporter, ni purger les données de l'autre |
+
+La finalisation serveur est une anonymisation irréversible, et non une
+suppression physique de la ligne `user_account` : les organisations partagées
+et leurs invitations portent des références `RESTRICT`. Le worker dédié
+purge les liens d'identité, secrets, sessions, droits personnels, consentements,
+répliques `geosylva_parcels` et autres données exclusivement rattachées au
+compte, puis conserve un tombstone technique désactivé. Les journaux d'audit
+nécessaires à la sécurité restent append-only ; les adresses e-mail historiques
+y sont masquées. Une sauvegarde PostgreSQL ou locale n'est jamais un mécanisme
+de réactivation du tombstone.
+
+Ces exigences sont détaillées dans
+`05_SPECIFICATIONS/GEOSYLVA/GEO_005_V1_PILOTAGE_GEOSYLVA_GSIE.md`.
+
+## 8. Traçabilité
 
 | Exigences | Source |
 |---|---|
@@ -117,8 +149,9 @@ GSIE et d'une vérification serveur sur chaque requête.
 | ID-S-001 à ID-S-010 | RFC-0032 §2.2, §2.3 et §2.6 |
 | ID-D-001 à ID-D-006 | GSIE-ARCH-IDENTITE-001 §3 et §4 |
 | ID-F-017 à ID-F-020, ID-S-015 à ID-S-017, ID-D-007 | DEC-000046 |
+| ID-F-021 à ID-F-028 | DEC-000074 et GEO-005 |
 
-## 8. Historique des modifications
+## 9. Historique des modifications
 
 | Date | Version | Modification |
 |---|---|---|
@@ -126,3 +159,5 @@ GSIE et d'une vérification serveur sur chaque requête.
 | 2026-08-03 | 1.1.0 | Parcours GeoSylva et diagnostic développeur issus de DEC-000045 |
 | 2026-08-03 | 1.2.0 | Profil, vérification e-mail, récupération et révocation issus de DEC-000046 |
 | 2026-08-09 | 1.3.0 | Ordre de l'écran de connexion GeoSylva, affichage conditionnel de la connexion professionnelle et précision sur les logos, issus de DEC-000058 |
+| 2026-08-26 | 1.4.0 | Ajout du cycle V1 sessions, export, consentements, suppression, restauration et isolation GeoSylva, issus de DEC-000074 |
+| 2026-08-26 | 1.5.0 | Finalisation différée, anonymisation irréversible et worker serveur issus de DEC-000075 |

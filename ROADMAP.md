@@ -1,5 +1,229 @@
 # ROADMAP — Quintessences / GSIE
 
+> **Lecture rapide (2026-09-02).** Le chemin critique V1 est G1 → G5
+> (DEC-000074, GEO-005). `DEC-000083` (Proposé) gèle en « Horizon 2 » les
+> chantiers Hub Unreal, Mesh, LLM, LoRa, WeatherNext, applications
+> secondaires et Orchestre : leurs sections ci-dessous restent à titre de
+> référence et ne sont pas des travaux actifs tant que le gel n'est pas levé.
+> Voir `23_QUALITY_MANAGEMENT/AUDITS/2026-09-02_ANALYSE_ETAT_ET_VISION.md`.
+
+## Lancement GeoSylva — mise à jour du 2026-09-07
+
+- Cartographie des calculs réalisée : [audit et proposition de stack](23_QUALITY_MANAGEMENT/AUDITS/2026-09-07_GEOSYLVA_CALCULS_CARTOGRAPHIE.md), DEC-000088 proposé. 357 tests Android ciblés passent. Prochaine tranche proposée : fiabiliser le cubage V2 puis prouver un parcours calcul → run durable → synthèse → vérification, en suivant la migration V2 existante.
+
+DEC-000084 précise 3.0 = interface terminée, 3.1 = application fiable et
+commercialisable, gratuite avec abonnement. Le pilotage reste dans GEO-005 §11.
+
+- [x] Clarifier les jalons, les lots L0–L6 et les critères de sortie.
+- [x] Ajouter JUnit, durées pytest et garde Docker au workflow serveur local.
+- [x] Vérifier 25 tests ciblés et la génération locale du rapport JUnit.
+- [ ] Reproduire la CI complète sur les snapshots candidats des deux dépôts.
+- [ ] Recetter les comptes et l'isolation ; valider les migrations depuis 2.8.
+- [ ] Prouver le parcours mobile hors ligne → reprise → GSIE → résultat sourcé.
+- [ ] DEC-000087 : correction serveur versionnée ciblant compte/objet/révision,
+  recalcul des synthèses et journal utilisateur récupérable sans push.
+- [ ] Qualifier le benchmark matériel et les packs IA séparément du socle local ;
+  évaluer la voix métier mains libres et préciser le contrat de confirmation.
+- [ ] Recetter le cycle Google Play abonnement et les droits hors ligne.
+- [ ] Implémenter et prouver DEC-000085 : essai global unique de 14 jours,
+  exceptions testeur administrées et contrats du futur accès entreprise sans essai.
+- [ ] Appliquer DEC-000086 : activation explicite « Démarrer mon essai »,
+  idempotente côté GSIE ; installation et connexion sans démarrage d'essai.
+- [ ] Préparer staging distant, restauration, alertes et candidate Play.
+
+Le serveur TEST reste Docker local selon le Fondateur. Aucun gate produit,
+déploiement ou succès GitHub n'est acquis par cette mise à jour documentaire.
+
+## Suites de l'analyse d'état — 2026-09-02
+
+- [x] Corriger la collision `DEC-000078` (→ `DEC-000082`) et aligner
+  `GSIE/API/AGENTS.md`.
+- [x] Nettoyer la racine (rapports de sécurité → `AUDITS/`, binaires →
+  `tmp/`, `.gitignore`).
+- [ ] Valider ou amender `DEC-000083` (gel Horizon 2) et réordonner ce
+  fichier en conséquence.
+- [ ] Valider ou amender le format tableau de bord
+  (`22_PROJECT_MEMORY/DRAFT_PROJECT_MEMORY_TABLEAU_DE_BORD.md`) ; si validé,
+  déplacer le journal actuel vers `22_PROJECT_MEMORY/JOURNAL_2026-07_2026-08.md`.
+- [ ] Scinder et committer les 83 fichiers non suivis par sujet ; renommer ou
+  fermer `feat/schemas-de-domaine`.
+- [ ] Identifier et solliciter deux experts forestiers indépendants pour la
+  relecture GSIE-Bench Gold (RFC-0039, DEC-000067).
+- [ ] Exécuter une première acquisition FETCH réelle bornée sur SoilGrids WCS
+  jusqu'à Silver (G3, tranche 1).
+- [ ] Identifier une structure partenaire pour une semaine de terrain GeoSylva
+  3.1 (critère de sortie V1).
+- [ ] Inventorier et classer les 371 tests ignorés ; fusionner ou fermer les
+  six branches dependabot.
+
+## Fiabilisation transverse GSIE + Forge — état de preuve au 2026-08-30
+
+- [x] Lire et relier les contrats Data Registry, Forge, sourcing, licences,
+  handoff, moteurs et GSIE-Bench avant modification.
+- [x] Ajouter une matrice exécutable couvrant les 23 sources du registre :
+  requête, handoff Forge, métadonnées, TDM, partenariat, blocage et sources
+  ouvertes encore non câblées.
+- [x] Rendre l'audit sans réseau et bloquant pour les adapters orphelins ou
+  reliés à une source interdite.
+- [x] Prouver la matrice par 4 tests unitaires et Ruff.
+- [x] Migrer le chemin actif `soilgrids` vers l’adapter WCS autorisé et
+  documenter séparément licence, couverture, version, checksum et promotion.
+  Le REST bêta n’est plus appelé ; FETCH et promotion restent fermés tant que
+  leur preuve opérationnelle dédiée n’est pas validée.
+- [x] Raccorder proprement les adapters Registry déjà qualifiés de TAXREF et
+  d’Indigénat Bellifa, avec leur contrat de provenance et leur handoff
+  versionné ; leur branchement ne vaut pas activation FETCH.
+- [ ] Réaliser la campagne grande échelle sur infrastructure dédiée :
+  PostgreSQL/PostGIS/pgvector, object storage, Redis, 14 moteurs, Forge,
+  scénarios GSIE-Bench Open/Silver, pannes, rejouabilité et absence de fuite
+  train/évaluation. Une preuve locale ou un build ne vaut pas SLO de
+  production.
+
+### Contrat extensible Forge → GSIE — 2026-08-31
+
+- [x] Définir `forge_analysis_bundle.v1` et son exporteur Forge.
+- [x] Ajouter le catalogue extensible des sources et paramètres, sans
+  migration de base spécifique à un fournisseur.
+- [x] Ajouter la provenance, la qualité, l'incertitude, les méthodes et le
+  graphe de dépendances des features dérivées.
+- [x] Raccorder le validateur GSIE sans réseau, l'empreinte canonique et le
+  gate CLI.
+- [x] Prouver un exemple interopérable avec TAXREF, SoilGrids WCS et Bellifa.
+- [x] Ajouter l'import persistant TEST du bundle canonique dans le sas
+  field_intake, avec allowlist de profil, autorisation writer/admin,
+  quarantaine, idempotence concurrente et exclusion de l'hydratation.
+- [ ] Concevoir puis valider séparément la promotion scientifique et l'import
+  de production ; aucun simple changement de profil ne doit ouvrir ce chemin.
+- [ ] Exécuter la campagne de charge dédiée sur PostgreSQL/PostGIS, Redis,
+  object storage, Forge et les 14 moteurs.
+
+## V1 fonctionnelle — pilote GeoSylva et ordre obligatoire (DEC-000074, 2026-08-26)
+
+Le pilote de la V1 est **GeoSylva 3.0 → 3.1**. Ignis reste dans le
+portefeuille GSIE mais sort du chemin critique de la V1. Le document
+opérationnel unique est
+[`GEO-005`](05_SPECIFICATIONS/GEOSYLVA/GEO_005_V1_PILOTAGE_GEOSYLVA_GSIE.md).
+
+L’ordre de réalisation est bloquant :
+
+1. finaliser GeoSylva 3.1 sur le Samsung S25 Ultra : interface, persistance,
+   calculs, synthèses et martelage ;
+2. valider le compte Quintessences dans GeoSylva : création, connexion locale,
+   Google, récupération, restauration, export, révocation et suppression,
+   avec recette RGPD par ADB ;
+3. finaliser le Data Acquisition Fabric et les composants liés, en réutilisant
+   les connecteurs, registres et méthodes existants ;
+4. réaliser la verticale GeoSylva 3.1 ↔ GSIE après validation de RFC-0041 et
+   DEC-000073 ;
+5. démarrer la boucle d’amélioration sur cette verticale déterministe, avec
+   benchmark et validation humaine avant tout entraînement ou fine-tuning.
+
+La coordination est séparée : Claude travaille sur l’interface GeoSylva ;
+Codex travaille sur les comptes, l’API, la sécurité et la recette Android par
+ADB. Deux agents ne modifient pas simultanément les mêmes fichiers. Un build
+vert ou une preuve locale ne vaut pas validation de production.
+
+Le détail des gates G0 à G5, du registre de données personnelles, de la
+matrice CPT de tests de compte et des preuves attendues est maintenu dans
+GEO-005.
+
+L’audit G0 du 2026-08-29 fournit la première matrice technique de référence.
+Après recontrôle de l’API `gsie-test`, approbation de la matrice et enregistrement
+des WIP concurrents, G0 est clôturé pour la réconciliation uniquement. G1 et G2
+restent ouverts. Voir le rapport et le registre dans
+`23_QUALITY_MANAGEMENT/AUDITS/`.
+
+État de préparation ADB : Platform-Tools 36.0.0 installé et daemon fonctionnel
+sur le poste ; le Samsung S25 Ultra est autorisé et listé sur le profil Android
+principal. GeoSylva 3.0.0 est installé et son activité principale est lancée.
+
+État de recette du compte au 2026-08-29 : la connexion locale, l’affichage du
+profil, la déconnexion et la persistance de cette déconnexion après relance sont
+validés sur le S25 par ADB. Le chemin client d’une session locale expirée a été
+corrigé : rotation du refresh token, rechargement du profil, puis purge locale
+si le refresh est invalide ; l’écran revient sans faux bandeau d’identifiants.
+L’API locale valide aussi l’export du compte, les sessions, la vérification
+d’adresse e-mail et la récupération de mot de passe (ancien secret refusé après
+rotation), ainsi que les consentements versionnés.
+Le finaliseur serveur est implémenté par DEC-000075, la migration `0055` est
+appliquée localement et la fonction SQL a finalisé avec succès un compte
+synthétique dédié (CPT-16) ; le smoke test non destructif du processus worker
+reste à faire. Le client Kotlin GeoSylva expose maintenant les contrats export,
+consentements, e-mail, mot de passe, suppression différée, sessions et MFA.
+La page native dédiée de création de compte est maintenant installée sur le
+S25 : elle réutilise le socle de connexion et ne redirige plus vers Chrome ; la
+validation du formulaire vide est prouvée. Le scénario API réel du compte est
+également passé le 2026-08-29 : création, consentements explicitement acceptés
+et révoqués, export incluant l'historique, vérification e-mail, annulation de
+suppression, reconnexion avec le même compte et isolation d'un compte B. Le
+correctif RLS et d'export est tracé par DEC-000077. Google reste à configurer,
+et la purge locale complète, l'isolation multi-compte dans l'application et la
+recette Android de bout en bout restent ouvertes. Le parcours natif est
+maintenant relié aux deux consentements obligatoires : aucun accord n'est
+pré-coché, la soumission sans accord est bloquée, puis l'acceptation explicite
+enregistre `terms` et `privacy` en `v1`; la carte Compte permet aussi la
+lecture et la révocation avec conservation de l'historique. La prochaine
+action immédiate est le smoke test du worker puis la matrice Android de
+restauration/isolation, sans `pm clear`. L'icône GeoSylva jour/nuit utilise
+désormais la même ressource feuille que le fichier fondateur fourni.
+
+## Site public — première passe UX (2026-08-23)
+
+- [x] Rendre la navigation mobile complète et signaler les rubriques actives.
+- [x] Clarifier le parcours d'accueil avec des appels à l'action internes
+  vers le moteur GSIE et les applications.
+- [x] Remplacer les statistiques publiques non alimentées par des repères
+  éditoriaux non dynamiques.
+- [x] Améliorer l'accessibilité des cartes interactives et du focus clavier.
+- [x] Rendre explicite la limite du formulaire de contact tant que son
+  routage automatique n'est pas livré.
+- [ ] Brancher `GET /public/stats` et décider des métriques publiques,
+  avec preuve de fraîcheur et endpoint effectivement déployé.
+- [x] Brancher le routage du formulaire de contact (catégorie + message) avec
+  `POST /api/v1/public/contact`, Turnstile serveur, champ piège, limite de
+  débit et transport SMTP sans persistance en base.
+- [ ] Valider la procédure de conservation RGPD et activer le destinataire
+  réel après recette de livraison.
+- [ ] Définir puis appliquer le processus de publication vie privée de la
+  Galerie avant de publier des médias.
+
+## Site public — socle de production (2026-08-23)
+
+- [x] Ajouter `robots.txt`, sitemap dynamique et `security.txt`.
+- [x] Ajouter les en-têtes de sécurité compatibles Cloudflare Pages.
+- [x] Ajouter `npm run verify:public` comme porte bloquante avant publication.
+- [x] Vérifier dans cette porte les sections juridiques essentielles en plus
+  des placeholders et des fichiers publics requis.
+- [x] Aligner la politique de confidentialité sur le routage API conditionnel,
+  l'absence de persistance GSIE et le traitement Turnstile.
+- [ ] Renseigner et valider identité éditeur, responsable de publication,
+  hébergeur définitif, responsable de traitement et durées de conservation.
+- [x] Livrer le endpoint de contact, son traitement anti-abus et son routage
+  e-mail SMTP conditionnel, avec les mentions d'information correspondantes.
+- [x] Rendre l'origine API configurable par `PUBLIC_API_ORIGIN` pour isoler les
+  builds local, staging et production.
+- [x] Garder la Galerie fail-closed sans collection Astro vide tant que le
+  processus de publication vie privée n'est pas adopté ; le build ne signale
+  plus d'avertissement applicatif sur cette zone.
+- [x] Préparer `npm run deploy:pages` avec garde juridique, reconstruction et
+  exigence du nom de projet Cloudflare ; aucun appel Wrangler automatique.
+- [x] Fermer par défaut la zone Compte dans les builds publics tant que sa
+  session web n'est pas conforme à `IDENTITE-001`.
+- [ ] Remplacer le stockage navigateur actuel par une stratégie de session web
+  validée, puis activer `PUBLIC_ACCOUNT_ENABLED` après recette sécurité.
+- [x] Vérifier automatiquement les liens internes du build avant tout appel
+  de déploiement.
+- [x] Ajouter l'audit live en lecture seule du domaine, des headers, des
+  fichiers publics et de la santé API.
+- [x] Centraliser la bascule, la recette post-déploiement et le rollback dans
+  `site-quintessences/RELEASE_CHECKLIST.md`.
+- [ ] Remplacer la landing actuellement servie par l'artefact Astro après
+  validation légale et autorisation Cloudflare.
+- [ ] Configurer le destinataire réel, la durée de conservation et la recette
+  de livraison avant activation publique.
+- [ ] Exécuter la recette DNS/HTTPS/headers/accessibilité sur staging puis
+  rattacher le domaine de production.
+
 ## Fiabilisation des environnements et des moteurs (2026-08-13)
 
 - [x] Cloisonner les rôles et namespaces `development`, `test`, `benchmark`,
@@ -23,14 +247,34 @@
   (DEC-000072) : Place d'abord, FieldIntake `accepted` en repli, quarantaine
   étanche, endpoint de prévisualisation et persistance du rapport dans
   `analysis_run`. 58 tests, couverture 100 % du package `orchestration`.
-- [ ] Réconcilier RFC-0033 avec l'orchestration actuelle (RFC-0041 / DEC-000073,
-  Draft/Proposé) : préparer d'abord les règles/qualifications et l'état global
-  côté serveur, puis créer le `station-link` dédié, révocable et contrôlé par
-  compte. Aucune implémentation mobile ou migration Room avant validation.
+- [~] Réconcilier RFC-0033 avec l'orchestration actuelle (RFC-0041 / DEC-000073,
+  Draft/Proposé) : préparation serveur implémentée et prouvée sur PostgreSQL /
+  PostGIS (`StationPreparationService`, snapshots complets du
+  `RapportPreparation`, bundle Forge `gsie_test_preparation.v0.1`, importeur
+  GSIE TEST, citations PROV et empreintes SHA-256, endpoint de prévisualisation
+  `/preparation`) — restent à valider puis à compléter par le `station-link`
+  dédié, révocable et contrôlé par compte. Aucune implémentation mobile ou
+  migration Room avant validation.
 - [ ] Versionner puis implémenter le client Kotlin `/orchestration/analyse`
   avec file Room idempotente ; les écrans martelage/résultats de GeoSylva 3.0
   restent en parallèle et ne bloquent pas la première boucle.
 - [ ] Concevoir les templates et vérificateurs par domaine après stabilisation.
+
+## R&D scientifique — WeatherNext et Scientific Model Fabric (2026-08-18)
+
+- [x] Décortiquer WeatherNext v0.3.0 : FGN, mesh icosaédrique, xarray/JAX,
+  rollout autorégressif, ensembles, CRPS, variables, checkpoints et licences.
+- [x] Définir la trajectoire Atmos provider-first : flux WeatherNext 2,
+  comparaison ECMWF/Météo-France, stockage Zarr et provenance.
+- [x] Concevoir la propagation probabiliste Atmos → IGNIS et le POC borné.
+- [x] Construire le premier horizon des technologies candidates Hydro, forêt,
+  EO, biodiversité, sols, drones et simulation.
+- [ ] Obtenir l'accès WeatherNext autorisé et qualifier les termes des flux.
+- [ ] Exécuter le POC WeatherNext → Atmos sur un territoire forestier français.
+- [ ] Benchmark WeatherNext, ECMWF et Météo-France par variable, horizon,
+  région et extrêmes avant toute décision d'auto-hébergement.
+- [ ] Décider l'activation d'un worker GPU ou d'un downscaler uniquement après
+  les preuves du POC et la qualification Model Registry.
 
 ## Assainissement transversal Phases 1 à 4 (2026-08-13)
 
@@ -677,7 +921,7 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 | **FieldIntake stationnel v0.1** | ✅ **Contrat implémenté et testé (2026-08-12)** | Observations, calculs, interprétations et recommandations séparés ; unités et formules dendrométriques contrôlées ; contradiction Farges conservée en Silver/quarantaine avec abstention obligatoire. Intégration JSONB optionnelle sans migration. |
 | **Ressources locales — quarantaine** | 🔒 **Metadata-only (2026-08-12)** | Candidats spatiaux et bibliothèque scientifique catalogués sans copie ni ingestion. Licences, provenance, CRS, sensibilité et droits d'annotation restent à qualifier avant toute utilisation. |
 | **Relecture experte Farges** | 📝 **Dossier Review (2026-08-12)** | Checklist scientifique/juridique et garde automatisée `assess_gold_qualification`. Deux avis indépendants requis ; Closed et promotion Gold restent bloqués. |
-| **Pipeline source existante — SoilGrids** | 🔄 **RAW → SILVER v0.1 + preuves PostgreSQL (2026-08-13)** | Normalisation metadata-only, mapping `wv003 → wv0033`, garde `SilverPromotionService` et `SilverPromotionEvidenceRepository` chargé depuis PostgreSQL. Reste à exécuter un test Docker réel contrôlé et qualifier les unités avant promotion effective. |
+| **Pipeline source existante — SoilGrids** | 🔄 **RAW → SILVER v0.1 + replay PostgreSQL prouvé (2026-08-25)** | Normalisation metadata-only, mapping `wv003 → wv0033`, garde `SilverPromotionService` et `SilverPromotionEvidenceRepository` chargés depuis PostgreSQL. Le replay de l'actif autorisé par DEC-000061 applique le manifeste, référence le RAW, persiste les cinq dimensions `QualityAssessment` de façon idempotente et refuse toute promotion tant que le statut reste `discovered`. Reste à qualifier les unités, puis à obtenir une décision opérateur distincte avant toute nouvelle ouverture FETCH ou promotion effective. |
 | **Architecture évolutive et ressources locales** — GSIE-ARCH-EVOLUTION-001 | 🔎 **Audit v1.2.0 Draft (2026-08-12)** | Guide aligné sur les enums/modèles QualityAssessment, DatasetHealth et FieldIntake ; séparation implémenté/cible, zones `DATA_*`, resolver hors des 14 moteurs, Model Registry cible et porte des ressources locales. Inventaire `E:\Documents` v2 : 3 077 ressources logiques, 143 groupes de doublons, 489 sensibles à confirmer, aucune ingestion. Restent : arbitrages FieldIntake, promotion `DATA_GOLD`, chiffrement au repos/RLS et qualification experte des scénarios. |
 
 > La couverture de lignes ne constitue pas à elle seule un critère de livraison.
@@ -699,10 +943,12 @@ La Phase 1 est **clôturée**. Le projet peut entrer en Phase 2
 
 ### Tranche verticale prioritaire
 
-La première démonstration intégrée cible un territoire pilote Ignis : ingestion
-multi-sources, qualification de la preuve, persistance versionnée, validation
-humaine, consultation API puis visualisation d'une couche dans le Hub. Cette
-tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
+La première démonstration intégrée cible désormais **GeoSylva 3.1** :
+fonctionnement local sur Samsung S25 Ultra, compte Quintessences et contrôles
+RGPD, puis acquisition qualifiée et liaison GeoSylva ↔ GSIE. La verticale
+Ignis est reportée hors du chemin critique de cette V1. Cette priorité ne
+change ni les contrats scientifiques, ni la nécessité de valider RFC-0041 et
+DEC-000073 avant la façade GeoSylva.
 
 ### Gates obligatoires avant extension
 
@@ -813,9 +1059,9 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | ID | Description | Statut |
 |---|---|---|
 | P0-1 | Sauvegardes DB (pgBackRest + WAL archiving) | **Implémenté et validé en direct (2026-08-08)**. Rebuild `Dockerfile.db` en local reste bloqué (2026-08-08, re-testé) par l'interception TLS de l'antivirus Kaspersky sur ce poste dev (`curl` vers github.com échoue avec `SSL certificate problem: self signed certificate in certificate chain`) — **confirmé sans lien avec le projet** : `.github/workflows/ci.yml` (job `Docker build`, ligne 244) construit `Dockerfile.db` avec succès en CI (environnement Linux GitHub Actions, aucune interception TLS). Ce n'est donc pas un blocage réel pour la production, seulement une gêne locale de ce poste Windows. Reste : repo2 S3 pour pgBackRest. Voir `GSIE/API/docs/BACKUP_RESTORE.md` |
-| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **Livré (2026-08-08)** — `ParcelSyncRepository.pull()` (`apps/GeoSylva`, commit `705967e`) : pagine `GET /parcelles`, fusionne en local via `decideMergeOutcome()` (fonction pure testée). Règle de résolution : une modification locale non encore synchronisée n'est jamais écrasée par le pull (le local gagne) ; un tombstone serveur déclenche une suppression douce locale sous la même garde. Bouton « Récupérer depuis le serveur » ajouté aux options développeur. Suite de tests du module verte. Commit local uniquement — push vers le repo externe GeoSylva à confirmer. |
+| P0-3 (2e moitié) | SDK Kotlin pour GeoSylva | **Socle livré (2026-08-08), recette V1 à poursuivre** — `ParcelSyncRepository.pull()` (`apps/GeoSylva`, commit `705967e`) : pagine `GET /parcelles`, fusionne en local via `decideMergeOutcome()` (fonction pure testée). La validation V1 doit encore couvrir l’interface 3.1, l’isolation compte/données, la restauration et la recette S25 Ultra. Commit local uniquement — push vers le repo externe GeoSylva à confirmer. |
 | AUTH-2 | Vérification e-mail + récupération de mot de passe | **Terminé — DEC-000046** |
-| AUTH-3 | Écrans de compte web/GeoSylva + configuration OAuth Google | **GeoSylva livré ; Web et configuration publique à faire** |
+| AUTH-3 | Compte Quintessences web/GeoSylva + configuration OAuth Google | **Code serveur et parcours GeoSylva présents ; recette RGPD ADB, isolation multi-compte, effacement final et configuration Google Cloud restent à prouver** |
 | SEC-EDGE | Cloudflare Tunnel, protocole M2M et plan de contrôle | **Code et runbook terminés — activation avec domaine/token à faire** |
 | P1-8 | Intégration GeoSylva/QGISIA ↔ GSIE via SDK | **Partiel — GeoSylva parcelles livré ; QGISIA et SDK commun à faire** |
 
@@ -842,8 +1088,9 @@ tranche verticale prime sur le démarrage parallèle de nouveaux moteurs.
 | GEO-003 | Matrice de traçabilité GeoSylva | `05_SPECIFICATIONS/GEOSYLVA/GEO_003_TRACEABILITY.md` | Draft ✅ |
 | ID-001 | Authentification Quintessences multi-fournisseurs | `05_SPECIFICATIONS/IDENTITE/IDENTITE_001_AUTHENTIFICATION.md` | Draft ✅ |
 
-> Ordre : Hub (P0, bloquant) → Ignis (P1) → GeoSylva (P1) → Hydro/Flora
-> (P2) → Artemis/QGISIA (P3).
+> Pour la V1 fonctionnelle : GeoSylva 3.0 → 3.1 → compte Quintessences/RGPD
+> → Data Acquisition Fabric → verticale GeoSylva ↔ GSIE. L’ordre historique
+> Hub/Ignis/GeoSylva reste une vue de portefeuille et ne pilote plus cette V1.
 
 ### Veille partenariat
 
@@ -931,6 +1178,22 @@ non encore implémentées.
 > La Phase 1 ne se clôture que lorsque les 12 livrables sont au
 > minimum **Validated**.
 
+### Data Registry — handoff Forge → GSIE IFN (2026-08-26)
+
+- [x] Figer `gsie_acquisition_handoff.v1` en réutilisant `DatasetManifest`,
+  `ManifestAssetInput` et le Data Registry GSIE existants.
+- [x] Faire produire par le connecteur IFN existant la taille, le type MIME,
+  l'URL originale et le SHA-256 de l'archive, avec extraction ZIP sûre.
+- [x] Implémenter l'importeur dry-run/application : staging borné, sink
+  transactionnel, clé RAW déterministe, rejeu idempotent et nettoyage après
+  échec Registry.
+- [x] Prouver la verticale IFN sur une archive locale synthétique : 22 tests
+  Forge, 3 tests API ciblés, Ruff et mypy strict passants.
+- [ ] Brancher un déclencheur planifié sans ouvrir FETCH ni contourner la
+  qualification juridique ; conserver une activation opérateur explicite.
+- [ ] Étendre le handoff aux autres sources seulement après définition de leur
+  preuve d'acquisition, format, licence, incrémentalité et validation métier.
+
 ### Data Registry — prochaine tranche
 
 - [x] Politique QualityAssessment versionnée et historique append-only.
@@ -938,8 +1201,8 @@ non encore implémentées.
 - [x] Évaluation partielle et reproductible des quatre manifests.
 - [x] Porte worker FETCH fail-closed, sans activation fournisseur.
 - [ ] Qualifier juridiquement et techniquement chaque source pour FETCH.
-- [x] Qualifier la base juridique SoilGrids et identifier WCS comme voie
-  candidate ; maintien fermé en attente de l'allowlist des couvertures.
+- [x] Qualifier la base juridique SoilGrids et retenir WCS comme voie active
+  de consommation ; le worker FETCH et la promotion restent fail-closed.
 - [x] Figer le contrat WCS SoilGrids : 12 propriétés, six profondeurs, quatre
   sorties, CRS, format, pixels, taille et timeout.
 - [x] Reproduire `DescribeCoverage` avec une chaîne TLS approuvée.

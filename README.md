@@ -56,6 +56,12 @@ les domaines concernés. Voir RFC-0037 et
 Priorités : 14 moteurs GSIE, API GSIE (FastAPI), Centre de Commandement
 Unreal Engine 5.8, applications clientes.
 
+**Pilotage de la V1 :** conformément à `DEC-000074`, GeoSylva 3.0 → 3.1 est
+le pilote fonctionnel. L’ordre est GeoSylva sur Samsung S25 Ultra, compte
+Quintessences et RGPD, Data Acquisition Fabric, verticale GeoSylva ↔ GSIE,
+puis boucle d’amélioration. Le plan d’exécution est
+[`GEO-005`](05_SPECIFICATIONS/GEOSYLVA/GEO_005_V1_PILOTAGE_GEOSYLVA_GSIE.md).
+
 ---
 
 ## Pourquoi Quintessences existe

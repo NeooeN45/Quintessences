@@ -33,8 +33,10 @@
 
 `tests/mutation/harnais.py` contient des mutations textuelles. Chaque
 mutation supprime une garde et vérifie qu'au moins un test l'échoue.
-Score attendu : **14/14**. Ajouter une mutation pour chaque nouvelle
-garde de résilience.
+Score attendu : **100 % des mutations tuées** (le nombre courant est
+`len(MUTATIONS)` dans le harnais — 70 lors de la dernière preuve CI,
+DEC-000066 ; ne pas figer ce chiffre dans la documentation). Ajouter une
+mutation pour chaque nouvelle garde de résilience.
 
 ## Clients d'API externes
 

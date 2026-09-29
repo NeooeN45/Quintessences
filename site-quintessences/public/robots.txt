@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /compte/
+
+Sitemap: https://quintessences-platform.com/sitemap.xml
