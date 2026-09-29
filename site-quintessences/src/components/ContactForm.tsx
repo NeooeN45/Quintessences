@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
-import { PUBLIC_API_V1 } from "../lib/publicConfig";
+import { PUBLIC_API_V1, PUBLIC_TURNSTILE_SITE_KEY } from "../lib/publicConfig";
 
 // Migration directe du formulaire de landing-quintessences/ (DEC-000055).
-// Le site key Turnstile est public par conception (pas un secret).
-const TURNSTILE_SITE_KEY = "0x4AAAAAAEIpP0qaRpOz5IdW";
 const CONTACT_URL = `${PUBLIC_API_V1}/public/contact`;
 
 const CATEGORIES = [
@@ -150,7 +148,7 @@ export default function ContactForm() {
         />
       </div>
 
-      <div ref={widgetRef} className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />
+      <div ref={widgetRef} className="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITE_KEY} />
 
       <button
         type="submit"

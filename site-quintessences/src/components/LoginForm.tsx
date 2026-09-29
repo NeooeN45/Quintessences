@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { loginPassword, friendlyErrorMessage } from "../lib/authApi.ts";
-
-const TURNSTILE_SITE_KEY = "0x4AAAAAAEIpP0qaRpOz5IdW";
+import { PUBLIC_TURNSTILE_SITE_KEY } from "../lib/publicConfig";
 
 export default function LoginForm() {
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -66,7 +65,7 @@ export default function LoginForm() {
         />
       </div>
 
-      <div ref={widgetRef} className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />
+      <div ref={widgetRef} className="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITE_KEY} />
 
       <button
         type="submit"
