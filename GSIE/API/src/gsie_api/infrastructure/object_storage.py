@@ -117,6 +117,12 @@ def _copy_and_hash(source: BinaryIO, target: BinaryIO, chunk_size: int) -> tuple
 class ObjectStorage(ABC):
     """Interface abstraite pour le stockage objet."""
 
+    def uri_for_key(self, key: str) -> str:
+        """Retourne l'URI interne stable d'une clé sans effectuer d'I/O."""
+
+        del key
+        raise ObjectStorageError("Ce backend ne sait pas construire une URI interne")
+
     @abstractmethod
     async def put(
         self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
@@ -183,6 +189,11 @@ class LocalStorage(ObjectStorage):
             raise ValueError("Object key resolves outside configured storage")
         return candidate
 
+    def uri_for_key(self, key: str) -> str:
+        """Construit l'URI interne locale correspondant à une clé validée."""
+
+        return f"local:///{quote(_validate_key(key), safe='/')}"
+
     async def put(
         self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"
     ) -> str:
@@ -193,7 +204,7 @@ class LocalStorage(ObjectStorage):
         # L'URI persistée est un identifiant interne, jamais un chemin du
         # système de fichiers. Le téléchargement local doit passer par le
         # service autorisé qui connaît déjà la clé, pas par une URI `file://`.
-        return f"local:///{quote(_validate_key(key), safe='/')}"
+        return self.uri_for_key(key)
 
     @staticmethod
     def _write_file(path: Path, data: BinaryIO) -> None:
@@ -356,6 +367,11 @@ class S3Storage(ObjectStorage):
 
     def _uri(self, key: str) -> str:
         return f"s3://{self._bucket}/{quote(key, safe='/')}"
+
+    def uri_for_key(self, key: str) -> str:
+        """Construit l'URI S3 stable correspondant à une clé validée."""
+
+        return self._uri(_validate_key(key))
 
     async def put(
         self, key: str, data: BinaryIO, content_type: str = "application/octet-stream"

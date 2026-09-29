@@ -62,6 +62,16 @@ Les comptes persistés vivent dans `gsie_rgpd_identites`. Google est fermé
 tant que `GSIE_GOOGLE_OAUTH_CLIENT_IDS` est vide. Le login de développement
 historique `/auth/login` reste interdit en staging et production.
 
+La suppression est différée : `POST /auth/me/deletion/request` révoque les
+sessions et place le compte en `pending_deletion`, tandis que
+`POST /auth/deletion/cancel` permet l'annulation par code à usage unique avant
+l'échéance. Le service Compose `account-deletion-worker` finalise ensuite les
+comptes échus par lots via la fonction PostgreSQL `SECURITY DEFINER` de la
+migration `20260826_0055`. La finalisation est irréversible : les données
+d'authentification, les données personnelles liées et les répliques GeoSylva
+sont purgées ; les organisations partagées sont conservées et le compte est
+anonymisé en tombstone. Le worker n'est jamais exposé par HTTP.
+
 En développement, `docker compose up -d mailpit` expose l'interface captive
 sur <http://localhost:8025> et le SMTP uniquement dans le réseau Compose.
 Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
@@ -140,6 +150,17 @@ connaissance déjà présente est refusée ; aucun remplacement silencieux n'est
 fait. La CLI `scripts/import_gsie_test_bundle.py` permet un import manuel.
 Ce chemin est la précondition nommée par DEC-000073 pour qu'une préparation
 serveur puisse assembler règles et état global sans les inventer.
+
+### Import persistant du bundle d'analyse Forge
+
+Le contrat `forge_analysis_bundle.v1` peut maintenant être importé dans le
+sas `field_intake` par `POST /api/v1/data/analysis-bundles/import`. Ce chemin
+reste strictement limité à `database_role=test`, exige un profil explicitement
+allowlisté et une autorisation `writer` ou `admin`. Il persiste la forme
+canonique en `analysis_bundle`/`quarantined`, avec idempotence sur `bundle_id`
+et empreinte SHA-256. L'hydratation n'en consomme aucune valeur avant une
+promotion scientifique dédiée. La CLI correspondante est
+`scripts/import_forge_analysis_bundle_test.py` ; la production reste fermée.
 
 ### Vertical Data Registry — SoilGrids replay
 
@@ -300,6 +321,7 @@ src/gsie_api/
 
 ## Documentation
 
+- [Matrice de couverture des sources GSIE/Forge](docs/data/GSIE_FORGE_ACQUISITION_HANDOFF.md#matrice-de-couverture-des-sources) — audit exhaustif sans réseau, branchements, handoff et blocages juridiques.
 - [Application du manifeste Data Registry](docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md) —
   dry-run, application transactionnelle, santé réelle persistée, idempotence
   et limites `metadata_only`/`FETCH`.

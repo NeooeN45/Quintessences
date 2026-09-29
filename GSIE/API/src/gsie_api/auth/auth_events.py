@@ -12,6 +12,8 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from sqlalchemy import text
+
 from gsie_api.audit.repository import SqlAlchemyAuditRepository
 from gsie_api.audit.service import AuditEntry, AuditService
 from gsie_api.core.logging import get_logger
@@ -40,25 +42,36 @@ async def log_auth_event(
     Fire-and-forget : toute exception est loggée mais jamais propagée.
     """
     try:
-        entry = AuditEntry(
-            id=uuid4(),
-            timestamp=datetime.now(UTC),
-            actor_id=actor_id,
-            actor_email=actor_email,
-            action=action,
-            resource_type="auth",
-            resource_id=str(actor_id) if actor_id else None,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            organisation_id=None,
-            workspace_id=None,
-            status_code=status_code,
-            method=None,
-            path=None,
-            details=details or {},
-            trace_id=None,
-        )
-        service = AuditService(SqlAlchemyAuditRepository(session))
-        await service.log(entry)
+        # Les événements de login réussi arrivent avant que le middleware
+        # d'authentification ne puisse poser le contexte RLS. Les événements
+        # anonymes (échec de login, mot de passe faible) n'ont, eux, aucun
+        # actor_id. Le contexte minimal est donc posé ici pour les événements
+        # identifiés ; la politique INSERT dédiée traite le cas anonyme.
+        async with session.begin_nested():
+            if actor_id is not None:
+                await session.execute(
+                    text("SELECT set_config('app.current_user_id', :account_id, true)"),
+                    {"account_id": str(actor_id)},
+                )
+            entry = AuditEntry(
+                id=uuid4(),
+                timestamp=datetime.now(UTC),
+                actor_id=actor_id,
+                actor_email=actor_email,
+                action=action,
+                resource_type="auth",
+                resource_id=str(actor_id) if actor_id else None,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                organisation_id=None,
+                workspace_id=None,
+                status_code=status_code,
+                method=None,
+                path=None,
+                details=details or {},
+                trace_id=None,
+            )
+            service = AuditService(SqlAlchemyAuditRepository(session))
+            await service.log(entry)
     except Exception:
         logger.exception("auth_event_log_failed", action=action)

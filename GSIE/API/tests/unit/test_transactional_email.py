@@ -31,6 +31,7 @@ def smtp_settings() -> Settings:
         smtp_use_tls=False,
         smtp_starttls=False,
         email_sender="noreply@quintessences-platform.com",
+        public_contact_recipient="owner@example.com",
         identity_action_code_expire_minutes=15,
         organisation_invitation_expire_hours=72,
     )
@@ -88,6 +89,7 @@ async def test_should_return_false_when_disabled_sender_used() -> None:
     )
     assert await sender.send_email_change_code("user@example.com", "1234", True) is False
     assert await sender.send_deletion_cancellation_code("user@example.com", "1234") is False
+    assert await sender.send_contact("user@example.com", "support", "Bonjour") is False
 
 
 @patch.object(smtplib, "SMTP")
@@ -149,6 +151,23 @@ async def test_should_send_deletion_cancellation_code(
     client = mock_smtp.return_value.__enter__.return_value
     message: EmailMessage = client.send_message.call_args[0][0]
     assert "AAAA-BBBB" in message.get_content()
+
+
+@patch.object(smtplib, "SMTP")
+async def test_should_send_public_contact_with_reply_to(
+    mock_smtp: MagicMock,
+    smtp_settings: Settings,
+) -> None:
+    sender = SmtpTransactionalEmailSender(smtp_settings)
+
+    result = await sender.send_contact("user@example.com", "support", "Bonjour l'équipe.")
+
+    assert result is True
+    client = mock_smtp.return_value.__enter__.return_value
+    message: EmailMessage = client.send_message.call_args[0][0]
+    assert message["To"] == "owner@example.com"
+    assert message["Reply-To"] == "user@example.com"
+    assert "Bonjour l'équipe." in message.get_content()
 
 
 @patch.object(smtplib, "SMTP")

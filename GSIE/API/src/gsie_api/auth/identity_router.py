@@ -111,7 +111,7 @@ from gsie_api.core.config import get_settings
 from gsie_api.core.limiter import get_client_address
 from gsie_api.core.limiter import limiter as _limiter
 from gsie_api.core.logging import get_logger
-from gsie_api.infrastructure.database import get_db, set_rls_context
+from gsie_api.infrastructure.database import get_db, get_db_user_rls, set_rls_context
 from gsie_api.infrastructure.models.accounts import AccountConsentModel
 from gsie_api.organisations.repository import SqlAlchemyOrganisationRepository
 from gsie_api.organisations.service import OrganisationService
@@ -853,7 +853,7 @@ async def export_account_data(
     request: Request,
     response: Response,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
-    db_session: Annotated[AsyncSession, Depends(get_db)],
+    db_session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> dict[str, object]:
     del request, response
     export = await AccountExportService(db_session).export(_account_id(current_user))
@@ -866,14 +866,15 @@ async def list_consents(
     request: Request,
     response: Response,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
-    db_session: Annotated[AsyncSession, Depends(get_db)],
+    db_session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> ConsentListResponse:
     del request, response
+    account_id = _account_id(current_user)
     rows = (
         (
             await db_session.execute(
                 select(AccountConsentModel)
-                .where(AccountConsentModel.account_id == _account_id(current_user))
+                .where(AccountConsentModel.account_id == account_id)
                 .order_by(AccountConsentModel.accepted_at.desc())
             )
         )
@@ -900,7 +901,7 @@ async def accept_consent(
     response: Response,
     body: ConsentRequest,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
-    db_session: Annotated[AsyncSession, Depends(get_db)],
+    db_session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> ConsentResponse:
     del response
     account_id = _account_id(current_user)
@@ -937,15 +938,16 @@ async def revoke_consent(
     response: Response,
     consent_type: str,
     current_user: Annotated[dict[str, object], Depends(get_current_user)],
-    db_session: Annotated[AsyncSession, Depends(get_db)],
+    db_session: Annotated[AsyncSession, Depends(get_db_user_rls)],
 ) -> CompletedResponse:
     del request, response
     if consent_type not in {"terms", "privacy", "marketing"}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Consentement invalide")
+    account_id = _account_id(current_user)
     await db_session.execute(
         update(AccountConsentModel)
         .where(
-            AccountConsentModel.account_id == _account_id(current_user),
+            AccountConsentModel.account_id == account_id,
             AccountConsentModel.consent_type == consent_type,
             AccountConsentModel.revoked_at.is_(None),
         )

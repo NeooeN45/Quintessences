@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsie_api.infrastructure.models.accounts import (
+    AccountConsentModel,
     AccountRoleModel,
     ActiveSessionModel,
     IdentityProviderLinkModel,
@@ -45,6 +46,7 @@ class AccountExportService:
         if account is None:
             raise ValueError("Compte introuvable")
         identity_links = await self._identity_links(account_id)
+        consents = await self._consents(account_id)
         roles = await self._roles(account_id)
         memberships = await self._memberships(account_id)
         subscriptions = await self._subscriptions(account_id)
@@ -61,6 +63,7 @@ class AccountExportService:
                 "updated_at": account.updated_at.isoformat(),
             },
             "identity_links": identity_links,
+            "consents": consents,
             "roles": roles,
             "organisations": memberships,
             "subscriptions": subscriptions,
@@ -92,6 +95,28 @@ class AccountExportService:
                 "last_authenticated_at": (
                     row.last_authenticated_at.isoformat() if row.last_authenticated_at else None
                 ),
+            }
+            for row in rows
+        ]
+
+    async def _consents(self, account_id: UUID) -> list[dict[str, object]]:
+        rows = (
+            (
+                await self._session.execute(
+                    select(AccountConsentModel)
+                    .where(AccountConsentModel.account_id == account_id)
+                    .order_by(AccountConsentModel.accepted_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            {
+                "consent_type": row.consent_type,
+                "document_version": row.document_version,
+                "accepted_at": row.accepted_at.isoformat(),
+                "revoked_at": row.revoked_at.isoformat() if row.revoked_at else None,
             }
             for row in rows
         ]

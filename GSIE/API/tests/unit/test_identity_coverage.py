@@ -79,7 +79,7 @@ from gsie_api.core.auth import (
     create_mfa_challenge_token,
     create_mfa_setup_token,
 )
-from gsie_api.infrastructure.database import get_db
+from gsie_api.infrastructure.database import get_db, get_db_user_rls
 from gsie_api.infrastructure.models.accounts import (
     IdentityActionTokenModel,
     IdentityProviderLinkModel,
@@ -144,6 +144,7 @@ def client_identite(mock_lifespan: object) -> Generator[TestClient, None, None]:
     db_session = MagicMock()
     db_session.execute = AsyncMock()
     app.dependency_overrides[get_db] = lambda: db_session
+    app.dependency_overrides[get_db_user_rls] = lambda: db_session
     with TestClient(app) as client:
         yield client
 
@@ -1047,7 +1048,7 @@ def should_list_account_consents(client_identite: TestClient) -> None:
     )
     session = _session()
     session.execute.return_value = _result(scalars=(row,))
-    client_identite.app.dependency_overrides[get_db] = lambda: session
+    client_identite.app.dependency_overrides[get_db_user_rls] = lambda: session
     response = client_identite.get("/api/v1/auth/me/consents", headers=_bearer())
     assert response.status_code == 200
     consents = response.json()["consents"]
@@ -1065,7 +1066,7 @@ def should_accept_new_consent_and_supersede_previous_version(client_identite: Te
         captured["consent"].accepted_at = datetime.now(UTC)  # type: ignore[union-attr]
 
     session.flush = AsyncMock(side_effect=_flush)
-    client_identite.app.dependency_overrides[get_db] = lambda: session
+    client_identite.app.dependency_overrides[get_db_user_rls] = lambda: session
     response = client_identite.post(
         "/api/v1/auth/me/consents",
         headers=_bearer(),
