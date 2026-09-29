@@ -1,0 +1,25 @@
+#!/bin/sh
+# GSIE — garde-fou pré-commit (bloquant).
+# 1. Gouvernance (tools/check_governance_consistency.py — CLAUDE.md §2)
+# 2. Scan des secrets sur le diff stagé (tools/security_diag.py)
+
+python tools/check_governance_consistency.py
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Le garde-fou de gouvernance a trouvé des incohérences (voir ci-dessus)."
+  echo "   Le commit est bloqué. Corrige les statuts/références avant de recommitter."
+  exit $STATUS
+fi
+
+python tools/security_diag.py --staged --no-report
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Secret potentiel détecté dans le diff stagé (voir ci-dessus)."
+  echo "   Le commit est bloqué — aucun secret ne doit entrer dans l'historique."
+  echo "   Faux positif ? Marque la clé TEST-ONLY ou déplace-la dans une zone allowlistée."
+  exit $STATUS
+fi
