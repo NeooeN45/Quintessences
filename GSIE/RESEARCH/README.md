@@ -43,6 +43,30 @@ reposer sur une source identifiable.
 
 ---
 
+## Mission WeatherNext 2 → Atmos (2026-08-18)
+
+Cette étude évalue le dépôt officiel WeatherNext v0.3.0 et les équivalents
+scientifiques utiles aux autres domaines Quintessences. Elle ne vaut pas
+adoption de modèle : chaque candidat reste soumis à une licence qualifiée, un
+benchmark territorial et une validation humaine.
+
+- [WEATHERNEXT2_DEEP_DIVE.md](WEATHERNEXT2_DEEP_DIVE.md) — dépôt, architecture,
+  données, inference, ensembles, matériel et limites.
+- [QUINTESSENCES_SCIENTIFIC_TECHNOLOGY_HORIZON.md](QUINTESSENCES_SCIENTIFIC_TECHNOLOGY_HORIZON.md)
+  — horizon multi-domaines et technologies pivots.
+- [TOP_20_WEATHERNEXT_LIKE_TECHNOLOGIES.md](TOP_20_WEATHERNEXT_LIKE_TECHNOLOGIES.md)
+  — classement initial et Top 5 à tester.
+- [WEATHERNEXT_ATMOS_POC_PLAN.md](WEATHERNEXT_ATMOS_POC_PLAN.md) — POC flux,
+  normalisation, stockage, API, downscaling et IGNIS.
+
+Voir aussi les architectures :
+
+- `../ARCHITECTURE/ATMOS_WEATHERNEXT_ARCHITECTURE.md`
+- `../ARCHITECTURE/IGNIS_PROBABILISTIC_WEATHER_INTEGRATION.md`
+- `../ARCHITECTURE/ADR_WEATHERNEXT_ATMOS.md`
+
+---
+
 ## Archive des sources (depuis 2026-08-16)
 
 Les documents sources ont été archivés dans [ARCHIVE/](ARCHIVE/) après consolidation dans les registres. Voir [ARCHIVE/README.md](ARCHIVE/README.md) pour détails et priorités de consultation.
