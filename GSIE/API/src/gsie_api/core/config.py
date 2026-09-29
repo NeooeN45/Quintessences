@@ -171,8 +171,6 @@ class Settings(BaseSettings):
             "http://localhost:4000",
             "http://localhost:8080",
             "http://127.0.0.1:4000",
-            "https://quintessences-platform.com",
-            "https://www.quintessences-platform.com",
         ]
     )
     # Limite taille corps de requête (bytes) — défaut 1 MiB (OWASP A04)

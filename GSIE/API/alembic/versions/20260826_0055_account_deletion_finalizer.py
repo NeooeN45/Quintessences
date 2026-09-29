@@ -25,9 +25,9 @@ _ROLE_APPLICATION = "gsie_application"
 
 def upgrade() -> None:
     """Installe l'exception d'anonymisation et le finaliseur par lots."""
-    # La base de référence ne suppose pas pgcrypto ; la fonction est utilisée
-    # uniquement pour générer l'identifiant de l'événement d'audit final.
-    op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
+    # gen_random_uuid() est natif depuis PostgreSQL 13 ; la base de
+    # référence (postgis 16) n'exige donc ni pgcrypto ni privilège
+    # d'installation d'extension pour générer l'audit final.
     # Le journal reste append-only dans tous les cas ordinaires. La seule
     # mutation autorisée ici est actor_email -> NULL, sous un GUC local que
     # seule la fonction SECURITY DEFINER ci-dessous pose.
