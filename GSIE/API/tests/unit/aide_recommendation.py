@@ -142,3 +142,4 @@ class SessionEspion(SessionDiagnosticFictif):
 
     async def execute(self, *args: Any, **kwargs: Any) -> None:
         self.insertions.append(args[0] if args else None)
+        await super().execute(*args, **kwargs)
