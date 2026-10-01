@@ -1,13 +1,13 @@
-# IDENTITÉ — Authentification multi-fournisseurs 1.3.0
+# IDENTITÉ — Authentification multi-fournisseurs 1.5.0
 
 | Champ | Valeur |
 |---|---|
 | **Identifiant** | IDENTITE-001 |
 | **Statut** | Draft |
-| **Version** | 1.4.0 |
-| **Date** | 2026-08-03 |
+| **Version** | 1.5.0 |
+| **Date** | 2026-10-01 |
 | **Auteur** | Direction technique (assistée par Codex) |
-| **Décision** | DEC-000044, DEC-000045, DEC-000046, DEC-000058 |
+| **Décision** | DEC-000044, DEC-000045, DEC-000046, DEC-000058, DEC-000074, DEC-000075 |
 
 ## 1. Résumé
 
@@ -150,6 +150,7 @@ Ces exigences sont détaillées dans
 | ID-D-001 à ID-D-006 | GSIE-ARCH-IDENTITE-001 §3 et §4 |
 | ID-F-017 à ID-F-020, ID-S-015 à ID-S-017, ID-D-007 | DEC-000046 |
 | ID-F-021 à ID-F-028 | DEC-000074 et GEO-005 |
+| Politique de finalisation serveur et worker dédié (§7) | DEC-000075 |
 
 ## 9. Historique des modifications
 
