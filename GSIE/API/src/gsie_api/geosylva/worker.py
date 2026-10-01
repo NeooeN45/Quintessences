@@ -11,7 +11,10 @@ from gsie_api.engines.orchestration.hydration import HydratationVideError, Stati
 from gsie_api.engines.orchestration.preparation import PreparationError
 from gsie_api.geosylva.repository import GeoSylvaAnalysisRepository
 from gsie_api.geosylva.service import GeoSylvaAnalysisService
-from gsie_api.infrastructure.database import async_session_factory
+from gsie_api.infrastructure.database import (
+    async_session_factory,
+    set_internal_worker_context,
+)
 from gsie_api.outbox_health import write_worker_heartbeat
 
 logger = get_logger("gsie_api.geosylva.worker")
@@ -21,6 +24,7 @@ async def process_next() -> bool:
     """Réserve puis traite un job ; le bail permet sa reprise après un crash."""
 
     async with async_session_factory() as claim_session:
+        await set_internal_worker_context(claim_session)
         job = await GeoSylvaAnalysisRepository(claim_session).claim_next(now=datetime.now(UTC))
         if job is None:
             await claim_session.commit()
@@ -29,6 +33,7 @@ async def process_next() -> bool:
         await claim_session.commit()
 
     async with async_session_factory() as session:
+        await set_internal_worker_context(session)
         repository = GeoSylvaAnalysisRepository(session)
         claimed = await repository.get(analysis_id)
         if claimed is None:

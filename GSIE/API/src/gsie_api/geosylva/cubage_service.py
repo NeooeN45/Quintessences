@@ -1,5 +1,7 @@
 """Service de synchronisation des sessions de cubage GeoSylva."""
 
+# ruff: noqa: TC001, TC002, TC003
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -55,9 +57,7 @@ class GeoSylvaCubageService:
         )
 
     @staticmethod
-    def _response(
-        model: GeoSylvaCubageSessionModel, trace_id: str
-    ) -> CubageSyncResponse:
+    def _response(model: GeoSylvaCubageSessionModel, trace_id: str) -> CubageSyncResponse:
         return CubageSyncResponse(
             session_id=model.session_id,
             calculation_id=model.calculation_id,

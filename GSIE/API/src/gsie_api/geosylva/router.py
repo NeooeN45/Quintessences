@@ -46,6 +46,9 @@ def get_cubage_service(session: DbSession) -> GeoSylvaCubageService:
     return GeoSylvaCubageService(session)
 
 
+CubageService = Annotated[GeoSylvaCubageService, Depends(get_cubage_service)]
+
+
 def _account_id(current_user: dict[str, Any]) -> UUID:
     try:
         return UUID(str(current_user.get("sub", "")))
@@ -168,7 +171,7 @@ async def sync_cubage_session(
     body: CubageSyncRequest,
     request: Request,
     response: Response,
-    service: Annotated[GeoSylvaCubageService, Depends(get_cubage_service)],
+    service: CubageService,
     current_user: CurrentUser,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=36, max_length=36)],
 ) -> CubageSyncResponse:
@@ -203,7 +206,8 @@ async def sync_cubage_session(
 async def get_cubage_session(
     session_id: UUID,
     request: Request,
-    service: Annotated[GeoSylvaCubageService, Depends(get_cubage_service)],
+    response: Response,
+    service: CubageService,
     current_user: CurrentUser,
 ) -> CubageSessionResponse:
     result = await service.get_owned(

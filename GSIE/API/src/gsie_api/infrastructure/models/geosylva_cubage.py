@@ -1,5 +1,7 @@
 """Persistance des sessions de cubage synchronisées depuis GeoSylva."""
 
+# ruff: noqa: TC003
+
 from __future__ import annotations
 
 from typing import Any

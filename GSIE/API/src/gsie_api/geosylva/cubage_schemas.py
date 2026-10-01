@@ -1,5 +1,7 @@
 """Schémas V1 du cubage offline-first GeoSylva–GSIE."""
 
+# ruff: noqa: TC003
+
 from __future__ import annotations
 
 import hashlib
@@ -52,8 +54,13 @@ class CubageGeometry(GeoSylvaModel):
         positions: list[tuple[float, float]] = []
 
         def visit(node: Any) -> None:
-            if isinstance(node, list) and len(node) >= 2 and all(
-                isinstance(item, int | float) and not isinstance(item, bool) for item in node[:2]
+            if (
+                isinstance(node, list)
+                and len(node) >= 2
+                and all(
+                    isinstance(item, int | float) and not isinstance(item, bool)
+                    for item in node[:2]
+                )
             ):
                 longitude, latitude = float(node[0]), float(node[1])
                 if not (-180 <= longitude <= 180 and -90 <= latitude <= 90):
