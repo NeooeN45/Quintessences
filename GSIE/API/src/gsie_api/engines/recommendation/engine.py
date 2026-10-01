@@ -436,12 +436,30 @@ class RecommendationEngine:
             .on_conflict_do_nothing(index_elements=[ResourceModel.id])
         )
         await self._session.flush()
+
+        racine = await self._session.get(ResourceModel, agent_id)
+        if racine is None or racine.type != "agent":
+            type_racine = racine.type if racine is not None else "absent"
+            raise RecommendationEngineError(
+                f"agent {agent_id} incohérent : type racine {type_racine!r}, " "attendu 'agent'"
+            )
+
         await self._session.execute(
             pg_insert(AgentModel)
             .values(id=agent_id, name=nom, type=type_agent)
             .on_conflict_do_nothing(index_elements=[AgentModel.id])
         )
         await self._session.flush()
+
+        agent = await self._session.get(AgentModel, agent_id)
+        if agent is None:
+            raise RecommendationEngineError(f"agent {agent_id} incohérent : sous-type Agent absent")
+        if agent.name != nom or agent.type != type_agent:
+            raise RecommendationEngineError(
+                f"agent {agent_id} incompatible : existant "
+                f"(name={agent.name!r}, type={agent.type.value!r}), demandé "
+                f"(name={nom!r}, type={type_agent.value!r})"
+            )
         return agent_id
 
     # --- Génération des recommandations ---
