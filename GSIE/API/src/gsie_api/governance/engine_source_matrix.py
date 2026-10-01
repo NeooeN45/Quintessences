@@ -9,6 +9,8 @@ restent documentés comme candidats. Ils ne constituent jamais une autorisation
 d'egress ou d'ingestion.
 """
 
+# ruff: noqa: TC003
+
 from __future__ import annotations
 
 from collections import Counter

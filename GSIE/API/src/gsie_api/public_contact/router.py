@@ -19,7 +19,6 @@ from .schemas import PublicContactRequest, PublicContactResponse
 
 router = APIRouter(prefix="/public", tags=["public"])
 logger = get_logger("gsie_api.public_contact")
-_DEFAULT_RESPONSE = Response()
 
 
 def get_contact_sender() -> TransactionalEmailSender:
@@ -36,9 +35,9 @@ def get_contact_sender() -> TransactionalEmailSender:
 @limiter.limit("5/minute")
 async def submit_contact(
     request: Request,
+    response: Response,
     payload: PublicContactRequest,
     sender: Annotated[TransactionalEmailSender, Depends(get_contact_sender)],
-    response: Response = _DEFAULT_RESPONSE,
 ) -> PublicContactResponse:
     """Valide puis transmet un message sans l'enregistrer en base GSIE."""
 
