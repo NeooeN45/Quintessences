@@ -46,32 +46,44 @@ async def log_auth_event(
         # d'authentification ne puisse poser le contexte RLS. Les événements
         # anonymes (échec de login, mot de passe faible) n'ont, eux, aucun
         # actor_id. Le contexte minimal est donc posé ici pour les événements
-        # identifiés ; la politique INSERT dédiée traite le cas anonyme.
+        # identifiés, puis restauré : un SET LOCAL dans un savepoint persiste
+        # après sa libération et masquerait sinon le contexte du compte
+        # courant pour le reste de la transaction. En cas d'erreur, le
+        # rollback vers le savepoint annule automatiquement le SET LOCAL.
+        entry = AuditEntry(
+            id=uuid4(),
+            timestamp=datetime.now(UTC),
+            actor_id=actor_id,
+            actor_email=actor_email,
+            action=action,
+            resource_type="auth",
+            resource_id=str(actor_id) if actor_id else None,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            organisation_id=None,
+            workspace_id=None,
+            status_code=status_code,
+            method=None,
+            path=None,
+            details=details or {},
+            trace_id=None,
+        )
+        service = AuditService(SqlAlchemyAuditRepository(session))
         async with session.begin_nested():
-            if actor_id is not None:
-                await session.execute(
-                    text("SELECT set_config('app.current_user_id', :account_id, true)"),
-                    {"account_id": str(actor_id)},
-                )
-            entry = AuditEntry(
-                id=uuid4(),
-                timestamp=datetime.now(UTC),
-                actor_id=actor_id,
-                actor_email=actor_email,
-                action=action,
-                resource_type="auth",
-                resource_id=str(actor_id) if actor_id else None,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                organisation_id=None,
-                workspace_id=None,
-                status_code=status_code,
-                method=None,
-                path=None,
-                details=details or {},
-                trace_id=None,
+            if actor_id is None:
+                await service.log(entry)
+                return
+            previous_user_id = await session.scalar(
+                text("SELECT current_setting('app.current_user_id', true)")
             )
-            service = AuditService(SqlAlchemyAuditRepository(session))
+            await session.execute(
+                text("SELECT set_config('app.current_user_id', :account_id, true)"),
+                {"account_id": str(actor_id)},
+            )
             await service.log(entry)
+            await session.execute(
+                text("SELECT set_config('app.current_user_id', :previous, true)"),
+                {"previous": previous_user_id or ""},
+            )
     except Exception:
         logger.exception("auth_event_log_failed", action=action)

@@ -30,7 +30,13 @@ AUDIT_SCHEMA = "gsie_audit"
 
 _AUDIT_ACTIONS = (
     "'create', 'read', 'update', 'delete', 'export', "
-    "'login', 'logout', 'invite', 'revoke', 'sync'"
+    "'login', 'logout', 'invite', 'revoke', 'sync', "
+    "'login_failed', 'login_locked', 'login_mfa_challenge', 'login_success', "
+    "'mfa_disable_step_up_failed', 'mfa_disabled', 'mfa_login_failed', "
+    "'mfa_recovery_failed', 'mfa_setup', 'mfa_verify_failed', 'mfa_verify_success', "
+    "'oidc_link_required', 'oidc_login_failed', 'register_password_compromised', "
+    "'register_password_weak', 'register_success', 'session_revoked', "
+    "'sessions_revoked_all'"
 )
 
 
