@@ -6,7 +6,38 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-09-29 — Diagnostic sécurité continu installé sur les 4 dépôts (hooks bloquants) ; premier cycle exécuté ; DEC-000091 proposée. |
+| **Dernière mise à jour** | 2026-10-01 — Durcissement RLS des tables GeoSylva (Alembic `20260929_0059` en tête), audit d'authentification complété et commit des WIP locaux. |
+
+### Durcissement RLS GeoSylva et audit d'authentification — 2026-10-01
+
+- La migration `20260929_0059` active et force la RLS propriétaire sur
+  `geosylva_analysis_job` et `geosylva_cubage_session` (modèle
+  `geosylva_parcels`, migration `20260803_0031`) et révoque `DELETE` pour
+  `gsie_application`.
+- Le worker asynchrone des jobs d'analyse pose désormais le GUC
+  transaction-local `app.internal_worker` via `set_internal_worker_context`
+  à chaque session (`geosylva/worker.py`) ; le cubage reste strictement
+  limité au compte propriétaire.
+- La synchronisation cubage déduplique aussi par `session_id` (PK globale) :
+  une re-synchronisation avec une nouvelle `Idempotency-Key` rejoue le paquet
+  persisté ; les collisions résiduelles et cross-compte sont converties en
+  HTTP 409 via un savepoint qui préserve la transaction du endpoint.
+- `log_auth_event` restaure le `app.current_user_id` précédent après
+  l'insertion : un `SET LOCAL` dans un savepoint persistait après sa
+  libération et masquait le contexte du compte courant.
+- Le modèle `audit_log` s'aligne sur la migration `20260826_0053` : la CHECK
+  couvre les 18 actions d'authentification (login, MFA, OIDC, enregistrement,
+  sessions) — corrige l'absence de journalisation signalée par le pentest du
+  2026-08-07.
+- Correctifs revue : `response: Response` restauré sur `POST /public/contact`
+  (requis par le rate limiter `headers_enabled=True`).
+- Point ouvert relevé en revue : sous `FORCE RLS`, la purge du finaliseur RGPD
+  (`finalize_due_account_deletions`, `SECURITY DEFINER`) dépend du rôle
+  propriétaire de la fonction — à prouver par un test d'intégration Postgres
+  avant production (préexistant sur `geosylva_parcels`, étendu aux deux tables).
+- Preuves : Ruff et mypy strict propres ; suite unitaire 3094/3095 avant
+  correctif `public_contact`, test de contrat limiter couvert par le fix.
+  IDENTITE-001 passe en 1.5.0 (en-tête et traçabilité DEC-000075 alignés).
 
 ### Diagnostic sécurité continu — 2026-09-29
 

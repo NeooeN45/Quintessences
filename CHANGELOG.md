@@ -4,6 +4,30 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [DURCISSEMENT RLS GEOSYLVA ET AUDIT AUTH] - 2026-10-01
+
+- Migration `20260929_0059` : RLS propriétaire activée et forcée sur
+  `geosylva_analysis_job` et `geosylva_cubage_session`, `DELETE` révoqué pour
+  `gsie_application` (DEC-000075, DEC-000077, RFC-0042).
+- Worker GeoSylva : contexte `app.internal_worker` transaction-local posé via
+  `set_internal_worker_context` avant chaque accès aux tables RLS.
+- Cubage : déduplication par `session_id` en plus de l'`Idempotency-Key`,
+  collisions converties en HTTP 409 via savepoint (transaction préservée).
+- Auth : `log_auth_event` restaure le contexte RLS précédent après insertion ;
+  la CHECK `audit_log` s'aligne sur les 28 actions de la migration `0053`
+  (dont les 18 actions d'authentification signalées manquantes au pentest du
+  2026-08-07).
+- `POST /public/contact` : paramètre `response: Response` restauré
+  (obligation slowapi `headers_enabled=True`), le singleton partagé est
+  supprimé.
+- IDENTITE-001 passe en 1.5.0 : date, décisions (DEC-000074, DEC-000075) et
+  traçabilité §8 alignées.
+- Forge : option `--gsie-handoff` sur `forge scrape` (handoff Data Registry
+  GSIE pour l'IFN), connecteur IFN durci (limite 512 Mo, SHA-256 streaming,
+  extraction zip anti-traversal et anti-lien symbolique).
+
+---
+
 ## [DIAGNOSTIC SECURITE CONTINU] - 2026-09-29
 
 - DEC-000091 proposée : orchestrateur `tools/security_diag.py` et hooks Git
