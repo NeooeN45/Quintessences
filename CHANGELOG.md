@@ -24,7 +24,12 @@ Format : `## [version] - YYYY-MM-DD`
   traçabilité §8 alignées.
 - Forge : option `--gsie-handoff` sur `forge scrape` (handoff Data Registry
   GSIE pour l'IFN), connecteur IFN durci (limite 512 Mo, SHA-256 streaming,
-  extraction zip anti-traversal et anti-lien symbolique).
+  extraction zip anti-traversal et anti-lien symbolique) ; dépendances
+  vulnérables mises à jour (urllib3 2.8.0, idna 3.20, virtualenv 21.14.2,
+  roboflow 1.5.1). Risque accepté et tracé : `diskcache 5.6.3`
+  (PYSEC-2026-2447) n'a pas de fix publié ; push Forge réalisé avec le
+  contournement d'urgence documenté `git push --no-verify` (hook pre-push),
+  rapport `output/security-diag/security-diag-20261001-194136.md`.
 
 ---
 
