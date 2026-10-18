@@ -1,5 +1,19 @@
 # ROADMAP — Quintessences / GSIE
 
+## Protection des dépôts — priorité courte du 18 octobre 2026
+
+- [x] Vérifier les six dépôts, leurs branches et leur visibilité réelle.
+- [x] Préparer les contrôles de secrets, de fichiers sensibles et de chaîne CI.
+- [ ] Publier les branches de qualité et vérifier les contrôles distants.
+- [ ] Appliquer la décision de confidentialité : droits administratifs du connecteur
+  insuffisants (403), à résoudre sans partager de jeton dans une discussion.
+- [ ] Vérifier les protections privées selon l’offre, Pages, accès et distribution TEST.
+- [ ] Harmoniser les licences et les droits de contribution après revue juridique.
+- [ ] Réconcilier les branches GSIE avec tests dédiés, sans fusion implicite.
+- [ ] Reprendre le parcours GeoSylva réception, stocks, enlèvements et exports
+  pour la démonstration du 21 octobre ; intégration FORLOG après ce parcours.
+
+
 ## Fiabilisation des environnements et des moteurs (2026-08-13)
 
 - [x] Cloisonner les rôles et namespaces `development`, `test`, `benchmark`,

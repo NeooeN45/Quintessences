@@ -84,7 +84,7 @@ GSIE/API/knowledge_stats.json
 apps/GeoSylva/
 # QGISIA — repo GitHub NeooeN45/QGISIAPRO
 apps/QGISIA/
-# Forge — usine de données (pas de remote configuré)
+# Forge — dépôt indépendant NeooeN45/Forge
 Forge/
 # Treekipedia — clone d'inspection du dépôt MIT (porte son propre .git).
 # Copie de travail servant l'analyse RFC-0030 ; la source de vérité reste le
@@ -102,3 +102,14 @@ GSIE/API/backups/
 # Rapports horodatés reproductibles (publiés comme artefacts CI, pas comme source).
 GSIE/API/tests/perf/results/data_registry_validation_*.json
 GSIE/API/tests/perf/results/data_registry_infrastructure_smoke_*.json
+
+# Identifiants et signatures privés
+!.env.template
+!.env.sample
+*.jks
+*.keystore
+*.p12
+*.pfx
+keystore.properties
+
+*.py[cod]

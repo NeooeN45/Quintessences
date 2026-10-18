@@ -4,6 +4,20 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [SÉCURITÉ DES DÉPÔTS] - 2026-10-18
+
+- Audit des six dépôts et de leur visibilité effective ; sources locales préservées.
+- Gitleaks 8.30.1 vérifié par empreinte, sorties masquées et garde des fichiers sensibles.
+- Deux fixtures de signature et l’identifiant public TAXREF qualifiés explicitement.
+- Checkout sans persistance du jeton, upload SARIF figé et délais de jobs bornés.
+- Dependabot uv natif ; suppression du robot de verrou disposant de droits d’écriture.
+- Actualisation de la compétence Git : Forge possède un dépôt distant indépendant.
+- Passage en privé demandé par le fondateur ; appels API bloqués par les droits
+  administratifs du connecteur. Aucun changement de visibilité prétendu accompli.
+- Revue de l’état documentaire centrée sur les branches réellement présentes ;
+  la fusion `main`/`feat/schemas-de-domaine` reste un chantier distinct.
+
+
 ## [CHAÎNE DE RAISONNEMENT — TROIS RFC] - 2026-08-17
 
 - Discussion sur l'amélioration de la chaîne de raisonnement GSIE, à
