@@ -2,10 +2,10 @@
 
 | Champ | Valeur |
 |---|---|
-| ID | DEC-000092 |
-| Statut | Draft — instruction du fondateur consignée, application à vérifier |
+| **ID** | DEC-000092 |
+| **Statut** | Draft — instruction du fondateur consignée, application à vérifier |
 | Date | 2026-10-18 |
-| Décideur | Camille Perraudeau (Fondateur) |
+| **Décideur** | Camille Perraudeau (Fondateur) |
 | Nature | Organisation et confidentialité |
 
 ## Instruction
