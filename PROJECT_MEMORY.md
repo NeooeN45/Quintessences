@@ -29,6 +29,13 @@ fixtures par empreinte, les permissions CI minimales, des actions figées et
 Dependabot natif pour uv. Le robot de régénération de verrou avec droit d’écriture
 est supprimé. Voir [le guide du dépôt](docs/QUALITE_DEPOT.md).
 
+L’audit du verrou API et ses correctifs (PyJWT 2.15.0, multidict 6.9.1,
+urllib3 2.8.0) ne retournent plus d’avis de vulnérabilité connu ; 288 tests
+unitaires d’identité passent avec ces versions. Voir
+[le suivi des dépendances](docs/DEPENDANCES_SECURITE_2026-10-18.md).
+La CI HA distante reste bloquée par l’image `minio/mc` inaccessible ; cela
+interdit de présenter l’ensemble du serveur comme validé.
+
 Le développement GeoSylva pour le 21 octobre reste prioritaire. Son archive source
 et les preuves de tests sont conservées dans les livrables de session ; le socle
 qualité est séparé du lot métier. La licence de Forge (MIT dans les métadonnées,

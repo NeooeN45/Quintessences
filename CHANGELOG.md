@@ -6,6 +6,10 @@ Format : `## [version] - YYYY-MM-DD`
 
 ## [SÉCURITÉ DES DÉPÔTS] - 2026-10-18
 
+- Verrou API : PyJWT 2.15.0, multidict 6.9.1, urllib3 2.8.0 ; 288 tests
+  d’identité passants et aucun avis connu sur cet export du verrou.
+- Risque d’infrastructure distinct : image minio/mc inaccessible dans la CI HA.
+
 - Audit des six dépôts et de leur visibilité effective ; sources locales préservées.
 - Gitleaks 8.30.1 vérifié par empreinte, sorties masquées et garde des fichiers sensibles.
 - Deux fixtures de signature et l’identifiant public TAXREF qualifiés explicitement.

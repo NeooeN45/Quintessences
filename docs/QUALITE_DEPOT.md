@@ -1,5 +1,14 @@
 # Qualité et sécurité du dépôt Quintessences
 
+| Champ | Valeur |
+|---|---|
+| Identifiant | QUALITE-DEPOT-2026-10-18 |
+| Statut | Draft |
+| Version | 1.0 |
+| Date | 2026-10-18 |
+| Auteur | Codex, pour revue du mainteneur |
+
+
 État du socle : 18 octobre 2026. Ce guide décrit des contrôles techniques ;
 il ne modifie ni la licence ni les droits d’accès GitHub.
 

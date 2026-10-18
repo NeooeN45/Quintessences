@@ -4,7 +4,9 @@
 
 - [x] Vérifier les six dépôts, leurs branches et leur visibilité réelle.
 - [x] Préparer les contrôles de secrets, de fichiers sensibles et de chaîne CI.
-- [ ] Publier les branches de qualité et vérifier les contrôles distants.
+- [x] Publier les branches de qualité et vérifier les nouveaux contrôles de secrets.
+- [ ] Résoudre le téléchargement MinIO en CI HA et terminer les autres contrôles
+  avant fusion de la PR ; aucun échec de la plateforme n’est masqué.
 - [ ] Appliquer la décision de confidentialité : droits administratifs du connecteur
   insuffisants (403), à résoudre sans partager de jeton dans une discussion.
 - [ ] Vérifier les protections privées selon l’offre, Pages, accès et distribution TEST.
