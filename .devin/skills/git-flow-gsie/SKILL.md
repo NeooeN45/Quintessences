@@ -37,7 +37,7 @@ test(gis-engine): couverture 100% des requêtes PostGIS
 
 - `apps/GeoSylva/` → repo indépendant GitHub: NeooeN45/GeoSylva
 - `apps/QGISIA/` → repo indépendant GitHub: NeooeN45/QGISIAPRO
-- `Forge/` → repo local, pas de remote
+- `Forge/` → dépôt indépendant GitHub : NeooeN45/Forge (branche `master`)
 
 Pour travailler sur un repo externe : cd dans le dossier, git indépendant.
 
@@ -53,3 +53,11 @@ Pour travailler sur un repo externe : cd dans le dossier, git indépendant.
 - Une seule préoccupation par PR
 - Reviewable en < 30 min
 - Titre = message du commit principal
+
+## Protection du travail
+
+- Vérifier les références distantes avant de conclure qu’un accès manque.
+- Préserver les changements non commités et les branches divergentes.
+- Ne jamais afficher les valeurs de secrets ; les détecteurs doivent les masquer.
+- Une visibilité privée ne remplace ni la licence ni la protection des branches.
+- Changer une visibilité, transférer un dépôt ou réécrire l’historique exige une décision explicite.

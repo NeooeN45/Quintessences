@@ -23,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -60,6 +61,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Validate source-of-truth registry
         run: |
@@ -95,15 +98,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check no secrets in tracked files
-        run: |
-          # Scan basique pour des patterns de secrets courants
-          if grep -rnE '(ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|sk-[a-zA-Z0-9]{20}|AKIA[0-9A-Z]{16})' \
-            --include='*.md' --include='*.py' --include='*.sh' --include='*.yml' --include='*.json' \
-            . | grep -v '.git/' ; then
-            echo "::error::Potential secret detected in tracked files!"
-            exit 1
-          fi
+      # Le workflow repository-security.yml remplace le grep qui affichait les valeurs.
 
       - name: Vérifier le cloisonnement des environnements de données
         run: |
@@ -158,6 +153,8 @@ jobs:
         working-directory: GSIE/API
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -237,6 +234,8 @@ jobs:
         working-directory: GSIE/API
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -271,6 +270,8 @@ jobs:
         working-directory: GSIE/API
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -332,6 +333,8 @@ jobs:
         working-directory: GSIE/API
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -391,6 +394,8 @@ jobs:
       GSIE_REQUIRE_MIGRATION_IMAGE: "true"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -482,6 +487,8 @@ jobs:
         working-directory: GSIE/ENGINES/EVIDENCE_ENGINE/rust
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@8641a17e25bf5b40c118d48fe0f81e8655731839 # 1.85.0
@@ -506,6 +513,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -523,6 +532,8 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -577,9 +588,19 @@ jobs:
           exit-code: "0"
 
       - name: Upload résultats SARIF vers GitHub Security
-        uses: github/codeql-action/upload-sarif@v4.37.4
+        if: ${{ !github.event.repository.private }}
+        uses: github/codeql-action/upload-sarif@ea14db8afdef5d462e69d78c4ca45002d4522418 # v4.37.4
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Conserver le rapport Trivy en dépôt privé
+        if: ${{ always() && github.event.repository.private }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: trivy-private-report
+          path: trivy-results.sarif
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Échec CI si vulnérabilité HIGH ou CRITICAL corrigible détectée
         if: always()
@@ -607,6 +628,8 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
@@ -632,9 +655,19 @@ jobs:
         run: bandit -r GSIE/API/src/gsie_api/ --severity-level medium --confidence-level medium --skip B101
 
       - name: Upload résultats SARIF vers GitHub Security
-        uses: github/codeql-action/upload-sarif@v4.37.4
+        if: ${{ !github.event.repository.private }}
+        uses: github/codeql-action/upload-sarif@ea14db8afdef5d462e69d78c4ca45002d4522418 # v4.37.4
         with:
           sarif_file: bandit-results.sarif
+
+      - name: Conserver le rapport Bandit en dépôt privé
+        if: ${{ always() && github.event.repository.private }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: bandit-private-report
+          path: bandit-results.sarif
+          retention-days: 7
+          if-no-files-found: error
 
   governance-check:
     name: Governance Guard
@@ -643,6 +676,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Check no Locked documents modified without RFC

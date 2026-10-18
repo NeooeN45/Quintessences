@@ -6,7 +6,41 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-08-17 — **RFC-0041 et DEC-000073 proposés pour réconcilier le contrat GeoSylva–GSIE.** |
+| **Dernière mise à jour** | 2026-10-18 — audit des dépôts et durcissement CI ; confidentialité demandée, application bloquée par les droits de l’intégration. |
+
+## Sécurité des dépôts et reprise — 18 octobre 2026
+
+La décision [DEC-000092](03_DECISIONS/DEC-000092-confidentialite-depots.md)
+consigne la demande du fondateur de renforcer les dépôts et de passer en privé
+Quintessences et GeoSylva. Les deux appels administratifs GitHub renvoient 403
+« Resource not accessible by integration » : **ils sont encore publics** à cette
+vérification. Forge, Hub et horizon-origin-web sont déjà privés ; geosylva-privacy
+est public et archivé. Aucun achat, transfert, changement de licence ou déploiement
+n’est effectué. Les graphes GitHub Pages devront être retirés lors du changement.
+
+Cette branche de qualité part de `main` (`d7b400c`). La branche
+`feat/schemas-de-domaine` (`9e6864b`) contient des évolutions distinctes : les
+historiques divergent de 34 et 52 commits. Elles ne sont ni perdues ni fusionnées
+implicitement. Les comptes rendus historiques ci-dessous ne valent pas validation
+de l’ensemble de cette branche de développement.
+
+Le socle ajoute le contrôle Gitleaks avec valeurs masquées, des exceptions de
+fixtures par empreinte, les permissions CI minimales, des actions figées et
+Dependabot natif pour uv. Le robot de régénération de verrou avec droit d’écriture
+est supprimé. Voir [le guide du dépôt](docs/QUALITE_DEPOT.md).
+
+L’audit du verrou API et ses correctifs (PyJWT 2.15.0, multidict 6.9.1,
+urllib3 2.8.0) ne retournent plus d’avis de vulnérabilité connu ; 288 tests
+unitaires d’identité passent avec ces versions. Voir
+[le suivi des dépendances](docs/DEPENDANCES_SECURITE_2026-10-18.md).
+La CI HA distante reste bloquée par l’image `minio/mc` inaccessible ; cela
+interdit de présenter l’ensemble du serveur comme validé.
+
+Le développement GeoSylva pour le 21 octobre reste prioritaire. Son archive source
+et les preuves de tests sont conservées dans les livrables de session ; le socle
+qualité est séparé du lot métier. La licence de Forge (MIT dans les métadonnées,
+propriétaire dans le README) reste à arbitrer, sans changement rétroactif.
+
 
 ### Fiabilisation environnements et moteurs (2026-08-13)
 

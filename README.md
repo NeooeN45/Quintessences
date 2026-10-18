@@ -658,3 +658,7 @@ Voir `LICENSE` pour le texte complet.
 Pour toute question, réclamation ou collaboration :
 
 **5jvw9s5zj@mozmail.com**
+
+## Qualité du dépôt
+
+[Contrôles et procédure de contribution](docs/QUALITE_DEPOT.md) · [Signalement privé de vulnérabilités](SECURITY.md).

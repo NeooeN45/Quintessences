@@ -6,7 +6,7 @@ version: 2
 
 updates:
   # Dépendances Python (API GSIE)
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/GSIE/API"
     schedule:
       interval: "weekly"
