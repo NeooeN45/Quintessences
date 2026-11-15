@@ -14,7 +14,7 @@
 | Autorité de la décision enregistrée | Camille Perraudeau (Fondateur) |
 | Priorité | Gouvernance préalable à la poursuite GeoSylva |
 
-## 1. Mission reçue
+## Mission
 
 Le Fondateur a tranché DEC-000073 le 15 novembre 2026 : **« validée avec
 mise à jour »**. Enregistrer les quatre éléments suivants :
@@ -29,7 +29,7 @@ mise à jour »**. Enregistrer les quatre éléments suivants :
 4. Limiter le lancement aux métiers technicien forestier et conducteur de
    travaux forestiers ; geler tout chantier hors GeoSylva jusqu'à sa sortie.
 
-## 2. Livrables et périmètre autorisé
+## Livrables et périmètre autorisé
 
 - Créer [DEC-000093](../../03_DECISIONS/DEC-000093.md), complément de DEC-000073
   sans réécrire cette dernière.
@@ -44,7 +44,7 @@ La synchronisation est **proposée**, non appliquée dans cette mission. Le
 diff est limité à cinq documents Markdown. La présence du code sur la branche
 de départ sert à la relecture ; elle n'est pas une modification de code de ce lot.
 
-## 3. Documents obligatoires
+## Documents obligatoires
 
 - `AGENTS.md`, `00_CONSTITUTION/README.md`, `PACT_FOR_AI_AGENTS.md` et
   `GSIE-CON-000`, `GSIE-CON-001`, `GSIE-CON-002`, `GSIE-CON-004`, `GSIE-CON-005`.
@@ -54,7 +54,7 @@ de départ sert à la relecture ; elle n'est pas une modification de code de ce 
 - Sources du BFF, de la préparation, du worker et des contrats concernés au
   commit de départ, uniquement en lecture.
 
-## 4. Vérification des identifiants
+## Vérification des identifiants
 
 L'inventaire du 15 novembre couvre les **35 branches distantes**, leurs SHA,
 les fichiers numérotés et les variantes du registre, ainsi que les deux branches
@@ -63,7 +63,7 @@ locales préexistantes. Les maxima observés sont 000092 pour les décisions,
 **DEC-000093** et **GSIE-PROMPT-0032**. Aucune nouvelle RFC n'est créée.
 Le détail de l'inventaire figure dans le rapport de revue.
 
-## 5. Interdictions et conditions d'arrêt
+## Interdictions
 
 - Aucun changement de code, contrat exécutable, test, SQL ou migration ;
   aucune installation de dépendance ni aucun déploiement.
@@ -71,13 +71,16 @@ Le détail de l'inventaire figure dans le rapport de revue.
 - Aucune donnée, règle, qualification, preuve ou validation manquante inventée.
 - Ne pas présenter l'adaptation du chemin comme une homologation du DTO entier.
 - Ne pas pousser sur `main`, fusionner ni publier implicitement le résultat.
-- Suspendre l'édition en cas de collision d'identifiants ou de changements locaux
-  inconnus ; réexaminer le numéro si une branche distante a réservé le même ID.
 
 La production des documents, de la branche dédiée et du commit local est
 autorisée par la mission. Toute suite technique est une mission distincte.
 
-## 6. Méthode et acceptation
+## Conditions d'arrêt
+
+- Suspendre l'édition en cas de collision d'identifiants ou de changements locaux
+  inconnus ; réexaminer le numéro si une branche distante a réservé le même ID.
+
+## Méthode et acceptation
 
 1. Vérifier les références distantes et les numéros sur toutes les branches.
 2. Créer un worktree dédié depuis le snapshot portant le BFF.
@@ -86,9 +89,17 @@ autorisée par la mission. Toute suite technique est une mission distincte.
 5. Exécuter `python3 tools/check_governance_consistency.py` et examiner le diff.
 6. Vérifier l'absence de modification de DEC-000073, de documents Locked, du code
    et des trois fichiers canoniques dont la synchronisation est seulement proposée.
-7. Remettre branche, commit, cinq fichiers, écarts fichier/ligne et résultat du contrôle.
 
-## 7. État de remise
+## Rapport obligatoire
+
+Remettre :
+
+- La branche et le commit.
+- Les cinq fichiers du lot documentaire.
+- Les écarts avec leurs références fichier/ligne.
+- Le résultat du contrôle.
+
+## État de remise
 
 La décision du Fondateur est enregistrée comme validée ; la mission et les
 propositions de synchronisation sont remises **EN_REVUE**. Cela ne constitue
