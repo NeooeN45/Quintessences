@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | **Identifiant** | AUDIT-RECONCILIATION-SERVEUR-2026-11-16 |
-| **Statut documentaire** | Draft — preuves finales à compléter par l'orchestrateur |
+| **Statut documentaire** | Draft — remise en revue, résultats et limites consignés |
 | **État de remise** | EN_REVUE ; aucune auto-approbation ni autorisation de fusion |
 | **Version** | 1.0.0 |
 | **Date** | 2026-11-16 |
@@ -21,9 +21,9 @@ identifiants de migration déjà publiés. Elle prépare une seule lignée Alemb
 avec une création historique et deux validations explicites du schéma, pour
 préserver les bases issues de `main` et de `feat/schemas-de-domaine`.
 
-Ce bilan distingue les preuves déjà observées des campagnes encore en attente.
-Les résultats de tests, de CI et de sauvegarde distante laissés « EN ATTENTE »
-doivent être complétés à partir des artefacts avant acceptation technique.
+Ce bilan distingue les preuves observées et les campagnes non terminées à la
+date de son relevé. Les résultats de tests et de CI sont détaillés en section 6 ;
+le SHA de publication et sa sauvegarde sont relevés dans la PR après le push.
 Aucune base utilisateur n'est migrée par cette mission ; aucun succès local
 ne vaut qualification du serveur en production.
 
@@ -52,9 +52,10 @@ les documents déjà publiés.
 | Parents de cette fusion | `efb682b247e8e9e36af179f48af3466775855a54` et `d7b400cb15d9f2216f3296d92754a6e67e55a63f`, relus par `git show -s --format='%H%n%P%n%s' HEAD` |
 | Commit de compatibilité des migrations | `c81b5b1` ; durcissement final et correctifs de contrôles dans `df4aea9` |
 | Fusion du snapshot sécurité | `2b9f191265bc3475fe417163355ad399dc75eec9` ; parents `c81b5b1` et `e3e18d4` |
-| Commit final remis en revue | EN ATTENTE |
-| PR vers `main` et URL | EN ATTENTE |
-| Sauvegarde distante datée et SHA relu sur GitHub | EN ATTENTE |
+| Commit de code final vérifié | `2d829871ee4046d0c9522accf5d55445af2cb301` ; les compléments ultérieurs du bilan et du registre sont documentaires |
+| Publication documentaire finale | SHA du HEAD remis dans les métadonnées de la PR, distinct du commit de code vérifié ci-dessus |
+| PR vers `main` et URL | [PR nº 74, brouillon](https://github.com/NeooeN45/Quintessences/pull/74), sans fusion |
+| Sauvegarde distante datée | `backup/quintessences-reconciliation-2026-11-16-163633Z` ; première publication du code `2d82987`, puis avance normale vers le HEAD documentaire ; SHA final relu dans la PR |
 
 L'historique est conservé par des fusions ordinaires. Les publications et la PR
 restent limitées à la branche d'intégration ; aucun push sur `main`, aucune
@@ -67,7 +68,7 @@ dans la remise.
 |---|---|
 | Serveur déjà présent dans `feat` | Migrations `0052` à `0059`, contrats Forge/TEST, hydratation et préparation stationnelles, BFF GeoSylva et protections existantes sont des apports hérités ; cette mission ne les présente pas comme des fonctionnalités nouvellement développées |
 | Apports de `main` | CI et couverture combinée, Docker, tests d'identité/intake et de routeurs, documents qualité/recherche hérités ; conservation du contenu utile des deux branches |
-| Apports du snapshot sécurité | Trois commits et 24 fichiers modifiés depuis `main` : contrôles de dépôt, secrets et workflows, verrou API et corrections de dépendances, SECURITY et documents datés ; intégration et vérifications finales encore à tracer |
+| Apports du snapshot sécurité | Trois commits et 24 fichiers modifiés depuis `main` : contrôles de dépôt, secrets et workflows, verrou API et corrections de dépendances, SECURITY et documents datés ; fusion `2b9f191` et contrôles repris en section 6 |
 | Nouveau travail de réconciliation | Résolution des quatre conflits, génération OpenAPI, compatibilité des deux `0051`, validation finale `0060`, tests des historiques et de conservation, revue de fraîcheur, présent bilan et DEC-000094 `Draft` |
 | Pilotage documentaire | Textes de synchronisation proposés en section 8 ; aucune réécriture de `PROJECT_MEMORY.md`, `ROADMAP.md` ou `CHANGELOG.md` déduite de ces propositions |
 
@@ -97,7 +98,7 @@ Dependabot uv natif. Ces constats de diff ne sont pas des tests exécutés.
 |---|---|---|
 | `GSIE/API/src/gsie_api/infrastructure/models/__init__.py` | Un seul import `field_intake` ; conservation de `geosylva_analysis` et `geosylva_cubage`, nécessaires aux modèles hérités de `feat` | Registre relu après résolution |
 | `GSIE/API/tests/unit/test_routers_coverage_ext.py` | Union intégrale des trois méthodes de mapping de `feat` et des deux méthodes de traduction de `main` ; assertions conservées | 49 scénarios réussis, XML et log en section 6 |
-| `GSIE/API/tests/unit/test_migration_contract.py` | Tête attendue alignée sur `20261116_0060` ; assertions de lignée conservées et complétées par des tests des deux identifiants historiques | Résultat final EN ATTENTE |
+| `GSIE/API/tests/unit/test_migration_contract.py` | Tête attendue alignée sur `20261116_0060` ; assertions de lignée conservées et complétées par des tests des deux identifiants historiques | 11 cas réussis ; contrôle de tête unique reproduit |
 | `GSIE/API/docs/openapi.json` | Régénération par `scripts/extract_openapi.py` depuis l'application fusionnée, avec son mécanisme de fallback Evidence Python ; aucune fusion manuelle des schémas JSON | 151 chemins, 299 schémas, version 0.1.0 ; commande en section 6 |
 
 Les méthodes `should_map_analyse_hydration_errors`,
@@ -261,10 +262,19 @@ downgrade préalable n'est prévu pour une base à conserver.
 
 ### 6.1 Environnement et portée des preuves
 
-Les commandes API sont exécutées depuis `GSIE/API` avec Python 3.12 dans
-`.venv`. L'orchestrateur a préparé l'environnement avec uv et le verrou
-`--frozen --extra dev` de la branche de départ ; une synchronisation après
-la fusion sécurité reste à consigner.
+Les premières commandes API utilisent Python 3.12 dans `.venv`, préparé avec
+le verrou de la branche de départ. Après la fusion sécurité, `uv lock --check`
+et `uv sync --locked --extra dev` réussissent avec les caches dans le workspace.
+La suite complète finale utilise explicitement Python 3.12.14 de
+`/workspace/.onboarding/venvs/quintessences-reconciliation-2026-11/bin/python`,
+le verrou fusionné (dont PyJWT 2.15.0) et le `PYTHONPATH` du worktree intégré.
+La `.venv` locale est également synchronisée avant le harnais de mutation.
+
+La campagne complète utilise deux workers, `GSIE_REQUIRE_DOCKER=1`,
+`GSIE_REQUIRE_MIGRATION_IMAGE=true` et une empreinte avant/après des 621 fichiers
+versionnés des sources, tests, fixtures, migrations et configurations API.
+Les clés JWT locales sont générées pour les tests, ignorées par Git et absentes
+des commits. Les dates techniques des JUnit et de GitHub sont en UTC.
 
 L'image préexistante retenue pour les essais isolés est
 `gsie-onboarding-db:local`, identifiant
@@ -292,7 +302,7 @@ PYTHONPATH=/workspace/quintessences-integration-2026-11/GSIE/API/src \
 
 | Preuve | Résultat | Code de sortie et limite |
 |---|---|---|
-| Génération OpenAPI après fusion de `main` | 151 chemins, 299 schémas, version 0.1.0 | 0 rapporté par l'orchestrateur ; stabilité sur tête finale EN ATTENTE |
+| Génération OpenAPI après fusion de `main` | 151 chemins, 299 schémas, version 0.1.0 | 0 ; égalité avec l'application relue et contrôle OpenAPI distant réussi sur `2d82987` |
 | Union des tests routeurs | 49 réussis, 0 échec, 0 erreur, 0 ignoré ; 3,574 s dans JUnit | 0 rapporté par l'orchestrateur ; micro-suite `--no-cov`, aucune mesure de couverture opposable |
 | Lecture du JUnit et du log | Racine `testsuites` ; suite `pytest` avec `tests="49"`, `failures="0"`, `errors="0"`, `skipped="0"` ; log `49 passed in 3.57s` | Artefacts relus par l'agent documentation |
 | Comparaison des créations | 17 colonnes, mêmes quatre contraintes et quatre index explicites | Lecture des deux snapshots ; compilation SQL hors connexion et enregistreur d'opérations par l'architecte, code 0 rapporté ; aucun essai PostgreSQL dans cette analyse |
@@ -304,23 +314,22 @@ Le résumé d'un agent ne remplace pas leur relecture ni celle du diff final.
 L'analyse indépendante a utilisé SQLAlchemy 2.0.36 et Alembic 1.14.0 pour
 compiler les deux anciennes créations et comparer leurs signatures. Elle a
 aussi vérifié un graphe hypothétique en mémoire, code 0 ; les tests sur le
-graphe réellement implémenté et PostgreSQL restent à consigner. Le modèle
+graphe réellement implémenté et PostgreSQL sont attestés ci-dessous. Le modèle
 `field_intake.py` est identique dans les trois snapshots, blob
 `b481a1f4f8b735d3f96171bf42c28b67df8d7886` ; le fichier B est identique dans
 `main` et sécurité, blob `1cadf819c2d297df6872100872b422a7df5263f6`.
 
-### 6.3 Campagnes obligatoires à compléter
+### 6.3 Résultats des campagnes locales
 
-« EN ATTENTE » signifie qu'aucun succès n'est attesté par ce bilan à ce stade.
-Toute variante réelle de commande, code de sortie non nul, test ignoré et motif
-de non-exécution doit être conservé lors de la mise à jour.
+Les résultats des micro-suites sont distincts de ceux de la suite complète et
+de la politique multicouche. Un test ignoré n'est jamais compté comme réussi.
 
 | Commande / campagne | Résultat | Code | Artefact |
 |---|---|---|---|
-| `python3 tools/check_governance_consistency.py`, racine | Aucune incohérence détectée | 0 | Nouvelle exécution finale à consigner |
-| `python3 tools/check_source_of_truth.py`, racine | 10 sources conformes au 16 novembre | 0 | Nouvelle exécution finale à consigner |
-| `python3 tools/check_ai_prompts.py`, racine | 23 missions conformes | 0 | Nouvelle exécution finale à consigner |
-| `python3 tools/check_build_consistency.py`, racine | Construction conforme | 0 | Nouvelle exécution finale à consigner |
+| `python3 tools/check_governance_consistency.py`, racine | Aucune incohérence détectée | 0 | `check_governance_consistency-final.log` |
+| `python3 tools/check_source_of_truth.py`, racine | 10 sources conformes au 16 novembre | 0 | `check_source_of_truth-final.log` |
+| `python3 tools/check_ai_prompts.py`, racine | 23 missions conformes | 0 | `check_ai_prompts-final.log` |
+| `python3 tools/check_build_consistency.py`, racine | Construction conforme | 0 | `check_build_consistency-final.log` |
 | `.venv/bin/python -m alembic heads`, API | `20261116_0060 (head)` ; une tête | 0 | `migration-contract-final.log` |
 | Lignée Alembic et contrat unitaire | 11 réussis | 0 | `migration-contract-final.xml` |
 | Créations historiques reproduites sur PostgreSQL réel, sans `stamp` ni `create_all` | 50 migrations authentiques de `main` et 58 de `feat` ; blobs contrôlés | 0 | `qa-reconciliation-final-v2.xml` |
@@ -330,13 +339,18 @@ de non-exécution doit être conservé lors de la mise à jour.
 | Schémas divergents refusés sans altération des lignes | 87 dérives et trois attaques de catalogue refusées ; 155 scénarios ciblés réussis au total, aucun ignoré | 0 | Même JUnit, 280,132 s |
 | Sauvegarde, restauration puis upgrade des historiques `main` et `feat` | 2 réussis ; 17 colonnes, trois sentinelles, données liées et catalogue d'intake conservés | 0 | `qa-backup-restore-newcases.xml` ; deux bases distinctes dans chaque cluster jetable, pas d'essai inter-clusters |
 | Formes restaurées du CHECK et refus voisins | 24 réussis : 7 formes connues admises, 17 expressions hors contrat refusées | 0 | Même JUnit ; 26 cas ciblés en 33,845 s, aucun ignoré |
-| Python final, `pytest tests/ -q -n 2`, API, première exécution | 3 562 réussis, 11 échoués, 64 ignorés ; couverture 95,8107 %, seuil non atteint | 1 | `full-suite.xml`, `coverage-full.json` ; reprise après corrections EN ATTENTE |
+| Python final, `pytest tests/ -q -n 2`, API, première exécution | 3 562 réussis, 11 échoués, 64 ignorés ; couverture 95,8107 %, seuil non atteint | 1 | `full-suite.xml`, `coverage-full.json` ; causes corrigées, preuve historique conservée |
+| Suite complète sur `2d82987` | 3 702 réussis, 0 échec, 0 erreur, 64 ignorés préexistants ; 3 766 cas | 0 | `full-suite-final.xml`, `full-suite-final.log`, `full-suite-final-state.json` ; 856,67 s |
+| Régression finale des migrations dans la suite complète | 181 réussis : 128 intake unitaires/intégration, 2 baseline et 51 isolation/RGPD | 0 | Sous-ensemble vérifié dans le même JUnit complet ; helper final `425ee399…` |
 | Reproduction ciblée bundle/contact après correction | 16 réussis ; deux routeurs à 100 % | 0 | `qa-bundle-contact.xml`, `coverage-qa-bundle-contact.json` |
 | Contrat BFF, cycle de vie et provenance simulée | 138 réussis, dont 99 nouveaux ; 679/681 lignes BFF couvertes | 0 | `bff-tests-final.log`, `coverage-bff.json` ; entrée CLI et garde inaccessible restent non couvertes |
 | Typage strict API | 272 fichiers sans erreur | 0 | `mypy-final.log` |
 | Harnais de mutation rapide | 72/72 mutations détectées ; les cibles déclarées sont toutes unitaires | 0 | `mutation-final.log`, `mutation-final-state.json` ; 702,43 s ; aucune modification des sources réelles par le harnais |
-| Couverture complète et multicouche | EN ATTENTE | EN ATTENTE | À joindre |
-| Revue indépendante migration et union des tests | Aucun blocage signalé dans ce périmètre ; helper final vérifié par empreinte | Sans objet | Revue des correctifs de CI en cours ; aucune homologation globale du serveur |
+| Couverture complète globale | 19 533/20 099 lignes ; 97,183939 %, seuil global 97,10 % atteint | 0 | `coverage-full-final.json` |
+| Politique multicouche, `scripts/check_coverage_policy.py --report …/coverage-full-final.json` | Refus : `geosylva/cubage_schemas.py` 155/156 lignes, 99,36 % au lieu de 100 % ; ligne 77 inaccessible | 1 | Aucune exclusion ou baisse de seuil ajoutée ; les autres exigences ne signalent pas de défaut |
+| Ruff et format | Contrôle réussi ; 547 fichiers déjà au format attendu | 0 | Commandes sur `src tests`, reproduites après gel |
+| Tests des outils de gouvernance | 12 réussis | 0 | `python3 -m unittest discover -s tools/tests -p 'test_*.py'` |
+| Revue indépendante migration, union des tests, correctifs de CI et BFF | Aucun blocage signalé dans la compatibilité des migrations ; helper final vérifié par empreinte | Sans objet | Assertions anciennes conservées ; limites de restitution, trace et couverture explicites ; aucune homologation globale du serveur |
 
 La première campagne de 155 tests porte sur le helper de SHA-256
 `887a4b49afbe10b645ba1f14bbd6d38ad26b0903b5a1a7de687cff3e32e543e4`.
@@ -361,7 +375,7 @@ octet par octet à celles de la campagne précédente. Son SHA-256 est
 `425ee3993f9d7be17e0d90d873f420e7bcf2ce5cf14aa9b52cccef5996719180`.
 La revue indépendante confirme l'étroitesse du diff ; les 26 nouveaux tests
 sur ce helper passent. Leurs 102 anciens voisins sont désélectionnés dans ce
-passage ciblé, et doivent être inclus dans la suite complète finale.
+passage ciblé ; ils sont tous inclus dans la suite complète finale réussie.
 
 Les 11 échecs de la première suite complète ont deux causes : sept tests
 cherchent un exemple dans le dépôt externe Forge absent du clone CI ; quatre
@@ -380,8 +394,9 @@ La première tentative avait aussi des entrées en cours de changement
 (`full-suite-input-drift.*`) ; la seconde sur fichiers figés a permis d'isoler
 la cause (`full-suite-collection-ids.*`). Des identifiants de scénarios stables
 remplacent ces noms aléatoires, sans changer leurs entrées ni assertions.
-Aucun succès n'est attribué à ces tentatives. La campagne finale doit porter
-sur des fichiers figés et des empreintes égales.
+Aucun succès n'est attribué à ces tentatives. La campagne finale porte sur
+des fichiers figés : empreintes avant/après égales,
+`3aca4d7aed38bcded8dfcd8b079a2bacbce3375bf7d195203a26ee6f2e806082`.
 
 ### 6.3.1 Ajustements nécessaires aux contrôles hérités
 
@@ -398,31 +413,66 @@ sur des fichiers figés et des empreintes égales.
   les propositions 88 à 91 restent explicitement en attente de validation.
   Le garde existant n'est pas affaibli.
 
-### 6.4 CI distante et sauvegarde
+### 6.4 CI distante sur le commit de code vérifié
 
-Première publication : [PR nº 74](https://github.com/NeooeN45/Quintessences/pull/74),
-en brouillon vers `main`, tête `8b1a0d1b41b0de48cdb26d47e9134b811cff2b3c`.
-Sur cette tête, les jobs Markdown, cohérence, Governance Guard, Bandit,
-Rust, gouvernance des sources et secrets réussissent. La suite Python et ses
-jobs dépendants restent à suivre sur la tête finale.
-Le [run HA 43900525818](https://github.com/NeooeN45/Quintessences/actions/runs/43900525818)
-échoue au téléchargement de `minio/mc:RELEASE.2025-08-13T08-35-41Z`
-avec `pull access denied`, avant les migrations et essais TLS : le blocage
-historique est reproduit, aucune qualification HA n'est acquise.
+Le relevé ci-dessous porte sur `2d829871ee4046d0c9522accf5d55445af2cb301`,
+événement `pull_request`, [run CI 43904802076](https://github.com/NeooeN45/Quintessences/actions/runs/43904802076).
+Les compléments documentaires du bilan et du registre déclenchent un nouveau
+run : ses états courants doivent être lus dans la PR et ne sont pas déduits
+du présent tableau.
 
-| Élément attendu | État |
-|---|---|
-| Run(s), URL, événement et SHA réellement testés | EN ATTENTE |
-| Résultat de chaque job, dont jobs ignorés ou annulés et cause | EN ATTENTE |
-| `ci-gate` et politique de couverture combinée DEC-000066 | EN ATTENTE |
-| Sécurité, dépendances et secrets sur la tête finale | EN ATTENTE |
-| HA et dépendances d'infrastructure | EN ATTENTE ; le blocage historique `minio/mc` doit être requalifié |
-| Référence distante de sauvegarde datée | EN ATTENTE |
-| SHA relu sur GitHub et correspondance avec le commit remis | EN ATTENTE |
+| Job | Conclusion observée | Précision |
+|---|---|---|
+| Lint Markdown | Vert | Corpus et nouveaux documents |
+| Consistency Checks | Vert | Quatre contrôles et tests des outils |
+| Governance Guard | Vert | Documents Locked et champs DEC |
+| Python lint + type + test | Vert | Ruff, mypy, OpenAPI et tests unitaires |
+| Python mutation harness | Vert | Harnais existant conservé |
+| Python integration tests (PostGIS + Redis) | Rouge | 467 réussis, 1 échoué : course sur `ix_resource_gsie_id` dans le test de huit analyses concurrentes ; détails ci-dessous |
+| Python couverture combinée | Ignoré par dépendance | Intégration rouge ; aucun résultat multicouche distant acquis |
+| Rust clippy + test | Vert | Python 3.12 explicite pour PyO3 |
+| Docker build | Vert | Image API construite, non déployée |
+| Data Registry (PostgreSQL + MinIO) | Rouge | `minio/minio` : `pull access denied`, sortie 125 ; aucun scénario Registry réel exécuté, absence d'artefacts consécutive |
+| Scan de sécurité (Trivy) | Rouge | Image reconstruite localement sur la branche : 21 alertes corrigeables signalées, 10 système et 11 bibliothèques ; pas d'exception ajoutée |
+| Analyse SAST Python (Bandit) | Vert | Garde de sévérité conservé |
+| CI Gate (bloque merge) | Rouge | Jobs obligatoires en échec/ignorés ; protection conservée |
+| Source governance | Vert | [Run 43904802069](https://github.com/NeooeN45/Quintessences/actions/runs/43904802069) |
+| Secrets et fichiers sensibles | Vert | [Run 43904802038](https://github.com/NeooeN45/Quintessences/actions/runs/43904802038), Gitleaks masqué |
+| Deux replicas, TLS et drainage | Rouge | [Run 43904802117](https://github.com/NeooeN45/Quintessences/actions/runs/43904802117) : `minio/mc` inaccessible avant les essais HA |
 
-Un contrôle local réussi ou un ancien run vert ne remplace pas les résultats
-de la tête soumise à la PR. Le bilan doit conserver les jobs rouges, ignorés,
-annulés ou non déclenchés et leur impact réel sur l'acceptation.
+La suite locale complète réussie ne permet pas d'effacer l'échec concurrent
+distant : huit sessions indépendantes ont heurté l'index unique
+`ix_resource_gsie_id` lors de la matérialisation de l'agent moteur,
+`engines/recommendation/engine.py:433`. Le test reste inchangé et actif ; aucun
+parallélisme n'est réduit pour obtenir un passage vert.
+
+Le diagnostic en lecture seule retrouve exactement les mêmes blobs dans les
+trois sources et dans `2d82987` : moteur de recommandation
+`3ee8a29e23f93348634a393c95aee8a022b8a3e7`, test d'orchestration
+`e222b43607f12ce239d8fb748f807302b8d165a6`, modèle racine
+`31c7b56403f9b91f7b8990f613d842cbf5f0c7f9` et baseline
+`ae7f17aca65c5140e9ae9deaa7faed388f8f42b0`. Ce défaut est donc hérité,
+pas créé par la résolution des conflits. Le test concurrent et l'upsert ont
+été introduits le 15 août, commits `22b4dc9` et `554f0e2`.
+
+`ON CONFLICT (id) DO NOTHING` arbitre la seule PK alors que `gsie_id` est
+également unique. La correction minimale proposée, non appliquée dans ce lot,
+est un `ON CONFLICT DO NOTHING` sans cible pour la racine `ResourceModel`,
+avec la cible `AgentModel.id` conservée pour l'enfant. Elle doit être relue
+et validée avec concurrence réelle et collisions incohérentes : un autre UUID
+portant le même `gsie_id` ne doit pas être adopté, et la cohérence des
+métadonnées d'un UUID déjà présent n'est pas prouvée par cet upsert.
+
+Trivy scanne bien une image reconstruite dans le job malgré le tag local
+`ghcr.io/neooen45/gsie-api:latest` : ce n'est pas la preuve d'un déploiement ni
+le scan supposé d'une vieille image distante. Le rapport signale 17 HIGH et
+4 CRITICAL corrigeables ; leur qualification et mise à jour restent à faire,
+sans abaisser la porte ni enrichir `.trivyignore` pour les masquer.
+
+La sauvegarde `backup/quintessences-reconciliation-2026-11-16-163633Z`
+est d'abord publiée sur le code vérifié, puis avancée sans réécriture vers le
+commit documentaire final. Le SHA final relu est consigné dans la description
+de la PR et dans la remise ; il doit correspondre au HEAD final publié.
 
 ## 7. Revue du registre des sources de vérité
 
@@ -440,7 +490,7 @@ doivent être examinés conformément à DOCUMENT_CONTROL, section 7.
 
 | Corpus | Preuve de revue à consigner | Conclusion et limites |
 |---|---|---|
-| `etat_projet` | Lecture des en-têtes et sections récentes de `PROJECT_MEMORY.md`, `ROADMAP.md` et `CHANGELOG.md` ; confrontation au contrat d'intake et aux preuves disponibles ; inspection structurelle des liens par le relecteur | État RLS/migration `0059` du 1er octobre, pilotage GeoSylva/G1–G5 et chantiers ouverts relus. Les ajouts de sécurité datent du 18 octobre ; une nouvelle proposition figure en section 8. La lecture n'autorise pas une réécriture et la tête finale reste à vérifier |
+| `etat_projet` | Lecture des en-têtes et sections récentes de `PROJECT_MEMORY.md`, `ROADMAP.md` et `CHANGELOG.md` ; confrontation au contrat d'intake et aux preuves disponibles ; inspection structurelle des liens par le relecteur | État RLS/migration `0059` du 1er octobre, pilotage GeoSylva/G1–G5 et chantiers ouverts relus. Les ajouts de sécurité datent du 18 octobre ; la tête `0060` est vérifiée mais les vues restent historiques. Leur synchronisation nouvelle est seulement proposée en section 8 |
 | `directives_actives` | Lecture intégrale indépendante des sept directives actives et des décisions levant les anciennes restrictions ; comparaison des blobs entre les trois sources | Sept blobs identiques, relus par l'agent documentation avec `git rev-parse SHA:chemin` ; inventaire ci-dessous |
 | Propriétaire et statut | Lecture des champs `owner` / `status` et confrontation aux auteurs et arbitrages pertinents | Initialement Direction technique / canonique pour `etat_projet` ; Fondateur / canonique pour `directives_actives`, cohérent avec les auteurs. Maintien des propriétaires proposé ; mandats non confirmés par une source externe |
 | Liens et doublons | Inspection structurelle des liens Markdown relatifs des trois vues par le relecteur ; comptage indépendant des titres `##` suivi d’un espace dans chaque snapshot | Aucune cible locale absente détectée par cette inspection ; ancres non contrôlées, aucun appel réseau. Le même titre d'assainissement apparaît 69 fois dans chacun des trois CHANGELOG ; défaut préexistant, conservé |
@@ -480,15 +530,17 @@ combine leur structure complète (titres/liens) et une lecture ciblée :
 Elle ne prétend pas relire intégralement les 11 160 lignes de ces trois vues,
 ni requalifier chacune de leurs preuves historiques.
 
-La revue préalable indépendante n'a exécuté aucun test ni contacté de base.
-L'examen adversarial du diff final reste à joindre. Ces constats ne valident
+La revue indépendante n'a lancé aucune nouvelle campagne de tests ni contacté
+de base ; elle a relu les diffs, assertions, JUnit, empreintes et limites.
+Les essais PostgreSQL et la suite complète sont exécutés par les rôles QA
+et orchestrateur, avec les résultats de la section 6. Ces constats ne valident
 pas de nouveaux contenus, et le statut global
 `canonique` d'un corpus ne transforme pas un DEC ou une directive `Draft`
 en décision applicable.
 
-### 7.2 Métadonnées proposées après revue effective
+### 7.2 Métadonnées appliquées après revue effective
 
-| Corpus | Statut proposé | Dernière revue proposée | Prochaine revue maximale proposée | Justification |
+| Corpus | Statut retenu | Dernière revue | Prochaine revue maximale | Justification |
 |---|---|---|---|---|
 | `etat_projet` | `reference` provisoire | `2026-11-16`, avec portée et réserves explicites | `2026-11-23` (sept jours), et immédiatement après changement d'état | Le champ courant de PROJECT_MEMORY indique encore `0059`, alors que l'intégration vise `0060` ; la synchronisation reste une proposition. Un renouvellement canonique mensuel ferait croire à un état consolidé démontré. Le délai de sept jours reste inférieur au maximum mensuel |
 | `directives_actives` | `canonique` | `2026-11-16`, après conclusion de la revue des sept directives | `2027-02-16` au plus tard ; revue anticipée dès nouvelle directive, décision de remplacement ou contradiction | Textes intégralement relus, stabilité des sept blobs dans les trois snapshots et propriété cohérente localement ; limite trimestrielle DOCUMENT_CONTROL |
@@ -501,9 +553,10 @@ serveur ou applicative. » Le retour à `canonique` nécessite une mise en
 cohérence autorisée des vues et une revue des preuves de l'état qu'elles
 déclarent ; il ne découle pas d'une simple nouvelle date.
 
-L'orchestrateur met à jour le registre à partir des preuves effectives. La
-date proposée ne constitue ni une revue exécutée par anticipation, ni une
-autorisation d'appliquer les propositions de synchronisation.
+L'orchestrateur a mis à jour le registre à partir de cette revue effective,
+avec une portée explicite et un lien vers le bilan. Les nouvelles dates
+ne constituent aucune autorisation d'appliquer les propositions de
+synchronisation, ni une adoption des décisions `Draft`.
 
 ## 8. Textes proposés pour les vues de pilotage
 
@@ -529,10 +582,15 @@ change de parent ; 20261116_0060 valide aussi les bases déjà migrées.
 Le contrat reste de 17 colonnes, quatre contraintes et quatre index explicites,
 sans stamp, downgrade préalable ni conversion de données.
 
-Preuves sur le commit [SHA final] : [tests et contrôles réellement exécutés,
-résultats, ignorés, limites et CI par job]. Rapport :
+Preuves du code 2d829871ee4046d0c9522accf5d55445af2cb301 : 3 702 tests
+réussis, 64 ignorés préexistants ; quatre contrôles à 0 et une tête 0060.
+La CI 43904802076 reste rouge : concurrence d'agent héritée, MinIO et
+Trivy ; le contrôle multicouche local refuse encore le contrat cubage.
+Rapport :
 23_QUALITY_MANAGEMENT/AUDITS/RECONCILIATION_SERVEUR_2026-11-16.md.
-PR [numéro/URL] et sauvegarde [référence/SHA relu]. Le lot reste en revue ;
+PR https://github.com/NeooeN45/Quintessences/pull/74 et sauvegarde
+backup/quintessences-reconciliation-2026-11-16-163633Z ; SHA final relu
+dans la description de la PR. Le lot reste en revue ;
 aucune fusion, migration de base utilisateur ou qualification de production.
 La PR nº 73 et les écarts métier E01 à E06 restent hors périmètre.
 ~~~
@@ -549,17 +607,21 @@ Proposition de tranche dédiée, avec cases cochées seulement sur preuve :
 ~~~markdown
 ## Réconciliation serveur — 2026-11-16 — EN_REVUE
 
-- [ ] Réunir main et le snapshot sécurité sur la branche d'intégration et
-  publier le SHA final sans fusionner la PR.
-- [ ] Conserver l'union des tests et régénérer OpenAPI.
-- [ ] Prouver une seule tête 20261116_0060 et les chemins neuf, 0050,
+- [x] Réunir main et le snapshot sécurité sur la branche d'intégration et
+  publier le code vérifié sans fusionner la PR.
+- [x] Conserver l'union des tests et régénérer OpenAPI.
+- [x] Prouver une seule tête 20261116_0060 et les chemins neuf, 0050,
   ancien main et ancien feat sur PostgreSQL isolé.
-- [ ] Prouver la conservation des lignes et le refus des schémas divergents.
-- [ ] Reproduire les quatre contrôles, la suite API et la CI par job ;
-  documenter les tests ignorés et les limites.
-- [ ] Joindre la revue indépendante, la procédure locale avec restauration
-  testée et la sauvegarde distante datée.
-- [ ] Soumettre DEC-000094 Draft et la PR à l'autorité compétente.
+- [x] Prouver la conservation des lignes et le refus des schémas divergents.
+- [x] Exécuter les quatre contrôles, la suite API et relever la CI par job ;
+  conserver explicitement les rouges et les 64 ignorés préexistants.
+- [x] Joindre la revue indépendante, la procédure locale avec restauration
+  testée et la référence de sauvegarde distante datée.
+- [x] Soumettre DEC-000094 Draft et la PR nº 74 à la relecture.
+- [ ] Corriger et vérifier la concurrence héritée, l'accès MinIO et les
+  alertes Trivy ; rétablir les portes CI sans abaisser leurs exigences.
+- [ ] Arbitrer le reliquat de couverture inaccessible et traiter les écarts
+  BFF de traçabilité et de restitution avant qualification produit.
 
 Cette tranche ne clôture aucun gate produit GeoSylva, ne corrige pas E01 à E06
 et n'atteste aucun déploiement ou essai en production.
@@ -582,8 +644,12 @@ Proposition d'entrée :
   et index ; identifiants historiques conservés et validation commune 0060.
 - DEC-000094 rédigée en Draft ; bilan, risques, preuves et procédure de reprise
   dans RECONCILIATION_SERVEUR_2026-11-16.md.
-- Vérifications sur [SHA final] : [résultats effectivement acquis, ignorés et
-  limites]. PR [URL], sauvegarde [référence et SHA relu].
+- Code vérifié 2d829871ee4046d0c9522accf5d55445af2cb301 : 3 702 tests
+  réussis, 64 ignorés préexistants, quatre contrôles à 0 ; CI encore rouge,
+  avec causes et limites consignées dans le bilan.
+- PR https://github.com/NeooeN45/Quintessences/pull/74 ; sauvegarde
+  backup/quintessences-reconciliation-2026-11-16-163633Z, SHA final relu
+  dans la description de la PR.
 - Remise EN_REVUE ; aucune fusion de PR, migration de base utilisateur ou
   qualification de production.
 ~~~
@@ -720,7 +786,7 @@ précédente :
   la réponse porte un UUID. L'écart de corrélation doit être corrigé dans
   un lot distinct ; la fourniture explicite d'un en-tête valide ne constitue
   pas une correction de ce cas.
-- `GSIE/API/src/gsie_api/geosylva/service.py:73` et `router.py:151` : le
+- `GSIE/API/src/gsie_api/geosylva/service.py:71` et `router.py:151` : le
   service peut conserver un `result_payload` puis classer le job
   `failed/SCIENTIFIC_VALIDATION_BLOCKED`. La route de résultat vérifie d'abord
   l'absence de payload et peut donc restituer ce payload malgré le statut
@@ -744,12 +810,12 @@ précédente :
 | 69 occurrences d'un même titre CHANGELOG préexistantes | Constat mesuré dans les trois snapshots ; correction non incluse implicitement dans la réconciliation |
 | Marqueur Windows modifié dans `eccodeslib → eckitlib` | Qualification Windows séparée si cette plateforme entre dans l'acceptation ; les essais Linux ne suffisent pas |
 | Défaut `received_at` écrit différemment dans l'ORM existant | L'architecte relève que `server_default="now()"` compile en `DEFAULT 'now()'`, tandis que les migrations figées produisent `DEFAULT now()` ; point préexistant dans les trois snapshots, non corrigé ici. Le helper se fonde sur les migrations |
-| Revue et CI finales incomplètes | Remise EN_REVUE ; aucune conclusion d'acceptation avant les preuves manquantes |
+| CI rouge et écarts BFF hérités | Remise EN_REVUE ; ni succès local ni nouveau passage intermittent ne clôturent une course concurrente ou une porte scientifique non qualifiée |
 | Floorplan indisponible | Aucune carte créée ou actualisée ; analyse des sources utilisée, aucune installation tentée |
 
-La remise doit encore rassembler le diff final relu, toutes les preuves de la
-section 6, la conclusion des deux revues de corpus, les résultats CI par job
-et le SHA de sauvegarde relu à distance. DEC-000094 reste `Draft` jusqu'à
+La remise rassemble les preuves locales, les limites, les deux revues de
+corpus et le relevé CI du commit de code. Le SHA de publication et celui de
+la sauvegarde distante sont remis dans la PR après vérification. DEC-000094 reste `Draft` jusqu'à
 décision explicite du Fondateur. Le présent rapport ne prononce aucune
 validation produit, autorisation de fusion ni autorisation de migration d'une
 base utilisateur.
@@ -774,4 +840,4 @@ base utilisateur.
 
 | Date | Événement |
 |---|---|
-| 2026-11-16 | Création du bilan de travail : comparaison complète du schéma, propositions de synchronisation et procédure locale ; preuves finales en attente |
+| 2026-11-16 | Remise EN_REVUE : comparaison complète, une tête Alembic, tests des historiques et restaurations, suite locale réussie, contrôles à 0, CI rouge documentée, propositions de synchronisation et procédure locale |

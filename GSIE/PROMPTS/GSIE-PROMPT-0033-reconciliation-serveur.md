@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | EN_COURS |
+| Statut | EN_REVUE |
 | Agent principal | Codex |
 | Environnement | Workspace partagé, worktree d'intégration isolé |
 | Dépôt | NeooeN45/Quintessences |
@@ -129,3 +129,18 @@ résultats CI par job ; les risques résiduels et la procédure de reprise local
 La proposition de synchronisation de `PROJECT_MEMORY.md`, `ROADMAP.md` et
 `CHANGELOG.md` reste distincte des faits vérifiés. Indiquer la sauvegarde datée
 et son SHA relu sur GitHub. Remettre en revue sans auto-approbation ni fusion.
+
+### Rapport de la remise
+
+- PR nº 74 vers `main`, en brouillon ; PR nº 73 toujours non fusionnée.
+- Code vérifié : `2d829871ee4046d0c9522accf5d55445af2cb301`.
+- Suite complète : 3 702 réussis, 64 ignorés préexistants, aucun échec local.
+  Les quatre contrôles de gouvernance rendent chacun le code 0.
+- Tête unique `20261116_0060` ; deux historiques et restaurations réelles
+  testés, sans suppression de migration ni conversion de données.
+- CI rouge : course héritée d'agent concurrent, accès aux images MinIO,
+  alertes Trivy ; porte publique à 100 % également bloquée localement.
+- Bilan et propositions de synchronisation :
+  `23_QUALITY_MANAGEMENT/AUDITS/RECONCILIATION_SERVEUR_2026-11-16.md`.
+- SHA documentaire final et sauvegarde relue dans la description de la PR.
+  Aucune approbation, fusion ou qualification de production n'est acquise.
