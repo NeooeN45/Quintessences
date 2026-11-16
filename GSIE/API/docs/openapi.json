@@ -319,6 +319,127 @@
         "title": "AnalyseRequest",
         "type": "object"
       },
+      "AnalysisAccepted": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "result_url": {
+            "title": "Result Url",
+            "type": "string"
+          },
+          "retry_after_seconds": {
+            "default": 2,
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Retry After Seconds",
+            "type": "integer"
+          },
+          "status": {
+            "const": "pending",
+            "default": "pending",
+            "title": "Status",
+            "type": "string"
+          },
+          "status_url": {
+            "title": "Status Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "status_url",
+          "result_url"
+        ],
+        "title": "AnalysisAccepted",
+        "type": "object"
+      },
+      "AnalysisStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "completed_engines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Completed Engines",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "progress_percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "retry_after_seconds": {
+            "anyOf": [
+              {
+                "maximum": 60.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After Seconds"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GeoSylvaAnalysisStatus"
+          },
+          "unavailable_engines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unavailable Engines",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "status",
+          "progress_percent",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AnalysisStatusResponse",
+        "type": "object"
+      },
       "AromeTemperatureQuery": {
         "additionalProperties": false,
         "description": "Requête de température 2 m réelle du modèle AROME pour un point et une échéance.",
@@ -459,7 +580,25 @@
               "logout",
               "invite",
               "revoke",
-              "sync"
+              "sync",
+              "login_failed",
+              "login_locked",
+              "login_mfa_challenge",
+              "login_success",
+              "mfa_disable_step_up_failed",
+              "mfa_disabled",
+              "mfa_login_failed",
+              "mfa_recovery_failed",
+              "mfa_setup",
+              "mfa_verify_failed",
+              "mfa_verify_success",
+              "oidc_link_required",
+              "oidc_login_failed",
+              "register_password_compromised",
+              "register_password_weak",
+              "register_success",
+              "session_revoked",
+              "sessions_revoked_all"
             ],
             "title": "Action",
             "type": "string"
@@ -1886,6 +2025,18 @@
         "title": "ConsentResponse",
         "type": "object"
       },
+      "ContactCategory": {
+        "description": "Catégories affichées par le formulaire public.",
+        "enum": [
+          "partenariat",
+          "presse",
+          "securite",
+          "support",
+          "autre"
+        ],
+        "title": "ContactCategory",
+        "type": "string"
+      },
       "ContentType": {
         "description": "Type de contenu soumis.",
         "enum": [
@@ -2550,6 +2701,629 @@
           "page"
         ],
         "title": "CoverageResponse",
+        "type": "object"
+      },
+      "CubageCalculationPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "items": {
+              "$ref": "#/components/schemas/CubageEvidencePayload"
+            },
+            "maxItems": 100,
+            "title": "Basis",
+            "type": "array"
+          },
+          "calculated_at": {
+            "format": "date-time",
+            "title": "Calculated At",
+            "type": "string"
+          },
+          "calculation_id": {
+            "format": "uuid",
+            "title": "Calculation Id",
+            "type": "string"
+          },
+          "engine": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Engine",
+            "type": "string"
+          },
+          "engine_version": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "inputs_fingerprint": {
+            "title": "Inputs Fingerprint",
+            "type": "string"
+          },
+          "method_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Method Id",
+            "type": "string"
+          },
+          "method_version": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Method Version",
+            "type": "string"
+          },
+          "parameters": {
+            "title": "Parameters",
+            "type": "object"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/CubageQualityPayload"
+          },
+          "result_fingerprint": {
+            "title": "Result Fingerprint",
+            "type": "string"
+          },
+          "results": {
+            "title": "Results",
+            "type": "object"
+          },
+          "units": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Units",
+            "type": "object"
+          }
+        },
+        "required": [
+          "calculation_id",
+          "engine",
+          "engine_version",
+          "method_id",
+          "method_version",
+          "quality",
+          "inputs_fingerprint",
+          "result_fingerprint",
+          "calculated_at"
+        ],
+        "title": "CubageCalculationPayload",
+        "type": "object"
+      },
+      "CubageClientPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "application_id": {
+            "const": "geosylva",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "application_version": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Application Version",
+            "type": "string"
+          },
+          "locale": {
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Locale",
+            "type": "string"
+          },
+          "os_version": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Os Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "application_id",
+          "application_version",
+          "os_version",
+          "locale"
+        ],
+        "title": "CubageClientPayload",
+        "type": "object"
+      },
+      "CubageEvidencePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "citation": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Citation",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "method",
+              "parameter",
+              "reference"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "source_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_version": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Source Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_version",
+          "citation",
+          "role"
+        ],
+        "title": "CubageEvidencePayload",
+        "type": "object"
+      },
+      "CubageGeometry": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {},
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "Point",
+              "Polygon",
+              "MultiPolygon"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "CubageGeometry",
+        "type": "object"
+      },
+      "CubageMeasurementsPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "canonical_units": {
+            "const": "SI",
+            "default": "SI",
+            "title": "Canonical Units",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "type": "object"
+            },
+            "maxItems": 10000,
+            "title": "Items",
+            "type": "array"
+          },
+          "measurements_fingerprint": {
+            "title": "Measurements Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "measurements_fingerprint"
+        ],
+        "title": "CubageMeasurementsPayload",
+        "type": "object"
+      },
+      "CubageQualityPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "valid",
+              "warning",
+              "blocked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "uncertainty": {
+            "title": "Uncertainty",
+            "type": "object"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "CubageQualityPayload",
+        "type": "object"
+      },
+      "CubageSessionPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CubageGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "owner_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Account Id"
+          },
+          "purpose": {
+            "enum": [
+              "inventory",
+              "martelage",
+              "commercial",
+              "other"
+            ],
+            "title": "Purpose",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "session_fingerprint": {
+            "title": "Session Fingerprint",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "station_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Station Id"
+          },
+          "sync_state": {
+            "$ref": "#/components/schemas/CubageSessionState"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "purpose",
+          "created_at",
+          "updated_at",
+          "revision",
+          "sync_state",
+          "session_fingerprint"
+        ],
+        "title": "CubageSessionPayload",
+        "type": "object"
+      },
+      "CubageSessionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "calculation": {
+            "$ref": "#/components/schemas/CubageCalculationPayload"
+          },
+          "measurements": {
+            "$ref": "#/components/schemas/CubageMeasurementsPayload"
+          },
+          "session": {
+            "$ref": "#/components/schemas/CubageSessionPayload"
+          },
+          "trace_id": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "verification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CubageVerificationPayload"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "session",
+          "measurements",
+          "calculation",
+          "trace_id"
+        ],
+        "title": "CubageSessionResponse",
+        "type": "object"
+      },
+      "CubageSessionState": {
+        "enum": [
+          "LOCAL_DRAFT",
+          "LOCAL_CALCULATED",
+          "QUEUED_FOR_SYNC",
+          "SYNCING",
+          "SYNCED",
+          "SERVER_REVIEW_REQUIRED",
+          "SYNC_FAILED_RETRYABLE",
+          "SYNC_FAILED_FINAL"
+        ],
+        "title": "CubageSessionState",
+        "type": "string"
+      },
+      "CubageSyncRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "calculation": {
+            "$ref": "#/components/schemas/CubageCalculationPayload"
+          },
+          "client": {
+            "$ref": "#/components/schemas/CubageClientPayload"
+          },
+          "measurements": {
+            "$ref": "#/components/schemas/CubageMeasurementsPayload"
+          },
+          "schema_version": {
+            "const": "geosylva.cubage.sync.request.v1",
+            "default": "geosylva.cubage.sync.request.v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/CubageSessionPayload"
+          }
+        },
+        "required": [
+          "session",
+          "measurements",
+          "calculation",
+          "client"
+        ],
+        "title": "CubageSyncRequest",
+        "type": "object"
+      },
+      "CubageSyncResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "calculation_id": {
+            "format": "uuid",
+            "title": "Calculation Id",
+            "type": "string"
+          },
+          "retry_after_seconds": {
+            "anyOf": [
+              {
+                "maximum": 60.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After Seconds"
+          },
+          "schema_version": {
+            "const": "geosylva.cubage.sync.response.v1",
+            "default": "geosylva.cubage.sync.response.v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "server_record_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Record Id"
+          },
+          "server_verification_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Verification Id"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CubageSyncStatus"
+          },
+          "trace_id": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "session_id",
+          "calculation_id",
+          "status",
+          "trace_id"
+        ],
+        "title": "CubageSyncResponse",
+        "type": "object"
+      },
+      "CubageSyncStatus": {
+        "enum": [
+          "accepted",
+          "synced",
+          "review_required",
+          "rejected",
+          "retryable_error"
+        ],
+        "title": "CubageSyncStatus",
+        "type": "string"
+      },
+      "CubageVerificationPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "differences": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Differences",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "method_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method Id"
+          },
+          "method_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method Version"
+          },
+          "results": {
+            "title": "Results",
+            "type": "object"
+          },
+          "server_engine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Engine"
+          },
+          "server_engine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Engine Version"
+          },
+          "source_calculation_id": {
+            "format": "uuid",
+            "title": "Source Calculation Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "not_run",
+              "consistent",
+              "divergent",
+              "not_comparable",
+              "blocked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "verification_id": {
+            "format": "uuid",
+            "title": "Verification Id",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "verification_id",
+          "source_calculation_id",
+          "status"
+        ],
+        "title": "CubageVerificationPayload",
         "type": "object"
       },
       "DangerFeuxDepartement": {
@@ -3639,6 +4413,51 @@
         "title": "EmailInvitationRequest",
         "type": "object"
       },
+      "EngineExecution": {
+        "additionalProperties": false,
+        "properties": {
+          "engine": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Engine",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "required": [
+          "engine",
+          "version",
+          "status"
+        ],
+        "title": "EngineExecution",
+        "type": "object"
+      },
       "EngineStatusResponse": {
         "additionalProperties": false,
         "description": "Réponse standardisée pour le statut d'un moteur.",
@@ -4170,6 +4989,31 @@
         "title": "GeoData",
         "type": "object"
       },
+      "GeoJsonGeometry": {
+        "additionalProperties": false,
+        "description": "Emprise forestière WGS84 bornée contre les charges géométriques.",
+        "properties": {
+          "coordinates": {
+            "items": {},
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "Polygon",
+              "MultiPolygon"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "GeoJsonGeometry",
+        "type": "object"
+      },
       "GeoLayer": {
         "additionalProperties": false,
         "description": "Une couche géospatiale (GIS_ENGINE.md §5).",
@@ -4226,6 +5070,132 @@
         ],
         "title": "GeoLayer",
         "type": "object"
+      },
+      "GeoSylvaAnalysisRequest": {
+        "additionalProperties": false,
+        "description": "Intention mobile ; les faits scientifiques sont résolus côté serveur.",
+        "properties": {
+          "alternatives_requested": {
+            "default": true,
+            "title": "Alternatives Requested",
+            "type": "boolean"
+          },
+          "app_version": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "App Version",
+            "type": "string"
+          },
+          "evidence_levels": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/gsie_api__engines__evidence__schemas__EvidenceLevel"
+            },
+            "maxProperties": 5,
+            "title": "Evidence Levels",
+            "type": "object"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/GeoJsonGeometry"
+          },
+          "maximum_depth": {
+            "default": 5,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Maximum Depth",
+            "type": "integer"
+          },
+          "objective": {
+            "$ref": "#/components/schemas/ObjectifForestier"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Question",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "requested_capabilities": {
+            "items": {
+              "enum": [
+                "gis",
+                "climate",
+                "pedology",
+                "botanical",
+                "forest_dynamics",
+                "correlation",
+                "reasoning",
+                "diagnostic",
+                "recommendation",
+                "validation",
+                "simulation",
+                "learning",
+                "evidence",
+                "knowledge"
+              ],
+              "type": "string"
+            },
+            "maxItems": 14,
+            "minItems": 1,
+            "title": "Requested Capabilities",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "geosylva.analysis.request.v1",
+            "default": "geosylva.analysis.request.v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "species_taxref_ids": {
+            "items": {
+              "exclusiveMinimum": 0.0,
+              "type": "integer"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Species Taxref Ids",
+            "type": "array"
+          },
+          "station_id": {
+            "format": "uuid",
+            "title": "Station Id",
+            "type": "string"
+          },
+          "user_constraints": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "User Constraints",
+            "type": "array"
+          }
+        },
+        "required": [
+          "request_id",
+          "station_id",
+          "geometry",
+          "species_taxref_ids",
+          "question",
+          "objective",
+          "app_version"
+        ],
+        "title": "GeoSylvaAnalysisRequest",
+        "type": "object"
+      },
+      "GeoSylvaAnalysisStatus": {
+        "enum": [
+          "pending",
+          "running",
+          "partial",
+          "completed",
+          "failed",
+          "expired"
+        ],
+        "title": "GeoSylvaAnalysisStatus",
+        "type": "string"
       },
       "GeoSylvaDeleteRequest": {
         "additionalProperties": false,
@@ -7596,6 +8566,63 @@
         "title": "ProviderProjection",
         "type": "object"
       },
+      "PublicContactRequest": {
+        "additionalProperties": false,
+        "description": "Message entrant borné et validé avant tout traitement externe.",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ContactCategory"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 5000,
+            "minLength": 10,
+            "title": "Message",
+            "type": "string"
+          },
+          "turnstile_token": {
+            "default": "",
+            "maxLength": 2048,
+            "title": "Turnstile Token",
+            "type": "string"
+          },
+          "website": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Website",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "category",
+          "message"
+        ],
+        "title": "PublicContactRequest",
+        "type": "object"
+      },
+      "PublicContactResponse": {
+        "additionalProperties": false,
+        "description": "Accusé de réception générique, sans exposer le destinataire interne.",
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "message": {
+            "default": "Votre message a été transmis.",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "title": "PublicContactResponse",
+        "type": "object"
+      },
       "QualificationConclusion": {
         "additionalProperties": false,
         "description": "Rôle et domaine attribués à une conclusion (extension v1).\n\nLe contrat §5 suppose que le moteur sait classer une conclusion. Il ne le\nsait pas et ne doit pas le deviner. Tant que le Knowledge Engine ne\nfournit pas de règles de qualification, l'appelant les déclare — sur le\nprécédent assumé du Correlation Engine et du Reasoning Engine.",
@@ -9328,6 +10355,144 @@
           "horizon"
         ],
         "title": "ScenarioSimulation",
+        "type": "object"
+      },
+      "ScientificAnalysisResult": {
+        "additionalProperties": false,
+        "description": "Projection explicable : chaque conclusion conserve sa preuve complète.",
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "calculations": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Calculations",
+            "type": "array"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "title": "Completed At",
+            "type": "string"
+          },
+          "conclusions": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Conclusions",
+            "type": "array"
+          },
+          "contradictions": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Contradictions",
+            "type": "array"
+          },
+          "data_coverage": {
+            "title": "Data Coverage",
+            "type": "object"
+          },
+          "data_versions": {
+            "title": "Data Versions",
+            "type": "object"
+          },
+          "duration_ms": {
+            "minimum": 0.0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "engines": {
+            "items": {
+              "$ref": "#/components/schemas/EngineExecution"
+            },
+            "title": "Engines",
+            "type": "array"
+          },
+          "observations": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "recommendations": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "geosylva.analysis.result.v1",
+            "default": "geosylva.analysis.result.v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "station_id": {
+            "format": "uuid",
+            "title": "Station Id",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          },
+          "trace_id": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "unavailable_engines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unavailable Engines",
+            "type": "array"
+          },
+          "uncertainties": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Uncertainties",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "request_id",
+          "station_id",
+          "summary",
+          "duration_ms",
+          "trace_id",
+          "completed_at"
+        ],
+        "title": "ScientificAnalysisResult",
         "type": "object"
       },
       "SearchCandidate": {
@@ -14906,6 +16071,402 @@
         ]
       }
     },
+    "/api/v1/geosylva/analyses": {
+      "post": {
+        "operationId": "create_analysis_api_v1_geosylva_analyses_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 36,
+              "minLength": 36,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeoSylvaAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Créer une analyse scientifique asynchrone",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/analyses/{analysis_id}": {
+      "get": {
+        "operationId": "get_analysis_status_api_v1_geosylva_analyses__analysis_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Analysis Status",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/analyses/{analysis_id}/result": {
+      "get": {
+        "operationId": "get_analysis_result_api_v1_geosylva_analyses__analysis_id__result_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScientificAnalysisResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Analysis Result",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/cubage/sessions/sync": {
+      "post": {
+        "operationId": "sync_cubage_session_api_v1_geosylva_cubage_sessions_sync_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 36,
+              "minLength": 36,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CubageSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CubageSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Synchroniser une session de cubage offline-first",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/cubage/sessions/{session_id}": {
+      "get": {
+        "operationId": "get_cubage_session_api_v1_geosylva_cubage_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CubageSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Relire une session de cubage synchronisée",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/resources": {
+      "get": {
+        "operationId": "list_resources_api_v1_geosylva_resources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response List Resources Api V1 Geosylva Resources Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Resources",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
+    "/api/v1/geosylva/resources/{dataset_id}": {
+      "get": {
+        "operationId": "get_resource_api_v1_geosylva_resources__dataset_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Resource Api V1 Geosylva Resources  Dataset Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Resource",
+        "tags": [
+          "geosylva-bff"
+        ]
+      }
+    },
     "/api/v1/gis/altitude": {
       "post": {
         "description": "Interroge l'API de calcul altimétrique de l'IGN (RGE ALTI) pour un point WGS 84. Aucune valeur par défaut en cas d'échec (ADR-009).",
@@ -16762,6 +18323,48 @@
         ]
       }
     },
+    "/api/v1/public/contact": {
+      "post": {
+        "description": "Valide puis transmet un message sans l'enregistrer en base GSIE.",
+        "operationId": "submit_contact_api_v1_public_contact_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicContactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Contact",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/v1/reasoning/infer": {
       "post": {
         "description": "Applique les règles d'inférence du Knowledge Engine sur le contexte stationnel fourni pour produire des conclusions expliquées et traçables. Chaque conclusion porte sa chaîne d'inférence complète, ses sources et son niveau de preuve (GSIE-CON-002, GSIE-CON-004). Le moteur n'invente aucune règle — il applique uniquement celles fournies par le Knowledge Engine. Lorsqu'aucune règle applicable n'existe, l'absence de conclusion est un résultat honnête.",
@@ -17984,6 +19587,10 @@
       "name": "metrics"
     },
     {
+      "description": "Contact public du site Quintessences",
+      "name": "public"
+    },
+    {
       "description": "CRUD générique — types enregistrés du métamodèle",
       "name": "resources"
     },
@@ -17994,6 +19601,10 @@
     {
       "description": "Synchronisation hors ligne des parcelles privées GeoSylva",
       "name": "sync-geosylva"
+    },
+    {
+      "description": "Analyses serveur et bibliothèque scientifique pour GeoSylva",
+      "name": "geosylva-bff"
     },
     {
       "description": "Evidence Engine — collecte et validation de sources",
