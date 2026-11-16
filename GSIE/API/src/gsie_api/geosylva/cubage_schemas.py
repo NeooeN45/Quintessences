@@ -73,8 +73,6 @@ class CubageGeometry(GeoSylvaModel):
                 visit(child)
 
         visit(value)
-        if not positions:
-            raise ValueError("la géométrie doit contenir au moins une position")
         return value
 
 
