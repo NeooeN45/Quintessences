@@ -1,5 +1,12 @@
 # Réconciliation serveur — GSIE-PROMPT-0033
 
+> **Bilan historique.** La proposition conservatoire B/0060 et sa procédure
+> ont été remplacées par la décision du Fondateur du 16 novembre 2026, mise
+> en œuvre dans GSIE-PROMPT-0034. Le bilan actuel est
+> [Levée des blocages PR74](LEVEE_BLOCAGES_PR74_2026-11-16.md).
+> Les résultats et commandes ci-dessous décrivent leurs SHA d'origine ;
+> ne pas les interpréter comme la lignée ou la procédure actuelle.
+
 | Champ | Valeur |
 |---|---|
 | **Identifiant** | AUDIT-RECONCILIATION-SERVEUR-2026-11-16 |
@@ -686,6 +693,11 @@ Les anciens titres dupliqués ne sont pas nettoyés implicitement par cette
 entrée ; une correction séparée doit conserver l'historique et ses renvois.
 
 ## 9. Procédure locale proposée et reprise
+
+> Procédure historique de la proposition 0033, désormais remplacée. Pour le
+> lot 0034, les anciennes bases de développement sont à recréer ; consulter
+> le [README API](../../GSIE/API/README.md#contrat-de-migration), sans `stamp`
+> ni tentative de migration conservatoire vers la révision retirée 0060.
 
 ### 9.1 Préconditions
 

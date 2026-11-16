@@ -1,5 +1,12 @@
 # GSIE-PROMPT-0033 — Réconcilier les branches serveur de Quintessences
 
+> État historique de la remise 0033. La décision du Fondateur du 16 novembre
+> 2026 et GSIE-PROMPT-0034 remplacent la proposition de compatibilité B/0060
+> par la recréation des anciennes bases de développement et la lignée A → 0052
+> → 0059. Le commit documentaire 57121c8 est désormais intégré localement à
+> la branche de la PR nº 74 ; cela ne fusionne aucune PR sur GitHub. Les preuves
+> ci-dessous restent attachées à leurs commits d'origine.
+
 | Champ | Valeur |
 |---|---|
 | Statut | EN_REVUE |

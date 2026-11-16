@@ -46,6 +46,46 @@ down_revision: str | None = "20260801_0026"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+_GARDE_DOUBLONS_HORS_LIGNE = """
+DO $gsie_alias_doublons$
+DECLARE
+    nombre_paires bigint;
+    echantillon text;
+BEGIN
+    SELECT count(*) INTO nombre_paires
+    FROM (
+        SELECT 1
+        FROM entity_alias
+        GROUP BY namespace, external_id
+        HAVING count(*) > 1
+    ) AS paires;
+
+    IF nombre_paires > 0 THEN
+        SELECT string_agg(
+            namespace || '/' || external_id || ' ×' || occurrences::text,
+            ', ' ORDER BY occurrences DESC
+        ) INTO echantillon
+        FROM (
+            SELECT namespace, external_id, count(*) AS occurrences
+            FROM entity_alias
+            GROUP BY namespace, external_id
+            HAVING count(*) > 1
+            ORDER BY occurrences DESC
+            LIMIT 5
+        ) AS doublons;
+
+        RAISE EXCEPTION USING MESSAGE =
+            'entity_alias porte ' || nombre_paires::text
+            || ' paire(s) (namespace, external_id) en double : l''index unique '
+            || 'idx_entity_alias_ns_extid ne peut pas etre pose. Echantillon : '
+            || echantillon
+            || '. Dedoublonnez avant de rejouer cette migration — la fusion releve '
+            || 'du metier, pas d''un DELETE automatique (CON-010).';
+    END IF;
+END;
+$gsie_alias_doublons$
+"""
+
 
 def _refuser_les_doublons_d_alias() -> None:
     """Arrête la migration sur un diagnostic lisible plutôt qu'une erreur brute.
@@ -57,6 +97,14 @@ def _refuser_les_doublons_d_alias() -> None:
     faire. Le déploiement s'arrête alors sans que l'exploitant sache si le
     problème tient à une ligne ou à dix mille.
     """
+    if op.get_context().as_sql:
+        op.execute(_GARDE_DOUBLONS_HORS_LIGNE)
+    else:
+        _refuser_les_doublons_d_alias_en_ligne()
+
+
+def _refuser_les_doublons_d_alias_en_ligne() -> None:
+    """Conserve le diagnostic détaillé sur les doublons de la base connectée."""
     doublons = (
         op.get_bind()
         .execute(

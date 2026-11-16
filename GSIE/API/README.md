@@ -259,16 +259,85 @@ pytest
 
 - La lignée officielle commence à `20260726_0001`, baseline immuable du schéma
   GSIE v6.2 (116 tables applicatives).
-- Une ancienne base locale marquée `0001` à `0013` n'est pas compatible : elle
-  doit être recréée, aucune donnée historique n'étant à conserver.
+- Une ancienne base locale marquée `0001` à `0013` n'est pas compatible :
+  elle doit être recréée, aucune donnée historique n'étant à conserver.
 - Toute évolution future crée une nouvelle révision Alembic autonome ; la
   baseline ne doit jamais être réécrite ni importer les modèles applicatifs.
-- `20260823_0051` crée le sas `field_intake` (provenance, statut, empreinte,
-  cible stationnelle, contraintes et index de lecture) requis par la
-  préparation Forge → GSIE TEST ; son upgrade/downgrade est testé sur
-  PostgreSQL/PostGIS réel.
-- La CI exécute réellement `upgrade head`, `downgrade base`, puis un second
-  `upgrade head` sur PostgreSQL 16 avec PostGIS et Apache AGE.
+- Selon l'instruction du Fondateur du 16 novembre 2026 et
+  [GSIE-PROMPT-0034](../PROMPTS/GSIE-PROMPT-0034-lever-blocages-pr-74.md),
+  la lignée retenue garde une seule création d'intake, `20260823_0051`,
+  suivie directement de `20260826_0052` ; sa tête est `20260929_0059`.
+  Les révisions `20260908_0051` et `20261116_0060` ainsi que leur helper
+  sont retirés de la lignée active. La
+  [DEC-000094 révisée](../../03_DECISIONS/DEC-000094.md) reste `Draft`.
+- Le contrat `field_intake` conserve ses 17 colonnes, contraintes et index,
+  sa provenance et sa quarantaine ; aucune conversion métier n'est ajoutée.
+- Les validations attendues couvrent le SQL hors ligne et le cycle
+  `upgrade head → downgrade base → upgrade head` sur PostgreSQL 16 avec
+  PostGIS et Apache AGE, uniquement sur une base jetable. La garde
+  anti-doublons de `20260801_0027` reste obligatoire avant son index unique,
+  y compris dans le SQL hors ligne. Les résultats sont consignés dans le
+  [bilan PR74](../../23_QUALITY_MANAGEMENT/AUDITS/LEVEE_BLOCAGES_PR74_2026-11-16.md) ;
+  les preuves de la précédente solution B/`0060` ne les remplacent pas.
+
+### Recréation ciblée des anciennes bases de développement
+
+Le Fondateur a déclaré l'absence de base hébergée et de donnée métier réelle,
+puis autorisé explicitement **« la simplification et la recréation documentée »**
+après inventaire. Aucune base ni aucun volume d'origine n'est supprimé dans
+ce lot. Une ancienne base de développement marquée `20260908_0051` ou
+`20261116_0060` doit être recréée pour la lignée simplifiée ; ne pas la convertir
+par `stamp`, réécriture d'`alembic_version` ou downgrade.
+
+L'inventaire a retrouvé `gsie` et `gsie_pack_recipe_20261002` à la révision
+B dans `gsie-onboarding-pgdata-v2`. La base
+`gsie_hierarchy_full_test_20261003` porte `20261003_0052`, inconnue de cette
+branche : la laisser intacte et diagnostiquer son usage avant toute autre
+intervention. Les bases sans marqueur ne sont pas déclarées vides pour autant.
+
+Procédure à exécuter ultérieurement par le responsable, sur une base identifiée :
+
+1. Relever le cluster, le nom de base et sa révision ; arrêter uniquement ses
+   écrivains (API, workers et imports concernés). Conserver l'originale et le
+   checkout antérieur. Si une donnée réelle est découverte, suspendre
+   l'intervention et demander un arbitrage.
+2. Préparer les rôles et extensions avec l'initialisation canonique existante,
+   puis créer une **nouvelle base vide distincte**. L'exemple
+   `gsie_pr74_recree` doit être remplacé si ce nom existe déjà. Les services
+   libpq sont configurés localement ; aucune valeur secrète n'est affichée.
+3. Pointer explicitement `GSIE_MIGRATION_DATABASE_URL` vers cette nouvelle
+   base avec le compte de migration. Alembic retombe sinon sur
+   `GSIE_DATABASE_URL` : ne pas utiliser ce repli dans cette procédure.
+4. Appliquer la tête ciblée, puis vérifier révision, contrat d'intake,
+   permissions et tests locaux avant de reconnecter les seuls clients de
+   développement concernés. Les originaux restent conservés.
+
+Exemples à adapter, jamais exécutés automatiquement par le démarrage de l'API :
+
+~~~bash
+set -euo pipefail
+# Service de la SOURCE identifiée ; authentification hors des logs.
+psql 'service=gsie_pr74_source' -X -v ON_ERROR_STOP=1 \
+  -c 'SELECT current_database(), version_num FROM public.alembic_version;'
+
+# Le responsable a vérifié que cette nouvelle cible n'existe pas.
+createdb --maintenance-db='service=gsie_pr74_administration' \
+  --template=template0 gsie_pr74_recree
+
+# Depuis GSIE/API ; l'URL désigne la nouvelle base, sous son propriétaire.
+: "${GSIE_MIGRATION_DATABASE_URL:?Définir explicitement l'URL de la nouvelle base vide}"
+.venv/bin/python -m alembic heads
+.venv/bin/python -m alembic current --verbose
+.venv/bin/python -m alembic upgrade 20260929_0059
+.venv/bin/python -m alembic current --verbose
+~~~
+
+Cette procédure ne fait pas de `docker compose down -v`, ne retire aucun volume
+MinIO et n'efface aucune autre base. Un nettoyage des anciennes sources serait
+une intervention distincte, après vérification de la cible exacte et de ses
+usages. En cas d'échec, arrêter la nouvelle instance et diagnostiquer ;
+l'originale, jamais modifiée par cette procédure, reste disponible avec son
+ancienne version applicative.
 
 ## Architecture (clean architecture par modules moteurs)
 
