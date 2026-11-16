@@ -405,6 +405,15 @@ def should_return_stored_provenance_when_owner_reads_a_partial_result(bff_client
         ("GET", "/resources"),
         ("GET", f"/resources/{uuid4()}"),
     ],
+    ids=[
+        "soumettre-analyse",
+        "suivre-analyse",
+        "lire-resultat",
+        "synchroniser-cubage",
+        "lire-cubage",
+        "lister-ressources",
+        "lire-ressource",
+    ],
 )
 def should_require_authentication_when_any_bff_route_is_called(
     bff_client: tuple, method: str, path: str

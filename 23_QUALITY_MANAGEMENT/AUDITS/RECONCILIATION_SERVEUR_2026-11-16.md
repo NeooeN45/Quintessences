@@ -354,11 +354,14 @@ suite complète. Les 64 ignorés existaient : 46 seeds v6.1 retirés, 14 API
 KnowledgeObject retirées, trois cas Rust natif indisponible et un CSV réel
 Treekipedia absent. Aucun nouveau marqueur d'ignorance n'est ajouté.
 
-Une tentative intermédiaire de la suite complète s'est arrêtée à la collecte :
-les deux nouveaux fichiers BFF changeaient encore entre les collectes des
-workers. Cette tentative est archivée sous `full-suite-input-drift.*` ; ses
-empreintes d'entrée et sortie divergent et aucun succès ne lui est attribué.
-La campagne finale doit porter sur des fichiers figés et des empreintes égales.
+Deux tentatives intermédiaires se sont arrêtées à la collecte xdist. Les noms
+de scénarios contenaient des UUID générés à l'import, différents entre workers.
+La première tentative avait aussi des entrées en cours de changement
+(`full-suite-input-drift.*`) ; la seconde sur fichiers figés a permis d'isoler
+la cause (`full-suite-collection-ids.*`). Des identifiants de scénarios stables
+remplacent ces noms aléatoires, sans changer leurs entrées ni assertions.
+Aucun succès n'est attribué à ces tentatives. La campagne finale doit porter
+sur des fichiers figés et des empreintes égales.
 
 ### 6.3.1 Ajustements nécessaires aux contrôles hérités
 
