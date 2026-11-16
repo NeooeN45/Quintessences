@@ -31,7 +31,7 @@
 | GSIE-PROMPT-0027 | GLM 5.2 via Devin | Schémas de domaine — sept migrations, une par schéma (RFC-0029 validée par DEC-000039) | À LANCER | Suite du lot RGPD `20260728_0011`/`0012` | Architecte |
 | GSIE-PROMPT-0032 | Codex | Enregistrer la validation avec mise à jour de DEC-000073 : façade asynchrone, deux métiers GeoSylva, écarts et synchronisation proposée | EN_REVUE | Arbitrage du Fondateur du 2026-11-15 ; snapshot `9e6864b` ; numérotation inter-branches vérifiée | Architecte-relecteur Claude ; arbitrage final du Fondateur |
 | GSIE-PROMPT-0033 | Codex et revue indépendante | Réconciliation serveur des branches domaine, main et sécurité | EN_REVUE | Snapshots 9e6864b, d7b400c, e3e18d4 ; PR nº 74 brouillon, CI rouge documentée ; PR nº 73 non fusionnée | Architecte/QA ; Claude et Fondateur avant fusion |
-| GSIE-PROMPT-0034 | Codex et consortium spécialisé | Lever les blocages de la PR nº 74 selon la décision du 16 novembre | EN_COURS | Départ ffdc260 ; intégration 57121c8, simplification des migrations et sécurité ciblée | Reviewer indépendant, architecte et Fondateur |
+| GSIE-PROMPT-0034 | Codex et consortium spécialisé | Lever les blocages de la PR nº 74 selon la décision du 16 novembre | EN_REVUE | Bilan PR74 ; 0032 intégré, lignée simplifiée, 21 alertes corrigées ; E/F proposés, sans fusion | Reviewer indépendant, architecte et Fondateur |
 
 > **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
 > correspondent à du travail structurant réalisé directement par

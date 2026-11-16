@@ -4,6 +4,28 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [RÉCONCILIATION SERVEUR — EN RELECTURE] - 2026-11-16
+
+- GSIE-PROMPT-0033/0034 : intégration locale des historiques serveur et de
+  GSIE-PROMPT-0032 sur `integration/reconciliation-serveur-2026-11` ; PR74
+  en brouillon, aucun push sur `main` et aucune fusion de PR.
+- Après inventaire puis accord explicite du Fondateur, une création
+  `field_intake` (`20260823_0051`), parent direct de `20260826_0052`, tête
+  `20260929_0059` ; anciens chemins de compatibilité retirés, SQL hors ligne
+  rétabli avec garde anti-doublons conservée. Originaux locaux intacts,
+  recréation dans une nouvelle base documentée ; DEC-000094 reste `Draft`.
+- Deux lignes de garde cubage inaccessibles retirées après accord, autres
+  validations inchangées. Base Python et dépendances épinglées sur les versions
+  correctrices des 21 alertes Trivy observées ; le scan de l'image effective
+  est suivi séparément des tests de compatibilité.
+- Suite complète : 3 588 réussis, 64 ignorés préexistants, couverture 97,19 % ;
+  vrai scan d'image : 21 couples corrigés, 118 résiduelles documentées.
+  MinIO et course d'identité reproduits ; propositions distinctes du code.
+- Résultats, rouges conservés, limites et propositions MinIO/concurrence :
+  [bilan GSIE-PROMPT-0034](23_QUALITY_MANAGEMENT/AUDITS/LEVEE_BLOCAGES_PR74_2026-11-16.md).
+
+---
+
 ## [SÉCURITÉ DES DÉPÔTS] - 2026-10-18
 
 - Verrou API : PyJWT 2.15.0, multidict 6.9.1, urllib3 2.8.0 ; 288 tests

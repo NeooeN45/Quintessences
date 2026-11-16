@@ -6,7 +6,31 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-10-18 — audit des dépôts et durcissement CI ; confidentialité demandée, application bloquée par les droits de l’intégration. |
+| **Dernière mise à jour** | 2026-11-16 — réconciliation serveur et levée ciblée des blocages sur la branche d'intégration, en relecture ; aucun déploiement ni fusion dans main. |
+
+## Réconciliation serveur et blocages PR74 — 16 novembre 2026
+
+La branche `integration/reconciliation-serveur-2026-11` réunit `main`,
+`feat/schemas-de-domaine`, le durcissement des dépôts et les documents de
+GSIE-PROMPT-0032. La [PR nº 74](https://github.com/NeooeN45/Quintessences/pull/74)
+reste en brouillon ; aucune de ces intégrations locales ne vaut fusion dans
+`main`. DEC-000093 complète DEC-000073 ; les écarts E01 à E06 restent distincts.
+
+Après inventaire des bases locales et accord complémentaire du Fondateur,
+GSIE-PROMPT-0034 simplifie la lignée : création `20260823_0051`, parent direct
+de `20260826_0052`, tête unique `20260929_0059`. Les originaux sont conservés ;
+les bases anciennes nécessitent une nouvelle base vide selon la procédure
+du README API. DEC-000094 reste `Draft`. Les deux lignes cubage inaccessibles
+sont retirées après accord ; les 21 couples Trivy corrigeables sont absents
+du scan d'image reconstruite. Les 118 résiduelles sans version corrigée
+indiquée restent documentées. La suite donne 3 588 réussis et 64 ignorés
+préexistants, couverture 97,19 %. Les contrôles, limites et propositions
+MinIO/concurrence, reproduites mais non appliquées, sont consignés dans le
+[bilan GSIE-PROMPT-0034](23_QUALITY_MANAGEMENT/AUDITS/LEVEE_BLOCAGES_PR74_2026-11-16.md).
+
+Cette mission ne qualifie ni les données scientifiques, ni un environnement
+de production. Le lancement reste centré sur les métiers technicien forestier
+et conducteur de travaux forestiers ; les autres chantiers restent gelés.
 
 ## Sécurité des dépôts et reprise — 18 octobre 2026
 

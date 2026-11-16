@@ -314,7 +314,7 @@ Procédure à exécuter ultérieurement par le responsable, sur une base identif
 
 Exemples à adapter, jamais exécutés automatiquement par le démarrage de l'API :
 
-~~~bash
+```bash
 set -euo pipefail
 # Service de la SOURCE identifiée ; authentification hors des logs.
 psql 'service=gsie_pr74_source' -X -v ON_ERROR_STOP=1 \
@@ -330,7 +330,7 @@ createdb --maintenance-db='service=gsie_pr74_administration' \
 .venv/bin/python -m alembic current --verbose
 .venv/bin/python -m alembic upgrade 20260929_0059
 .venv/bin/python -m alembic current --verbose
-~~~
+```
 
 Cette procédure ne fait pas de `docker compose down -v`, ne retire aucun volume
 MinIO et n'efface aucune autre base. Un nettoyage des anciennes sources serait

@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | EN_COURS |
+| Statut | EN_REVUE |
 | Agent principal | Codex, consortium spécialisé avec revue indépendante |
 | Dépôt | NeooeN45/Quintessences |
 | Branche | integration/reconciliation-serveur-2026-11 |
@@ -68,6 +68,16 @@ de géométrie inaccessible, les alertes de sécurité, MinIO et la concurrence.
 
 La traçabilité du lot et les mentions de tête/procédure devenues inexactes
 sont actualisées de manière ciblée ; aucune refonte documentaire générale.
+
+### Accords complémentaires reçus le 16 novembre 2026
+
+L'inventaire a retrouvé `20260908_0051` dans `gsie` et
+`gsie_pack_recipe_20261002`. Après suspension et vérification de leur usage,
+le Fondateur autorise explicitement **« la simplification et la recréation
+documentée »**. Aucun volume d'origine ne doit être supprimé dans ce lot.
+Il autorise aussi **« ce retrait de deux lignes »** pour la garde cubage,
+après son diagnostic et les huit tests. Ces accords d'exécution ne valident
+pas DEC-000094, qui reste `Draft` jusqu'à la relecture demandée.
 
 ## Non-objectifs
 

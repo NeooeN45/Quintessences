@@ -1,5 +1,22 @@
 # ROADMAP — Quintessences / GSIE
 
+## Réconciliation serveur — point de contrôle du 16 novembre 2026
+
+- [x] Réunir les trois historiques et GSIE-PROMPT-0032 sur la branche
+  d'intégration, sans fusion de PR ni push sur `main`.
+- [x] Simplifier la lignée Alembic après inventaire et accord du Fondateur ;
+  conserver les originaux et documenter la recréation des bases anciennes.
+- [x] Retirer les deux lignes cubage autorisées et épingler les versions
+  correctrices des 21 alertes documentées.
+- [x] Exécuter les preuves globales et le vrai scan d'image ; documenter les
+  118 résiduelles et reproduire les blocages MinIO/concurrence.
+- [ ] Relire puis qualifier les implémentations proposées pour MinIO et les
+  identités concurrentes du [bilan PR74](23_QUALITY_MANAGEMENT/AUDITS/LEVEE_BLOCAGES_PR74_2026-11-16.md).
+- [ ] Faire relire DEC-000094, maintenue `Draft`, et les résultats de la PR74
+  par l'architecte puis le Fondateur avant toute décision de fusion.
+- [ ] Reprendre ensuite les parcours technicien forestier et conducteur de
+  travaux forestiers ; lancement GeoSylva 3.1 visé au 28 février 2027.
+
 ## Protection des dépôts — priorité courte du 18 octobre 2026
 
 - [x] Vérifier les six dépôts, leurs branches et leur visibilité réelle.
