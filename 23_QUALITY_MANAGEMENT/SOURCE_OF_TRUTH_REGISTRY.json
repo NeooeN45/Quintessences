@@ -97,7 +97,7 @@
     },
     {
       "id": "etat_projet",
-      "scope": "État courant, feuille de route et historique consolidé",
+      "scope": "Vues de pilotage historiques ; consolidation actuelle en attente de synchronisation autorisée",
       "paths": [
         "PROJECT_MEMORY.md",
         "ROADMAP.md",
