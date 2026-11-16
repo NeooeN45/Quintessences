@@ -328,20 +328,40 @@ de non-exécution doit être conservé lors de la mise à jour.
 | Ancienne base `main` et ancienne base `feat` vers la tête | Réussis avec leurs créations réelles | 0 | Même JUnit |
 | Conservation complète des lignes, UUID et identité de table pendant les validations | Comparaison des 17 colonnes et OID ; réussie | 0 | Même JUnit |
 | Schémas divergents refusés sans altération des lignes | 87 dérives et trois attaques de catalogue refusées ; 155 scénarios ciblés réussis au total, aucun ignoré | 0 | Même JUnit, 280,132 s |
-| Sauvegarde et restauration d'une base de test jetable | EN ATTENTE | EN ATTENTE | À joindre |
+| Sauvegarde, restauration puis upgrade des historiques `main` et `feat` | 2 réussis ; 17 colonnes, trois sentinelles, données liées et catalogue d'intake conservés | 0 | `qa-backup-restore-newcases.xml` ; deux bases distinctes dans chaque cluster jetable, pas d'essai inter-clusters |
+| Formes restaurées du CHECK et refus voisins | 24 réussis : 7 formes connues admises, 17 expressions hors contrat refusées | 0 | Même JUnit ; 26 cas ciblés en 33,845 s, aucun ignoré |
 | Python final, `pytest tests/ -q -n 2`, API, première exécution | 3 562 réussis, 11 échoués, 64 ignorés ; couverture 95,8107 %, seuil non atteint | 1 | `full-suite.xml`, `coverage-full.json` ; reprise après corrections EN ATTENTE |
 | Reproduction ciblée bundle/contact après correction | 16 réussis ; deux routeurs à 100 % | 0 | `qa-bundle-contact.xml`, `coverage-qa-bundle-contact.json` |
 | Contrat BFF, cycle de vie et provenance simulée | 138 réussis, dont 99 nouveaux ; 679/681 lignes BFF couvertes | 0 | `bff-tests-final.log`, `coverage-bff.json` ; entrée CLI et garde inaccessible restent non couvertes |
-| Lint, typage, couverture combinée et mutation prévus par la CI | EN ATTENTE | EN ATTENTE | À joindre |
+| Typage strict API | 272 fichiers sans erreur | 0 | `mypy-final.log` |
+| Harnais de mutation rapide | 72/72 mutations détectées ; les cibles déclarées sont toutes unitaires | 0 | `mutation-final.log`, `mutation-final-state.json` ; 702,43 s ; aucune modification des sources réelles par le harnais |
+| Couverture complète et multicouche | EN ATTENTE | EN ATTENTE | À joindre |
 | Revue indépendante migration et union des tests | Aucun blocage signalé dans ce périmètre ; helper final vérifié par empreinte | Sans objet | Revue des correctifs de CI en cours ; aucune homologation globale du serveur |
 
-Le helper testé porte le SHA-256
+La première campagne de 155 tests porte sur le helper de SHA-256
 `887a4b49afbe10b645ba1f14bbd6d38ad26b0903b5a1a7de687cff3e32e543e4`.
 Les premières tentatives rouges restent conservées : drapeau PostgreSQL
 `connoinherit`, opérateur texte homonyme, puis masquage de `unnest` et d'une
 comparaison OID. La version finale qualifie les accès par `pg_catalog` et les
 155 tests ciblés passent. Ces rouges ne sont pas présentés comme des régressions
 encore ouvertes sur ce helper.
+
+Un exercice réel de `pg_dump --format=custom` puis `pg_restore` révèle ensuite
+un faux refus supplémentaire. PostgreSQL distribue les conversions natives
+de `ARRAY[varchar...]::text[]` sur chacun des trois littéraux. Les expressions
+avant/après ont le même opérateur natif (OID 98, fonction 67), les mêmes flags,
+dépendances et huit évaluations de contrôle ; aucune règle de statut ne change.
+La preuve rouge complète de l'ancien helper est conservée dans
+`backup-restore-main-v4.json` et `backup-restore-main-v4-comparaison.json`.
+
+Le correctif final retire seulement les deux casts connus, dans l'ordre
+extérieur `text`, puis intérieur `character varying`. Il ne boucle pas sur
+des conversions arbitraires. Ses quatre requêtes catalogue sont identiques
+octet par octet à celles de la campagne précédente. Son SHA-256 est
+`425ee3993f9d7be17e0d90d873f420e7bcf2ce5cf14aa9b52cccef5996719180`.
+La revue indépendante confirme l'étroitesse du diff ; les 26 nouveaux tests
+sur ce helper passent. Leurs 102 anciens voisins sont désélectionnés dans ce
+passage ciblé, et doivent être inclus dans la suite complète finale.
 
 Les 11 échecs de la première suite complète ont deux causes : sept tests
 cherchent un exemple dans le dépôt externe Forge absent du clone CI ; quatre

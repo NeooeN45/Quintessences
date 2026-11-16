@@ -25,6 +25,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -1175,3 +1176,156 @@ def should_refuse_a_custom_collation_hidden_by_a_catalogue_oid_operator(
     assert _versions(url) == [_FEAT_0051]
     assert _capturer(url, tables) == donnees
     assert _catalogue(url) == catalogue
+
+
+def _commande_sauvegarde(conteneur: Any, arguments: list[str]) -> bytes:
+    """Exige le succès effectif du binaire PostgreSQL, sans tolérer d'erreur."""
+    resultat = conteneur.exec_run(arguments, demux=True)
+    sortie, erreur = resultat.output
+    assert resultat.exit_code == 0, (
+        f"Échec de {arguments[0]} : " f"{(erreur or b'').decode('utf-8', errors='replace')}"
+    )
+    return sortie or b""
+
+
+def _expression_check_statuts(url: str) -> str:
+    valeurs = _requete(
+        url,
+        "SELECT pg_catalog.pg_get_expr(conbin, conrelid) "
+        "FROM pg_catalog.pg_constraint "
+        "WHERE conrelid = 'public.field_intake'::pg_catalog.regclass "
+        "AND conname = 'ck_field_intake_status'",
+    )
+    assert len(valeurs) == 1
+    return str(valeurs[0])
+
+
+def _ordre_physique_intake(url: str) -> list[str]:
+    return _requete(
+        url,
+        "SELECT attname FROM pg_catalog.pg_attribute "
+        "WHERE attrelid = 'public.field_intake'::pg_catalog.regclass "
+        "AND attnum > 0 AND NOT attisdropped ORDER BY attnum",
+    )
+
+
+@pytest.mark.parametrize(
+    ("lignee", "revision"),
+    [("main", _MAIN_0051), ("feat", _FEAT_0059)],
+    ids=["main-0051", "feat-0059"],
+)
+def should_upgrade_a_real_historical_backup_after_pg_dump_and_pg_restore(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    lignee: str,
+    revision: str,
+) -> None:
+    """Deux bases neuves du même cluster jetable ; les rôles restent partagés."""
+    from testcontainers.postgres import PostgresContainer
+
+    assert _image_disponible(_IMAGE_DB), f"Image de migration absente : {_IMAGE_DB}"
+    base_source = "gsie_reconciliation_backup_source"
+    base_restauree = "gsie_reconciliation_backup_restauree"
+    chemin_dump = "/tmp/gsie_reconciliation_historique.dump"
+    with PostgresContainer(
+        image=_IMAGE_DB,
+        driver="asyncpg",
+        username="gsie",
+        password="gsie_test",
+        dbname=base_source,
+    ).with_command("postgres -c shared_preload_libraries=age -c search_path=public") as postgres:
+        url_source = postgres.get_connection_url().replace(
+            "postgresql+psycopg2", "postgresql+asyncpg"
+        )
+        url_restauree = (
+            make_url(url_source).set(database=base_restauree).render_as_string(hide_password=False)
+        )
+        asyncio.run(_nettoyer_extensions_preinstallees(url_source))
+        monkeypatch.setenv("GSIE_DATABASE_URL", url_source)
+        monkeypatch.setenv("GSIE_MIGRATION_DATABASE_URL", url_source)
+        monkeypatch.setenv("GSIE_DATABASE_ROLE", "test")
+        monkeypatch.setenv("GSIE_DATA_NAMESPACE", "gsie-reconciliation-backup-test")
+        get_settings.cache_clear()
+        try:
+            command.upgrade(_configuration_historique(tmp_path, lignee), revision)
+            assert _requete(url_source, "SELECT current_database()") == [base_source]
+            assert _versions(url_source) == [revision]
+            tables = _inserer_sentinelles(url_source, bff=revision == _FEAT_0059)
+            source = _capturer(url_source, tables)
+            assert len(source["field_intake"]) == 3
+            assert all(len(ligne) == 17 for ligne in source["field_intake"])
+            acceptee = next(
+                ligne for ligne in source["field_intake"] if ligne["status"] == "accepted"
+            )
+            assert all(valeur is not None for valeur in acceptee.values())
+            ordre = _ordre_physique_intake(url_source)
+            assert len(ordre) == 17
+            expression_source = _expression_check_statuts(url_source)
+            assert "::text[]" in expression_source
+            _verifier_contrat(url_source)
+
+            conteneur = postgres.get_wrapped_container()
+            _commande_sauvegarde(
+                conteneur,
+                [
+                    "pg_dump",
+                    "--username",
+                    "gsie",
+                    "--dbname",
+                    base_source,
+                    "--format=custom",
+                    "--file",
+                    chemin_dump,
+                ],
+            )
+            archive = _commande_sauvegarde(conteneur, ["cat", chemin_dump])
+            assert archive.startswith(b"PGDMP")
+            assert len(archive) > 5
+            (tmp_path / f"{lignee}-{revision}.dump").write_bytes(archive)
+            manifeste = _commande_sauvegarde(conteneur, ["pg_restore", "--list", chemin_dump])
+            assert b"TABLE DATA public field_intake " in manifeste
+            _commande_sauvegarde(
+                conteneur,
+                ["createdb", "--username", "gsie", "--template", "template0", base_restauree],
+            )
+            _commande_sauvegarde(
+                conteneur,
+                [
+                    "pg_restore",
+                    "--username",
+                    "gsie",
+                    "--dbname",
+                    base_restauree,
+                    "--exit-on-error",
+                    "--single-transaction",
+                    chemin_dump,
+                ],
+            )
+
+            assert _requete(url_restauree, "SELECT current_database()") == [base_restauree]
+            assert _versions(url_restauree) == [revision]
+            assert _capturer(url_restauree, tables) == source
+            assert _ordre_physique_intake(url_restauree) == ordre
+            expression_restauree = _expression_check_statuts(url_restauree)
+            assert expression_restauree != expression_source
+            assert all(
+                f"('{statut}'::character varying)::text" in expression_restauree
+                for statut in ("quarantined", "accepted", "rejected")
+            )
+            _verifier_contrat(url_restauree)
+            catalogue_restaure = _catalogue(url_restauree)
+            monkeypatch.setenv("GSIE_DATABASE_URL", url_restauree)
+            monkeypatch.setenv("GSIE_MIGRATION_DATABASE_URL", url_restauree)
+            get_settings.cache_clear()
+
+            command.upgrade(_configuration_courante(), "head")
+
+            assert _versions(url_restauree) == [_HEAD]
+            assert _capturer(url_restauree, tables) == source
+            assert _ordre_physique_intake(url_restauree) == ordre
+            assert _catalogue(url_restauree) == catalogue_restaure
+            _verifier_contrat(url_restauree)
+            assert _versions(url_source) == [revision]
+            assert _capturer(url_source, tables) == source
+        finally:
+            get_settings.cache_clear()

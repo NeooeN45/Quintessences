@@ -152,8 +152,13 @@ def _is_status_check(expression: str | None) -> bool:
             parts.append(values[start:position])
             start = position + 1
     parts.append(values[start:])
+    # pg_restore peut distribuer varchar → text sur les trois littéraux.
+    # Seules ces deux conversions, dans cet ordre connu, sont retirées.
     literals = [
-        _without_cast(part, (("::", "character", "varying"), ("::", "text")))
+        _without_cast(
+            _without_cast(part, (("::", "text"),)),
+            (("::", "character", "varying"),),
+        )
         for part in parts
     ]
     return (

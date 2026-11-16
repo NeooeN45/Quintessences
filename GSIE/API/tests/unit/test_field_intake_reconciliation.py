@@ -66,3 +66,107 @@ def should_refuse_schema_verification_on_a_non_postgresql_connection() -> None:
         helper["validate_field_intake_v1"](connexion)
 
     connexion.execute.assert_not_called()
+
+
+_STATUTS = ("quarantined", "accepted", "rejected")
+
+
+def _expression_statuts(litteraux: tuple[str, ...]) -> str:
+    return "((status)::text = ANY (ARRAY[" + ", ".join(litteraux) + "]))"
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        _expression_statuts(tuple(f"'{statut}'" for statut in _STATUTS)),
+        _expression_statuts(tuple(f"'{statut}'::text" for statut in _STATUTS)),
+        _expression_statuts(tuple(f"'{statut}'::character varying" for statut in _STATUTS)),
+        _expression_statuts(tuple(f"('{statut}'::character varying)::text" for statut in _STATUTS)),
+        _expression_statuts(
+            tuple(f"((('{statut}'::character varying))::text)" for statut in _STATUTS)
+        ),
+        "((status)::text = ANY ((ARRAY['quarantined'::character varying, "
+        "'accepted'::character varying, 'rejected'::character varying])::text[]))",
+        "status IN (('quarantined'::character varying)::text, "
+        "('accepted'::character varying)::text, ('rejected'::character varying)::text)",
+    ],
+    ids=[
+        "litteraux",
+        "text",
+        "varchar",
+        "pg-restore-varchar-vers-text",
+        "parentheses-equivalentes",
+        "pg-dump-cast-du-tableau",
+        "in-varchar-vers-text",
+    ],
+)
+def should_accept_only_the_known_status_literal_casts(expression: str) -> None:
+    helper = run_path(str(_RACINE_API / "alembic" / "compatibility" / "field_intake_v1.py"))
+
+    assert helper["_is_status_check"](expression) is True
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        _expression_statuts(tuple(f"('{statut}'::text)::character varying" for statut in _STATUTS)),
+        _expression_statuts(
+            tuple(f"(('{statut}'::character varying)::text)::text" for statut in _STATUTS)
+        ),
+        _expression_statuts(
+            tuple(
+                f"(('{statut}'::character varying)::character varying)::text" for statut in _STATUTS
+            )
+        ),
+        _expression_statuts(tuple(f"('{statut}'::citext)::text" for statut in _STATUTS)),
+        _expression_statuts(tuple(f"('{statut}'::varchar(20))::text" for statut in _STATUTS)),
+        _expression_statuts(
+            tuple(f"('{statut}'::character varying)::public.text" for statut in _STATUTS)
+        ),
+        _expression_statuts(tuple(f"lower('{statut}')::text" for statut in _STATUTS)),
+        _expression_statuts(tuple(f"('{statut}' || '')::text" for statut in _STATUTS)),
+        _expression_statuts(("'quarantined'::text", "'accepted'::text", "'invente'::text")),
+        _expression_statuts(("'quarantined'::text", "'accepted'::text", "'accepted'::text")),
+        _expression_statuts(tuple(f"'{statut}'::text" for statut in (*_STATUTS, "invente"))),
+        _expression_statuts(tuple(f"'{statut}'::text" for statut in _STATUTS)).replace(
+            "status", "kind", 1
+        ),
+        _expression_statuts(tuple(f"'{statut}'::text" for statut in _STATUTS)) + " OR true",
+        _expression_statuts(
+            tuple(
+                f"('{statut}'::character varying)::text COLLATE public.inconnue"
+                for statut in _STATUTS
+            )
+        ),
+        _expression_statuts(("'quarantined'::text", "'accepted'::text", "NULL::text")),
+        _expression_statuts(
+            tuple(f"(('{statut}'::text)::character varying)::text" for statut in _STATUTS)
+        ),
+        _expression_statuts(tuple(f"('{statut}'::text)::text" for statut in _STATUTS)),
+    ],
+    ids=[
+        "ordre-inverse",
+        "text-repete",
+        "varchar-repete",
+        "type-inconnu",
+        "taille-varchar",
+        "cast-non-systeme",
+        "fonction",
+        "concatenation",
+        "statut-inconnu",
+        "statut-duplique",
+        "quatre-statuts",
+        "autre-colonne",
+        "condition-elargie",
+        "collation-inconnue",
+        "null",
+        "chaine-text-varchar-text",
+        "double-text",
+    ],
+)
+def should_refuse_neighbouring_casts_or_status_expressions_outside_the_frozen_contract(
+    expression: str,
+) -> None:
+    helper = run_path(str(_RACINE_API / "alembic" / "compatibility" / "field_intake_v1.py"))
+
+    assert helper["_is_status_check"](expression) is False
