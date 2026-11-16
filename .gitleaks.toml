@@ -1,0 +1,17 @@
+title = "Quintessences — règles par défaut et fixtures publiques vérifiées"
+
+[extend]
+useDefault = true
+
+# Clés publiques de tests d’interopérabilité : jamais utilisées pour l’authentification.
+# Toute modification de leur contenu est bloquée par check_repository.py (SHA-256).
+[[allowlists]]
+description = "Deux clés privées TEST-ONLY du corpus de signatures"
+paths = [
+  '''(^|/)21_EXPERIMENTS/EXP-0001_CAPSULE_TERRITORIALE/EXPERIENCE/fixtures/contract-interop/(other|trusted)-private-TEST-ONLY\.pem$'''
+]
+
+[[allowlists]]
+description = "Identifiant public TAXREF du catalogue GBIF, pas une clé d’accès"
+regexTarget = "secret"
+regexes = ['''^0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6$''']

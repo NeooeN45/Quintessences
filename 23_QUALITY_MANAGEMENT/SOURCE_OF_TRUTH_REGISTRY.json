@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-09-29",
+  "reviewed_at": "2026-11-16",
   "precedence": [
     "constitution",
     "directives_actives",
@@ -36,9 +36,11 @@
       "authority": 90,
       "owner": "Fondateur",
       "status": "canonique",
-      "last_reviewed": "2026-09-29",
-      "next_review": "2026-11-14",
-      "superseded_by": null
+      "last_reviewed": "2026-11-16",
+      "next_review": "2027-02-16",
+      "superseded_by": null,
+      "review_evidence": "23_QUALITY_MANAGEMENT/AUDITS/RECONCILIATION_SERVEUR_2026-11-16.md",
+      "review_scope": "Sept directives actives intégralement relues, blobs identiques dans les trois snapshots ; amendements et levée des restrictions de phase vérifiés ; aucun Draft promu."
     },
     {
       "id": "decisions",
@@ -103,10 +105,12 @@
       ],
       "authority": 50,
       "owner": "Direction technique",
-      "status": "canonique",
-      "last_reviewed": "2026-09-29",
-      "next_review": "2026-10-29",
-      "superseded_by": null
+      "status": "reference",
+      "last_reviewed": "2026-11-16",
+      "next_review": "2026-11-23",
+      "superseded_by": null,
+      "review_evidence": "23_QUALITY_MANAGEMENT/AUDITS/RECONCILIATION_SERVEUR_2026-11-16.md",
+      "review_scope": "Revue documentaire ciblée ; vues historiques avec écarts ; synchronisation seulement proposée ; aucune qualification serveur ou applicative."
     },
     {
       "id": "qms",
