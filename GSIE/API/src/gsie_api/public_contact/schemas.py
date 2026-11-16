@@ -36,4 +36,3 @@ class PublicContactResponse(BaseModel):
 
     accepted: bool = True
     message: str = "Votre message a été transmis."
-

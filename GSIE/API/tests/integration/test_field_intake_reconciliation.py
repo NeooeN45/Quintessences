@@ -325,9 +325,9 @@ def _configuration_historique(repertoire: Path, lignee: str) -> Config:
     empreinte = hashlib.sha256()
     for chemin in sorted(versions.glob("*.py")):
         empreinte.update(chemin.name.encode() + b"\0" + chemin.read_bytes() + b"\0")
-    assert empreinte.hexdigest() == _SHA_HISTORIQUES[lignee], (
-        "La chaîne historique doit correspondre exactement au snapshot approuvé"
-    )
+    assert (
+        empreinte.hexdigest() == _SHA_HISTORIQUES[lignee]
+    ), "La chaîne historique doit correspondre exactement au snapshot approuvé"
 
     configuration = _configuration_courante()
     configuration.set_main_option("version_locations", str(versions))
@@ -506,9 +506,7 @@ def _verifier_contrat(url: str) -> None:
         "ix_field_intake_submitted_by_received",
         "ix_field_intake_status_received",
     }
-    assert all(
-        index["valid"] and index["ready"] for index in catalogue["index"].values()
-    )
+    assert all(index["valid"] and index["ready"] for index in catalogue["index"].values())
 
 
 def _inserer_sentinelles(url: str, *, bff: bool = False) -> tuple[str, ...]:
@@ -696,6 +694,60 @@ def should_preserve_complete_historical_rows_when_upgrading_to_the_reconciled_he
     assert _catalogue(url) == catalogue
 
 
+def should_refuse_a_custom_equality_operator_hidden_by_the_check_decompilation(
+    base_reconciliation: str,
+    tmp_path: Path,
+) -> None:
+    """Un opérateur homonyme peut donner au même texte CHECK un autre sens."""
+    url = base_reconciliation
+    command.upgrade(_configuration_historique(tmp_path, "feat"), _FEAT_0051)
+    tables = _inserer_sentinelles(url)
+    _executer(
+        url,
+        "ALTER DATABASE gsie_reconciliation_test SET search_path = public, pg_catalog",
+        "CREATE FUNCTION public.intake_egalite_non_canonique(text, text) "
+        "RETURNS boolean LANGUAGE sql IMMUTABLE AS $$ SELECT true $$",
+        "CREATE OPERATOR public.= (LEFTARG = text, RIGHTARG = text, "
+        "PROCEDURE = public.intake_egalite_non_canonique)",
+        "ALTER TABLE field_intake DROP CONSTRAINT ck_field_intake_status",
+        "ALTER TABLE field_intake ADD CONSTRAINT ck_field_intake_status "
+        "CHECK (status::text OPERATOR(public.=) ANY "
+        "(ARRAY['quarantined', 'accepted', 'rejected']::text[]))",
+    )
+    assert _requete(url, "SELECT 'invente'::text OPERATOR(public.=) 'accepted'::text") == [True]
+
+    async def expression_vue_par_la_migration() -> str:
+        # Ce moteur reprend le search_path de la base, comme env.py.
+        moteur = create_async_engine(url)
+        try:
+            async with moteur.connect() as connexion:
+                expression = await connexion.scalar(
+                    text(
+                        "SELECT pg_catalog.pg_get_expr(conbin, conrelid) "
+                        "FROM pg_catalog.pg_constraint "
+                        "WHERE conrelid = pg_catalog.to_regclass('public.field_intake') "
+                        "AND contype = 'c'"
+                    )
+                )
+                assert expression is not None
+                return str(expression)
+        finally:
+            await moteur.dispose()
+
+    expression = asyncio.run(expression_vue_par_la_migration())
+    assert "OPERATOR(" not in expression
+    assert " = ANY " in expression
+    donnees = _capturer(url, tables)
+    catalogue = _catalogue(url)
+
+    with pytest.raises(RuntimeError, match=r"public\.field_intake"):
+        command.upgrade(_configuration_courante(), _MAIN_0051)
+
+    assert _versions(url) == [_FEAT_0051]
+    assert _capturer(url, tables) == donnees
+    assert _catalogue(url) == catalogue
+
+
 def should_preserve_rows_and_relation_oids_when_replaying_compatibility_boundaries(
     base_reconciliation: str,
     tmp_path: Path,
@@ -757,9 +809,7 @@ _CK = "ck_field_intake_status"
 _STATUTS = "'quarantined', 'accepted', 'rejected'"
 
 
-def _derive_contrainte(
-    identifiant: str, nom: str, definition: str, originale: str
-) -> _Derive:
+def _derive_contrainte(identifiant: str, nom: str, definition: str, originale: str) -> _Derive:
     suppression = f"ALTER TABLE field_intake DROP CONSTRAINT {nom}"
     return _Derive(
         identifiant,
@@ -1032,3 +1082,96 @@ def should_resume_the_real_upgrade_after_a_rejected_schema_has_been_restored(
     _verifier_contrat(url)
 
 
+def should_refuse_a_reversed_unique_constraint_hidden_by_exact_unnest_overloads(
+    base_reconciliation: str,
+    tmp_path: Path,
+) -> None:
+    """Une surcharge exacte peut masquer l'ordre réel lu par un appel non qualifié."""
+    url = base_reconciliation
+    command.upgrade(_configuration_historique(tmp_path, "feat"), _FEAT_0051)
+    tables = _inserer_sentinelles(url)
+    _executer(
+        url,
+        "ALTER DATABASE gsie_reconciliation_test SET search_path = public, pg_catalog",
+        "ALTER TABLE field_intake DROP CONSTRAINT uq_field_intake_application_event",
+        "ALTER TABLE field_intake ADD CONSTRAINT uq_field_intake_application_event "
+        "UNIQUE (client_event_id, application_key)",
+        "CREATE FUNCTION public.unnest(smallint[]) RETURNS SETOF smallint "
+        "LANGUAGE sql IMMUTABLE AS $$ SELECT n FROM pg_catalog.unnest("
+        "CASE WHEN pg_catalog.array_to_string($1, ',') = '6,5' "
+        "THEN ARRAY[5,6]::smallint[] ELSE $1 END) AS n $$",
+        "CREATE FUNCTION public.unnest(int2vector) RETURNS SETOF smallint "
+        "LANGUAGE sql IMMUTABLE AS $$ SELECT n FROM public.unnest($1::smallint[]) AS n $$",
+    )
+    assert _requete(
+        url,
+        "SELECT conkey::text FROM pg_catalog.pg_constraint "
+        "WHERE conrelid = 'public.field_intake'::regclass AND contype = 'u'",
+    ) == ["{6,5}"]
+    assert _requete(url, "SELECT array_agg(n)::text FROM unnest(ARRAY[6,5]::smallint[]) AS n") == [
+        "{5,6}"
+    ]
+    assert _requete(url, "SELECT array_agg(n)::text FROM unnest('6 5'::int2vector) AS n") == [
+        "{5,6}"
+    ]
+    donnees = _capturer(url, tables)
+    catalogue = _catalogue(url)
+
+    with pytest.raises(RuntimeError, match=r"public\.field_intake"):
+        command.upgrade(_configuration_courante(), _MAIN_0051)
+
+    assert _versions(url) == [_FEAT_0051]
+    assert _capturer(url, tables) == donnees
+    assert _catalogue(url) == catalogue
+
+
+def should_refuse_a_custom_collation_hidden_by_a_catalogue_oid_operator(
+    base_reconciliation: str,
+    tmp_path: Path,
+) -> None:
+    """Le contrôle de collation doit employer la comparaison native des OID."""
+    url = base_reconciliation
+    command.upgrade(_configuration_historique(tmp_path, "feat"), _FEAT_0051)
+    tables = _inserer_sentinelles(url)
+    _executer(
+        url,
+        "ALTER DATABASE gsie_reconciliation_test SET search_path = public, pg_catalog",
+        'CREATE COLLATION public.reconciliation FROM pg_catalog."C"',
+        "ALTER TABLE field_intake ALTER COLUMN application_key "
+        "TYPE varchar(100) COLLATE public.reconciliation",
+    )
+    collation = int(
+        _requete(
+            url,
+            "SELECT oid FROM pg_catalog.pg_collation WHERE collname = 'reconciliation'",
+        )[0]
+    )
+    defaut = int(
+        _requete(url, "SELECT typcollation FROM pg_catalog.pg_type WHERE typname = 'varchar'")[0]
+    )
+    _executer(
+        url,
+        "CREATE FUNCTION public.intake_egalite_oid(oid, oid) RETURNS boolean "
+        "LANGUAGE sql IMMUTABLE AS $$ SELECT pg_catalog.oideq($1, $2) OR "
+        f"(pg_catalog.oideq($1, {collation}::oid) "
+        f"AND pg_catalog.oideq($2, {defaut}::oid)) $$",
+        "CREATE OPERATOR public.= (LEFTARG = oid, RIGHTARG = oid, "
+        "PROCEDURE = public.intake_egalite_oid)",
+    )
+    assert _requete(
+        url,
+        "SELECT a.attcollation OPERATOR(pg_catalog.=) t.typcollation "
+        "FROM pg_catalog.pg_attribute a "
+        "JOIN pg_catalog.pg_type t ON t.oid = a.atttypid "
+        "WHERE a.attrelid = 'public.field_intake'::regclass AND a.attname = 'application_key'",
+    ) == [False]
+    assert _requete(url, f"SELECT {collation}::oid OPERATOR(public.=) {defaut}::oid") == [True]
+    donnees = _capturer(url, tables)
+    catalogue = _catalogue(url)
+
+    with pytest.raises(RuntimeError, match=r"public\.field_intake"):
+        command.upgrade(_configuration_courante(), _MAIN_0051)
+
+    assert _versions(url) == [_FEAT_0051]
+    assert _capturer(url, tables) == donnees
+    assert _catalogue(url) == catalogue

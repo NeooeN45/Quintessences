@@ -66,4 +66,3 @@ def should_refuse_schema_verification_on_a_non_postgresql_connection() -> None:
         helper["validate_field_intake_v1"](connexion)
 
     connexion.execute.assert_not_called()
-

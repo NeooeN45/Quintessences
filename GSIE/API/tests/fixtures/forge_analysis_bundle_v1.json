@@ -1,0 +1,144 @@
+{
+  "schema_version": "forge_analysis_bundle.v1",
+  "bundle_id": "00000000-0000-4000-8000-000000000080",
+  "station_id": "00000000-0000-4000-8000-000000000081",
+  "profile_id": "geosylva.station.analysis",
+  "generated_at": "2026-08-31T10:00:00Z",
+  "sources": [
+    {
+      "source_id": "ign-apicarto-cadastre",
+      "adapter_key": "ign",
+      "adapter_version": "1.0.0",
+      "dataset_version": "2026.1",
+      "license": "Licence de la distribution qualifiée",
+      "reference": "registry:ign-apicarto-cadastre",
+      "retrieved_at": "2026-08-31T09:50:00Z",
+      "qualification": "qualified"
+    },
+    {
+      "source_id": "soilgrids-wcs",
+      "adapter_key": "soilgrids",
+      "adapter_version": "2.0.0",
+      "dataset_version": "2026.1",
+      "license": "Licence de la distribution qualifiée",
+      "reference": "registry:soilgrids-wcs",
+      "retrieved_at": "2026-08-31T09:51:00Z",
+      "qualification": "qualified"
+    },
+    {
+      "source_id": "taxref-via-gbif",
+      "adapter_key": "taxref",
+      "adapter_version": "1.0.0",
+      "dataset_version": "2026.1",
+      "license": "Licence de la distribution qualifiée",
+      "reference": "registry:taxref-via-gbif",
+      "retrieved_at": "2026-08-31T09:52:00Z",
+      "qualification": "qualified"
+    },
+    {
+      "source_id": "indigenat-bellifa-2026",
+      "adapter_key": "indigenat-bellifa",
+      "adapter_version": "2026.1.0",
+      "dataset_version": "2026",
+      "license": "Licence de la distribution qualifiée",
+      "reference": "registry:indigenat-bellifa-2026",
+      "retrieved_at": "2026-08-31T09:53:00Z",
+      "qualification": "qualified"
+    }
+  ],
+  "parameters": [
+    {
+      "parameter_id": "gis.altitude_m",
+      "value": 420,
+      "unit": "m",
+      "source_id": "ign-apicarto-cadastre",
+      "observed_at": "2026-08-31T09:50:00Z",
+      "evidence_level": "C",
+      "quality_score": 0.99,
+      "method_id": "ign.altitude",
+      "method_version": "1.0"
+    },
+    {
+      "parameter_id": "pedology.soilgrids.phh2o",
+      "value": 5.4,
+      "unit": "pH",
+      "source_id": "soilgrids-wcs",
+      "observed_at": "2026-08-31T09:51:00Z",
+      "evidence_level": "C",
+      "quality_score": 0.95,
+      "uncertainty": 0.2,
+      "method_id": "soilgrids.wcs.phh2o",
+      "method_version": "2.0"
+    },
+    {
+      "parameter_id": "pedology.soilgrids.clay",
+      "value": 180,
+      "unit": "g/kg",
+      "source_id": "soilgrids-wcs",
+      "observed_at": "2026-08-31T09:51:00Z",
+      "evidence_level": "C",
+      "quality_score": 0.95,
+      "uncertainty": 12,
+      "method_id": "soilgrids.wcs.clay",
+      "method_version": "2.0"
+    },
+    {
+      "parameter_id": "botany.taxref.taxon_key",
+      "value": 1234,
+      "unit": "id",
+      "source_id": "taxref-via-gbif",
+      "observed_at": "2026-08-31T09:52:00Z",
+      "evidence_level": "B",
+      "quality_score": 0.98,
+      "method_id": "taxref.gbif.search",
+      "method_version": "1.0"
+    },
+    {
+      "parameter_id": "botany.indigenat.code_ser",
+      "value": "I",
+      "unit": "code",
+      "source_id": "indigenat-bellifa-2026",
+      "observed_at": "2026-08-31T09:53:00Z",
+      "evidence_level": "B",
+      "quality_score": 0.9,
+      "method_id": "bellifa.lookup",
+      "method_version": "2026.1"
+    }
+  ],
+  "derived_features": [
+    {
+      "feature_id": "risk.water_stress",
+      "value": 0.82,
+      "unit": "score",
+      "dependencies": [
+        "gis.altitude_m",
+        "pedology.soilgrids.clay",
+        "pedology.soilgrids.phh2o"
+      ],
+      "source_ids": [
+        "ign-apicarto-cadastre",
+        "soilgrids-wcs"
+      ],
+      "formula": "f(altitude_m, clay, phh2o)",
+      "calculator_id": "forge.water-stress",
+      "calculator_version": "1.0.0",
+      "evidence_level": "C",
+      "quality_score": 0.88,
+      "uncertainty": 0.1
+    }
+  ],
+  "lineage": {
+    "pipeline_id": "geosylva.station.analysis",
+    "forge_version": "0.2.0",
+    "config_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "input_manifest_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "reproducible": true,
+    "transformations": [
+      "normalisation",
+      "qualification",
+      "derivation.water-stress"
+    ],
+    "seed": 42
+  },
+  "omitted_parameter_ids": []
+}

@@ -489,6 +489,9 @@ jobs:
     name: Rust clippy + test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # PyO3 0.24.2 ne prend pas en charge le Python 3.14 du runner.
+      PYO3_PYTHON: python3.12
     defaults:
       run:
         working-directory: GSIE/ENGINES/EVIDENCE_ENGINE/rust
@@ -496,6 +499,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Configurer Python 3.12 pour PyO3
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
+        with:
+          python-version: "3.12"
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@8641a17e25bf5b40c118d48fe0f81e8655731839 # 1.85.0

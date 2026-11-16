@@ -71,8 +71,7 @@ def _payload(archive: Path) -> dict[str, object]:
                 "checksum": checksum,
                 "checksum_algorithm": "sha256",
                 "original_uri": (
-                    "https://inventaire-forestier.ign.fr/dataifn/data/"
-                    "export_dataifn_2024.zip"
+                    "https://inventaire-forestier.ign.fr/dataifn/data/" "export_dataifn_2024.zip"
                 ),
                 "archived_at": timestamp,
             }

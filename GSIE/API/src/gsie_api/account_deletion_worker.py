@@ -29,9 +29,7 @@ async def finalize_due_accounts(batch_size: int | None = None) -> int:
     async with async_session_factory() as session:
         try:
             result = await session.execute(
-                text(
-                    "SELECT gsie_rgpd_identites.finalize_due_account_deletions(:batch_size)"
-                ),
+                text("SELECT gsie_rgpd_identites.finalize_due_account_deletions(:batch_size)"),
                 {"batch_size": limit},
             )
             processed = int(result.scalar_one() or 0)

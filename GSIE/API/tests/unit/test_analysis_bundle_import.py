@@ -20,7 +20,9 @@ from gsie_api.data.analysis_bundle_import import (
 from gsie_api.data.analysis_bundle_router import import_analysis_bundle
 from gsie_api.data.field_intake import FieldIntakeConflict, FieldIntakeResponse
 
-_EXAMPLE = Path(__file__).parents[4] / "Forge" / "examples" / "gsie_analysis_bundle_v1.json"
+# Copie inchangée de NeooeN45/Forge, master, examples/gsie_analysis_bundle_v1.json.
+# Blob Git authentifié : a8ee220d725936a72b7b4d825fe9257ba8bbe962.
+_EXAMPLE = Path(__file__).resolve().parents[1] / "fixtures" / "forge_analysis_bundle_v1.json"
 
 
 def _bundle():

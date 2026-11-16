@@ -187,9 +187,7 @@ def load_acquisition_handoff(path: str | Path) -> AcquisitionHandoff:
     except OSError as exc:
         raise AcquisitionHandoffError(f"Impossible de lire le handoff {handoff_path}") from exc
     except json.JSONDecodeError as exc:
-        raise AcquisitionHandoffError(
-            f"JSON de handoff invalide à la ligne {exc.lineno}"
-        ) from exc
+        raise AcquisitionHandoffError(f"JSON de handoff invalide à la ligne {exc.lineno}") from exc
     if not isinstance(payload, dict):
         raise AcquisitionHandoffError("le handoff JSON doit être un objet")
     try:

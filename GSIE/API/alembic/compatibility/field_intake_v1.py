@@ -3,6 +3,8 @@
 Ce module appartient aux migrations, pas aux modèles de l'application. Il ne
 doit plus évoluer avec ces modèles : un autre contrat nécessiterait une autre
 version. La vérification ne lit aucune ligne métier et n'exécute aucun DDL.
+Les fonctions, types et opérateurs des lectures catalogue sont qualifiés pour
+que leur identité ne dépende pas du ``search_path`` de la connexion.
 """
 
 from __future__ import annotations
@@ -174,22 +176,27 @@ def _validate_columns(connection: Connection, table_oid: int) -> None:
                tn.nspname AS type_schema,
                NOT a.attnotnull AS nullable,
                pg_catalog.pg_get_expr(ad.adbin, ad.adrelid) AS default_expression,
-               a.attidentity::text AS identity,
-               a.attgenerated::text AS generated,
-               a.attcollation = t.typcollation AS default_collation,
+               a.attidentity::pg_catalog.text AS identity,
+               a.attgenerated::pg_catalog.text AS generated,
+               a.attcollation OPERATOR(pg_catalog.=) t.typcollation AS default_collation,
                NOT EXISTS (
                    SELECT 1 FROM pg_catalog.pg_depend AS d
-                   WHERE d.classid = 'pg_catalog.pg_attrdef'::pg_catalog.regclass
-                     AND d.objid = ad.oid
-                     AND d.refclassid = 'pg_catalog.pg_proc'::pg_catalog.regclass
-                     AND d.refobjid <> 'pg_catalog.now()'::pg_catalog.regprocedure
+                   WHERE d.classid
+                      OPERATOR(pg_catalog.=) 'pg_catalog.pg_attrdef'::pg_catalog.regclass
+                     AND d.objid OPERATOR(pg_catalog.=) ad.oid
+                     AND d.refclassid
+                        OPERATOR(pg_catalog.=) 'pg_catalog.pg_proc'::pg_catalog.regclass
+                     AND d.refobjid
+                        OPERATOR(pg_catalog.<>) 'pg_catalog.now()'::pg_catalog.regprocedure
                ) AS known_default_function
         FROM pg_catalog.pg_attribute AS a
-        JOIN pg_catalog.pg_type AS t ON t.oid = a.atttypid
-        JOIN pg_catalog.pg_namespace AS tn ON tn.oid = t.typnamespace
+        JOIN pg_catalog.pg_type AS t ON t.oid OPERATOR(pg_catalog.=) a.atttypid
+        JOIN pg_catalog.pg_namespace AS tn ON tn.oid OPERATOR(pg_catalog.=) t.typnamespace
         LEFT JOIN pg_catalog.pg_attrdef AS ad
-          ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
-        WHERE a.attrelid = :table_oid AND a.attnum > 0 AND NOT a.attisdropped
+          ON ad.adrelid OPERATOR(pg_catalog.=) a.attrelid
+            AND ad.adnum OPERATOR(pg_catalog.=) a.attnum
+        WHERE a.attrelid OPERATOR(pg_catalog.=) :table_oid AND a.attnum OPERATOR(pg_catalog.>) 0
+          AND NOT a.attisdropped
         """,
         table_oid,
     )
@@ -220,41 +227,55 @@ def _validate_constraints(connection: Connection, table_oid: int) -> dict[int, s
     constraints = _read(
         connection,
         """
-        SELECT c.conname AS name, c.contype::text AS kind,
+        SELECT c.conname AS name, c.contype::pg_catalog.text AS kind,
                c.convalidated AS validated, c.condeferrable AS deferrable,
                c.condeferred AS deferred, c.connoinherit AS no_inherit,
                c.conislocal AS local, c.coninhcount AS inherit_count,
                c.conindid AS index_oid,
                ARRAY(
                    SELECT a.attname
-                   FROM unnest(c.conkey) WITH ORDINALITY AS k(attnum, position)
+                   FROM pg_catalog.unnest(c.conkey) WITH ORDINALITY AS k(attnum, position)
                    JOIN pg_catalog.pg_attribute AS a
-                     ON a.attrelid = c.conrelid AND a.attnum = k.attnum
+                     ON a.attrelid OPERATOR(pg_catalog.=) c.conrelid
+                       AND a.attnum OPERATOR(pg_catalog.=) k.attnum
                    ORDER BY k.position
                ) AS columns,
                rn.nspname AS referred_schema, r.relname AS referred_table,
                ARRAY(
                    SELECT a.attname
-                   FROM unnest(c.confkey) WITH ORDINALITY AS k(attnum, position)
+                   FROM pg_catalog.unnest(c.confkey) WITH ORDINALITY AS k(attnum, position)
                    JOIN pg_catalog.pg_attribute AS a
-                     ON a.attrelid = c.confrelid AND a.attnum = k.attnum
+                     ON a.attrelid OPERATOR(pg_catalog.=) c.confrelid
+                       AND a.attnum OPERATOR(pg_catalog.=) k.attnum
                    ORDER BY k.position
                ) AS referred_columns,
-               c.confupdtype::text AS update_action,
-               c.confdeltype::text AS delete_action,
-               c.confmatchtype::text AS match_type,
+               c.confupdtype::pg_catalog.text AS update_action,
+               c.confdeltype::pg_catalog.text AS delete_action,
+               c.confmatchtype::pg_catalog.text AS match_type,
                pg_catalog.pg_get_expr(c.conbin, c.conrelid) AS check_expression,
-               (SELECT count(*) FROM pg_catalog.pg_trigger AS t
-                WHERE t.tgconstraint = c.oid) AS trigger_count,
+               NOT EXISTS (
+                   SELECT 1 FROM pg_catalog.pg_depend AS d
+                   WHERE d.classid
+                      OPERATOR(pg_catalog.=) 'pg_catalog.pg_constraint'::pg_catalog.regclass
+                     AND d.objid OPERATOR(pg_catalog.=) c.oid
+                     AND d.refclassid OPERATOR(pg_catalog.=) ANY (ARRAY[
+                         'pg_catalog.pg_proc'::pg_catalog.regclass,
+                         'pg_catalog.pg_operator'::pg_catalog.regclass,
+                         'pg_catalog.pg_type'::pg_catalog.regclass,
+                         'pg_catalog.pg_collation'::pg_catalog.regclass
+                     ])
+               ) AS builtin_check_dependencies,
+               (SELECT pg_catalog.count(*) FROM pg_catalog.pg_trigger AS t
+                WHERE t.tgconstraint OPERATOR(pg_catalog.=) c.oid) AS trigger_count,
                NOT EXISTS (
                    SELECT 1 FROM pg_catalog.pg_trigger AS t
-                   WHERE t.tgconstraint = c.oid
-                     AND (NOT t.tgisinternal OR t.tgenabled <> 'O')
+                   WHERE t.tgconstraint OPERATOR(pg_catalog.=) c.oid
+                     AND (NOT t.tgisinternal OR t.tgenabled OPERATOR(pg_catalog.<>) 'O')
                ) AS default_triggers
         FROM pg_catalog.pg_constraint AS c
-        LEFT JOIN pg_catalog.pg_class AS r ON r.oid = c.confrelid
-        LEFT JOIN pg_catalog.pg_namespace AS rn ON rn.oid = r.relnamespace
-        WHERE c.conrelid = :table_oid
+        LEFT JOIN pg_catalog.pg_class AS r ON r.oid OPERATOR(pg_catalog.=) c.confrelid
+        LEFT JOIN pg_catalog.pg_namespace AS rn ON rn.oid OPERATOR(pg_catalog.=) r.relnamespace
+        WHERE c.conrelid OPERATOR(pg_catalog.=) :table_oid
         """,
         table_oid,
     )
@@ -301,8 +322,13 @@ def _validate_constraints(connection: Connection, table_oid: int) -> dict[int, s
                 _refuse(
                     "clé étrangère différente de target_resource_id → public.resource.id NO ACTION"
                 )
-        elif name != "ck_field_intake_status" or not _is_status_check(
-            constraint["check_expression"]
+        elif (
+            name != "ck_field_intake_status"
+            # Les objets natifs du CHECK historique sont épinglés par
+            # PostgreSQL, sans entrée pg_depend. Toute telle dépendance révèle
+            # une autre identité, même si search_path en masque le nom au rendu.
+            or not constraint["builtin_check_dependencies"]
+            or not _is_status_check(constraint["check_expression"])
         ):
             _refuse(
                 "contrainte CHECK ck_field_intake_status différente des trois statuts autorisés"
@@ -323,33 +349,38 @@ def _validate_indexes(
                i.indnullsnotdistinct AS nulls_not_distinct,
                i.indnatts AS attribute_count, i.indnkeyatts AS key_count,
                i.indexprs IS NULL AS no_expression, i.indpred IS NULL AS no_predicate,
-               i.indoption::smallint[] AS key_options, r.reloptions AS options,
+               i.indoption::pg_catalog.int2[] AS key_options, r.reloptions AS options,
                ARRAY(
                    SELECT a.attname
-                   FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, position)
+                   FROM pg_catalog.unnest(i.indkey) WITH ORDINALITY AS k(attnum, position)
                    LEFT JOIN pg_catalog.pg_attribute AS a
-                     ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+                     ON a.attrelid OPERATOR(pg_catalog.=) i.indrelid
+                       AND a.attnum OPERATOR(pg_catalog.=) k.attnum
                    ORDER BY k.position
                ) AS columns,
                ARRAY(
-                   SELECT opc.opcdefault AND n.nspname = 'pg_catalog'
-                   FROM unnest(i.indclass) WITH ORDINALITY AS k(opclass_oid, position)
-                   JOIN pg_catalog.pg_opclass AS opc ON opc.oid = k.opclass_oid
-                   JOIN pg_catalog.pg_namespace AS n ON n.oid = opc.opcnamespace
+                   SELECT opc.opcdefault AND n.nspname OPERATOR(pg_catalog.=) 'pg_catalog'
+                   FROM pg_catalog.unnest(i.indclass) WITH ORDINALITY AS k(opclass_oid, position)
+                   JOIN pg_catalog.pg_opclass AS opc ON opc.oid OPERATOR(pg_catalog.=) k.opclass_oid
+                   JOIN pg_catalog.pg_namespace AS n ON n.oid
+                      OPERATOR(pg_catalog.=) opc.opcnamespace
                    ORDER BY k.position
                ) AS default_opclasses,
                ARRAY(
-                   SELECT k.collation_oid = a.attcollation
-                   FROM unnest(i.indkey::smallint[], i.indcollation::oid[])
-                        WITH ORDINALITY AS k(attnum, collation_oid, position)
+                   SELECT k.collation_oid OPERATOR(pg_catalog.=) a.attcollation
+                   FROM ROWS FROM (
+                       pg_catalog.unnest(i.indkey::pg_catalog.int2[]),
+                       pg_catalog.unnest(i.indcollation::pg_catalog.oid[])
+                   ) WITH ORDINALITY AS k(attnum, collation_oid, position)
                    LEFT JOIN pg_catalog.pg_attribute AS a
-                     ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+                     ON a.attrelid OPERATOR(pg_catalog.=) i.indrelid
+                       AND a.attnum OPERATOR(pg_catalog.=) k.attnum
                    ORDER BY k.position
                ) AS default_collations
         FROM pg_catalog.pg_index AS i
-        JOIN pg_catalog.pg_class AS r ON r.oid = i.indexrelid
-        JOIN pg_catalog.pg_am AS am ON am.oid = r.relam
-        WHERE i.indrelid = :table_oid
+        JOIN pg_catalog.pg_class AS r ON r.oid OPERATOR(pg_catalog.=) i.indexrelid
+        JOIN pg_catalog.pg_am AS am ON am.oid OPERATOR(pg_catalog.=) r.relam
+        WHERE i.indrelid OPERATOR(pg_catalog.=) :table_oid
         """,
         table_oid,
     )
@@ -400,25 +431,27 @@ def validate_field_intake_v1(connection: Connection) -> None:
         connection.execute(
             sa.text(
                 """
-                SELECT c.oid AS table_oid, c.relkind::text AS kind,
-                       c.relpersistence::text AS persistence,
+                SELECT c.oid AS table_oid, c.relkind::pg_catalog.text AS kind,
+                       c.relpersistence::pg_catalog.text AS persistence,
                        c.relispartition AS partition,
                        c.relrowsecurity AS row_security, c.relforcerowsecurity AS force_rls,
                        EXISTS (
                            SELECT 1 FROM pg_catalog.pg_inherits AS i
-                           WHERE i.inhrelid = c.oid OR i.inhparent = c.oid
+                           WHERE i.inhrelid OPERATOR(pg_catalog.=) c.oid
+                             OR i.inhparent OPERATOR(pg_catalog.=) c.oid
                        ) AS inheritance,
                        EXISTS (
                            SELECT 1 FROM pg_catalog.pg_trigger AS t
-                           WHERE t.tgrelid = c.oid AND NOT t.tgisinternal
+                           WHERE t.tgrelid OPERATOR(pg_catalog.=) c.oid AND NOT t.tgisinternal
                        ) AS user_triggers,
                        EXISTS (SELECT 1 FROM pg_catalog.pg_policy AS p
-                               WHERE p.polrelid = c.oid) AS policies,
+                               WHERE p.polrelid OPERATOR(pg_catalog.=) c.oid) AS policies,
                        EXISTS (SELECT 1 FROM pg_catalog.pg_rewrite AS r
-                               WHERE r.ev_class = c.oid) AS rules
+                               WHERE r.ev_class OPERATOR(pg_catalog.=) c.oid) AS rules
                 FROM pg_catalog.pg_class AS c
-                JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND c.relname = 'field_intake'
+                JOIN pg_catalog.pg_namespace AS n ON n.oid OPERATOR(pg_catalog.=) c.relnamespace
+                WHERE n.nspname OPERATOR(pg_catalog.=) 'public'
+                  AND c.relname OPERATOR(pg_catalog.=) 'field_intake'
                 """
             )
         ).mappings()

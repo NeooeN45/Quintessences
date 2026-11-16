@@ -78,9 +78,7 @@ def test_une_dependance_inconnue_est_refusee() -> None:
 
 def test_les_candidats_recherche_ne_sont_pas_treates_comme_des_sources_actives() -> None:
     candidates = {
-        candidate
-        for binding in ENGINE_SOURCE_MATRIX
-        for candidate in binding.candidate_sources
+        candidate for binding in ENGINE_SOURCE_MATRIX for candidate in binding.candidate_sources
     }
 
     assert "BD Forêt v2" in candidates

@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import HTTPException
 from pydantic import SecretStr
 from starlette.requests import Request
+from starlette.responses import Response
 
+from gsie_api.auth.transactional_email import DisabledTransactionalEmailSender
 from gsie_api.core.config import Settings
 from gsie_api.public_contact import router as contact_router_module
 from gsie_api.public_contact.schemas import ContactCategory, PublicContactRequest
+from gsie_api.shared.turnstile import TurnstileVerificationError
 
 
 def _request() -> Request:
@@ -64,7 +67,12 @@ async def _call(request: Request, payload: PublicContactRequest, sender: object)
 
     endpoint = getattr(contact_router_module.submit_contact, "__wrapped__", None)
     assert endpoint is not None
-    return await endpoint(request, payload, sender)
+    return await endpoint(
+        request=request,
+        response=Response(),
+        payload=payload,
+        sender=sender,
+    )
 
 
 async def test_should_transmit_valid_contact_message(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -147,3 +155,79 @@ async def test_should_drop_honeypot_message_without_delivery(
     assert result.accepted is True
     sender.send_contact.assert_not_awaited()
     turnstile.verify.assert_not_awaited()
+
+
+async def should_refuse_contact_when_turnstile_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = _settings()
+    sender = SimpleNamespace(is_configured=True, send_contact=AsyncMock(return_value=True))
+    unavailable = TurnstileVerificationError("service Turnstile indisponible")
+    turnstile = SimpleNamespace(verify=AsyncMock(side_effect=unavailable))
+    monkeypatch.setattr(contact_router_module, "get_settings", lambda: settings)
+    monkeypatch.setattr(contact_router_module, "TurnstileClient", lambda _: turnstile)
+
+    with pytest.raises(HTTPException, match="503: La vérification anti-robot") as error:
+        await _call(_request(), _payload(), sender)
+
+    assert error.value.status_code == 503
+    assert error.value.detail == "La vérification anti-robot est temporairement indisponible."
+    assert error.value.__cause__ is unavailable
+    turnstile.verify.assert_awaited_once_with("token", remote_ip="127.0.0.1")
+    sender.send_contact.assert_not_awaited()
+
+
+async def should_refuse_contact_when_the_email_transport_is_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = _settings()
+    sender = DisabledTransactionalEmailSender()
+    send_contact = AsyncMock(return_value=False)
+    monkeypatch.setattr(sender, "send_contact", send_contact)
+    turnstile = SimpleNamespace(verify=AsyncMock(return_value=True))
+    monkeypatch.setattr(contact_router_module, "get_settings", lambda: settings)
+    monkeypatch.setattr(contact_router_module, "TurnstileClient", lambda _: turnstile)
+
+    with pytest.raises(HTTPException, match="503: Le service de contact") as error:
+        await _call(_request(), _payload(), sender)
+
+    assert error.value.status_code == 503
+    assert error.value.detail == "Le service de contact est temporairement indisponible."
+    turnstile.verify.assert_awaited_once_with("token", remote_ip="127.0.0.1")
+    send_contact.assert_not_awaited()
+
+
+async def should_refuse_contact_when_delivery_returns_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = _settings()
+    sender = SimpleNamespace(is_configured=True, send_contact=AsyncMock(return_value=False))
+    turnstile = SimpleNamespace(verify=AsyncMock(return_value=True))
+    monkeypatch.setattr(contact_router_module, "get_settings", lambda: settings)
+    monkeypatch.setattr(contact_router_module, "TurnstileClient", lambda _: turnstile)
+
+    with pytest.raises(HTTPException, match="503: Le message n'a pas pu être transmis") as error:
+        await _call(_request(), _payload(), sender)
+
+    assert error.value.status_code == 503
+    assert error.value.detail == (
+        "Le message n'a pas pu être transmis. Écrivez directement à "
+        "contact@quintessences-platform.com."
+    )
+    turnstile.verify.assert_awaited_once_with("token", remote_ip="127.0.0.1")
+    sender.send_contact.assert_awaited_once_with(
+        sender_email="visitor@example.com",
+        category="partenariat",
+        message="Bonjour, je souhaite échanger sur un partenariat.",
+    )
+
+
+def should_return_the_contact_sender_from_the_transactional_factory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sender = DisabledTransactionalEmailSender()
+    factory = Mock(return_value=sender)
+    monkeypatch.setattr(contact_router_module, "get_transactional_email_sender", factory)
+
+    assert contact_router_module.get_contact_sender() is sender
+    factory.assert_called_once_with()
