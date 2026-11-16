@@ -438,7 +438,7 @@ du présent tableau.
 | CI Gate (bloque merge) | Rouge | Jobs obligatoires en échec/ignorés ; protection conservée |
 | Source governance | Vert | [Run 43904802069](https://github.com/NeooeN45/Quintessences/actions/runs/43904802069) |
 | Secrets et fichiers sensibles | Vert | [Run 43904802038](https://github.com/NeooeN45/Quintessences/actions/runs/43904802038), Gitleaks masqué |
-| Deux replicas, TLS et drainage | Rouge | [Run 43904802117](https://github.com/NeooeN45/Quintessences/actions/runs/43904802117) : `minio/mc` inaccessible avant les essais HA |
+| Deux replicas, TLS et drainage | Rouge | [Run 43904802117](https://github.com/NeooeN45/Quintessences/actions/runs/43904802117) : `minio/minio` inaccessible avant les essais HA ; le refus sur `minio/mc` avait été observé dans le premier run 43900525818 |
 
 La suite locale complète réussie ne permet pas d'effacer l'échec concurrent
 distant : huit sessions indépendantes ont heurté l'index unique
@@ -473,6 +473,34 @@ La sauvegarde `backup/quintessences-reconciliation-2026-11-16-163633Z`
 est d'abord publiée sur le code vérifié, puis avancée sans réécriture vers le
 commit documentaire final. Le SHA final relu est consigné dans la description
 de la PR et dans la remise ; il doit correspondre au HEAD final publié.
+
+### 6.4.1 Relevé complet après publication documentaire
+
+Le [run 43909814591](https://github.com/NeooeN45/Quintessences/actions/runs/43909814591)
+sur `6998aff543d49f3f317d88b7952398e63c8b5b7c` est terminé. Son arbre API
+est strictement identique à celui du code `2d82987`, objet Git
+`a3318e3aed8003b796c185746772be31471a287b`. Les conclusions diffèrent du
+relevé précédent sur deux jobs :
+
+- intégration : **vert**, 468 réussis en 221,56 s, aucun échec ; ce passage
+  sans correctif du moteur ne clôt pas la course héritée observée auparavant ;
+- couverture combinée : **rouge**, désormais exécutée ; 19 533/20 099 lignes,
+  97,18 % global, et seul refus sur le contrat cubage à 155/156 lignes.
+
+Tous les autres jobs du tableau précédent conservent leur conclusion :
+les huit autres jobs de qualité/construction sont verts, Data Registry,
+Trivy et CI Gate restent rouges. Les workflows séparés Source governance
+([43909815145](https://github.com/NeooeN45/Quintessences/actions/runs/43909815145))
+et sécurité du dépôt
+([43909814585](https://github.com/NeooeN45/Quintessences/actions/runs/43909814585))
+sont verts ; HA
+([43909814570](https://github.com/NeooeN45/Quintessences/actions/runs/43909814570))
+est rouge, sur `minio/minio` avant les essais.
+
+Le garde Trivy signale toujours 21 alertes corrigeables, 17 HIGH et
+4 CRITICAL. La CI globale est **rouge** ; aucun succès n'est supposé sur
+le nouveau run automatiquement déclenché par l'ajout documentaire de ce
+relevé. Ce dernier ajout ne modifie aucun fichier API.
 
 ## 7. Revue du registre des sources de vérité
 
