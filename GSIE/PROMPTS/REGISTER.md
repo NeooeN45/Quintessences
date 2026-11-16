@@ -30,6 +30,8 @@
 | GSIE-PROMPT-0026 | GLM 5.2 via Devin | Vérification des URL de l'inventaire existant (232 testées, contre-audit Architecte : 6,5 % de péremption réelle) | RENDU | Suite de GSIE-PROMPT-0025 | Architecte |
 | GSIE-PROMPT-0027 | GLM 5.2 via Devin | Schémas de domaine — sept migrations, une par schéma (RFC-0029 validée par DEC-000039) | À LANCER | Suite du lot RGPD `20260728_0011`/`0012` | Architecte |
 
+| GSIE-PROMPT-0033 | Codex et revue indépendante | Réconciliation serveur des branches domaine, main et sécurité | EN_COURS | Snapshots 9e6864b, d7b400c, e3e18d4 ; PR nº 73 non fusionnée | Architecte/QA ; Claude et Fondateur avant fusion |
+
 > **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
 > correspondent à du travail structurant réalisé directement par
 > l'Architecte/Codex sans délégation à un agent Devin (Claude ou GLM 5.2).
