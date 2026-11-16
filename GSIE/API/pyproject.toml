@@ -230,3 +230,16 @@ dev = [
     "pytest==9.0.3",
     "pytest-asyncio==1.3.0",
 ]
+
+# Versions transitives de sécurité, sans nouvelle dépendance métier (GSIE-PROMPT-0034).
+[tool.uv]
+constraint-dependencies = [
+    # CVE-2026-111064, CVE-2026-111066 et CVE-2026-123817.
+    "aiohttp==3.14.4",
+    # Racines de certification compromises : GHSA-6q48-6c7w-9gw2.
+    "certifi==2026.10.18",
+    # CVE-2026-114605 et CVE-2026-128089.
+    "dnspython==2.9.2",
+    # CVE-2026-119194 à CVE-2026-119197.
+    "pyasn1==0.6.5",
+]

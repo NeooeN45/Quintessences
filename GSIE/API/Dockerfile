@@ -9,7 +9,7 @@
 
 FROM rust:1.85.0-slim-bookworm@sha256:1829c432be4a592f3021501334d3fcca24f238432b13306a4e62669dec538e52 AS rust-toolchain
 
-FROM python:3.12-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e AS builder
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS builder
 
 LABEL org.opencontainers.image.title="GSIE API"
 LABEL org.opencontainers.image.description="General System Intelligence Engine REST/WebSocket API"
@@ -64,8 +64,8 @@ RUN maturin build --release && \
 WORKDIR /build/api
 
 # Dépendances Python
-# uv 0.12.10 embarque quinn-proto >= 0.11.15 (GHSA-4w2j-m93h-cj5j).
-RUN pip install --no-cache-dir "uv==0.12.10"
+# uv 0.13.4 corrige le magasin de certificats embarqué (GHSA-hq85-5cpj-mr62).
+RUN pip install --no-cache-dir "uv==0.13.4"
 
 # Copie du projet API et installation des dépendances + wheel Rust
 COPY GSIE/API/pyproject.toml GSIE/API/uv.lock GSIE/API/README.md ./
@@ -81,7 +81,7 @@ RUN uv pip install --system --no-deps .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
 # --- Stage final ---
-FROM python:3.12-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e AS runtime
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS runtime
 
 WORKDIR /app
 
