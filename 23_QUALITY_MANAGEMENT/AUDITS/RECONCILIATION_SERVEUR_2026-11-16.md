@@ -331,6 +331,7 @@ de non-exécution doit être conservé lors de la mise à jour.
 | Sauvegarde et restauration d'une base de test jetable | EN ATTENTE | EN ATTENTE | À joindre |
 | Python final, `pytest tests/ -q -n 2`, API, première exécution | 3 562 réussis, 11 échoués, 64 ignorés ; couverture 95,8107 %, seuil non atteint | 1 | `full-suite.xml`, `coverage-full.json` ; reprise après corrections EN ATTENTE |
 | Reproduction ciblée bundle/contact après correction | 16 réussis ; deux routeurs à 100 % | 0 | `qa-bundle-contact.xml`, `coverage-qa-bundle-contact.json` |
+| Contrat BFF, cycle de vie et provenance simulée | 138 réussis, dont 99 nouveaux ; 679/681 lignes BFF couvertes | 0 | `bff-tests-final.log`, `coverage-bff.json` ; entrée CLI et garde inaccessible restent non couvertes |
 | Lint, typage, couverture combinée et mutation prévus par la CI | EN ATTENTE | EN ATTENTE | À joindre |
 | Revue indépendante migration et union des tests | Aucun blocage signalé dans ce périmètre ; helper final vérifié par empreinte | Sans objet | Revue des correctifs de CI en cours ; aucune homologation globale du serveur |
 
@@ -353,6 +354,12 @@ suite complète. Les 64 ignorés existaient : 46 seeds v6.1 retirés, 14 API
 KnowledgeObject retirées, trois cas Rust natif indisponible et un CSV réel
 Treekipedia absent. Aucun nouveau marqueur d'ignorance n'est ajouté.
 
+Une tentative intermédiaire de la suite complète s'est arrêtée à la collecte :
+les deux nouveaux fichiers BFF changeaient encore entre les collectes des
+workers. Cette tentative est archivée sous `full-suite-input-drift.*` ; ses
+empreintes d'entrée et sortie divergent et aucun succès ne lui est attribué.
+La campagne finale doit porter sur des fichiers figés et des empreintes égales.
+
 ### 6.3.1 Ajustements nécessaires aux contrôles hérités
 
 - Python 3.12 est explicitement choisi pour PyO3 0.24.2 dans le job Rust ;
@@ -369,6 +376,16 @@ Treekipedia absent. Aucun nouveau marqueur d'ignorance n'est ajouté.
   Le garde existant n'est pas affaibli.
 
 ### 6.4 CI distante et sauvegarde
+
+Première publication : [PR nº 74](https://github.com/NeooeN45/Quintessences/pull/74),
+en brouillon vers `main`, tête `8b1a0d1b41b0de48cdb26d47e9134b811cff2b3c`.
+Sur cette tête, les jobs Markdown, cohérence, Governance Guard, Bandit,
+Rust, gouvernance des sources et secrets réussissent. La suite Python et ses
+jobs dépendants restent à suivre sur la tête finale.
+Le [run HA 43900525818](https://github.com/NeooeN45/Quintessences/actions/runs/43900525818)
+échoue au téléchargement de `minio/mc:RELEASE.2025-08-13T08-35-41Z`
+avec `pull access denied`, avant les migrations et essais TLS : le blocage
+historique est reproduit, aucune qualification HA n'est acquise.
 
 | Élément attendu | État |
 |---|---|
@@ -653,6 +670,43 @@ aux essais sur des bases jetables et ne constitue pas une procédure de reprise
 pour une base à conserver.
 
 ## 10. Risques résiduels et conditions d'acceptation
+
+### 10.1 Constats supplémentaires des nouveaux tests BFF
+
+Ces constats concernent du code hérité de `feat`. Ils sont signalés sans
+modifier la production ni déclarer résolus les écarts E01 à E06 de la mission
+précédente :
+
+- `GSIE/API/src/gsie_api/geosylva/cubage_schemas.py:77` : le refus après
+  `if not positions` est inaccessible pour un JSON fini normal. Une visite
+  réussie ajoute une position, directement ou via les enfants non vides ;
+  les autres structures lèvent avant son retour. Aucun objet artificiel ni
+  exclusion de couverture n'est introduit pour rendre cette ligne verte.
+  La porte contractuelle à 100 % reste opposable.
+- `GSIE/API/src/gsie_api/geosylva/router.py:97` et `:122`, avec
+  `core/limiter.py:46` : le handler écrit deux secondes pour le polling,
+  mais SlowAPI remplace l'en-tête HTTP `Retry-After` par sa fenêtre de quota
+  proche de 60 secondes ; le JSON garde deux secondes. Les premiers tests
+  HTTP révèlent huit échecs d'hypothèse, conservés dans les preuves initiales.
+  Les tests finaux distinguent le handler et le transport HTTP et montrent
+  l'écart ; aucune garantie de deux secondes sur le réseau n'est affirmée.
+- `GSIE/API/src/gsie_api/geosylva/router.py:61` et
+  `shared/middleware.py:120` : sans en-tête `X-Trace-ID` entrant, le middleware
+  génère un identifiant pour les logs et la réponse, mais ne l'inscrit pas
+  dans `request.state`. Le BFF peut donc transmettre `n/a` au job alors que
+  la réponse porte un UUID. L'écart de corrélation doit être corrigé dans
+  un lot distinct ; la fourniture explicite d'un en-tête valide ne constitue
+  pas une correction de ce cas.
+- `GSIE/API/src/gsie_api/geosylva/service.py:73` et `router.py:151` : le
+  service peut conserver un `result_payload` puis classer le job
+  `failed/SCIENTIFIC_VALIDATION_BLOCKED`. La route de résultat vérifie d'abord
+  l'absence de payload et peut donc restituer ce payload malgré le statut
+  `failed`. Les tests prouvent les refus de préparation et le classement du
+  job ; ils ne prouvent pas un verrou global de publication scientifique.
+  Cet écart de restitution doit être traité avant qualification produit,
+  dans un lot explicitement relu.
+
+### 10.2 Conditions de remise
 
 | Risque ou limite | Traitement / preuve requise |
 |---|---|
