@@ -29,6 +29,7 @@
 | GSIE-PROMPT-0025 | GLM 5.2 via Devin | Élargissement de l'inventaire des sources de données (179 recensées, angles morts géographiques, thématiques et modes d'accès distants) | À LANCER | Suite de l'audit `RFC-0029` §11 | Architecte |
 | GSIE-PROMPT-0026 | GLM 5.2 via Devin | Vérification des URL de l'inventaire existant (232 testées, contre-audit Architecte : 6,5 % de péremption réelle) | RENDU | Suite de GSIE-PROMPT-0025 | Architecte |
 | GSIE-PROMPT-0027 | GLM 5.2 via Devin | Schémas de domaine — sept migrations, une par schéma (RFC-0029 validée par DEC-000039) | À LANCER | Suite du lot RGPD `20260728_0011`/`0012` | Architecte |
+| GSIE-PROMPT-0032 | Codex | Enregistrer la validation avec mise à jour de DEC-000073 : façade asynchrone, deux métiers GeoSylva, écarts et synchronisation proposée | EN_REVUE | Arbitrage du Fondateur du 2026-11-15 ; snapshot `9e6864b` ; numérotation inter-branches vérifiée | Architecte-relecteur Claude ; arbitrage final du Fondateur |
 | GSIE-PROMPT-0033 | Codex et revue indépendante | Réconciliation serveur des branches domaine, main et sécurité | EN_REVUE | Snapshots 9e6864b, d7b400c, e3e18d4 ; PR nº 74 brouillon, CI rouge documentée ; PR nº 73 non fusionnée | Architecte/QA ; Claude et Fondateur avant fusion |
 | GSIE-PROMPT-0034 | Codex et consortium spécialisé | Lever les blocages de la PR nº 74 selon la décision du 16 novembre | EN_COURS | Départ ffdc260 ; intégration 57121c8, simplification des migrations et sécurité ciblée | Reviewer indépendant, architecte et Fondateur |
 
@@ -45,3 +46,12 @@
 Le statut, le snapshot attribué et le verdict de revue sont mis à jour à
 chaque transition. Un prompt bloqué peut être préparé, mais ne doit pas être
 présenté comme exécuté.
+
+## Réservation inter-branches du 15 novembre 2026
+
+Les numéros 0028 à 0031 sont déjà attribués sur la branche
+`docs/trajectoire-simulation-territoriale`. Ils ne sont pas réattribués ni
+présentés comme intégrés à cette branche. La mission suivante utilise
+[GSIE-PROMPT-0032](GSIE-PROMPT-0032-validation-dec-000073.md), après inventaire
+des 35 branches distantes et des branches locales préexistantes. Le détail
+est conservé dans le [rapport de revue](../../23_QUALITY_MANAGEMENT/AUDITS/AUDIT_DEC_000073_2026-11-15.md#6-inventaire-préalable-des-identifiants).

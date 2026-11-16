@@ -127,7 +127,7 @@ construite. Ne pas présenter un scan de verrou comme un scan de l'image.
 - Aucun changement de statut Draft sans relecture/validation applicable.
 - Publication sur la branche d'intégration et sauvegarde distante relue.
 
-## Rapport final obligatoire
+## Rapport obligatoire
 
 Remettre le hash final, `alembic heads`, les tests et quatre contrôles avec
 codes de sortie, la CI job par job et, pour chaque point A à F : fait,
