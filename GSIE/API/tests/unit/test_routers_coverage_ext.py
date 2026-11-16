@@ -818,7 +818,6 @@ class TestOrchestrationRouter:
         assert resp.status_code == expected_status
         assert "préparation refusée" in resp.json()["detail"]
 
-
     @pytest.mark.parametrize(
         ("error", "expected_status"),
         [
@@ -885,6 +884,7 @@ class TestOrchestrationRouter:
 
         assert response.status_code == expected_status
         assert response.json()["detail"] == str(exception)
+
 
 # ===========================================================================
 # Reasoning Router

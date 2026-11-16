@@ -185,6 +185,8 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
         f"{_SCHEMA_IDENTITES}.active_session",
         f"{_SCHEMA_IDENTITES}.failed_login_attempt",
         f"{_SCHEMA_IDENTITES}.revoked_refresh_token",
+        f"{_SCHEMA_IDENTITES}.geosylva_analysis_job",
+        f"{_SCHEMA_IDENTITES}.geosylva_cubage_session",
     }
 
 

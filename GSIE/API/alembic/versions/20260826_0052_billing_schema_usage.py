@@ -6,7 +6,7 @@ installer un compte local, puis echouer lors de la creation de son abonnement
 gratuit.
 
 Revision: 20260826_0052
-Precede: 20260823_0051
+Precede: 20260908_0051
 """
 
 from collections.abc import Sequence
@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from alembic import op
 
 revision: str = "20260826_0052"
-down_revision: str | None = "20260823_0051"
+down_revision: str | None = "20260908_0051"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
