@@ -15,7 +15,8 @@ complète — invisible (`GSIE-CON-001`, `ADR-009`).
 """
 
 import asyncio
-from collections.abc import AsyncGenerator
+import json
+from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -31,6 +32,7 @@ from gsie_api.engines.orchestration.service import OrchestrationEngine
 from gsie_api.infrastructure.database import get_db
 from gsie_api.infrastructure.models.enrichment import AnalysisRunModel
 from tests.conftest import requires_docker
+from tests.integration.harnais_f import lancer_campagne_agent
 
 pytestmark = requires_docker
 
@@ -254,6 +256,17 @@ async def test_analyses_concurrentes_avec_sessions_independantes_sont_persistant
     assert len(set(identifiants)) == 8
     for identifiant in identifiants:
         assert await db_session.get(AnalysisRunModel, identifiant) is not None
+
+
+async def test_campagne_agent_moteur_should_persister_96_analyses_sans_collision(
+    postgres_url: str, monkeypatch: pytest.MonkeyPatch, record_property: Callable[[str, str], None]
+) -> None:
+    """Le défaut intermittent de la PR74 doit être éprouvé à chaque salve."""
+    bilan = await lancer_campagne_agent(postgres_url, monkeypatch, _corps)
+    preuve = json.dumps(bilan, ensure_ascii=False)
+    record_property("campagne_agent_moteur", preuve)
+    print(preuve)
+    assert (bilan["analyses"], bilan["reussites"], bilan["echecs"]) == (96, 96, 0), preuve
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,13 @@
 # ROADMAP — Quintessences / GSIE
 
+## Course d'identité Agent — point de contrôle du 18 novembre 2026
+
+- [x] Reproduire sur `main` (`47be204`) et versionner le banc de concurrence.
+- [x] Proposer une correction de la création Resource/Agent et ses tests
+  pour le ticket nº 76 dans une demande de fusion dédiée.
+- [ ] Examiner les preuves et la CI du correctif avant toute décision de fusion
+  ou de requalification des invariants.
+
 ## Réconciliation serveur — point de contrôle du 16 novembre 2026
 
 - [x] Réunir les trois historiques et GSIE-PROMPT-0032 sur la branche

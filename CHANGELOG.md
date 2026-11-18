@@ -4,6 +4,16 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [IDENTITÉ AGENT — EN RELECTURE] - 2026-11-18
+
+- GSIE-PROMPT-0036 : création concurrente avec arbitrage des deux unicités
+  de la racine, lecture fraîche de l'identité racine et du type Agent,
+  verrous partagés jusqu'au commit de l'appelant.
+- Campagne PostgreSQL de 96 analyses en CI, sondes de collision et de
+  verrouillage, mutation de l'arbitre limité à l'UUID.
+
+---
+
 ## [MINIO PROVISOIRE — EN RELECTURE] - 2026-11-18
 
 - GSIE-PROMPT-0035 : MinIO et `mc` sont construits depuis des archives de

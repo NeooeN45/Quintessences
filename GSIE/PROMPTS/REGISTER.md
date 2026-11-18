@@ -33,6 +33,7 @@
 | GSIE-PROMPT-0033 | Codex et revue indépendante | Réconciliation serveur des branches domaine, main et sécurité | EN_REVUE | Snapshots 9e6864b, d7b400c, e3e18d4 ; PR nº 74 brouillon, CI rouge documentée ; PR nº 73 non fusionnée | Architecte/QA ; Claude et Fondateur avant fusion |
 | GSIE-PROMPT-0034 | Codex et consortium spécialisé | Lever les blocages de la PR nº 74 selon la décision du 16 novembre | EN_REVUE | Bilan PR74 ; 0032 intégré, lignée simplifiée, 21 alertes corrigées ; E/F proposés, sans fusion | Reviewer indépendant, architecte et Fondateur |
 | GSIE-PROMPT-0035 | Claude, architecte-relecteur | MinIO provisoire construit depuis des sources épinglées pour débloquer la PR nº 74 | EN_REVUE | GSIE-PROMPT-0034 §7.1 ; décisions du Fondateur des 16 et 18 novembre 2026 | Codex ou agent indépendant, puis Fondateur |
+| GSIE-PROMPT-0036 | Codex | Corriger la course `ix_resource_gsie_id` et assurer la cohérence de l'Agent jusqu'au commit | EN_REVUE | Base `47be204` ; campagne PostgreSQL 92/96 avant et 96/96 après ; sondes et mutation | Agent indépendant, puis Fondateur |
 
 > **Note** : Les entrées marquées « interne » (GSIE-PROMPT-0018 à 0022)
 > correspondent à du travail structurant réalisé directement par

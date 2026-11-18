@@ -6,7 +6,16 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-11-16 — réconciliation serveur et levée ciblée des blocages sur la branche d'intégration, en relecture ; aucun déploiement ni fusion dans main. |
+| **Dernière mise à jour** | 2026-11-18 — correction de la course d'identité Agent en revue sur une branche dédiée. |
+
+## Concurrence de création d'Agent — 18 novembre 2026
+
+La réconciliation nº 74 est intégrée dans `main` à `47be204`.
+[GSIE-PROMPT-0036](GSIE/PROMPTS/GSIE-PROMPT-0036-corriger-course-agent.md)
+traite le ticket nº 76 séparément. Le banc reconstitué sur PostgreSQL reproduit
+la violation de l'index `ix_resource_gsie_id` avant correction. Le moteur
+vérifie les deux lignes d'identité et les protège jusqu'au commit.
+La correction reste en revue. Les statuts INV-004 et INV-005 ne sont pas promus.
 
 ## Réconciliation serveur et blocages PR74 — 16 novembre 2026
 

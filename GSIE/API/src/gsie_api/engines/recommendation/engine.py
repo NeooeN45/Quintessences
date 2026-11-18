@@ -42,7 +42,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4, uuid5
 
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -103,6 +103,10 @@ _ETATS_HORS_MAPPING_V1: frozenset[DiagnosticGlobalState] = frozenset(
 
 class RecommendationEngineError(Exception):
     """Erreur de base du Recommendation Engine."""
+
+
+class IdentiteAgentIncoherenteError(RecommendationEngineError):
+    """Le couple Resource/Agent ne correspond pas à l'identité attendue."""
 
 
 class RecommandationIntrouvableError(RecommendationEngineError):
@@ -423,25 +427,41 @@ class RecommendationEngine:
         )
 
     async def _agent(self, agent_id: UUID, *, nom: str, type_agent: AgentType) -> UUID:
-        """Crée l'Agent sans course entre deux requêtes concurrentes.
-
-        Le ``GET`` suivi d'un ``INSERT`` était correct en séquentiel mais deux
-        analyses simultanées pouvaient toutes deux observer l'agent absent et
-        provoquer une violation de ``resource_pkey``. L'insertion idempotente
-        PostgreSQL est atomique et conserve la stabilité des identifiants.
-        """
+        """Matérialise et contrôle l'identité dans la transaction appelante."""
+        gsie_id = f"agent:{agent_id}"
+        # PostgreSQL doit arbitrer l'UUID et l'index unique sur gsie_id.
         await self._session.execute(
             pg_insert(ResourceModel)
-            .values(id=agent_id, type="agent", gsie_id=f"agent:{agent_id}")
-            .on_conflict_do_nothing(index_elements=[ResourceModel.id])
+            .values(id=agent_id, type="agent", gsie_id=gsie_id)
+            .on_conflict_do_nothing()
         )
         await self._session.flush()
+        # En READ COMMITTED, cette instruction voit la ligne du gagnant après
+        # l'INSERT. La lecture de colonnes ne réutilise aucune instance ORM.
+        # FOR SHARE fige aussi les types, qui ne font pas partie des clés.
+        racine = (
+            await self._session.execute(
+                select(ResourceModel.id, ResourceModel.type, ResourceModel.gsie_id)
+                .where(ResourceModel.id == agent_id)
+                .with_for_update(read=True)
+            )
+        ).one_or_none()
+        if racine != (agent_id, "agent", gsie_id):
+            raise IdentiteAgentIncoherenteError("Identité racine Agent incohérente.")
+
         await self._session.execute(
             pg_insert(AgentModel)
             .values(id=agent_id, name=nom, type=type_agent)
             .on_conflict_do_nothing(index_elements=[AgentModel.id])
         )
         await self._session.flush()
+        type_persiste = (
+            await self._session.execute(
+                select(AgentModel.type).where(AgentModel.id == agent_id).with_for_update(read=True)
+            )
+        ).scalar_one_or_none()
+        if type_persiste != type_agent:
+            raise IdentiteAgentIncoherenteError("Type du sous-type Agent incohérent.")
         return agent_id
 
     # --- Génération des recommandations ---
