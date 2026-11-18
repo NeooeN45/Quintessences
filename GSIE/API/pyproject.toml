@@ -23,7 +23,7 @@ dependencies = [
     "geoalchemy2==0.16.0",
     "alembic==1.14.0",
     # Cache & temps réel
-    "redis[hiredis]==5.2.1",
+    "redis[hiredis]==8.1.0",
     "websockets==14.1",
     # Géospatial — Rasterio fournit le décodage GeoTIFF WCS SoilGrids.
     "shapely==2.0.6",
