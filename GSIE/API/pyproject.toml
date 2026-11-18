@@ -19,7 +19,7 @@ dependencies = [
     "geojson-pydantic==1.1.2",
     # Base de données
     "asyncpg==0.30.0",
-    "sqlalchemy[asyncio]==2.0.36",
+    "sqlalchemy[asyncio]==2.1.8",
     "geoalchemy2==0.16.0",
     "alembic==1.14.0",
     # Cache & temps réel
