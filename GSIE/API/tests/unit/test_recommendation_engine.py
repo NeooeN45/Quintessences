@@ -317,13 +317,9 @@ async def should_raise_diagnostic_introuvable_when_id_missing() -> None:
 @pytest.mark.asyncio
 async def should_create_forestier_agent_when_forestier_id_provided() -> None:
     """_agent_forestier doit créer un agent quand forestier_id est fourni."""
-    from unittest.mock import AsyncMock, MagicMock
+    from tests.unit.aide_recommendation import SessionEspion
 
-    session = AsyncMock()
-    session.get = AsyncMock(return_value=None)  # Resource n'existe pas
-    session.add = MagicMock()
-    session.execute = AsyncMock()
-    session.flush = AsyncMock()
+    session = SessionEspion()
     engine = RecommendationEngine(session)
 
     forestier_id = uuid4()
@@ -331,29 +327,41 @@ async def should_create_forestier_agent_when_forestier_id_provided() -> None:
     assert result == forestier_id
     # Les deux écritures passent par INSERT ... ON CONFLICT DO NOTHING afin
     # de rester sûres sous concurrence : resource puis agent.
-    assert session.execute.await_count >= 2
+    assert [insertion.table.name for insertion in session.insertions] == ["resource", "agent"]
 
 
 @pytest.mark.asyncio
 async def should_return_agent_id_when_resource_already_exists() -> None:
     """_agent doit retourner l'agent_id si la resource existe déjà."""
-    from unittest.mock import AsyncMock, MagicMock
+    from unittest.mock import Mock
 
-    from gsie_api.infrastructure.models.base import ResourceModel
+    from gsie_api.infrastructure.models.enums import AgentType
+    from tests.unit.aide_recommendation import SessionEspion
 
-    session = AsyncMock()
-    # Resource existe déjà
-    existing = MagicMock(spec=ResourceModel)
-    session.get = AsyncMock(return_value=existing)
-    session.add = MagicMock()
-    session.flush = AsyncMock()
+    session = SessionEspion()
+    session.add = Mock()
     engine = RecommendationEngine(session)
 
     agent_id = uuid4()
-    result = await engine._agent(agent_id, nom="Test", type_agent=MagicMock())
+    await engine._agent(agent_id, nom="Nom existant", type_agent=AgentType.person)
+    result = await engine._agent(agent_id, nom="Test", type_agent=AgentType.person)
     assert result == agent_id
     # session.add ne doit pas avoir été appelé
     session.add.assert_not_called()
+
+
+async def should_arbitrate_both_root_unique_keys_when_materialising_agent() -> None:
+    from gsie_api.infrastructure.models.enums import AgentType
+    from tests.unit.aide_recommendation import SessionEspion
+
+    session = SessionEspion()
+    identifiant = uuid4()
+    await RecommendationEngine(session)._agent(
+        identifiant, nom="Moteur", type_agent=AgentType.software
+    )
+
+    (racine,) = [requete for requete in session.insertions if requete.table.name == "resource"]
+    assert str(racine).endswith("ON CONFLICT DO NOTHING")
 
 
 # --- Garde : la persistance des recommandations est traçable (GSIE-CON-005)

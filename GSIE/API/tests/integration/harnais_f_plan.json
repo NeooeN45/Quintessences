@@ -1,0 +1,12 @@
+{
+  "reference": "LEVEE_BLOCAGES_PR74_2026-11-16.md §7.2",
+  "salves": 12,
+  "analyses_par_salve": 8,
+  "delai_barriere_secondes": 20,
+  "delai_salve_secondes": 60,
+  "schema": "tête Alembic courante, migrée une fois puis clonée par salve",
+  "isolation": "READ COMMITTED",
+  "barriere": "dans chaque transaction, à l'entrée de RecommendationEngine._agent pour l'Agent moteur canonique",
+  "reprises": 0,
+  "recette": "96 commits distincts, aucune erreur, 8 arrivées et 8 libérations avec PID et XID distincts par salve, un seul couple Resource/Agent canonique, aucune analyse perdue ni orpheline"
+}

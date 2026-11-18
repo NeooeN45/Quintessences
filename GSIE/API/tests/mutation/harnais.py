@@ -758,6 +758,28 @@ MUTATIONS: tuple[Mutation, ...] = (
         ),
     ),
     Mutation(
+        cle="agent_racine_conflit_limite_a_uuid",
+        fichier="gsie_api/engines/recommendation/engine.py",
+        ancien=(
+            '            .values(id=agent_id, type="agent", gsie_id=gsie_id)\n'
+            "            .on_conflict_do_nothing()"
+        ),
+        nouveau=(
+            '            .values(id=agent_id, type="agent", gsie_id=gsie_id)\n'
+            "            .on_conflict_do_nothing(index_elements=[ResourceModel.id])"
+        ),
+        defaut_reproduit=(
+            "l'insertion concurrente de l'Agent laisse échapper une violation de "
+            "l'index unique ix_resource_gsie_id"
+        ),
+        tests=(
+            "tests/unit/test_recommendation_engine.py::"
+            "should_arbitrate_both_root_unique_keys_when_materialising_agent",
+            "tests/integration/test_recommendation_identite_agent.py::"
+            "should_refuse_agent_when_gsie_id_belongs_to_another_uuid",
+        ),
+    ),
+    Mutation(
         cle="decision_sans_recommandation_toleree",
         fichier="gsie_api/engines/recommendation/engine.py",
         ancien=(

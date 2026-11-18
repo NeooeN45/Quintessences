@@ -67,6 +67,7 @@ Source : `GSIE/API/src/gsie_api/engines/recommendation/engine.py`
 | `RecommendationEngineError` | Requête invalide | 400 |
 | `RecommandationIntrouvableError` (hérite de `RecommendationEngineError`) | Recommandation référencée introuvable lors de l'enregistrement d'une décision | 400 |
 | `DiagnosticIntrouvableError` (hérite de `RecommendationEngineError`) | Diagnostic référencé introuvable | 400 |
+| `IdentiteAgentIncoherenteError` (hérite de `RecommendationEngineError`) | Identité racine ou type de l'Agent incompatible avec celui attendu | 400 |
 
 ### 4. Dépendances
 

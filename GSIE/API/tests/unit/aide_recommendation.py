@@ -16,6 +16,7 @@ test-là, le stub masquerait précisément ce qu'il simplifie.
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import Mock
 from uuid import UUID  # noqa: TC003 — annotation evaluee par SQLAlchemy
 
 from gsie_api.infrastructure.models.diagnostic import DiagnosticModel
@@ -48,6 +49,7 @@ class SessionDiagnosticFictif:
         self._confiance = confiance
         self._etat_global = etat_global
         self._recommandation_existe = recommandation_existe
+        self._agents: dict[tuple[str, UUID], dict[str, Any]] = {}
 
     async def get(self, modele: type[Any], identifiant: UUID) -> Any:
         if modele is DiagnosticModel:
@@ -84,8 +86,23 @@ class SessionDiagnosticFictif:
     async def flush(self) -> None:
         """Ne fait rien : aucune contrainte n'est evaluee."""
 
-    async def execute(self, *args: Any, **kwargs: Any) -> None:
-        """Avale les insertions dans les tables de jonction."""
+    async def execute(self, requete: Any) -> Any:
+        """Mémorise les Agents relus par le moteur. PostgreSQL éprouve les contraintes."""
+        if requete.is_insert and requete.table.name in {"resource", "agent"}:
+            valeurs = requete.compile().params
+            if requete.table.name == "agent" or valeurs["type"] == "agent":
+                self._agents.setdefault((requete.table.name, valeurs["id"]), valeurs)
+        if requete.is_select:
+            table = requete.get_final_froms()[0].name
+            identifiant = requete.compile().params["id_1"]
+            valeurs = self._agents[(table, identifiant)]
+            return Mock(
+                one_or_none=Mock(
+                    return_value=(valeurs["id"], valeurs["type"], valeurs.get("gsie_id"))
+                ),
+                scalar_one_or_none=Mock(return_value=valeurs["type"]),
+            )
+        return None
 
 
 class SessionEspion(SessionDiagnosticFictif):
@@ -109,5 +126,7 @@ class SessionEspion(SessionDiagnosticFictif):
     def add(self, instance: Any) -> None:
         self.ajouts.append(instance)
 
-    async def execute(self, *args: Any, **kwargs: Any) -> None:
-        self.insertions.append(args[0] if args else None)
+    async def execute(self, requete: Any) -> Any:
+        if requete.is_insert:
+            self.insertions.append(requete)
+        return await super().execute(requete)
