@@ -4,6 +4,21 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [MINIO PROVISOIRE — EN RELECTURE] - 2026-11-18
+
+- GSIE-PROMPT-0035 : MinIO et `mc` sont construits depuis des archives de
+  sources officielles épinglées par commit et vérifiées par SHA-256 à chaque
+  construction (`GSIE/API/docker/minio/`). Les images amont ne sont plus
+  distribuées et la dernière version en binaire est affectée par
+  CVE-2025-62506.
+- Solution **provisoire** autorisée par le Fondateur le 16 novembre 2026 :
+  dette et échéance (« avant ouverture aux testeurs ») inscrites dans
+  `GSIE/API/docker/minio/README.md`.
+- DEC-000094 passe à `Validated` (validation du Fondateur du 16 novembre
+  2026). Aucune fusion, aucun push sur `main`.
+
+---
+
 ## [RÉCONCILIATION SERVEUR — EN RELECTURE] - 2026-11-16
 
 - GSIE-PROMPT-0033/0034 : intégration locale des historiques serveur et de
