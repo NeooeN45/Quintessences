@@ -62,11 +62,28 @@ Les comptes persistés vivent dans `gsie_rgpd_identites`. Google est fermé
 tant que `GSIE_GOOGLE_OAUTH_CLIENT_IDS` est vide. Le login de développement
 historique `/auth/login` reste interdit en staging et production.
 
+La suppression est différée : `POST /auth/me/deletion/request` révoque les
+sessions et place le compte en `pending_deletion`, tandis que
+`POST /auth/deletion/cancel` permet l'annulation par code à usage unique avant
+l'échéance. Le service Compose `account-deletion-worker` finalise ensuite les
+comptes échus par lots via la fonction PostgreSQL `SECURITY DEFINER` de la
+migration `20260826_0055`. La finalisation est irréversible : les données
+d'authentification, les données personnelles liées et les répliques GeoSylva
+sont purgées ; les organisations partagées sont conservées et le compte est
+anonymisé en tombstone. Le worker n'est jamais exposé par HTTP.
+
 En développement, `docker compose up -d mailpit` expose l'interface captive
 sur <http://localhost:8025> et le SMTP uniquement dans le réseau Compose.
 Avant toute ouverture publique, configurer `GSIE_SMTP_HOST`, les identifiants
 du relais et STARTTLS ou TLS direct ; Mailpit ne doit jamais recevoir de
 données réelles.
+
+Le contact public du site est exposé par
+`POST /api/v1/public/contact`. Il ne persiste pas le message dans GSIE : après
+validation serveur de Turnstile, il le transmet au relais SMTP vers
+`GSIE_PUBLIC_CONTACT_RECIPIENT` et positionne l'adresse du visiteur en
+`Reply-To`. `GSIE_PUBLIC_CONTACT_ENABLED` reste `false` par défaut et ne peut
+être activé qu'avec un destinataire réel, un SMTP chiffré et Turnstile actif.
 
 La publication de production passe par le profil `edge` :
 
@@ -92,25 +109,75 @@ l'isolement du plan de contrôle et la rotation sont décrits dans
 
 ### Orchestration et hydratation stationnelle
 
-La route interne suivante est actuellement implémentée et testée :
+Les routes internes suivantes sont actuellement implémentées et testées :
 
 ```text
 POST /api/v1/orchestration/analyse
 GET  /api/v1/orchestration/stations/{station_id}/contexte
+GET  /api/v1/orchestration/stations/{station_id}/preparation
 ```
 
-Elle exécute la chaîne déterministe
+`POST /orchestration/analyse` exécute la chaîne déterministe
 `Reasoning → Diagnostic → Recommendation → Validation`. `station_id` résout
 d'abord une `Place`, puis une soumission `FieldIntake accepted` ; les données
 `quarantined` ou `rejected` ne sont jamais consommées. Le rapport d'hydratation
 et le contexte effectivement utilisé sont conservés dans `analysis_run`.
 
+`GET /orchestration/stations/{station_id}/preparation` prévisualise les
+entrées qualifiées d'une analyse sans lancer les moteurs : hydratation du
+contexte, sélection des règles `accepted` applicables via le Knowledge
+Engine, chargement des qualifications réelles, résolution de l'état global
+depuis un `FieldIntake` `accepted` et figement d'un `RapportPreparation`
+immuable. Le rapport conserve les snapshots du contexte, des règles et de
+l'état global, les versions des règles, les qualifications, les sources et
+les empreintes SHA-256 correspondantes. Refuse explicitement avec
+`AUCUNE_REGLE_QUALIFIEE`, `QUALIFICATION_REGLE_MANQUANTE`,
+`VERSION_REGLE_MANQUANTE` ou `ETAT_GLOBAL_NON_SOURCE` si une précondition
+scientifique manque.
+
+### Import GSIE TEST (bundle Forge)
+
+L'importeur `gsie_api.data.gsie_test_bundle` accepte un bundle Forge typé
+`gsie_test_preparation.v0.1` (règles explicitement qualifiées, état global
+sourcé, observations, place, identité station) et l'applique **uniquement**
+sur une base dont `database_role == "test"`. Il valide le WKT et le SRID
+Lambert-93 2154, crée la `Place`, ingère les règles `accepted` via le
+Knowledge Engine et crée les ressources PROV `Source`/`Citation` primaires
+nécessaires à leur sélection. Il crée aussi un `FieldIntake` `accepted`
+portant l'état global versionné `global_state.v0.1`, sa source d'origine et
+les empreintes SHA-256 du bundle et du payload. Une station ou une
+connaissance déjà présente est refusée ; aucun remplacement silencieux n'est
+fait. La CLI `scripts/import_gsie_test_bundle.py` permet un import manuel.
+Ce chemin est la précondition nommée par DEC-000073 pour qu'une préparation
+serveur puisse assembler règles et état global sans les inventer.
+
+### Import persistant du bundle d'analyse Forge
+
+Le contrat `forge_analysis_bundle.v1` peut maintenant être importé dans le
+sas `field_intake` par `POST /api/v1/data/analysis-bundles/import`. Ce chemin
+reste strictement limité à `database_role=test`, exige un profil explicitement
+allowlisté et une autorisation `writer` ou `admin`. Il persiste la forme
+canonique en `analysis_bundle`/`quarantined`, avec idempotence sur `bundle_id`
+et empreinte SHA-256. L'hydratation n'en consomme aucune valeur avant une
+promotion scientifique dédiée. La CLI correspondante est
+`scripts/import_forge_analysis_bundle_test.py` ; la production reste fermée.
+
+### Vertical Data Registry — SoilGrids replay
+
+Le scénario `tests/integration/test_soilgrids_registry_vertical.py` rejoue
+l'actif de 569 octets autorisé par DEC-000061, sans effectuer de nouvel appel
+à ISRIC. Il applique le manifeste `archive_copy`, conserve l'actif RAW dans
+le Registry, persiste les cinq dimensions de `QualityAssessment` via
+`QualityAssessmentPersistenceService`, puis rejoue exactement le même rapport
+sans créer de doublon. La tentative de promotion est volontairement refusée
+avec `SOURCE_NOT_VALIDATED` tant que la version reste `discovered` : aucune
+promotion vers `staging` ou `production` n'est implicite.
+
 La façade GeoSylva n'est **pas encore livrée**. RFC-0041 (Draft) et DEC-000073
 (Proposé) prévoient une future route
 `POST /api/v1/orchestration/analyse-geosylva`, mais plusieurs préconditions
-restent à implémenter : sélection serveur de règles qualifiées, qualifications
-validées, état global sourcé et lien explicite
-`parcelleId local → gsie_resource_id`. Aucun état par défaut n'est autorisé.
+restent à valider puis compléter : endpoint `station-link` dédié, révocable
+et contrôlé par compte. Aucun état par défaut n'est autorisé.
 
 Voir [RFC-0041](../../02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
 [DEC-000073](../../03_DECISIONS/DEC-000073.md) et
@@ -192,12 +259,85 @@ pytest
 
 - La lignée officielle commence à `20260726_0001`, baseline immuable du schéma
   GSIE v6.2 (116 tables applicatives).
-- Une ancienne base locale marquée `0001` à `0013` n'est pas compatible : elle
-  doit être recréée, aucune donnée historique n'étant à conserver.
+- Une ancienne base locale marquée `0001` à `0013` n'est pas compatible :
+  elle doit être recréée, aucune donnée historique n'étant à conserver.
 - Toute évolution future crée une nouvelle révision Alembic autonome ; la
   baseline ne doit jamais être réécrite ni importer les modèles applicatifs.
-- La CI exécute réellement `upgrade head`, `downgrade base`, puis un second
-  `upgrade head` sur PostgreSQL 16 avec PostGIS et Apache AGE.
+- Selon l'instruction du Fondateur du 16 novembre 2026 et
+  [GSIE-PROMPT-0034](../PROMPTS/GSIE-PROMPT-0034-lever-blocages-pr-74.md),
+  la lignée retenue garde une seule création d'intake, `20260823_0051`,
+  suivie directement de `20260826_0052` ; sa tête est `20260929_0059`.
+  Les révisions `20260908_0051` et `20261116_0060` ainsi que leur helper
+  sont retirés de la lignée active. La
+  [DEC-000094 révisée](../../03_DECISIONS/DEC-000094.md) reste `Draft`.
+- Le contrat `field_intake` conserve ses 17 colonnes, contraintes et index,
+  sa provenance et sa quarantaine ; aucune conversion métier n'est ajoutée.
+- Les validations attendues couvrent le SQL hors ligne et le cycle
+  `upgrade head → downgrade base → upgrade head` sur PostgreSQL 16 avec
+  PostGIS et Apache AGE, uniquement sur une base jetable. La garde
+  anti-doublons de `20260801_0027` reste obligatoire avant son index unique,
+  y compris dans le SQL hors ligne. Les résultats sont consignés dans le
+  [bilan PR74](../../23_QUALITY_MANAGEMENT/AUDITS/LEVEE_BLOCAGES_PR74_2026-11-16.md) ;
+  les preuves de la précédente solution B/`0060` ne les remplacent pas.
+
+### Recréation ciblée des anciennes bases de développement
+
+Le Fondateur a déclaré l'absence de base hébergée et de donnée métier réelle,
+puis autorisé explicitement **« la simplification et la recréation documentée »**
+après inventaire. Aucune base ni aucun volume d'origine n'est supprimé dans
+ce lot. Une ancienne base de développement marquée `20260908_0051` ou
+`20261116_0060` doit être recréée pour la lignée simplifiée ; ne pas la convertir
+par `stamp`, réécriture d'`alembic_version` ou downgrade.
+
+L'inventaire a retrouvé `gsie` et `gsie_pack_recipe_20261002` à la révision
+B dans `gsie-onboarding-pgdata-v2`. La base
+`gsie_hierarchy_full_test_20261003` porte `20261003_0052`, inconnue de cette
+branche : la laisser intacte et diagnostiquer son usage avant toute autre
+intervention. Les bases sans marqueur ne sont pas déclarées vides pour autant.
+
+Procédure à exécuter ultérieurement par le responsable, sur une base identifiée :
+
+1. Relever le cluster, le nom de base et sa révision ; arrêter uniquement ses
+   écrivains (API, workers et imports concernés). Conserver l'originale et le
+   checkout antérieur. Si une donnée réelle est découverte, suspendre
+   l'intervention et demander un arbitrage.
+2. Préparer les rôles et extensions avec l'initialisation canonique existante,
+   puis créer une **nouvelle base vide distincte**. L'exemple
+   `gsie_pr74_recree` doit être remplacé si ce nom existe déjà. Les services
+   libpq sont configurés localement ; aucune valeur secrète n'est affichée.
+3. Pointer explicitement `GSIE_MIGRATION_DATABASE_URL` vers cette nouvelle
+   base avec le compte de migration. Alembic retombe sinon sur
+   `GSIE_DATABASE_URL` : ne pas utiliser ce repli dans cette procédure.
+4. Appliquer la tête ciblée, puis vérifier révision, contrat d'intake,
+   permissions et tests locaux avant de reconnecter les seuls clients de
+   développement concernés. Les originaux restent conservés.
+
+Exemples à adapter, jamais exécutés automatiquement par le démarrage de l'API :
+
+```bash
+set -euo pipefail
+# Service de la SOURCE identifiée ; authentification hors des logs.
+psql 'service=gsie_pr74_source' -X -v ON_ERROR_STOP=1 \
+  -c 'SELECT current_database(), version_num FROM public.alembic_version;'
+
+# Le responsable a vérifié que cette nouvelle cible n'existe pas.
+createdb --maintenance-db='service=gsie_pr74_administration' \
+  --template=template0 gsie_pr74_recree
+
+# Depuis GSIE/API ; l'URL désigne la nouvelle base, sous son propriétaire.
+: "${GSIE_MIGRATION_DATABASE_URL:?Définir explicitement l'URL de la nouvelle base vide}"
+.venv/bin/python -m alembic heads
+.venv/bin/python -m alembic current --verbose
+.venv/bin/python -m alembic upgrade 20260929_0059
+.venv/bin/python -m alembic current --verbose
+```
+
+Cette procédure ne fait pas de `docker compose down -v`, ne retire aucun volume
+MinIO et n'efface aucune autre base. Un nettoyage des anciennes sources serait
+une intervention distincte, après vérification de la cible exacte et de ses
+usages. En cas d'échec, arrêter la nouvelle instance et diagnostiquer ;
+l'originale, jamais modifiée par cette procédure, reste disponible avec son
+ancienne version applicative.
 
 ## Architecture (clean architecture par modules moteurs)
 
@@ -250,6 +390,7 @@ src/gsie_api/
 
 ## Documentation
 
+- [Matrice de couverture des sources GSIE/Forge](docs/data/GSIE_FORGE_ACQUISITION_HANDOFF.md#matrice-de-couverture-des-sources) — audit exhaustif sans réseau, branchements, handoff et blocages juridiques.
 - [Application du manifeste Data Registry](docs/data/GSIE_DATA_REGISTRY_MANIFEST_APPLICATION_2026-08-10.md) —
   dry-run, application transactionnelle, santé réelle persistée, idempotence
   et limites `metadata_only`/`FETCH`.

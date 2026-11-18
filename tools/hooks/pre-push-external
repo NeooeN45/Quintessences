@@ -1,0 +1,25 @@
+#!/bin/sh
+# Quintessences — pre-push (repo externe) : diagnostic sécurité complet.
+# Délègue au diagnostic partagé du repo parent s'il est accessible ;
+# sinon repli sur un grep minimal des secrets sur l'arborescence.
+
+DIAG="__DIAG_RELPATH__"
+
+if [ -f "$DIAG" ]; then
+  python "$DIAG" --root "$(git rev-parse --show-toplevel)" --mode full
+  exit $?
+fi
+
+# Repli autonome : motifs de secrets courants sur les fichiers suivis.
+HITS=$(git grep -nE \
+  '(ghp_[A-Za-z0-9]{36}|sk-[A-Za-z0-9_-]{20}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY)' \
+  -- . 2>/dev/null | grep -v 'TEST-ONLY' || true)
+
+if [ -n "$HITS" ]; then
+  echo "❌ Secrets potentiels détectés (diagnostic partagé introuvable) :"
+  echo "$HITS" | head -20
+  exit 1
+fi
+
+echo "⚠ diagnostic partagé introuvable ($DIAG) — scan secrets minimal OK."
+exit 0

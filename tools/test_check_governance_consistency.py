@@ -144,7 +144,9 @@ def test_restauration_livrable_309_preserve_le_fragment_historique():
 
     fragment, scellement = contenu.split(marqueur, maxsplit=1)
     entete_git = f"blob {len(fragment)}\0".encode()
-    empreinte = hashlib.sha1(entete_git + fragment).hexdigest()
+    empreinte = hashlib.sha1(
+        entete_git + fragment, usedforsecurity=False
+    ).hexdigest()
 
     assert empreinte == "f1a68789752fe7751b20aa99fbdec0df587d6f96"
     assert b"Aucun SQL manquant n'a ete reconstitue." in scellement

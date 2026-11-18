@@ -502,3 +502,35 @@ L'escalade #003 est résolue par l'option A.
 | orjson | 3.11.6 | Avis historique corrigé | À jour ; aucun avis pip-audit | 2026-08-09 |
 | app-store-server-library | 3.1.2 | Avis historique corrigé | À jour ; tests billing passants | 2026-08-09 |
 | pytest | 9.0.3 | Avis historique corrigé | À jour ; pytest-asyncio 1.3.0 compatible | 2026-08-09 |
+
+---
+
+### Cycle — Audit git uncommitted (Quintessences + Forge)
+
+- **Statut** : TERMINÉ
+- **Action** : Audit sécurité des changements non commités sur 2 repos Windows
+- **Périmètre** :
+  - `E:\Projets\Quintessences` (branche `feat/schemas-de-domaine`) — 13 modifiés + 3 untracked
+  - `E:\Projets\Quintessences\Forge` (branche `master`) — 5 modifiés + 3 untracked (dont `scratch_ifn/`)
+- **Verdicts** :
+  - **Quintessences** : **COMMITTABLE** — aucun secret/PII/chemin absolu introduit ; P2 sur la garde du bypass RLS worker à documenter/durcir.
+  - **Forge** : **COMMITTABLE AVEC EXCLUSIONS** — exclure impérativement `scratch_ifn/` (43,4 Mo de données brutes IFN). Le code source est sain.
+- **Findings notables** :
+  - `GSIE/API/src/gsie_api/infrastructure/database.py:165-169` — `set_internal_worker_context` pose `app.internal_worker='on'` sans garde au niveau DB (rôle/signature) ; le bypass RLS repose uniquement sur la confiance applicative. **P2**.
+  - `GSIE/API/alembic/versions/20260929_0059_geosylva_rls.py:42-51` — Construction DDL en f-string, mais valeurs issues de constantes du module (pas d'injection). **P2 informatif**.
+  - `GSIE/API/src/gsie_api/geosylva/cubage_repository.py:47` — `_find_by_session` utilise `session.get()` sans filtre explicite sur `account_id` ; la protection repose entièrement sur RLS. **P2**.
+  - `Forge/scratch_ifn/` — Dossier de 43,4 Mo contenant des archives et CSV/PDF extraits des données brutes IFN ; ne doit **jamais** être commité. **P1**.
+  - `Forge/src/dataset_forge/gsie_acquisition.py:61,158` — Incohérence entre `output_path.resolve()` (utilisé pour le contrôle relatif) et `output_path.write_text()` (écriture non résolue) ; faible risque local CLI. **P2**.
+- **Exclusions explicites** :
+  - `Forge/scratch_ifn/data_2024.zip`
+  - `Forge/scratch_ifn/doc_2024.zip`
+  - `Forge/scratch_ifn/extracted/*.csv` et `*.pdf` (20 fichiers)
+- **Contrôles vérifiés** :
+  - Aucun secret, token, mot de passe, clé privée ou chaîne de connexion avec credentials dans les diffs/untracked.
+  - Aucun chemin absolu Windows (`C:\Users\...`) dans les modifications.
+  - Aucun `eval()`, `exec()`, `shell=True`, `subprocess` dans les changements.
+  - `ifn_connector.py` implémente une protection contre le zip-slip et les liens symboliques.
+  - `scratch_ifn/` a été échantillonné : pas de données personnelles (noms, emails, téléphones) ; uniquement des données forestières publiques IGN.
+- **Leçons** :
+  - Le `scratch_ifn/` de Forge doit être ajouté au `.gitignore` (`scratch_ifn/` ou déplacé vers `datasets/`).
+  - Le bypass RLS worker mérite une note d'architecture/ADR et un durcissement éventuel (rôle DB dédié ou garde cryptographique) avant la production.

@@ -61,10 +61,11 @@
   --color-app-aeris: #2f8f8a;
   --color-app-atlas: #2c7594;
 
-  --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, monospace;
+  /* Pile locale : aucune requête vers un fournisseur de polices tiers. */
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial,
+    sans-serif;
+  --font-mono: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    monospace;
 }
 
 :root {
@@ -103,6 +104,13 @@ body {
 
 a {
   color: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
 ::selection {

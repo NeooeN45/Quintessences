@@ -1,0 +1,8 @@
+#!/bin/sh
+# GSIE — pre-push : diagnostic sécurité COMPLET (bloquant).
+# Exécute : secrets (commit + arborescence), checks config, Bandit,
+# pip-audit, cargo-audit, npm-audit. Tout finding P0/P1 bloque le push.
+# Contournement d'urgence (à tracer) : git push --no-verify
+
+python tools/security_diag.py --mode full
+exit $?

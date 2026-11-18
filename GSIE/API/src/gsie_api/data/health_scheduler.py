@@ -36,11 +36,15 @@ end
 return 0
 """
 _ADAPTER_TO_MANIFEST_SLUGS: dict[str, tuple[str, ...]] = {
-    # Le premier slug est canonique ; le second permet seulement de continuer
-    # à mesurer l'ancienne base avant sa migration transactionnelle.
+    # Le premier slug est canonique ; les suivants ne servent qu'à relire une
+    # projection historique déjà présente pendant sa migration transactionnelle.
     "gbif": ("gbif-species-api", "gbif-occurrences"),
     "ign": ("ign-apicarto-cadastre", "ign-apicarto"),
-    "soilgrids": ("soilgrids-rest-beta", "soilgrids-properties"),
+    # Le REST bêta est interdit : il ne peut être ni sondé ni utilisé comme
+    # projection de santé, même si un ancien manifeste le référence encore.
+    "soilgrids": ("soilgrids-wcs", "soilgrids-properties"),
+    "taxref": ("taxref-via-gbif",),
+    "indigenat-bellifa": ("indigenat-bellifa-2026",),
     "meteofrance": ("meteofrance-meteo-forets", "meteofrance-services"),
 }
 

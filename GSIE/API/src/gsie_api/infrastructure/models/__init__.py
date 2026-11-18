@@ -21,8 +21,10 @@ from gsie_api.infrastructure.models import (
     ecology,  # noqa: F401
     enrichment,  # noqa: F401 — entity_image, entity_description, ingestion_progress
     fair_rgpd,  # noqa: F401
-    field_intake,  # noqa: F401 — intake applicatif en quarantaine
+    field_intake,  # noqa: F401 — intake applicatif en quarantaine et provenance terrain
     forestry,  # noqa: F401 — types RFC-0016 (schéma forestier spécialisé)
+    geosylva_analysis,  # noqa: F401 — jobs asynchrones propriétaires du BFF GeoSylva
+    geosylva_cubage,  # noqa: F401 — sessions de cubage offline-first GeoSylva
     governance,  # noqa: F401
     identification,  # noqa: F401 — 3 types RFC-0018 (identification botanique Pl@ntNet)
     junctions,  # noqa: F401 — 17 tables de jonction n:m

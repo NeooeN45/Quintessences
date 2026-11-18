@@ -9,7 +9,7 @@
 
 FROM rust:1.85.0-slim-bookworm@sha256:1829c432be4a592f3021501334d3fcca24f238432b13306a4e62669dec538e52 AS rust-toolchain
 
-FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS builder
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS builder
 
 LABEL org.opencontainers.image.title="GSIE API"
 LABEL org.opencontainers.image.description="General System Intelligence Engine REST/WebSocket API"
@@ -64,8 +64,8 @@ RUN maturin build --release && \
 WORKDIR /build/api
 
 # Dépendances Python
-# uv 0.12.10 embarque quinn-proto >= 0.11.15 (GHSA-4w2j-m93h-cj5j).
-RUN pip install --no-cache-dir "uv==0.12.10"
+# uv 0.13.4 corrige le magasin de certificats embarqué (GHSA-hq85-5cpj-mr62).
+RUN pip install --no-cache-dir "uv==0.13.4"
 
 # Copie du projet API et installation des dépendances + wheel Rust
 COPY GSIE/API/pyproject.toml GSIE/API/uv.lock GSIE/API/README.md ./
@@ -81,7 +81,7 @@ RUN uv pip install --system --no-deps .
 RUN uv pip install --system /build/gsie_evidence/target/wheels/gsie_evidence-*.whl
 
 # --- Stage final ---
-FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b AS runtime
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS runtime
 
 WORKDIR /app
 
@@ -89,6 +89,7 @@ WORKDIR /app
 RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update \
     && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y --no-install-recommends \
     libgeos-c1v5 \
+    libexpat1 \
     libproj25 \
     libpq5 \
     && rm -rf /var/lib/apt/lists/* \
@@ -96,6 +97,10 @@ RUN apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=60 -o Acquire::https
 
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+# uv/uvx servent uniquement à construire l'image. Les laisser dans runtime
+# augmente inutilement la surface d'attaque et embarque des dépendances Rust
+# qui ne sont pas nécessaires au service (dont quinn-proto).
+RUN rm -f /usr/local/bin/uv /usr/local/bin/uvx
 COPY --chown=gsie:gsie --from=builder /build/api/src/ ./src/
 COPY --chown=gsie:gsie --from=builder /build/api/pyproject.toml /build/api/gunicorn.conf.py ./
 # Alembic — migrations du schéma (opération explicite, jamais automatique)

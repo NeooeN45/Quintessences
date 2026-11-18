@@ -8,7 +8,8 @@
 | **Auteur** | Camille Perraudeau, avec contre-analyse Devin CLI |
 | **Date** | 2026-08-17 |
 | **Motivation** | Réconcilier RFC-0033 avec l'orchestration actuellement implémentée et rendre possible un appel GeoSylva sans invention de règles, de qualifications ou d'état global |
-| **Décision liée** | DEC-000073 — proposée |
+| **Décision liée** | DEC-000093 — principes et route validés avec mise à jour ; complète DEC-000073 |
+| **Dernière mise à jour** | 2026-11-15 — adaptation documentaire, statut Draft conservé |
 | **RFC liées** | RFC-0015, RFC-0020, RFC-0033, RFC-0040 |
 | **Décisions liées** | DEC-000048, DEC-000049, DEC-000071, DEC-000072 |
 | **Lois fondatrices** | GSIE-CON-000, GSIE-CON-001, GSIE-CON-002, GSIE-CON-004, GSIE-CON-005, GSIE-CON-007 |
@@ -58,53 +59,73 @@ des moteurs. Elle ajoute une façade cliente et un lien d'identité explicite.
    global retenus sont persistés avec leurs identifiants, versions et sources ;
    un rejeu ne re-sélectionne pas silencieusement une autre connaissance.
 
-## 3. Façade cliente proposée
+## 3. Façade cliente asynchrone retenue
 
-### 3.1 Endpoint
+### 3.1 Endpoint et suivi
 
-Ajouter, sans retirer la route interne existante :
+Par décision du Fondateur du 15 novembre 2026, enregistrée dans DEC-000093,
+la façade cliente retenue est le parcours asynchrone existant :
 
 ```text
-POST /api/v1/orchestration/analyse-geosylva
+POST /api/v1/geosylva/analyses
+GET  /api/v1/geosylva/analyses/{id}
+GET  /api/v1/geosylva/analyses/{id}/result
 ```
 
-La route interne `POST /api/v1/orchestration/analyse` reste disponible pour
-les appels techniques et les tests de la chaîne complète. La façade traduit
-l'intention GeoSylva vers le contrat interne dans une transaction contrôlée.
+Le POST accepte un job avec HTTP 202 ; le code existant fournit `Location`,
+`Retry-After`, `analysis_id`, `status_url` et `result_url`. Le suivi expose
+l'état du job ; le résultat fournit la projection scientifique lorsqu'elle
+est disponible. Ces éléments de transport sont constatés dans
+`GSIE/API/src/gsie_api/geosylva/router.py` et `schemas.py` au snapshot
+`9e6864b353c8c03d15c067dffd2b358f7a57d94f`.
 
-### 3.2 Requête d'intention
+Une acceptation HTTP 202 n'est ni une validation scientifique ni une preuve
+que les données requises existent. Les refus de préparation restent
+obligatoires et doivent être identifiables dans le suivi asynchrone. La
+correspondance des codes publics reste un écart documenté, pas une garantie
+acquise par l'existence de la route.
 
-```json
-{
-  "contract_version": "analyse-geosylva.v1",
-  "requete_id": "uuid-v4",
-  "session_id": "uuid-v4",
-  "station_id": "uuid-gsie-place",
-  "parcelle_client_id": "parcelle-locale-123",
-  "question": "Quelles essences sont adaptées à cette station ?",
-  "objectif_forestier": "production",
-  "alternatives_demandees": true,
-  "niveaux_preuve_declares": {
-    "pedologie": "F",
-    "peuplement": "F"
-  }
-}
-```
+Le chemin initial du 17 août est conservé en section 11 comme historique ;
+il n'est plus la cible cliente à construire. La route interne
+`POST /api/v1/orchestration/analyse` conserve son rôle technique. La façade
+appelle la chaîne interne en processus, sans second appel HTTP.
 
-Le corps ne contient ni auteur, ni règle, ni qualification, ni `etat_global`, ni
-`contexte`. Le compte est dérivé du JWT. `parcelle_client_id` est uniquement
-une corrélation mobile : il ne peut jamais devenir une identité GSIE ou une
-`SourceReference`. `station_id` doit être un UUID GSIE déjà résolu par le
-mécanisme de liaison de la section 4.
+### 3.2 Requête d'intention et contrat existant
 
-Les `niveaux_preuve_declares` sont bornés aux blocs déclarables de DEC-000072.
-Ils déclarent le niveau manquant d'une donnée hydratée ; ils ne qualifient ni
-une règle ni une conclusion et ne peuvent pas être dérivés d'une confiance.
+Le principe reste celui de DEC-000073 : intention mobile, auteur dérivé du
+JWT, `station_id` GSIE relié explicitement ; aucune règle, qualification,
+valeur d'état global ou contexte scientifique fabriqué par le client.
 
-La façade n'accepte pas de `contexte` client. Cette restriction est volontaire :
-le schéma interne accepte un contexte pour les appels techniques historiques,
-mais la façade GeoSylva doit toujours passer par l'hydratation et la vérification
-serveur de l'identité et de la provenance.
+Le DTO existant est `GeoSylvaAnalysisRequest` dans
+`GSIE/API/src/gsie_api/geosylva/schemas.py`. L'alignement du chemin n'adopte
+pas implicitement tous ses champs. Le modèle logique initial, reproduit en
+section 11, ne doit pas être envoyé tel quel à l'API asynchrone actuelle.
+
+| Notion | Représentation existante constatée | Limite de l'alignement |
+|---|---|---|
+| Version de requête | `schema_version = geosylva.analysis.request.v1` | Constat du DTO existant ; ne remplace pas silencieusement toute l'enveloppe RFC-0033. |
+| Identité de l'intention | `request_id`, égal à l'en-tête `Idempotency-Key` | Correspond au rôle logique de `requete_id` ; empreinte distincte de celle du moteur interne. |
+| Identité stationnelle | `station_id` UUID | Le typage UUID ne prouve ni le lien actif ni le contrôle du compte. |
+| Question et objectif | `question`, `objective` | Intentions ; ne constituent pas une connaissance scientifique. |
+| Niveaux déclarés | `evidence_levels` | Restent bornés aux déclarations admises par DEC-000072 ; aucune qualification de règle ou conclusion. |
+| Déclarations supplémentaires | `geometry`, `species_taxref_ids`, obligatoires | Extension du contrat initial à arbitrer ; ni faits acceptés ni contexte scientifique autoritaire. |
+
+Les lignes 38 à 58 de `geosylva/service.py` préparent depuis la station GSIE
+et n'injectent pas `geometry` ni `species_taxref_ids` dans le contexte du
+moteur. Leur statut d'emprise ou d'espèces demandées doit être explicité avant
+homologation du contrat. Leur existence dans une requête n'en fait pas une
+observation sourcée, une `SourceReference` ou un lien stationnel valide.
+
+La correspondance des autres champs d'enveloppe, notamment `session_id`, reste
+à qualifier : aucun champ absent ne doit être ajouté ou remplacé tacitement.
+Cette mise à jour ne définit donc pas un nouveau corps JSON exécutable et ne
+corrige aucun DTO. Voir les écarts E01 et E02 du
+[rapport de revue](../23_QUALITY_MANAGEMENT/AUDITS/AUDIT_DEC_000073_2026-11-15.md).
+
+La façade n'accepte pas un contexte scientifique client à la place de
+l'hydratation serveur. Le schéma interne peut conserver son rôle pour les
+appels techniques historiques ; la façade GeoSylva reste soumise au contrôle
+de l'identité stationnelle, du compte et de la provenance.
 
 ### 3.3 Préparation côté serveur
 
@@ -125,10 +146,14 @@ hors de la session :
 8. refuser si l'une de ces capacités ou preuves manque ;
 9. exécuter Reasoning → Diagnostic → Recommendation → Validation.
 
-Dans l'état actuel du code, la sélection serveur des règles/qualifications et
-la fourniture d'un état global stationnel ne sont pas encore implémentées. La
-façade ne peut donc pas être activée avant cette tranche préparatoire. Tant que
-la précondition n'est pas satisfaite, elle refuse avec des codes explicites :
+Le constat d'absence de préparation du 17 août n'est plus l'état du code
+examiné : `engines/orchestration/preparation.py` contient désormais
+`StationPreparationService`, la sélection des règles/qualifications et le
+chargement d'un état accepté. Cette présence ne prouve ni le lien stationnel,
+ni les provenances en base, ni la conformité des reprises ou des réponses.
+Les portes techniques restent ouvertes. Si une précondition manque, la
+façade doit refuser avec des codes explicites, y compris après acceptation
+asynchrone du job :
 
 ```text
 AUCUNE_REGLE_QUALIFIEE
@@ -142,9 +167,11 @@ ne doit jamais être converti en blocage scientifique ni en valeur par défaut.
 
 L'état global ne peut provenir que d'une ressource ou d'un `FieldIntake`
 `accepted` dont le schéma porte explicitement cet état, sa date, sa source et
-son niveau de preuve. Le contrat `station_intake.v0.1` actuel ne porte pas
-encore cet état : tant qu'une extension versionnée et validée n'existe pas,
-`ETAT_GLOBAL_NON_SOURCE` est le comportement obligatoire.
+son niveau de preuve. Le code examiné déclare `EtatGlobalPayload` avec
+`schema_version = global_state.v0.1` et vérifie un état dans les soumissions
+acceptées. Un modèle déclaré ne prouve pas qu'une donnée acceptée et sourcée
+existe pour la station demandée : si elle manque ou n'est pas admissible,
+`ETAT_GLOBAL_NON_SOURCE` reste le comportement obligatoire.
 
 Le `RapportPreparation` est immuable et contient au minimum :
 
@@ -159,47 +186,38 @@ Le `RapportPreparation` est immuable et contient au minimum :
 Aucune valeur par défaut `sain`, aucune qualification automatique et aucune
 conversion confiance → niveau de preuve ne sont autorisées.
 
-### 3.4 Compatibilité RFC-0033
+### 3.4 Compatibilité RFC-0033 et restitution
 
-La façade porte l'enveloppe commune adoptée par RFC-0033, avec un nom de version
-non ambigu :
-
-- `requete_id` ;
-- `session_id` ;
-- `moteur_cible` égal à `orchestration` ;
-- `contract_version`, par exemple `analyse-geosylva.v1` ;
-- `payload` d'intention ;
-- auteur dérivé du JWT côté serveur.
+RFC-0033 reste la référence d'enveloppe commune. Le BFF asynchrone distingue
+l'identité de la demande (`request_id`), celle du job (`analysis_id`) et le
+résultat scientifique. Le relevé des représentations existantes en section
+3.2 ne vaut pas homologation de l'enveloppe complète.
 
 `version` au sens optimistic locking de RFC-0033 n'est pas ajouté à une
 intention d'analyse : aucune ressource mutable locale n'est verrouillée par
 cette demande. Ce mécanisme reste celui de DEC-000048 pour la synchronisation
 des parcelles.
 
-La façade appelle `OrchestrationEngine` directement dans le même processus,
-avec la session et la transaction prévues. Elle ne réalise jamais un second
-appel HTTP vers `/orchestration/analyse`.
+La façade appelle `OrchestrationEngine` directement dans le processus serveur,
+avec la session et la transaction prévues. Elle ne réalise pas de second appel
+HTTP vers `/orchestration/analyse`. Les droits consommateur dédiés et la limite
+pilote de 10 analyses par minute **et par compte** restent exigés ; le code de
+limitation réseau ne suffit pas à démontrer cette dernière condition.
 
-La façade dispose d'un scope RBAC consommateur dédié, distinct de la porte
-technique `EngineWriteUser`, et d'une limite explicite de 10 analyses par minute
-et par compte pour le pilote. Toute évolution de cette limite doit être mesurée
-et documentée.
-
-La sortie conserve le format métier `AnalyseComplete` actuel dans `payload` et
-expose également :
-
-- `resultat_id` correspondant à `analyse_id` ;
-- `requete_origine` ;
-- `contract_version` et version de l'orchestration ;
-- `RapportHydratation` et `RapportPreparation` ;
-- sources, niveaux de preuve et chaîne d'inférence.
+Le résultat doit conserver les sources, niveaux de preuve, chaîne d'inférence,
+`RapportHydratation` et `RapportPreparation` demandés par DEC-000073. La
+projection existante `ScientificAnalysisResult` expose des observations,
+versions et empreintes ; sa restitution partielle des rapports est signalée
+en E05 du rapport de revue. Aucune nouvelle forme de réponse n'est inventée
+ici et aucune conservation complète n'est déclarée livrée sans preuve.
 
 ### 3.5 Erratum documentaire RFC-0033
 
 RFC-0033 §2.4–2.5 décrit des routes moteurs et d'orchestration qui ne sont pas
 les routes actuellement montées. RFC-0041 ne supprime pas la RFC adoptée : elle
-formalise que la façade `analyse-geosylva` et la route interne actuelle sont la
-réconciliation opérationnelle de ce contrat, tandis qu'un futur SDK ne doit
+retient maintenant la façade asynchrone décrite en section 3.1 et conserve la
+route interne. L'ancienne proposition est archivée en section 11. La
+réconciliation des DTO et des preuves reste à qualifier ; un SDK ne doit
 jamais coder contre un endpoint non vérifié dans OpenAPI.
 
 ## 4. Identité parcelle locale → ressource GSIE
@@ -240,7 +258,11 @@ Cette table évite d'ajouter immédiatement un UUID et une provenance incomplèt
 à toutes les entités historiques GeoSylva. L'extension des entités reste une
 tranche ultérieure si le modèle de données le justifie.
 
-### 4.3 Opération serveur retenue
+### 4.3 Opération serveur retenue — à construire
+
+**État au 15 novembre 2026 : endpoint non retrouvé dans le snapshot serveur
+examiné, encore à construire.** Le présent texte décrit la cible et non un
+service livré ou une migration exécutée.
 
 Le choix est fixé sur un endpoint dédié, sans modifier la sémantique du PUT de
 synchronisation parcellaire :
@@ -271,6 +293,10 @@ automatique. L'accès à un `station_id` est toujours contrôlé par appartenanc
 au compte, même si l'UUID est difficile à deviner.
 
 ## 5. File mobile et idempotence
+
+Les noms ci-dessous décrivent la cible logique de file ; ils ne prouvent pas
+sa présence dans un APK. La clé d'intention logique `requete_id` correspond
+au rôle de `request_id` dans le BFF asynchrone existant.
 
 La file GeoSylva reprend le pattern de DEC-000048 et de RFC-0033 :
 
@@ -321,6 +347,14 @@ permettre de rejouer silencieusement une préparation différente.
 
 ## 6. Tranches obligatoires avant activation
 
+DEC-000093 fixe le lancement aux métiers technicien forestier et conducteur
+de travaux forestiers. Tout chantier hors GeoSylva est gelé jusqu'à sa
+sortie. Les dépendances GSIE strictement nécessaires à ces deux parcours ne
+constituent pas une autorisation de reprendre d'autres chantiers.
+
+Les tranches ci-dessous restent des portes à qualifier. Leur présence dans
+la RFC ou dans le code ne signifie pas qu'elles sont closes.
+
 ### Tranche 0 — Préconditions serveur
 
 - spécifier la ressource de règles applicables et son domaine de validité ;
@@ -344,7 +378,7 @@ manière explicite. Elle ne doit pas donner un faux succès.
 
 ### Tranche 2 — Façade et file mobile
 
-- contrat `analyse-geosylva.v1` ;
+- réconciliation de l'intention avec le DTO existant `geosylva.analysis.request.v1`, sans homologation implicite des champs supplémentaires ;
 - appel en processus vers l'orchestrateur interne ;
 - scope RBAC consommateur ;
 - file Room, cache SQLCipher et Worker ;
@@ -399,7 +433,9 @@ le premier test serveur.
 
 ## 9. Portes de validation
 
-Avant passage en `Validated` :
+La validation des principes et du choix de façade par DEC-000093 ne clôt pas
+ces portes et ne promeut pas la RFC entière en document validé. Son statut
+reste Draft. Avant passage en `Validated` :
 
 1. capacité serveur de préparation effectivement implémentée ou refus nommé
    `AUCUNE_REGLE_QUALIFIEE` vérifié ;
@@ -418,9 +454,60 @@ Avant passage en `Validated` :
 13. Ruff, mypy, tests Android et tests d'intégration ;
 14. relecture du run CI sur un snapshot Git stabilisé.
 
-## 10. Autorisation demandée
+## 10. Décision acquise et suites distinctes
 
-Cette RFC demande l'autorisation de concevoir et implémenter la façade et le
-lien d'identité uniquement après validation de DEC-000073. La route interne,
-le cœur local, la quarantaine et les règles de gouvernance existantes restent
-inchangés jusque-là.
+DEC-000093 enregistre la décision du Fondateur du 15 novembre 2026 :
+DEC-000073 est validée avec mise à jour pour ses principes, la façade
+asynchrone retenue et les deux métiers de lancement. DEC-000073 reste
+inchangée comme trace historique ; la nouvelle décision la complète.
+
+La présente mission ne réalise que cet enregistrement documentaire.
+`station-link`, la réconciliation contractuelle et les preuves des écarts
+restent des travaux distincts, sans activation, migration ou déploiement
+implicites. Le cœur local, la route interne et les garde-fous de provenance
+restent préservés.
+
+## 11. Historique de la proposition
+
+| Date | État et évolution |
+|---|---|
+| 2026-08-17 | Proposition initiale Draft, liée à DEC-000073 proposée : façade envisagée sous le chemin d'orchestration reproduit ci-dessous. |
+| 2026-11-15 | DEC-000093 enregistre « validée avec mise à jour » : principes conservés, façade asynchrone existante retenue, station-link restant à construire et gel des chantiers hors GeoSylva. La RFC reste Draft. |
+
+### 11.1 Chemin initial — historique, non cible cliente
+
+La section 3.1 du 17 août proposait :
+
+```text
+POST /api/v1/orchestration/analyse-geosylva
+```
+
+Ce choix est remplacé par celui de la section 3.1 courante. Il n'est pas une
+seconde façade à implémenter.
+
+### 11.2 Modèle d'intention initial — historique, non payload actuel
+
+La proposition du 17 août présentait le modèle suivant ; il ne correspond pas
+au corps accepté tel quel par le DTO asynchrone existant :
+
+```json
+{
+  "contract_version": "analyse-geosylva.v1",
+  "requete_id": "uuid-v4",
+  "session_id": "uuid-v4",
+  "station_id": "uuid-gsie-place",
+  "parcelle_client_id": "parcelle-locale-123",
+  "question": "Quelles essences sont adaptées à cette station ?",
+  "objectif_forestier": "production",
+  "alternatives_demandees": true,
+  "niveaux_preuve_declares": {
+    "pedologie": "F",
+    "peuplement": "F"
+  }
+}
+```
+
+Le texte initial complet est conservé dans [le snapshot de départ immuable](https://github.com/NeooeN45/Quintessences/blob/9e6864b353c8c03d15c067dffd2b358f7a57d94f/02_RFC/RFC-0041-contrat-facade-geosylva-identite-stationnelle.md),
+blob Git `f194c48624a8a09b336de0490f47a3f9d8edd3fa`. La présente mise à jour ne
+réécrit pas DEC-000073 et ne présente pas les préconditions historiques comme
+des fonctions déjà livrées.

@@ -25,10 +25,10 @@ dependencies = [
     # Cache & temps réel
     "redis[hiredis]==5.2.1",
     "websockets==14.1",
-    # Géospatial — shapely/pyproj dès la semaine 1 (léger)
-    # rasterio + geopandas ajoutés en semaine 5 (GIS Engine, nécessite GDAL)
+    # Géospatial — Rasterio fournit le décodage GeoTIFF WCS SoilGrids.
     "shapely==2.0.6",
     "pyproj==3.7.0",
+    "rasterio==1.5.1",
     # Observabilité
     "structlog==24.4.0",
     "prometheus-fastapi-instrumentator==8.0.2",
@@ -39,7 +39,7 @@ dependencies = [
     "opentelemetry-instrumentation-redis==0.65b0",
     "opentelemetry-exporter-otlp-proto-grpc==1.44.0",
     # Auth — JWT GSIE + mots de passe locaux Argon2id + Google OIDC (DEC-000044)
-    "pyjwt[crypto]==2.13.0",
+    "pyjwt[crypto]==2.15.0",
     "bcrypt==5.0.0",
     "argon2-cffi==25.1.0",
     "email-validator==2.3.0",
@@ -192,6 +192,11 @@ ignore_missing_imports = true
 module = "shapely.*"
 ignore_missing_imports = true
 
+# Rasterio expose des extensions GDAL sans stubs complets.
+[[tool.mypy.overrides]]
+module = "rasterio.*"
+ignore_missing_imports = true
+
 # cfgrib/defusedxml n'ont pas de stubs officiels installés — Climate
 # Engine, decodage GRIB2 AROME
 [[tool.mypy.overrides]]
@@ -224,4 +229,17 @@ dev = [
     "psycopg2-binary==2.9.12",
     "pytest==9.0.3",
     "pytest-asyncio==1.3.0",
+]
+
+# Versions transitives de sécurité, sans nouvelle dépendance métier (GSIE-PROMPT-0034).
+[tool.uv]
+constraint-dependencies = [
+    # CVE-2026-111064, CVE-2026-111066 et CVE-2026-123817.
+    "aiohttp==3.14.4",
+    # Racines de certification compromises : GHSA-6q48-6c7w-9gw2.
+    "certifi==2026.10.18",
+    # CVE-2026-114605 et CVE-2026-128089.
+    "dnspython==2.9.2",
+    # CVE-2026-119194 à CVE-2026-119197.
+    "pyasn1==0.6.5",
 ]

@@ -14,7 +14,12 @@ from gsie_api.data.adapters import (
 )
 
 if TYPE_CHECKING:
-    from gsie_api.data.adapters import AdapterContext, AdapterFetchRequest, DataSourceAdapter
+    from gsie_api.data.adapters import (
+        AdapterContext,
+        AdapterFetchRequest,
+        AdapterFetchResult,
+        DataSourceAdapter,
+    )
     from gsie_api.data.fetch_policy import FetchQualificationRegistry
 
 
@@ -81,6 +86,7 @@ class BoundedFetchWorker:
         if request.max_bytes > context.max_bytes:
             raise AdapterSecurityError("FETCH_SIZE_LIMIT_EXCEEDED: limite du contexte")
 
+        result: AdapterFetchResult | None = None
         try:
             async with asyncio.timeout(context.timeout_seconds):
                 result = await adapter.fetch(request, context)
@@ -120,6 +126,11 @@ class BoundedFetchWorker:
         except BaseException:
             await self._abort(sink)
             raise
+        finally:
+            if result is not None:
+                close = getattr(result.body, "aclose", None)
+                if callable(close):
+                    await close()
 
 
 __all__ = ["BoundedFetchReceipt", "BoundedFetchWorker", "FetchSink"]

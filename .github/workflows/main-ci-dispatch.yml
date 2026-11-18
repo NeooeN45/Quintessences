@@ -15,6 +15,7 @@ concurrency:
 jobs:
   dispatch-full-ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Dispatch canonical CI on main
         env:

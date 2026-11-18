@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { register, friendlyErrorMessage } from "../lib/authApi.ts";
 
 export default function RegisterForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError(null);

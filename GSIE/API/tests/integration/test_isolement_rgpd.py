@@ -185,6 +185,8 @@ def test_les_deux_schemas_existent_et_portent_les_bonnes_tables(base_migree: str
         f"{_SCHEMA_IDENTITES}.active_session",
         f"{_SCHEMA_IDENTITES}.failed_login_attempt",
         f"{_SCHEMA_IDENTITES}.revoked_refresh_token",
+        f"{_SCHEMA_IDENTITES}.geosylva_analysis_job",
+        f"{_SCHEMA_IDENTITES}.geosylva_cubage_session",
     }
 
 
@@ -414,7 +416,7 @@ def test_le_role_applicatif_n_atteint_pas_les_donnees_personnelles_metier(
 def test_le_role_applicatif_accede_uniquement_aux_tables_techniques_d_identite(
     base_migree: str,
 ) -> None:
-    """L'API dispose du DML nécessaire à l'authentification, sans suppression."""
+    """L'API dispose du DML requis par l'identité et le BFF, sans suppression."""
     droits = asyncio.run(
         _lire(
             base_migree,
@@ -440,6 +442,9 @@ def test_le_role_applicatif_accede_uniquement_aux_tables_techniques_d_identite(
             "active_session",
             "failed_login_attempt",
             "revoked_refresh_token",
+            # 0056/0057 : tables du BFF, protégées par RLS depuis 0059.
+            "geosylva_analysis_job",
+            "geosylva_cubage_session",
         )
         for privilege in ("INSERT", "SELECT", "UPDATE")
     }

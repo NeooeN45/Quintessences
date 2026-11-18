@@ -1,0 +1,6 @@
+#!/bin/sh
+# GSIE — post-commit : diagnostic sécurité rapide en arrière-plan.
+# Non bloquant : le rapport atterrit dans output/security-diag/latest.md
+# et est relu en début de session suivante ou à la demande.
+
+python tools/security_diag.py --mode quick --commit HEAD >/dev/null 2>&1 &

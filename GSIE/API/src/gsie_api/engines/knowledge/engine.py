@@ -32,7 +32,7 @@ classification convergent tous deux vers claim_kind=classification —
 RFC-0011 §3.3) et ne permettrait pas un aller-retour exact.
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -252,9 +252,18 @@ class KnowledgeEngine:
             id=request.connaissance_id,
             claim_kind=_TYPE_TO_CLAIM_KIND[request.type],
             lifecycle_status=_STATUS_TO_LIFECYCLE[request.statut],
+            spatial_scope_id=request.spatial_scope_id,
             version=1,
         )
         self._session.add(assertion)
+        self._session.add_all(
+            AssertionQualifierModel(
+                assertion_id=request.connaissance_id,
+                key=key,
+                value=value,
+            )
+            for key, value in request.qualificateurs.items()
+        )
 
         evidence = EvidenceAssessmentModel(
             id=evidence_resource_id,
@@ -515,6 +524,10 @@ class KnowledgeEngine:
             "relations": [r.model_dump(mode="json") for r in request.relations],
             "mots_cles": list(request.mots_cles),
             "conflits": [c.model_dump(mode="json") for c in request.conflits],
+            "qualificateurs": dict(request.qualificateurs),
+            "spatial_scope_id": (
+                str(request.spatial_scope_id) if request.spatial_scope_id is not None else None
+            ),
         }
 
     def _to_knowledge_object(
@@ -808,6 +821,32 @@ class KnowledgeEngine:
             ecartees=len(ecartees),
         )
         return regles, ecartees
+
+    async def qualifications_regles(self, regle_ids: Sequence[str]) -> dict[str, dict[str, str]]:
+        """Expose les qualificateurs des règles déjà sélectionnées.
+
+        La sélection d'applicabilité reste celle de [regles_applicables]. Cette
+        méthode ne requalifie rien : elle rend seulement les champs déclarés
+        par la connaissance accepted, afin que la couche de préparation puisse
+        vérifier le contrat Diagnostic sans les inventer.
+        """
+        identifiants = [UUID(regle_id) for regle_id in regle_ids]
+        bruts = await self._qualificateurs_par_assertion(identifiants)
+        return {str(regle_id): bruts.get(regle_id, {}) for regle_id in identifiants}
+
+    async def versions_regles(self, regle_ids: Sequence[str]) -> dict[str, int]:
+        """Expose les versions courantes des règles déjà sélectionnées."""
+        identifiants = [UUID(regle_id) for regle_id in regle_ids]
+        if not identifiants:
+            return {}
+        lignes = (
+            await self._session.execute(
+                select(AssertionModel.id, AssertionModel.version).where(
+                    AssertionModel.id.in_(identifiants)
+                )
+            )
+        ).all()
+        return {str(regle_id): version for regle_id, version in lignes}
 
     async def _qualificateurs_par_assertion(
         self, assertion_ids: list[UUID]

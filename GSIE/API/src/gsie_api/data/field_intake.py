@@ -10,12 +10,19 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 from gsie_api.data.field_intake_station import StationIntake  # noqa: TC001
 from gsie_api.infrastructure.models.field_intake import FieldIntakeModel
 
-FieldIntakeKind = Literal["observation", "feedback", "action_outcome", "correction"]
+FieldIntakeKind = Literal[
+    "observation",
+    "analysis_bundle",
+    "feedback",
+    "action_outcome",
+    "correction",
+]
 
 
 class FieldIntakeSubmission(BaseModel):
@@ -104,8 +111,27 @@ class FieldIntakeService:
             payload_hash=payload_hash,
             target_resource_id=submission.target_resource_id,
         )
-        self._session.add(intake)
-        await self._session.flush()
+        try:
+            # Le sas UNIQUE garantit qu'une course entre deux imports ne
+            # crée pas deux lignes. Le savepoint permet au second appel de
+            # relire la ligne gagnante sans invalider la transaction externe.
+            async with self._session.begin_nested():
+                self._session.add(intake)
+                await self._session.flush()
+        except IntegrityError:
+            concurrent = await self._find_existing(submission)
+            if concurrent is None:
+                raise
+            if concurrent.payload_hash != payload_hash:
+                raise FieldIntakeConflict(
+                    "client_event_id déjà utilisé avec un payload différent"
+                ) from None
+            return FieldIntakeResponse(
+                id=concurrent.id,
+                status="quarantined",
+                duplicate=True,
+                payload_hash=payload_hash,
+            )
         return FieldIntakeResponse(
             id=intake.id,
             status="quarantined",

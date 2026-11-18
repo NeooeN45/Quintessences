@@ -6,7 +6,7 @@ import AnimatedHeading from "../components/AnimatedHeading.tsx";
 <BaseLayout title="Politique de confidentialité" description="Politique de confidentialité et protection des données personnelles.">
   <section class="mx-auto max-w-2xl px-6 py-20">
     <AnimatedHeading client:load lines={[{ text: "Confidentialité" }]} />
-    <p class="mt-2 text-sm text-[var(--color-fg-400)]">Dernière mise à jour : 9 août 2026</p>
+    <p class="mt-2 text-sm text-[var(--color-fg-400)]">Dernière mise à jour : 23 août 2026</p>
 
     <div class="content mt-10">
       <h2>Responsable de traitement</h2>
@@ -21,25 +21,59 @@ import AnimatedHeading from "../components/AnimatedHeading.tsx";
       <ul>
         <li>
           <strong>Accueil, Actualités, Galerie</strong> — aucune donnée
-          personnelle n'est collectée pour la simple consultation de ces
-          pages.
+          n'est demandée par Quintessences pour la simple consultation de ces
+          pages. Des données techniques peuvent néanmoins être traitées par
+          l'hébergeur ou le réseau de diffusion selon leurs propres politiques.
         </li>
         <li>
           <strong>Contact</strong> — l'adresse e-mail, la catégorie et le
-          message que vous saisissez sont transmis dans le seul but de
-          répondre à votre demande. Le formulaire est protégé par
-          Cloudflare Turnstile, un service tiers qui vérifie que vous n'êtes
-          pas un robot ; Cloudflare peut à ce titre traiter des données
-          techniques (voir sa propre politique de confidentialité).
+          message saisis dans le formulaire sont transmis au destinataire de
+          contact configuré par l'éditeur lorsque le routage est activé. Le
+          site ne les enregistre pas dans la base GSIE ; le message peut ensuite
+          être conservé dans la boîte de réception du destinataire selon la
+          procédure interne, <strong>[À CONFIRMER — durée de conservation des demandes de contact]</strong>.
+          Le formulaire est protégé par Cloudflare Turnstile, un service tiers
+          qui vérifie que vous n'êtes pas un robot ; Cloudflare peut à ce titre
+          traiter des données techniques (voir sa propre politique de
+          confidentialité). Si le routage est indisponible, utilisez l'adresse
+          e-mail indiquée sur la page Contact.
         </li>
         <li>
-          <strong>Compte</strong> — cette zone est en construction. Lorsqu'elle
-          sera disponible, la création d'un compte impliquera un traitement de
-          données personnelles (adresse e-mail, mot de passe haché, historique
-          de connexion) décrit à ce moment-là dans cette même page, selon les
-          règles déjà en vigueur pour le compte Quintessences côté mobile.
+          <strong>Compte</strong> — la zone Compte traite l'adresse e-mail, le
+          nom d'affichage facultatif, le mot de passe haché et les éléments
+          techniques nécessaires à l'authentification et à la sécurité (session,
+          adresse IP, navigateur et journaux de sécurité). Les jetons de session
+          sont conservés dans le stockage de session du navigateur. Les données
+          de compte sont conservées pendant la durée du compte puis selon la
+          procédure d'effacement applicable, <strong>[À CONFIRMER — durée et procédure de conservation des comptes supprimés]</strong>.
         </li>
       </ul>
+
+      <h2>Bases juridiques</h2>
+      <p>
+        Les demandes de contact sont traitées pour permettre à l'éditeur d'y
+        répondre et d'assurer la sécurité du service, sur la base juridique
+        retenue pour chaque catégorie de demande. La base juridique définitive
+        et sa formulation doivent être validées par le responsable de
+        traitement avant l'ouverture publique du routage,
+        <strong>[À CONFIRMER — bases juridiques par finalité]</strong>.
+      </p>
+      <p>
+        La gestion d'un compte repose sur l'exécution du service demandé et les
+        mesures de sécurité associées, sous réserve des conditions spécifiques
+        qui seront présentées lors de l'inscription.
+      </p>
+
+      <h2>Destinataires et prestataires</h2>
+      <p>
+        Les données peuvent être accessibles à l'éditeur, au destinataire de
+        contact configuré et aux prestataires strictement nécessaires à la
+        fourniture du service : hébergement, protection anti-robot Cloudflare
+        Turnstile et transport SMTP. L'identité du prestataire SMTP, les
+        éventuels transferts hors de l'Espace économique européen et les
+        garanties associées doivent être documentés avant publication,
+        <strong>[À CONFIRMER — prestataires et garanties de transfert]</strong>.
+      </p>
 
       <h2>Cookies</h2>
       <p>
@@ -51,9 +85,10 @@ import AnimatedHeading from "../components/AnimatedHeading.tsx";
 
       <h2>Durée de conservation</h2>
       <p>
-        Les messages reçus via le formulaire de contact sont conservés le
-        temps nécessaire au traitement de votre demande. [À COMPLÉTER —
-        durée précise selon la procédure interne retenue.]
+        Le formulaire ne conserve pas les messages dans la base GSIE. Les
+        échanges transmis au destinataire ou envoyés directement par e-mail
+        sont traités dans sa messagerie selon la durée indiquée ci-dessus ; cette
+        durée doit être arrêtée avant l'ouverture publique du routage automatique.
       </p>
 
       <h2>Vos droits</h2>
@@ -65,7 +100,7 @@ import AnimatedHeading from "../components/AnimatedHeading.tsx";
         ces droits en écrivant à
         <a href="mailto:contact@quintessences-platform.com">contact@quintessences-platform.com</a>.
         Vous disposez également du droit d'introduire une réclamation auprès
-        de la CNIL (www.cnil.fr).
+        de la <a href="https://www.cnil.fr/fr/plaintes">CNIL</a>.
       </p>
     </div>
   </section>

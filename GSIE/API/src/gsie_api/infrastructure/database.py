@@ -149,6 +149,26 @@ async def set_rls_context(
     session.info["workspace_id"] = workspace_id
 
 
+async def set_internal_worker_context(session: AsyncSession) -> None:
+    """Active le bypass RLS des workers internes pour la transaction courante.
+
+    Pose ``app.internal_worker = 'on'`` via ``set_config(..., true)`` — la
+    valeur est locale à la transaction : un commit/rollback la réinitialise.
+    Les tables de jobs GeoSylva sont protégées par une policy propriétaire ;
+    le worker traite les jobs de tous les comptes et pose ce marqueur avant
+    chaque requête sur ces tables.
+
+    À appeler après le début de la transaction (le premier ``execute`` la
+    démarre en autobegin) et **à nouveau après chaque commit** si la session
+    continue à travailler.
+    """
+    dialect_name = session.bind.dialect.name if session.bind is not None else ""
+    if dialect_name == "sqlite":
+        session.info["internal_worker"] = True
+        return
+    await session.execute(text("SELECT set_config('app.internal_worker', 'on', true)"))
+
+
 async def _resolve_active_organisation(
     session: AsyncSession,
     user_id: str,

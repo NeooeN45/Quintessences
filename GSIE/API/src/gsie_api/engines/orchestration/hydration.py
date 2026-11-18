@@ -360,7 +360,14 @@ class StationContexteHydrator:
         """
         statement = (
             select(FieldIntakeModel)
-            .where(FieldIntakeModel.target_resource_id == station_id)
+            .where(
+                FieldIntakeModel.target_resource_id == station_id,
+                # Un bundle Forge reste un artefact de quarantaine jusqu'à
+                # sa conversion explicite en observation stationnelle. Même
+                # une acceptation manuelle ne doit pas le faire consommer par
+                # l'hydratation avant ce contrôle scientifique.
+                FieldIntakeModel.kind == "observation",
+            )
             .order_by(FieldIntakeModel.observed_at.desc(), FieldIntakeModel.id.desc())
         )
         soumissions = list((await self._session.execute(statement)).scalars())

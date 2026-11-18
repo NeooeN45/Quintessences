@@ -19,8 +19,10 @@ def test_default_registry_is_lazy_and_stable() -> None:
     assert [item.key for item in registry.descriptors()] == [
         "gbif",
         "ign",
+        "indigenat-bellifa",
         "meteofrance",
         "soilgrids",
+        "taxref",
     ]
     assert registry.get("GBIF") is registry.get("gbif")
     assert get_adapter_registry() is get_adapter_registry()
@@ -33,10 +35,10 @@ async def test_offline_campaign_does_not_contact_providers() -> None:
         offline=True,
     )
 
-    assert len(summary.reports) == 4
+    assert len(summary.reports) == 6
     assert summary.healthy == 0
     assert summary.unavailable == 0
-    assert summary.unknown == 4
+    assert summary.unknown == 6
     assert {item.error_code for item in summary.reports} == {"OFFLINE_MODE"}
 
 

@@ -28,6 +28,23 @@ from pathlib import Path
 _api_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_api_root / "src"))
 
+
+# Force le fallback Python pour le moteur Evidence — la CI tourne sur
+# Linux sans la wheel Rust compilée, donc l'OpenAPI de référence doit
+# être généré sans le module gsie_evidence. Sans ça, un développeur
+# avec la wheel Rust installée localement produit un openapi.json avec
+# des paths/schemas supplémentaires qui dérive en CI.
+class _RustBlocker:
+    """Module fantôme qui lève ImportError à tout accès d'attribut."""
+
+    def __getattr__(self, name: str) -> object:
+        raise ImportError(
+            f"gsie_evidence.{name} bloqué par extract_openapi.py (fallback Python forcé)"
+        )
+
+
+sys.modules["gsie_evidence"] = _RustBlocker()  # type: ignore[assignment]
+
 from gsie_api.app import app  # noqa: E402
 
 _OUTPUT_PATH = _api_root / "docs" / "openapi.json"

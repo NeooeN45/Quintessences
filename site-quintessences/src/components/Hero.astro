@@ -9,7 +9,7 @@ const HERO_LINES = [
 ];
 ---
 
-<section class="relative overflow-hidden border-b border-[var(--color-border)]">
+<section class="relative overflow-hidden border-b border-[var(--color-border)]" aria-label="Présentation de Quintessences">
   <VideoBackdrop />
   <div class="relative mx-auto max-w-5xl px-6 pb-20 pt-24 sm:pt-32">
     <p class="eyebrow">Jumeau numérique · environnemental · fédéré</p>
@@ -18,25 +18,25 @@ const HERO_LINES = [
       <AnimatedHeading client:load size="hero" lines={HERO_LINES} />
     </div>
 
-    <p class="relative mt-10 max-w-md text-[var(--color-fg-300)]">
-      Quintessences qualifie la preuve scientifique, raisonne dessus et laisse
-      un forestier décider — un écosystème d'intelligence environnementale
-      fondé sur le moteur GSIE.
+    <p class="relative mt-10 max-w-xl text-lg leading-relaxed text-[var(--color-fg-300)] sm:text-xl">
+      Un même socle pour comprendre les territoires, explorer des scénarios
+      et éclairer les décisions de terrain — avec des preuves identifiables,
+      des raisonnements explicables et un humain aux commandes.
     </p>
 
     <div class="relative mt-8 flex flex-wrap items-center gap-3">
       <a
-        href="/compte/inscription/"
+        href="#applications"
         class="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
         style="background: var(--color-fg-100)"
       >
-        Créer un compte
+        Explorer l'écosystème
       </a>
       <a
-        href="https://docs.quintessences-platform.com"
+        href="#moteur"
         class="rounded-full border border-[var(--color-border-strong)] px-5 py-2.5 text-sm font-medium text-[var(--color-fg-200)] transition-colors hover:border-[var(--color-fg-100)]"
       >
-        Documentation
+        Voir la chaîne GSIE
       </a>
     </div>
   </div>

@@ -195,6 +195,15 @@ class KnowledgeIngestRequest(BaseModel):
     relations: list[RelationRef] = Field(default_factory=list, max_length=200)
     mots_cles: list[str] = Field(default_factory=list, max_length=50)
     conflits: list[ConflitBibliographique] = Field(default_factory=list, max_length=100)
+    qualificateurs: dict[str, str] = Field(
+        default_factory=dict,
+        max_length=20,
+        description="Qualificateurs déclarés pour une règle dérivable et diagnostiquable",
+    )
+    spatial_scope_id: UUID | None = Field(
+        default=None,
+        description="Place ou territoire portant le domaine spatial de la règle",
+    )
 
 
 class KnowledgeQuery(BaseModel):

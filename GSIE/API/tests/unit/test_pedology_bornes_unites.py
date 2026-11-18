@@ -1,7 +1,7 @@
 """Une valeur pédologique reste dans ce que son unité autorise.
 
 Seconde ligne de défense, indépendante du client qui produit la valeur.
-`soilgrids_client.py` retombait sur un facteur d'échelle de 1 quand SoilGrids
+Le client historique `soilgrids_client.py` retombait sur un facteur d'échelle de 1 quand SoilGrids
 omettait `unit_measure` : une couche `phh2o` de moyenne 52 — un pH de 5,2 mis à
 l'échelle par dix — ressortait à **pH 52**, et la règle `pedologie_pH < 5.5`
 évaluait alors `52 < 5.5`, diagnostiquant basique un sol acide.
