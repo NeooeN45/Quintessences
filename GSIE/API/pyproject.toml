@@ -69,7 +69,7 @@ dependencies = [
     # Retries avec backoff exponentiel — clients API externes (GSIE-PROMPT-0023)
     "tenacity==8.5.0",
     # Sérialisation JSON haute performance (veille techno 2026-08-02)
-    "orjson==3.11.6",
+    "orjson==3.13.0",
     # Boucle d'événements haute performance (Linux uniquement, veille techno 2026-08-02)
     "uvloop==0.21.0 ; sys_platform != 'win32'",
     "eccodeslib==2.47.3.23 ; sys_platform != 'win32'",
