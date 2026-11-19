@@ -71,6 +71,16 @@ class GeoSylvaSyncService:
     ) -> GeoSylvaParcelRecord:
         current = await self._repository.get_for_update(account_id, client_id)
         if current is not None and current.last_operation_id == mutation.operation_id:
+            # Un identifiant rejoué n'acquitte que la même mutation. Sinon,
+            # le mobile pourrait croire sauvegardé un contenu jamais persisté.
+            expected_base = current.version - 1 if current.version > 1 else None
+            if (
+                current.deleted_at is not None
+                or mutation.base_version != expected_base
+                or mutation.client_updated_at != current.client_updated_at
+                or mutation.payload != current.payload
+            ):
+                raise GeoSylvaSyncConflictError(current)
             return current
         if current is None:
             if mutation.base_version is not None:
@@ -113,6 +123,13 @@ class GeoSylvaSyncService:
     ) -> GeoSylvaParcelRecord:
         current = await self._repository.get_for_update(account_id, client_id)
         if current is not None and current.last_operation_id == operation_id:
+            expected_base = current.version - 1 if current.version > 1 else None
+            if (
+                current.deleted_at is None
+                or base_version != expected_base
+                or client_updated_at != current.client_updated_at
+            ):
+                raise GeoSylvaSyncConflictError(current)
             return current
         now = datetime.now(UTC)
         if current is None:

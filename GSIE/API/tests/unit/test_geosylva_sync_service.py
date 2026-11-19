@@ -1,6 +1,7 @@
 """Règles métier de la synchronisation de parcelles GeoSylva."""
 
-from datetime import UTC, datetime
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 import pytest
@@ -206,3 +207,179 @@ async def should_reject_delete_when_base_version_mismatches_current() -> None:
         )
 
     assert captured.value.current.version == current.version
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"payload": {"name": "Observation différente", "surface_ha": 12.5}},
+        {"client_updated_at": datetime(2026, 8, 3, 12, 0, tzinfo=UTC)},
+        {"base_version": 1},
+    ],
+    ids=["contenu", "date", "version-de-base"],
+)
+async def should_reject_reused_upsert_id_when_request_changes(changes: dict) -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    mutation = _mutation()
+    current = await service.upsert(account_id, "parcelle-1", mutation)
+
+    with pytest.raises(GeoSylvaSyncConflictError, match="Conflit de version") as captured:
+        await service.upsert(account_id, "parcelle-1", replace(mutation, **changes))
+
+    assert captured.value.current == current
+    assert repository.records[(account_id, "parcelle-1")] == current
+
+
+@pytest.mark.parametrize("changed_field", ["date", "version-de-base"])
+async def should_reject_reused_delete_id_when_request_changes(changed_field: str) -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    active = await service.upsert(account_id, "parcelle-1", _mutation())
+    operation_id = uuid4()
+    deleted_at = datetime(2026, 8, 3, 11, 0, tzinfo=UTC)
+    current = await service.delete(
+        account_id,
+        "parcelle-1",
+        operation_id=operation_id,
+        base_version=active.version,
+        client_updated_at=deleted_at,
+    )
+
+    with pytest.raises(GeoSylvaSyncConflictError, match="Conflit de version") as captured:
+        await service.delete(
+            account_id,
+            "parcelle-1",
+            operation_id=operation_id,
+            base_version=current.version if changed_field == "version-de-base" else active.version,
+            client_updated_at=deleted_at + timedelta(hours=1)
+            if changed_field == "date"
+            else deleted_at,
+        )
+
+    assert captured.value.current == current
+    assert repository.records[(account_id, "parcelle-1")] == current
+
+
+async def should_reject_delete_when_operation_id_belongs_to_upsert() -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    mutation = _mutation()
+    current = await service.upsert(account_id, "parcelle-1", mutation)
+
+    with pytest.raises(GeoSylvaSyncConflictError, match="Conflit de version") as captured:
+        await service.delete(
+            account_id,
+            "parcelle-1",
+            operation_id=mutation.operation_id,
+            base_version=mutation.base_version,
+            client_updated_at=mutation.client_updated_at,
+        )
+
+    assert captured.value.current == current
+    assert repository.records[(account_id, "parcelle-1")] == current
+
+
+async def should_reject_upsert_when_operation_id_belongs_to_delete() -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    mutation = _mutation()
+    active = await service.upsert(account_id, "parcelle-1", mutation)
+    deletion_id = uuid4()
+    current = await service.delete(
+        account_id,
+        "parcelle-1",
+        operation_id=deletion_id,
+        base_version=active.version,
+        client_updated_at=mutation.client_updated_at,
+    )
+
+    with pytest.raises(GeoSylvaSyncConflictError, match="Conflit de version") as captured:
+        await service.upsert(
+            account_id,
+            "parcelle-1",
+            replace(mutation, operation_id=deletion_id, base_version=active.version),
+        )
+
+    assert captured.value.current == current
+    assert repository.records[(account_id, "parcelle-1")] == current
+
+
+async def should_replay_updated_parcel_when_timestamp_uses_equivalent_offset() -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    first = await service.upsert(account_id, "parcelle-1", _mutation())
+    mutation = _mutation(base_version=first.version)
+    current = await service.upsert(account_id, "parcelle-1", mutation)
+
+    replay = await service.upsert(
+        account_id,
+        "parcelle-1",
+        replace(
+            mutation,
+            client_updated_at=mutation.client_updated_at.astimezone(
+                timezone(timedelta(hours=2)),
+            ),
+        ),
+    )
+
+    assert replay == current
+    assert replay.version == 2
+
+
+@pytest.mark.parametrize("initially_present", [False, True])
+async def should_replay_tombstone_when_timestamp_uses_equivalent_offset(
+    initially_present: bool,
+) -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    base_version = None
+    if initially_present:
+        active = await service.upsert(account_id, "parcelle-1", _mutation())
+        base_version = active.version
+    operation_id = uuid4()
+    deleted_at = datetime(2026, 8, 3, 11, 0, tzinfo=UTC)
+    current = await service.delete(
+        account_id,
+        "parcelle-1",
+        operation_id=operation_id,
+        base_version=base_version,
+        client_updated_at=deleted_at,
+    )
+
+    replay = await service.delete(
+        account_id,
+        "parcelle-1",
+        operation_id=operation_id,
+        base_version=base_version,
+        client_updated_at=deleted_at.astimezone(timezone(timedelta(hours=2))),
+    )
+
+    assert replay == current
+    assert replay.deleted_at is not None
+    assert replay.version == (2 if initially_present else 1)
+
+
+async def should_reject_old_operation_when_newer_version_has_been_saved() -> None:
+    repository = MemoryParcelRepository()
+    service = GeoSylvaSyncService(repository)
+    account_id = uuid4()
+    old_mutation = _mutation()
+    first = await service.upsert(account_id, "parcelle-1", old_mutation)
+    current = await service.upsert(
+        account_id,
+        "parcelle-1",
+        _mutation(base_version=first.version),
+    )
+
+    with pytest.raises(GeoSylvaSyncConflictError, match="Conflit de version") as captured:
+        await service.upsert(account_id, "parcelle-1", old_mutation)
+
+    assert captured.value.current == current
+    assert repository.records[(account_id, "parcelle-1")] == current
