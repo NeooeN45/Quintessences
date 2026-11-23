@@ -125,13 +125,17 @@ invariants:
       sous-type correspondante doivent rester cohérents ; une collision UUID ne
       doit jamais être masquée par un ON CONFLICT silencieux.
     modules: [GSIE_API, PostgreSQL, RecommendationEngine]
-    test_status: MISSING
-    test_references: []
-    evidence_references: [AUD-001, ISSUE-38]
+    test_status: PARTIAL
+    test_references:
+      - GSIE/API/tests/integration/test_agent_resource_coherence.py::test_agent_refuse_un_uuid_deja_utilise_par_un_autre_type
+      - GSIE/API/tests/integration/test_agent_resource_coherence.py::test_agent_existant_incompatible_est_refuse_sans_ecrasement
+    evidence_references: [AUD-001, ISSUE-38, PR-45, CI-36738455457]
     coverage_note: >-
-      Le risque de collision sémantique ResourceModel/sous-type est suivi, mais
-      aucun test de collision UUID avec type racine incompatible n'a encore été
-      identifié.
+      Les collisions UUID avec type racine incompatible et les sous-types Agent
+      préexistants incompatibles sont prouvés sur PostgreSQL dans la PR #45 :
+      368 tests d'intégration passent sur le run 36738455457. La preuve reste
+      PARTIAL car les autres couples ResourceModel/sous-type et les courses
+      concurrentes inter-processus ne sont pas encore couverts.
 
   - id: INV-006
     title: Toute recommandation scientifique importante est traçable
