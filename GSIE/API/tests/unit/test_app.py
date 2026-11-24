@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from fastapi import FastAPI
+from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
 
 from gsie_api.app import create_app
@@ -27,7 +28,7 @@ def should_create_app_with_correct_title():
 def should_have_health_and_ready_routes():
     """L'app doit avoir les routes /health et /ready."""
     app = create_app()
-    paths = {r.path for r in app.routes}
+    paths = {r.path for r in iter_route_contexts(app.routes)}
     assert "/health" in paths
     assert "/ready" in paths
 
@@ -35,7 +36,7 @@ def should_have_health_and_ready_routes():
 def should_have_engine_routes():
     """L'app doit avoir les routes moteurs sous /api/v1/."""
     app = create_app()
-    paths = {r.path for r in app.routes}
+    paths = {r.path for r in iter_route_contexts(app.routes)}
     assert "/api/v1/evidence/status" in paths
     assert "/api/v1/knowledge/status" in paths
     assert "/api/v1/gis/status" in paths

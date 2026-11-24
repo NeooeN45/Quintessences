@@ -6,7 +6,22 @@
 | **Moteur** | GSIE (General System Intelligence Engine) |
 | **Phase** | 4 — Implémentation |
 | **Directive courante** | GSIE-DIR-0011 (Lancement Phase 4) |
-| **Dernière mise à jour** | 2026-11-16 — réconciliation serveur et levée ciblée des blocages sur la branche d'intégration, en relecture ; aucun déploiement ni fusion dans main. |
+| **Dernière mise à jour** | 2026-11-24 — correction FastAPI GHSA-f56c-v883-vx8r préparée sur branche dédiée, en relecture ; aucun déploiement ni fusion dans main. |
+
+## Sécurité FastAPI — préparation du 24 novembre 2026
+
+La branche `fix/fastapi-dos-2026-11-24`, issue de `main` à `47be204`,
+épingle FastAPI `0.163.2` pour le ticket [#89](https://github.com/NeooeN45/Quintessences/issues/89).
+Les six régressions bornées query/header/formulaire échouent sur `0.134.0`
+et passent sur la version proposée. Le contrat OpenAPI reste identique ;
+les tests d'inventaire des routes utilisent désormais les contextes de routes
+publics de FastAPI, y compris le contrôle des endpoints limités.
+
+Voir les [preuves et limites](23_QUALITY_MANAGEMENT/AUDITS/FASTAPI_DOS_2026-11-24.md).
+Ce changement ne ferme pas le ticket, ne promeut aucun invariant et ne vaut
+pas qualification de production. Les contrôles PostgreSQL, HA/TLS, image et
+limites edge restent nécessaires. La PR #88 et les problèmes #75/#76 ne sont
+pas modifiés.
 
 ## Réconciliation serveur et blocages PR74 — 16 novembre 2026
 

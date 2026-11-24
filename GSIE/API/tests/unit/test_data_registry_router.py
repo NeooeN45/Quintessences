@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException, Request, Response
+from fastapi.routing import iter_route_contexts
 
 from gsie_api.app import create_app
 from gsie_api.data import router as data_router
@@ -28,7 +29,7 @@ def registry_service(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 
 
 def should_register_all_phase_two_registry_routes() -> None:
-    paths = {route.path for route in create_app().routes}
+    paths = {route.path for route in iter_route_contexts(create_app().routes)}
     assert {
         "/api/v1/data/catalog",
         "/api/v1/data/datasets/{dataset_id}",

@@ -1,5 +1,17 @@
 # ROADMAP — Quintessences / GSIE
 
+## Sécurité API — point de contrôle du 24 novembre 2026
+
+- [x] Préparer FastAPI `0.163.2` et son verrou sur une branche dédiée (#89).
+- [x] Reproduire puis supprimer les balayages répétés de paramètres query,
+  header et formulaire avec six tests bornés ; préserver OpenAPI.
+- [x] Adapter l'inventaire des routeurs inclus sans affaiblir le contrôle
+  des signatures des endpoints limités.
+- [ ] Qualifier la CI complète, l'image et les limites edge avant fusion ;
+  conserver #89 ouvert et les invariants inchangés jusque-là.
+
+Preuves : [correctif FastAPI](23_QUALITY_MANAGEMENT/AUDITS/FASTAPI_DOS_2026-11-24.md).
+
 ## Réconciliation serveur — point de contrôle du 16 novembre 2026
 
 - [x] Réunir les trois historiques et GSIE-PROMPT-0032 sur la branche

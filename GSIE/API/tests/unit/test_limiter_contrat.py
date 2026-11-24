@@ -17,6 +17,7 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 from fastapi import Response
+from fastapi.routing import iter_route_contexts
 from slowapi import Limiter
 
 import gsie_api
@@ -57,19 +58,24 @@ def test_tout_endpoint_limite_declare_response() -> None:
     limites = set(limiter_partage._route_limits)
 
     manquants: list[str] = []
-    for route in app.routes:
+    controles = 0
+    for route in iter_route_contexts(app.routes):
         endpoint = getattr(route, "endpoint", None)
         if endpoint is None:
             continue
         cle = f"{endpoint.__module__}.{endpoint.__qualname__}"
         if cle not in limites and endpoint.__name__ not in limites:
             continue
+        controles += 1
         parametres = inspect.signature(endpoint).parameters
         parametre = parametres.get("response")
         annotations = inspect.get_annotations(endpoint, eval_str=True)
         if parametre is None or annotations.get("response") is not Response:
             manquants.append(cle)
 
+    assert (
+        controles > 0
+    ), "Aucun endpoint limité contrôlé : vérifier le parcours des routeurs inclus"
     assert manquants == [], (
         "Endpoint(s) limité(s) sans `response: Response` — chaque appel "
         f"renverrait 500 : {sorted(manquants)}"
