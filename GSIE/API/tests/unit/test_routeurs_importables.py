@@ -29,6 +29,8 @@ import importlib
 import pkgutil
 from pathlib import Path
 
+from fastapi.routing import iter_route_contexts
+
 import gsie_api.engines as engines
 from gsie_api.app import create_app
 
@@ -74,7 +76,9 @@ def test_tous_les_routeurs_presents_sont_montes_sur_l_application() -> None:
     moteur a un routeur » : un moteur en cours de construction n'a pas encore
     de ``router.py``, et ce n'est pas un défaut.
     """
-    prefixes_montes = {route.path for route in create_app().routes}
+    prefixes_montes = {
+        route.path for route in iter_route_contexts(create_app().routes) if route.path is not None
+    }
 
     for nom in _paquets_moteurs_avec_routeur():
         module = importlib.import_module(f"gsie_api.engines.{nom}.router")

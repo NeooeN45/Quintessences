@@ -4,6 +4,19 @@ Format : `## [version] - YYYY-MM-DD`
 
 ---
 
+## [FASTAPI — EN RELECTURE] - 2026-11-24
+
+- FastAPI `0.134.0` → `0.163.2` pour GHSA-f56c-v883-vx8r (#89),
+  seul paquet dont la version change dans le verrou généré avec uv `0.13.4`.
+- Six tests de non-régression bornés prouvent la disparition des balayages
+  répétés query/header/formulaire ; données répétées et upload préservés.
+- Tests d'inventaire adaptés à `iter_route_contexts` ; le contrôle des
+  endpoints limités refuse désormais une inspection vide.
+- OpenAPI inchangée. [Preuves et limites](23_QUALITY_MANAGEMENT/AUDITS/FASTAPI_DOS_2026-11-24.md)
+  conservées ; aucune fusion, aucun déploiement et aucun invariant promu.
+
+---
+
 ## [MINIO PROVISOIRE — EN RELECTURE] - 2026-11-18
 
 - GSIE-PROMPT-0035 : MinIO et `mc` sont construits depuis des archives de

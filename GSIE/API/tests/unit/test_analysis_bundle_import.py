@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from fastapi.routing import iter_route_contexts
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -230,9 +231,9 @@ def should_expose_the_forge_import_route() -> None:
     import gsie_api.app as app_module
 
     with patch.object(app_module._settings, "database_role", "test"):
-        paths = {route.path for route in app_module.create_app().routes}
+        paths = {route.path for route in iter_route_contexts(app_module.create_app().routes)}
     assert "/api/v1/data/analysis-bundles/import" in paths
 
     with patch.object(app_module._settings, "database_role", "production"):
-        paths = {route.path for route in app_module.create_app().routes}
+        paths = {route.path for route in iter_route_contexts(app_module.create_app().routes)}
     assert "/api/v1/data/analysis-bundles/import" not in paths
