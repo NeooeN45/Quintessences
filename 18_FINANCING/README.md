@@ -12,6 +12,7 @@ Documenter le modèle économique, les sources de financement, le budget par pha
 | `FUNDING_SOURCES.md` | Inventaire des sources de financement (national, européen, régional, privé, recherche) avec stratégie par phase | 1.0.0 |
 | `BUDGET_BY_PHASE.md` | Budget détaillé par phase (7 phases), plan financier pluriannuel (7 ans), plan de trésorerie, plan de levée | 1.0.0 |
 | `FINANCIAL_GOVERNANCE.md` | Gouvernance financière (acteurs, processus de décision, contrôles, audit, transparence, conflits d'intérêt) | 1.0.0 |
+| `MICROSOFT_FOR_STARTUPS_APPLICATION.md` | Dossier de candidature, réponses proposées, preuves et garde-fous Azure | Brouillon 2026-07-22 |
 
 ## Principes
 
